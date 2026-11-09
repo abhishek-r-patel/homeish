@@ -1,4 +1,10 @@
 // Shared role types and fail-closed, per-module permission maps.
+import { MODULE_KEYS, MODULE_REGISTRY } from '../modules';
+import type { ModuleKey } from '../modules';
+
+export { MODULE_KEYS };
+export type { ModuleKey };
+
 export const SOCIETY_ROLES = [
   'admin',
   'committee',
@@ -9,33 +15,16 @@ export const SOCIETY_ROLES = [
 
 export type SocietyRole = (typeof SOCIETY_ROLES)[number];
 
-export const MODULE_KEYS = [
-  'core',
-  'visitor',
-  'delivery',
-  'billing',
-  'service_request',
-  'staff',
-  'housekeeping',
-  'amc',
-  'notice',
-  'amenity',
-] as const;
-
-export type ModuleKey = (typeof MODULE_KEYS)[number];
 export type PermissionMap = Readonly<Record<string, readonly SocietyRole[]>>;
 export type PermissionMaps = Partial<
   Readonly<Record<ModuleKey, PermissionMap>>
 >;
 
-export const PERMISSION_MAPS: PermissionMaps = {
-  core: {
-    'society:read': ['admin', 'committee', 'guard'],
-    'membership:read': ['admin', 'committee'],
-    'membership:manage': ['admin'],
-    'audit:read': ['admin', 'committee'],
-  },
-};
+const permissionMaps: Partial<Record<ModuleKey, PermissionMap>> = {};
+for (const moduleKey of MODULE_KEYS) {
+  permissionMaps[moduleKey] = MODULE_REGISTRY[moduleKey].permissions;
+}
+export const PERMISSION_MAPS: PermissionMaps = permissionMaps;
 
 export function isSocietyRole(role: string): role is SocietyRole {
   return SOCIETY_ROLES.some((candidate) => candidate === role);

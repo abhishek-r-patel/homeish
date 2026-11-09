@@ -83,11 +83,14 @@
 
   --container-content-narrow: 560px;
   --container-content-default: 960px;
-  --container-content-wide: 1200px;
+  --container-content-wide: 100%;
+  --container-content-marketing: 1200px;
 
   --duration-motion-fast: 120ms;
   --duration-motion-base: 200ms;
   --duration-motion-slow: 280ms;
+  --spacing-overlay-max: 90dvh;
+  --shadow-overlay: 0 8px 32px rgb(27 31 35 / 16%);
 }
 
 [data-font-preference='device_default'] {

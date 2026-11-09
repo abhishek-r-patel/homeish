@@ -1,8 +1,9 @@
-// Resident route boundary; the resident shell is added with its core screens.
+// Resident route boundary with its responsive navigation shell.
 import type { ReactNode } from 'react';
+import { ResidentShell } from '@/components/app-shells';
 
 export default function ResidentLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  return children;
+  return <ResidentShell>{children}</ResidentShell>;
 }

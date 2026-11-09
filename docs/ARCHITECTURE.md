@@ -153,10 +153,12 @@ One Next.js app, role-specific route groups with distinct layouts:
 | `(admin)`    | Admin, committee, HK supervisor | Bottom tabs / sidebar                                        |
 | `developer`  | Platform developer              | Dark top bar, separate login, separate cookie/session policy |
 
-The shell reads the **active society's enabled modules** and the user's roles, then builds navigation (DESIGN.md 5.3). A disabled module renders no nav item, and its routes return the module-disabled page.
+The shared shells accept the active society's enabled modules, roles, society switcher data, and notification count, then build navigation from the module registry and role permissions (DESIGN.md 5.3). Core navigation is always retained; disabled or unauthorized modules produce no item, heading, or gap. The current route-group layouts provide fixed role shells and a core-only module fallback until authenticated request-context wiring; they must not invent a user or society session. The host-aware marketing/environment entry page stays at the app root so it is not framed by the unauthenticated shell. A disabled module renders no nav item, and its routes return the module-disabled page.
 
 ### 5.3 PWA scope (PRD D-23)
 
+- `src/app/manifest.ts`, the square SVG mark and generated 192px/512px PNGs provide install metadata and icons. P2 adds no service worker or offline data caching; the Web Push-only worker remains separate work.
+- The component foundation fixture is a development-only `page.fixture.tsx` route extension, included by `next.config.ts` outside production builds and covered by Playwright accessibility, responsive and interaction checks.
 - Web app manifest (install to home screen), service worker for **Web Push only**. No offline data caching in MVP (NFR-15); an "offline" banner is shown by connectivity detection.
 - Guard devices run the same app; a guard installs it to the home screen. **[AA-01]**
 - iOS Web Push works only for installed PWAs on supported iOS versions; fallback is the guard calling the resident; SMS/WhatsApp alerts are post-MVP (PRD D-06). Flagged risk in PRD Section 15.

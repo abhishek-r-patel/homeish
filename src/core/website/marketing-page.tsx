@@ -20,7 +20,7 @@ export function MarketingPage({
         Skip to content
       </a>
       <header className="border-b border-rule">
-        <div className="mx-auto flex max-w-content-wide flex-wrap items-center justify-between gap-space-4 px-space-5 py-space-5">
+        <div className="mx-auto flex max-w-content-marketing flex-wrap items-center justify-between gap-space-4 px-space-5 py-space-5">
           <Link aria-label="Homeish home" href="/">
             <Brand />
           </Link>
@@ -49,7 +49,7 @@ export function MarketingPage({
       <main id="main">
         <section
           aria-labelledby="intro-title"
-          className="mx-auto grid max-w-content-wide items-center gap-space-7 px-space-5 py-space-8 expanded:grid-cols-2"
+          className="mx-auto grid max-w-content-marketing items-center gap-space-7 px-space-5 py-space-8 expanded:grid-cols-2"
         >
           <div>
             <p className="mb-space-5 text-caption font-semibold uppercase tracking-widest text-ink-muted">
@@ -121,7 +121,7 @@ export function MarketingPage({
           </aside>
         </section>
         <section className="border-y border-rule bg-surface" id="features">
-          <div className="mx-auto max-w-content-wide px-space-5 py-space-8">
+          <div className="mx-auto max-w-content-marketing px-space-5 py-space-8">
             <p className="text-caption font-semibold uppercase tracking-widest text-ink-muted">
               Planned for the everyday
             </p>
@@ -151,7 +151,7 @@ export function MarketingPage({
           </div>
         </section>
         <section
-          className="mx-auto max-w-content-wide px-space-5 py-space-8"
+          className="mx-auto max-w-content-marketing px-space-5 py-space-8"
           id="how-it-works"
         >
           <h2 className="text-display font-bold">
@@ -170,7 +170,7 @@ export function MarketingPage({
           </ol>
         </section>
         <section className="border-y border-rule bg-surface" id="your-society">
-          <div className="mx-auto grid max-w-content-wide gap-space-6 px-space-5 py-space-8 expanded:grid-cols-2">
+          <div className="mx-auto grid max-w-content-marketing gap-space-6 px-space-5 py-space-8 expanded:grid-cols-2">
             <div>
               <h2 className="text-display font-bold">
                 Already have a society address?
@@ -198,7 +198,7 @@ export function MarketingPage({
         </section>
       </main>
       <footer className="border-t border-rule">
-        <div className="mx-auto flex max-w-content-wide flex-wrap justify-between gap-space-4 px-space-5 py-space-6 text-caption text-ink-muted">
+        <div className="mx-auto flex max-w-content-marketing flex-wrap justify-between gap-space-4 px-space-5 py-space-6 text-caption text-ink-muted">
           <p>Homeish. A little more like home.</p>
           <p>In development. Not open for live society use.</p>
         </div>

@@ -1,8 +1,9 @@
-// Developer route boundary; its isolated shell is added with the developer console.
+// Developer route boundary with its isolated dark shell.
 import type { ReactNode } from 'react';
+import { DeveloperShell } from '@/components/app-shells';
 
 export default function DeveloperLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  return children;
+  return <DeveloperShell>{children}</DeveloperShell>;
 }
