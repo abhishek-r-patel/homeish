@@ -77,7 +77,7 @@ npm run e2e
 npm run build
 ```
 
-`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks, a public-environment-name check and the migration naming check. `npm run db:test` runs SQL assertion tests against testdb using PostgreSQL's `psql` client. GitHub Actions also scans repository history for secrets and tests migrations against a fresh local Supabase database. Other database commands (`npm run db:list`, `db:push`, `db:types`, `db:types:check`, `db:new`) are listed in [Local setup](docs/LOCAL_SETUP.md). Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
+`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks, a public-environment-name check and the migration naming check. `npm run test:integration:local` applies all migrations to a throwaway local PostgreSQL 17 server and runs the database integration tests (see [Local setup](docs/LOCAL_SETUP.md)). GitHub Actions runs static checks and build, database integration tests on a disposable `postgres:17` service, and browser tests as parallel jobs; it also scans repository history with Gitleaks, and CodeQL scans the code for vulnerabilities on pushes, pull requests and weekly. Other database commands (`npm run db:list`, `db:push`, `db:types`, `db:types:check`, `db:new`) are listed in [Local setup](docs/LOCAL_SETUP.md). Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
 
 ## Project structure
 
@@ -89,7 +89,7 @@ npm run build
 - `src/modules/`: isolated product modules, added as their phases begin
 - `supabase/`: CLI config, migrations, synthetic seed data and database tests
 - `src/core/db/`: generated database types (`npm run db:types`)
-- `tests/`: unit and browser tests
+- `tests/`: unit, database integration and browser tests
 - `docs/`: product, design, architecture and agent instructions
 
 ## Dependencies

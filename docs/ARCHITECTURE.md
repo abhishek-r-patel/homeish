@@ -324,7 +324,8 @@ Single repository, single Next.js app. Module folders are self-contained and reg
 ```
 homeish/
 ├─ .env.example                   Environment variable names and placeholders only
-├─ .github/workflows/ci.yml       Parallel jobs: secret scan, static checks and build; clean-database SQL tests; browser smoke
+├─ .github/workflows/ci.yml       Parallel jobs: secret scan, static checks and build; database integration tests on disposable PostgreSQL 17; browser smoke
+├─ .github/workflows/codeql.yml   CodeQL security analysis on pushes, pull requests and weekly
 ├─ .gitignore
 ├─ .nvmrc
 ├─ .prettierrc.json
@@ -336,11 +337,10 @@ homeish/
 ├─ playwright.config.ts
 ├─ postcss.config.mjs
 ├─ README.md
-├─ scripts/                       Header and public-environment checks; environment-profile loader (with-env.mjs); hidden DB-password setter (set-db-password.ps1); database commands and migration-name check (db.mjs, check-migrations.mjs)
+├─ scripts/                       Header and public-environment checks; environment-profile loader (with-env.mjs); hidden DB-password setter (set-db-password.ps1); database commands and migration-name check (db.mjs, check-migrations.mjs); local integration-test runner (test-integration-local.ps1)
 ├─ supabase/
 │  ├─ migrations/                 Forward-only SQL, ordered; sections per module
-│  ├─ seed/                       Synthetic seed data
-│  └─ tests/                      Database tests (RLS, functions)
+│  └─ seed/                       Synthetic seed data
 ├─ public/                        Homeish logo, manifest, icons, service worker
 ├─ src/
 │  ├─ app/                        Next.js routes only (thin)
@@ -387,10 +387,12 @@ homeish/
 │  └─ lib/                        Pure utilities (money, dates, formatting)
 ├─ tests/
 │  ├─ e2e/                        Playwright smoke + accessibility checks
+│  ├─ integration/                Database tests (migrations, RLS, functions) on disposable PostgreSQL; support/ holds the harness and Supabase stand-in
 │  ├─ unit/                       Vitest tests
 │  └─ fixtures/
 ├─ tsconfig.json
-└─ vitest.config.ts
+├─ vitest.config.ts
+└─ vitest.integration.config.ts
 ```
 
 Foundation status: the Next.js shell, route-group boundaries, health route, shared Button/TextInput primitives, design tokens, environment validation and baseline CI checks are implemented. Public marketing, host allow-listing, browser-only synthetic preview and beta entry are also implemented. Maplewood's host is reserved as a disabled placeholder; active society hosts, module routes, database configuration and role shells are still pending their planned phases.
@@ -677,17 +679,17 @@ Rules:
 
 ## 18. Testing Approach
 
-| Level         | Tool                                                                                                                                          | Scope                                                                                                                                                                                                                                                  | Gate                                           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
-| Static        | TypeScript strict, ESLint, formatter                                                                                                          | Whole repo                                                                                                                                                                                                                                             | Every PR                                       |
-| Unit          | Vitest                                                                                                                                        | Pure logic: money, date/timezone, late-fee and allocation rules, permission map, Zod schemas, error mapping, scrubber                                                                                                                                  | Every PR                                       |
-| Database      | `npm run db:test` uses development testdb (AD-13); CI uses a fresh local Supabase database built from migrations on its Docker-enabled runner | **RLS and SQL functions**: tenant isolation, role matrix cells, module-disabled denial, bill uniqueness, ledger immutability, visitor decision race (first response wins), duplicate-UTR rejection, idempotent payment confirmation, no negative stock | Every PR touching migrations                   |
-| Integration   | Vitest + the development Supabase project (AD-13)                                                                                             | Services end-to-end through the real database with a fake integration adapters (email, push)                                                                                                                                                           | Every PR                                       |
-| E2E           | Playwright (phone and desktop viewports)                                                                                                      | Key journeys per module (PRD Section 6), module toggle on/off, error/empty/loading states, offline banner                                                                                                                                              | Before each module release; nightly on staging |
-| Accessibility | axe in Playwright + manual keyboard/screen reader (TalkBack, VoiceOver)                                                                       | DESIGN.md Section 14 and 15                                                                                                                                                                                                                            | Manual pass per module UAT                     |
-| Security      | Dependency audit, secret scanning, RLS-presence check, header check                                                                           | CI                                                                                                                                                                                                                                                     | Every PR                                       |
-| Payment       | UPI flow: submit, duplicate UTR, confirm, reject and resubmit, double-click confirm, UPI-detail change audit and notification                 | Billing module                                                                                                                                                                                                                                         | Before billing release                         |
-| Manual UAT    | Pilot society checklist per module                                                                                                            | Real device on low-end Android and iOS Safari                                                                                                                                                                                                          | Per module release                             |
+| Level         | Tool                                                                                                                                       | Scope                                                                                                                                                                                                                                                  | Gate                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| Static        | TypeScript strict, ESLint, formatter                                                                                                       | Whole repo                                                                                                                                                                                                                                             | Every PR                                       |
+| Unit          | Vitest                                                                                                                                     | Pure logic: money, date/timezone, late-fee and allocation rules, permission map, Zod schemas, error mapping, scrubber                                                                                                                                  | Every PR                                       |
+| Database      | Vitest on a disposable local PostgreSQL 17 with a Supabase auth/roles stand-in; a fresh migrated database per test file, locally and in CI | **RLS and SQL functions**: tenant isolation, role matrix cells, module-disabled denial, bill uniqueness, ledger immutability, visitor decision race (first response wins), duplicate-UTR rejection, idempotent payment confirmation, no negative stock | Every PR touching migrations                   |
+| Integration   | Vitest + the development Supabase project (AD-13)                                                                                          | Services end-to-end through the real database with a fake integration adapters (email, push)                                                                                                                                                           | Every PR                                       |
+| E2E           | Playwright (phone and desktop viewports)                                                                                                   | Key journeys per module (PRD Section 6), module toggle on/off, error/empty/loading states, offline banner                                                                                                                                              | Before each module release; nightly on staging |
+| Accessibility | axe in Playwright + manual keyboard/screen reader (TalkBack, VoiceOver)                                                                    | DESIGN.md Section 14 and 15                                                                                                                                                                                                                            | Manual pass per module UAT                     |
+| Security      | Dependency audit, secret scanning (Gitleaks), CodeQL, RLS-presence check, header check                                                     | CI                                                                                                                                                                                                                                                     | Every PR                                       |
+| Payment       | UPI flow: submit, duplicate UTR, confirm, reject and resubmit, double-click confirm, UPI-detail change audit and notification              | Billing module                                                                                                                                                                                                                                         | Before billing release                         |
+| Manual UAT    | Pilot society checklist per module                                                                                                         | Real device on low-end Android and iOS Safari                                                                                                                                                                                                          | Per module release                             |
 
 Rules:
 
