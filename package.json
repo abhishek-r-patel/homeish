@@ -22,7 +22,13 @@
     "e2e:ui": "playwright test --ui",
     "check:headers": "node scripts/check-source-headers.mjs",
     "check:public-env": "node scripts/check-public-env.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:headers && npm run check:public-env"
+    "check:migrations": "node scripts/check-migrations.mjs",
+    "db:new": "node scripts/db.mjs new",
+    "db:list": "node scripts/with-env.mjs testdb node scripts/db.mjs list",
+    "db:push": "node scripts/with-env.mjs testdb node scripts/db.mjs push",
+    "db:types": "node scripts/with-env.mjs testdb node scripts/db.mjs types",
+    "db:types:check": "node scripts/with-env.mjs testdb node scripts/db.mjs types --check",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:headers && npm run check:public-env && npm run check:migrations"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",

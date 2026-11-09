@@ -336,7 +336,7 @@ homeish/
 ├─ playwright.config.ts
 ├─ postcss.config.mjs
 ├─ README.md
-├─ scripts/                       Header and public-environment checks; environment-profile loader (with-env.mjs); hidden DB-password setter (set-db-password.ps1)
+├─ scripts/                       Header and public-environment checks; environment-profile loader (with-env.mjs); hidden DB-password setter (set-db-password.ps1); database commands and migration-name check (db.mjs, check-migrations.mjs)
 ├─ supabase/
 │  ├─ migrations/                 Forward-only SQL, ordered; sections per module
 │  ├─ seed/                       Synthetic seed data

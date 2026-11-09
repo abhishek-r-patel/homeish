@@ -17,7 +17,7 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000 for the public marketing page or http://demo.localhost:3000 for a synthetic interactive preview. The checked-in environment file contains placeholders only. The app does not connect to Supabase yet. Database setup is a separate foundation task (P0.4): because Docker Desktop cannot be installed on the developer machine, development, automated database tests and staging/beta share one free Supabase project, `homeish-testdb` (Mumbai), with synthetic data only, managed through the Supabase CLI (ARCHITECTURE AD-13). It is never used for real society data. Two more projects exist but stay paused until needed: `homeish-demo` (synthetic showcase, later served by its own Vercel project `demo-homeish`) and `homeish-live` (all onboarded societies; schema changes reach it only through approved CI, never from a laptop). See ARCHITECTURE AD-14.
+Open http://localhost:3000 for the public marketing page or http://demo.localhost:3000 for a synthetic interactive preview. The checked-in environment file contains placeholders only. The app code does not connect to Supabase yet. Because Docker Desktop cannot be installed on the developer machine, development, automated database tests and staging/beta share one free Supabase project, `homeish-testdb` (Mumbai), with synthetic data only, managed through the Supabase CLI (ARCHITECTURE AD-13). It is never used for real society data. Two more projects exist but stay paused until needed: `homeish-demo` (synthetic showcase, later served by its own Vercel project `demo-homeish`) and `homeish-live` (all onboarded societies; schema changes reach it only through approved CI, never from a laptop). See ARCHITECTURE AD-14. CLI sign-in, linking, migrations and type generation are described in [Local setup](docs/LOCAL_SETUP.md).
 
 Line endings are normalised to LF by `.gitattributes`, so formatting checks behave the same on Windows and CI.
 
@@ -76,7 +76,7 @@ npm run e2e
 npm run build
 ```
 
-`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks and a public-environment-name check. Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
+`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks, a public-environment-name check and the migration naming check. Database commands (`npm run db:list`, `db:push`, `db:types`, `db:types:check`, `db:new`) are listed in [Local setup](docs/LOCAL_SETUP.md). Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
 
 ## Project structure
 
@@ -86,7 +86,8 @@ npm run build
 - `src/styles/`: Tailwind theme and global tokens
 - `public/`: Homeish logo and later PWA assets
 - `src/modules/`: isolated product modules, added as their phases begin
-- `supabase/`: migrations, synthetic seed data and database tests
+- `supabase/`: CLI config, migrations, synthetic seed data and database tests
+- `src/core/db/`: generated database types (`npm run db:types`)
 - `tests/`: unit and browser tests
 - `docs/`: product, design, architecture and agent instructions
 
@@ -105,3 +106,4 @@ Radix UI, Lucide, React Hook Form, Sentry, Web Push and PDF tooling are intentio
 - [API](docs/API.md)
 - [Agent instructions](docs/AGENTS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
+- [Local setup](docs/LOCAL_SETUP.md)
