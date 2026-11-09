@@ -2,7 +2,7 @@
 
 *A little more like home.*
 
-Homeish (renamed from Dwello on 2026-11-09) is a multi-tenant society-management web app. Its approved foundation is a single Next.js App Router application with TypeScript, Tailwind CSS and Supabase.
+Homeish is a multi-tenant society-management web app. Its approved foundation is a single Next.js App Router application with TypeScript, Tailwind CSS and Supabase.
 
 ## Requirements
 
@@ -47,9 +47,9 @@ Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_A
 ### Verified setup and deployment pause (2026-11-09)
 
 - Implementation and documentation are committed and pushed to `main` and `beta` in the same GitHub repository.
-- The GitHub repository is still `abhishek-r-patel/dwello`; renaming it to `homeish` is pending owner action. The Vercel projects were renamed on 2026-11-09 from `dwello`/`beta-dwello` to `homeish`/`beta-homeish`. They are connected to the repository, and have Production branches `main` and `beta` respectively, Next.js preset and Node.js 24.
-- `dwello.vercel.app` could not be attached: Vercel reports it belongs to another project, which led to the Homeish rename. `homeish.vercel.app` is now attached to `homeish`. The projects also keep their earlier assigned addresses `dwello-self.vercel.app` and `beta-dwello.vercel.app`.
-- Despite the dashboard setting "Git deployments disabled", pushes to `main`/`beta` on 2026-11-09 created Dwello-branded scaffold deployments (no backend or real data). The owner then had both projects **paused** and `vercel.json` changed to block `main`/`beta` deployments. No demo/beta nested domains or real society hosts have been attached.
+- The GitHub repository is `abhishek-r-patel/homeish`. Vercel projects `homeish` and `beta-homeish` are connected to it, with Production branches `main` and `beta` respectively, Next.js preset and Node.js 24.
+- `homeish.vercel.app` is attached to `homeish` and `beta-homeish.vercel.app` to `beta-homeish`. The originally requested product address belonged to another Vercel project, which led to the Homeish name (PRD D-01).
+- Despite the dashboard setting "Git deployments disabled", pushes to `main`/`beta` on 2026-11-09 created scaffold deployments under the earlier name (no backend or real data). The owner then had both projects **paused** and `vercel.json` changed to block `main`/`beta` deployments. No demo/beta nested domains or real society hosts have been attached.
 - Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. `APP_BASE_DOMAIN` is `homeish.vercel.app` in both projects; `NEXT_PUBLIC_APP_URL` is `https://homeish.vercel.app` (shared) and `https://beta.homeish.vercel.app` (beta). Before resuming: re-enable `main`/`beta` in `vercel.json`, unpause the projects, attach/verify the remaining hosts, and verify HTTPS and host isolation after deployment.
 - Local verification passed: formatting, lint, type checking, 33 unit tests, four browser tests (including automated accessibility and the exact 15-minute reset), and production build. This is not hosted verification, manual assistive-technology testing or launch approval.
 

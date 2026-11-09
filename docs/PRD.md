@@ -94,7 +94,7 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 Current delivery is the marketing page, host allow-list, beta entry and a browser-only synthetic demo illustration (manual and 15-minute resets). Authentication, actual modules, isolated backend provisioning and database-backed demo resets remain prerequisites for a full working demo or any real society activation. Maplewood's reserved host shows a disabled "not open yet" page; all other society hosts fail closed as unconfigured. No society directory is published.
 
-**Hosting gate, 2026-11-09:** Vercel reported the originally requested `dwello.vercel.app` is assigned to another project, so the owner renamed the product to Homeish (D-01). `homeish.vercel.app` is now attached to the renamed `homeish` Vercel project. The owner paused live deployment: both projects (`homeish`, `beta-homeish`) are paused and `vercel.json` blocks `main`/`beta` deployments. Code and `main`/`beta` branches are retained. The demo/beta example URLs above are not confirmed live addresses.
+**Hosting gate, 2026-11-09:** Vercel reported the originally requested product address is assigned to another project, so the owner chose the name Homeish (D-01). `homeish.vercel.app` is attached to the `homeish` Vercel project and `beta-homeish.vercel.app` to `beta-homeish`. The owner paused live deployment: both projects (`homeish`, `beta-homeish`) are paused and `vercel.json` blocks `main`/`beta` deployments. Code and `main`/`beta` branches are retained. The demo/beta example URLs above are not confirmed live addresses.
 
 ### 4.1 Features and Functional Requirements
 
@@ -758,7 +758,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 
 | ID | Decision | Recommendation | Priority |
 |---|---|---|---|
-| D-01 | Product name | **Approved 2026-11-09:** Homeish, tagline "A little more like home." (renamed from Dwello the same day because `dwello.vercel.app` was unavailable; existing logo mark kept) | Closed |
+| D-01 | Product name | **Approved 2026-11-09:** Homeish, tagline "A little more like home." (chosen the same day because the originally requested `.vercel.app` address was unavailable; existing logo mark kept) | Closed |
 | D-02 | MVP module set & order | **Approved 2026-11-09:** Core + Visitor + Delivery + Billing + Service Request; Staff/HK/AMC next | Closed |
 | D-03 | Login method | **Approved 2026-11-09:** email + code now; mobile OTP, passwords and Google later | Closed |
 | D-04 | Developer login security | **Approved 2026-11-09:** email + password + TOTP MFA, separate route | Closed |

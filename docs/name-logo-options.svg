@@ -1,4 +1,4 @@
-<!-- Original naming and logo concepts for Dwello; names and marks are not trademark-screened. -->
+<!-- Original naming and logo concepts for Homeish; names and marks are not trademark-screened. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1410" viewBox="0 0 1200 1410" role="img" aria-labelledby="title description">
   <title id="title">Twenty app name and logo concepts</title>
   <desc id="description">A contact sheet of twenty original name and logo directions for a society management app.</desc>
@@ -30,8 +30,8 @@
       <path class="thin ink" d="M6 68h58M28 42h14M28 50h14"/>
       <circle class="brand-fill" cx="43" cy="56" r="1.7"/>
     </g>
-    <text class="name" x="135" y="168">Dwello</text>
-    <text class="note" x="135" y="197">Home + register</text>
+    <text class="name" x="135" y="168">Homeish</text>
+    <text class="note" x="135" y="197">Chosen name · uses mark 15</text>
   </g>
 
   <g transform="translate(312 96)">

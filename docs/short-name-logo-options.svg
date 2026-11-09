@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1190" viewBox="0 0 1200 1190" role="img" aria-labelledby="title description">
-  <title id="title">Twenty Dwello-style app name and logo concepts</title>
+  <title id="title">Twenty short, warm home-name and logo concepts</title>
   <desc id="description">Twenty short, warm, home-related name ideas with original logo marks. Each matching vercel.app address returned Deployment Not Found on 9 November 2026. This is not a reservation or guarantee of availability.</desc>
   <style>
     .page { fill: #f6f4ef; }
@@ -16,7 +16,7 @@
     .page-note { fill: #59606a; font: 400 14px Manrope, 'Segoe UI', sans-serif; }
   </style>
   <rect class="page" width="1200" height="1190"/>
-  <text class="page-title" x="24" y="42">20 names in the Dwello style</text>
+  <text class="page-title" x="24" y="42">20 short, warm home names</text>
   <text class="page-note" x="24" y="69">Short, warm, home-related names · original logo directions</text>
   <text class="page-note" x="24" y="91">Matching .vercel.app hosts returned Deployment Not Found on 9 Nov 2026; this does not reserve them.</text>
 
@@ -28,9 +28,9 @@
       <path class="thin brand" d="M23 31h24"/>
       <circle class="brand-fill" cx="47" cy="50" r="3"/>
     </g>
-    <text class="name" x="135" y="123">Dwellory</text>
+    <text class="name" x="135" y="123">Homela</text>
     <text class="tag" x="135" y="148">A better everyday at home</text>
-    <text class="url" x="135" y="177">dwellory.vercel.app · 404*</text>
+    <text class="url" x="135" y="177">homela.vercel.app · 404*</text>
   </g>
   <g transform="translate(312 110)">
     <rect class="card" width="270" height="202" rx="12"/>
