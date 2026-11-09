@@ -1,4 +1,4 @@
-// Public marketing screen using Dwello's paper-and-ink design direction.
+// Public marketing screen using Homeish's paper-and-ink design direction.
 import { Brand } from '@/components/ui/brand';
 import Link from 'next/link';
 import { demoExample, websiteContent as copy } from './content';
@@ -21,7 +21,7 @@ export function MarketingPage({
       </a>
       <header className="border-b border-rule">
         <div className="mx-auto flex max-w-content-wide flex-wrap items-center justify-between gap-space-4 px-space-5 py-space-5">
-          <Link aria-label="Dwello home" href="/">
+          <Link aria-label="Homeish home" href="/">
             <Brand />
           </Link>
           <nav
@@ -199,7 +199,7 @@ export function MarketingPage({
       </main>
       <footer className="border-t border-rule">
         <div className="mx-auto flex max-w-content-wide flex-wrap justify-between gap-space-4 px-space-5 py-space-6 text-caption text-ink-muted">
-          <p>Dwello. A little more order, a little more home.</p>
+          <p>Homeish. A little more like home.</p>
           <p>In development. Not open for live society use.</p>
         </div>
       </footer>

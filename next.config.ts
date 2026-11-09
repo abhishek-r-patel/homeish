@@ -1,4 +1,4 @@
-// Next.js configuration for the Dwello application.
+// Next.js configuration for the Homeish application.
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {};

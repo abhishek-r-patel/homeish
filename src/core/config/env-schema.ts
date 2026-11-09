@@ -9,7 +9,7 @@ const hostnameSchema = z
 
 const routingSchema = z.object({
   APP_DEPLOYMENT: z.enum(['shared', 'beta']).default('shared'),
-  APP_BASE_DOMAIN: hostnameSchema.default('dwello.vercel.app'),
+  APP_BASE_DOMAIN: hostnameSchema.default('homeish.vercel.app'),
   VERCEL_URL: hostnameSchema.optional(),
   VERCEL_PROJECT_PRODUCTION_URL: hostnameSchema.optional(),
 });

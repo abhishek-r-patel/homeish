@@ -1,11 +1,25 @@
 // Verify each Vercel project builds only its own release branch.
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
+
+it('enables only release branch deployments with the project build gate', () => {
+  const config = JSON.parse(
+    readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8'),
+  );
+  expect(config.git.deploymentEnabled).toEqual({
+    main: true,
+    beta: true,
+    '*': false,
+  });
+  expect(config.ignoreCommand).toBe('node scripts/vercel-ignore-build.mjs');
+});
 
 it.each([
   ['shared', 'main', 1],
   ['shared', 'beta', 0],
+  ['shared', 'feature/test', 0],
   ['beta', 'main', 0],
   ['beta', 'beta', 1],
   ['beta', 'feature/test', 0],
