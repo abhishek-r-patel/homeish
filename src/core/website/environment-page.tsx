@@ -22,7 +22,7 @@ export function EnvironmentPage({
   surface,
   websiteOrigin,
 }: {
-  surface: Exclude<SiteSurface, 'website'>;
+  surface: Exclude<SiteSurface, 'website' | 'society'>;
   websiteOrigin: string;
 }) {
   const copy = entries[surface];

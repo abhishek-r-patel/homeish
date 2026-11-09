@@ -734,7 +734,7 @@ Approved 2026-11-09: the bare product host is a marketing website, separate from
 
 Website-only tokens: `marketing-display` = 40px mobile / 64px expanded, weight 700, line height 1.1; `content-wide` = 1200px. All other website values reuse existing tokens. Navigation wraps on phones; links and controls have 48px minimum targets; provide a skip link.
 
-The demo is labelled synthetic and an illustrative preview, with browser-memory interactions, manual reset and an automatic reset every 15 minutes while open. It is not a visitor module or a connected database. No real society entry, including Maplewood, is provisioned before MVP and the future create-society script. Unconfigured society hosts return 404. Beta shows a testing-only entry, never production society data. Non-marketing hosts are not indexed.
+The demo is labelled synthetic and an illustrative preview, with browser-memory interactions, manual reset and an automatic reset every 15 minutes while open. It is not a visitor module or a connected database. No real society entry is provisioned before MVP and the future create-society script. The reserved Maplewood host shows only "Maplewood is not open yet" with a link back to the website—no form, button or sign-in. Unconfigured society hosts return 404. Beta shows a testing-only entry, never production society data. Non-marketing hosts are not indexed.
 
 ### 18.1 Out of Scope (Design)
 
