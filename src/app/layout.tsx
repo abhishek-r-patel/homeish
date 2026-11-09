@@ -6,7 +6,7 @@ import '@fontsource-variable/sora';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Dwello',
+  title: 'Homeish',
 };
 
 export default function RootLayout({

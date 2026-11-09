@@ -13,32 +13,32 @@ const localBetaFor = () => parseRoutingEnvironment({ APP_DEPLOYMENT: 'beta' });
 
 describe('host routing', () => {
   it.each([
-    ['dwello.vercel.app', 'website'],
-    ['demo.dwello.vercel.app', 'demo'],
-    ['DWELLO.VERCEL.APP:443', 'website'],
+    ['homeish.vercel.app', 'website'],
+    ['demo.homeish.vercel.app', 'demo'],
+    ['HOMEISH.VERCEL.APP:443', 'website'],
   ])('routes shared host %s to %s', (host, surface) => {
     expect(resolveSiteSurface(host, shared)).toBe(surface);
     expect(resolveSiteSurface(host, beta)).toBeNull();
   });
 
   it('only serves beta on the beta project', () => {
-    expect(resolveSiteSurface('beta.dwello.vercel.app', beta)).toBe('beta');
-    expect(resolveSiteSurface('beta.dwello.vercel.app', shared)).toBeNull();
+    expect(resolveSiteSurface('beta.homeish.vercel.app', beta)).toBe('beta');
+    expect(resolveSiteSurface('beta.homeish.vercel.app', shared)).toBeNull();
   });
 
   it.each([
     null,
     '',
-    'unknown.dwello.vercel.app',
-    'demo.dwello.vercel.app.attacker.test',
+    'unknown.homeish.vercel.app',
+    'demo.homeish.vercel.app.attacker.test',
     'attacker.test',
-    'https://dwello.vercel.app',
-    'dwello.vercel.app,attacker.test',
-    'dwello.vercel.app@attacker.test',
-    'dwello.vercel.app/path',
-    'dwello.vercel.app:0',
-    'dwello.vercel.app:65536',
-    'dwello.vercel.app:3000',
+    'https://homeish.vercel.app',
+    'homeish.vercel.app,attacker.test',
+    'homeish.vercel.app@attacker.test',
+    'homeish.vercel.app/path',
+    'homeish.vercel.app:0',
+    'homeish.vercel.app:65536',
+    'homeish.vercel.app:3000',
     'localhost:3000',
     'demo.localhost:3000',
   ])('rejects unknown or malformed host %s on Vercel', (host) => {
@@ -47,20 +47,20 @@ describe('host routing', () => {
   });
 
   it('serves reserved Maplewood only as a disabled shared-app society', () => {
-    expect(resolveSiteSurface('maplewood.dwello.vercel.app', shared)).toBe(
+    expect(resolveSiteSurface('maplewood.homeish.vercel.app', shared)).toBe(
       'society',
     );
-    expect(resolveSociety('maplewood.dwello.vercel.app', shared)).toEqual({
+    expect(resolveSociety('maplewood.homeish.vercel.app', shared)).toEqual({
       slug: 'maplewood',
       name: 'Maplewood',
       status: 'disabled',
     });
-    expect(resolveSiteSurface('maplewood.dwello.vercel.app', beta)).toBeNull();
+    expect(resolveSiteSurface('maplewood.homeish.vercel.app', beta)).toBeNull();
     for (const host of [
-      'maplewood.dwello.vercel.app:3000',
+      'maplewood.homeish.vercel.app:3000',
       'maplewood.localhost:3000',
-      'x.maplewood.dwello.vercel.app',
-      'maplewood.dwello.vercel.app.attacker.test',
+      'x.maplewood.homeish.vercel.app',
+      'maplewood.homeish.vercel.app.attacker.test',
     ]) {
       expect(resolveSiteSurface(host, shared)).toBeNull();
     }
@@ -70,18 +70,18 @@ describe('host routing', () => {
     const configuration = parseRoutingEnvironment({
       VERCEL: '1',
       APP_DEPLOYMENT: 'beta',
-      VERCEL_URL: 'beta-dwello-abc-team.vercel.app',
-      VERCEL_PROJECT_PRODUCTION_URL: 'beta-dwello.vercel.app',
+      VERCEL_URL: 'beta-homeish-abc-team.vercel.app',
+      VERCEL_PROJECT_PRODUCTION_URL: 'beta-homeish.vercel.app',
     });
     expect(resolveSiteSurface(configuration.VERCEL_URL!, configuration)).toBe(
       'beta',
     );
-    expect(resolveSiteSurface('beta-dwello.vercel.app', configuration)).toBe(
+    expect(resolveSiteSurface('beta-homeish.vercel.app', configuration)).toBe(
       'beta',
     );
     expect(resolveSiteSurface('other.vercel.app', configuration)).toBeNull();
     expect(
-      resolveSiteSurface('demo.dwello.vercel.app', configuration),
+      resolveSiteSurface('demo.homeish.vercel.app', configuration),
     ).toBeNull();
   });
 
@@ -105,11 +105,11 @@ describe('host routing', () => {
   });
 
   it('builds canonical public links and preserves local ports', () => {
-    expect(siteOrigin('demo', 'dwello-abc-team.vercel.app', shared)).toBe(
-      'https://demo.dwello.vercel.app',
+    expect(siteOrigin('demo', 'homeish-abc-team.vercel.app', shared)).toBe(
+      'https://demo.homeish.vercel.app',
     );
-    expect(siteOrigin('website', 'maplewood.dwello.vercel.app', shared)).toBe(
-      'https://dwello.vercel.app',
+    expect(siteOrigin('website', 'maplewood.homeish.vercel.app', shared)).toBe(
+      'https://homeish.vercel.app',
     );
     expect(
       siteOrigin('demo', '127.0.0.1:3000', parseRoutingEnvironment({})),

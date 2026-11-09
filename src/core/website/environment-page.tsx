@@ -12,9 +12,9 @@ const entries = {
   },
   beta: {
     label: 'Testing only',
-    title: 'Dwello beta',
+    title: 'Homeish beta',
     description:
-      'This is the separate testing environment for upcoming Dwello changes. Society sign-in and database-backed features are not configured yet. Use synthetic data only; never use real society information here.',
+      'This is the separate testing environment for upcoming Homeish changes. Society sign-in and database-backed features are not configured yet. Use synthetic data only; never use real society information here.',
   },
 };
 
@@ -29,7 +29,7 @@ export function EnvironmentPage({
   return (
     <main className="mx-auto min-h-dvh max-w-content-narrow px-space-5 py-space-8">
       <a
-        aria-label="Dwello website"
+        aria-label="Homeish website"
         className="inline-block"
         href={websiteOrigin}
       >
@@ -45,7 +45,7 @@ export function EnvironmentPage({
         className="mt-space-6 inline-flex min-h-12 items-center text-brand underline underline-offset-4"
         href={websiteOrigin}
       >
-        Back to the Dwello website
+        Back to the Homeish website
       </a>
     </main>
   );

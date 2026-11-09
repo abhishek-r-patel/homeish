@@ -1,8 +1,8 @@
-# Dwello — Design System and UX Specification (DESIGN.md)
+# Homeish — Design System and UX Specification (DESIGN.md)
 
 | Field | Value |
 |---|---|
-| Product | Dwello (PRD D-01 approved 2026-11-09) |
+| Product | Homeish (PRD D-01 approved 2026-11-09) |
 | Version | 0.1 (Draft for approval) |
 | Date | 2026-11-09 |
 | Source of truth for | Visual design, UX patterns, components, states, accessibility |
@@ -20,7 +20,7 @@
 ## 1. Visual Direction and Design Principles
 
 ### 1.1 Direction: "The Gate Register"
-Dwello digitizes the paper visitor register, the notice board and the maintenance receipt book. The look draws from those objects: warm off-white paper, dark ink text, ruled dividers, stamped status labels, and one confident blue. It should feel like a well-kept, trustworthy ledger, not a startup dashboard.
+Homeish digitizes the paper visitor register, the notice board and the maintenance receipt book. The look draws from those objects: warm off-white paper, dark ink text, ruled dividers, stamped status labels, and one confident blue. It should feel like a well-kept, trustworthy ledger, not a startup dashboard.
 
 | Do | Do not |
 |---|---|
@@ -638,7 +638,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 
 ### 12.6 Cross-module pages
 - **Notification inbox (S-11):** list items grouped Today / Earlier; unread indicator dot plus visible text for assistive tech; tapping opens the deep link and marks read; "Mark all read" in header.
-- **Profile (S-12):** read-only facts (name, mobile, society, role, unit) and editable name/photo and font preference (Dwello fonts or device default); sign out at the bottom; "Help and support" with copyable session ID (11.5).
+- **Profile (S-12):** read-only facts (name, mobile, society, role, unit) and editable name/photo and font preference (Homeish fonts or device default); sign out at the bottom; "Help and support" with copyable session ID (11.5).
 - **Error / no-access / module-disabled (S-13):** full-region states per 9.3.
 
 ---
@@ -771,6 +771,6 @@ The demo is labelled synthetic and an illustrative preview, with browser-memory 
 | DD-04 | "Help" screen exposing a copyable session/request ID on every role | **Approved 2026-11-09:** copyable ID available from Help throughout the app | Closed |
 | DD-05 | Society-configurable unit terminology | **Approved 2026-11-09:** custom text, 1–24 letters or spaces; defaults to "Unit" | Closed |
 | DD-06 | Brand colour (`#1E4E8C` blue) and the "Gate Register" paper-and-ink direction | **Approved 2026-11-09:** documented palette and direction | Closed |
-| DD-07 | Product logo/mark (product name Dwello confirmed in PRD D-01) | **Approved 2026-11-09:** Dwello wordmark paired with the roof-and-entry mark from logo concept 15 | Closed |
+| DD-07 | Product logo/mark (product name Homeish confirmed in PRD D-01) | **Approved 2026-11-09:** Homeish wordmark paired with the roof-and-entry mark from logo concept 15 | Closed |
 | DD-08 | Bottom tab bar for residents/admin on phones vs. hamburger drawer | **Approved 2026-11-09:** bottom tabs on phones | Closed |
 | DD-09 | Confirmation for developer high-impact actions (suspend/archive society, disabling module with pending items) | **Approved 2026-11-09:** standard dialog stating the consequence; no typed confirmation | Closed |

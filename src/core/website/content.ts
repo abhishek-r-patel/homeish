@@ -4,7 +4,7 @@ export const websiteContent = {
   introduction:
     'Bring your society’s visitor register, delivery book, maintenance records and service requests into one simple place.',
   availability:
-    'Dwello is being built, one useful module at a time. Explore a synthetic preview today; live society onboarding is not open yet.',
+    'Homeish is being built, one useful module at a time. Explore a synthetic preview today; live society onboarding is not open yet.',
   modules: [
     {
       name: 'Visitors',
@@ -46,14 +46,14 @@ export const websiteContent = {
   ],
   questions: [
     {
-      question: 'Can we use Dwello for our society today?',
+      question: 'Can we use Homeish for our society today?',
       answer:
         'Not yet. The public demo is an illustrative preview, not a live society-management service. Society onboarding stays closed until sign-in, data protection and the required modules are ready.',
     },
     {
-      question: 'Does Dwello collect our maintenance payments?',
+      question: 'Does Homeish collect our maintenance payments?',
       answer:
-        'The planned payment flow sends money directly to your society’s UPI account. Your admin checks the payment and confirms it in Dwello. Dwello does not hold your society’s funds.',
+        'The planned payment flow sends money directly to your society’s UPI account. Your admin checks the payment and confirms it in Homeish. Homeish does not hold your society’s funds.',
     },
     {
       question: 'Will every society need every module?',

@@ -1,8 +1,8 @@
-# Dwello — Agent Instructions (AGENTS.md)
+# Homeish — Agent Instructions (AGENTS.md)
 
 | Field | Value |
 |---|---|
-| Product | Dwello (PRD D-01 approved 2026-11-09) |
+| Product | Homeish (PRD D-01 approved 2026-11-09) |
 | Version | 0.1 |
 | Date | 2026-11-09 |
 | Audience | The coding agent working in this repository |

@@ -1,8 +1,8 @@
-# Dwello — Society Management SaaS: Product Requirements Document (PRD)
+# Homeish — Society Management SaaS: Product Requirements Document (PRD)
 
 | Field | Value |
 |---|---|
-| Product | Dwello |
+| Product | Homeish |
 | Version | 0.1 (Draft for approval) |
 | Date | 2026-11-09 |
 | Status | Draft — pending owner approval of items in Section 17 |
@@ -88,13 +88,13 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 ### 4.0 Public website, society hosts and beta (D-34)
 
-**Approved 2026-11-09:** `dwello.vercel.app` is the public marketing website, not a login screen. `demo.dwello.vercel.app` is a public interactive synthetic demo, periodically reset. Future societies use their own configured subdomains of the same application, not separate branches. **Owner clarification:** Maplewood is a real society: its address is prepared but disabled (placeholder page only). Do not onboard it now; the owner will do that through a future create-society script once MVP is ready.
+**Approved 2026-11-09:** `homeish.vercel.app` is the public marketing website, not a login screen. `demo.homeish.vercel.app` is a public interactive synthetic demo, periodically reset. Future societies use their own configured subdomains of the same application, not separate branches. **Owner clarification:** Maplewood is a real society: its address is prepared but disabled (placeholder page only). Do not onboard it now; the owner will do that through a future create-society script once MVP is ready.
 
-`beta.dwello.vercel.app` belongs to a separate Vercel project deploying the `beta` branch for testing and later new features. Verified changes are merged into `main` for the shared website/society deployment. Beta must never use real society data or the production database. This preserves D-24: live societies share a database with enforced society isolation; it does not copy Civic Pulse's per-society database model.
+`beta.homeish.vercel.app` belongs to a separate Vercel project deploying the `beta` branch for testing and later new features. Verified changes are merged into `main` for the shared website/society deployment. Beta must never use real society data or the production database. This preserves D-24: live societies share a database with enforced society isolation; it does not copy Civic Pulse's per-society database model.
 
 Current delivery is the marketing page, host allow-list, beta entry and a browser-only synthetic demo illustration (manual and 15-minute resets). Authentication, actual modules, isolated backend provisioning and database-backed demo resets remain prerequisites for a full working demo or any real society activation. Maplewood's reserved host shows a disabled "not open yet" page; all other society hosts fail closed as unconfigured. No society directory is published.
 
-**Hosting gate, 2026-11-09:** Vercel reports the requested `dwello.vercel.app` is assigned to another project. The owner paused live deployment rather than choosing an alternative. Code and `main`/`beta` branches are retained; both Git-linked Vercel projects exist but automatic deployments are disabled and no site is deployed. Actual parent-domain selection is still open; the example URLs above are not confirmed live addresses.
+**Hosting approval, 2026-11-09:** Vercel reported the originally requested product address is assigned to another project, so the owner chose the name Homeish (D-01). `homeish.vercel.app` is attached to `homeish` and `beta-homeish.vercel.app` to `beta-homeish`, under team `arp-dev`. After a temporary pause, the owner approved resuming both scaffold projects and automatic deployment: merge a feature branch into `beta` to deploy `beta-homeish`, verify it, then merge `beta` into `main` to deploy `homeish`. The owner also approved committing/pushing and performing this initial release sequence. `vercel.json` enables only the two release branches; the project build gate isolates them. Preview branch tracking stays disabled and Production domain assignment is automatic. This does not activate authentication, backends, modules or real societies. The nested demo/beta example URLs above are not confirmed live addresses; current hosted beta testing uses `beta-homeish.vercel.app`.
 
 ### 4.1 Features and Functional Requirements
 
@@ -125,7 +125,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 **Society Settings (RWA Settings page, admin-editable)**
 - `CORE-16` **Gate login mode** (admin chooses): (1) **Individual guard accounts** — each guard has their own email and signs in with it (default); or (2) **Shared gate account** — one shared email for all guards, where each guard identifies themselves when they start a shift or log an entry, so each entry still records who handled it. The admin also chooses *how* guards identify themselves: **pick their name** from the guard list, or enter a **personal PIN** (stored only as a hash, attempts rate-limited). **[D-30 — Approved 2026-11-09; A-31]**
 - `CORE-17` Other society profile values (name, address, contact, logo, timezone, and the society's custom label for "Unit") are editable by admin as listed in CORE-5. The custom label is 1–24 letters or spaces and defaults to "Unit". Module settings follow MOD-3 unless a module section says admin-editable (e.g., billing UPI details, BIL-15). Every change is audit-logged. **[DD-05 — Approved 2026-11-09]**
-- `CORE-18` Users may choose the Dwello font style (Manrope for body text and Sora for headings) or their device's default font. The preference is saved to their account and follows them across devices. **[DD-02 — Approved 2026-11-09]**
+- `CORE-18` Users may choose the Homeish font style (Manrope for body text and Sora for headings) or their device's default font. The preference is saved to their account and follows them across devices. **[DD-02 — Approved 2026-11-09]**
 
 **Module Registry & Developer Config** (developer-only)
 - `MOD-1` Developer config pages list all modules per society with an on/off toggle.
@@ -137,7 +137,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 
 **Platform Subscription (SaaS)**
 - `SAAS-1` Each society has a status: Trial, Active, Suspended, Archived. Suspended societies get read-only access. **[D-07 — Approved 2026-11-09]**
-- `SAAS-2` Developer manually sets plan/status in MVP. **No** in-app subscription billing/payment from societies in MVP; invoices are handled outside Dwello. The first ten live societies receive Dwello without a subscription charge; hosting costs are separate. The subscription price and offer terms after the first ten will be decided before society eleven is invited. **[D-08, D-33 — Approved 2026-11-09]**
+- `SAAS-2` Developer manually sets plan/status in MVP. **No** in-app subscription billing/payment from societies in MVP; invoices are handled outside Homeish. The first ten live societies receive Homeish without a subscription charge; hosting costs are separate. The subscription price and offer terms after the first ten will be decided before society eleven is invited. **[D-08, D-33 — Approved 2026-11-09]**
 - `SAAS-3` Tenant isolation enforced at data layer for every query.
 
 **Logging, Error Tracking & Observability** (developer-facing)
@@ -758,15 +758,15 @@ Items marked **High** block design/build of the affected module; resolve them be
 
 | ID | Decision | Recommendation | Priority |
 |---|---|---|---|
-| D-01 | Product name | **Approved 2026-11-09:** Dwello | Closed |
+| D-01 | Product name | **Approved 2026-11-09:** Homeish, tagline "A little more like home." (chosen the same day because the originally requested `.vercel.app` address was unavailable; existing logo mark kept) | Closed |
 | D-02 | MVP module set & order | **Approved 2026-11-09:** Core + Visitor + Delivery + Billing + Service Request; Staff/HK/AMC next | Closed |
 | D-03 | Login method | **Approved 2026-11-09:** email + code now; mobile OTP, passwords and Google later | Closed |
 | D-04 | Developer login security | **Approved 2026-11-09:** email + password + TOTP MFA, separate route | Closed |
 | D-05 | Resident onboarding | **Approved 2026-11-09:** email invite or society-code request with admin approval | Closed |
 | D-06 | Notification channels in MVP | **Approved 2026-11-09:** in-app + push + email; SMS/WhatsApp post-MVP | Closed |
 | D-07 | Suspended society behavior | **Approved 2026-11-09:** read-only access | Closed |
-| D-08 | SaaS subscription billing in-app | **Approved 2026-11-09:** no in-app billing; invoice outside Dwello | Closed |
-| D-09 | Error tracking approach | **Approved 2026-11-09:** Sentry plus Dwello ErrorLog | Closed |
+| D-08 | SaaS subscription billing in-app | **Approved 2026-11-09:** no in-app billing; invoice outside Homeish | Closed |
+| D-09 | Error tracking approach | **Approved 2026-11-09:** Sentry plus Homeish ErrorLog | Closed |
 | D-10 | No-response visitor policy | **Approved 2026-11-09:** guard may allow by society setting, with a required reason and audit entry | Closed |
 | D-11 | QR vs code for pre-approvals | **Approved 2026-11-09:** QR and the same readable 6-digit code in MVP | Closed |
 | D-12 | Billing calculation methods | **Approved 2026-11-09:** fixed per unit, per sq ft, custom per unit | Closed |
@@ -789,7 +789,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 | D-30 | Guard identification in shared gate-account mode | **Approved 2026-11-09:** RWA admin chooses per society: pick name or personal PIN | Closed |
 | D-31 | Protection of society UPI details | **Approved 2026-11-09:** admin edits; audited; admins and committee notified; residents see last-changed date | Closed |
 | D-32 | How a UPI payment is marked paid | **Approved 2026-11-09:** resident submits UTR (optional screenshot); admin confirms or rejects | Closed |
-| D-33 | First-ten society offer | **Approved 2026-11-09:** first ten live societies pay no Dwello subscription; production hosting remains separately funded; decide later pricing before society eleven is invited | Closed |
+| D-33 | First-ten society offer | **Approved 2026-11-09:** first ten live societies pay no Homeish subscription; production hosting remains separately funded; decide later pricing before society eleven is invited | Closed |
 | D-34 | Public website, society subdomains and beta | **Approved 2026-11-09:** public marketing root; interactive synthetic demo with periodic resets; future society subdomains, Maplewood address reserved but disabled, onboarding via post-MVP create-society script; separate beta Vercel project/branch; beta-to-main release flow | Closed |
 | D-29 | Dues ownership on tenant/owner change | **Approved 2026-11-09:** balance stays with the unit and is billed to the current owner | Closed |
 

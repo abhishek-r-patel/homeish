@@ -29,17 +29,17 @@ export async function generateMetadata(): Promise<Metadata> {
   const { surface, host, configuration, society } = await requestSite();
   if (surface === 'society') {
     return {
-      title: `Dwello | ${society?.name ?? 'Society'}`,
+      title: `Homeish | ${society?.name ?? 'Society'}`,
       robots: { index: false, follow: false },
     };
   }
   return {
     title:
       surface === 'website'
-        ? 'Dwello | Society life, thoughtfully organised'
-        : `Dwello | ${surface}`,
+        ? 'Homeish | A little more like home'
+        : `Homeish | ${surface}`,
     description:
-      'A clearer everyday for your society. Explore Dwello’s planned visitor, delivery, maintenance and service-request tools.',
+      'A little more like home. Explore Homeish’s planned visitor, delivery, maintenance and service-request tools for your society.',
     robots:
       surface === 'website'
         ? { index: true, follow: true }

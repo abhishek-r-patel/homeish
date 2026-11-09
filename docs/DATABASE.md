@@ -1,8 +1,8 @@
-# Dwello — Database Design (DATABASE.md)
+# Homeish — Database Design (DATABASE.md)
 
 | Field | Value |
 |---|---|
-| Product | Dwello (PRD D-01 approved 2026-11-09) |
+| Product | Homeish (PRD D-01 approved 2026-11-09) |
 | Version | 0.1 (Draft for approval) |
 | Date | 2026-11-09 |
 | Depends on | [PRD.md](./PRD.md) (data, roles, journeys), [ARCHITECTURE.md](./ARCHITECTURE.md) (stack, security model), [DESIGN.md](./DESIGN.md) (screens that drive queries) |
