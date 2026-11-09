@@ -1,6 +1,6 @@
 # Homeish
 
-*A little more like home.*
+_A little more like home._
 
 Homeish is a multi-tenant society-management web app. Its approved foundation is a single Next.js App Router application with TypeScript, Tailwind CSS and Supabase.
 
@@ -17,18 +17,32 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000 for the public marketing page or http://demo.localhost:3000 for a synthetic interactive preview. The checked-in environment file contains placeholders only. The app does not connect to Supabase yet; local database setup is a separate foundation task and requires Docker Desktop and the Supabase CLI.
+Open http://localhost:3000 for the public marketing page or http://demo.localhost:3000 for a synthetic interactive preview. The checked-in environment file contains placeholders only. The app code does not connect to Supabase yet. Because Docker Desktop cannot be installed on the developer machine, development, automated database tests and staging/beta share one free Supabase project, `homeish-testdb` (Mumbai), with synthetic data only, managed through the Supabase CLI (ARCHITECTURE AD-13). It is never used for real society data. Two more projects exist but stay paused until needed: `homeish-demo` (synthetic showcase, later served by its own Vercel project `demo-homeish`) and `homeish-live` (all onboarded societies; schema changes reach it only through approved CI, never from a laptop). See ARCHITECTURE AD-14. CLI sign-in, linking, migrations and type generation are described in [Local setup](docs/LOCAL_SETUP.md).
+
+Line endings are normalised to LF by `.gitattributes`, so formatting checks behave the same on Windows and CI.
+
+### Database-specific environment profiles
+
+Settings for each database live in their own ignored file named `.env.<profile>.local`: `.env.testdb.local` for `homeish-testdb`, `.env.demo.local` for `homeish-demo` and `.env.live.local` for `homeish-live`. The live file exists only as the source for filling GitHub/Vercel secrets later (owner decision, AD-14); it cannot be used to run anything locally. Project URLs, keys and generated app secrets are filled from Supabase automatically; values for paused projects stay `pending-resume-...` until each is resumed. Never paste values into chat or commit them. Set a database password without showing it on screen:
+
+```powershell
+./scripts/set-db-password.ps1 testdb   # hidden prompt; also demo or live
+npm run dev:testdb                     # app against homeish-testdb
+npm run env -- testdb <command...>     # any other command with that profile
+```
+
+`scripts/with-env.mjs` loads the profile before the command starts, so its values take precedence over `.env.local`. It refuses the `live` profile, and refuses to run if the file is missing or does not list every variable in `.env.example` (it names the missing variables, never values), so a profile is never silently completed from another database's settings. Plain `npm run dev` keeps using `.env.local` with placeholders.
 
 ## Website, society addresses and beta
 
 Approved hosting topology (2026-11-09), following Civic Pulse's two-project pattern. The owner approved resuming scaffold hosting and automatic deployments through beta, then main. The Vercel team is `arp-dev`. `homeish.vercel.app` is attached to `homeish`; the currently attached beta address is `beta-homeish.vercel.app`. Nested demo/beta addresses below remain planned, not verified live addresses.
 
-| Host | Vercel project | Git branch | Purpose |
-|---|---|---|---|
-| `homeish.vercel.app` | `homeish` | `main` | Public marketing website |
-| `demo.homeish.vercel.app` | `homeish` | `main` | Synthetic interactive preview |
-| `<society>.homeish.vercel.app` | `homeish` | `main` | Future society host, provisioned only after MVP |
-| `beta.homeish.vercel.app` | `beta-homeish` | `beta` | Isolated testing and future features |
+| Host                           | Vercel project | Git branch | Purpose                                         |
+| ------------------------------ | -------------- | ---------- | ----------------------------------------------- |
+| `homeish.vercel.app`           | `homeish`      | `main`     | Public marketing website                        |
+| `demo.homeish.vercel.app`      | `homeish`      | `main`     | Synthetic interactive preview                   |
+| `<society>.homeish.vercel.app` | `homeish`      | `main`     | Future society host, provisioned only after MVP |
+| `beta.homeish.vercel.app`      | `beta-homeish` | `beta`     | Isolated testing and future features            |
 
 `APP_DEPLOYMENT=shared` serves the website and demo entries; `APP_DEPLOYMENT=beta` serves beta only. `APP_BASE_DOMAIN` defaults to `homeish.vercel.app`. Unknown society hosts return 404, never another society or the public demo. Provider-supplied deployment aliases resolve only to their own project's website/beta entry. Hostnames select a screen, not an authenticated society or permission.
 
@@ -42,7 +56,7 @@ Feature branches → pull request into `beta` → automatic deployment to `beta-
 
 Attach only the bare website and demo hostnames to `homeish`, and the beta hostname to `beta-homeish`; verify DNS/TLS and availability rather than assuming an alias is reserved. The Maplewood host may be attached to `homeish` when hosting resumes (it serves only the disabled placeholder); do not attach other society hosts yet. Connect both projects to the same GitHub repository. Never copy Civic Pulse credentials or configuration into Homeish.
 
-Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_APP_ENV=preview` with explicitly nonfunctional scaffold values (reserved `.invalid` backend URL and placeholder integration keys). This does **not** make either project production-ready; the Vercel target name is not an app-readiness claim. Before enabling workflows, provision isolated staging/beta and production Supabase projects, give demo a synthetic-only backend/reset boundary, configure real integrations, set the correct application environment, and verify isolation. Never reset a shared production database or onboard Maplewood as part of demo setup.
+Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_APP_ENV=preview` with explicitly nonfunctional scaffold values (reserved `.invalid` backend URL and placeholder integration keys). This does **not** make either project production-ready; the Vercel target name is not an app-readiness claim. Before enabling workflows, connect staging/beta to the shared non-production `homeish-testdb` project (AD-13), provision the paused `homeish-live` project for production and `homeish-demo` for the demo (AD-14), give demo a synthetic-only backend/reset boundary, configure real integrations, set the correct application environment, and verify isolation. Never reset a shared production database or onboard Maplewood as part of demo setup.
 
 ### Hosting setup and resume approval (2026-11-09)
 
@@ -52,6 +66,7 @@ Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_A
 - Earlier pushes created scaffold deployments under the previous name; the owner temporarily paused both projects. The owner subsequently approved resuming both projects, committing/pushing this configuration, and publishing the current feature branch through `beta` and then `main`. Release-branch Git deployments are now enabled in repository configuration. No demo/beta nested domains or real society hosts have been attached.
 - Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. `APP_BASE_DOMAIN` is `homeish.vercel.app` in both projects. The planned canonical beta URL is `https://beta.homeish.vercel.app`; use the attached `https://beta-homeish.vercel.app` address for current hosted testing. Verify deployment success, HTTPS and host isolation after merging. Attaching additional domains and activating societies remain separate work.
 - Local verification passed: formatting, lint, type checking, 33 unit tests, four browser tests (including automated accessibility and the exact 15-minute reset), and production build. This is not hosted verification, manual assistive-technology testing or launch approval.
+- Hosted smoke check on 2026-11-09: `https://homeish.vercel.app` served the public marketing page and `https://beta-homeish.vercel.app` served the beta scaffold over HTTPS. This does not verify database connectivity, real society workflows or production readiness.
 
 ## Checks
 
@@ -62,7 +77,7 @@ npm run e2e
 npm run build
 ```
 
-`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks and a public-environment-name check. Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
+`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks, a public-environment-name check and the migration naming check. `npm run db:test` runs SQL assertion tests against testdb using PostgreSQL's `psql` client. GitHub Actions also scans repository history for secrets and tests migrations against a fresh local Supabase database. Other database commands (`npm run db:list`, `db:push`, `db:types`, `db:types:check`, `db:new`) are listed in [Local setup](docs/LOCAL_SETUP.md). Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
 
 ## Project structure
 
@@ -72,7 +87,8 @@ npm run build
 - `src/styles/`: Tailwind theme and global tokens
 - `public/`: Homeish logo and later PWA assets
 - `src/modules/`: isolated product modules, added as their phases begin
-- `supabase/`: migrations, synthetic seed data and database tests
+- `supabase/`: CLI config, migrations, synthetic seed data and database tests
+- `src/core/db/`: generated database types (`npm run db:types`)
 - `tests/`: unit and browser tests
 - `docs/`: product, design, architecture and agent instructions
 
@@ -91,3 +107,4 @@ Radix UI, Lucide, React Hook Form, Sentry, Web Push and PDF tooling are intentio
 - [API](docs/API.md)
 - [Agent instructions](docs/AGENTS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
+- [Local setup](docs/LOCAL_SETUP.md)

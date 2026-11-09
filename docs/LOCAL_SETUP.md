@@ -1,0 +1,92 @@
+# Homeish — Local Setup (LOCAL_SETUP.md)
+
+Step-by-step setup for a Windows development machine. There is no local database: Docker Desktop cannot be installed, so development and automated database tests use the shared cloud project `homeish-testdb`, which only ever holds synthetic data (ARCHITECTURE AD-13, AD-14).
+
+## 1. Tools
+
+- Node.js 24.20.0 and npm (see README).
+- The Supabase CLI is a project development dependency (`supabase` in `package.json`); it is installed by `npm ci`. Do not install it globally.
+
+```powershell
+npm ci
+```
+
+## 2. Network certificates (company networks)
+
+Some company networks inspect secure web traffic with their own certificate. Windows trusts it, but Node.js does not by default, so the Supabase CLI fails with `Transport error` or `SELF_SIGNED_CERT_IN_CHAIN`. The project's database commands (`npm run db:*`) already tell Node to also trust the Windows certificate store. For any other direct CLI call in the same window, set:
+
+```powershell
+$env:NODE_USE_SYSTEM_CA = '1'
+```
+
+## 3. Supabase projects
+
+| Project          | Ref                    | Use                                                      | State  |
+| ---------------- | ---------------------- | -------------------------------------------------------- | ------ |
+| `homeish-testdb` | `oqyagsabodaueghtrocv` | Development, automated tests, staging/beta (synthetic)   | Active |
+| `homeish-demo`   | `iauusmylbymplqtheinp` | Synthetic showcase data only                             | Paused |
+| `homeish-live`   | `yhwadldjeyirkgbmoctb` | All onboarded societies — real data; changes only via CI | Paused |
+
+All are in South Asia (Mumbai). Paused projects must be resumed before 14 Dec 2027 (AD-14).
+
+## 4. Sign the CLI in and link testdb (once per machine)
+
+1. In the Supabase dashboard, open **Account → Access tokens** and create a token limited to `homeish-testdb` with a short expiry.
+2. Sign in and link (the token is stored in Windows Credential Manager, not in the project):
+
+```powershell
+$env:NODE_USE_SYSTEM_CA = '1'
+npx supabase login
+npx supabase link --project-ref oqyagsabodaueghtrocv
+```
+
+The link is kept in `supabase/.temp/`, which Git ignores. Never link `homeish-live` from a laptop.
+
+## 5. Environment profiles
+
+Each database has its own ignored settings file: `.env.testdb.local`, `.env.demo.local`, `.env.live.local` (README, "Database-specific environment profiles"). Project addresses, keys and app secrets are filled from Supabase; set the database password without it appearing on screen:
+
+```powershell
+./scripts/set-db-password.ps1 testdb
+```
+
+`.env.live.local` is only the source for GitHub/Vercel secrets later; every project script refuses to run against live.
+
+## 6. Database commands
+
+The portable PostgreSQL tools can run the database tests without Docker. Add PostgreSQL's `bin` folder to `PATH`, or set `PSQL_PATH` to the full path of `psql.exe` for the current PowerShell window:
+
+```powershell
+$env:PSQL_PATH = 'C:\path\to\postgresql\bin\psql.exe'
+```
+
+| Command                                          | What it does                                                           |
+| ------------------------------------------------ | ---------------------------------------------------------------------- |
+| `npm run db:new -- <module>_<short_description>` | Creates an empty, timestamped migration file in `supabase/migrations/` |
+| `npm run db:list`                                | Shows which migrations testdb has applied                              |
+| `npm run db:test`                                | Runs SQL assertion tests against testdb in a rolled-back transaction   |
+| `npm run db:push`                                | Applies new migrations to testdb (add `-- --dry-run` to preview first) |
+| `npm run db:types`                               | Regenerates `src/core/db/database.types.ts` from testdb                |
+| `npm run db:types:check`                         | Fails if the generated types no longer match testdb                    |
+| `npm run check:migrations`                       | Checks migration file names (also part of `npm run check`)             |
+
+Database commands load `.env.testdb.local` and run against the address in it. To target the demo project once it is resumed: `npm run env -- demo node scripts/db.mjs push`. They refuse `homeish-live` and an unset password, and hide database addresses in their output. `db:test` uses `psql` and reads the password from the profile into the child process environment, not its command line. It runs each `*.test.sql` file inside a transaction and rolls it back; tests must not commit or roll back their own transaction.
+
+GitHub Actions runs `npm run db:test:local` against a fresh local Supabase database after applying migrations. GitHub-hosted runners provide Docker; this avoids storing a database password in GitHub and does not require Docker on the developer laptop. `db:test:local` accepts only `localhost` on port `54322`; use `npm run db:test` locally to test the shared `homeish-testdb`.
+
+Write database tests as SQL assertions that raise an exception on failure (for example, a `DO` block with an `IF ... THEN RAISE EXCEPTION ... END IF`). The runner treats a clean `psql` exit as a pass and stops at the first SQL error.
+
+### Migration rules (DATABASE 14.1)
+
+- Name: `YYYYMMDDHHMMSS_<module>_<short_description>.sql`, where `<module>` is a module key (`core`, `visitor`, `delivery`, `billing`, `service_request`, `staff`, `housekeeping`, `amc`, `notice`, `amenity`). `db:new` adds the timestamp.
+- Forward-only: never edit a migration once it has run on testdb; fix forward with a new one.
+- One concern per file; a table ships with RLS enabled, its policies and grants in the same file.
+- After every schema change run `npm run db:push`, then `npm run db:types`, and commit the migration and the regenerated types together.
+- Roll-out order: testdb → demo → live; live only through approved CI.
+
+### Folders
+
+- `supabase/migrations/`: forward-only SQL.
+- `supabase/seed/`: synthetic seed files (`*.sql`, configured in `supabase/config.toml`); never real people.
+- `supabase/tests/`: SQL assertion tests (RLS, functions); run with `npm run db:test`. Tests are rolled back after each file.
+- `supabase/config.toml`: CLI settings. It describes a local stack we do not run; hosted project settings are changed in the dashboard, never with `supabase config push`.

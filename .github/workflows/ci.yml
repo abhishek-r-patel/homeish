@@ -7,18 +7,45 @@ on:
       - main
       - beta
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.20.0
           cache: npm
       - run: npm ci
       - run: cp .env.example .env.local
       - run: npm run check
+      - run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+      - run: npx supabase db start
+      - run: npx supabase db reset
+      - name: Set local database URL
+        shell: bash
+        run: |
+          database_url="$(npx supabase status --output env | sed -n 's/^DB_URL=//p' | sed -e 's/^"//' -e 's/"$//')"
+          if [[ -z "$database_url" ]]; then
+            echo "::error::Supabase did not provide a local database URL."
+            exit 1
+          fi
+          printf 'SUPABASE_DB_URL=%s\n' "$database_url" >> "$GITHUB_ENV"
+      - run: npm run db:test:local
+      - name: Stop local Supabase database
+        if: always()
+        run: npx supabase stop --no-backup
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
       - run: npm run build
