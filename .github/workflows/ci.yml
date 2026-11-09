@@ -19,10 +19,12 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -39,34 +41,44 @@ jobs:
 
   database:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Disposable PostgreSQL that matches Supabase's major version. Tests add a stand-in for
+    # Supabase's auth schema and roles; no real database credential exists in CI.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: supabase_admin
+          POSTGRES_DB: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U supabase_admin -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.20.0
           cache: npm
       - run: npm ci
-      - run: sudo apt-get update && sudo apt-get install --yes postgresql-client
-      - run: npx supabase db start
-      - run: npx supabase db reset
-      - name: Set local database URL
-        shell: bash
-        run: |
-          database_url="$(npx supabase status --output env | sed -n 's/^DB_URL=//p' | sed -e 's/^"//' -e 's/"$//')"
-          if [[ -z "$database_url" ]]; then
-            echo "::error::Supabase did not provide a local database URL."
-            exit 1
-          fi
-          printf 'SUPABASE_DB_URL=%s\n' "$database_url" >> "$GITHUB_ENV"
-      - run: npm run db:test:local
-      - name: Stop local Supabase database
-        if: always()
-        run: npx supabase stop --no-backup
+      - name: Apply migrations and run integration tests on disposable PostgreSQL 17
+        run: npm run test:integration
+        env:
+          INTEGRATION_DATABASE_URL: postgres://supabase_admin@127.0.0.1:5432/postgres
 
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24.20.0
