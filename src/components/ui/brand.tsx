@@ -1,14 +1,14 @@
-// Shared Dwello wordmark and selected roof-and-entry logo.
+// Shared Homeish wordmark and selected roof-and-entry logo.
 import Image from 'next/image';
 
 export function Brand() {
   return (
     <Image
-      alt="Dwello"
+      alt="Homeish"
       className="h-auto w-60"
       height={84}
       priority
-      src="/dwello-logo.svg"
+      src="/homeish-logo.svg"
       width={300}
     />
   );

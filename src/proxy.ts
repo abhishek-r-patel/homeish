@@ -9,7 +9,7 @@ export function proxy(request: NextRequest) {
     parseRoutingEnvironment(process.env),
   );
   if (!surface || (surface === 'society' && request.nextUrl.pathname !== '/')) {
-    return new NextResponse('This Dwello address is not configured.', {
+    return new NextResponse('This Homeish address is not configured.', {
       status: 404,
       headers: {
         'Cache-Control': 'private, no-store',
@@ -27,6 +27,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|dwello-logo\\.svg|favicon\\.ico).*)',
+    '/((?!_next/static|_next/image|homeish-logo\\.svg|favicon\\.ico).*)',
   ],
 };

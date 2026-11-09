@@ -1,8 +1,8 @@
-# Dwello — Implementation Plan (IMPLEMENTATION_PLAN.md)
+# Homeish — Implementation Plan (IMPLEMENTATION_PLAN.md)
 
 | Field | Value |
 |---|---|
-| Product | Dwello (PRD D-01 approved 2026-11-09) |
+| Product | Homeish (PRD D-01 approved 2026-11-09) |
 | Version | 0.1 (Draft for approval) |
 | Date | 2026-11-09 |
 | Depends on | [PRD.md](./PRD.md), [DESIGN.md](./DESIGN.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [AGENTS.md](./AGENTS.md) |
@@ -83,11 +83,11 @@ A module is **done** only when all of the following are true:
 | Needed before | Item | Status |
 |---|---|---|
 | P0 | Accounts created (GitHub, Supabase, Vercel, Sentry, Brevo) and Docker Desktop installed on the developer machine (the local database needs it) | Owner action |
-| P2 | Product logo (DESIGN DD-07; Dwello wordmark + concept-15 mark) | **Approved 2026-11-09:** selected logo asset added |
+| P2 | Product logo (DESIGN DD-07; Homeish wordmark + concept-15 mark) | **Approved 2026-11-09:** selected logo asset added |
 | P3 (staging) | Your own domain with email sender verification (SPF/DKIM) so login emails are not marked as spam | Owner action |
 | P7 | A pilot society's UPI ID and payee name for testing (a test UPI ID is fine until the real one is entered by the society's admin) | Owner action |
 | P10 | Production accounts and budget for paid hosting before the first live society; the first-ten no-subscription offer does not cover hosting | Owner action |
-| Before society eleven | Dwello subscription price and offer terms after the first ten free societies | Open |
+| Before society eleven | Homeish subscription price and offer terms after the first ten free societies | Open |
 | P10 | Pilot society and admin contact | Owner action |
 
 ---
@@ -112,7 +112,7 @@ A module is **done** only when all of the following are true:
 
 P0.9 local implementation includes public marketing, exact-host routing, an illustrative browser-memory demo and beta entry. It does not complete P1-P4 or activate real workflows. The owner approved implementation, documentation and live Git/Vercel setup on 2026-11-09, then deferred Maplewood onboarding until a future create-society script after MVP; its address is reserved in code as a disabled placeholder. External deployment status is recorded in README after verification. Full interactive society demo/reset jobs and real society activation remain gated on backend/auth/module completion and isolation tests. No real society data is seeded.
 
-**P0.9 status, 2026-11-09:** code/docs committed and pushed to `main` and `beta`; formatting/lint/type checks, 33 unit tests, four browser tests and production build pass locally. Both Vercel projects are Git-linked with correct release branches and scaffold-only configuration. Hosting is **paused by the owner**: requested `dwello.vercel.app` belongs to another project, no fallback has been approved, both projects have automatic Git deployments disabled and zero deployments. No nested demo/beta or Maplewood host is attached in Vercel (Maplewood's disabled placeholder route exists in code, 33 unit tests and four browser tests pass with it). Domain selection, hosted HTTPS/routing verification and final launch approval remain open.
+**P0.9 status, 2026-11-09:** code/docs committed and pushed to `main` and `beta`; formatting/lint/type checks, 33 unit tests, four browser tests and production build pass locally. Both Vercel projects are Git-linked with correct release branches and scaffold-only configuration. Hosting is **paused by the owner**: requested `dwello.vercel.app` belongs to another project, so the product was renamed Homeish (PRD D-01); the Vercel projects (still `dwello`/`beta-dwello`) have automatic Git deployments disabled and zero deployments. No nested demo/beta or Maplewood host is attached in Vercel (Maplewood's disabled placeholder route exists in code, 33 unit tests and four browser tests pass with it). Domain selection, hosted HTTPS/routing verification and final launch approval remain open.
 
 **Files/modules affected:** repository root configuration, `src/core/config/`, `supabase/`, `tests/`, `.github/workflows/`, README.
 
@@ -573,7 +573,7 @@ Each follows the same pattern: a migration group, module registration, permissio
 | IPA-2 | Each module is released to the pilot only when it passes its completion gate, one at a time | Assumption |
 | IPD-1 | Free tiers only for local/staging synthetic data; paid production hosting before the first live society, including the first-ten free offer (AD-06, D-33) | **Approved 2026-11-09** |
 | IPD-2 | Whether the guard alert sound/haptic (DESIGN DD-03) is built in P5.9 | **Approved 2026-11-09:** include it with a mute control |
-| IPD-3 | Brand colour and name final before P2 | **Approved 2026-11-09:** Dwello and the documented brand palette |
+| IPD-3 | Brand colour and name final before P2 | **Approved 2026-11-09:** Homeish and the documented brand palette |
 
 ---
 
@@ -585,4 +585,4 @@ Before it starts, the owner should complete two small actions (nothing technical
 1. Create the accounts listed in Section 2.3 (GitHub, Supabase free project for staging, Vercel, Sentry, Brevo).
 2. Install Docker Desktop on the Windows machine (the local database needs it).
 
-The product name, brand, typography, society unit label, guard alert, Dwello logo and production-hosting boundaries are approved. Decide the subscription price and offer terms after the first ten free societies before inviting society eleven.
+The product name, brand, typography, society unit label, guard alert, Homeish logo and production-hosting boundaries are approved. Decide the subscription price and offer terms after the first ten free societies before inviting society eleven.

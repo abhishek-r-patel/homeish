@@ -72,27 +72,30 @@ test('demo interactions are synthetic and reset manually and periodically', asyn
 test('rejects unconfigured hosts and beta on the shared deployment', async ({
   request,
 }) => {
-  for (const host of ['unknown.dwello.vercel.app', 'beta.dwello.vercel.app']) {
+  for (const host of [
+    'unknown.homeish.vercel.app',
+    'beta.homeish.vercel.app',
+  ]) {
     const response = await request.get('/', { headers: { Host: host } });
     expect(response.status()).toBe(404);
     expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow');
   }
   const maplewood = await request.get('/', {
-    headers: { Host: 'maplewood.dwello.vercel.app' },
+    headers: { Host: 'maplewood.homeish.vercel.app' },
   });
   expect(maplewood.status()).toBe(200);
   expect(maplewood.headers()['x-robots-tag']).toBe('noindex, nofollow');
   expect(await maplewood.text()).toContain('Maplewood is not open yet');
   const demo = await request.get('/', {
     headers: {
-      Host: 'demo.dwello.vercel.app',
-      'x-dwello-surface': 'maplewood',
+      Host: 'demo.homeish.vercel.app',
+      'x-homeish-surface': 'maplewood',
     },
   });
   expect(await demo.text()).toContain('Meet your sample society');
   expect(await demo.text()).not.toContain('Maplewood is not open yet');
   const blockedLogin = await request.get('/login', {
-    headers: { Host: 'maplewood.dwello.vercel.app' },
+    headers: { Host: 'maplewood.homeish.vercel.app' },
   });
   expect(blockedLogin.status()).toBe(404);
 });
