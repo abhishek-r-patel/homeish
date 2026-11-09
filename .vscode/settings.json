@@ -1,0 +1,19 @@
+{
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Write the subject line as Conventional Commits: type(scope): summary. Use a lowercase type (feat, fix, docs, test, ci, chore, refactor, perf, build, style), a short lowercase scope naming the area changed (for example core, db, ci, auth, billing, readme), and an imperative, lowercase summary of at most 72 characters with no trailing period."
+    },
+    {
+      "text": "After the subject, add one blank line, then 2 to 6 bullet lines starting with '- '. Each bullet is one concise sentence in imperative mood starting with a capital letter, with no trailing period, describing a concrete change or why it was made."
+    },
+    {
+      "text": "Reference plan or requirement IDs when relevant (for example P0.6, D-01, VIS-4, G-02), in the subject or a bullet."
+    },
+    {
+      "text": "Do not add Co-authored-by or any other trailers. Never include secrets, keys, passwords, database URLs, tokens or personal data."
+    },
+    {
+      "text": "Example:\nfeat(core): add Dwello application foundation\n\n- Set up Next.js, strict TypeScript, Tailwind CSS and Supabase dependencies\n- Validate environment configuration and add a health-check endpoint\n- Configure CI, code-quality checks, unit tests and browser accessibility smoke tests"
+    }
+  ]
+}

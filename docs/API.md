@@ -92,10 +92,10 @@ Operations are named `area.verbNoun` in lower camel case, e.g. `visitor.decide`,
 
 ### 3.2 Response envelope (all server operations and JSON routes)
 
-| Case    | Shape                                                                                                                                                                                              |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Success | `ok: true`, `data` (the result), optional `meta` (pagination, server time)                                                                                                                         |
-| Failure | `ok: false`, `error` with `code`, `message` (plain language, safe to show), optional `fieldErrors` (field → message), optional `referenceId` (for unexpected errors), optional `retryAfterSeconds` |
+| Case    | Shape                                                                                                                                                                                                                                   |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Success | `ok: true`, `data` (the result), optional `meta` (pagination, server time)                                                                                                                                                              |
+| Failure | `ok: false`, `error` with `code`, `message` (plain language, safe to show), optional `fieldErrors` (field → message), optional `reason` (`CONFLICT` only), optional `referenceId` (for unexpected errors), optional `retryAfterSeconds` |
 
 - Expected failures are **returned**, never thrown to the user. Unexpected failures are caught at the boundary, logged, and returned as `INTERNAL_ERROR` with a `referenceId` (PRD LOG-2).
 - Messages never include stack traces, SQL, internal IDs of other records, or whether another user's data exists.
@@ -141,6 +141,8 @@ Operations are named `area.verbNoun` in lower camel case, e.g. `visitor.decide`,
 | `INTERNAL_ERROR`       | Anything unexpected                                                  | 500                         | Error panel with reference ID                           |
 
 `CONFLICT` reasons (closed list): `already_decided`, `expired`, `duplicate_reference` (UTR), `duplicate_charge`, `stale_version`, `invalid_state`, `limit_reached`, `has_history` (delete blocked), `not_unpaid` (cancel blocked).
+
+The shared error model in `src/core/errors/` owns the closed error-code and conflict-reason lists, safe default messages, HTTP status mapping, response envelopes and UUID request-ID validation. An incoming `x-request-id` is preserved only when it is a valid UUID; otherwise the server generates one.
 
 ### 3.6 Idempotency and double submission
 
@@ -330,7 +332,7 @@ All require MFA (2.2). All actions are audited.
 | `/api/health`                       | GET          | Uptime monitor              | None                                                                                                          | Returns `ok` when the app and database respond, otherwise 503. **No** version, credentials or internals (NFR-11)                           |
 | `/api/jobs/daily`                   | POST         | Platform scheduler          | Secret bearer token (`CRON_SECRET`, compared in constant time); anything else is rejected with 401 and logged | Runs the daily jobs (below). Returns only counts per job                                                                                   |
 | `/api/push/subscriptions`           | POST, DELETE | Signed-in browser           | Session                                                                                                       | Save or remove this device's push subscription; max 5 per user; validated; keys stored server-side only                                    |
-| `/api/client-errors`                | POST         | Browser (may be signed out) | Session optional; rate limited                                                                                | Receives a client error report; body ≤ 8 KB; strict schema; scrubbed; stored in the error log; returns the `referenceId` shown to the user |
+| `/api/client-errors`                | POST         | Browser (may be signed out) | Same-origin, session optional; rate limited                                                                   | Receives only message, stack, path and device summary; body ≤ 8 KB; strict schema; scrubbed; stored in the error log; returns the `referenceId` shown to the user |
 | `/api/files/upload-url`             | POST         | Signed-in browser           | Session + permission                                                                                          | Issues a short-lived **upload link** for one allowed file after checking bucket, owner entity, type, size and counts                       |
 | `/api/files/url`                    | POST         | Signed-in browser           | Session + permission                                                                                          | Issues a **short-lived view link** for a stored file after checking the caller may see the owning record                                   |
 | `/api/billing/receipts/{paymentId}` | GET          | Signed-in browser           | Session + permission (payer, unit occupants, A, C)                                                            | Streams the receipt PDF for a confirmed payment                                                                                            |

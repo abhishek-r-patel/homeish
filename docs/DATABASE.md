@@ -28,7 +28,7 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | Application schema | **`public`** (tables, exposed to the API only through RLS and grants)                                             | Standard Supabase pattern                                                                             |
 | Private schema     | **`private`** (helper and maintenance functions, not exposed to the API)                                          | Keeps security helpers out of the public API surface                                                  |
 | File storage       | Supabase Storage (private buckets); the database stores **paths only**                                            | Section 12                                                                                            |
-| Extensions         | `pgcrypto` (UUIDs, PIN hashing), `citext` (case-insensitive email)                                                | Minimal set. No other extensions in MVP                                                               |
+| Extensions         | `pgcrypto` (UUIDs, PIN hashing), `citext` (case-insensitive email), both in the unexposed `extensions` schema    | Minimal set. No other extensions in MVP                                                               |
 | ORM                | None (ARCHITECTURE AD-03). Generated TypeScript types from the schema; transactional operations are SQL functions | One source of truth for the schema                                                                    |
 
 ### 1.1 Conventions that apply to every table
@@ -45,7 +45,7 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | Text limits                   | Every free-text column has a length `CHECK` (names ≤ 120, descriptions ≤ 2,000, reasons ≤ 500)                                                                                                                                                                                                                                   |
 | Soft delete                   | `active boolean` or a status value. Hard delete is blocked on money, entry, request history and audit tables                                                                                                                                                                                                                     |
 | Deletion of parents           | `ON DELETE RESTRICT` everywhere, except notification and subscription rows owned by a user                                                                                                                                                                                                                                       |
-| Updated timestamps            | `updated_at` maintained by a shared trigger                                                                                                                                                                                                                                                                                      |
+| Updated timestamps            | `updated_at` maintained by `private.set_updated_at()`                                                                                                                                                                                                                                                                           |
 | Double-submit protection      | The tables for user-created records (`visitor_entries`, `delivery_entries`, `billing_payments`, `service_requests`, `service_request_comments`) also carry `client_request_id uuid` (nullable); unique `(society_id, created_by, client_request_id)` where not null, so a repeated submission returns the original row (API 3.6) |
 | Naming of keys                | Primary `…_pkey`, foreign `…_fkey`, unique `…_key`, check `…_check`, index `…_idx`                                                                                                                                                                                                                                               |
 
@@ -361,7 +361,9 @@ A daily job inserts its key first; a duplicate means it already ran, so re-runni
 | window_start | timestamptz | PK part |                                                                                |
 | count        | int         | no      |                                                                                |
 
-Hashed keys (no raw emails/IPs). Cleared daily. No API access (ARCHITECTURE AD-05).
+Hashed keys (no raw emails/IPs). Cleared daily. No direct API access (ARCHITECTURE AD-05); a service-role-only atomic function increments fixed-window counters.
+
+The P1 operational-table migrations enforce the documented API boundaries: audit rows are immutable, error-log details are immutable while developer resolution fields may change, and jobs are visible only to their creator/admin/developer. The service role alone writes operational records; `job_run_keys` and `rate_limits` have no user-facing grants.
 
 ---
 
@@ -799,6 +801,10 @@ The application roles (`admin`, `guard`, resident, etc.) are **data** (`membersh
 
 Policies check **membership data in the database**, not JWT claims alone, so revoking a role or deactivating a person takes effect on the next request (PRD CORE-10).
 
+The initial helper migration defines fail-closed stubs. The membership migration replaces `is_member`, `has_role`, `module_enabled` and `society_writable` with checks against current database state; `is_developer` remains false until the developer MFA flow is implemented. Core is always enabled, while other modules require an enabled `module_configs` row. The `private` schema is not exposed through PostgREST. Only `authenticated` and `service_role` can execute the helpers; `anon` has no schema access.
+
+The base-table migration adds identity and society profile constraints, the ten module reference rows, and RLS/grants on the initial five tables. The membership migration adds self/manager-only reads and no direct membership writes. Society and module-config reads now require an active membership. Society/module configuration writes and developer registration remain reserved for later database functions or administrator migrations.
+
 ### 13.3 Write paths
 
 Two kinds, chosen per table:
@@ -866,7 +872,11 @@ Only `visitor_entries`, `delivery_entries` and `notifications` are published to 
 | Before risky production migrations | Take a manual backup (Section 15) first                                                                                                                                                                                                               |
 | Module introduction                | A module's tables ship in its own migrations; the `modules` row already exists, so it can be shipped **disabled** and enabled for a pilot society by the developer                                                                                    |
 
+The disposable-PostgreSQL integration suite enforces these catalog rules in CI. Its explicit global-table allowlist is `profiles`, `developers`, `societies`, `modules` and `rate_limits`; all other public tables must be society-scoped. Foreign-key indexes may be partial only when the predicate requires every indexed foreign-key column to be non-null. The append-only trigger check enumerates append-only tables and must be extended when one is added.
+
 Order of the first migrations: 1) extensions, schemas, shared triggers; 2) helper functions; 3) `profiles`, `developers`, `societies`, `modules`, `module_configs`; 4) structure and membership tables; 5) logs, jobs, notifications; 6) one migration group per module in the order Visitor → Delivery → Billing → Service Request.
+
+The first migration installs `pgcrypto` and `citext` in the unexposed `extensions` schema, creates the unexposed `private` schema, and defines `private.set_updated_at()` and `private.reject_append_only_mutation()` for tables added by later migrations. The latter raises SQLSTATE `55000` on either update or delete.
 
 ### 14.2 Reference data (in migrations, never in seed scripts)
 
