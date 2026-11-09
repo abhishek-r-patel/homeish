@@ -21,7 +21,7 @@ Open http://localhost:3000 for the public marketing page or http://demo.localhos
 
 ## Website, society addresses and beta
 
-Requested hosting topology (2026-11-09), following Civic Pulse's two-project pattern. **Live deployment is paused by the owner.** `homeish.vercel.app` is attached to the `homeish` Vercel project (2026-11-09); both projects are paused, so no Homeish site is served yet.
+Approved hosting topology (2026-11-09), following Civic Pulse's two-project pattern. The owner approved resuming scaffold hosting and automatic deployments through beta, then main. The Vercel team is `arp-dev`. `homeish.vercel.app` is attached to `homeish`; the currently attached beta address is `beta-homeish.vercel.app`. Nested demo/beta addresses below remain planned, not verified live addresses.
 
 | Host | Vercel project | Git branch | Purpose |
 |---|---|---|---|
@@ -38,19 +38,19 @@ For local beta, stop the shared dev server, set `$env:APP_DEPLOYMENT='beta'` and
 
 ### Release and hosting setup
 
-Feature branches → pull request into `beta` → verify the beta site → merge `beta` into `main`. Both Vercel projects use their **Production deployment target**, but only `homeish` is the eventual live-society app. Set each project's Production branch accordingly. CI runs for both release branches. `vercel.json` disables feature-branch deployments and, while hosting is paused, `main` and `beta` deployments too (set them back to `true` when resuming); the ignored-build script prevents each project building the other release branch. Configure `APP_DEPLOYMENT` in both Production and Preview targets before the first deployment.
+Feature branches → pull request into `beta` → automatic deployment to `beta-homeish` → verify the beta site → merge `beta` into `main` → automatic deployment to `homeish`. Both Vercel projects use their **Production deployment target**, but only `homeish` is the eventual live-society app. Their Production branches are `beta` and `main` respectively. CI runs for pull requests and both release branches. `vercel.json` enables `main` and `beta` and disables feature-branch deployments; the ignored-build script prevents each project building the other release branch. Keep Preview branch tracking disabled and automatic Production domain assignment enabled in both projects. Configure `APP_DEPLOYMENT=beta` in `beta-homeish` and `APP_DEPLOYMENT=shared` in `homeish`. A direct push to either release branch also triggers deployment; this configuration does not itself enforce pull-request-only merges or wait for CI before publishing.
 
 Attach only the bare website and demo hostnames to `homeish`, and the beta hostname to `beta-homeish`; verify DNS/TLS and availability rather than assuming an alias is reserved. The Maplewood host may be attached to `homeish` when hosting resumes (it serves only the disabled placeholder); do not attach other society hosts yet. Connect both projects to the same GitHub repository. Never copy Civic Pulse credentials or configuration into Homeish.
 
 Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_APP_ENV=preview` with explicitly nonfunctional scaffold values (reserved `.invalid` backend URL and placeholder integration keys). This does **not** make either project production-ready; the Vercel target name is not an app-readiness claim. Before enabling workflows, provision isolated staging/beta and production Supabase projects, give demo a synthetic-only backend/reset boundary, configure real integrations, set the correct application environment, and verify isolation. Never reset a shared production database or onboard Maplewood as part of demo setup.
 
-### Verified setup and deployment pause (2026-11-09)
+### Hosting setup and resume approval (2026-11-09)
 
 - Implementation and documentation are committed and pushed to `main` and `beta` in the same GitHub repository.
 - The GitHub repository is `abhishek-r-patel/homeish`. Vercel projects `homeish` and `beta-homeish` are connected to it, with Production branches `main` and `beta` respectively, Next.js preset and Node.js 24.
 - `homeish.vercel.app` is attached to `homeish` and `beta-homeish.vercel.app` to `beta-homeish`. The originally requested product address belonged to another Vercel project, which led to the Homeish name (PRD D-01).
-- Despite the dashboard setting "Git deployments disabled", pushes to `main`/`beta` on 2026-11-09 created scaffold deployments under the earlier name (no backend or real data). The owner then had both projects **paused** and `vercel.json` changed to block `main`/`beta` deployments. No demo/beta nested domains or real society hosts have been attached.
-- Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. `APP_BASE_DOMAIN` is `homeish.vercel.app` in both projects; `NEXT_PUBLIC_APP_URL` is `https://homeish.vercel.app` (shared) and `https://beta.homeish.vercel.app` (beta). Before resuming: re-enable `main`/`beta` in `vercel.json`, unpause the projects, attach/verify the remaining hosts, and verify HTTPS and host isolation after deployment.
+- Earlier pushes created scaffold deployments under the previous name; the owner temporarily paused both projects. The owner subsequently approved resuming both projects, committing/pushing this configuration, and publishing the current feature branch through `beta` and then `main`. Release-branch Git deployments are now enabled in repository configuration. No demo/beta nested domains or real society hosts have been attached.
+- Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. `APP_BASE_DOMAIN` is `homeish.vercel.app` in both projects. The planned canonical beta URL is `https://beta.homeish.vercel.app`; use the attached `https://beta-homeish.vercel.app` address for current hosted testing. Verify deployment success, HTTPS and host isolation after merging. Attaching additional domains and activating societies remain separate work.
 - Local verification passed: formatting, lint, type checking, 33 unit tests, four browser tests (including automated accessibility and the exact 15-minute reset), and production build. This is not hosted verification, manual assistive-technology testing or launch approval.
 
 ## Checks
