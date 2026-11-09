@@ -18,6 +18,8 @@
 
 ## 1. Database Technology
 
+D-34 environment boundary (approved 2026-11-09): society subdomains do not change D-24's shared live database/RLS design. Beta must have a separate synthetic-only backend. The public demo needs a synthetic-only reset boundary before database-backed writes are introduced. Current marketing/demo/beta entry pages make no database calls; demo state is browser memory only. Maplewood and all real society provisioning, including hostnames, are deferred until MVP and a future create-society script. No database projects, migrations, live society records or reset jobs are created by this website work.
+
 | Item | Choice | Reason |
 |---|---|---|
 | Engine | **PostgreSQL** (managed by **Supabase**) | Approved stack (ARCHITECTURE AD-01). Relational integrity for ledgers and tenants; row-level security |

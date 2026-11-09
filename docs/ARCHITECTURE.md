@@ -322,7 +322,7 @@ dwello/
 ├─ public/                        Dwello logo, manifest, icons, service worker
 ├─ src/
 │  ├─ app/                        Next.js routes only (thin)
-│  │  ├─ (auth)/                  S-01..S-04; currently the Dwello brand entry
+│  │  ├─ (auth)/                  S-01..S-04; thin host-aware root entry
 │  │  ├─ (resident)/              R-xx screens, mounted per module
 │  │  ├─ (guard)/                 G-xx screens
 │  │  ├─ (admin)/                 A-xx screens
@@ -334,9 +334,11 @@ dwello/
 │  │     ├─ files/                Signed URL issuance, PDF downloads
 │  │     └─ health/               Health check (NFR-11)
 │  ├─ instrumentation.ts          Server environment validation on startup
+│  ├─ proxy.ts                    Host allow-list and non-public noindex headers
 │  ├─ core/                       Mandatory platform (cannot be disabled)
 │  │  ├─ auth/                    Session, request context, OTP flow helpers
 │  │  ├─ tenancy/                 Society, membership, active-society handling
+│  │  ├─ website/                 Marketing copy/screens, society-address form, synthetic preview
 │  │  ├─ permissions/             Role types, shared helpers
 │  │  ├─ modules/                 Module registry, enabled-modules lookup, guards
 │  │  ├─ notifications/           In-app + push dispatch, inbox
@@ -369,7 +371,7 @@ dwello/
 └─ vitest.config.ts
 ```
 
-Foundation status: the Next.js shell, route-group boundaries, health route, shared Button/TextInput primitives, design tokens, environment validation and baseline CI checks are implemented. Module routes, database configuration and role shells are still pending their planned phases.
+Foundation status: the Next.js shell, route-group boundaries, health route, shared Button/TextInput primitives, design tokens, environment validation and baseline CI checks are implemented. Public marketing, host allow-listing, browser-only synthetic preview and beta entry are also implemented. Real society hosts (including Maplewood), module routes, database configuration and role shells are still pending their planned phases.
 
 Rules:
 - `app/` contains routing and layout only; page files import from `modules/*` and `core/*`.
@@ -583,11 +585,18 @@ Threats specifically considered: cross-tenant ID tampering, role escalation via 
 ## 16. Environment Configuration
 
 ### 16.1 Environments
+
+Approved D-34 hosting: shared Vercel project `dwello` builds `main` and serves the bare product host and `demo` host. Separate project `beta-dwello` builds `beta` and serves `beta.dwello.vercel.app`. Each uses Vercel's Production target; beta is nevertheless a testing environment. Real society hosts are deferred until MVP and a future create-society script; do not attach Maplewood now. Feature branches deploy to neither project; merge into beta for hosted testing, then merge verified beta into main. This replaces the earlier per-pull-request deployment assumption below.
+
+`APP_DEPLOYMENT` selects `shared` or `beta`; `APP_BASE_DOMAIN` defines the parent host. `core/config/host-routing.ts` accepts exact known hosts and provider-supplied deployment aliases only. Localhost variants are accepted only outside Vercel. Proxy rejects unknown hosts before app routes; dynamic rendering and private/no-store responses prevent cross-host page caching. Page rendering resolves the host again rather than trusting a client-supplied tenant header. This is entry routing only: future authenticated operations still require membership checks and RLS.
+
+Maplewood is a real society but is not provisioned: no hostname, onboarding, identity, login or data access is created. The public demo is currently an in-memory synthetic illustration, reset every 15 minutes while open or manually. No reset touches a database. Full demo writes/reset jobs require the backend foundation and a verified synthetic-only isolation boundary. Beta requires its own Supabase project before connected testing; production society data is never copied down. No backend is provisioned by this entry-page implementation. Hosted scaffold pages use application environment `preview` until real integrations and launch gates are complete; do not weaken staging/production validation to deploy them.
+
 | Environment | Purpose | Backend | Data |
 |---|---|---|---|
 | Local | Development | Supabase local stack (CLI) | Synthetic seed |
-| Preview | Per-pull-request deploys | Shared **staging** database | Synthetic |
-| Staging | Pre-release UAT | Own Supabase project | Synthetic |
+| Preview | Entry-page scaffold or future explicitly enabled previews | None for scaffold; isolated synthetic backend before workflows | Synthetic |
+| Staging / beta | Pre-release UAT on the beta branch/project | Own Supabase project (not yet configured) | Synthetic |
 | Production | Live societies | Own Supabase project | Real; never copied down |
 
 Separate Supabase projects, email sender settings and Sentry environments per environment.
@@ -701,7 +710,7 @@ Production project created and backups verified → sender email domain verified
 |---|---|
 | AA-01 | Guards use the installed PWA on an Android phone/tablet with camera and Web Push support |
 | AA-02 | Developer sessions are shorter than society sessions and require recent MFA |
-| AA-03 | One production domain; developer console is isolated by path/cookie scope or a subdomain |
+| AA-03 | One parent product domain with marketing, demo and society subdomains (D-34); beta has a separate project/branch; developer console remains isolated by path/cookie scope or subdomain |
 | AA-04 | Society count and size stay within PRD NFR-4 for the first year; one database instance suffices |
 | AA-05 | Realtime delivers status in under ~5 seconds; polling fallback covers outages |
 | AA-06 | Brevo's sending limits (and Supabase's custom email settings) support the expected login-code volume; a paid plan may be needed as societies grow |

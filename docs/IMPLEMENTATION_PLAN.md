@@ -108,6 +108,9 @@ A module is **done** only when all of the following are true:
 | P0.6 | Create the continuous-integration pipeline: lint, typecheck, unit, database tests, build; checks for secrets in the repo and for secret-looking names with the public prefix | M |
 | P0.7 | Connect Vercel preview deployments (staging variables only, no secrets in the repo) and a Supabase staging project | S |
 | P0.8 | Create the project README (setup, commands, structure, document links) | S |
+| P0.9 | D-34: build the marketing root, allow-listed demo and isolated beta entry; synthetic browser preview with resets; configure main/beta hosting and document actual external verification | M |
+
+P0.9 local implementation includes public marketing, exact-host routing, an illustrative browser-memory demo and beta entry. It does not complete P1-P4 or activate real workflows. The owner approved implementation, documentation and live Git/Vercel setup on 2026-11-09, then deferred all Maplewood provisioning (including its hostname) until a future create-society script after MVP. External deployment status is recorded in README after verification. Full interactive society demo/reset jobs and real society activation remain gated on backend/auth/module completion and isolation tests. No real society data is seeded.
 
 **Files/modules affected:** repository root configuration, `src/core/config/`, `supabase/`, `tests/`, `.github/workflows/`, README.
 

@@ -439,6 +439,9 @@ Names only; values are kept in the host's secret store and never committed (ARCH
 |---|---|---|---|
 | `NEXT_PUBLIC_APP_ENV` | Public | `local`, `preview`, `staging`, `production` | All |
 | `NEXT_PUBLIC_APP_URL` | Public | Base URL (used to validate origins and build links) | All |
+| `APP_DEPLOYMENT` | Server | `shared` (default) or `beta`; restricts accepted hosts and Vercel release branch | Set explicitly on Vercel |
+| `APP_BASE_DOMAIN` | Server | Parent hostname without scheme/port; defaults to `dwello.vercel.app` | Optional override |
+| `VERCEL`, `VERCEL_URL`, `VERCEL_PROJECT_PRODUCTION_URL` | Server, provider-injected | Disable local hosts on Vercel; allow exact deployment/project aliases for their own environment only | Vercel |
 | `APP_VERSION` | Server (injected at build) | Version shown in the error log | All |
 | `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase project URL | All |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Public client key; safe because the database rules decide access | All |
@@ -462,6 +465,8 @@ Notes:
 - Limits, retention periods and defaults are constants in code and per-society settings in the database, not environment variables **[APA-03]** (this supersedes the "Feature" row in ARCHITECTURE 16.2).
 - Startup validates this list with a schema; a missing or malformed value fails fast with a clear message (names only, never values).
 - Each environment (local, preview, staging, production) uses its own keys and its own Supabase project; production secrets are never used elsewhere.
+- The public website/entry scaffold makes no backend calls. Hosted scaffolds may use `preview` with nonfunctional `.invalid` backend URLs and placeholder keys, never real society credentials. Do not treat this as staging/production readiness. Full demo and beta backends remain unconfigured.
+- D-34 host routing adds no authenticated operations, society lookup API or reset endpoint. Unknown hosts return 404; non-marketing hosts carry `X-Robots-Tag: noindex, nofollow`; host-routed pages are private/no-store. Maplewood onboarding and login remain unavailable. A hostname is not a society authorization credential.
 
 ---
 
