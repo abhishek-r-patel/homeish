@@ -62,7 +62,7 @@ npm run e2e
 npm run build
 ```
 
-`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks and a public-environment-name check. Playwright runs the browser smoke and accessibility check.
+`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks and a public-environment-name check. Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
 
 ## Project structure
 
