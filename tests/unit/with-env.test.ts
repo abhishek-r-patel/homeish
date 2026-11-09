@@ -50,6 +50,20 @@ it('passes the command exit code through', () => {
   expect(run('testdb', 'node', '-e', 'process.exit(3)').status).toBe(3);
 });
 
+it('passes arguments with spaces and shell characters unchanged', () => {
+  writeFileSync(join(directory, '.env.testdb.local'), 'ALPHA=a\nBETA=b\n');
+  const argument = "it's (a) test & more";
+  const result = run(
+    'testdb',
+    'node',
+    '-e',
+    'console.log(JSON.stringify(process.argv[1]))',
+    argument,
+  );
+  expect(result.status).toBe(0);
+  expect(result.stdout).toContain(JSON.stringify(argument));
+});
+
 it('fails when the profile file is missing', () => {
   const result = run('demo', 'node', 'print.mjs');
   expect(result.status).toBe(1);
