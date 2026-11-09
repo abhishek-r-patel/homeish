@@ -41,10 +41,16 @@ if (missingNames.length > 0) {
   fail(`${profileFile} is missing: ${missingNames.join(', ')}`);
 }
 
+// The command runs through a shell (cmd.exe on Windows, sh elsewhere), so quote shell syntax.
 function quote(argument) {
-  return /[\s"]/.test(argument)
-    ? `"${argument.replaceAll('"', '\\"')}"`
-    : argument;
+  if (process.platform === 'win32') {
+    return /[\s"&|<>^()]/.test(argument)
+      ? `"${argument.replaceAll('"', '\\"')}"`
+      : argument;
+  }
+  return /^[\w@%+=:,./-]+$/.test(argument)
+    ? argument
+    : `'${argument.replaceAll("'", "'\\''")}'`;
 }
 
 console.log(`Using environment profile: ${profileFile}`);
