@@ -1,8 +1,8 @@
-# Dwello — API Design (API.md)
+# Homeish — API Design (API.md)
 
 | Field | Value |
 |---|---|
-| Product | Dwello (PRD D-01 approved 2026-11-09) |
+| Product | Homeish (PRD D-01 approved 2026-11-09) |
 | Version | 0.1 (Draft for approval) |
 | Date | 2026-11-09 |
 | Depends on | [PRD.md](./PRD.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [DESIGN.md](./DESIGN.md) |
@@ -18,7 +18,7 @@
 
 ## 1. Principles
 
-1. **There is no public API.** Dwello does not offer an API to partners or other apps (PRD out of scope). Everything below is internal, plus the connections to outside services.
+1. **There is no public API.** Homeish does not offer an API to partners or other apps (PRD out of scope). Everything below is internal, plus the connections to outside services.
 2. **The browser is untrusted.** Every operation re-verifies who the caller is, which society they act in, whether the module is on, their role and ownership of the data — on the server and again in the database (ARCHITECTURE 8.2).
 3. **Few doors.** Normal pages and forms use *server operations* (Section 5). A small set of HTTP routes exists only where an outside system, a file or a scheduler needs one (Section 6).
 4. **One shape for answers and errors** across every operation (Section 3).
@@ -440,7 +440,7 @@ Names only; values are kept in the host's secret store and never committed (ARCH
 | `NEXT_PUBLIC_APP_ENV` | Public | `local`, `preview`, `staging`, `production` | All |
 | `NEXT_PUBLIC_APP_URL` | Public | Base URL (used to validate origins and build links) | All |
 | `APP_DEPLOYMENT` | Server | `shared` (default) or `beta`; restricts accepted hosts and Vercel release branch | Set explicitly on Vercel |
-| `APP_BASE_DOMAIN` | Server | Parent hostname without scheme/port; defaults to `dwello.vercel.app` | Optional override |
+| `APP_BASE_DOMAIN` | Server | Parent hostname without scheme/port; defaults to `homeish.vercel.app` | Optional override |
 | `VERCEL`, `VERCEL_URL`, `VERCEL_PROJECT_PRODUCTION_URL` | Server, provider-injected | Disable local hosts on Vercel; allow exact deployment/project aliases for their own environment only | Vercel |
 | `APP_VERSION` | Server (injected at build) | Version shown in the error log | All |
 | `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase project URL | All |
