@@ -86,6 +86,14 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 ## 4. Core Platform Module (`core`)
 
+### 4.0 Public website, society hosts and beta (D-34)
+
+**Approved 2026-11-09:** `dwello.vercel.app` is the public marketing website, not a login screen. `demo.dwello.vercel.app` is a public interactive synthetic demo, periodically reset. Future societies use their own configured subdomains of the same application, not separate branches. **Owner clarification:** do not provision or onboard Maplewood now, including its hostname. The owner will do that through a future create-society script once MVP is ready; Maplewood is an address example only.
+
+`beta.dwello.vercel.app` belongs to a separate Vercel project deploying the `beta` branch for testing and later new features. Verified changes are merged into `main` for the shared website/society deployment. Beta must never use real society data or the production database. This preserves D-24: live societies share a database with enforced society isolation; it does not copy Civic Pulse's per-society database model.
+
+Current delivery is the marketing page, host allow-list, beta entry and a browser-only synthetic demo illustration (manual and 15-minute resets). Authentication, actual modules, isolated backend provisioning and database-backed demo resets remain prerequisites for a full working demo or any real society activation. All real society hosts, including Maplewood, fail closed as unconfigured. No society directory is published.
+
 ### 4.1 Features and Functional Requirements
 
 **Authentication & Accounts**
@@ -780,6 +788,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 | D-31 | Protection of society UPI details | **Approved 2026-11-09:** admin edits; audited; admins and committee notified; residents see last-changed date | Closed |
 | D-32 | How a UPI payment is marked paid | **Approved 2026-11-09:** resident submits UTR (optional screenshot); admin confirms or rejects | Closed |
 | D-33 | First-ten society offer | **Approved 2026-11-09:** first ten live societies pay no Dwello subscription; production hosting remains separately funded; decide later pricing before society eleven is invited | Closed |
+| D-34 | Public website, society subdomains and beta | **Approved 2026-11-09:** public marketing root; interactive synthetic demo with periodic resets; future society subdomains, no Maplewood onboarding/host until post-MVP create-society script; separate beta Vercel project/branch; beta-to-main release flow | Closed |
 | D-29 | Dues ownership on tenant/owner change | **Approved 2026-11-09:** balance stays with the unit and is billed to the current owner | Closed |
 
 ---

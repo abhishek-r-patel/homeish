@@ -728,10 +728,18 @@ Process: automated checks (axe or equivalent) on every page in CI do **not** rep
 
 ---
 
-## 18. Out of Scope (Design)
+## 18. Public website and environment entries
+
+Approved 2026-11-09: the bare product host is a marketing website, separate from society sign-in. It reuses the paper, ink, blue, Manrope, Sora and selected logo direction. Sections: product introduction, planned MVP modules, setup steps, society-address entry and FAQs. Do not invent customer counts, testimonials, availability, contact details or paid pricing.
+
+Website-only tokens: `marketing-display` = 40px mobile / 64px expanded, weight 700, line height 1.1; `content-wide` = 1200px. All other website values reuse existing tokens. Navigation wraps on phones; links and controls have 48px minimum targets; provide a skip link.
+
+The demo is labelled synthetic and an illustrative preview, with browser-memory interactions, manual reset and an automatic reset every 15 minutes while open. It is not a visitor module or a connected database. No real society entry, including Maplewood, is provisioned before MVP and the future create-society script. Unconfigured society hosts return 404. Beta shows a testing-only entry, never production society data. Non-marketing hosts are not indexed.
+
+### 18.1 Out of Scope (Design)
 
 - Dark theme (DD-01), per-society colour theming or white-labelling beyond logo and name
-- Illustrations, mascots, onboarding carousels, marketing/landing site design
+- Illustrations, mascots, onboarding carousels
 - Swipe/long-press gesture actions, drag-and-drop interactions
 - Animated charts, data-visualisation library
 - Native-app-specific design (platform widgets) unless PRD D-23 changes

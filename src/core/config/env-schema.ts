@@ -3,6 +3,28 @@ import { z } from 'zod';
 
 export type EnvironmentSource = Readonly<Record<string, string | undefined>>;
 
+const hostnameSchema = z
+  .string()
+  .regex(/^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/);
+
+const routingSchema = z.object({
+  APP_DEPLOYMENT: z.enum(['shared', 'beta']).default('shared'),
+  APP_BASE_DOMAIN: hostnameSchema.default('dwello.vercel.app'),
+  VERCEL_URL: hostnameSchema.optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: hostnameSchema.optional(),
+});
+
+export function parseRoutingEnvironment(source: EnvironmentSource) {
+  const result = routingSchema.safeParse(source);
+  if (!result.success) {
+    reportInvalidVariables(result.error.issues);
+  }
+  return {
+    ...result.data,
+    allowLocalHosts: source.VERCEL !== '1',
+  };
+}
+
 const publicSchema = z.object({
   NEXT_PUBLIC_APP_ENV: z.enum(['local', 'preview', 'staging', 'production']),
   NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -131,5 +153,9 @@ export function parseServerEnvironment(source: EnvironmentSource) {
     );
   }
 
-  return { public: publicEnvironment, server: serverEnvironment };
+  return {
+    public: publicEnvironment,
+    server: serverEnvironment,
+    routing: parseRoutingEnvironment(source),
+  };
 }
