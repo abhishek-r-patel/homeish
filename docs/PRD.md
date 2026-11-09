@@ -94,6 +94,8 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 Current delivery is the marketing page, host allow-list, beta entry and a browser-only synthetic demo illustration (manual and 15-minute resets). Authentication, actual modules, isolated backend provisioning and database-backed demo resets remain prerequisites for a full working demo or any real society activation. All real society hosts, including Maplewood, fail closed as unconfigured. No society directory is published.
 
+**Hosting gate, 2026-11-09:** Vercel reports the requested `dwello.vercel.app` is assigned to another project. The owner paused live deployment rather than choosing an alternative. Code and `main`/`beta` branches are retained; both Git-linked Vercel projects exist but automatic deployments are disabled and no site is deployed. Actual parent-domain selection is still open; the example URLs above are not confirmed live addresses.
+
 ### 4.1 Features and Functional Requirements
 
 **Authentication & Accounts**
