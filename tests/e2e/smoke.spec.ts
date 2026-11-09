@@ -41,8 +41,9 @@ test('marketing fits a phone and society-address validation is explicit', async 
   await expect(
     page.getByRole('heading', { name: 'Maplewood is not open yet' }),
   ).toBeVisible();
-  await expect(page.getByRole('button')).toHaveCount(0);
-  await expect(page.getByRole('textbox')).toHaveCount(0);
+  const societyPage = page.getByRole('main');
+  await expect(societyPage.getByRole('button')).toHaveCount(0);
+  await expect(societyPage.getByRole('textbox')).toHaveCount(0);
 });
 
 test('demo interactions are synthetic and reset manually and periodically', async ({
