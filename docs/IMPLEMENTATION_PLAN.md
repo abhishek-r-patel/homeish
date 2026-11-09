@@ -112,6 +112,8 @@ A module is **done** only when all of the following are true:
 
 P0.9 local implementation includes public marketing, exact-host routing, an illustrative browser-memory demo and beta entry. It does not complete P1-P4 or activate real workflows. The owner approved implementation, documentation and live Git/Vercel setup on 2026-11-09, then deferred all Maplewood provisioning (including its hostname) until a future create-society script after MVP. External deployment status is recorded in README after verification. Full interactive society demo/reset jobs and real society activation remain gated on backend/auth/module completion and isolation tests. No real society data is seeded.
 
+**P0.9 status, 2026-11-09:** code/docs committed and pushed to `main` and `beta`; formatting/lint/type checks, 33 unit tests, four browser tests and production build pass locally. Both Vercel projects are Git-linked with correct release branches and scaffold-only configuration. Hosting is **paused by the owner**: requested `dwello.vercel.app` belongs to another project, no fallback has been approved, both projects have automatic Git deployments disabled and zero deployments. No nested demo/beta or Maplewood host is attached. Domain selection, hosted HTTPS/routing verification and final launch approval remain open.
+
 **Files/modules affected:** repository root configuration, `src/core/config/`, `supabase/`, `tests/`, `.github/workflows/`, README.
 
 **Database/API changes:** none (empty migration folder and generated types only).
@@ -122,7 +124,7 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 - A fresh checkout runs the app, the unit tests, the database tests and the end-to-end smoke test with the documented commands.
 - The pipeline is green on the main branch and blocks bad changes.
 - No secrets exist in the repository; the example file contains names and placeholders only.
-- A preview deployment loads a blank page.
+- When hosted deployment is resumed, the approved website/demo/beta entry pages load on their selected hosts and unknown society hosts fail closed. No live deployment is currently approved.
 
 ---
 

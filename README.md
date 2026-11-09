@@ -19,7 +19,7 @@ Open http://localhost:3000 for the public marketing page or http://demo.localhos
 
 ## Website, society addresses and beta
 
-Approved hosting topology (2026-11-09), following Civic Pulse's two-project pattern:
+Requested hosting topology (2026-11-09), following Civic Pulse's two-project pattern. **Live deployment is paused by the owner; the requested parent domain is unavailable.**
 
 | Host | Vercel project | Git branch | Purpose |
 |---|---|---|---|
@@ -42,7 +42,14 @@ Attach only the bare website and demo hostnames to `dwello`, and the beta hostna
 
 Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_APP_ENV=preview` with explicitly nonfunctional scaffold values (reserved `.invalid` backend URL and placeholder integration keys). This does **not** make either project production-ready; the Vercel target name is not an app-readiness claim. Before enabling workflows, provision isolated staging/beta and production Supabase projects, give demo a synthetic-only backend/reset boundary, configure real integrations, set the correct application environment, and verify isolation. Never reset a shared production database or onboard Maplewood as part of demo setup.
 
-Live deployment status is recorded below after external verification; the topology alone is not proof of deployment.
+### Verified setup and deployment pause (2026-11-09)
+
+- Implementation and documentation are committed and pushed to `main` and `beta` in the same GitHub repository.
+- Vercel projects `dwello` and `beta-dwello` exist, are connected to the repository, and have Production branches `main` and `beta` respectively, Next.js preset and Node.js 24.
+- `dwello.vercel.app` could not be attached: Vercel reports it belongs to another project. The automatically assigned shared address is `dwello-self.vercel.app`; beta's default address is `beta-dwello.vercel.app`. Neither is a deployed site.
+- The owner chose **pause live deployment**, not the fallback domain. Both projects have automatic Git deployments disabled and zero deployments. No demo/beta nested domains or real society hosts have been attached.
+- Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. Before resuming, choose an available parent domain, update `APP_BASE_DOMAIN` and each project's `NEXT_PUBLIC_APP_URL`, attach/verify the selected hosts, re-enable Git deployments, and verify HTTPS and host isolation after deployment.
+- Local verification passed: formatting, lint, type checking, 33 unit tests, four browser tests (including automated accessibility and the exact 15-minute reset), and production build. This is not hosted verification, manual assistive-technology testing or launch approval.
 
 ## Checks
 
