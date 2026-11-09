@@ -324,7 +324,7 @@ Single repository, single Next.js app. Module folders are self-contained and reg
 ```
 homeish/
 ├─ .env.example                   Environment variable names and placeholders only
-├─ .github/workflows/ci.yml       Static checks, browser smoke and build
+├─ .github/workflows/ci.yml       Parallel jobs: secret scan, static checks and build; clean-database SQL tests; browser smoke
 ├─ .gitignore
 ├─ .nvmrc
 ├─ .prettierrc.json
