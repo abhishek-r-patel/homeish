@@ -8,7 +8,7 @@ export function proxy(request: NextRequest) {
     request.headers.get('host'),
     parseRoutingEnvironment(process.env),
   );
-  if (!surface) {
+  if (!surface || (surface === 'society' && request.nextUrl.pathname !== '/')) {
     return new NextResponse('This Dwello address is not configured.', {
       status: 404,
       headers: {

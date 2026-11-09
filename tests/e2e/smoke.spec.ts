@@ -39,7 +39,7 @@ test('marketing fits a phone and society-address validation is explicit', async 
   await page.getByRole('button', { name: 'Open Society' }).click();
   await expect(page).toHaveURL('http://maplewood.localhost:3000/');
   await expect(
-    page.getByText('This Dwello address is not configured.'),
+    page.getByRole('heading', { name: 'Maplewood is not open yet' }),
   ).toBeVisible();
   await expect(page.getByRole('button')).toHaveCount(0);
   await expect(page.getByRole('textbox')).toHaveCount(0);
@@ -72,15 +72,17 @@ test('demo interactions are synthetic and reset manually and periodically', asyn
 test('rejects unconfigured hosts and beta on the shared deployment', async ({
   request,
 }) => {
-  for (const host of [
-    'unknown.dwello.vercel.app',
-    'beta.dwello.vercel.app',
-    'maplewood.dwello.vercel.app',
-  ]) {
+  for (const host of ['unknown.dwello.vercel.app', 'beta.dwello.vercel.app']) {
     const response = await request.get('/', { headers: { Host: host } });
     expect(response.status()).toBe(404);
     expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow');
   }
+  const maplewood = await request.get('/', {
+    headers: { Host: 'maplewood.dwello.vercel.app' },
+  });
+  expect(maplewood.status()).toBe(200);
+  expect(maplewood.headers()['x-robots-tag']).toBe('noindex, nofollow');
+  expect(await maplewood.text()).toContain('Maplewood is not open yet');
   const demo = await request.get('/', {
     headers: {
       Host: 'demo.dwello.vercel.app',

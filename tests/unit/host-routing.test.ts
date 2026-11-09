@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { parseRoutingEnvironment } from '../../src/core/config/env-schema';
 import {
   resolveSiteSurface,
+  resolveSociety,
   siteOrigin,
 } from '../../src/core/config/host-routing';
 
 const shared = parseRoutingEnvironment({ VERCEL: '1' });
 const beta = parseRoutingEnvironment({ VERCEL: '1', APP_DEPLOYMENT: 'beta' });
+const localBetaFor = () => parseRoutingEnvironment({ APP_DEPLOYMENT: 'beta' });
 
 describe('host routing', () => {
   it.each([
@@ -28,7 +30,6 @@ describe('host routing', () => {
     null,
     '',
     'unknown.dwello.vercel.app',
-    'maplewood.dwello.vercel.app',
     'demo.dwello.vercel.app.attacker.test',
     'attacker.test',
     'https://dwello.vercel.app',
@@ -43,6 +44,26 @@ describe('host routing', () => {
   ])('rejects unknown or malformed host %s on Vercel', (host) => {
     expect(resolveSiteSurface(host, shared)).toBeNull();
     expect(resolveSiteSurface(host, beta)).toBeNull();
+  });
+
+  it('serves reserved Maplewood only as a disabled shared-app society', () => {
+    expect(resolveSiteSurface('maplewood.dwello.vercel.app', shared)).toBe(
+      'society',
+    );
+    expect(resolveSociety('maplewood.dwello.vercel.app', shared)).toEqual({
+      slug: 'maplewood',
+      name: 'Maplewood',
+      status: 'disabled',
+    });
+    expect(resolveSiteSurface('maplewood.dwello.vercel.app', beta)).toBeNull();
+    for (const host of [
+      'maplewood.dwello.vercel.app:3000',
+      'maplewood.localhost:3000',
+      'x.maplewood.dwello.vercel.app',
+      'maplewood.dwello.vercel.app.attacker.test',
+    ]) {
+      expect(resolveSiteSurface(host, shared)).toBeNull();
+    }
   });
 
   it('accepts only explicitly supplied deployment aliases', () => {
@@ -69,7 +90,12 @@ describe('host routing', () => {
     expect(resolveSiteSurface('127.0.0.1:3000', local)).toBe('website');
     expect(resolveSiteSurface('[::1]:3000', local)).toBe('website');
     expect(resolveSiteSurface('demo.localhost:3000', local)).toBe('demo');
-    expect(resolveSiteSurface('maplewood.localhost:3000', local)).toBeNull();
+    expect(resolveSiteSurface('maplewood.localhost:3000', local)).toBe(
+      'society',
+    );
+    expect(
+      resolveSiteSurface('maplewood.localhost:3000', localBetaFor()),
+    ).toBeNull();
     expect(resolveSiteSurface('beta.localhost:3000', local)).toBeNull();
     expect(resolveSiteSurface('unknown.localhost:3000', local)).toBeNull();
     const localBeta = parseRoutingEnvironment({ APP_DEPLOYMENT: 'beta' });

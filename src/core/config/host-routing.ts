@@ -1,8 +1,9 @@
 // Resolve explicit public hosts without treating a hostname as authorization.
 import type { parseRoutingEnvironment } from './env-schema';
+import { findReservedSociety, type ReservedSociety } from './societies';
 
 export type RoutingConfiguration = ReturnType<typeof parseRoutingEnvironment>;
-export type SiteSurface = 'website' | 'demo' | 'beta';
+export type SiteSurface = 'website' | 'demo' | 'beta' | 'society';
 
 export function parseRequestHost(host: string | null) {
   const match = host?.match(
@@ -14,12 +15,32 @@ export function parseRequestHost(host: string | null) {
   return { hostname: match[1].toLowerCase(), port: match[2] };
 }
 
+// Societies live only on the shared deployment; beta never serves society hosts.
+export function resolveSociety(
+  host: string | null,
+  configuration: RoutingConfiguration,
+): ReservedSociety | null {
+  const parsed = parseRequestHost(host);
+  if (!parsed || configuration.APP_DEPLOYMENT === 'beta') return null;
+  const { hostname, port } = parsed;
+  let suffix: string | null = null;
+  if (configuration.allowLocalHosts && hostname.endsWith('.localhost')) {
+    suffix = '.localhost';
+  } else if (!port || port === '443') {
+    suffix = `.${configuration.APP_BASE_DOMAIN}`;
+  }
+  if (!suffix || !hostname.endsWith(suffix)) return null;
+  const slug = hostname.slice(0, -suffix.length);
+  return slug.includes('.') ? null : findReservedSociety(slug);
+}
+
 export function resolveSiteSurface(
   host: string | null,
   configuration: RoutingConfiguration,
 ): SiteSurface | null {
   const parsed = parseRequestHost(host);
   if (!parsed) return null;
+  if (resolveSociety(host, configuration)) return 'society';
   const { hostname, port } = parsed;
   const isBeta = configuration.APP_DEPLOYMENT === 'beta';
   const base = configuration.APP_BASE_DOMAIN;
@@ -47,7 +68,7 @@ export function resolveSiteSurface(
 }
 
 export function siteOrigin(
-  surface: SiteSurface,
+  surface: Exclude<SiteSurface, 'society'>,
   host: string,
   configuration: RoutingConfiguration,
 ): string {
