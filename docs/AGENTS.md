@@ -223,7 +223,7 @@ Follow ARCHITECTURE 18. A change is not finished until its tests exist and pass.
 |---|---|
 | Pure logic (money, dates, late fees, allocation, permission map, schemas, scrubber, error mapping) | Unit tests with edge cases (zero, boundary dates, rounding, duplicates) |
 | Table, policy, function or migration | Database tests: tenant isolation, each role/matrix cell allowed and denied, module-disabled denial, uniqueness and check rules, append-only protection, idempotency, concurrency (e.g., two approvers, double confirm) |
-| Service or server operation | Integration tests through the real local database with fakes for outside services |
+| Service or server operation | Integration tests through the real development database (ARCHITECTURE AD-13) with fakes for outside services |
 | Screen or journey | End-to-end tests at phone and desktop sizes covering the happy path, loading, empty, error, no-permission and module-disabled states, plus an automated accessibility check |
 | Outside-service adapter | Tests against fakes; failure, timeout and retry behavior |
 | Bug fix | A test that fails before the fix and passes after |
