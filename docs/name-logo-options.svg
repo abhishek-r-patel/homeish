@@ -1,0 +1,275 @@
+<!-- Original naming and logo concepts for Dwello; names and marks are not trademark-screened. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1410" viewBox="0 0 1200 1410" role="img" aria-labelledby="title description">
+  <title id="title">Twenty app name and logo concepts</title>
+  <desc id="description">A contact sheet of twenty original name and logo directions for a society management app.</desc>
+  <style>
+    .page { fill: #f6f4ef; }
+    .card { fill: #ffffff; stroke: #ddd8cc; stroke-width: 1.5; }
+    .selected { stroke: #1e4e8c; stroke-width: 3; }
+    .ink { stroke: #1b1f23; }
+    .brand { stroke: #1e4e8c; }
+    .brand-fill { fill: #1e4e8c; }
+    .soft-fill { fill: #e6eef8; }
+    .line { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .thin { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .name { fill: #1b1f23; font: 600 22px Manrope, 'Segoe UI', sans-serif; text-anchor: middle; }
+    .note { fill: #59606a; font: 400 13px Manrope, 'Segoe UI', sans-serif; text-anchor: middle; }
+    .number { fill: #59606a; font: 500 12px Manrope, 'Segoe UI', sans-serif; }
+    .page-title { fill: #1b1f23; font: 700 30px Sora, 'Segoe UI', sans-serif; }
+    .page-note { fill: #59606a; font: 400 15px Manrope, 'Segoe UI', sans-serif; }
+  </style>
+  <rect class="page" width="1200" height="1410"/>
+  <text class="page-title" x="24" y="42">20 name + logo concepts</text>
+  <text class="page-note" x="24" y="70">Original visual directions · trademark and domain availability not checked</text>
+
+  <g transform="translate(24 96)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">01</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M12 61V14h46v47M23 61V31h24v30"/>
+      <path class="thin ink" d="M6 68h58M28 42h14M28 50h14"/>
+      <circle class="brand-fill" cx="43" cy="56" r="1.7"/>
+    </g>
+    <text class="name" x="135" y="168">Dwello</text>
+    <text class="note" x="135" y="197">Home + register</text>
+  </g>
+
+  <g transform="translate(312 96)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">02</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M12 18v43h46V18M12 18h14M44 18h14"/>
+      <path class="thin ink" d="M25 42h20v19H25z"/>
+      <circle class="brand-fill" cx="35" cy="33" r="4"/>
+      <path class="thin brand" d="M35 37v5"/>
+    </g>
+    <text class="name" x="135" y="168">Aangan</text>
+    <text class="note" x="135" y="197">Shared courtyard</text>
+  </g>
+
+  <g transform="translate(600 96)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">03</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M9 34 35 13l26 21M16 31v31h38V31"/>
+      <path class="line ink" d="M22 58V38l27 19V37"/>
+      <path class="thin brand" d="M22 65h27"/>
+    </g>
+    <text class="name" x="135" y="168">Nivasa</text>
+    <text class="note" x="135" y="197">A place to belong</text>
+  </g>
+
+  <g transform="translate(888 96)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">04</text>
+    <g transform="translate(100 32)">
+      <path class="line ink" d="M12 61V22l23-10 23 10v39"/>
+      <path class="line brand" d="M25 61V39h20v22M35 39v22"/>
+      <path class="thin brand" d="M18 29h10M42 29h10"/>
+      <circle class="brand-fill" cx="35" cy="30" r="3"/>
+    </g>
+    <text class="name" x="135" y="168">Nivara</text>
+    <text class="note" x="135" y="197">Home, made secure</text>
+  </g>
+
+  <g transform="translate(24 354)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">05</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M12 18v44M24 18v44M36 18v24M48 18v24M60 18v44"/>
+      <path class="line ink" d="M36 43 57 59M36 43l5-1M36 43l1 5"/>
+      <path class="thin brand" d="M8 67h56"/>
+    </g>
+    <text class="name" x="135" y="168">ApnaGate</text>
+    <text class="note" x="135" y="197">A familiar front door</text>
+  </g>
+
+  <g transform="translate(312 354)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">06</text>
+    <g transform="translate(100 32)">
+      <path class="line ink" d="M12 62V18h46v44M24 62V30h22v32"/>
+      <path class="line brand" d="m28 45 6 6 13-15"/>
+      <path class="thin brand" d="M6 68h58"/>
+    </g>
+    <text class="name" x="135" y="168">Gatewise</text>
+    <text class="note" x="135" y="197">Smart entry, simply</text>
+  </g>
+
+  <g transform="translate(600 354)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">07</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M8 38 25 22l16 16M14 34v27h23V34M40 43h10"/>
+      <path class="line ink" d="m50 43 10 10-10 10M62 43v20"/>
+      <path class="thin brand" d="M8 68h54"/>
+    </g>
+    <text class="name" x="135" y="168">GharSetu</text>
+    <text class="note" x="135" y="197">Homes connected</text>
+  </g>
+
+  <g transform="translate(888 354)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">08</text>
+    <g transform="translate(100 32)">
+      <path class="line ink" d="M11 61V30h16v31M43 61V18h16v43"/>
+      <path class="thin brand" d="M7 68h58M17 39h5M17 48h5M49 28h5M49 38h5M49 48h5"/>
+      <path class="line brand" d="M27 45h16"/>
+    </g>
+    <text class="name" x="135" y="168">SocietyOne</text>
+    <text class="note" x="135" y="197">One place for all</text>
+  </g>
+
+  <g transform="translate(24 612)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">09</text>
+    <g transform="translate(100 32)">
+      <rect class="line brand" x="12" y="14" width="21" height="21" rx="3"/>
+      <rect class="line ink" x="39" y="14" width="21" height="21" rx="3"/>
+      <rect class="line ink" x="12" y="41" width="21" height="21" rx="3"/>
+      <path class="thin brand" d="M33 24h6M23 35v6M49 35v10H33"/>
+      <circle class="brand-fill" cx="33" cy="45" r="3"/>
+    </g>
+    <text class="name" x="135" y="168">Blockmate</text>
+    <text class="note" x="135" y="197">Every block in sync</text>
+  </g>
+
+  <g transform="translate(312 612)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">10</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M9 38 24 24l15 14M15 35v25h18V35"/>
+      <path class="line ink" d="M33 38 48 24l15 14M39 35v25h18V35"/>
+      <circle class="brand-fill" cx="36" cy="44" r="4"/>
+      <path class="thin brand" d="M36 48v8"/>
+    </g>
+    <text class="name" x="135" y="168">Neighbr</text>
+    <text class="note" x="135" y="197">Good neighbours, connected</text>
+  </g>
+
+  <g transform="translate(600 612)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">11</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M10 60h50M15 58c0-22 10-36 20-36s20 14 20 36"/>
+      <path class="line ink" d="M26 60V44h18v16"/>
+      <circle class="brand-fill" cx="35" cy="14" r="4"/>
+    </g>
+    <text class="name" x="135" y="168">Sahaay</text>
+    <text class="note" x="135" y="197">A helpful hand at home</text>
+  </g>
+
+  <g transform="translate(888 612)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">12</text>
+    <g transform="translate(100 32)">
+      <circle class="line brand" cx="24" cy="36" r="19"/>
+      <circle class="line ink" cx="46" cy="36" r="19"/>
+      <path class="thin brand" d="M35 17v38M24 36h22"/>
+      <circle class="brand-fill" cx="35" cy="36" r="4"/>
+    </g>
+    <text class="name" x="135" y="168">Saanjha</text>
+    <text class="note" x="135" y="197">Shared life, shared space</text>
+  </g>
+
+  <g transform="translate(24 870)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">13</text>
+    <g transform="translate(100 32)">
+      <path class="line ink" d="M12 17v46h46V17M12 17h12M46 17h12"/>
+      <path class="line brand" d="M21 63V42h28v21M35 42v21"/>
+      <path class="thin brand" d="M35 22v12M29 28h12"/>
+    </g>
+    <text class="name" x="135" y="168">Courta</text>
+    <text class="note" x="135" y="197">A courtyard for modern living</text>
+  </g>
+
+  <g transform="translate(312 870)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">14</text>
+    <g transform="translate(100 32)">
+      <rect class="line brand" x="12" y="12" width="20" height="20" rx="2"/>
+      <rect class="line ink" x="40" y="12" width="20" height="20" rx="2"/>
+      <rect class="line ink" x="12" y="40" width="20" height="20" rx="2"/>
+      <rect class="line brand" x="40" y="40" width="20" height="20" rx="2"/>
+      <path class="thin brand" d="M32 22h8M22 32v8M50 32v8M32 50h8"/>
+    </g>
+    <text class="name" x="135" y="168">Commonly</text>
+    <text class="note" x="135" y="197">Common life, made easier</text>
+  </g>
+
+  <g transform="translate(600 870)">
+    <rect class="card selected" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">15</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M9 35 35 13l26 22M16 31v30h38V31"/>
+      <path class="line ink" d="M27 61V42h16v19"/>
+      <path class="thin brand" d="M28 25h14"/>
+      <circle class="brand-fill" cx="35" cy="34" r="3"/>
+    </g>
+    <text class="name" x="135" y="168">Griha</text>
+    <text class="note" x="135" y="197">Selected mark for Dwello</text>
+  </g>
+
+  <g transform="translate(888 870)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">16</text>
+    <g transform="translate(100 32)">
+      <path class="line ink" d="M8 38 22 25l14 13M14 36v24h16V36M36 38 50 25l14 13M42 36v24h16V36"/>
+      <path class="line brand" d="M23 51h26M27 51c0-12 5-18 9-18s9 6 9 18"/>
+      <circle class="brand-fill" cx="36" cy="22" r="3"/>
+    </g>
+    <text class="name" x="135" y="168">Setu Living</text>
+    <text class="note" x="135" y="197">A bridge between neighbours</text>
+  </g>
+
+  <g transform="translate(24 1128)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">17</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M10 22h22v22H10zM32 22h22M32 44h22"/>
+      <path class="line ink" d="M32 22v42M32 44h22v20H32"/>
+      <circle class="brand-fill" cx="21" cy="33" r="3"/>
+    </g>
+    <text class="name" x="135" y="168">Nook Society</text>
+    <text class="note" x="135" y="197">Your own corner, connected</text>
+  </g>
+
+  <g transform="translate(312 1128)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">18</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M12 17h46v46H12z"/>
+      <path class="line ink" d="M22 17v46M33 17v46M44 17v46"/>
+      <path class="thin brand" d="M12 30h46M12 44h46M12 57h46"/>
+      <path class="line brand" d="M8 68h54"/>
+    </g>
+    <text class="name" x="135" y="168">Gatebook</text>
+    <text class="note" x="135" y="197">The modern gate register</text>
+  </g>
+
+  <g transform="translate(600 1128)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">19</text>
+    <g transform="translate(100 32)">
+      <path class="line ink" d="M13 60V27l22-14 22 14v33"/>
+      <path class="line brand" d="M22 60V39h26v21M22 27h26"/>
+      <path class="thin brand" d="M35 39v21"/>
+      <circle class="brand-fill" cx="35" cy="31" r="3"/>
+    </g>
+    <text class="name" x="135" y="168">Niva</text>
+    <text class="note" x="135" y="197">Short, warm and modern</text>
+  </g>
+
+  <g transform="translate(888 1128)">
+    <rect class="card" width="270" height="236" rx="12"/>
+    <text class="number" x="16" y="23">20</text>
+    <g transform="translate(100 32)">
+      <path class="line brand" d="M10 29 35 12l25 17M16 27v18h38V27"/>
+      <path class="thin ink" d="M16 52h38M16 59h38M24 46v20M35 46v20M46 46v20"/>
+      <path class="line brand" d="M8 69h54"/>
+    </g>
+    <text class="name" x="135" y="168">HomeLedger</text>
+    <text class="note" x="135" y="197">Home life, in good order</text>
+  </g>
+</svg>
