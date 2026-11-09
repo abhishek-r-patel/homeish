@@ -54,27 +54,29 @@ Each database has its own ignored settings file: `.env.testdb.local`, `.env.demo
 
 ## 6. Database commands
 
-The portable PostgreSQL tools can run the database tests without Docker. Add PostgreSQL's `bin` folder to `PATH`, or set `PSQL_PATH` to the full path of `psql.exe` for the current PowerShell window:
-
-```powershell
-$env:PSQL_PATH = 'C:\path\to\postgresql\bin\psql.exe'
-```
-
 | Command                                          | What it does                                                           |
 | ------------------------------------------------ | ---------------------------------------------------------------------- |
 | `npm run db:new -- <module>_<short_description>` | Creates an empty, timestamped migration file in `supabase/migrations/` |
 | `npm run db:list`                                | Shows which migrations testdb has applied                              |
-| `npm run db:test`                                | Runs SQL assertion tests against testdb in a rolled-back transaction   |
 | `npm run db:push`                                | Applies new migrations to testdb (add `-- --dry-run` to preview first) |
 | `npm run db:types`                               | Regenerates `src/core/db/database.types.ts` from testdb                |
 | `npm run db:types:check`                         | Fails if the generated types no longer match testdb                    |
 | `npm run check:migrations`                       | Checks migration file names (also part of `npm run check`)             |
 
-Database commands load `.env.testdb.local` and run against the address in it. To target the demo project once it is resumed: `npm run env -- demo node scripts/db.mjs push`. They refuse `homeish-live` and an unset password, and hide database addresses in their output. `db:test` uses `psql` and reads the password from the profile into the child process environment, not its command line. It runs each `*.test.sql` file inside a transaction and rolls it back; tests must not commit or roll back their own transaction.
+Database commands load `.env.testdb.local` and run against the address in it. To target the demo project once it is resumed: `npm run env -- demo node scripts/db.mjs push`. They refuse `homeish-live` and an unset password, and hide database addresses in their output.
 
-GitHub Actions runs `npm run db:test:local` against a fresh local Supabase database after applying migrations. GitHub-hosted runners provide Docker; this avoids storing a database password in GitHub and does not require Docker on the developer laptop. `db:test:local` accepts only `localhost` on port `54322`; use `npm run db:test` locally to test the shared `homeish-testdb`.
+### Database integration tests
 
-Write database tests as SQL assertions that raise an exception on failure (for example, a `DO` block with an `IF ... THEN RAISE EXCEPTION ... END IF`). The runner treats a clean `psql` exit as a pass and stops at the first SQL error.
+Database tests (migrations, RLS, SQL functions) are Vitest files in `tests/integration/`. They never use testdb, demo or live: they run against a throwaway PostgreSQL 17 server on this machine and refuse any other host. For each test file the harness (`tests/integration/support/database.ts`) creates a fresh database, adds a small stand-in for Supabase's `auth` schema and roles (`supabase-stub.sql`, `roles.sql`), applies every migration in order and drops the database afterwards. Extend the stand-in only to mirror real Supabase behaviour a migration needs; sign-in itself is verified against testdb.
+
+Run them with the portable PostgreSQL server tools (no Docker). Set `PG_BIN` to its `bin` folder once per PowerShell window, or add that folder to `PATH`:
+
+```powershell
+$env:PG_BIN = 'C:\path\to\postgresql\bin'
+npm run test:integration:local
+```
+
+The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then stops the server and deletes its files. Without a server, `npm run test:integration` skips these tests locally; in CI a missing server is an error. GitHub Actions runs the same tests against a `postgres:17` service container, so no database password is stored in GitHub.
 
 ### Migration rules (DATABASE 14.1)
 
@@ -88,5 +90,5 @@ Write database tests as SQL assertions that raise an exception on failure (for e
 
 - `supabase/migrations/`: forward-only SQL.
 - `supabase/seed/`: synthetic seed files (`*.sql`, configured in `supabase/config.toml`); never real people.
-- `supabase/tests/`: SQL assertion tests (RLS, functions); run with `npm run db:test`. Tests are rolled back after each file.
+- `tests/integration/`: database integration tests and their harness; run with `npm run test:integration:local`.
 - `supabase/config.toml`: CLI settings. It describes a local stack we do not run; hosted project settings are changed in the dashboard, never with `supabase config push`.
