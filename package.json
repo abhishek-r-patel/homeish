@@ -25,6 +25,8 @@
     "check:migrations": "node scripts/check-migrations.mjs",
     "db:new": "node scripts/db.mjs new",
     "db:list": "node scripts/with-env.mjs testdb node scripts/db.mjs list",
+    "db:test": "node scripts/with-env.mjs testdb node scripts/db.mjs test",
+    "db:test:local": "node scripts/db.mjs test-local",
     "db:push": "node scripts/with-env.mjs testdb node scripts/db.mjs push",
     "db:types": "node scripts/with-env.mjs testdb node scripts/db.mjs types",
     "db:types:check": "node scripts/with-env.mjs testdb node scripts/db.mjs types --check",

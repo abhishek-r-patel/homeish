@@ -66,6 +66,8 @@ describe('db', () => {
     'postgresql://postgres.yhwadldjeyirkgbmoctb:secret-value@aws-0-ap-south-1.pooler.supabase.com:5432/postgres';
   const testdbUrl = (password: string) =>
     `postgresql://postgres.oqyagsabodaueghtrocv:${password}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`;
+  const localUrl =
+    'postgresql://postgres:local-password@127.0.0.1:54322/postgres';
 
   it.each(['create_things', 'core', 'core_Bad', 'unknown_create_things'])(
     'rejects migration label %j before calling the CLI',
@@ -76,7 +78,7 @@ describe('db', () => {
     },
   );
 
-  it.each(['list', 'push', 'types'])(
+  it.each(['list', 'test', 'push', 'types'])(
     'refuses %s against homeish-live without printing the address',
     (action) => {
       const result = run('db.mjs', [action], { SUPABASE_DB_URL: liveUrl });
@@ -98,6 +100,43 @@ describe('db', () => {
     });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('set-db-password.ps1');
+  });
+
+  it('refuses database tests when the password placeholder is still present', () => {
+    const result = run('db.mjs', ['test'], {
+      SUPABASE_DB_URL: testdbUrl('__SET_DB_PASSWORD__'),
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('set-db-password.ps1');
+  });
+
+  it('rejects unexpected database test arguments', () => {
+    const result = run('db.mjs', ['test', '--yes']);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('npm run db:test');
+  });
+
+  it('requires a database address for local database tests', () => {
+    const result = run('db.mjs', ['test-local']);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('SUPABASE_DB_URL');
+  });
+
+  it('refuses remote addresses for local database tests', () => {
+    const result = run('db.mjs', ['test-local'], {
+      SUPABASE_DB_URL: testdbUrl('secret-value'),
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('port 54322');
+    expect(result.stderr).not.toContain('secret-value');
+  });
+
+  it('accepts only local Supabase addresses for local database tests', () => {
+    const result = run('db.mjs', ['test-local'], {
+      SUPABASE_DB_URL: localUrl,
+    });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('No database test files found');
   });
 
   it('rejects an unknown action', () => {

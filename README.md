@@ -66,6 +66,7 @@ Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_A
 - Earlier pushes created scaffold deployments under the previous name; the owner temporarily paused both projects. The owner subsequently approved resuming both projects, committing/pushing this configuration, and publishing the current feature branch through `beta` and then `main`. Release-branch Git deployments are now enabled in repository configuration. No demo/beta nested domains or real society hosts have been attached.
 - Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. `APP_BASE_DOMAIN` is `homeish.vercel.app` in both projects. The planned canonical beta URL is `https://beta.homeish.vercel.app`; use the attached `https://beta-homeish.vercel.app` address for current hosted testing. Verify deployment success, HTTPS and host isolation after merging. Attaching additional domains and activating societies remain separate work.
 - Local verification passed: formatting, lint, type checking, 33 unit tests, four browser tests (including automated accessibility and the exact 15-minute reset), and production build. This is not hosted verification, manual assistive-technology testing or launch approval.
+- Hosted smoke check on 2026-11-09: `https://homeish.vercel.app` served the public marketing page and `https://beta-homeish.vercel.app` served the beta scaffold over HTTPS. This does not verify database connectivity, real society workflows or production readiness.
 
 ## Checks
 
@@ -76,7 +77,7 @@ npm run e2e
 npm run build
 ```
 
-`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks, a public-environment-name check and the migration naming check. Database commands (`npm run db:list`, `db:push`, `db:types`, `db:types:check`, `db:new`) are listed in [Local setup](docs/LOCAL_SETUP.md). Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
+`npm run check` runs formatting, lint, strict type checking, unit tests, source-header checks, a public-environment-name check and the migration naming check. `npm run db:test` runs SQL assertion tests against testdb using PostgreSQL's `psql` client. GitHub Actions also scans repository history for secrets and tests migrations against a fresh local Supabase database. Other database commands (`npm run db:list`, `db:push`, `db:types`, `db:types:check`, `db:new`) are listed in [Local setup](docs/LOCAL_SETUP.md). Playwright runs the browser smoke and accessibility check. The disabled-society control assertions are scoped to the page's main content so framework development tools do not count as society controls.
 
 ## Project structure
 
