@@ -1,8 +1,8 @@
-# Dwello — Architecture (ARCHITECTURE.md)
+# Homeish — Architecture (ARCHITECTURE.md)
 
 | Field | Value |
 |---|---|
-| Product | Dwello (PRD D-01 approved 2026-11-09) |
+| Product | Homeish (PRD D-01 approved 2026-11-09) |
 | Version | 0.1 (Draft for approval) |
 | Date | 2026-11-09 |
 | Depends on | [PRD.md](./PRD.md) (scope, roles, requirements), [DESIGN.md](./DESIGN.md) (UX, components) |
@@ -300,7 +300,7 @@ Each privileged function takes an explicit society ID and re-checks it; none ret
 Single repository, single Next.js app. Module folders are self-contained and registered in one place.
 
 ```
-dwello/
+homeish/
 ├─ .env.example                   Environment variable names and placeholders only
 ├─ .github/workflows/ci.yml       Static checks, browser smoke and build
 ├─ .gitignore
@@ -319,7 +319,7 @@ dwello/
 │  ├─ migrations/                 Forward-only SQL, ordered; sections per module
 │  ├─ seed/                       Synthetic seed data
 │  └─ tests/                      Database tests (RLS, functions)
-├─ public/                        Dwello logo, manifest, icons, service worker
+├─ public/                        Homeish logo, manifest, icons, service worker
 ├─ src/
 │  ├─ app/                        Next.js routes only (thin)
 │  │  ├─ (auth)/                  S-01..S-04; thin host-aware root entry
@@ -586,9 +586,9 @@ Threats specifically considered: cross-tenant ID tampering, role escalation via 
 
 ### 16.1 Environments
 
-Approved D-34 hosting: shared Vercel project `dwello` builds `main` and serves the bare product host and `demo` host. Separate project `beta-dwello` builds `beta` and serves `beta.dwello.vercel.app`. Each uses Vercel's Production target; beta is nevertheless a testing environment. Society activation is deferred until MVP and a future create-society script; Maplewood is reserved in `src/core/config/societies.ts` with status `disabled` and serves only a placeholder. Feature branches deploy to neither project; merge into beta for hosted testing, then merge verified beta into main. This replaces the earlier per-pull-request deployment assumption below.
+Approved D-34 hosting: shared Vercel project `homeish` builds `main` and serves the bare product host and `demo` host. Separate project `beta-homeish` builds `beta` and serves `beta.homeish.vercel.app`. Each uses Vercel's Production target; beta is nevertheless a testing environment. Society activation is deferred until MVP and a future create-society script; Maplewood is reserved in `src/core/config/societies.ts` with status `disabled` and serves only a placeholder. Feature branches deploy to neither project; merge into beta for hosted testing, then merge verified beta into main. This replaces the earlier per-pull-request deployment assumption below.
 
-External setup status, 2026-11-09: both projects are created and Git-linked with the correct release branches, but have zero deployments and automatic Git deployments disabled at the owner's request. `dwello.vercel.app` is assigned to another project; the assigned fallback `dwello-self.vercel.app` has not been approved. No nested demo/beta host or real society host is attached. The topology above is the requested design, not an available or live-domain claim. See README for the resume checklist; select the parent domain before enabling builds.
+External setup status, 2026-11-09: projects `homeish` and `beta-homeish` are Git-linked to `abhishek-r-patel/homeish` under Vercel team `arp-dev`, with Production branches `main` and `beta`. The attached addresses are `homeish.vercel.app` and `beta-homeish.vercel.app`. After a temporary pause, the owner approved resuming scaffold hosting and publishing the current feature branch through beta, then main. `vercel.json` enables only `main`/`beta`; `scripts/vercel-ignore-build.mjs` builds `main` only for `APP_DEPLOYMENT=shared` and `beta` only for `APP_DEPLOYMENT=beta`. Keep Preview branch tracking off and automatic Production domain assignment on in both projects. Direct release-branch pushes also deploy; pull-request-only enforcement and CI-gated publication are not supplied by this configuration. No nested demo/beta or real society host is attached. The topology above remains the requested design, not a live-domain claim. See README for current hosting details.
 
 `APP_DEPLOYMENT` selects `shared` or `beta`; `APP_BASE_DOMAIN` defines the parent host. `core/config/host-routing.ts` accepts exact known hosts and provider-supplied deployment aliases only. Localhost variants are accepted only outside Vercel. Proxy rejects unknown hosts before app routes; dynamic rendering and private/no-store responses prevent cross-host page caching. Page rendering resolves the host again rather than trusting a client-supplied tenant header. This is entry routing only: future authenticated operations still require membership checks and RLS.
 
@@ -673,8 +673,8 @@ flowchart LR
 - **Rollback**: redeploy the previous app build; database rolled forward with a corrective migration (never edited in place). Backups are the last resort.
 - **Feature release by module**: a new module ships dark (disabled for all societies), is enabled for a pilot society by the developer, then for others (PRD Section 14 release gating). The module toggle doubles as the feature flag; no separate flag service.
 - **Scheduled job**: platform cron calls the daily job endpoint with the secret header; failures log to `error_logs` and Sentry.
-- **Domain and TLS**: one parent product domain with configured website/demo/society hosts, managed certificates; beta on a separate project; developer console on a distinct path or subdomain with its own cookie scope. **[AA-03, D-34]** Domain selection and live deployment are currently paused.
-- **Cost posture**: free tiers are limited to local development and synthetic-data staging. Use paid production tiers before the first live society, regardless of whether that society pays a Dwello subscription; the first-ten society offer does not cover hosting costs. **[AD-06 — Approved 2026-11-09; PRD D-33]**
+- **Domain and TLS**: one parent product domain with configured website/demo/society hosts, managed certificates; beta on a separate project; developer console on a distinct path or subdomain with its own cookie scope. **[AA-03, D-34]** Scaffold hosting is approved on `homeish.vercel.app` and `beta-homeish.vercel.app`; nested domains and real society activation remain pending.
+- **Cost posture**: free tiers are limited to local development and synthetic-data staging. Use paid production tiers before the first live society, regardless of whether that society pays a Homeish subscription; the first-ten society offer does not cover hosting costs. **[AD-06 — Approved 2026-11-09; PRD D-33]**
 
 ### 19.2 First-society go-live checklist (summary)
 Production project created and backups verified → sender email domain verified (SPF/DKIM) and login email tested → society admin enters UPI details → secrets set → migrations applied → developer account with MFA created → society created with only ready modules enabled → admin invited → pilot UAT → monitoring and alerts confirmed.
@@ -731,7 +731,7 @@ Production project created and backups verified → sender email domain verified
 | AD-04 | Payments: UPI direct to society, admin confirms (PRD D-14/D-15/D-32) | **Approved 2026-11-09** | Closed |
 | AD-05 | Rate limiting with Postgres counters (no extra service) | **Approved 2026-11-09:** hashed counters in Postgres | Closed |
 | AD-06 | Use paid lowest tiers for production (backups, no pausing); free tier only for local/staging with synthetic data | **Approved 2026-11-09** | Closed |
-| AD-07 | Web Push (own VAPID) instead of FCM/OneSignal | **Approved 2026-11-09:** browser push with Dwello keys; PWA install required on supported iPhones | Closed |
+| AD-07 | Web Push (own VAPID) instead of FCM/OneSignal | **Approved 2026-11-09:** browser push with Homeish keys; PWA install required on supported iPhones | Closed |
 | AD-08 | Email login codes via Brevo through Supabase custom email settings (PRD D-03/D-28); SMS later | **Approved 2026-11-09** | Closed |
 | AD-09 | Module enforcement in both service layer and RLS | **Approved 2026-11-09:** check in the app and database | Closed |
 | AD-10 | Keep Radix primitives for accessible dialogs/popovers/tabs only | **Approved 2026-11-09:** use only when native controls are not sufficient | Closed |

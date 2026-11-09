@@ -1,0 +1,267 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1190" viewBox="0 0 1200 1190" role="img" aria-labelledby="title description">
+  <title id="title">Twenty English app name and logo concepts</title>
+  <desc id="description">Twenty easy-to-pronounce English name ideas with original simple logo marks. Each matching vercel.app address returned Deployment Not Found when checked on 9 November 2026. This is not a reservation or guarantee of availability.</desc>
+  <style>
+    .page { fill: #f6f4ef; }
+    .card { fill: #ffffff; stroke: #ddd8cc; stroke-width: 1.5; }
+    .ink { fill: none; stroke: #1b1f23; }
+    .brand { fill: none; stroke: #1e4e8c; }
+    .brand-fill { fill: #1e4e8c; }
+    .line { stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .thin { stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .name { fill: #1b1f23; font: 600 20px Manrope, 'Segoe UI', sans-serif; text-anchor: middle; }
+    .tag { fill: #59606a; font: 400 12px Manrope, 'Segoe UI', sans-serif; text-anchor: middle; }
+    .url { fill: #59606a; font: 500 11px Manrope, 'Segoe UI', sans-serif; text-anchor: middle; }
+    .page-title { fill: #1b1f23; font: 700 30px Sora, 'Segoe UI', sans-serif; }
+    .page-note { fill: #59606a; font: 400 14px Manrope, 'Segoe UI', sans-serif; }
+  </style>
+  <rect class="page" width="1200" height="1190"/>
+  <text class="page-title" x="24" y="42">20 English name + logo concepts</text>
+  <text class="page-note" x="24" y="69">Easy-to-say directions · matching .vercel.app hosts returned Deployment Not Found on 9 Nov 2026</text>
+  <text class="page-note" x="24" y="91">A 404 is not a reservation or guarantee. Vercel allocates these addresses first-come, first-served.</text>
+
+  <g transform="translate(24 110)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="m8 43 27-23 27 23M15 39v29h40V39"/>
+      <path class="line ink" d="M29 68V49h12v19"/>
+      <circle class="brand-fill" cx="22" cy="50" r="3"/>
+      <circle class="brand-fill" cx="48" cy="50" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">GatherHome</text>
+    <text class="tag" x="135" y="148">A place for everyone</text>
+    <text class="url" x="135" y="177">gatherhome.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(312 110)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <circle class="line brand" cx="27" cy="43" r="22"/>
+      <circle class="thin ink" cx="43" cy="43" r="22"/>
+      <path class="line brand" d="m22 44 12-10 12 10M26 42v14h16V42"/>
+    </g>
+    <text class="name" x="135" y="123">NestCircle</text>
+    <text class="tag" x="135" y="148">Community, close by</text>
+    <text class="url" x="135" y="177">nestcircle.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(600 110)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="m9 44 26-23 26 23M16 40v28h38V40"/>
+      <path class="line ink" d="M30 68V47h11v21"/>
+      <path class="thin brand" d="M22 30h26"/>
+      <path class="thin ink" d="M35 21v-8"/>
+    </g>
+    <text class="name" x="135" y="123">WelcomeHome</text>
+    <text class="tag" x="135" y="148">Feel at home, together</text>
+    <text class="url" x="135" y="177">welcomehome.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(888 110)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="m8 44 24-21 24 21M14 41v27h36V41"/>
+      <path class="line ink" d="m23 47 10 10 17-19"/>
+      <path class="thin brand" d="M8 68h50"/>
+      <circle class="brand-fill" cx="32" cy="32" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">KindredHome</text>
+    <text class="tag" x="135" y="148">Neighbours, like family</text>
+    <text class="url" x="135" y="177">kindredhome.vercel.app · 404*</text>
+  </g>
+
+  <g transform="translate(24 324)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="m7 39 19-17 19 17M12 36v25h28V36"/>
+      <path class="line ink" d="m32 47 17-15 17 15M36 44v22h25V44"/>
+      <circle class="brand-fill" cx="32" cy="52" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">TogetherHome</text>
+    <text class="tag" x="135" y="148">Better, side by side</text>
+    <text class="url" x="135" y="177">togetherhome.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(312 324)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <circle class="thin brand" cx="35" cy="45" r="29"/>
+      <path class="line ink" d="m12 46 23-20 23 20M18 43v25h34V43"/>
+      <path class="thin brand" d="M29 68V51h12v17"/>
+    </g>
+    <text class="name" x="135" y="123">HomeCircle</text>
+    <text class="tag" x="135" y="148">One connected community</text>
+    <text class="url" x="135" y="177">homecircle.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(600 324)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="m9 49 26-23 26 23M16 45v23h38V45"/>
+      <circle class="thin ink" cx="35" cy="45" r="23"/>
+      <path class="thin brand" d="M35 45V31M35 45l11 6"/>
+      <circle class="brand-fill" cx="35" cy="45" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">EverydayHome</text>
+    <text class="tag" x="135" y="148">A simpler day at home</text>
+    <text class="url" x="135" y="177">everydayhome.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(888 324)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M15 34a22 22 0 0 1 36-8l6 7"/>
+      <path class="line ink" d="m57 24 1 10-10-1"/>
+      <path class="line brand" d="M55 51a22 22 0 0 1-36 8l-6-7"/>
+      <path class="line ink" d="m13 61-1-10 10 1"/>
+      <path class="thin brand" d="m23 43 12-10 12 10M27 41v15h16V41"/>
+    </g>
+    <text class="name" x="135" y="123">LivingLoop</text>
+    <text class="tag" x="135" y="148">Life, in a good flow</text>
+    <text class="url" x="135" y="177">livingloop.vercel.app · 404*</text>
+  </g>
+
+  <g transform="translate(24 538)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M12 19h46v47H12z"/>
+      <path class="line ink" d="M35 19v47M12 42h46"/>
+      <path class="thin brand" d="M21 29h5M44 29h5M21 52h5M44 52h5"/>
+      <circle class="brand-fill" cx="35" cy="42" r="4"/>
+    </g>
+    <text class="name" x="135" y="123">CommonHome</text>
+    <text class="tag" x="135" y="148">Shared spaces, made simple</text>
+    <text class="url" x="135" y="177">commonhome.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(312 538)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line ink" d="M12 65V30h16v35M43 65V30h16v35"/>
+      <path class="line brand" d="M28 44h15"/>
+      <path class="thin brand" d="m38 37 7 7-7 7"/>
+      <circle class="brand-fill" cx="20" cy="38" r="2.5"/>
+      <circle class="brand-fill" cx="51" cy="38" r="2.5"/>
+    </g>
+    <text class="name" x="135" y="123">HomeGather</text>
+    <text class="tag" x="135" y="148">Bring your community closer</text>
+    <text class="url" x="135" y="177">homegather.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(600 538)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M11 23h48v45H11z"/>
+      <path class="line ink" d="M24 23v45M46 23v45"/>
+      <path class="thin brand" d="M18 34h6M46 34h6M18 48h6M46 48h6"/>
+      <path class="line ink" d="M30 68V49h10v19"/>
+    </g>
+    <text class="name" x="135" y="123">HomeCourtyard</text>
+    <text class="tag" x="135" y="148">Your place, connected</text>
+    <text class="url" x="135" y="177">homecourtyard.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(888 538)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M10 28h50v40H10z"/>
+      <path class="line ink" d="M19 68V42h32v26M26 42v26M44 42v26"/>
+      <path class="thin brand" d="M10 36h50"/>
+      <circle class="brand-fill" cx="35" cy="30" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">OurCourtyard</text>
+    <text class="tag" x="135" y="148">A community to call yours</text>
+    <text class="url" x="135" y="177">ourcourtyard.vercel.app · 404*</text>
+  </g>
+
+  <g transform="translate(24 752)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M12 46c7-21 39-21 46 0-7 21-39 21-46 0Z"/>
+      <path class="thin ink" d="M21 46c5-11 23-11 28 0-5 11-23 11-28 0Z"/>
+      <path class="line brand" d="M35 25v-9M35 67v-8"/>
+      <circle class="brand-fill" cx="35" cy="46" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">Nestwise</text>
+    <text class="tag" x="135" y="148">A smarter way to belong</text>
+    <text class="url" x="135" y="177">nestwise.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(312 752)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="m9 48 26-23 26 23M16 44v24h38V44"/>
+      <path class="line ink" d="M35 47v-13M35 39c-9 0-12-5-12-11 8 0 12 4 12 11ZM35 43c9 0 12-5 12-11-8 0-12 4-12 11Z"/>
+      <path class="thin brand" d="M28 68h14"/>
+    </g>
+    <text class="name" x="135" y="123">ThriveHome</text>
+    <text class="tag" x="135" y="148">A better place to grow</text>
+    <text class="url" x="135" y="177">thrivehome.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(600 752)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M15 22h40v46H15z"/>
+      <path class="line ink" d="M24 68V35h22v33"/>
+      <circle class="brand-fill" cx="40" cy="51" r="2.5"/>
+      <path class="thin brand" d="M22 28h26"/>
+      <path class="thin ink" d="M35 16v-6"/>
+    </g>
+    <text class="name" x="135" y="123">Doorwise</text>
+    <text class="tag" x="135" y="148">The right things, in reach</text>
+    <text class="url" x="135" y="177">doorwise.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(888 752)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M13 68V43a22 22 0 0 1 44 0v25"/>
+      <path class="line ink" d="M22 68V45h26v23"/>
+      <circle class="brand-fill" cx="35" cy="39" r="4"/>
+      <path class="thin brand" d="M7 68h56"/>
+    </g>
+    <text class="name" x="135" y="123">GateCircle</text>
+    <text class="tag" x="135" y="148">A warmer welcome in</text>
+    <text class="url" x="135" y="177">gatecircle.vercel.app · 404*</text>
+  </g>
+
+  <g transform="translate(24 966)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M12 68V34h46v34M12 34l23-18 23 18"/>
+      <path class="line ink" d="M25 68V44h20v24M35 44v24"/>
+      <path class="thin brand" d="M19 40h8M43 40h8"/>
+    </g>
+    <text class="name" x="135" y="123">Courtyardly</text>
+    <text class="tag" x="135" y="148">Everyday life, together</text>
+    <text class="url" x="135" y="177">courtyardly.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(312 966)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M11 23h22v22H11zM37 23h22v22H37z"/>
+      <path class="line ink" d="M11 49h22v19H11zM37 49h22v19H37z"/>
+      <path class="thin brand" d="M33 34h4M22 45v4M48 45v4M33 58h4"/>
+      <circle class="brand-fill" cx="35" cy="45" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">SocietyNest</text>
+    <text class="tag" x="135" y="148">A place for every neighbour</text>
+    <text class="url" x="135" y="177">societynest.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(600 966)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line ink" d="M13 68V20h44v48"/>
+      <path class="line brand" d="M24 68V43h22v25"/>
+      <path class="thin brand" d="M20 30h8M42 30h8"/>
+      <circle class="brand-fill" cx="35" cy="35" r="3"/>
+    </g>
+    <text class="name" x="135" y="123">CivicDoor</text>
+    <text class="tag" x="135" y="148">A clear way to community</text>
+    <text class="url" x="135" y="177">civicdoor.vercel.app · 404*</text>
+  </g>
+  <g transform="translate(888 966)">
+    <rect class="card" width="270" height="202" rx="12"/>
+    <g transform="translate(100 19)">
+      <path class="line brand" d="M14 68V30h42v38"/>
+      <path class="line ink" d="M23 68V43h24v25"/>
+      <path class="thin brand" d="M20 37h30"/>
+      <circle class="brand-fill" cx="35" cy="24" r="4"/>
+      <path class="thin ink" d="M8 68h54"/>
+    </g>
+    <text class="name" x="135" y="123">LobbyLane</text>
+    <text class="tag" x="135" y="148">A friendly start at home</text>
+    <text class="url" x="135" y="177">lobbylane.vercel.app · 404*</text>
+  </g>
+  <text class="page-note" x="24" y="1184">*Live HTTP probe: 404 / Vercel Deployment Not Found. No availability guarantee; confirm in your Vercel account before choosing.</text>
+</svg>
