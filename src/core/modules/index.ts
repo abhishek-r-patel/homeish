@@ -6,6 +6,10 @@ import type {
   SocietyRole,
 } from '../permissions';
 import { MODULE_KEYS, type ModuleKey } from './module-types';
+import {
+  billingSettingsSchema,
+  DEFAULT_BILLING_SETTINGS,
+} from '../billing/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -267,21 +271,57 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   billing: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_BILLING_SETTINGS,
     key: 'billing',
     name: 'Maintenance, Fines & Payments',
     navigation: {
       admin: [
-        { href: '/admin/billing', label: 'Billing', permission: 'bill:list' },
+        {
+          href: '/admin/billing',
+          label: 'Billing',
+          permission: 'billing:charges:read',
+        },
       ],
       committee: [
-        { href: '/admin/billing', label: 'Billing', permission: 'bill:list' },
+        {
+          href: '/admin/billing',
+          label: 'Billing',
+          permission: 'billing:charges:read',
+        },
       ],
-      resident: [{ href: '/bills', label: 'Bills', permission: 'bill:list' }],
+      resident: [
+        {
+          href: '/bills',
+          label: 'Bills',
+          permission: 'billing:bills:read',
+        },
+      ],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'billing:charges:read': ['admin', 'committee'],
+      'billing:charges:manage': ['admin'],
+      'billing:settings:manage': ['admin'],
+      'billing:bills:read': ['admin', 'committee', 'resident'],
+      'billing:bills:manage': ['admin'],
+      'billing:ledger:read': ['admin', 'committee', 'resident'],
+      'billing:payments:read': ['admin', 'committee', 'resident'],
+      'billing:payments:manage': ['admin'],
+      'billing:payments:submit': ['resident'],
+      'billing:payment_details:read': [
+        'admin',
+        'committee',
+        'guard',
+        'hk_supervisor',
+        'resident',
+      ],
+      'billing:payment_details:manage': ['admin'],
+    },
+    settingsAccess: {
+      due_day_of_month: 'admin',
+      rounding: 'admin',
+      billing: 'developer',
+    },
+    settingsSchema: billingSettingsSchema,
   },
   service_request: {
     core: false,

@@ -85,7 +85,7 @@ describe('module registry', () => {
         'visitor:list': ['resident'],
       },
       billing: {
-        'bill:list': ['resident'],
+        'billing:bills:read': ['resident'],
       },
     } as const;
     const nav = getRoleNavigation(
@@ -153,5 +153,52 @@ describe('module registry', () => {
     expect(markup).toContain('Visitor Management is not available');
     expect(markup).toContain('Existing information has not been removed.');
     expect(markup).toContain('href="/home"');
+  });
+
+  it('exposes billing setup only to authorized roles and keeps its settings developer-managed', () => {
+    expect(hasPermission(['admin'], 'billing', 'billing:charges:manage')).toBe(
+      true,
+    );
+    expect(
+      hasPermission(['committee'], 'billing', 'billing:charges:read'),
+    ).toBe(true);
+    expect(
+      hasPermission(['committee'], 'billing', 'billing:charges:manage'),
+    ).toBe(false);
+    expect(hasPermission(['guard'], 'billing', 'billing:charges:read')).toBe(
+      false,
+    );
+    expect(
+      hasPermission(['resident'], 'billing', 'billing:payment_details:read'),
+    ).toBe(true);
+    expect(
+      hasPermission(['resident'], 'billing', 'billing:payment_details:manage'),
+    ).toBe(false);
+    expect(
+      getRoleNavigation(['admin'], ['billing']).some(
+        ({ href }) => href === '/admin/billing',
+      ),
+    ).toBe(true);
+    expect(
+      getRoleNavigation(['guard'], ['billing']).some(
+        ({ moduleKey }) => moduleKey === 'billing',
+      ),
+    ).toBe(false);
+    expect(getModuleDefinition('billing').settingsAccess).toEqual({
+      billing: 'developer',
+      due_day_of_month: 'admin',
+      rounding: 'admin',
+    });
+    expect(
+      parseModuleSettings('billing', {
+        late_fee: { type: 'percent', value: 2.5 },
+        due_day_of_month: 'last_day',
+        rounding: 'rupee',
+      }),
+    ).toEqual({
+      late_fee: { type: 'percent', value: 2.5 },
+      due_day_of_month: 'last_day',
+      rounding: 'rupee',
+    });
   });
 });

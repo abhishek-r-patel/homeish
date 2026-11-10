@@ -1,7 +1,12 @@
 // Issue a five-minute view URL only to society members or verified developers.
 import { z } from 'zod';
 import { AppError, ValidationError } from '../../../../core/errors';
-import { isSocietyLogoPath } from '../../../../core/files/attachments';
+import {
+  isBillingPaymentProofPath,
+  isBillingQrPath,
+  isSocietyLogoPath,
+} from '../../../../core/files/attachments';
+import { readBillingPaymentDetails } from '../../../../core/billing/queries';
 import { runFileRoute } from '../../../../core/files/http';
 import { authorizeRequest } from '../../../../core/permissions/authorize';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
@@ -16,6 +21,12 @@ const viewSchema = z.discriminatedUnion('bucket', [
   z
     .object({
       bucket: z.literal('delivery-photos'),
+      path: z.string().max(500),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('payment-proofs'),
       path: z.string().max(500),
     })
     .strict(),
@@ -35,8 +46,21 @@ function parseBody(body: unknown) {
     }
     return { ...parsed.data, societyId: match[1] };
   }
+  if (parsed.data.bucket === 'payment-proofs') {
+    const societyId = parsed.data.path.split('/')[0] ?? '';
+    const unitId = parsed.data.path.split('/')[1] ?? '';
+    if (!isBillingPaymentProofPath(parsed.data.path, societyId, unitId)) {
+      throw new ValidationError({
+        path: 'Choose a valid billing payment proof.',
+      });
+    }
+    return { ...parsed.data, societyId };
+  }
   const societyId = parsed.data.path.split('/')[0] ?? '';
-  if (!isSocietyLogoPath(parsed.data.path, societyId)) {
+  if (
+    !isSocietyLogoPath(parsed.data.path, societyId) &&
+    !isBillingQrPath(parsed.data.path, societyId)
+  ) {
     throw new ValidationError({ path: 'Choose a valid society file.' });
   }
   return { ...parsed.data, societyId };
@@ -77,6 +101,22 @@ export async function POST(request: Request) {
           ['admin', 'committee', 'guard'].includes(role),
         )
       ) {
+        throw new AppError('FORBIDDEN');
+      }
+    } else if (input.bucket === 'payment-proofs') {
+      authorizeRequest(context, {
+        moduleKey: 'billing',
+        permission: 'billing:payments:read',
+      });
+      if (
+        context.societyId !== input.societyId ||
+        !context.roles.some((role) => ['admin', 'committee'].includes(role))
+      ) {
+        throw new AppError('FORBIDDEN');
+      }
+    } else if (isBillingQrPath(input.path, input.societyId)) {
+      const details = await readBillingPaymentDetails(context, input.societyId);
+      if (!context.roles.includes('admin') && details?.qr_path !== input.path) {
         throw new AppError('FORBIDDEN');
       }
     } else {

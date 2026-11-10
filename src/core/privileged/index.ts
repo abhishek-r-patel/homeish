@@ -34,4 +34,10 @@ export {
   createDeliveryEntryPrivileged,
   overrideDeliveryPrivileged,
 } from './delivery';
+export {
+  runBillingDailyTaskPrivileged,
+  sendBillingReceiptEmailPrivileged,
+  type BillingDailyTask,
+  type BillingReceiptEmail,
+} from './billing';
 export type { TransactionalEmail } from '../notifications/email';

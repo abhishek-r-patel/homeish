@@ -1,4 +1,4 @@
-// Issue one society-logo upload token after verifying the society and file limits.
+// Issue owner-scoped upload tokens after verifying module, society and file limits.
 import { z } from 'zod';
 import {
   AppError,
@@ -8,8 +8,10 @@ import {
 import {
   MAX_FILE_BYTES,
   SOCIETY_LOGO_CONTENT_TYPES,
+  isBillingQrPath,
   isSocietyLogoPath,
 } from '../../../../core/files/attachments';
+import { readBillingPaymentDetails } from '../../../../core/billing/queries';
 import { runFileRoute } from '../../../../core/files/http';
 import { enforceRateLimit } from '../../../../core/rate-limit';
 import { authorizeRequest } from '../../../../core/permissions/authorize';
@@ -22,6 +24,7 @@ const issueSchema = z.discriminatedUnion('bucket', [
       contentType: z.enum(SOCIETY_LOGO_CONTENT_TYPES),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
       societyId: z.uuid(),
+      purpose: z.enum(['logo', 'billing-qr']).default('logo'),
     })
     .strict(),
   z
@@ -35,6 +38,14 @@ const issueSchema = z.discriminatedUnion('bucket', [
   z
     .object({
       bucket: z.literal('delivery-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      unitId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('payment-proofs'),
       contentType: z.enum(['image/jpeg', 'image/png']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
       unitId: z.uuid(),
@@ -89,6 +100,57 @@ export async function POST(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(issueSchema, body);
+      if (input.bucket === 'payment-proofs') {
+        authorizeRequest(context, {
+          moduleKey: 'billing',
+          permission: 'billing:payments:submit',
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        const [unitResult, occupancyResult] = await Promise.all([
+          context.db
+            .from('units')
+            .select('id')
+            .eq('id', input.unitId)
+            .eq('society_id', societyId)
+            .eq('active', true)
+            .maybeSingle(),
+          context.db
+            .from('unit_occupants')
+            .select('id, memberships!inner(user_id, status)')
+            .eq('unit_id', input.unitId)
+            .eq('society_id', societyId)
+            .eq('status', 'active')
+            .eq('memberships.user_id', context.userId)
+            .eq('memberships.status', 'active')
+            .limit(1),
+        ]);
+        if (unitResult.error || occupancyResult.error) {
+          throw new Error('Could not verify the payment proof unit.', {
+            cause: unitResult.error ?? occupancyResult.error,
+          });
+        }
+        if (!unitResult.data || occupancyResult.data.length === 0) {
+          throw new AppError('NOT_FOUND');
+        }
+        await enforceRateLimit(
+          'billingSubmitUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension = input.contentType === 'image/jpeg' ? 'jpg' : 'png';
+        const path = `${societyId}/${input.unitId}/payments/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the payment proof upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
       if (
         input.bucket === 'visitor-photos' ||
         input.bucket === 'delivery-photos'
@@ -136,6 +198,44 @@ export async function POST(request: Request) {
             `Could not issue the ${directory} photo upload token.`,
             { cause: error },
           );
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.purpose === 'billing-qr') {
+        authorizeRequest(context, {
+          moduleKey: 'billing',
+          permission: 'billing:payment_details:manage',
+          write: true,
+        });
+        if (context.societyId !== input.societyId) {
+          throw new AppError('FORBIDDEN');
+        }
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const details = await readBillingPaymentDetails(
+          context,
+          input.societyId,
+        );
+        const directory = `${input.societyId}/billing-qr`;
+        const { data: files, error: listError } = await context.db.storage
+          .from(input.bucket)
+          .list(directory, { limit: 3 });
+        if (listError) {
+          throw new Error('Could not check the QR image file count.');
+        }
+        if (files.length >= (details?.qr_path ? 2 : 1)) {
+          throw new ConflictError('limit_reached');
+        }
+        const extension = input.contentType === 'image/jpeg' ? 'jpg' : 'png';
+        const path = `${directory}/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the QR image upload token.');
         }
         return { path, signedUrl: data.signedUrl };
       }
@@ -188,6 +288,29 @@ export async function DELETE(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(pathSchema, body);
+      const billingSocietyId = input.path.split('/')[0] ?? '';
+      if (isBillingQrPath(input.path, billingSocietyId)) {
+        authorizeRequest(context, {
+          moduleKey: 'billing',
+          permission: 'billing:payment_details:manage',
+          write: true,
+        });
+        if (context.societyId !== billingSocietyId) {
+          throw new AppError('FORBIDDEN');
+        }
+        const details = await readBillingPaymentDetails(
+          context,
+          billingSocietyId,
+        );
+        if (details?.qr_path === input.path) {
+          throw new ConflictError('invalid_state');
+        }
+        const { error } = await context.db.storage
+          .from(input.bucket)
+          .remove([input.path]);
+        if (error) throw new Error('Could not remove the unused QR image.');
+        return {};
+      }
       const match = input.path.match(
         /^([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/logos\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png)$/i,
       );
