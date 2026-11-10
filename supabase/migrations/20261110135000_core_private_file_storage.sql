@@ -34,7 +34,18 @@ REVOKE ALL ON FUNCTION private.file_society_id(text)
 GRANT EXECUTE ON FUNCTION private.file_society_id(text)
   TO authenticated, service_role;
 
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Supabase owns storage.objects and enables RLS on it; migrations cannot alter it, so assert instead.
+DO $$
+BEGIN
+  IF NOT (
+    SELECT relrowsecurity
+    FROM pg_catalog.pg_class
+    WHERE oid = 'storage.objects'::regclass
+  ) THEN
+    RAISE EXCEPTION 'Row level security must be enabled on storage.objects.';
+  END IF;
+END
+$$;
 
 CREATE POLICY homeish_files_read
   ON storage.objects FOR SELECT TO authenticated

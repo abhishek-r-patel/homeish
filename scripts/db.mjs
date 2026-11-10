@@ -65,6 +65,18 @@ function runCli(args, { capture = false } = {}) {
   });
 }
 
+// Read without a separate existence check to avoid a check-then-use race (CodeQL js/file-system-race).
+function readTextIfPresent(path) {
+  try {
+    return readFileSync(path, 'utf8');
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return '';
+    }
+    throw error;
+  }
+}
+
 async function generateTypes(check) {
   const remote = `--remote=${targetDatabaseUrl()}`;
   const result = await runCli(
@@ -80,9 +92,7 @@ async function generateTypes(check) {
     ...options,
     filepath: TYPES_FILE,
   });
-  const current = existsSync(TYPES_FILE)
-    ? readFileSync(TYPES_FILE, 'utf8')
-    : '';
+  const current = readTextIfPresent(TYPES_FILE);
   if (check) {
     if (current !== formatted) {
       fail(`${TYPES_FILE} is out of date. Run npm run db:types.`);
