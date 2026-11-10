@@ -40,4 +40,5 @@ export {
   type BillingDailyTask,
   type BillingReceiptEmail,
 } from './billing';
+export { runServiceRequestAutoClosePrivileged } from './service-requests';
 export type { TransactionalEmail } from '../notifications/email';

@@ -4,6 +4,7 @@ import {
   claimDailyJobRun,
   listDailyJobSocieties,
   runBillingDailyTaskPrivileged,
+  runServiceRequestAutoClosePrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -34,6 +35,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
   billingTask('billing.late_fees'),
   billingTask('billing.reminders'),
   billingTask('billing.stale_payments'),
+  {
+    name: 'service_request.auto_close',
+    run: async (societyId, periodKey) => {
+      await runServiceRequestAutoClosePrivileged(societyId, periodKey);
+    },
+  },
 ];
 
 export function dailyPeriodKey(now: Date): string {

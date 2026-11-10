@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   listDailyJobSocieties: vi.fn(),
   claimDailyJobRun: vi.fn(),
   runBillingDailyTaskPrivileged: vi.fn(),
+  runServiceRequestAutoClosePrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -15,6 +16,8 @@ vi.mock('../../src/core/privileged', () => ({
   listDailyJobSocieties: mocks.listDailyJobSocieties,
   claimDailyJobRun: mocks.claimDailyJobRun,
   runBillingDailyTaskPrivileged: mocks.runBillingDailyTaskPrivileged,
+  runServiceRequestAutoClosePrivileged:
+    mocks.runServiceRequestAutoClosePrivileged,
 }));
 
 import {
@@ -102,13 +105,14 @@ describe('daily jobs', () => {
     expect(mocks.logUnexpectedError).toHaveBeenCalledTimes(1);
   });
 
-  it('registers billing late fees before reminders and stale-payment alerts', async () => {
+  it('registers billing work before service request auto-close', async () => {
     mocks.claimDailyJobRun.mockResolvedValue(true);
     mocks.runBillingDailyTaskPrivileged.mockResolvedValue(undefined);
     expect(dailyJobTasks.map(({ name }) => name)).toEqual([
       'billing.late_fees',
       'billing.reminders',
       'billing.stale_payments',
+      'service_request.auto_close',
     ]);
 
     await runDailyJobs({ now: new Date('2026-11-10T00:00:00.000Z') });
@@ -120,6 +124,10 @@ describe('daily jobs', () => {
       ['billing.reminders', 'society-2', '2026-11-10'],
       ['billing.stale_payments', 'society-1', '2026-11-10'],
       ['billing.stale_payments', 'society-2', '2026-11-10'],
+    ]);
+    expect(mocks.runServiceRequestAutoClosePrivileged.mock.calls).toEqual([
+      ['society-1', '2026-11-10'],
+      ['society-2', '2026-11-10'],
     ]);
   });
 });
