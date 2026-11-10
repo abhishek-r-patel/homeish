@@ -269,6 +269,11 @@ export function MembershipStatus({
       ) : null}
       <ActionNotice state={notice} />
       <SignOutButton onSignOut={signOut} pending={pending} />
+      {!waiting ? (
+        <Link className="text-caption text-brand underline" href="/register">
+          Request access with a society code
+        </Link>
+      ) : null}
       <Link className="text-caption text-brand underline" href="/login">
         Sign in with a different email
       </Link>

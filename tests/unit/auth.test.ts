@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   finishAuthCodeAttempt: vi.fn(),
   hashRateLimitIdentifier: vi.fn(),
   hasSignInAccess: vi.fn(),
+  isRegistrationCodeActive: vi.fn(),
   ensureAuthUserForSignIn: vi.fn(),
   logUnexpectedError: vi.fn(),
   reserveAuthCodeAttempt: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock('../../src/core/privileged', () => ({
   ensureAuthUserForSignIn: mocks.ensureAuthUserForSignIn,
   finishAuthCodeAttempt: mocks.finishAuthCodeAttempt,
   hasSignInAccess: mocks.hasSignInAccess,
+  isRegistrationCodeActive: mocks.isRegistrationCodeActive,
   reserveAuthCodeAttempt: mocks.reserveAuthCodeAttempt,
   startAuthCodeChallenge: mocks.startAuthCodeChallenge,
 }));
@@ -72,6 +74,7 @@ describe('email-code authentication', () => {
       'auth:challenge:email:' + 'a'.repeat(64),
     );
     mocks.hasSignInAccess.mockResolvedValue(true);
+    mocks.isRegistrationCodeActive.mockResolvedValue(false);
     mocks.ensureAuthUserForSignIn.mockResolvedValue(undefined);
     mocks.logUnexpectedError.mockResolvedValue('ERR-A1B2C3D4E5');
     mocks.reserveAuthCodeAttempt.mockResolvedValue({
@@ -149,17 +152,46 @@ describe('email-code authentication', () => {
     );
   });
 
-  it('keeps registration requests generic until a registration flow authorizes them', async () => {
+  it('keeps registration requests generic until the join code authorizes them', async () => {
     const response = await requestCode(
-      { email: 'resident@example.test', purpose: 'register' },
+      {
+        email: 'resident@example.test',
+        purpose: 'register',
+        joinCode: 'ABCDEFG2',
+      },
       context,
     );
 
     expect(response.message).toBe(
       'If this email is registered, a code has been sent.',
     );
-    expect(mocks.hasSignInAccess).not.toHaveBeenCalled();
+    expect(mocks.isRegistrationCodeActive).toHaveBeenCalledWith('ABCDEFG2');
     expect(mocks.signInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it('starts a separate registration challenge only for a valid code', async () => {
+    mocks.isRegistrationCodeActive.mockResolvedValue(true);
+
+    await requestCode(
+      {
+        email: 'resident@example.test',
+        purpose: 'register',
+        joinCode: 'ABCDEFG2',
+      },
+      context,
+    );
+
+    expect(mocks.ensureAuthUserForSignIn).toHaveBeenCalledWith(
+      'resident@example.test',
+    );
+    expect(mocks.hashRateLimitIdentifier).toHaveBeenCalledWith(
+      'auth:registration:challenge:email',
+      'resident@example.test',
+    );
+    expect(mocks.signInWithOtp).toHaveBeenCalledWith({
+      email: 'resident@example.test',
+      options: { shouldCreateUser: false },
+    });
   });
 
   it('enforces email and IP policies for code requests and verification', async () => {
@@ -253,6 +285,30 @@ describe('email-code authentication', () => {
     });
     expect(mocks.rpc).toHaveBeenCalledWith('claim_memberships');
     expect(mocks.verifyOtp).toHaveBeenCalledTimes(1);
+  });
+
+  it('verifies a registration code only while its society code remains active', async () => {
+    mocks.isRegistrationCodeActive.mockResolvedValue(true);
+
+    await expect(
+      verifyCode(
+        {
+          email: 'resident@example.test',
+          code: '123456',
+          purpose: 'register',
+          joinCode: 'ABCDEFG2',
+        },
+        context,
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(mocks.hashRateLimitIdentifier).toHaveBeenCalledWith(
+      'auth:registration:challenge:email',
+      'resident@example.test',
+    );
+    expect(mocks.hasSignInAccess).not.toHaveBeenCalled();
+    expect(mocks.isRegistrationCodeActive).toHaveBeenCalledWith('ABCDEFG2');
+    expect(mocks.rpc).toHaveBeenCalledWith('claim_memberships');
   });
 
   it('clears the session if membership claiming fails after code verification', async () => {

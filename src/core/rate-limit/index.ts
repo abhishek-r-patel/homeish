@@ -49,12 +49,6 @@ export const RATE_LIMIT_POLICIES = {
     windowSeconds: 900,
     failureMode: 'closed',
   },
-  guardPinFailures: {
-    key: 'guard:roster:pin-failures',
-    limit: 5,
-    windowSeconds: 900,
-    failureMode: 'closed',
-  },
   visitorPreApprovalGuardFailures: {
     key: 'visitor:guard-session:failures',
     limit: 10,

@@ -14,4 +14,11 @@ export {
   type ErrorLogWrite,
 } from './log-writers';
 export { consumeRateLimitKey } from './rate-limit-writer';
+export {
+  isRegistrationCodeActive,
+  lookupRegistrationSociety,
+} from './registration';
 export { checkDatabaseHealth } from './health-check';
+export { claimDailyJobRun, listDailyJobSocieties } from './daily-jobs';
+export { sendTransactionalEmail } from './transactional-email';
+export type { TransactionalEmail } from '../notifications/email';

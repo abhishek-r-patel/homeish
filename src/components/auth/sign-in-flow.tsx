@@ -163,6 +163,15 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
             We use your email only to confirm your sign-in. Account details are
             never shown to someone who is not signed in.
           </p>
+          <p className="text-caption text-ink-muted">
+            Have a society join code?{' '}
+            <Link
+              className="text-brand underline underline-offset-2"
+              href="/register"
+            >
+              Request access
+            </Link>
+          </p>
         </>
       ) : (
         <>

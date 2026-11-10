@@ -43,4 +43,18 @@ describe('environment configuration', () => {
       }),
     ).toThrow('BREVO_API_KEY');
   });
+
+  it('accepts a deployment-configured positive daily Brevo quota', () => {
+    const parsed = parseServerEnvironment({
+      ...localEnvironment,
+      BREVO_DAILY_EMAIL_QUOTA: '450',
+    });
+    expect(parsed.server.BREVO_DAILY_EMAIL_QUOTA).toBe(450);
+    expect(() =>
+      parseServerEnvironment({
+        ...localEnvironment,
+        BREVO_DAILY_EMAIL_QUOTA: '0',
+      }),
+    ).toThrow('BREVO_DAILY_EMAIL_QUOTA');
+  });
 });

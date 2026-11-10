@@ -93,6 +93,9 @@ export async function requestCodeAction(
       {
         email: formData.get('email'),
         purpose: formData.get('purpose'),
+        ...(formData.get('joinCode')
+          ? { joinCode: formData.get('joinCode') }
+          : {}),
       },
       context,
     ),
@@ -103,15 +106,22 @@ export async function verifyCodeAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   return runAuthAction('auth.verifyCode', async (context) => {
+    const purpose = formData.get('purpose');
+    const joinCode = formData.get('joinCode');
     await verifyCode(
       {
         email: formData.get('email'),
         code: formData.get('code'),
+        ...(purpose ? { purpose } : {}),
+        ...(joinCode ? { joinCode } : {}),
       },
       context,
     );
     return {
-      redirectTo: safeReturnPath(formData.get('returnTo')) ?? '/session',
+      redirectTo:
+        purpose === 'register'
+          ? '/register'
+          : (safeReturnPath(formData.get('returnTo')) ?? '/session'),
     };
   });
 }

@@ -13,6 +13,7 @@ import {
   ensureAuthUserForSignIn,
   finishAuthCodeAttempt,
   hasSignInAccess,
+  isRegistrationCodeActive,
   reserveAuthCodeAttempt,
   startAuthCodeChallenge,
 } from '../privileged';
@@ -24,8 +25,30 @@ export const requestCodeSchema = z
   .object({
     email: emailSchema,
     purpose: z.enum(['signin', 'register']),
+    joinCode: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-HJ-NP-Z2-9]{8}$/)
+      .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine(({ purpose, joinCode }, context) => {
+    if (purpose === 'register' && !joinCode) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Enter the society code to register.',
+        path: ['joinCode'],
+      });
+    }
+    if (purpose === 'signin' && joinCode) {
+      context.addIssue({
+        code: 'custom',
+        message: 'A society code is only used for registration.',
+        path: ['joinCode'],
+      });
+    }
+  });
 
 export const verifyCodeSchema = z
   .object({
@@ -34,8 +57,31 @@ export const verifyCodeSchema = z
       .string()
       .trim()
       .regex(/^\d{6}$/),
+    purpose: z.enum(['signin', 'register']).default('signin'),
+    joinCode: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-HJ-NP-Z2-9]{8}$/)
+      .optional(),
   })
-  .strict();
+  .strict()
+  .superRefine(({ purpose, joinCode }, context) => {
+    if (purpose === 'register' && !joinCode) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Enter the society code to register.',
+        path: ['joinCode'],
+      });
+    }
+    if (purpose === 'signin' && joinCode) {
+      context.addIssue({
+        code: 'custom',
+        message: 'A society code is only used for registration.',
+        path: ['joinCode'],
+      });
+    }
+  });
 
 export interface AuthRequestContext {
   requestId: string;
@@ -67,7 +113,7 @@ export async function requestCode(
   input: unknown,
   context: AuthRequestContext,
 ): Promise<{ message: string }> {
-  const { email, purpose } = parseRequest(requestCodeSchema, input);
+  const { email, purpose, joinCode } = parseRequest(requestCodeSchema, input);
   const requestId = requestIdFrom(context);
 
   await Promise.all([
@@ -84,14 +130,20 @@ export async function requestCode(
     enforceRateLimit('authRequestCodeIpHourly', ipFrom(context), requestId),
   ]);
 
-  if (purpose !== 'signin' || !(await hasSignInAccess(email))) {
+  if (
+    (purpose === 'signin' && !(await hasSignInAccess(email))) ||
+    (purpose === 'register' &&
+      (!joinCode || !(await isRegistrationCodeActive(joinCode))))
+  ) {
     return { message: REQUEST_CODE_MESSAGE };
   }
 
   try {
     await ensureAuthUserForSignIn(email);
     const emailKey = await hashRateLimitIdentifier(
-      'auth:challenge:email',
+      purpose === 'register'
+        ? 'auth:registration:challenge:email'
+        : 'auth:challenge:email',
       email,
     );
     await startAuthCodeChallenge(emailKey);
@@ -131,7 +183,10 @@ export async function verifyCode(
   input: unknown,
   context: AuthRequestContext,
 ): Promise<void> {
-  const { email, code } = parseRequest(verifyCodeSchema, input);
+  const { email, code, purpose, joinCode } = parseRequest(
+    verifyCodeSchema,
+    input,
+  );
   const requestId = requestIdFrom(context);
 
   await Promise.all([
@@ -139,7 +194,12 @@ export async function verifyCode(
     enforceRateLimit('authVerifyCodeIpHourly', ipFrom(context), requestId),
   ]);
 
-  const emailKey = await hashRateLimitIdentifier('auth:challenge:email', email);
+  const emailKey = await hashRateLimitIdentifier(
+    purpose === 'register'
+      ? 'auth:registration:challenge:email'
+      : 'auth:challenge:email',
+    email,
+  );
   const { client } = await createUserSupabaseClient();
   const reservation = await reserveAuthCodeAttempt(emailKey);
   if (reservation.status === 'locked') {
@@ -199,7 +259,10 @@ export async function verifyCode(
     }
     sessionEstablished = true;
 
-    const stillEligible = await hasSignInAccess(email);
+    const stillEligible =
+      purpose === 'register'
+        ? Boolean(joinCode && (await isRegistrationCodeActive(joinCode)))
+        : await hasSignInAccess(email);
     const challengeConsumed = await finish({
       failed: false,
       succeeded: true,
