@@ -24,6 +24,10 @@ export type StorageBucket =
 
 const SOCIETY_LOGO_PATH_PATTERN =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/logos\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png)$/i;
+const BILLING_QR_PATH_PATTERN =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/billing-qr\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png)$/;
+const BILLING_PAYMENT_PROOF_PATH_PATTERN =
+  /^([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/payments\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png)$/i;
 
 const STORAGE_BUCKETS: readonly StorageBucket[] = [
   'visitor-photos',
@@ -45,6 +49,24 @@ const BUCKET_CONTENT_TYPES: Readonly<
 export function isSocietyLogoPath(path: string, societyId: string): boolean {
   const match = SOCIETY_LOGO_PATH_PATTERN.exec(path);
   return match?.[1]?.toLowerCase() === societyId.toLowerCase();
+}
+
+export function isBillingQrPath(path: string, societyId: string): boolean {
+  const match = BILLING_QR_PATH_PATTERN.exec(path);
+  return match?.[1] === societyId;
+}
+
+export function isBillingPaymentProofPath(
+  path: string,
+  societyId: string,
+  unitId: string,
+): boolean {
+  const match = BILLING_PAYMENT_PROOF_PATH_PATTERN.exec(path);
+  return (
+    match !== null &&
+    match[1]?.toLowerCase() === societyId.toLowerCase() &&
+    match[2]?.toLowerCase() === unitId.toLowerCase()
+  );
 }
 
 export async function verifyFileAttachment(

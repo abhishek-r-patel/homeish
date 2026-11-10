@@ -366,6 +366,7 @@ homeish/
 │  │  ├─ website/                 Marketing copy/screens, society-address form, synthetic preview
 │  │  ├─ permissions/             Role types, shared helpers
 │  │  ├─ modules/                 Module registry, enabled-modules lookup, guards
+│  │  ├─ billing/                 P7A setup operations, checked queries and shared money/settings schemas
 │  │  ├─ notifications/           In-app + push dispatch, inbox
 │  │  ├─ logging/                 Error log, audit log, request ID, Sentry adapter
 │  │  ├─ errors/                  Error classes, result type, mapping
@@ -385,6 +386,7 @@ homeish/
 │  │     ├─ components/          Module composites (per DESIGN.md 6.20)
 │  │     └─ __tests__/
 │  ├─ components/
+│  │  ├─ billing/                 Charge and payment-settings forms, confirmations and private QR upload
 │  │  └─ ui/                      Shared design-system components (DESIGN.md Section 6)
 │  ├─ styles/                     Tailwind theme/tokens
 │  └─ lib/                        Pure utilities (money, dates, formatting)

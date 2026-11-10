@@ -1,24 +1,66 @@
 // Issue a five-minute view URL only to society members or verified developers.
 import { z } from 'zod';
 import { AppError, ValidationError } from '../../../../core/errors';
-import { isSocietyLogoPath } from '../../../../core/files/attachments';
+import {
+  isBillingPaymentProofPath,
+  isBillingQrPath,
+  isSocietyLogoPath,
+} from '../../../../core/files/attachments';
+import { readBillingPaymentDetails } from '../../../../core/billing/queries';
 import { runFileRoute } from '../../../../core/files/http';
+import { authorizeRequest } from '../../../../core/permissions/authorize';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 
-const viewSchema = z
-  .object({
-    bucket: z.literal('society-assets'),
-    path: z.string().max(500),
-  })
-  .strict();
+const viewSchema = z.discriminatedUnion('bucket', [
+  z
+    .object({
+      bucket: z.literal('society-assets'),
+      path: z.string().max(500),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('delivery-photos'),
+      path: z.string().max(500),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('payment-proofs'),
+      path: z.string().max(500),
+    })
+    .strict(),
+]);
 
 function parseBody(body: unknown) {
   const parsed = viewSchema.safeParse(body);
   if (!parsed.success) {
     throw new ValidationError({ body: 'The file request is invalid.' });
   }
+  if (parsed.data.bucket === 'delivery-photos') {
+    const match = parsed.data.path.match(
+      /^([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/deliveries\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png)$/i,
+    );
+    if (!match?.[1]) {
+      throw new ValidationError({ path: 'Choose a valid delivery photo.' });
+    }
+    return { ...parsed.data, societyId: match[1] };
+  }
+  if (parsed.data.bucket === 'payment-proofs') {
+    const societyId = parsed.data.path.split('/')[0] ?? '';
+    const unitId = parsed.data.path.split('/')[1] ?? '';
+    if (!isBillingPaymentProofPath(parsed.data.path, societyId, unitId)) {
+      throw new ValidationError({
+        path: 'Choose a valid billing payment proof.',
+      });
+    }
+    return { ...parsed.data, societyId };
+  }
   const societyId = parsed.data.path.split('/')[0] ?? '';
-  if (!isSocietyLogoPath(parsed.data.path, societyId)) {
+  if (
+    !isSocietyLogoPath(parsed.data.path, societyId) &&
+    !isBillingQrPath(parsed.data.path, societyId)
+  ) {
     throw new ValidationError({ path: 'Choose a valid society file.' });
   }
   return { ...parsed.data, societyId };
@@ -48,7 +90,38 @@ async function authorizeView(context: RequestContext, societyId: string) {
 export async function POST(request: Request) {
   return runFileRoute(request, '/api/files/url', async (context, body) => {
     const input = parseBody(body);
-    await authorizeView(context, input.societyId);
+    if (input.bucket === 'delivery-photos') {
+      authorizeRequest(context, {
+        moduleKey: 'delivery',
+        permission: 'delivery:list',
+      });
+      if (
+        context.societyId !== input.societyId ||
+        !context.roles.some((role) =>
+          ['admin', 'committee', 'guard'].includes(role),
+        )
+      ) {
+        throw new AppError('FORBIDDEN');
+      }
+    } else if (input.bucket === 'payment-proofs') {
+      authorizeRequest(context, {
+        moduleKey: 'billing',
+        permission: 'billing:payments:read',
+      });
+      if (
+        context.societyId !== input.societyId ||
+        !context.roles.some((role) => ['admin', 'committee'].includes(role))
+      ) {
+        throw new AppError('FORBIDDEN');
+      }
+    } else if (isBillingQrPath(input.path, input.societyId)) {
+      const details = await readBillingPaymentDetails(context, input.societyId);
+      if (!context.roles.includes('admin') && details?.qr_path !== input.path) {
+        throw new AppError('FORBIDDEN');
+      }
+    } else {
+      await authorizeView(context, input.societyId);
+    }
     const expiresIn = 300;
     const { data, error } = await context.db.storage
       .from(input.bucket)

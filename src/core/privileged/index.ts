@@ -21,4 +21,23 @@ export {
 export { checkDatabaseHealth } from './health-check';
 export { claimDailyJobRun, listDailyJobSocieties } from './daily-jobs';
 export { sendTransactionalEmail } from './transactional-email';
+export {
+  checkInPreApprovedVisitorPrivileged,
+  checkInVisitorPrivileged,
+  checkOutVisitorPrivileged,
+  createVisitorEntryPrivileged,
+  overrideVisitorPrivileged,
+  validateVisitorCodePrivileged,
+} from './visitor';
+export {
+  collectDeliveryAsGuardPrivileged,
+  createDeliveryEntryPrivileged,
+  overrideDeliveryPrivileged,
+} from './delivery';
+export {
+  runBillingDailyTaskPrivileged,
+  sendBillingReceiptEmailPrivileged,
+  type BillingDailyTask,
+  type BillingReceiptEmail,
+} from './billing';
 export type { TransactionalEmail } from '../notifications/email';

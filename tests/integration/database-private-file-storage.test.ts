@@ -102,20 +102,49 @@ describe.skipIf(!hasDatabase)('database private file storage', () => {
             otherAdminId,
           ],
         );
+        await client.query(
+          `insert into public.module_configs (society_id, module_key, enabled)
+           values ($1, 'visitor', true), ($1, 'delivery', true)`,
+          [societyId],
+        );
+        const unitRows = await client.query<{
+          id: string;
+          society_id: string;
+        }>(
+          `insert into public.units (society_id, number, created_by)
+           values ($1, '1A', $2), ($3, '1A', $4)
+           returning id, society_id`,
+          [societyId, adminId, otherSocietyId, otherAdminId],
+        );
+        const unitId = unitRows.rows.find(
+          (unit) => unit.society_id === societyId,
+        )?.id;
+        const otherUnitId = unitRows.rows.find(
+          (unit) => unit.society_id === otherSocietyId,
+        )?.id;
+        if (!unitId || !otherUnitId) {
+          throw new Error('Storage unit fixtures were not created.');
+        }
         for (const bucketId of expectedBuckets) {
+          const ownName =
+            bucketId === 'delivery-photos'
+              ? `${societyId}/${unitId}/deliveries/44a696d6-774c-41d1-ae47-6254d4a8f4cf.jpg`
+              : `${societyId}/files/object.jpg`;
+          const foreignName =
+            bucketId === 'delivery-photos'
+              ? `${otherSocietyId}/${otherUnitId}/deliveries/54a696d6-774c-41d1-ae47-6254d4a8f4cf.jpg`
+              : `${otherSocietyId}/files/object.jpg`;
           await client.query(
             `insert into storage.objects (bucket_id, name)
-             values
-               ($1, $2 || '/files/object.jpg'),
-               ($1, $3 || '/files/object.jpg')`,
-            [bucketId, societyId, otherSocietyId],
+             values ($1, $2), ($1, $3)`,
+            [bucketId, ownName, foreignName],
           );
         }
         await client.query(
           `insert into storage.objects (bucket_id, name)
            values ('society-assets', 'not-a-society/logos/logo.png')`,
         );
-        return { adminId, guardId, residentId, societyId };
+        return { adminId, guardId, otherUnitId, residentId, societyId };
       });
 
       const residentRows = await database.asRole(
@@ -189,6 +218,37 @@ describe.skipIf(!hasDatabase)('database private file storage', () => {
         ),
       );
       expect(crossSocietyUpload.code).toBe('42501');
+      const mismatchedDeliveryUnit = await dbError(
+        database.asRole('authenticated', { sub: fixture.guardId }, (client) =>
+          client.query(
+            `insert into storage.objects (bucket_id, name)
+             values ('delivery-photos', $1)`,
+            [
+              `${fixture.societyId}/${fixture.otherUnitId}/deliveries/64a696d6-774c-41d1-ae47-6254d4a8f4cf.jpg`,
+            ],
+          ),
+        ),
+      );
+      expect(mismatchedDeliveryUnit.code).toBe('42501');
+
+      await database.asSuperuser((client) =>
+        client.query(
+          `update public.module_configs set enabled = false
+           where society_id = $1 and module_key = 'visitor'`,
+          [fixture.societyId],
+        ),
+      );
+      const disabledVisitorPhotos = await database.asRole(
+        'authenticated',
+        { sub: fixture.guardId },
+        (client) =>
+          client.query(
+            `select name from storage.objects
+             where bucket_id = 'visitor-photos' and name like $1`,
+            [`${fixture.societyId}/%`],
+          ),
+      );
+      expect(disabledVisitorPhotos.rows).toHaveLength(0);
     } finally {
       await database.drop();
     }

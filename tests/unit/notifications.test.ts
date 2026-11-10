@@ -82,6 +82,17 @@ describe('notification delivery adapters', () => {
     ).toBe(false);
   });
 
+  it('links UPI-detail change notifications to the admin payment settings without account data', () => {
+    const payload = createMinimalPushPayload({
+      title: 'Society payment details changed',
+      body: 'Review Payment Settings before making or confirming a payment.',
+      entity_type: 'billing_payment_details',
+      entity_id: 'cf25cc8a-00d9-4bf8-ac0f-f67eb3ef34cf',
+    });
+    expect(payload.url).toBe('/admin/billing?tab=payment-settings');
+    expect(payload.url).not.toContain('cf25cc8a');
+  });
+
   it('retries transient push failures once and prunes gone subscriptions', async () => {
     const calls = new Map<string, number>();
     const pruned: string[] = [];

@@ -401,7 +401,7 @@ RLS is enabled, with no user-facing grants. Only service-role functions create c
 | purpose                 | text        | no   | `guest`, `cab`, `service`, `official`, `other`                                                                     |
 | vehicle_no              | text        | yes  | ≤ 20, stored upper-case without spaces                                                                             |
 | people_count            | int         | no   | 1–50, default 1                                                                                                    |
-| photo_path              | text        | yes  |                                                                                                                    |
+| photo_path              | text        | yes  | Private upload at `{society_id}/{unit_id}/visitors/{random_uuid}.jpg|png`; verified again before entry creation           |
 | source                  | text        | no   | `walk_in`, `pre_approved`                                                                                          |
 | pre_approval_id         | uuid        | yes  | → `visitor_pre_approvals`; required when `source = pre_approved`, unique (one entry per approval)                  |
 | status                  | text        | no   | `pending`, `approved`, `denied`, `expired`, `checked_in`, `checked_out`                                            |
@@ -450,34 +450,37 @@ Unique `(society_id, phone)` among active rows. MVP warns only (A-12).
 
 ### 5.1 `delivery_entries`
 
-| Column              | Type        | Null | Notes                                                                          |
-| ------------------- | ----------- | ---- | ------------------------------------------------------------------------------ |
-| Std                 |             |      |                                                                                |
-| unit_id             | uuid        | no   |                                                                                |
-| company             | text        | no   | From the list or free text, ≤ 60                                               |
-| delivery_type       | text        | no   | `food`, `parcel`, `grocery`, `other`                                           |
-| photo_path          | text        | yes  |                                                                                |
-| status              | text        | no   | `pending_response`, `allowed`, `left_at_gate`, `denied`, `collected`, `closed` |
-| respond_by          | timestamptz | yes  | As for visitors                                                                |
-| decision_source     | text        | yes  | `resident`, `preference` (unit rule applied automatically), `guard_override`   |
-| decided_by          | uuid        | yes  |                                                                                |
-| decided_at          | timestamptz | yes  |                                                                                |
-| override_reason     | text        | yes  | Required for `guard_override`                                                  |
-| handled_by_guard_id | uuid        | no   | → `guard_roster`                                                               |
-| received_at         | timestamptz | yes  | When left at the gate/security desk                                            |
-| collected_at        | timestamptz | yes  | Set only from `left_at_gate` (DEL-5)                                           |
-| collected_by        | uuid        | yes  | → `profiles` (resident or guard who marked it)                                 |
+| Column              | Type        | Null | Notes                                                                                   |
+| ------------------- | ----------- | ---- | --------------------------------------------------------------------------------------- |
+| Standard columns    |             |      | Includes `created_by`, `updated_at`, `updated_by`                                       |
+| unit_id             | uuid        | no   | Same-society FK to an active unit                                                       |
+| company             | text        | no   | Platform/company or custom value; 1–60 characters                                       |
+| delivery_person     | text        | yes  | Optional; at most 120 characters                                                        |
+| delivery_type       | text        | no   | `food`, `parcel`, `grocery`, `other`                                                    |
+| photo_path          | text        | yes  | Private `delivery-photos` bucket; society/unit-scoped path                              |
+| status              | text        | no   | `pending_response`, `allowed`, `left_at_gate`, `denied`, `collected`, `closed`; a guard may close an expired request with a reason |
+| client_request_id   | uuid        | no   | Idempotency key unique per society and creator                                          |
+| respond_by          | timestamptz | yes  | Required while `pending_response`; computed from the society response timeout           |
+| decision_source     | text        | yes  | `resident`, `preference` (standing rule applied), or `guard_override`                   |
+| decided_by          | uuid        | yes  | Set for resident, standing-preference and guard decisions                               |
+| decided_at          | timestamptz | yes  | Required after a decision                                                               |
+| override_reason     | text        | yes  | Required for `guard_override`, at most 500 characters                                   |
+| handled_by_guard_id | uuid        | no   | Same-society FK to `guard_roster`                                                       |
+| received_at         | timestamptz | yes  | Set when a delivery is left at the gate/security desk                                   |
+| collected_at        | timestamptz | yes  | Set only when moving from `left_at_gate` to `collected`                                 |
+| collected_by        | uuid        | yes  | → `profiles` (resident or guard who marked it)                                          |
 
 Uncollected parcels are `left_at_gate` rows with `received_at` older than the society's threshold (default 3 days).
 
 ### 5.2 `delivery_preferences`
 
-| Column                 | Type | Null    | Notes                                                          |
-| ---------------------- | ---- | ------- | -------------------------------------------------------------- |
-| society_id             | uuid | PK part |                                                                |
-| unit_id                | uuid | PK part | One row per unit                                               |
-| rule                   | text | no      | `ask` (default), `always_allow`, `always_leave_at_gate` (A-13) |
-| updated_at, updated_by |      |         |                                                                |
+| Column                 | Type        | Null    | Notes                                                          |
+| ---------------------- | ----------- | ------- | -------------------------------------------------------------- |
+| society_id             | uuid        | PK part |                                                                |
+| unit_id                | uuid        | PK part | One row per unit                                               |
+| rule                   | text        | no      | `ask` (default), `always_allow`, `always_leave_at_gate` (A-13) |
+| updated_at             | timestamptz | no      | Maintained by the common update trigger                        |
+| updated_by             | uuid        | yes     | → `profiles`                                                   |
 
 ---
 
@@ -496,6 +499,8 @@ A **bill** (also used for fines and late fees) creates a **debit** on the unit's
 | method       | text    | no   | `fixed`, `per_sqft`, `custom` (PRD D-12)                                                                  |
 | amount_paise | bigint  | yes  | `fixed`: amount per unit; `per_sqft`: rate per sq ft in paise; `custom`: null. Check: > 0 when not custom |
 | active       | boolean | no   | Default `true`                                                                                            |
+
+P7A creates this table with minimal read grants and module-aware RLS for administrators and committee. `billing_charge_save` handles create/update/deactivate and its audit row in one transaction; direct API writes are denied. Updates require the last-read timestamp so stale editors cannot overwrite another administrator's change. Non-custom amounts must be positive safe-integer paise (at most `9007199254740991`); custom amounts must be null. Deactivation retains the row for bill history.
 
 ### 6.3 `billing_bills`
 
@@ -590,6 +595,8 @@ Checks: `bill` ⇒ debit with `bill_id`; `payment` ⇒ credit with `payment_id`;
 
 Changed only by one function that writes an `audit_logs` row (old and new values), notifies all admins and committee members, and lets residents see "last changed on" from `updated_at` (PRD D-31, approved). Readable by every member of the society (residents need it to pay). History lives in the audit log (no duplicate history table).
 
+P7A implements `billing_payment_details_get/update` with the billing module and society state checked again in SQL. A society-row lock serializes even concurrent first saves; an expected update timestamp prevents stale overwrites. Unchanged saves create no new history or notifications. The update function rechecks optional QR object existence, ownership path, MIME type and size. QR paths are `{society_id}/billing-qr/{random_uuid}.jpg|png` in `society-assets`; published objects cannot be overwritten or removed. Members can read the published image, while only administrators can read unattached drafts. Disabling billing hides these rows and QR images; suspension keeps reads but denies writes; archival denies access.
+
 ### 6.9 `billing_receipt_counters`
 
 | Column     | Type | Null    | Notes                                                    |
@@ -599,6 +606,17 @@ Changed only by one function that writes an `audit_logs` row (old and new values
 | last_no    | int  | no      | Incremented under a row lock when a payment is confirmed |
 
 Guarantees gap-free, unique receipt numbers per society and year without a global sequence.
+
+P7A provisions the counter table with no API table privileges and a deny policy. Receipt issuance and the row-locking increment are implemented in P7C, not by setup operations.
+
+### 6.10 Billing implementation notes (P7B–P7F)
+
+- **Migrations:** `20261110190000_billing_bills_ledger`, `20261110193000_billing_payments`, `20261110200000_billing_fines_late_fees` and `20261110203000_billing_reminders_reports`, after the P7A `20261110183000_billing_foundations`.
+- **Fines and waivers:** `billing_fine_add` creates a `fine` bill with one line and its ledger debit, plus an audit row, in a single transaction. `billing_bill_waive` locks the bill. It rejects waivers that exceed the outstanding amount, and when `amount` is null it waives the whole outstanding amount. Cancellation is allowed only when nothing has been paid; otherwise it raises `23505` with hint `not_unpaid`. Every waiver writes a ledger entry and an audit row with the reason. Admins act directly; there is no committee approval step.
+- **Late fees:** `billing_late_fees_run(society, today, request)` is executed only by the service role (daily runner). It charges at most one `late_fee` bill per overdue `regular`/`fine` bill per calendar month, after `due_date + grace_days`. Fees are a flat amount or a percentage of the outstanding amount, rounded per the society rule. Late-fee bills are never charged late fees (no compounding). The unique `(related_bill_id, period_start)` keeps re-runs idempotent. System-generated late fees have a null `created_by`; check constraints allow this only for `late_fee` bills and for lines without a charge type.
+- **Reminders and stale payments:** `billing_reminders_run` sends at most one notification per unit and reminder type per day: before due (default 3 days), on the due date, and every N days when overdue (default 7). `billing_stale_payments_run` alerts active admins once, on the day a submission reaches `pending_confirmation_alert_days` (default 3).
+- **Dashboard and exports:** `billing_dashboard(society, from, to)` returns aggregates and the top defaulters for A/C. `billing_report_export` builds a `dues_by_unit`, `collections` or `defaulters` CSV payload into a `jobs` row of type `export` and audits the export (LOG-4). `export_job_get` returns the job only to its creator or A/C of that society.
+- **Receipts:** `billing_receipt_get` returns a confirmed payment's receipt to the payer, unit occupants and A/C. `billing_receipt_email_recipients` (service role) lists payer email addresses for the receipt email.
 
 ---
 
@@ -727,12 +745,14 @@ Defaults apply when a key is absent. Editable by developer unless marked **A** (
 | delivery        | `leave_at_gate_enabled`           | true                              |                                       |
 | billing         | `due_day_of_month`                | 10                                |                                       |
 | billing         | `grace_days`                      | 5                                 |                                       |
-| billing         | `late_fee`                        | none                              | `{type: flat/percent, value}` (BIL-3) |
-| billing         | `reminders`                       | before 3 / on due / every 7 after | BIL-10                                |
+| billing         | `late_fee`                        | `null` (off)                      | `{type: "flat", value: integer_paise}` or `{type: "percent", value: percentage}`; percentage > 0, at most 100, up to 2 decimals (BIL-3, D-35) |
+| billing         | `reminders`                       | `{before_due_days: 3, on_due: true, overdue_every_days: 7}` | BIL-10; before may be 0; overdue interval must be positive |
 | billing         | `pending_confirmation_alert_days` | 3                                 | BIL-17                                |
 | service_request | `auto_close_days`                 | 3                                 | SRQ-3                                 |
 
 UPI details are **not** settings: they have their own table with a format check (Section 6.8).
+
+P7A registers billing settings as developer-managed, validates the same closed shape at the TypeScript and database boundaries, and preserves the defaults when a key is absent. Due day is 1-31, grace days are non-negative, and pending-confirmation alert days must be positive. These settings do not activate billing or run fees/reminders in P7A.
 
 ---
 
@@ -786,13 +806,13 @@ All purges are performed by the daily job (idempotent, logged).
 
 | Bucket            | Content             | Path                          | Who reads                                                                                      | Who writes                         |
 | ----------------- | ------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------- |
-| `visitor-photos`  | Visitor photos      | `{society_id}/{entry_id}/…`   | Admin, committee, guard, occupants of that unit                                                | Guard/admin when logging the entry |
+| `visitor-photos`  | Visitor photos      | `{society_id}/{unit_id}/visitors/{random_uuid}.jpg|png` | Admin, committee, guard | Guard/admin when logging the entry |
 | `delivery-photos` | Parcel photos       | `{society_id}/{entry_id}/…`   | Same as above                                                                                  | Guard/admin                        |
 | `request-files`   | Request photos/PDFs | `{society_id}/{request_id}/…` | Admin, committee, requester, occupants of the unit (common-area: any resident, D-17), assignee | Requester, admin                   |
 | `payment-proofs`  | UPI screenshots     | `{society_id}/{payment_id}/…` | Admin, committee, the submitter                                                                | Submitter                          |
 | `society-assets`  | Logo, UPI QR        | `{society_id}/…`              | Every member of the society                                                                    | Admin                              |
 
-Every bucket is provisioned private, with a 5 MiB limit and an allow-list of MIME types. `storage.objects` RLS derives the society UUID only from a valid first path segment and uses `private.is_member`, `private.has_role`, and `private.is_developer`; malformed and cross-society paths fail closed. These policies are a database backstop: route handlers additionally authorize the owning record before minting a signed URL. Until their owning modules exist, the file routes only accept the society-logo owner in `society-assets`; unsupported bucket/owner combinations are denied rather than treated as generic society access. The current module-bucket policies grant only their society-level admin/committee/guard baseline; requester, occupant and submitter access must be added alongside each module's owner-row authorization, not by broadening a society-only path check.
+Every bucket is provisioned private, with a 5 MiB limit and an allow-list of MIME types. `storage.objects` RLS derives the society UUID only from a valid first path segment and uses `private.is_member`, `private.has_role`, and `private.is_developer`; malformed and cross-society paths fail closed. These policies are a database backstop: route handlers additionally authorize the owning record before minting a signed URL. The upload route supports society logos, visitor/delivery photos and billing QR images. Entry photo uploads require their enabled module, an authorized guard/admin, and an active same-society unit. Billing QR uploads require a writable, billing-enabled society and its administrator, and allow one pending image alongside the saved image. Unattached QR images can be removed from Payment Settings; no automatic orphan sweep is registered. Other bucket/owner combinations are denied rather than treated as generic society access. Entry photo reads are limited to admin, committee and guard roles by Storage RLS.
 
 The P4G logo path is `{society_id}/logos/{random_uuid}.jpg|png`. Upload URL issuance checks the signed-in admin or MFA-verified developer, the society, the image MIME type, declared byte size, and the per-society pending/stored logo count. The society update operation rechecks the path, object metadata, MIME type and actual stored size before saving it. Replacing or clearing a logo audits the path change and then removes the former object; unattached uploads can be deleted through the upload-url route. An automatic scheduled orphan sweep is not registered yet.
 
@@ -865,12 +885,12 @@ RLS is **enabled on every table**; with no policy, access is denied. "Occupant" 
 | `error_logs`                                                                                   | Developer only                                                                                                       | Privileged writer inserts; developer updates status/resolve fields                                                                   |
 | `jobs`                                                                                         | Creator, admin; developer                                                                                            | Functions                                                                                                                            |
 | `job_run_keys`, `rate_limits`                                                                  | Nobody via API                                                                                                       | Privileged/functions only                                                                                                            |
-| `visitor_entries`                                                                              | Admin, committee, guard (society-wide); occupants (own unit)                                                         | Functions: create (guard/admin), decide (occupant approver), check-in/out (guard/admin), override                                    |
-| `visitor_pre_approvals`                                                                        | Creator, occupants of the unit, admin/committee. **Not guards**                                                      | Create/cancel by occupant via function; guard validates only through the validate function                                           |
-| `visitor_blacklist`                                                                            | Admin, committee, guard                                                                                              | Admin direct                                                                                                                         |
+| `visitor_entries`                                                                              | Admin, committee, guard (society-wide); occupants (own unit)                                                         | Functions: create (guard/admin), decide (occupant approver), check-in/out (guard/admin), override; authenticated column grants exclude phone, photo path and override reason |
+| `visitor_pre_approvals`                                                                        | Creator, occupants of the unit, admin/committee. **Not guards**                                                      | No authenticated direct table reads; create/cancel/list through functions; guard validates only through the validate function         |
+| `visitor_blacklist`                                                                            | Admin, committee, guard                                                                                              | No authenticated direct table reads; list function masks phone outside admin; writes through admin functions                        |
 | `delivery_entries`                                                                             | As `visitor_entries`                                                                                                 | Functions                                                                                                                            |
 | `delivery_preferences`                                                                         | Occupants of the unit, admin/committee                                                                               | Occupant approvers direct for own unit                                                                                               |
-| `billing_charge_types`                                                                         | Admin, committee                                                                                                     | Admin direct                                                                                                                         |
+| `billing_charge_types`                                                                         | Admin, committee                                                                                                     | Checked save function with transactional audit; no direct API writes |
 | `billing_bills`, `billing_bill_lines`, `billing_ledger_entries`, `billing_payment_allocations` | Admin, committee; occupants of that unit (family: own unit read, A-26)                                               | Functions only (generate, fine, waive, confirm)                                                                                      |
 | `billing_payments`                                                                             | Admin, committee; the submitter; occupants of the unit                                                               | Functions only (submit, record, confirm, reject)                                                                                     |
 | `billing_payment_details`                                                                      | Every member of the society                                                                                          | Function (admin; audited; committee notified)                                                                                        |

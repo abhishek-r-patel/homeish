@@ -1,4 +1,5 @@
 // Minimize Web Push data and apply retry/prune rules without exposing device keys.
+import { notificationPath } from './links';
 import { z } from 'zod';
 
 const uuid = z.uuid();
@@ -74,15 +75,13 @@ function notificationUrl(
   entityType: string | null,
   entityId: string | null,
 ): string {
-  if (!entityId || !uuid.safeParse(entityId).success) return '/notifications';
-  const paths: Readonly<Record<string, string>> = {
-    bill: '/bills',
-    delivery_entry: '/deliveries',
-    service_request: '/requests',
-    visitor_entry: '/visitors',
-  };
-  const path = entityType ? paths[entityType] : undefined;
-  return path ? `${path}/${entityId}` : '/notifications';
+  return (
+    notificationPath(
+      entityType,
+      entityId,
+      (value) => uuid.safeParse(value).success,
+    ) ?? '/notifications'
+  );
 }
 
 export function createMinimalPushPayload(notification: {
