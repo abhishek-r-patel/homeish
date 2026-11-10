@@ -425,8 +425,8 @@ Defined in Section 9.
 | Form | Guidance |
 |---|---|
 | Login / code (S-01, S-02) | Email field autofocus; code single field with autofill; resend button shows a cooldown in readable text ("Resend in 0:30", announced at start and end only); generic wording "If this email is registered, a code has been sent. Check your inbox and spam folder."; lockout message shows when to try again; "Use a different email" link |
-| New visitor (G-02) | Fields in this order: unit, visitor name, mobile (optional if society allows), purpose (option cards), people count (stepper), vehicle (optional), photo (optional). Unit picker remembers the last block. Target: complete in < 30 seconds |
-| Pre-approve (R-02) | Name, from/to window (defaults: now → end of day), optional vehicle; on success show the **result screen** with the QR and matching code, Copy and Share |
+| New visitor (G-02) | Fields in this order: unit, visitor name, mobile (optional if society allows), purpose, people count, vehicle (optional), photo (optional). The photo uploads privately and its path is re-verified on submit. Unit picker remembers the last block. Target: complete in < 30 seconds |
+| Pre-approve (R-02) | Name, from/to window (defaults: now → end of day, interpreted in the society time zone), optional vehicle; on success show the **result screen** with the QR and matching code, Copy and Share. Guards can scan with a supported device camera or enter the same code manually |
 | New delivery (G-05) | Company (option chips with "Other"), type, unit, photo optional |
 | Service request (R-05) | Category (option cards/list), location type segmented (My Unit / Common Area), description (required), photos up to 3, priority (Normal/Urgent switch with text label) |
 | Charge type / bill generation (A-07) | Stepper: 1 Choose period and charges → 2 Select units → 3 Preview totals (table + count + grand total) → 4 Confirm. Idempotency message in step 3 if bills already exist for the period |
