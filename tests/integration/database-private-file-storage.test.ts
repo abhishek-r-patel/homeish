@@ -102,6 +102,11 @@ describe.skipIf(!hasDatabase)('database private file storage', () => {
             otherAdminId,
           ],
         );
+        await client.query(
+          `insert into public.module_configs (society_id, module_key, enabled)
+           values ($1, 'visitor', true)`,
+          [societyId],
+        );
         for (const bucketId of expectedBuckets) {
           await client.query(
             `insert into storage.objects (bucket_id, name)
@@ -189,6 +194,25 @@ describe.skipIf(!hasDatabase)('database private file storage', () => {
         ),
       );
       expect(crossSocietyUpload.code).toBe('42501');
+
+      await database.asSuperuser((client) =>
+        client.query(
+          `update public.module_configs set enabled = false
+           where society_id = $1 and module_key = 'visitor'`,
+          [fixture.societyId],
+        ),
+      );
+      const disabledVisitorPhotos = await database.asRole(
+        'authenticated',
+        { sub: fixture.guardId },
+        (client) =>
+          client.query(
+            `select name from storage.objects
+             where bucket_id = 'visitor-photos' and name like $1`,
+            [`${fixture.societyId}/%`],
+          ),
+      );
+      expect(disabledVisitorPhotos.rows).toHaveLength(0);
     } finally {
       await database.drop();
     }
