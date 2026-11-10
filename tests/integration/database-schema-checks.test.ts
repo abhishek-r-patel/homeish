@@ -129,7 +129,7 @@ describe.skipIf(!hasDatabase)('database schema checks', () => {
           AND tbl.relkind IN ('r', 'p')
           AND tbl.relname NOT IN (
             'profiles', 'developers', 'societies', 'modules', 'rate_limits',
-            'auth_code_challenges'
+            'auth_code_challenges', 'push_subscriptions'
           )
           AND (
             society_column.attnum IS NULL

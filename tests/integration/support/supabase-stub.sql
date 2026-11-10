@@ -53,6 +53,33 @@ alter function auth.role() owner to supabase_auth_admin;
 grant usage on schema public to anon, authenticated, service_role, postgres;
 grant create on schema public to postgres;
 
+-- Minimal Storage catalog for policies and private bucket migration tests.
+create schema storage authorization postgres;
+grant usage on schema storage to anon, authenticated, service_role, postgres;
+
+create table storage.buckets (
+  id text primary key,
+  name text not null unique,
+  public boolean not null default false,
+  file_size_limit bigint,
+  allowed_mime_types text[]
+);
+
+create table storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text not null references storage.buckets (id),
+  name text not null,
+  owner uuid,
+  metadata jsonb,
+  unique (bucket_id, name)
+);
+alter table storage.objects owner to postgres;
+alter table storage.objects enable row level security;
+grant select, insert, update, delete on storage.objects
+  to anon, authenticated, service_role, postgres;
+grant select, insert, update, delete on storage.buckets
+  to anon, authenticated, service_role, postgres;
+
 -- Supabase's default grants for objects created by postgres in public.
 alter default privileges for role postgres in schema public
   grant all on tables to anon, authenticated, service_role;
