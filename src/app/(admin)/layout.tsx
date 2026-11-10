@@ -1,8 +1,9 @@
-// Admin route boundary; the admin shell is added with its core screens.
+// Admin route boundary with its responsive navigation shell.
 import type { ReactNode } from 'react';
+import { AdminShell } from '@/components/app-shells';
 
 export default function AdminLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  return children;
+  return <AdminShell>{children}</AdminShell>;
 }

@@ -153,10 +153,12 @@ One Next.js app, role-specific route groups with distinct layouts:
 | `(admin)`    | Admin, committee, HK supervisor | Bottom tabs / sidebar                                        |
 | `developer`  | Platform developer              | Dark top bar, separate login, separate cookie/session policy |
 
-The shell reads the **active society's enabled modules** and the user's roles, then builds navigation (DESIGN.md 5.3). A disabled module renders no nav item, and its routes return the module-disabled page.
+The shared shells accept the active society's enabled modules, roles, society switcher data, and notification count, then build navigation from the module registry and role permissions (DESIGN.md 5.3). Core navigation is always retained; disabled or unauthorized modules produce no item, heading, or gap. The current route-group layouts provide fixed role shells and a core-only module fallback until authenticated request-context wiring; they must not invent a user or society session. The host-aware marketing/environment entry page stays at the app root so it is not framed by the unauthenticated shell. A disabled module renders no nav item, and its routes return the module-disabled page.
 
 ### 5.3 PWA scope (PRD D-23)
 
+- `src/app/manifest.ts`, the square SVG mark and generated 192px/512px PNGs provide install metadata and icons. P2 adds no service worker or offline data caching; the Web Push-only worker remains separate work.
+- The component foundation fixture is a development-only `page.fixture.tsx` route extension, included by `next.config.ts` outside production builds and covered by Playwright accessibility, responsive and interaction checks.
 - Web app manifest (install to home screen), service worker for **Web Push only**. No offline data caching in MVP (NFR-15); an "offline" banner is shown by connectivity detection.
 - Guard devices run the same app; a guard installs it to the home screen. **[AA-01]**
 - iOS Web Push works only for installed PWAs on supported iOS versions; fallback is the guard calling the resident; SMS/WhatsApp alerts are post-MVP (PRD D-06). Flagged risk in PRD Section 15.
@@ -276,9 +278,10 @@ Core tables belong to `core`. Each module owns its tables, prefixed by module ke
 | Developer                                                        | **Email + password + TOTP MFA**, separate login route (S-05)            | `developer` platform role set only by direct database action, never through any UI; sessions require MFA assurance level before any `/developer` route or developer-only function runs |
 
 - Sign-up is **closed**: an email address can sign in only if it has an invitation or approved membership (CORE-9). Unknown emails get the same generic message ("If this email is registered, a code has been sent"), so nobody can discover who is registered (DESIGN.md 7.3).
+- After an auth email is confirmed, a database trigger creates the matching profile and keeps its email synchronized; it preserves user-managed profile fields and never reactivates a disabled profile.
 - Sessions: secure, HTTP-only, same-site cookies; 30-day society sessions (PRD A-06). Developer sessions are shorter. **[AA-02]**
 - Identity is derived **server-side** from the verified session on every request; never from client-supplied IDs.
-- Code abuse protection: provider/Supabase rate limits plus per-email and per-IP attempt counters in Postgres; lockout message states when to retry. Daily email-sending limits at the provider are a real constraint on free plans (PRD risk); monitor quota.
+- Code abuse protection: provider/Supabase rate limits, per-email and per-IP counters in `rate_limits`, and a service-only hashed-email challenge that atomically locks after five failed code attempts. Challenge rows expire after ten minutes; daily email-sending limits at the provider remain a quota to monitor.
 - **Login methods are pluggable (PRD A-35).** The app's own profile record is keyed by the Supabase user ID, not by the login method, and the email is the unique identity. Adding mobile OTP, passwords or Google later means enabling that method and adding a screen; existing users keep their accounts and can link a second method. **[AD-11]**
 - **Gate login mode (PRD CORE-16).** A per-society setting chooses _individual guard accounts_ or a _shared gate account_. In shared mode, a `guard_roster` (society, name, optional PIN hash, active) exists and every visitor/delivery entry stores the roster entry that handled it. The society setting chooses how the guard identifies themselves: pick their name or enter a personal PIN (hashed, attempts rate-limited), so "who let this person in" is always recorded. **[AD-12, PRD D-30 approved]**
 
@@ -308,7 +311,7 @@ Allowed only in a single isolated server module (`src/core/privileged/`), never 
 1. Scheduled job execution.
 2. Error/audit log writer for events where the user session cannot write (e.g., pre-auth errors).
 3. Push notification sender (reading subscriptions).
-4. Sign-in invitation check: a service-role-only database function that tells the server whether an email has an invitation or membership, so codes are sent only to expected people while the user-visible answer stays generic (API 2.1).
+4. Sign-in invitation check: `public.has_signin_access(email)` is service-role-only and returns only a boolean, so codes are sent only to expected people while the user-visible answer stays generic (API 2.1). `public.claim_memberships()` is callable only by an authenticated user and links that user's verified-email invitations.
 5. Developer-console cross-society reads after the developer check passes.
 
 Confirming a payment, changing UPI details and similar admin actions are **not** privileged: they run under the admin's own session and are checked by RLS and SQL functions.

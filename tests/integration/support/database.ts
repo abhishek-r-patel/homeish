@@ -43,6 +43,8 @@ export type ApiRole = 'anon' | 'authenticated' | 'service_role';
 export interface Claims {
   sub?: string;
   role?: string;
+  session_id?: string;
+  aal?: string;
 }
 
 function connectionString(user: string, database: string): string {

@@ -28,7 +28,7 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | Application schema | **`public`** (tables, exposed to the API only through RLS and grants)                                             | Standard Supabase pattern                                                                             |
 | Private schema     | **`private`** (helper and maintenance functions, not exposed to the API)                                          | Keeps security helpers out of the public API surface                                                  |
 | File storage       | Supabase Storage (private buckets); the database stores **paths only**                                            | Section 12                                                                                            |
-| Extensions         | `pgcrypto` (UUIDs, PIN hashing), `citext` (case-insensitive email)                                                | Minimal set. No other extensions in MVP                                                               |
+| Extensions         | `pgcrypto` (UUIDs, PIN hashing), `citext` (case-insensitive email), both in the unexposed `extensions` schema     | Minimal set. No other extensions in MVP                                                               |
 | ORM                | None (ARCHITECTURE AD-03). Generated TypeScript types from the schema; transactional operations are SQL functions | One source of truth for the schema                                                                    |
 
 ### 1.1 Conventions that apply to every table
@@ -45,7 +45,7 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | Text limits                   | Every free-text column has a length `CHECK` (names ≤ 120, descriptions ≤ 2,000, reasons ≤ 500)                                                                                                                                                                                                                                   |
 | Soft delete                   | `active boolean` or a status value. Hard delete is blocked on money, entry, request history and audit tables                                                                                                                                                                                                                     |
 | Deletion of parents           | `ON DELETE RESTRICT` everywhere, except notification and subscription rows owned by a user                                                                                                                                                                                                                                       |
-| Updated timestamps            | `updated_at` maintained by a shared trigger                                                                                                                                                                                                                                                                                      |
+| Updated timestamps            | `updated_at` maintained by `private.set_updated_at()`                                                                                                                                                                                                                                                                            |
 | Double-submit protection      | The tables for user-created records (`visitor_entries`, `delivery_entries`, `billing_payments`, `service_requests`, `service_request_comments`) also carry `client_request_id uuid` (nullable); unique `(society_id, created_by, client_request_id)` where not null, so a repeated submission returns the original row (API 3.6) |
 | Naming of keys                | Primary `…_pkey`, foreign `…_fkey`, unique `…_key`, check `…_check`, index `…_idx`                                                                                                                                                                                                                                               |
 
@@ -53,17 +53,17 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 
 ## 2. Entity Overview
 
-### 2.1 Table inventory (MVP: 35 tables)
+### 2.1 Table inventory (MVP: 36 tables)
 
-| Module                  | Tables                                                                                                                                                                                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Core (17)**           | `profiles`, `developers`, `societies`, `modules`, `module_configs`, `blocks`, `units`, `memberships`, `unit_occupants`, `guard_roster`, `notifications`, `push_subscriptions`, `audit_logs`, `error_logs`, `jobs`, `job_run_keys`, `rate_limits` |
-| **Visitor (3)**         | `visitor_entries`, `visitor_pre_approvals`, `visitor_blacklist`                                                                                                                                                                                  |
-| **Delivery (2)**        | `delivery_entries`, `delivery_preferences`                                                                                                                                                                                                       |
-| **Billing (8)**         | `billing_charge_types`, `billing_bills`, `billing_bill_lines`, `billing_payments`, `billing_payment_allocations`, `billing_ledger_entries`, `billing_payment_details`, `billing_receipt_counters`                                                |
-| **Service Request (5)** | `service_request_categories`, `service_requests`, `service_request_comments`, `service_request_attachments`, `service_request_events`                                                                                                            |
+| Module                  | Tables                                                                                                                                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Core (18)**           | `profiles`, `developers`, `societies`, `modules`, `module_configs`, `blocks`, `units`, `memberships`, `unit_occupants`, `guard_roster`, `notifications`, `push_subscriptions`, `audit_logs`, `error_logs`, `jobs`, `job_run_keys`, `rate_limits`, `auth_code_challenges` |
+| **Visitor (3)**         | `visitor_entries`, `visitor_pre_approvals`, `visitor_blacklist`                                                                                                                                                                                                          |
+| **Delivery (2)**        | `delivery_entries`, `delivery_preferences`                                                                                                                                                                                                                               |
+| **Billing (8)**         | `billing_charge_types`, `billing_bills`, `billing_bill_lines`, `billing_payments`, `billing_payment_allocations`, `billing_ledger_entries`, `billing_payment_details`, `billing_receipt_counters`                                                                        |
+| **Service Request (5)** | `service_request_categories`, `service_requests`, `service_request_comments`, `service_request_attachments`, `service_request_events`                                                                                                                                    |
 
-Total: 17 + 3 + 2 + 8 + 5 = **35**.
+Total: 18 + 3 + 2 + 8 + 5 = **36**.
 
 Post-MVP modules (staff, housekeeping, AMC, notice, amenity) are outlined in Section 9 and get migrations only when their module starts.
 
@@ -133,7 +133,7 @@ Not drawn (to keep the diagram readable): every tenant table also points to `soc
 | status                 | text        | no   | `active`, `disabled`, `anonymized`; default `active`                                                                                                                 |
 | created_at, updated_at | timestamptz | no   |                                                                                                                                                                      |
 
-Constraints: unique `email`; check `font_preference` against the documented values. A profile is created automatically when a user first signs in (trigger); name is collected on first sign-in (S-04/profile).
+Constraints: unique `email`; check `font_preference` against the documented values. A profile is created after the auth email is confirmed, initially with the placeholder name `Homeish member`; the user can supply their name in profile onboarding. An auth trigger keeps the email copy synchronized without overwriting profile fields or reactivating a disabled profile.
 
 ### 3.2 `developers` — platform operators
 
@@ -142,7 +142,7 @@ Constraints: unique `email`; check `font_preference` against the documented valu
 | user_id    | uuid        | PK   | → `profiles` |
 | created_at | timestamptz | no   |              |
 
-No API grants: rows are added only by a database administrator (ARCHITECTURE 8.1). An RLS helper checks membership of this table plus the MFA assurance level of the session.
+No API grants: rows are added only by a database administrator (ARCHITECTURE 8.1). `private.developer_mfa_sessions` records the verified MFA time against the stable `auth.sessions.id`; `private.is_developer()` requires AAL2, verification within 15 minutes, and the four-hour auth-session cap.
 
 ### 3.3 `societies`
 
@@ -197,7 +197,7 @@ Rules: the primary key is `(society_id, module_key)`; every society gets a `core
 | name   | text    | no   | 1–60           |
 | active | boolean | no   | Default `true` |
 
-Unique `(society_id, name)`; unique `(society_id, id)` (same-society FK rule).
+Unique `(society_id, name)`; unique `(society_id, id)` (same-society FK rule). `created_by` defaults to the signed-in user; updates set `updated_by` from the active session.
 
 ### 3.7 `units`
 
@@ -211,7 +211,7 @@ Unique `(society_id, name)`; unique `(society_id, id)` (same-society FK rule).
 | area_sqft | numeric(8,2) | yes  | Must be > 0 when set. Used by per-sq-ft billing (BIL-1)        |
 | active    | boolean      | no   | Default `true`                                                 |
 
-Unique `(society_id, block_id, number)` treating a null block as one value (so `101` can exist once per society without a block); unique `(society_id, id)`. Units with history are never deleted (deactivate only, PRD edge cases).
+Unique `(society_id, block_id, number)` treating a null block as one value (so `101` can exist once per society without a block); unique `(society_id, id)`. Units with history are never deleted (deactivate only, PRD edge cases). `created_by` defaults to the signed-in user; updates set `updated_by` from the active session.
 
 ### 3.8 `memberships` — a person's access to one society
 
@@ -230,7 +230,8 @@ Constraints:
 - At least one of `user_id`, `invited_email` is set.
 - Unique `(society_id, user_id)` where `user_id` is not null; unique `(society_id, invited_email)` where `user_id` is null.
 - Unique `(society_id, id)`.
-- On first sign-in, a function links all memberships whose `invited_email` equals the verified sign-in email (CORE-9, ARCHITECTURE 8.1). Unknown emails link nothing and sign-in is refused with the generic message.
+- On first sign-in, `public.claim_memberships()` links invited rows whose `invited_email` matches the verified auth email (CORE-9). It activates the invitation and records `joined_at`; it skips a society where the user already has a membership, so sign-in never silently changes existing roles.
+- `public.has_signin_access(email)` returns only a boolean to the service role. It allows outstanding invitations and active or pending memberships for active profiles; deactivated memberships and disabled profiles do not qualify. The server uses this check before requesting a code, while returning the same generic response for eligible and ineligible addresses.
 
 Resident sub-types (owner, tenant, family) are **per unit**, so they live on `unit_occupants`, not here. Permission checks combine both (PRD matrix).
 
@@ -251,30 +252,36 @@ Constraints: unique `(unit_id, membership_id)` among non-ended rows; **at most o
 
 ### 3.10 `guard_roster` — who can be named as having handled a gate entry
 
-| Column        | Type    | Null | Notes                                                                                                                                                                            |
-| ------------- | ------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Std           |         |      |                                                                                                                                                                                  |
-| name          | text    | no   | 1–80                                                                                                                                                                             |
-| membership_id | uuid    | yes  | Set in individual mode (the guard's own account); null for named-only guards in shared mode                                                                                      |
-| pin_hash      | text    | yes  | Salted slow hash of the guard's PIN (bcrypt via `pgcrypto`). Required when the society's `guard_identification = pin`; never returned to the API; PIN never stored in plain text |
-| active        | boolean | no   | Default `true`                                                                                                                                                                   |
+| Column        | Type        | Null | Notes                                                                                                                                                                            |
+| ------------- | ----------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id            | uuid        | PK   |                                                                                                                                                                                  |
+| society_id    | uuid        | no   |                                                                                                                                                                                  |
+| created_at    | timestamptz | no   |                                                                                                                                                                                  |
+| created_by    | uuid        | no   | → `profiles`                                                                                                                                                                     |
+| updated_at    | timestamptz | no   |                                                                                                                                                                                  |
+| updated_by    | uuid        | yes  | → `profiles`                                                                                                                                                                     |
+| name          | text        | no   | 1–80                                                                                                                                                                             |
+| membership_id | uuid        | yes  | Set in individual mode (the guard's own account); null for named-only guards in shared mode                                                                                      |
+| pin_hash      | text        | yes  | Salted slow hash of the guard's PIN (bcrypt via `pgcrypto`). Required when the society's `guard_identification = pin`; never returned to the API; PIN never stored in plain text |
+| active        | boolean     | no   | Default `true`                                                                                                                                                                   |
 
-Rules: every gate entry (visitor/delivery) stores the roster entry that handled it, so "who let this person in" is always answerable in both gate-login modes **[DBD-3, approved: RWA admin chooses name-pick or PIN in settings]**. Unique `(society_id, name)` among active rows; unique `(society_id, id)`. PIN attempts are rate-limited (`rate_limits`). The `pin_hash` column has no read grant for any API role.
+Rules: every gate entry (visitor/delivery) stores the roster entry that handled it, so "who let this person in" is always answerable in both gate-login modes **[DBD-3, approved: RWA admin chooses name-pick or PIN in settings]**. Unique `(society_id, name)` among active rows; unique `(society_id, id)`. Five incorrect PIN attempts lock the guard for 15 minutes from the fifth failure. The `pin_hash` column has no read grant for any API role.
 
 ### 3.11 `notifications`
 
-| Column                 | Type        | Null | Notes                                                                                     |
-| ---------------------- | ----------- | ---- | ----------------------------------------------------------------------------------------- |
-| id                     | uuid        | PK   |                                                                                           |
-| society_id             | uuid        | no   |                                                                                           |
-| user_id                | uuid        | no   | → `profiles`, `ON DELETE CASCADE`                                                         |
-| type                   | text        | no   | e.g., `visitor_pending`, `bill_issued`, `payment_confirmed` (catalogue in code)           |
-| title, body            | text        | no   | ≤ 120 / ≤ 300. **No sensitive details** beyond what the lock screen may show (DESIGN 8.3) |
-| entity_type, entity_id | text, uuid  | yes  | Deep-link target                                                                          |
-| read_at                | timestamptz | yes  |                                                                                           |
-| created_at             | timestamptz | no   |                                                                                           |
+| Column                 | Type        | Null | Notes                                                                                        |
+| ---------------------- | ----------- | ---- | -------------------------------------------------------------------------------------------- |
+| id                     | uuid        | PK   |                                                                                              |
+| society_id             | uuid        | no   |                                                                                              |
+| user_id                | uuid        | no   | → `profiles`, `ON DELETE CASCADE`; composite FK also requires this user's society membership |
+| type                   | text        | no   | e.g., `visitor_pending`, `bill_issued`, `payment_confirmed` (catalogue in code)              |
+| title, body            | text        | no   | ≤ 120 / ≤ 300. **No sensitive details** beyond what the lock screen may show (DESIGN 8.3)    |
+| entity_type, entity_id | text, uuid  | yes  | Deep-link target                                                                             |
+| read_at                | timestamptz | yes  |                                                                                              |
+| created_at             | timestamptz | no   |                                                                                              |
+| request_id             | text        | yes  | Request correlation for best-effort post-commit push delivery                               |
 
-Inserted by the same transaction as the event that causes it (ARCHITECTURE 10); push sending happens afterwards and is best effort.
+Inserted by `private.create_notification` inside the same transaction as the event that causes it (ARCHITECTURE 10); the helper only accepts an active society membership. Push sending happens after commit and is best effort. A recipient can read only their own rows and update only `read_at`.
 
 ### 3.12 `push_subscriptions`
 
@@ -287,7 +294,7 @@ Inserted by the same transaction as the event that causes it (ARCHITECTURE 10); 
 | user_agent                  | text        | yes  |                                              |
 | created_at, last_success_at | timestamptz |      |                                              |
 
-Residents can add/remove their own subscription; **no API role can read the key columns**. Only the privileged push sender reads them. Subscriptions returning "gone" are deleted.
+Signed-in users add/remove their own subscription through authenticated RPCs; **no API role can read the table or key columns**. The row-level policy is owner-scoped, but client roles have no direct table grants. Only the privileged push sender reads the keys. At most ten endpoints can be registered for one user. Provider responses 404/410 prune stale subscriptions; transient errors receive one retry. This is a user-owned table, not a society-owned table.
 
 ### 3.13 `audit_logs` (AO)
 
@@ -361,7 +368,23 @@ A daily job inserts its key first; a duplicate means it already ran, so re-runni
 | window_start | timestamptz | PK part |                                                                                |
 | count        | int         | no      |                                                                                |
 
-Hashed keys (no raw emails/IPs). Cleared daily. No API access (ARCHITECTURE AD-05).
+Hashed keys (no raw emails/IPs). Cleared daily. No direct API access (ARCHITECTURE AD-05); a service-role-only atomic function increments fixed-window counters.
+
+The P1 operational-table migrations enforce the documented API boundaries: audit rows are immutable, error-log details are immutable while developer resolution fields may change, and jobs are visible only to their creator/admin/developer. The service role alone writes operational records; `job_run_keys`, `rate_limits` and `auth_code_challenges` have no user-facing grants.
+
+### 3.18 `auth_code_challenges`
+
+| Column             | Type        | Null   | Notes                                                                  |
+| ------------------ | ----------- | ------ | ---------------------------------------------------------------------- |
+| email_key          | text        | PK     | Salted hash of the normalized email; never raw email                   |
+| challenge_id       | uuid        | unique | Replaced whenever a new code is requested                              |
+| created_at         | timestamptz | no     |                                                                        |
+| expires_at         | timestamptz | no     | Ten minutes after creation                                             |
+| failed_attempts    | smallint    | no     | 0–5; fifth failure consumes the challenge                              |
+| in_flight_attempts | smallint    | no     | Reserved atomically to prevent concurrent attempts bypassing the limit |
+| consumed_at        | timestamptz | yes    | Set after success or the fifth failed attempt                          |
+
+RLS is enabled, with no user-facing grants. Only service-role functions create challenges, reserve an attempt, and record its outcome. A superseded challenge cannot complete a verification reserved against its prior ID; expired rows are cleaned during later challenge creation.
 
 ---
 
@@ -769,7 +792,11 @@ All purges are performed by the daily job (idempotent, logged).
 | `payment-proofs`  | UPI screenshots     | `{society_id}/{payment_id}/…` | Admin, committee, the submitter                                                                | Submitter                          |
 | `society-assets`  | Logo, UPI QR        | `{society_id}/…`              | Every member of the society                                                                    | Admin                              |
 
-Rules: all buckets private; access through short-lived signed links issued after a permission check; storage policies parse the first path segment as the society and use the same helper functions as table policies; upload limits 5 MB and JPG/PNG/PDF only (DAT-5); deleting a row deletes its file (a cleanup step in the delete/anonymise functions, plus an orphan check in the weekly operations list).
+Every bucket is provisioned private, with a 5 MiB limit and an allow-list of MIME types. `storage.objects` RLS derives the society UUID only from a valid first path segment and uses `private.is_member`, `private.has_role`, and `private.is_developer`; malformed and cross-society paths fail closed. These policies are a database backstop: route handlers additionally authorize the owning record before minting a signed URL. Until their owning modules exist, the file routes only accept the society-logo owner in `society-assets`; unsupported bucket/owner combinations are denied rather than treated as generic society access. The current module-bucket policies grant only their society-level admin/committee/guard baseline; requester, occupant and submitter access must be added alongside each module's owner-row authorization, not by broadening a society-only path check.
+
+The P4G logo path is `{society_id}/logos/{random_uuid}.jpg|png`. Upload URL issuance checks the signed-in admin or MFA-verified developer, the society, the image MIME type, declared byte size, and the per-society pending/stored logo count. The society update operation rechecks the path, object metadata, MIME type and actual stored size before saving it. Replacing or clearing a logo audits the path change and then removes the former object; unattached uploads can be deleted through the upload-url route. An automatic scheduled orphan sweep is not registered yet.
+
+View links expire after five minutes. Supabase Storage's signed-upload tokens are scoped to one path and, with upsert disabled, cannot replace an existing object; they expire after two hours. The Storage SDK does not expose a shorter upload-token lifetime. Avoid issuing tokens before the user is ready to upload. Upload limits are enforced at the bucket, issue-route and attach-time boundaries; accepted types are JPG/PNG/PDF as appropriate to each bucket (DAT-5).
 
 ---
 
@@ -794,10 +821,17 @@ The application roles (`admin`, `guard`, resident, etc.) are **data** (`membersh
 | `is_member(society)`           | Active membership in that society                                                 |
 | `has_role(society, roles)`     | Active membership with at least one of the roles                                  |
 | `occupies_unit(unit)`          | Active `unit_occupants` row for the current user's membership                     |
+| `is_household_manager(unit)`   | Current active owner or primary resident for that unit                            |
 | `module_enabled(society, key)` | `module_configs.enabled` is true (always true for `core`)                         |
 | `society_writable(society)`    | Society status is `trial` or `active` (suspended = read-only, archived = blocked) |
 
 Policies check **membership data in the database**, not JWT claims alone, so revoking a role or deactivating a person takes effect on the next request (PRD CORE-10).
+
+The initial helper migration defines fail-closed stubs. The membership migration replaces `is_member`, `has_role`, `module_enabled` and `society_writable` with checks against current database state; `is_developer` remains false until the developer MFA flow is implemented. The member-and-occupant migration adds `occupies_unit` and `is_household_manager`, both of which recheck active membership and occupancy state from the database. Core is always enabled, while other modules require an enabled `module_configs` row. The `private` schema is not exposed through PostgREST. Only `authenticated` and `service_role` can execute the helpers; `anon` has no schema access.
+
+The base-table migration adds identity and society profile constraints, the ten module reference rows, and RLS/grants on the initial five tables. The membership migration adds self/manager-only reads and no direct membership writes. Society and module-config reads now require an active membership. Society/module configuration writes and developer registration remain reserved for later database functions or administrator migrations.
+
+Member invitations, role changes, deactivation and occupancy changes use checked RPCs with fixed search paths. Each state change and its audit row share one transaction. Claiming an invitation activates its pending occupancy; deactivation ends active occupancy records without deleting their history. The `unit_occupants` read policy is limited to society managers, the occupant's own account, or an active household manager.
 
 ### 13.3 Write paths
 
@@ -805,6 +839,10 @@ Two kinds, chosen per table:
 
 - **Direct (RLS-checked)**: simple admin-maintained data without cross-row rules.
 - **Function (RPC)**: everything that has invariants, notifications or audit. Functions are `security definer` only where elevated access is needed; each sets a fixed search path, checks the caller explicitly (society, role, module, status), and has no public execute grant.
+
+Notification rows are created in the event RPC transaction, so the event, audit entry and inbox row commit or roll back together. The private `email_daily_quota` table is updated only by `record_email_send`; its daily count and 80% alert marker are not readable through API roles.
+
+`record_email_send(p_daily_limit)` atomically reserves a send against the configured daily limit, returns whether the send is allowed, and marks the first 80% threshold crossing for one developer alert. The operational alert also reserves from the same quota; sends over the cap are held.
 
 ### 13.4 Row-level security matrix
 
@@ -822,7 +860,7 @@ RLS is **enabled on every table**; with no policy, access is denied. "Occupant" 
 | `unit_occupants`                                                                               | Admin/committee; occupants of the same unit; self                                                                    | Function                                                                                                                             |
 | `guard_roster`                                                                                 | Admin, committee, guard (no `pin_hash` column)                                                                       | Admin direct (name/active); PIN set/reset by function                                                                                |
 | `notifications`                                                                                | Owner only                                                                                                           | Owner updates `read_at`; inserts by functions                                                                                        |
-| `push_subscriptions`                                                                           | No client reads                                                                                                      | Owner inserts/deletes own                                                                                                            |
+| `push_subscriptions`                                                                           | No client reads                                                                                                      | Authenticated owner-only registration/deletion RPCs; only privileged sender reads keys                                               |
 | `audit_logs`                                                                                   | Admin/committee of that society; developer all                                                                       | Functions/triggers only; never updated or deleted                                                                                    |
 | `error_logs`                                                                                   | Developer only                                                                                                       | Privileged writer inserts; developer updates status/resolve fields                                                                   |
 | `jobs`                                                                                         | Creator, admin; developer                                                                                            | Functions                                                                                                                            |
@@ -866,7 +904,11 @@ Only `visitor_entries`, `delivery_entries` and `notifications` are published to 
 | Before risky production migrations | Take a manual backup (Section 15) first                                                                                                                                                                                                               |
 | Module introduction                | A module's tables ship in its own migrations; the `modules` row already exists, so it can be shipped **disabled** and enabled for a pilot society by the developer                                                                                    |
 
+The disposable-PostgreSQL integration suite enforces these catalog rules in CI. Its explicit global-table allowlist is `profiles`, `developers`, `societies`, `modules`, `rate_limits` and `auth_code_challenges`; all other public tables must be society-scoped. Foreign-key indexes may be partial only when the predicate requires every indexed foreign-key column to be non-null. The append-only trigger check enumerates append-only tables and must be extended when one is added.
+
 Order of the first migrations: 1) extensions, schemas, shared triggers; 2) helper functions; 3) `profiles`, `developers`, `societies`, `modules`, `module_configs`; 4) structure and membership tables; 5) logs, jobs, notifications; 6) one migration group per module in the order Visitor → Delivery → Billing → Service Request.
+
+The first migration installs `pgcrypto` and `citext` in the unexposed `extensions` schema, creates the unexposed `private` schema, and defines `private.set_updated_at()` and `private.reject_append_only_mutation()` for tables added by later migrations. The latter raises SQLSTATE `55000` on either update or delete. The society-structure migration adds `private.set_updated_at_and_actor()` for admin-edited blocks and units.
 
 ### 14.2 Reference data (in migrations, never in seed scripts)
 
@@ -974,6 +1016,18 @@ Foreign-key columns not covered above get their own index (CI rule), because RLS
 ## 17. Query-to-Journey Check
 
 Every PRD journey can be served from the model above:
+
+The P4D registration migration adds `lookup_registration_society`, which resolves
+only an exact active join code and is executable only through the service-role
+boundary. Its result contains the society name and active unit picker data, not a
+society directory. Authenticated table reads cannot select `societies.join_code`;
+administrators read it through `get_society_join_code`. The application enforces
+fail-closed hourly and daily IP limits before calling lookup.
+`submit_society_registration` binds the verified authenticated user to a pending
+membership and occupancy in one transaction. Administrators rotate or disable
+join codes and approve or reject applications through audited SQL functions;
+approval activates the pending occupancy, while rejection deactivates the
+membership and ends the occupancy before commit.
 
 | Journey (PRD Section 6)                                                                      | Served by                                                                                     |
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |

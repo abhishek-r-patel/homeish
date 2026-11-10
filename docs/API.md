@@ -47,21 +47,25 @@
 | Step | Operation                                                  | Rules                                                                                                                                                                                                                                                                                                                                                         |
 | ---- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1    | `auth.requestCode` (email, purpose `signin` or `register`) | Always answers with the same generic message ("If this email is registered, a code has been sent") whether or not the email is known. Sends a 6-digit code by email only if the email has an invitation/membership (`signin`) or the caller is in the registration flow (`register`, Section 5.1). Closed sign-up: an email with neither never gets a society |
-| 2    | `auth.verifyCode` (email, code)                            | Code is single use and short-lived; 5 wrong tries invalidate it; on success a session is created and the user's invited memberships are linked (`claim_memberships`, DATABASE 3.8)                                                                                                                                                                            |
+| 2    | `auth.verifyCode` (email, code)                            | Code is single use and short-lived; 5 wrong tries invalidate it. Sign-in links eligible invitations; registration starts a session without granting society access                                                                                                                                                                                             |
 | 3    | Redirect                                                   | Based on state: no active membership → "waiting for approval" / registration screen; several societies → society picker (S-03); otherwise the home screen. Redirect targets are chosen by the server from a fixed list, never from a client-supplied address                                                                                                  |
 | —    | `auth.signOut`                                             | Ends the session                                                                                                                                                                                                                                                                                                                                              |
 
-There are **no magic links**: codes are typed in, so there is no callback URL to protect and no open-redirect risk. Future methods (mobile OTP, passwords, Google) are added as extra `auth.*` operations without changing user data (PRD A-35).
+There are **no magic links**: the email template contains only the six-digit code, which is typed in and expires after 10 minutes. The server keeps a private, hashed-email challenge with an atomic five-failure lockout; a new code starts a new challenge. No callback URL or open-redirect target is used. For registration, the caller supplies an active society code; the response remains generic whether the code is valid or not. The verified challenge is bound to the code, and completing sign-in does not grant society access until an administrator approves the later registration request. Future methods (mobile OTP, passwords, Google) are added as extra `auth.*` operations without changing user data (PRD A-35).
+
+For `signin`, the server checks `public.has_signin_access(email)` through the service-role boundary; that function returns only a boolean and is not callable by clients. After code verification, the authenticated session calls `public.claim_memberships()` to activate and link eligible invitations before loading the request context. Both eligible and ineligible addresses receive the same request-code response; provisioning or delivery failures are logged without changing that response. Malformed input and rate limits remain explicit errors.
 
 ### 2.2 Developer sign-in
 
-`auth.developerSignIn` (email + password) followed by `auth.developerVerifyMfa` (authenticator code) on a separate screen/route (S-05). Every `developer.*` operation requires a session that has passed MFA recently; otherwise it fails with `MFA_REQUIRED`. Developer accounts are created only by a database administrator (ARCHITECTURE 8.1).
+`auth.developerSignIn` (email + password) followed by `auth.developerVerifyMfa` (authenticator code) on a separate screen/route (S-05). Enrollment is available only after password authentication for an existing developer account. Developer access is bound to the Supabase session ID, expires four hours after that session was created, and requires TOTP verification within the previous 15 minutes; otherwise it fails with `MFA_REQUIRED`. Developer accounts are created only by a database administrator (ARCHITECTURE 8.1).
 
 ### 2.3 Session
 
-- Secure, HTTP-only, same-site cookies; 30-day society sessions, shorter developer sessions (ARCHITECTURE AA-02).
+- Secure, HTTP-only, same-site cookies; society sessions retain the configured 30-day lifetime, while developer authorization expires four hours after the auth session begins.
 - On every operation the server **verifies the user with the auth service** (not just reads the cookie) and then loads the **request context**: user, active society, roles, enabled modules (ARCHITECTURE 6.2).
 - The active society is a hint chosen in the switcher (`session.switchSociety`); it is always re-validated against current memberships, so removing someone's role takes effect on their next request.
+- `session.get` returns the signed-in profile and only its active or pending societies. The notification badge reads the current user's unread count directly under RLS and refreshes from the user's Realtime channel.
+- After session expiry, the return path is restricted to local `/session`, `/resident`, `/guard`, `/admin`, or `/developer` routes. External and unsupported destinations are discarded.
 
 ### 2.4 Shared gate account: guard identity (PRD CORE-16)
 
@@ -92,10 +96,10 @@ Operations are named `area.verbNoun` in lower camel case, e.g. `visitor.decide`,
 
 ### 3.2 Response envelope (all server operations and JSON routes)
 
-| Case    | Shape                                                                                                                                                                                              |
-| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Success | `ok: true`, `data` (the result), optional `meta` (pagination, server time)                                                                                                                         |
-| Failure | `ok: false`, `error` with `code`, `message` (plain language, safe to show), optional `fieldErrors` (field → message), optional `referenceId` (for unexpected errors), optional `retryAfterSeconds` |
+| Case    | Shape                                                                                                                                                                                                                                   |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Success | `ok: true`, `data` (the result), optional `meta` (pagination, server time)                                                                                                                                                              |
+| Failure | `ok: false`, `error` with `code`, `message` (plain language, safe to show), optional `fieldErrors` (field → message), optional `reason` (`CONFLICT` only), optional `referenceId` (for unexpected errors), optional `retryAfterSeconds` |
 
 - Expected failures are **returned**, never thrown to the user. Unexpected failures are caught at the boundary, logged, and returned as `INTERNAL_ERROR` with a `referenceId` (PRD LOG-2).
 - Messages never include stack traces, SQL, internal IDs of other records, or whether another user's data exists.
@@ -142,6 +146,8 @@ Operations are named `area.verbNoun` in lower camel case, e.g. `visitor.decide`,
 
 `CONFLICT` reasons (closed list): `already_decided`, `expired`, `duplicate_reference` (UTR), `duplicate_charge`, `stale_version`, `invalid_state`, `limit_reached`, `has_history` (delete blocked), `not_unpaid` (cancel blocked).
 
+The shared error model in `src/core/errors/` owns the closed error-code and conflict-reason lists, safe default messages, HTTP status mapping, response envelopes and UUID request-ID validation. An incoming `x-request-id` is preserved only when it is a valid UUID; otherwise the server generates one.
+
 ### 3.6 Idempotency and double submission
 
 - Operations that create user-submitted records (`visitor.createEntry`, `delivery.createEntry`, `billing.submitPayment`, `request.create`, `request.addComment`) take a **`clientRequestId`** generated once per form open. A repeat with the same ID returns the original result instead of creating a second record (DATABASE 1.1).
@@ -155,16 +161,16 @@ Edit operations on data several people can change (requests, resident records, c
 
 ### 3.8 Pagination, sorting and filtering (lists)
 
-| Item                     | Rule                                                                                                                                                                              |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Paging                   | `page` (from 1) and `pageSize` (allowed 10, 25, 50, 100; default 25). Response `meta`: `page`, `pageSize`, `total` (exact), `totalPages` — as DESIGN 6.13 requires                |
-| Sorting                  | `sort` and `dir` (`asc`/`desc`) from an allow-list per list; a stable tie-breaker (record ID) is always added; unknown values are rejected                                        |
-| Filtering                | Allow-listed filters per list (below). Filters and sorting run over the **whole authorised data set before paging**, with exact totals                                            |
-| Text search              | Literal, case-insensitive "contains" match; wildcard characters are escaped; length-limited (2–60)                                                                                |
-| Dates                    | `from` inclusive, `before` exclusive, interpreted in the **society timezone** **[APA-01]**                                                                                        |
-| Personal data in filters | Emails, phone numbers and payment references are searched through the operation's **body**, not the page URL, so they never appear in links, logs or browser history **[APA-02]** |
-| State in the URL         | Non-personal filters, sort and page live in the page URL so refresh, back and sharing work (DESIGN 6.14)                                                                          |
-| Large logs               | Error and audit logs use the same page/total model in MVP; a cursor model is introduced only if they pass roughly 100,000 rows (ARCHITECTURE Section 3)                           |
+| Item                     | Rule                                                                                                                                                                                |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paging                   | `page` (from 1) and `pageSize` (allowed 10, 25, 50, 100; default 25). Response `meta`: `page`, `pageSize`, `total` (exact), `totalPages` — as DESIGN 6.13 requires                  |
+| Sorting                  | `sort` and `dir` (`asc`/`desc`) from an allow-list per list; a stable tie-breaker (record ID) is always added; unknown values are rejected                                          |
+| Filtering                | Allow-listed filters per list (below). Filters and sorting run over the **whole authorised data set before paging**, with exact totals                                              |
+| Text search              | Literal, case-insensitive "contains" match; wildcard characters are escaped; length-limited (2–60)                                                                                  |
+| Dates                    | `from` inclusive, `before` exclusive, interpreted in the **society timezone** **[APA-01]**; cross-society developer error and audit filters use **Asia/Kolkata (IST)** **[APA-07]** |
+| Personal data in filters | Emails, phone numbers and payment references are searched through the operation's **body**, not the page URL, so they never appear in links, logs or browser history **[APA-02]**   |
+| State in the URL         | Non-personal filters, sort and page live in the page URL so refresh, back and sharing work (DESIGN 6.14)                                                                            |
+| Large logs               | Error and audit logs use the same page/total model in MVP; a cursor model is introduced only if they pass roughly 100,000 rows (ARCHITECTURE Section 3)                             |
 
 | List                    | Allowed filters                                                                 | Default sort                                         |
 | ----------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------- |
@@ -205,60 +211,66 @@ Edit operations on data several people can change (requests, resident records, c
 | `auth.verifyCode`                                 | Anyone                       | Check the code and start a session                                      | Links invited memberships                                                             |
 | `auth.signOut`                                    | Signed in                    | End session                                                             |                                                                                       |
 | `auth.developerSignIn`, `auth.developerVerifyMfa` | D                            | Developer sign-in with MFA                                              | Separate route                                                                        |
-| `session.get`                                     | Signed in                    | Current user, societies, roles, enabled modules, unread count           | Used by the shell and navigation                                                      |
+| `session.get`                                     | Signed in                    | Current user, active/pending societies, roles and enabled modules       | Includes the current user's unread notification count                                 |
 | `session.switchSociety`                           | Signed in                    | Change active society                                                   | Validated against memberships                                                         |
 | `profile.update`                                  | Signed in                    | Change own name, phone, photo, font preference                          | Direct on own row; preference is `manrope_sora` or `device_default`                   |
 | `registration.lookupSociety`                      | Anyone (code holder)         | Resolve a **society code** to the society name and its unit picker data | Code must match; rate limited; returns only name, blocks and unit numbers **[APD-1]** |
 | `registration.submit`                             | Signed in, no membership yet | Ask to join a unit                                                      | Creates a pending membership and occupancy; notifies admins (CORE-9)                  |
 
+Registration proceeds in three steps: a code lookup returns only the named society and its active blocks/units; the applicant requests and verifies an email code with `purpose: register` and the same `joinCode`; then the signed-in applicant submits `{ joinCode, unitId, fullName, relationship }`. The code is revalidated at submission. The request creates pending membership and occupancy rows, notifies society admins, and grants no access until approval. Lookup is limited to 10 requests/hour and 30/day per IP; submission is limited to 3/day per signed-in account. Unknown, malformed, disabled or rotated codes do not expose a society directory.
+
 ### 5.2 Society structure and people (`society`, `structure`, `members`, `guards`)
 
-| Operation                                            | Who                               | Purpose                                                             | DB function / notes                                                           |
-| ---------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `society.get`                                        | Members, D                        | Society profile and settings                                        |                                                                               |
-| `society.updateProfile`                              | A, D                              | Name, address, contact, logo, timezone, custom unit label           | Whitelisted columns; unit label is 1–24 letters or spaces; audited            |
-| `society.updateGateSettings`                         | A, D                              | Gate login mode and guard identification (name pick / PIN)          | Audited                                                                       |
-| `society.rotateJoinCode` / `society.disableJoinCode` | A, D                              | Create/replace/turn off the society code used for self-registration | Audited **[APD-1]**                                                           |
-| `structure.blocks.list/create/update`                | A (create/update), members (list) | Manage blocks                                                       | Direct                                                                        |
-| `structure.units.list/create/update/deactivate`      | A, members (list)                 | Manage units; deactivate only, never delete with history            | Direct; `has_history` conflict                                                |
-| `structure.units.importPreview` / `importConfirm`    | A                                 | CSV import of units in two steps                                    | Preview writes nothing; confirm creates a job (DATABASE `jobs`)               |
-| `members.list/get`                                   | A, C                              | People of the society                                               | PII masked per Section 13                                                     |
-| `members.invite`                                     | A                                 | Invite by email to a unit and role(s)                               | Creates invited membership; no email is sent until the person requests a code |
-| `members.importPreview` / `importConfirm`            | A                                 | CSV import of residents                                             | Same two-step pattern                                                         |
-| `members.approve` / `members.reject`                 | A (C if enabled)                  | Decide a self-registration                                          | Audited; notifies the applicant                                               |
-| `members.changeRoles`                                | A                                 | Change roles                                                        | Audited (PRD LOG-4)                                                           |
-| `members.deactivate`                                 | A                                 | Remove access immediately                                           | Audited; history kept (CORE-10)                                               |
-| `members.unit.assign/move/end`                       | A                                 | Occupancy: owner/tenant/family, primary, approver flag              | Enforces one primary per unit                                                 |
-| `household.members.list/setApprover`                 | R (owner/primary)                 | See and manage own household approvers                              | Own unit only (R-08)                                                          |
-| `guards.list/add/update/deactivate`                  | A (write), A/C/G (list)           | Guard roster                                                        | Direct on name/active                                                         |
-| `guards.setPin`                                      | A                                 | Set or reset a guard's PIN                                          | PIN stored only as a hash; never returned                                     |
-| `guards.identify`                                    | G (shared mode)                   | Say who is on duty                                                  | Section 2.4; rate limited                                                     |
-| `guards.unitContacts`                                | G                                 | Name and phone of a unit's approvers for "Call Resident"            | Returns only that; audited by volume, not by row                              |
+| Operation                                            | Who                               | Purpose                                                             | DB function / notes                                                                                          |
+| ---------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `society.get`                                        | Members, D                        | Society profile and settings                                        |                                                                                                              |
+| `society.updateProfile`                              | A, D                              | Name, address, contact, logo, timezone, custom unit label           | Whitelisted columns; unit label is 1–24 letters or spaces; audited                                           |
+| `society.updateGateSettings`                         | A, D                              | Gate login mode and guard identification (name pick / PIN)          | Audited                                                                                                      |
+| `society.rotateJoinCode` / `society.disableJoinCode` | A, D                              | Create/replace/turn off the society code used for self-registration | Audited **[APD-1]**                                                                                          |
+| `structure.blocks.list/create/update`                | A (create/update), members (list) | Manage blocks                                                       | Direct                                                                                                       |
+| `structure.units.list/create/update/deactivate`      | A, members (list)                 | Manage units; deactivate only, never delete with history            | Direct; `has_history` conflict                                                                               |
+| `structure.units.importPreview` / `importConfirm`    | A                                 | CSV import of units in two steps                                    | 512 KB / 1,000-row limit; preview writes nothing; confirm creates a job with a downloadable row-error report |
+| `members.list/get`                                   | A, C                              | People of the society                                               | Phone numbers are masked; invitations and occupancy are shown per Section 13                                 |
+| `members.invite`                                     | A                                 | Invite by email to a unit and role(s)                               | Creates invited membership and pending occupancy atomically; family is not an approver by default            |
+| `members.importPreview` / `importConfirm`            | A                                 | CSV import of residents                                             | 512 KB / 1,000-row limit; preview writes nothing; confirm creates invited memberships and a results job      |
+| `members.approve` / `members.reject`                 | A                                 | Decide a self-registration                                          | Audited; notifies the applicant                                                                              |
+| `members.changeRoles`                                | A                                 | Change roles                                                        | Audited (PRD LOG-4)                                                                                          |
+| `members.deactivate`                                 | A                                 | Remove access immediately                                           | Audited; history kept (CORE-10)                                                                              |
+| `members.unit.assign/move/end`                       | A                                 | Occupancy: owner/tenant/family, primary, approver flag              | Audited; preserves move-out history and enforces one active primary per unit                                 |
+| `household.members.list/setApprover`                 | R (owner/primary)                 | See and manage own household approvers                              | Own active units only; changes are audited (R-08)                                                            |
+| `profile.update`                                     | Signed-in user                    | Update name, phone and saved font preference                        | Self only; email and account status are read-only                                                            |
+| `guards.list/add/update/deactivate`                  | A (write), A/C/G (list)           | Guard roster                                                        | Direct on name/active                                                                                        |
+| `guards.setPin`                                      | A                                 | Set or reset a guard's PIN                                          | PIN stored only as a hash; never returned                                                                    |
+| `guards.identify`                                    | G (shared mode)                   | Say who is on duty                                                  | Name-pick or PIN; five failures lock the guard for 15 minutes (Section 2.4)                                  |
+| `guards.unitContacts`                                | G                                 | Name and phone of a unit's approvers for "Call Resident"            | Returns only active approvers' names and phone numbers for the selected unit                                  |
 
 ### 5.3 Notifications and jobs
 
-| Operation                                | Who                   | Purpose                                                  |
-| ---------------------------------------- | --------------------- | -------------------------------------------------------- |
-| `notifications.list` / `unreadCount`     | Signed in             | Own inbox and badge                                      |
-| `notifications.markRead` / `markAllRead` | Signed in             | Own items only                                           |
-| `jobs.list/get`                          | Creator, A, D         | Progress and result of imports, bill generation, exports |
-| `audit.list/get`                         | A, C (own society), D | Audit history with filters (Section 3.8)                 |
+| Operation                                   | Who                   | Purpose                                                                                                                 |
+| ------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `notifications.list` / `unreadCount`        | Signed in             | Own inbox and badge                                                                                                     |
+| `notifications.markRead` / `markAllRead`    | Signed in             | Own items only                                                                                                          |
+| `/api/push/subscriptions` `POST` / `DELETE` | Signed in             | Register or remove this user's device; endpoint host is allow-listed and key columns are never readable through the API |
+| `jobs.list/get`                             | Creator, A, D         | Progress and result of imports, bill generation, exports                                                                |
+| `audit.list/get`                            | A, C (own society), D | Audit history with filters (Section 3.8)                                                                                |
+
+Push subscription requests use `POST { endpoint, keys: { p256dh, auth } }` and `DELETE { endpoint }`. Requests must be same-origin JSON; endpoints are limited to supported HTTPS push providers, are rate-limited per user, and can never be listed by an API role. Up to ten endpoints may be registered for one signed-in user.
 
 ### 5.4 Developer console (`developer`)
 
 All require MFA (2.2). All actions are audited.
 
-| Operation                                     | Purpose                                     | Notes                                                                                                        |
-| --------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `developer.societies.list/get/create/update`  | Manage societies                            | Creation also creates the `core` module row, default settings and default request categories (DATABASE 14.2) |
-| `developer.societies.setStatus`               | Trial / active / suspended / archived       | Standard confirmation stating the consequence for suspend/archive (DESIGN 11.4)                              |
-| `developer.modules.list` / `toggle`           | Show and enable/disable modules per society | One transaction with audit; standard confirmation states the effect                                          |
-| `developer.modules.updateSettings`            | Edit module settings                        | Validated against the module's schema                                                                        |
-| `developer.members.createFirstAdmin`          | Invite the first admin of a society         |                                                                                                              |
-| `developer.errors.list/get/lookupByReference` | Error log viewer                            | Lookup by the reference ID a user reports                                                                    |
-| `developer.errors.resolve` / `ignore`         | Change error status with optional note      |                                                                                                              |
-| `developer.audit.list`                        | Cross-society audit                         |                                                                                                              |
-| `developer.health.summary`                    | Counts by severity, society and route       | Built from the error log                                                                                     |
+| Operation                                     | Purpose                                     | Notes                                                                                                                     |
+| --------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `developer.societies.list/get/create/update`  | Manage societies                            | Creation also creates the `core` module row and default settings; request categories are added in P8 (DATABASE 14.2)      |
+| `developer.societies.setStatus`               | Trial / active / suspended / archived       | Standard confirmation stating the consequence for suspend/archive (DESIGN 11.4)                                           |
+| `developer.modules.list` / `toggle`           | Show and enable/disable modules per society | One transaction with audit; standard confirmation states the effect                                                       |
+| `developer.modules.updateSettings`            | Edit module settings                        | Validated against the module's schema                                                                                     |
+| `developer.members.createFirstAdmin`          | Invite the first admin of a society         |                                                                                                                           |
+| `developer.errors.list/get/lookupByReference` | Error log viewer                            | Filters include society, module, severity, status, source, user, text and IST date range; lookup by reported reference ID |
+| `developer.errors.resolve` / `ignore`         | Change error status with optional note      | The record and its detail view are refreshed after the audited update                                                     |
+| `developer.audit.list`                        | Cross-society audit                         | Filters include society, actor, action, entity type and IST date range; shows before/after values                         |
+| `developer.health.summary`                    | Counts by severity, society and route       | Built from errors logged in the last 24 hours                                                                             |
 
 ### 5.5 Visitor (`visitor`)
 
@@ -325,17 +337,17 @@ All require MFA (2.2). All actions are audited.
 
 ## 6. HTTP Routes
 
-| Route                               | Method       | Caller                      | Authentication                                                                                                | Purpose                                                                                                                                    |
-| ----------------------------------- | ------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/api/health`                       | GET          | Uptime monitor              | None                                                                                                          | Returns `ok` when the app and database respond, otherwise 503. **No** version, credentials or internals (NFR-11)                           |
-| `/api/jobs/daily`                   | POST         | Platform scheduler          | Secret bearer token (`CRON_SECRET`, compared in constant time); anything else is rejected with 401 and logged | Runs the daily jobs (below). Returns only counts per job                                                                                   |
-| `/api/push/subscriptions`           | POST, DELETE | Signed-in browser           | Session                                                                                                       | Save or remove this device's push subscription; max 5 per user; validated; keys stored server-side only                                    |
-| `/api/client-errors`                | POST         | Browser (may be signed out) | Session optional; rate limited                                                                                | Receives a client error report; body ≤ 8 KB; strict schema; scrubbed; stored in the error log; returns the `referenceId` shown to the user |
-| `/api/files/upload-url`             | POST         | Signed-in browser           | Session + permission                                                                                          | Issues a short-lived **upload link** for one allowed file after checking bucket, owner entity, type, size and counts                       |
-| `/api/files/url`                    | POST         | Signed-in browser           | Session + permission                                                                                          | Issues a **short-lived view link** for a stored file after checking the caller may see the owning record                                   |
-| `/api/billing/receipts/{paymentId}` | GET          | Signed-in browser           | Session + permission (payer, unit occupants, A, C)                                                            | Streams the receipt PDF for a confirmed payment                                                                                            |
-| `/api/billing/bills/{billId}`       | GET          | Signed-in browser           | Session + permission                                                                                          | Streams the bill PDF                                                                                                                       |
-| `/api/exports/{jobId}`              | GET          | Signed-in browser           | Session + the job's creator or A/C of that society                                                            | Downloads a finished CSV export; file expires with the job                                                                                 |
+| Route                               | Method       | Caller                      | Authentication                                                                                                | Purpose                                                                                                                                                           |
+| ----------------------------------- | ------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/health`                       | GET          | Uptime monitor              | None                                                                                                          | Returns `ok` when the app and database respond, otherwise 503. **No** version, credentials or internals (NFR-11)                                                  |
+| `/api/jobs/daily`                   | POST         | Platform scheduler          | Secret bearer token (`CRON_SECRET`, compared in constant time); anything else is rejected with 401 and logged | Runs the daily jobs (below). Returns only counts per job                                                                                                          |
+| `/api/push/subscriptions`           | POST, DELETE | Signed-in browser           | Session                                                                                                       | Save or remove this device's push subscription; max 10 per user; validated; keys stored server-side only                                                          |
+| `/api/client-errors`                | POST         | Browser (may be signed out) | Same-origin, session optional; rate limited                                                                   | Receives only message, stack, path and device summary; body ≤ 8 KB; strict schema; scrubbed; stored in the error log; returns the `referenceId` shown to the user |
+| `/api/files/upload-url`             | POST, DELETE | Signed-in browser           | Session + society admin or MFA-verified developer                                                             | Issues a logo upload link or removes an unattached logo after owner, type, size and count checks; current scope is society logos                                  |
+| `/api/files/url`                    | POST         | Signed-in browser           | Session + society membership or MFA-verified developer                                                        | Issues a five-minute logo view link after checking the society and path; current scope is society logos                                                           |
+| `/api/billing/receipts/{paymentId}` | GET          | Signed-in browser           | Session + permission (payer, unit occupants, A, C)                                                            | Streams the receipt PDF for a confirmed payment                                                                                                                   |
+| `/api/billing/bills/{billId}`       | GET          | Signed-in browser           | Session + permission                                                                                          | Streams the bill PDF                                                                                                                                              |
+| `/api/exports/{jobId}`              | GET          | Signed-in browser           | Session + the job's creator or A/C of that society                                                            | Downloads a finished CSV export; file expires with the job                                                                                                        |
 
 Rules for all routes:
 
@@ -346,7 +358,9 @@ Rules for all routes:
 
 ### 6.1 The daily job (`/api/jobs/daily`)
 
-Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). Each task writes a run key first, so a second call the same day does nothing.
+The scheduler sends `POST` with `Authorization: Bearer <CRON_SECRET>`. A missing or incorrect secret returns `401`; the attempt is logged without recording the supplied token. The secret comparison is constant-time. Responses are `no-store` and use the standard JSON envelope; success returns `{ ok: true, data: { jobs: [{ job, succeeded, skipped, failed }] } }`. Only per-job counts are returned.
+
+Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each registered task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. Each task/society failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
 
 | Task                          | Behavior                                                                                     |
 | ----------------------------- | -------------------------------------------------------------------------------------------- |
@@ -363,11 +377,11 @@ A task failure is logged (error log + Sentry) and does not stop the other tasks;
 
 ### 6.2 File upload flow
 
-1. Screen asks `/api/files/upload-url` for a link (bucket, owning record, file name, type, size).
-2. Browser uploads **directly to storage** with that link (the file never passes through our server; link valid minutes, single path).
-3. The business operation that owns the file (`visitor.createEntry`, `billing.submitPayment`, `request.create`, `request.addComment`, `society.updateProfile`, `billing.paymentDetails.update`) receives the **storage path**, re-checks that the object exists, belongs to this society, and matches type and size limits, then saves the path.
-4. Files never attached are removed by the weekly orphan cleanup (DATABASE 12).
-   Limits: JPG, PNG or PDF; 5 MB each; at most 3 on a request; one screenshot per payment submission.
+The current file-route implementation supports society logos only. An authorized admin or MFA-verified developer sends `POST /api/files/upload-url` with `{ bucket: "society-assets", societyId, contentType, sizeBytes }`. The response contains `{ path, signedUrl }`. The browser uploads directly to that one path with upsert disabled; the signed upload token expires after **two hours**. Only JPEG/PNG images up to 5 MiB are accepted, and the per-society logo object count is checked before issuing a link.
+
+The society update operation rechecks the path, object metadata, MIME type and actual size before saving it. Replacing or clearing a logo audits the path change, then removes the former object. To remove an uploaded but unattached logo, send `DELETE /api/files/upload-url` with `{ bucket: "society-assets", path }`; attached logos cannot be deleted through this route. To view a logo, send `POST /api/files/url` with `{ bucket: "society-assets", path }`; an active society member or an MFA-verified developer receives `{ signedUrl, expiresIn: 300 }`. The file never passes through the application server.
+
+Other buckets and record owners are not yet accepted by these routes. Future owning operations must recheck the exact society-scoped path, object existence, MIME type and actual size before saving an attachment.
 
 ---
 
@@ -392,18 +406,18 @@ Rules:
 
 Each lives behind one adapter (ARCHITECTURE 12) so it can be replaced.
 
-| Service                          | Purpose                                         | Direction                               | MVP                         | Notes                                                                                                                   |
-| -------------------------------- | ----------------------------------------------- | --------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Supabase Auth**                | Email codes, developer password + MFA, sessions | Server → service                        | Yes                         | Sign-up closed (Section 2.1); email templates carry the 6-digit code, no links                                          |
-| **Brevo (SMTP)**                 | Sends the sign-in codes for Supabase Auth       | Auth service → Brevo                    | Yes                         | SMTP settings entered in the Supabase project; secrets live there, not in our app                                       |
-| **Brevo (email API)**            | Receipts to the payer, developer alerts         | Server → Brevo over HTTPS               | Yes                         | API key server-side only; minimal content (no UPI ID changes in the body, no personal data beyond the recipient's name) |
-| **Web Push**                     | Visitor, delivery, bill and request alerts      | Server → browser push services          | Yes                         | Standard protocol with our server keys; payload limited to title and body per DESIGN 8.3                                |
-| **Sentry**                       | Error alerts                                    | Browser/Server → Sentry                 | Yes                         | Scrubbed events; user ID and society ID only; no emails or phones                                                       |
-| **Supabase Storage**             | Files                                           | Browser (signed links) and server       | Yes                         | Private buckets only                                                                                                    |
-| **Supabase Database / Realtime** | Data                                            | Server and browser (RLS)                | Yes                         |                                                                                                                         |
-| **UPI link and QR**              | Resident pays the society directly              | Built on the server from stored details | Yes                         | No network call, no payment service; the payee and amount shown are generated server-side                               |
-| SMS / WhatsApp provider          | Mobile OTP and critical alerts                  | —                                       | **No** (post-MVP, PRD D-06) |                                                                                                                         |
-| Payment gateway                  | Online payment                                  | —                                       | **No** (PRD D-14)           | Would add a webhook route (Section 9)                                                                                   |
+| Service                          | Purpose                                         | Direction                               | MVP                         | Notes                                                                                                                                      |
+| -------------------------------- | ----------------------------------------------- | --------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Supabase Auth**                | Email codes, developer password + MFA, sessions | Server → service                        | Yes                         | Sign-up closed (Section 2.1); email templates carry the 6-digit code, no links                                                             |
+| **Brevo (SMTP)**                 | Sends the sign-in codes for Supabase Auth       | Auth service → Brevo                    | Yes                         | SMTP settings entered in the Supabase project; secrets live there, not in our app                                                          |
+| **Brevo (email API)**            | Receipts to the payer, developer alerts         | Server → Brevo over HTTPS               | Yes                         | API key server-side only; minimal content (no UPI ID changes in the body, no personal data beyond the recipient's name)                    |
+| **Web Push**                     | Visitor, delivery, bill and request alerts      | Server → browser push services          | Yes                         | VAPID-authenticated; payload contains scrubbed title/body and an allow-listed same-origin path, never contact details or subscription keys |
+| **Sentry**                       | Error alerts                                    | Browser/Server → Sentry                 | Yes                         | Scrubbed events; user ID and society ID only; no emails or phones                                                                          |
+| **Supabase Storage**             | Files                                           | Browser (signed links) and server       | Yes                         | Private buckets only                                                                                                                       |
+| **Supabase Database / Realtime** | Data                                            | Server and browser (RLS)                | Yes                         |                                                                                                                                            |
+| **UPI link and QR**              | Resident pays the society directly              | Built on the server from stored details | Yes                         | No network call, no payment service; the payee and amount shown are generated server-side                                                  |
+| SMS / WhatsApp provider          | Mobile OTP and critical alerts                  | —                                       | **No** (post-MVP, PRD D-06) |                                                                                                                                            |
+| Payment gateway                  | Online payment                                  | —                                       | **No** (PRD D-14)           | Would add a webhook route (Section 9)                                                                                                      |
 
 Data sent to each outside party is listed in Section 13.2.
 
@@ -441,11 +455,11 @@ Counters live in the database (`rate_limits`, ARCHITECTURE AD-05) with hashed ke
 | `auth.requestCode`                  | 1 per 30 s; 5 per hour                                  | Email + purpose                |
 | `auth.requestCode`                  | 20 per hour                                             | IP                             |
 | `auth.verifyCode`                   | 5 wrong tries per code (code then invalid); 10 per hour | Email; plus 30 per hour per IP |
-| `auth.developerSignIn` / MFA        | 5 failures per 15 min                                   | Email + IP                     |
+| `auth.developerSignIn` / MFA        | 5 attempts per 15 min                                   | Email + IP                     |
 | `guards.identify` (PIN)             | 5 failures then 15-minute lock                          | Roster guard                   |
 | `visitor.preApproval.validate`      | 10 failures per 10 min; 30 per 10 min                   | Guard session; society         |
 | `registration.lookupSociety`        | 10 per hour; 30 per day                                 | IP                             |
-| `registration.submit`               | 3 per day                                               | Email                          |
+| `registration.submit`               | 3 per day                                               | Signed-in account              |
 | `billing.submitPayment`             | 10 per hour                                             | User                           |
 | `/api/files/upload-url`             | 30 per hour (guards 120)                                | User                           |
 | `/api/client-errors`                | 20 per minute                                           | Session or IP                  |
@@ -454,7 +468,7 @@ Counters live in the database (`rate_limits`, ARCHITECTURE AD-05) with hashed ke
 | Other write operations (soft guard) | 120 per minute                                          | User                           |
 
 - **Fail-safe behavior:** if the counter store is unavailable, security-sensitive limits (sign-in codes, PIN, code validation, society code lookup) **fail closed** (the action is refused with a retry message); the rest **fail open** and the failure is logged.
-- **Email quota guard:** the number of login emails per day is tracked; at 80% of the Brevo plan's daily allowance the developer is alerted (the free plan's daily limit makes mass onboarding on one day a real risk; onboard in batches).
+- **Email quota guard:** each transactional email, including the operational alert, reserves one send against `BREVO_DAILY_EMAIL_QUOTA`; one developer alert is sent at 80% and sends over the configured cap are held. Provider timeouts and 5xx responses receive one retry; all adapter failures are logged without recipient or response-body details and never fail the originating action.
 - Reads are not individually limited by the app; platform protection (DDoS, bot rules) is provided by the host.
 
 ---
@@ -476,6 +490,7 @@ Names only; values are kept in the host's secret store and never committed (ARCH
 | `SUPABASE_SERVICE_ROLE_KEY`                             | **Server secret**                                            | Privileged identity (only the isolated server module, ARCHITECTURE 8.4)                              | All except local-only tools |
 | `SUPABASE_DB_URL`                                       | **Server secret (CI/migrations/backup only, never runtime)** | Direct database connection                                                                           | CI                          |
 | `BREVO_API_KEY`                                         | **Server secret**                                            | Send receipts and alerts                                                                             | Staging, production         |
+| `BREVO_DAILY_EMAIL_QUOTA`                               | Server                                                       | Per-deployment daily sending cap; an alert is sent at 80%                                            | Staging, production         |
 | `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`                 | Server                                                       | Verified sender                                                                                      | Staging, production         |
 | `DEVELOPER_ALERT_EMAIL`                                 | Server                                                       | Where critical alerts go                                                                             | Staging, production         |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`                          | Public                                                       | Browser push subscription key                                                                        | All                         |
@@ -615,6 +630,7 @@ Every operation and route logs: request ID, society ID, user ID, operation name,
 | APA-04 | Supabase and Vercel regions are chosen close to users (India if available)                                                                            |
 | APA-05 | A single outgoing email (receipt) per confirmed payment is acceptable for the free email plan's volume; bill reminders use in-app and push, not email |
 | APA-06 | One Brevo sender address and domain serve all societies in MVP                                                                                        |
+| APA-07 | Cross-society developer error and audit date filters use the app's default timezone, Asia/Kolkata (IST)                                               |
 
 ### 16.2 Decisions
 

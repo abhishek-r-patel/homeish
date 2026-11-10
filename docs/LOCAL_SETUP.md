@@ -86,6 +86,12 @@ The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then
 - After every schema change run `npm run db:push`, then `npm run db:types`, and commit the migration and the regenerated types together.
 - Roll-out order: testdb → demo → live; live only through approved CI.
 
+### Email-code sign-in setup
+
+`supabase/config.toml` disables public sign-up, requests six-digit codes that expire after ten minutes, uses a code-only email template, enables local TOTP enrollment/verification, and caps society sessions at 30 days. Developer access is separately capped at four hours per auth session and requires MFA from the previous 15 minutes. The local SMTP catcher remains enabled for local-stack use. The project does not run that stack, and these settings have not been pushed to `homeish-testdb`.
+
+Before real email testing, verify the sender domain in Brevo and configure its SMTP credentials in the `homeish-testdb` dashboard. Hosted Auth settings have not been changed; automated tests mock delivery. A test recipient only needs to be an inbox the tester controls. Do not configure production email or share SMTP credentials in source.
+
 ### Folders
 
 - `supabase/migrations/`: forward-only SQL.

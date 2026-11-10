@@ -25,16 +25,18 @@
     "check:headers": "node scripts/check-source-headers.mjs",
     "check:public-env": "node scripts/check-public-env.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
+    "check:privileged": "node scripts/check-privileged-imports.mjs",
     "db:new": "node scripts/db.mjs new",
     "db:list": "node scripts/with-env.mjs testdb node scripts/db.mjs list",
     "db:push": "node scripts/with-env.mjs testdb node scripts/db.mjs push",
     "db:types": "node scripts/with-env.mjs testdb node scripts/db.mjs types",
     "db:types:check": "node scripts/with-env.mjs testdb node scripts/db.mjs types --check",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:headers && npm run check:public-env && npm run check:migrations"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run check:headers && npm run check:public-env && npm run check:migrations && npm run check:privileged"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource-variable/sora": "^5.3.0",
+    "@sentry/nextjs": "^11.11.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/postcss": "^4.3.5",
@@ -43,6 +45,7 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tailwindcss": "^4.3.5",
+    "web-push": "^4.0.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -52,6 +55,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/web-push": "^3.6.4",
     "eslint": "^10.14.0",
     "eslint-config-next": "^16.4.5",
     "pg": "^8.23.1",
