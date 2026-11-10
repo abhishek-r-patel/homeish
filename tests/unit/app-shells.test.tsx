@@ -40,7 +40,9 @@ describe('application shells', () => {
     expect(markup).toContain('Expand navigation');
     expect(markup).toContain('medium:w-16');
     expect(markup).toContain('Dashboard');
-    expect(markup).not.toContain('Operations');
+    expect(markup).toContain('Structure');
+    expect(markup).toContain('Jobs');
+    expect(markup).toContain('Operations');
   });
 
   it('limits compact tabs to four destinations plus More', () => {

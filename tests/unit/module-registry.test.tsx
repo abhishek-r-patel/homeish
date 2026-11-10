@@ -37,7 +37,25 @@ describe('module registry', () => {
     ]);
     expect(getRoleNavigation(['admin'], []).map(({ href }) => href)).toEqual([
       '/admin',
+      '/admin/structure',
+      '/admin/members',
+      '/admin/settings',
+      '/admin/guards',
+      '/admin/jobs',
     ]);
+    expect(hasPermission(['admin'], 'core', 'membership:read')).toBe(true);
+    expect(hasPermission(['committee'], 'core', 'membership:read')).toBe(true);
+    expect(hasPermission(['resident'], 'core', 'membership:read')).toBe(false);
+    expect(hasPermission(['admin'], 'core', 'membership:manage')).toBe(true);
+    expect(hasPermission(['committee'], 'core', 'membership:manage')).toBe(
+      false,
+    );
+    expect(hasPermission(['guard'], 'core', 'guards:read')).toBe(true);
+    expect(hasPermission(['committee'], 'core', 'guards:manage')).toBe(false);
+    expect(hasPermission(['resident'], 'core', 'household:read')).toBe(true);
+    expect(hasPermission(['admin'], 'core', 'household:manage')).toBe(false);
+    expect(hasPermission(['admin'], 'core', 'structure:manage')).toBe(true);
+    expect(hasPermission(['resident'], 'core', 'structure:manage')).toBe(false);
     expect(getModuleNavigation('billing', 'guard')).toEqual([]);
     expect(getModuleDefinition('billing').name).toBe(
       'Maintenance, Fines & Payments',
@@ -61,6 +79,7 @@ describe('module registry', () => {
 
     expect(nav.map(({ href }) => href)).toEqual([
       '/home',
+      '/household',
       '/visitors',
       '/bills',
     ]);
@@ -68,7 +87,7 @@ describe('module registry', () => {
       getRoleNavigation(['resident'], ['visitor'], permissionMaps).map(
         ({ href }) => href,
       ),
-    ).toEqual(['/home', '/visitors']);
+    ).toEqual(['/home', '/household', '/visitors']);
   });
 
   it('validates settings through each module schema', () => {
