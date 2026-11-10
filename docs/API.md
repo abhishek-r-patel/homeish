@@ -290,14 +290,15 @@ All require MFA (2.2). All actions are audited.
 
 ### 5.6 Delivery (`delivery`)
 
-| Operation                     | Who                                 | Purpose                                    | Notes                                                                           |
-| ----------------------------- | ----------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- |
-| `delivery.createEntry`        | G, A                                | Log a delivery                             | Applies the unit's standing rule automatically (`decision_source = preference`) |
-| `delivery.respond`            | R (approver)                        | Allow / leave at gate / deny               | First response wins                                                             |
-| `delivery.override`           | G                                   | Decide after no response                   | Reason required; audited                                                        |
-| `delivery.markCollected`      | G, R (own unit)                     | Close a parcel left at the gate            | Only from `left_at_gate`                                                        |
-| `delivery.list/get`           | G, A, C; R (own unit)               | Logs; includes the uncollected-parcel view |                                                                                 |
-| `delivery.preference.get/set` | R (approver of own unit), A/C (get) | Unit standing rule                         | Direct                                                                          |
+| Operation                     | Who                                 | Purpose                                     | Notes                                                                                   |
+| ----------------------------- | ----------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `delivery.createEntry`        | G, A                                | Log a delivery                              | Applies the unit's standing rule automatically; photo attachment is rechecked          |
+| `delivery.respond`            | R (approver)                        | Allow / leave at gate / deny                | First response wins; leave-at-gate is rejected when disabled                           |
+| `delivery.override`           | G                                   | Decide or close after no response           | Requires an identified guard, expired response window and reason; audited and notified  |
+| `delivery.markCollected`      | G, R (own unit)                     | Mark a parcel collected                     | Only from `left_at_gate`; timestamp and actor are recorded                             |
+| `delivery.list/get`           | G, A, C; R (own unit)               | Logs; includes the uncollected-parcel view | Society threshold and timezone are applied by the database                             |
+| `delivery.preference.get/set` | R (approver of own unit), A/C (get) | Read or change a unit standing rule         | Writes require an active unit approver                                                  |
+| `delivery.settings.get/update`| G/A/C (get), A (update)             | Read and update delivery module settings    | Timeout, uncollected threshold and leave-at-gate toggle; writes are audited             |
 
 ### 5.7 Billing (`billing`)
 

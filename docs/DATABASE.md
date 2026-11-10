@@ -450,34 +450,37 @@ Unique `(society_id, phone)` among active rows. MVP warns only (A-12).
 
 ### 5.1 `delivery_entries`
 
-| Column              | Type        | Null | Notes                                                                          |
-| ------------------- | ----------- | ---- | ------------------------------------------------------------------------------ |
-| Std                 |             |      |                                                                                |
-| unit_id             | uuid        | no   |                                                                                |
-| company             | text        | no   | From the list or free text, ≤ 60                                               |
-| delivery_type       | text        | no   | `food`, `parcel`, `grocery`, `other`                                           |
-| photo_path          | text        | yes  |                                                                                |
-| status              | text        | no   | `pending_response`, `allowed`, `left_at_gate`, `denied`, `collected`, `closed` |
-| respond_by          | timestamptz | yes  | As for visitors                                                                |
-| decision_source     | text        | yes  | `resident`, `preference` (unit rule applied automatically), `guard_override`   |
-| decided_by          | uuid        | yes  |                                                                                |
-| decided_at          | timestamptz | yes  |                                                                                |
-| override_reason     | text        | yes  | Required for `guard_override`                                                  |
-| handled_by_guard_id | uuid        | no   | → `guard_roster`                                                               |
-| received_at         | timestamptz | yes  | When left at the gate/security desk                                            |
-| collected_at        | timestamptz | yes  | Set only from `left_at_gate` (DEL-5)                                           |
-| collected_by        | uuid        | yes  | → `profiles` (resident or guard who marked it)                                 |
+| Column              | Type        | Null | Notes                                                                                   |
+| ------------------- | ----------- | ---- | --------------------------------------------------------------------------------------- |
+| Standard columns    |             |      | Includes `created_by`, `updated_at`, `updated_by`                                       |
+| unit_id             | uuid        | no   | Same-society FK to an active unit                                                       |
+| company             | text        | no   | Platform/company or custom value; 1–60 characters                                       |
+| delivery_person     | text        | yes  | Optional; at most 120 characters                                                        |
+| delivery_type       | text        | no   | `food`, `parcel`, `grocery`, `other`                                                    |
+| photo_path          | text        | yes  | Private `delivery-photos` bucket; society/unit-scoped path                              |
+| status              | text        | no   | `pending_response`, `allowed`, `left_at_gate`, `denied`, `collected`, `closed`; a guard may close an expired request with a reason |
+| client_request_id   | uuid        | no   | Idempotency key unique per society and creator                                          |
+| respond_by          | timestamptz | yes  | Required while `pending_response`; computed from the society response timeout           |
+| decision_source     | text        | yes  | `resident`, `preference` (standing rule applied), or `guard_override`                   |
+| decided_by          | uuid        | yes  | Set for resident, standing-preference and guard decisions                               |
+| decided_at          | timestamptz | yes  | Required after a decision                                                               |
+| override_reason     | text        | yes  | Required for `guard_override`, at most 500 characters                                   |
+| handled_by_guard_id | uuid        | no   | Same-society FK to `guard_roster`                                                       |
+| received_at         | timestamptz | yes  | Set when a delivery is left at the gate/security desk                                   |
+| collected_at        | timestamptz | yes  | Set only when moving from `left_at_gate` to `collected`                                 |
+| collected_by        | uuid        | yes  | → `profiles` (resident or guard who marked it)                                          |
 
 Uncollected parcels are `left_at_gate` rows with `received_at` older than the society's threshold (default 3 days).
 
 ### 5.2 `delivery_preferences`
 
-| Column                 | Type | Null    | Notes                                                          |
-| ---------------------- | ---- | ------- | -------------------------------------------------------------- |
-| society_id             | uuid | PK part |                                                                |
-| unit_id                | uuid | PK part | One row per unit                                               |
-| rule                   | text | no      | `ask` (default), `always_allow`, `always_leave_at_gate` (A-13) |
-| updated_at, updated_by |      |         |                                                                |
+| Column                 | Type        | Null    | Notes                                                          |
+| ---------------------- | ----------- | ------- | -------------------------------------------------------------- |
+| society_id             | uuid        | PK part |                                                                |
+| unit_id                | uuid        | PK part | One row per unit                                               |
+| rule                   | text        | no      | `ask` (default), `always_allow`, `always_leave_at_gate` (A-13) |
+| updated_at             | timestamptz | no      | Maintained by the common update trigger                        |
+| updated_by             | uuid        | yes     | → `profiles`                                                   |
 
 ---
 
