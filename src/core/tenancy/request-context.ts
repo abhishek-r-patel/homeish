@@ -35,6 +35,7 @@ export interface RequestContext {
   roles: readonly SocietyRole[];
   enabledModules: ReadonlySet<ModuleKey>;
   isDeveloper: boolean;
+  isDeveloperAccount: boolean;
   mfaVerified: boolean;
   logger: RequestLogger;
 }
@@ -88,6 +89,32 @@ export async function buildRequestContext(
   }
   if (!authData.user) {
     throw new AppError('UNAUTHENTICATED');
+  }
+
+  const { data: profile, error: profileError } = await client
+    .from('profiles')
+    .select('status')
+    .eq('id', authData.user.id)
+    .maybeSingle();
+  if (profileError) {
+    throw new Error('Could not load the current user profile.', {
+      cause: profileError,
+    });
+  }
+  if (!profile || profile.status !== 'active') {
+    throw new AppError('UNAUTHENTICATED');
+  }
+
+  const { data: developerAccessRows, error: developerAccessError } =
+    await client.rpc('session_developer_access');
+  if (developerAccessError) {
+    throw new Error('Could not load the current developer session state.', {
+      cause: developerAccessError,
+    });
+  }
+  const developerAccess = developerAccessRows[0];
+  if (!developerAccess) {
+    throw new Error('The developer session state was not returned.');
   }
 
   const { data: membershipRows, error: membershipsError } = await client
@@ -157,8 +184,9 @@ export async function buildRequestContext(
     societyStatus,
     roles: activeMembership?.roles ?? [],
     enabledModules,
-    isDeveloper: false,
-    mfaVerified: false,
+    isDeveloper: developerAccess.mfa_verified,
+    isDeveloperAccount: developerAccess.is_developer_account,
+    mfaVerified: developerAccess.mfa_verified,
     logger: createRequestLogger(verifiedRequestId),
   };
 }

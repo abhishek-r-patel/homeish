@@ -128,7 +128,8 @@ describe.skipIf(!hasDatabase)('database schema checks', () => {
         WHERE ns.nspname = 'public'
           AND tbl.relkind IN ('r', 'p')
           AND tbl.relname NOT IN (
-            'profiles', 'developers', 'societies', 'modules', 'rate_limits'
+            'profiles', 'developers', 'societies', 'modules', 'rate_limits',
+            'auth_code_challenges'
           )
           AND (
             society_column.attnum IS NULL

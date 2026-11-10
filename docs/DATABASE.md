@@ -28,7 +28,7 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | Application schema | **`public`** (tables, exposed to the API only through RLS and grants)                                             | Standard Supabase pattern                                                                             |
 | Private schema     | **`private`** (helper and maintenance functions, not exposed to the API)                                          | Keeps security helpers out of the public API surface                                                  |
 | File storage       | Supabase Storage (private buckets); the database stores **paths only**                                            | Section 12                                                                                            |
-| Extensions         | `pgcrypto` (UUIDs, PIN hashing), `citext` (case-insensitive email), both in the unexposed `extensions` schema    | Minimal set. No other extensions in MVP                                                               |
+| Extensions         | `pgcrypto` (UUIDs, PIN hashing), `citext` (case-insensitive email), both in the unexposed `extensions` schema     | Minimal set. No other extensions in MVP                                                               |
 | ORM                | None (ARCHITECTURE AD-03). Generated TypeScript types from the schema; transactional operations are SQL functions | One source of truth for the schema                                                                    |
 
 ### 1.1 Conventions that apply to every table
@@ -45,7 +45,7 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | Text limits                   | Every free-text column has a length `CHECK` (names ≤ 120, descriptions ≤ 2,000, reasons ≤ 500)                                                                                                                                                                                                                                   |
 | Soft delete                   | `active boolean` or a status value. Hard delete is blocked on money, entry, request history and audit tables                                                                                                                                                                                                                     |
 | Deletion of parents           | `ON DELETE RESTRICT` everywhere, except notification and subscription rows owned by a user                                                                                                                                                                                                                                       |
-| Updated timestamps            | `updated_at` maintained by `private.set_updated_at()`                                                                                                                                                                                                                                                                           |
+| Updated timestamps            | `updated_at` maintained by `private.set_updated_at()`                                                                                                                                                                                                                                                                            |
 | Double-submit protection      | The tables for user-created records (`visitor_entries`, `delivery_entries`, `billing_payments`, `service_requests`, `service_request_comments`) also carry `client_request_id uuid` (nullable); unique `(society_id, created_by, client_request_id)` where not null, so a repeated submission returns the original row (API 3.6) |
 | Naming of keys                | Primary `…_pkey`, foreign `…_fkey`, unique `…_key`, check `…_check`, index `…_idx`                                                                                                                                                                                                                                               |
 
@@ -53,15 +53,15 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 
 ## 2. Entity Overview
 
-### 2.1 Table inventory (MVP: 35 tables)
+### 2.1 Table inventory (MVP: 36 tables)
 
-| Module                  | Tables                                                                                                                                                                                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Core (17)**           | `profiles`, `developers`, `societies`, `modules`, `module_configs`, `blocks`, `units`, `memberships`, `unit_occupants`, `guard_roster`, `notifications`, `push_subscriptions`, `audit_logs`, `error_logs`, `jobs`, `job_run_keys`, `rate_limits` |
-| **Visitor (3)**         | `visitor_entries`, `visitor_pre_approvals`, `visitor_blacklist`                                                                                                                                                                                  |
-| **Delivery (2)**        | `delivery_entries`, `delivery_preferences`                                                                                                                                                                                                       |
-| **Billing (8)**         | `billing_charge_types`, `billing_bills`, `billing_bill_lines`, `billing_payments`, `billing_payment_allocations`, `billing_ledger_entries`, `billing_payment_details`, `billing_receipt_counters`                                                |
-| **Service Request (5)** | `service_request_categories`, `service_requests`, `service_request_comments`, `service_request_attachments`, `service_request_events`                                                                                                            |
+| Module                  | Tables                                                                                                                                                                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Core (18)**           | `profiles`, `developers`, `societies`, `modules`, `module_configs`, `blocks`, `units`, `memberships`, `unit_occupants`, `guard_roster`, `notifications`, `push_subscriptions`, `audit_logs`, `error_logs`, `jobs`, `job_run_keys`, `rate_limits`, `auth_code_challenges` |
+| **Visitor (3)**         | `visitor_entries`, `visitor_pre_approvals`, `visitor_blacklist`                                                                                                                                                                                                          |
+| **Delivery (2)**        | `delivery_entries`, `delivery_preferences`                                                                                                                                                                                                                               |
+| **Billing (8)**         | `billing_charge_types`, `billing_bills`, `billing_bill_lines`, `billing_payments`, `billing_payment_allocations`, `billing_ledger_entries`, `billing_payment_details`, `billing_receipt_counters`                                                                        |
+| **Service Request (5)** | `service_request_categories`, `service_requests`, `service_request_comments`, `service_request_attachments`, `service_request_events`                                                                                                                                    |
 
 Total: 17 + 3 + 2 + 8 + 5 = **35**.
 
@@ -133,7 +133,7 @@ Not drawn (to keep the diagram readable): every tenant table also points to `soc
 | status                 | text        | no   | `active`, `disabled`, `anonymized`; default `active`                                                                                                                 |
 | created_at, updated_at | timestamptz | no   |                                                                                                                                                                      |
 
-Constraints: unique `email`; check `font_preference` against the documented values. A profile is created automatically when a user first signs in (trigger); name is collected on first sign-in (S-04/profile).
+Constraints: unique `email`; check `font_preference` against the documented values. A profile is created after the auth email is confirmed, initially with the placeholder name `Homeish member`; the user can supply their name in profile onboarding. An auth trigger keeps the email copy synchronized without overwriting profile fields or reactivating a disabled profile.
 
 ### 3.2 `developers` — platform operators
 
@@ -142,7 +142,7 @@ Constraints: unique `email`; check `font_preference` against the documented valu
 | user_id    | uuid        | PK   | → `profiles` |
 | created_at | timestamptz | no   |              |
 
-No API grants: rows are added only by a database administrator (ARCHITECTURE 8.1). An RLS helper checks membership of this table plus the MFA assurance level of the session.
+No API grants: rows are added only by a database administrator (ARCHITECTURE 8.1). `private.developer_mfa_sessions` records the verified MFA time against the stable `auth.sessions.id`; `private.is_developer()` requires AAL2, verification within 15 minutes, and the four-hour auth-session cap.
 
 ### 3.3 `societies`
 
@@ -230,7 +230,8 @@ Constraints:
 - At least one of `user_id`, `invited_email` is set.
 - Unique `(society_id, user_id)` where `user_id` is not null; unique `(society_id, invited_email)` where `user_id` is null.
 - Unique `(society_id, id)`.
-- On first sign-in, a function links all memberships whose `invited_email` equals the verified sign-in email (CORE-9, ARCHITECTURE 8.1). Unknown emails link nothing and sign-in is refused with the generic message.
+- On first sign-in, `public.claim_memberships()` links invited rows whose `invited_email` matches the verified auth email (CORE-9). It activates the invitation and records `joined_at`; it skips a society where the user already has a membership, so sign-in never silently changes existing roles.
+- `public.has_signin_access(email)` returns only a boolean to the service role. It allows outstanding invitations and active or pending memberships for active profiles; deactivated memberships and disabled profiles do not qualify. The server uses this check before requesting a code, while returning the same generic response for eligible and ineligible addresses.
 
 Resident sub-types (owner, tenant, family) are **per unit**, so they live on `unit_occupants`, not here. Permission checks combine both (PRD matrix).
 
@@ -363,7 +364,21 @@ A daily job inserts its key first; a duplicate means it already ran, so re-runni
 
 Hashed keys (no raw emails/IPs). Cleared daily. No direct API access (ARCHITECTURE AD-05); a service-role-only atomic function increments fixed-window counters.
 
-The P1 operational-table migrations enforce the documented API boundaries: audit rows are immutable, error-log details are immutable while developer resolution fields may change, and jobs are visible only to their creator/admin/developer. The service role alone writes operational records; `job_run_keys` and `rate_limits` have no user-facing grants.
+The P1 operational-table migrations enforce the documented API boundaries: audit rows are immutable, error-log details are immutable while developer resolution fields may change, and jobs are visible only to their creator/admin/developer. The service role alone writes operational records; `job_run_keys`, `rate_limits` and `auth_code_challenges` have no user-facing grants.
+
+### 3.18 `auth_code_challenges`
+
+| Column             | Type        | Null   | Notes                                                                  |
+| ------------------ | ----------- | ------ | ---------------------------------------------------------------------- |
+| email_key          | text        | PK     | Salted hash of the normalized email; never raw email                   |
+| challenge_id       | uuid        | unique | Replaced whenever a new code is requested                              |
+| created_at         | timestamptz | no     |                                                                        |
+| expires_at         | timestamptz | no     | Ten minutes after creation                                             |
+| failed_attempts    | smallint    | no     | 0–5; fifth failure consumes the challenge                              |
+| in_flight_attempts | smallint    | no     | Reserved atomically to prevent concurrent attempts bypassing the limit |
+| consumed_at        | timestamptz | yes    | Set after success or the fifth failed attempt                          |
+
+RLS is enabled, with no user-facing grants. Only service-role functions create challenges, reserve an attempt, and record its outcome. A superseded challenge cannot complete a verification reserved against its prior ID; expired rows are cleaned during later challenge creation.
 
 ---
 
@@ -872,7 +887,7 @@ Only `visitor_entries`, `delivery_entries` and `notifications` are published to 
 | Before risky production migrations | Take a manual backup (Section 15) first                                                                                                                                                                                                               |
 | Module introduction                | A module's tables ship in its own migrations; the `modules` row already exists, so it can be shipped **disabled** and enabled for a pilot society by the developer                                                                                    |
 
-The disposable-PostgreSQL integration suite enforces these catalog rules in CI. Its explicit global-table allowlist is `profiles`, `developers`, `societies`, `modules` and `rate_limits`; all other public tables must be society-scoped. Foreign-key indexes may be partial only when the predicate requires every indexed foreign-key column to be non-null. The append-only trigger check enumerates append-only tables and must be extended when one is added.
+The disposable-PostgreSQL integration suite enforces these catalog rules in CI. Its explicit global-table allowlist is `profiles`, `developers`, `societies`, `modules`, `rate_limits` and `auth_code_challenges`; all other public tables must be society-scoped. Foreign-key indexes may be partial only when the predicate requires every indexed foreign-key column to be non-null. The append-only trigger check enumerates append-only tables and must be extended when one is added.
 
 Order of the first migrations: 1) extensions, schemas, shared triggers; 2) helper functions; 3) `profiles`, `developers`, `societies`, `modules`, `module_configs`; 4) structure and membership tables; 5) logs, jobs, notifications; 6) one migration group per module in the order Visitor → Delivery → Billing → Service Request.
 

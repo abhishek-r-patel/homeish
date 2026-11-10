@@ -11,6 +11,7 @@ import {
 } from '../../../core/errors';
 import { logUnexpectedError } from '../../../core/logging/error-logger';
 import { enforceRateLimit } from '../../../core/rate-limit';
+import { clientIpFromHeaders } from '../../../core/request/client-ip';
 
 const MAX_BODY_BYTES = 8 * 1024;
 
@@ -97,19 +98,6 @@ function isSameOrigin(request: Request): boolean {
   return origin !== null && origin === new URL(request.url).origin;
 }
 
-function clientIp(request: Request): string {
-  const vercelIp = request.headers.get('x-vercel-forwarded-for');
-  const realIp = request.headers.get('x-real-ip');
-  const forwardedIp = request.headers
-    .get('x-forwarded-for')
-    ?.split(',')
-    .at(-1)
-    ?.trim();
-  const identifier =
-    vercelIp?.trim() || realIp?.trim() || forwardedIp || 'unknown';
-  return identifier.length <= 512 ? identifier : 'unknown';
-}
-
 function failureResponse(error: AppError, requestId: string): Response {
   const headers: Record<string, string> = {
     [REQUEST_ID_HEADER]: requestId,
@@ -140,7 +128,11 @@ export async function POST(request: Request): Promise<Response> {
       throw new ValidationError({ body: 'Send a JSON request body.' });
     }
 
-    await enforceRateLimit('clientErrorsMinute', clientIp(request), requestId);
+    await enforceRateLimit(
+      'clientErrorsMinute',
+      clientIpFromHeaders(request.headers),
+      requestId,
+    );
 
     const payload = clientErrorSchema.safeParse(await readBoundedJson(request));
     if (!payload.success) {

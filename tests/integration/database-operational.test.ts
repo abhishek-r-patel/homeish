@@ -176,7 +176,11 @@ describe.skipIf(!hasDatabase)('operational database tables', () => {
       { commit: true },
     );
 
-    for (const table of ['job_run_keys', 'rate_limits']) {
+    for (const table of [
+      'job_run_keys',
+      'rate_limits',
+      'auth_code_challenges',
+    ]) {
       const error = await dbError(
         db().asRole('authenticated', { sub: userId }, (client) =>
           client.query(`select * from public.${table}`),

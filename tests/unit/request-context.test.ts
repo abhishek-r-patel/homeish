@@ -25,6 +25,14 @@ function createTestClient() {
         { society_id: otherSocietyId, roles: ['guard'] },
       ]);
     }
+    if (url.pathname.endsWith('/profiles')) {
+      return Response.json({ status: 'active' });
+    }
+    if (url.pathname.endsWith('/rpc/session_developer_access')) {
+      return Response.json([
+        { is_developer_account: false, mfa_verified: false },
+      ]);
+    }
     if (url.pathname.endsWith('/societies')) {
       return Response.json({ status: 'active' });
     }
@@ -75,6 +83,7 @@ describe('buildRequestContext', () => {
       societyStatus: 'active',
       roles: ['admin', 'resident'],
       isDeveloper: false,
+      isDeveloperAccount: false,
       mfaVerified: false,
     });
     expect(context.enabledModules.has('core')).toBe(true);
@@ -106,6 +115,43 @@ describe('buildRequestContext', () => {
     vi.mocked(createUserSupabaseClient).mockResolvedValue({
       client,
       activeSocietyId: null,
+    });
+
+    await expect(
+      buildRequestContext('4f05ab7e-17d6-4d74-8a8b-3b37304c83f0'),
+    ).rejects.toMatchObject({ code: 'UNAUTHENTICATED' });
+  });
+
+  it('rejects a session for a disabled profile', async () => {
+    const fetcher: typeof fetch = async (input) => {
+      const url = new URL(
+        input instanceof Request ? input.url : input.toString(),
+      );
+      if (url.pathname.endsWith('/profiles')) {
+        return Response.json({ status: 'disabled' });
+      }
+      return Response.json([]);
+    };
+    const disabledClient = createClient<Database>(
+      'http://127.0.0.1:54321',
+      'test-anon-key',
+      { global: { fetch: fetcher } },
+    );
+    vi.spyOn(disabledClient.auth, 'getUser').mockResolvedValue({
+      data: {
+        user: {
+          id: userId,
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: '2026-01-01T00:00:00Z',
+        },
+      },
+      error: null,
+    });
+    vi.mocked(createUserSupabaseClient).mockResolvedValue({
+      client: disabledClient,
+      activeSocietyId,
     });
 
     await expect(

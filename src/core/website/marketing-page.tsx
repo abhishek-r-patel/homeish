@@ -43,6 +43,9 @@ export function MarketingPage({
             >
               Your society
             </a>
+            <Link className="inline-flex min-h-12 items-center" href="/login">
+              Sign in
+            </Link>
           </nav>
         </div>
       </header>

@@ -19,6 +19,7 @@ function requestContext(
     roles: ['resident'],
     enabledModules: new Set(['core', 'visitor']),
     isDeveloper: false,
+    isDeveloperAccount: false,
     mfaVerified: false,
     logger: {
       debug: vi.fn(),

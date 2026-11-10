@@ -147,6 +147,21 @@ async function hashIdentifier(scope: string, identifier: string) {
   return `${scope}:${hashedIdentifier}`;
 }
 
+export async function hashRateLimitIdentifier(
+  scope: string,
+  identifier: string,
+): Promise<string> {
+  if (
+    !scope.trim() ||
+    scope.length > 100 ||
+    !identifier.trim() ||
+    identifier.length > 512
+  ) {
+    throw new TypeError('Hashed identity must be non-empty and short.');
+  }
+  return hashIdentifier(scope, identifier);
+}
+
 export async function enforceRateLimit(
   policyName: RateLimitPolicyName,
   identifier: string,

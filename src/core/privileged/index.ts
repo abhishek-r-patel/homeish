@@ -1,4 +1,12 @@
 // Expose narrow privileged operations without exposing the service-role client.
+export { ensureAuthUserForSignIn, hasSignInAccess } from './auth-invitations';
+export {
+  finishAuthCodeAttempt,
+  reserveAuthCodeAttempt,
+  startAuthCodeChallenge,
+  type AuthCodeAttemptReservation,
+  type AuthCodeAttemptStatus,
+} from './auth-code-challenges';
 export {
   writeAuditLog,
   writeErrorLog,

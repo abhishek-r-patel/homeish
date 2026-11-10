@@ -18,6 +18,44 @@ test('loads the root route with no automated accessibility violations', async ({
   expect(accessibility.violations).toEqual([]);
 });
 
+test('renders the email-code sign-in screen accessibly', async ({ page }) => {
+  await page.goto('/login');
+  await expect(
+    page.getByRole('heading', { name: 'Welcome to Homeish' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Email address')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send code' })).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test('renders the isolated developer password and MFA screen accessibly', async ({
+  page,
+}) => {
+  await page.goto('/developer/login');
+  await expect(
+    page.getByRole('heading', { name: 'Developer sign in' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Developer email')).toBeVisible();
+  await expect(page.getByLabel('Password')).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test('returns an unauthenticated session to sign-in without an open redirect', async ({
+  page,
+}) => {
+  await page.goto('/session');
+  await expect(page).toHaveURL(/\/session-expired\?returnTo=%2Fsession$/);
+  await expect(
+    page.getByRole('heading', { name: 'Your session has ended' }),
+  ).toBeVisible();
+
+  await page.goto('/session-expired?returnTo=https%3A%2F%2Fattacker.test');
+  await expect(page.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+    'href',
+    '/login?returnTo=%2Fsession',
+  );
+});
+
 test('marketing fits a phone and society-address validation is explicit', async ({
   page,
 }) => {

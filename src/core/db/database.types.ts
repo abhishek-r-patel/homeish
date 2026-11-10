@@ -11,6 +11,37 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      auth_code_challenges: {
+        Row: {
+          challenge_id: string;
+          consumed_at: string | null;
+          created_at: string;
+          email_key: string;
+          expires_at: string;
+          failed_attempts: number;
+          in_flight_attempts: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          challenge_id: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          email_key: string;
+          expires_at: string;
+          failed_attempts?: number;
+          in_flight_attempts?: number;
+        };
+        Update: {
+          challenge_id?: string;
+          consumed_at?: string | null;
+          created_at?: string;
+          email_key?: string;
+          expires_at?: string;
+          failed_attempts?: number;
+          in_flight_attempts?: number;
+        };
+        Relationships: [];
+      };
       audit_logs: {
         Row: {
           action: string;
@@ -577,6 +608,31 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      claim_memberships: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      record_developer_mfa: {
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
+      session_developer_access: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          is_developer_account: boolean;
+          mfa_verified: boolean;
+        }[];
+      };
+      session_memberships: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          membership_status: string;
+          roles: string[];
+          society_id: string;
+          society_name: string;
+          society_status: string;
+        }[];
+      };
       consume_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };
         Returns: {
@@ -584,6 +640,30 @@ export type Database = {
           count: number;
           retry_after_seconds: number;
         }[];
+      };
+      finish_auth_code_attempt: {
+        Args: {
+          p_challenge_id: string;
+          p_failed: boolean;
+          p_succeeded: boolean;
+        };
+        Returns: boolean;
+      };
+      has_signin_access: {
+        Args: { p_email: string };
+        Returns: boolean;
+      };
+      reserve_auth_code_attempt: {
+        Args: { p_email_key: string };
+        Returns: {
+          challenge_id: string | null;
+          retry_after_seconds: number;
+          status: string;
+        }[];
+      };
+      start_auth_code_challenge: {
+        Args: { p_email_key: string };
+        Returns: string;
       };
     };
     Enums: {

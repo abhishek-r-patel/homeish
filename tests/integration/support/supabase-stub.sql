@@ -12,10 +12,19 @@ grant usage on schema auth to anon, authenticated, service_role, postgres;
 create table auth.users (
   id uuid primary key,
   email text unique,
+  email_confirmed_at timestamptz,
   created_at timestamptz not null default now()
 );
 alter table auth.users owner to supabase_auth_admin;
 grant all on auth.users to postgres;
+
+create table auth.sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table auth.sessions owner to supabase_auth_admin;
+grant all on auth.sessions to postgres;
 
 -- Same claim lookups as Supabase (PostgREST sets request.jwt.claims per request).
 create function auth.uid() returns uuid language sql stable as $$
