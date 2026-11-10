@@ -33,6 +33,15 @@ export type ModuleDefinition = {
 const emptySettingsSchema = z.object({}).strict();
 const emptySettings: Readonly<Record<string, unknown>> = {};
 const emptySettingsAccess: Readonly<Record<string, 'admin' | 'developer'>> = {};
+export const visitorSettingsSchema = z
+  .object({
+    approval_timeout_minutes: z.number().int().min(1).max(30).optional(),
+    overstay_hours: z.number().int().min(1).max(72).optional(),
+    photo_required: z.boolean().optional(),
+    guard_override_allowed: z.boolean().optional(),
+    phone_required: z.boolean().optional(),
+  })
+  .strict();
 
 export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   core: {
@@ -147,11 +156,24 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   visitor: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: {
+      approval_timeout_minutes: 3,
+      overstay_hours: 12,
+      photo_required: false,
+      guard_override_allowed: false,
+      phone_required: false,
+    },
     key: 'visitor',
     name: 'Visitor Management',
     navigation: {
       admin: [
+        {
+          href: '/admin/visitors',
+          label: 'Visitors',
+          permission: 'visitor:list',
+        },
+      ],
+      committee: [
         {
           href: '/admin/visitors',
           label: 'Visitors',
@@ -169,9 +191,20 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         { href: '/visitors', label: 'Visitors', permission: 'visitor:list' },
       ],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'visitor:list': ['admin', 'committee', 'guard', 'resident'],
+      'visitor:create': ['admin', 'guard'],
+      'visitor:decide': ['resident'],
+      'visitor:override': ['guard'],
+      'visitor:check_in': ['admin', 'guard'],
+      'visitor:preapproval:create': ['resident'],
+      'visitor:preapproval:cancel': ['admin', 'committee', 'resident'],
+      'visitor:blacklist:read': ['admin', 'committee', 'guard'],
+      'visitor:blacklist:manage': ['admin'],
+      'visitor:settings:manage': ['admin'],
+    },
+    settingsAccess: { visitor: 'admin' },
+    settingsSchema: visitorSettingsSchema,
   },
   delivery: {
     core: false,

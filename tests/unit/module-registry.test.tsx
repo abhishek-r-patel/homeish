@@ -27,7 +27,7 @@ describe('module registry', () => {
 
   it('keeps permission and navigation declarations scoped to each module', () => {
     expect(hasPermission(['admin'], 'core', 'membership:manage')).toBe(true);
-    expect(hasPermission(['admin'], 'visitor', 'visitor:list')).toBe(false);
+    expect(hasPermission(['admin'], 'visitor', 'visitor:list')).toBe(true);
     expect(getModuleNavigation('visitor', 'guard')).toEqual([
       {
         href: '/guard/visitors',
@@ -50,6 +50,13 @@ describe('module registry', () => {
     expect(hasPermission(['committee'], 'core', 'membership:manage')).toBe(
       false,
     );
+    expect(hasPermission(['resident'], 'visitor', 'visitor:decide')).toBe(true);
+    expect(hasPermission(['resident'], 'visitor', 'visitor:create')).toBe(
+      false,
+    );
+    expect(
+      hasPermission(['committee'], 'visitor', 'visitor:blacklist:manage'),
+    ).toBe(false);
     expect(hasPermission(['guard'], 'core', 'guards:read')).toBe(true);
     expect(hasPermission(['committee'], 'core', 'guards:manage')).toBe(false);
     expect(hasPermission(['resident'], 'core', 'household:read')).toBe(true);
@@ -92,7 +99,25 @@ describe('module registry', () => {
 
   it('validates settings through each module schema', () => {
     expect(parseModuleSettings('visitor', {})).toEqual({});
+    expect(
+      parseModuleSettings('visitor', {
+        approval_timeout_minutes: 3,
+        guard_override_allowed: false,
+        overstay_hours: 12,
+        phone_required: false,
+        photo_required: true,
+      }),
+    ).toEqual({
+      approval_timeout_minutes: 3,
+      guard_override_allowed: false,
+      overstay_hours: 12,
+      phone_required: false,
+      photo_required: true,
+    });
     expect(() => parseModuleSettings('visitor', { unknown: true })).toThrow();
+    expect(() =>
+      parseModuleSettings('visitor', { approval_timeout_minutes: 0 }),
+    ).toThrow();
   });
 
   it('renders a module-disabled page without implying its data was deleted', () => {

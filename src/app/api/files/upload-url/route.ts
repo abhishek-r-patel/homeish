@@ -12,16 +12,27 @@ import {
 } from '../../../../core/files/attachments';
 import { runFileRoute } from '../../../../core/files/http';
 import { enforceRateLimit } from '../../../../core/rate-limit';
+import { authorizeRequest } from '../../../../core/permissions/authorize';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 
-const issueSchema = z
-  .object({
-    bucket: z.literal('society-assets'),
-    contentType: z.enum(SOCIETY_LOGO_CONTENT_TYPES),
-    sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
-    societyId: z.uuid(),
-  })
-  .strict();
+const issueSchema = z.discriminatedUnion('bucket', [
+  z
+    .object({
+      bucket: z.literal('society-assets'),
+      contentType: z.enum(SOCIETY_LOGO_CONTENT_TYPES),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      societyId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('visitor-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      unitId: z.uuid(),
+    })
+    .strict(),
+]);
 
 const pathSchema = z
   .object({ bucket: z.literal('society-assets'), path: z.string().max(500) })
@@ -70,6 +81,44 @@ export async function POST(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(issueSchema, body);
+      if (input.bucket === 'visitor-photos') {
+        authorizeRequest(context, {
+          moduleKey: 'visitor',
+          permission: 'visitor:create',
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        const { data: unit, error: unitError } = await context.db
+          .from('units')
+          .select('id')
+          .eq('id', input.unitId)
+          .eq('society_id', societyId)
+          .eq('active', true)
+          .maybeSingle();
+        if (unitError) {
+          throw new Error('Could not verify the visitor photo unit.', {
+            cause: unitError,
+          });
+        }
+        if (!unit) throw new AppError('NOT_FOUND');
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension = input.contentType === 'image/jpeg' ? 'jpg' : 'png';
+        const path = `${societyId}/${input.unitId}/visitors/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the visitor photo upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
       canManageSociety(context, input.societyId);
       await enforceRateLimit(
         'fileUploadUserHourly',
