@@ -41,6 +41,7 @@ const serverSchema = z.object({
   APP_VERSION: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   BREVO_API_KEY: z.string().min(1).optional(),
+  BREVO_DAILY_EMAIL_QUOTA: z.coerce.number().int().positive().optional(),
   EMAIL_FROM_ADDRESS: z.string().email().optional(),
   EMAIL_FROM_NAME: z.string().min(1).optional(),
   DEVELOPER_ALERT_EMAIL: z.string().email().optional(),
@@ -68,6 +69,7 @@ const serverNames = [
   'APP_VERSION',
   'SUPABASE_SERVICE_ROLE_KEY',
   'BREVO_API_KEY',
+  'BREVO_DAILY_EMAIL_QUOTA',
   'EMAIL_FROM_ADDRESS',
   'EMAIL_FROM_NAME',
   'DEVELOPER_ALERT_EMAIL',
@@ -135,6 +137,7 @@ export function parseServerEnvironment(source: EnvironmentSource) {
   ) {
     requiredNames.push(
       'BREVO_API_KEY',
+      'BREVO_DAILY_EMAIL_QUOTA',
       'EMAIL_FROM_ADDRESS',
       'EMAIL_FROM_NAME',
       'DEVELOPER_ALERT_EMAIL',

@@ -1,0 +1,28 @@
+{
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "Write the subject line as Conventional Commits: type(scope): summary. Use a lowercase type (feat, fix, docs, test, ci, chore, refactor, perf, build, style), a short lowercase scope naming the area changed (for example core, db, ci, auth, billing, readme), and an imperative, lowercase summary of at most 72 characters with no trailing period."
+    },
+    {
+      "text": "Choose the type from the full set of changed files being committed (the staged files, or every changed and untracked file when nothing is staged), not the largest, first or last change. If the provided diff looks partial or truncated, infer the type from the file list and still prefer application code. Use test only when every committed file is under tests/ or is test configuration. Use docs only when every committed file is documentation (docs/, *.md, .env.example comments). Use ci only when every committed file is under .github/workflows or CI scripts. Use style only for formatting-only changes. Use build only for dependency or build-configuration changes."
+    },
+    {
+      "text": "When any committed file is application code (src/, supabase/migrations/, public/), tests, docs and config in the same commit never decide the type. Use feat if it adds user-visible or API behaviour, fix if it corrects wrong behaviour, refactor if behaviour is unchanged, and perf for performance-only changes. Use chore only when nothing else fits, such as editor settings or repository housekeeping."
+    },
+    {
+      "text": "Precedence for mixed commits: pick the first type in this order that applies to any committed file: feat > fix > perf > refactor > build > ci > test > docs > style > chore. Tests, docs and migrations shipped with a feature or fix keep that feature or fix type. A feature that also fixes something is feat. Behaviour that does not change is refactor, never fix. Mixes without application code follow the same order, for example ci plus docs is ci and tests plus docs is test."
+    },
+    {
+      "text": "After the subject, add one blank line, then 2 to 6 bullet lines starting with '- '. Each bullet is one concise sentence in imperative mood starting with a capital letter, with no trailing period, describing a concrete change or why it was made."
+    },
+    {
+      "text": "Reference plan or requirement IDs when relevant (for example P0.6, D-01, VIS-4, G-02) in a bullet, not the subject, so the subject summary stays lowercase."
+    },
+    {
+      "text": "Do not add Co-authored-by or any other trailers. Never include secrets, keys, passwords, database URLs, tokens or personal data."
+    },
+    {
+      "text": "Example:\nfeat(core): add registration, notifications and guard roster\n\n- Add P4 society-code registration with admin approval and rejection\n- Add notification inbox, Web Push subscriptions and post-commit delivery\n- Add guard roster with hashed PINs and a 15-minute lockout\n- Cover the new database functions with integration tests"
+    }
+  ]
+}
