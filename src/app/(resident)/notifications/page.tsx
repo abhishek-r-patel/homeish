@@ -7,17 +7,10 @@ import {
   markNotificationReadAction,
 } from './actions';
 import { listNotifications } from '@/core/notifications/operations';
+import { notificationPath } from '@/core/notifications/links';
 
 function notificationHref(entityType: string | null, entityId: string | null) {
-  if (!entityId) return null;
-  const paths: Readonly<Record<string, string>> = {
-    bill: '/bills',
-    delivery_entry: '/deliveries',
-    service_request: '/requests',
-    visitor_entry: '/visitors',
-  };
-  const path = entityType ? paths[entityType] : undefined;
-  return path ? `${path}/${encodeURIComponent(entityId)}` : null;
+  return notificationPath(entityType, entityId, (value) => value.length > 0);
 }
 
 export default async function NotificationsPage() {

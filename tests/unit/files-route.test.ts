@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   logUnexpectedError: vi.fn(),
   maybeSingle: vi.fn(),
   remove: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock('server-only', () => ({}));
@@ -32,6 +33,7 @@ import { POST as issueView } from '../../src/app/api/files/url/route';
 const societyId = '4a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const otherSocietyId = '7a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const path = `${societyId}/logos/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
+const deliveryPhotoPath = `${societyId}/6a696d6f-774c-41d1-ae47-6254d4a8f4cf/deliveries/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
 
 function request(
   url: string,
@@ -79,6 +81,7 @@ describe('private file URL routes', () => {
       error: null,
     });
     mocks.remove.mockResolvedValue({ error: null });
+    mocks.rpc.mockResolvedValue({ data: null, error: null });
     mocks.logUnexpectedError.mockResolvedValue('safe-reference');
     mocks.buildRequestContext.mockResolvedValue({
       db: {
@@ -133,6 +136,186 @@ describe('private file URL routes', () => {
       societyId,
       'test-request-id',
     );
+  });
+
+  function billingContext(roles = ['admin'], enabled = true) {
+    mocks.buildRequestContext.mockResolvedValue({
+      db: {
+        rpc: mocks.rpc,
+        storage: {
+          from: () => ({
+            createSignedUploadUrl: mocks.createSignedUploadUrl,
+            createSignedUrl: mocks.createSignedUrl,
+            list: mocks.list,
+            remove: mocks.remove,
+          }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [{ societyId, roles }],
+      roles,
+      societyId,
+      societyStatus: 'active',
+      requestId: 'billing-file-test',
+      userId: societyId,
+      enabledModules: new Set(enabled ? ['billing'] : []),
+    });
+  }
+
+  it('scopes billing QR uploads to a writable enabled society and limits pending files', async () => {
+    billingContext();
+    const body = {
+      bucket: 'society-assets',
+      purpose: 'billing-qr',
+      contentType: 'image/png',
+      sizeBytes: 1200,
+      societyId,
+    };
+    const response = await issueUpload(request('/api/files/upload-url', body));
+    expect(response.status).toBe(200);
+    expect((await responseBody(response)).data?.path).toMatch(
+      new RegExp(`^${societyId}/billing-qr/.*\\.png$`),
+    );
+    mocks.list.mockResolvedValueOnce({
+      data: [{ name: 'unused.png' }],
+      error: null,
+    });
+    expect(
+      (await issueUpload(request('/api/files/upload-url', body))).status,
+    ).toBe(409);
+    expect(
+      (
+        await issueUpload(
+          request('/api/files/upload-url', {
+            ...body,
+            societyId: otherSocietyId,
+          }),
+        )
+      ).status,
+    ).toBe(403);
+    billingContext(['committee']);
+    expect(
+      (await issueUpload(request('/api/files/upload-url', body))).status,
+    ).toBe(403);
+    billingContext(['admin'], false);
+    expect(
+      (
+        await responseBody(
+          await issueUpload(request('/api/files/upload-url', body)),
+        )
+      ).error?.code,
+    ).toBe('MODULE_DISABLED');
+  });
+
+  it('allows members to view only the published QR and prevents removing an attached image', async () => {
+    const qrPath = `${societyId}/billing-qr/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
+    const otherQrPath = `${societyId}/billing-qr/54a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
+    mocks.rpc.mockResolvedValue({
+      data: {
+        society_id: societyId,
+        upi_id: 'homeish-test@example',
+        payee_name: 'Synthetic Society',
+        qr_path: qrPath,
+        updated_at: '2026-11-10T12:00:00.123456+00:00',
+        updated_by: societyId,
+        updated_by_name: 'Test Admin',
+      },
+      error: null,
+    });
+    billingContext(['resident']);
+    expect(
+      (
+        await issueView(
+          request('/api/files/url', {
+            bucket: 'society-assets',
+            path: qrPath,
+          }),
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await issueView(
+          request('/api/files/url', {
+            bucket: 'society-assets',
+            path: otherQrPath,
+          }),
+        )
+      ).status,
+    ).toBe(403);
+    billingContext();
+    expect(
+      (
+        await deleteUpload(
+          request(
+            '/api/files/upload-url',
+            { bucket: 'society-assets', path: qrPath },
+            'DELETE',
+          ),
+        )
+      ).status,
+    ).toBe(409);
+    expect(
+      (
+        await deleteUpload(
+          request(
+            '/api/files/upload-url',
+            { bucket: 'society-assets', path: otherQrPath },
+            'DELETE',
+          ),
+        )
+      ).status,
+    ).toBe(200);
+    expect(mocks.remove).toHaveBeenCalledWith([otherQrPath]);
+  });
+
+  it('issues a private delivery photo link only for an active delivery unit', async () => {
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              eq: () => ({ eq: () => ({ maybeSingle: mocks.maybeSingle }) }),
+            }),
+          }),
+        }),
+        storage: {
+          from: () => ({
+            createSignedUploadUrl: mocks.createSignedUploadUrl,
+          }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [],
+      roles: ['guard'],
+      societyId,
+      societyStatus: 'active',
+      userId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      enabledModules: new Set(['delivery']),
+    });
+
+    const response = await issueUpload(
+      request('/api/files/upload-url', {
+        bucket: 'delivery-photos',
+        contentType: 'image/png',
+        sizeBytes: 1200,
+        unitId: '6a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await responseBody(response)).data).toMatchObject({
+      path: expect.stringMatching(
+        new RegExp(
+          `^${societyId}/6a696d6f-774c-41d1-ae47-6254d4a8f4cf/deliveries/.*\\.png$`,
+        ),
+      ),
+      signedUrl: 'https://storage.test/signed-upload',
+    });
   });
 
   it('rejects unsupported MIME types, oversize files, cross-origin and excess count', async () => {
@@ -227,6 +410,55 @@ describe('private file URL routes', () => {
     expect(mocks.createSignedUrl).toHaveBeenCalledWith(path, 300);
   });
 
+  it('allows delivery photo views to gate and management roles only', async () => {
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: {
+        from: vi.fn(),
+        storage: {
+          from: () => ({ createSignedUrl: mocks.createSignedUrl }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [],
+      roles: ['guard'],
+      societyId,
+      societyStatus: 'active',
+      userId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      enabledModules: new Set(['delivery']),
+    });
+    const response = await issueView(
+      request('/api/files/url', {
+        bucket: 'delivery-photos',
+        path: deliveryPhotoPath,
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.createSignedUrl).toHaveBeenCalledWith(deliveryPhotoPath, 300);
+
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: { from: vi.fn(), storage: { from: vi.fn() } },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [],
+      roles: ['resident'],
+      societyId,
+      societyStatus: 'active',
+      userId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      enabledModules: new Set(['delivery']),
+    });
+    const residentView = await issueView(
+      request('/api/files/url', {
+        bucket: 'delivery-photos',
+        path: deliveryPhotoPath,
+      }),
+    );
+    expect(residentView.status).toBe(403);
+    expect(mocks.createSignedUrl).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects a path whose society segment contains regular-expression syntax', async () => {
     const response = await issueView(
       request('/api/files/url', {
@@ -296,5 +528,74 @@ describe('private file URL routes', () => {
     );
     expect(denyAttachedDelete.status).toBe(409);
     expect(mocks.remove).toHaveBeenCalledTimes(1);
+  });
+
+  it('issues payment proof uploads only for units the caller actively occupies', async () => {
+    const unitId = '6a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+    const userId = '8a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+    const occupancyFilters: [string, unknown][] = [];
+    const occupancy = vi
+      .fn()
+      .mockResolvedValueOnce({ data: [{ id: 'occupant' }], error: null })
+      .mockResolvedValueOnce({ data: [], error: null });
+    function chain(table: string) {
+      const builder = {
+        eq: (column: string, value: unknown) => {
+          if (table === 'unit_occupants')
+            occupancyFilters.push([column, value]);
+          return builder;
+        },
+        limit: () => occupancy(),
+        maybeSingle: async () => ({ data: { id: unitId }, error: null }),
+        select: () => builder,
+      };
+      return builder;
+    }
+    mocks.buildRequestContext.mockResolvedValue({
+      db: {
+        from: chain,
+        storage: {
+          from: () => ({ createSignedUploadUrl: mocks.createSignedUploadUrl }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [{ societyId, roles: ['resident'] }],
+      roles: ['resident'],
+      societyId,
+      societyStatus: 'active',
+      requestId: 'test-request-id',
+      userId,
+      enabledModules: new Set(['billing']),
+    });
+    const body = {
+      bucket: 'payment-proofs',
+      contentType: 'image/jpeg',
+      sizeBytes: 1200,
+      unitId,
+    };
+
+    const allowed = await issueUpload(request('/api/files/upload-url', body));
+    expect(allowed.status).toBe(200);
+    expect((await responseBody(allowed)).data?.path).toMatch(
+      new RegExp(`^${societyId}/${unitId}/payments/.*\\.jpg$`),
+    );
+    expect(occupancyFilters).toEqual(
+      expect.arrayContaining([
+        ['unit_id', unitId],
+        ['memberships.user_id', userId],
+        ['memberships.status', 'active'],
+      ]),
+    );
+    expect(mocks.enforceRateLimit).toHaveBeenCalledWith(
+      'billingSubmitUserHourly',
+      userId,
+      'test-request-id',
+    );
+
+    const denied = await issueUpload(request('/api/files/upload-url', body));
+    expect(denied.status).toBe(404);
+    expect(mocks.createSignedUploadUrl).toHaveBeenCalledTimes(1);
   });
 });

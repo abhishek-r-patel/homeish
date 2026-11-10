@@ -1,6 +1,11 @@
 // Run registered daily work once per society and IST calendar day.
 import { logUnexpectedError } from '../logging/error-logger';
-import { claimDailyJobRun, listDailyJobSocieties } from '../privileged';
+import {
+  claimDailyJobRun,
+  listDailyJobSocieties,
+  runBillingDailyTaskPrivileged,
+  type BillingDailyTask,
+} from '../privileged';
 import { createRequestId } from '../errors';
 
 export interface DailyJobTask {
@@ -15,7 +20,21 @@ export interface DailyJobCount {
   failed: number;
 }
 
-export const dailyJobTasks: readonly DailyJobTask[] = [];
+function billingTask(name: BillingDailyTask): DailyJobTask {
+  return {
+    name,
+    run: async (societyId, periodKey) => {
+      await runBillingDailyTaskPrivileged(name, societyId, periodKey);
+    },
+  };
+}
+
+// Late fees run before reminders so reminder totals include the new charge.
+export const dailyJobTasks: readonly DailyJobTask[] = [
+  billingTask('billing.late_fees'),
+  billingTask('billing.reminders'),
+  billingTask('billing.stale_payments'),
+];
 
 export function dailyPeriodKey(now: Date): string {
   const parts = new Intl.DateTimeFormat('en-CA', {

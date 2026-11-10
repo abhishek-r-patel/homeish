@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   logUnexpectedError: vi.fn(),
   listDailyJobSocieties: vi.fn(),
   claimDailyJobRun: vi.fn(),
+  runBillingDailyTaskPrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -13,9 +14,14 @@ vi.mock('../../src/core/logging/error-logger', () => ({
 vi.mock('../../src/core/privileged', () => ({
   listDailyJobSocieties: mocks.listDailyJobSocieties,
   claimDailyJobRun: mocks.claimDailyJobRun,
+  runBillingDailyTaskPrivileged: mocks.runBillingDailyTaskPrivileged,
 }));
 
-import { dailyPeriodKey, runDailyJobs } from '../../src/core/jobs/daily';
+import {
+  dailyJobTasks,
+  dailyPeriodKey,
+  runDailyJobs,
+} from '../../src/core/jobs/daily';
 
 describe('daily jobs', () => {
   beforeEach(() => {
@@ -94,5 +100,26 @@ describe('daily jobs', () => {
     expect(firstTask).toHaveBeenCalledTimes(2);
     expect(secondTask).toHaveBeenCalledTimes(2);
     expect(mocks.logUnexpectedError).toHaveBeenCalledTimes(1);
+  });
+
+  it('registers billing late fees before reminders and stale-payment alerts', async () => {
+    mocks.claimDailyJobRun.mockResolvedValue(true);
+    mocks.runBillingDailyTaskPrivileged.mockResolvedValue(undefined);
+    expect(dailyJobTasks.map(({ name }) => name)).toEqual([
+      'billing.late_fees',
+      'billing.reminders',
+      'billing.stale_payments',
+    ]);
+
+    await runDailyJobs({ now: new Date('2026-11-10T00:00:00.000Z') });
+
+    expect(mocks.runBillingDailyTaskPrivileged.mock.calls).toEqual([
+      ['billing.late_fees', 'society-1', '2026-11-10'],
+      ['billing.late_fees', 'society-2', '2026-11-10'],
+      ['billing.reminders', 'society-1', '2026-11-10'],
+      ['billing.reminders', 'society-2', '2026-11-10'],
+      ['billing.stale_payments', 'society-1', '2026-11-10'],
+      ['billing.stale_payments', 'society-2', '2026-11-10'],
+    ]);
   });
 });

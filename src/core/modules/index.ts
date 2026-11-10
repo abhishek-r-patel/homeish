@@ -6,6 +6,10 @@ import type {
   SocietyRole,
 } from '../permissions';
 import { MODULE_KEYS, type ModuleKey } from './module-types';
+import {
+  billingSettingsSchema,
+  DEFAULT_BILLING_SETTINGS,
+} from '../billing/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -33,6 +37,22 @@ export type ModuleDefinition = {
 const emptySettingsSchema = z.object({}).strict();
 const emptySettings: Readonly<Record<string, unknown>> = {};
 const emptySettingsAccess: Readonly<Record<string, 'admin' | 'developer'>> = {};
+export const visitorSettingsSchema = z
+  .object({
+    approval_timeout_minutes: z.number().int().min(1).max(30).optional(),
+    overstay_hours: z.number().int().min(1).max(72).optional(),
+    photo_required: z.boolean().optional(),
+    guard_override_allowed: z.boolean().optional(),
+    phone_required: z.boolean().optional(),
+  })
+  .strict();
+export const deliverySettingsSchema = z
+  .object({
+    response_timeout_minutes: z.number().int().min(1).max(30).optional(),
+    uncollected_days: z.number().int().min(1).max(90).optional(),
+    leave_at_gate_enabled: z.boolean().optional(),
+  })
+  .strict();
 
 export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   core: {
@@ -147,11 +167,24 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   visitor: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: {
+      approval_timeout_minutes: 3,
+      overstay_hours: 12,
+      photo_required: false,
+      guard_override_allowed: false,
+      phone_required: false,
+    },
     key: 'visitor',
     name: 'Visitor Management',
     navigation: {
       admin: [
+        {
+          href: '/admin/visitors',
+          label: 'Visitors',
+          permission: 'visitor:list',
+        },
+      ],
+      committee: [
         {
           href: '/admin/visitors',
           label: 'Visitors',
@@ -169,17 +202,39 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         { href: '/visitors', label: 'Visitors', permission: 'visitor:list' },
       ],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'visitor:list': ['admin', 'committee', 'guard', 'resident'],
+      'visitor:create': ['admin', 'guard'],
+      'visitor:decide': ['resident'],
+      'visitor:override': ['guard'],
+      'visitor:check_in': ['admin', 'guard'],
+      'visitor:preapproval:create': ['resident'],
+      'visitor:preapproval:cancel': ['admin', 'committee', 'resident'],
+      'visitor:blacklist:read': ['admin', 'committee', 'guard'],
+      'visitor:blacklist:manage': ['admin'],
+      'visitor:settings:manage': ['admin'],
+    },
+    settingsAccess: { visitor: 'admin' },
+    settingsSchema: visitorSettingsSchema,
   },
   delivery: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: {
+      response_timeout_minutes: 3,
+      uncollected_days: 3,
+      leave_at_gate_enabled: true,
+    },
     key: 'delivery',
     name: 'Delivery Management',
     navigation: {
       admin: [
+        {
+          href: '/admin/deliveries',
+          label: 'Deliveries',
+          permission: 'delivery:list',
+        },
+      ],
+      committee: [
         {
           href: '/admin/deliveries',
           label: 'Deliveries',
@@ -201,27 +256,72 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         },
       ],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'delivery:list': ['admin', 'committee', 'guard', 'resident'],
+      'delivery:create': ['admin', 'guard'],
+      'delivery:respond': ['resident'],
+      'delivery:override': ['guard'],
+      'delivery:collect': ['guard', 'resident'],
+      'delivery:preference:read': ['admin', 'committee', 'resident'],
+      'delivery:preference:manage': ['resident'],
+      'delivery:settings:manage': ['admin'],
+    },
+    settingsAccess: { delivery: 'admin' },
+    settingsSchema: deliverySettingsSchema,
   },
   billing: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_BILLING_SETTINGS,
     key: 'billing',
     name: 'Maintenance, Fines & Payments',
     navigation: {
       admin: [
-        { href: '/admin/billing', label: 'Billing', permission: 'bill:list' },
+        {
+          href: '/admin/billing',
+          label: 'Billing',
+          permission: 'billing:charges:read',
+        },
       ],
       committee: [
-        { href: '/admin/billing', label: 'Billing', permission: 'bill:list' },
+        {
+          href: '/admin/billing',
+          label: 'Billing',
+          permission: 'billing:charges:read',
+        },
       ],
-      resident: [{ href: '/bills', label: 'Bills', permission: 'bill:list' }],
+      resident: [
+        {
+          href: '/bills',
+          label: 'Bills',
+          permission: 'billing:bills:read',
+        },
+      ],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'billing:charges:read': ['admin', 'committee'],
+      'billing:charges:manage': ['admin'],
+      'billing:settings:manage': ['admin'],
+      'billing:bills:read': ['admin', 'committee', 'resident'],
+      'billing:bills:manage': ['admin'],
+      'billing:ledger:read': ['admin', 'committee', 'resident'],
+      'billing:payments:read': ['admin', 'committee', 'resident'],
+      'billing:payments:manage': ['admin'],
+      'billing:payments:submit': ['resident'],
+      'billing:payment_details:read': [
+        'admin',
+        'committee',
+        'guard',
+        'hk_supervisor',
+        'resident',
+      ],
+      'billing:payment_details:manage': ['admin'],
+    },
+    settingsAccess: {
+      due_day_of_month: 'admin',
+      rounding: 'admin',
+      billing: 'developer',
+    },
+    settingsSchema: billingSettingsSchema,
   },
   service_request: {
     core: false,
@@ -370,7 +470,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'amenity',
   ],
-  committee: ['core', 'billing', 'service_request'],
+  committee: ['core', 'billing', 'service_request', 'delivery'],
   guard: ['core', 'visitor', 'delivery'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
