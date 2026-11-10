@@ -127,10 +127,37 @@ test('foundation controls support keyboard, focus, calendar and file interaction
   await filtersTrigger.click();
   const filterDialog = page.getByRole('dialog', { name: 'Filters' });
   await expect(filterDialog).toBeVisible();
+  await expect(filterDialog).toHaveAttribute('aria-modal', 'false');
+  await expect(
+    page.getByRole('button', { name: 'Close filters' }),
+  ).toBeFocused();
+  await page.setViewportSize({ width: 768, height: 600 });
+  const popoverBounds = await filterDialog.boundingBox();
+  expect(popoverBounds).not.toBeNull();
+  expect(popoverBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(popoverBounds!.y).toBeGreaterThanOrEqual(0);
+  expect(popoverBounds!.x + popoverBounds!.width).toBeLessThanOrEqual(768);
+  expect(popoverBounds!.y + popoverBounds!.height).toBeLessThanOrEqual(600);
+  await page.keyboard.press('Escape');
+  await expect(filterDialog).not.toBeVisible();
+  await expect(filtersTrigger).toBeFocused();
+
+  await filtersTrigger.click();
+  await expect(filterDialog).toBeVisible();
   await filterDialog.getByRole('button', { name: 'Apply filters' }).click();
   await expect(filterDialog).not.toBeVisible();
   await expect(filtersTrigger).toBeFocused();
 
+  await page.setViewportSize({ width: 390, height: 844 });
+  await filtersTrigger.click();
+  const filterSheet = page.getByRole('dialog', { name: 'Filters' });
+  await expect(filterSheet).toBeVisible();
+  await expect(filterSheet).toHaveAttribute('aria-modal', 'true');
+  await filterSheet.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(filterSheet).not.toBeVisible();
+  await expect(filtersTrigger).toBeFocused();
+
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.locator('#fixture-date-picker-expanded').click();
   const calendar = page.getByRole('dialog', { name: 'Choose a date' });
   await calendar.getByRole('button', { name: /16 January 2026/ }).click();

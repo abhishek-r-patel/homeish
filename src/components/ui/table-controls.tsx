@@ -1,7 +1,13 @@
 // Accessible data tables, sorting, filters and exact-total pagination.
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import type { ReactNode } from 'react';
 import { Button } from './button';
 import { Dialog } from './dialog';
@@ -372,7 +378,115 @@ export function FilterBar({
 }: FilterBarProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
+  const compact = useSyncExternalStore(
+    (notify) => {
+      const media = window.matchMedia('(max-width: 37.499rem)');
+      media.addEventListener('change', notify);
+      return () => media.removeEventListener('change', notify);
+    },
+    () => window.matchMedia('(max-width: 37.499rem)').matches,
+    () => true,
+  );
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open || compact) {
+      return;
+    }
+
+    const popover = popoverRef.current;
+    const trigger = triggerRef.current;
+    if (!popover || !trigger) {
+      return;
+    }
+
+    function updatePosition() {
+      const panel = popoverRef.current;
+      const anchor = triggerRef.current;
+      if (!panel || !anchor) {
+        return;
+      }
+
+      const anchorRect = anchor.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const margin = 8;
+      const gap = 8;
+      const availableBelow = Math.max(
+        0,
+        window.innerHeight - anchorRect.bottom - gap - margin,
+      );
+      const availableAbove = Math.max(0, anchorRect.top - gap - margin);
+      const maxHeight = Math.min(window.innerHeight * 0.7, 512);
+      const placeAbove =
+        panelRect.height > availableBelow && availableAbove > availableBelow;
+      const height = Math.min(
+        maxHeight,
+        placeAbove ? availableAbove : availableBelow,
+      );
+      const left = Math.min(
+        Math.max(margin, anchorRect.right - panelRect.width),
+        window.innerWidth - margin - panelRect.width,
+      );
+
+      panel.style.maxHeight = `${height}px`;
+      panel.style.left = `${left}px`;
+      panel.style.top = placeAbove
+        ? `${Math.max(margin, anchorRect.top - gap - height)}px`
+        : `${anchorRect.bottom + gap}px`;
+      panel.style.visibility = 'visible';
+    }
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [compact, open]);
+
+  useEffect(() => {
+    if (!open || compact) {
+      return;
+    }
+
+    function dismiss(event: KeyboardEvent | PointerEvent) {
+      if (
+        event instanceof KeyboardEvent &&
+        event.key === 'Escape' &&
+        !event.defaultPrevented
+      ) {
+        event.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+      } else if (
+        event instanceof PointerEvent &&
+        event.target instanceof Node &&
+        !popoverRef.current?.contains(event.target) &&
+        !triggerRef.current?.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener('keydown', dismiss);
+    document.addEventListener('pointerdown', dismiss);
+    popoverRef.current
+      ?.querySelector<HTMLElement>(
+        'input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled)',
+      )
+      ?.focus();
+    return () => {
+      document.removeEventListener('keydown', dismiss);
+      document.removeEventListener('pointerdown', dismiss);
+    };
+  }, [compact, open]);
+
+  function closePopover() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
 
   return (
     <div className="grid min-w-0 gap-space-3">
@@ -389,9 +503,9 @@ export function FilterBar({
         <Button
           aria-expanded={open}
           aria-haspopup="dialog"
-          aria-controls={`filters-${id}`}
+          aria-controls={open ? `filters-${id}` : undefined}
           buttonRef={triggerRef}
-          onClick={() => setOpen(true)}
+          onClick={() => setOpen((currentlyOpen) => !currentlyOpen)}
           variant="secondary"
         >
           Filters
@@ -428,20 +542,58 @@ export function FilterBar({
           Clear all
         </Button>
       )}
-      <Dialog
-        className="medium:top-16 medium:left-auto medium:right-space-5 medium:translate-x-0 medium:translate-y-0 medium:max-w-content-narrow medium:backdrop:bg-transparent"
-        id={`filters-${id}`}
-        onOpenChange={setOpen}
-        open={open}
-        title="Filters"
-      >
-        {children}
-        <div className="mt-space-4 flex justify-end">
-          <Button onClick={() => setOpen(false)} variant="primary">
-            Apply filters
-          </Button>
+      {compact ? (
+        <Dialog
+          id={`filters-${id}`}
+          onOpenChange={setOpen}
+          open={open}
+          title="Filters"
+        >
+          {children}
+          <div className="mt-space-4 flex justify-end">
+            <Button onClick={() => setOpen(false)} variant="primary">
+              Apply filters
+            </Button>
+          </div>
+        </Dialog>
+      ) : open ? (
+        <div
+          aria-labelledby={`filters-${id}-title`}
+          aria-modal="false"
+          className="fixed z-50 w-96 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-md border border-rule bg-surface p-space-5 text-ink shadow-overlay"
+          id={`filters-${id}`}
+          ref={popoverRef}
+          role="dialog"
+          style={{
+            left: 0,
+            maxHeight: 'min(70dvh, 32rem)',
+            top: 0,
+            visibility: 'hidden',
+          }}
+        >
+          <header className="mb-space-4 flex items-start justify-between gap-space-3">
+            <h2
+              className="text-heading font-semibold"
+              id={`filters-${id}-title`}
+            >
+              Filters
+            </h2>
+            <Button
+              aria-label="Close filters"
+              iconOnly
+              leadingIcon={<span aria-hidden="true">×</span>}
+              onClick={closePopover}
+              variant="tertiary"
+            />
+          </header>
+          {children}
+          <div className="mt-space-4 flex justify-end">
+            <Button onClick={closePopover} variant="primary">
+              Apply filters
+            </Button>
+          </div>
         </div>
-      </Dialog>
+      ) : null}
     </div>
   );
 }
