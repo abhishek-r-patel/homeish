@@ -32,6 +32,7 @@ import { POST as issueView } from '../../src/app/api/files/url/route';
 const societyId = '4a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const otherSocietyId = '7a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const path = `${societyId}/logos/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
+const deliveryPhotoPath = `${societyId}/6a696d6f-774c-41d1-ae47-6254d4a8f4cf/deliveries/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
 
 function request(
   url: string,
@@ -135,6 +136,53 @@ describe('private file URL routes', () => {
     );
   });
 
+  it('issues a private delivery photo link only for an active delivery unit', async () => {
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              eq: () => ({ eq: () => ({ maybeSingle: mocks.maybeSingle }) }),
+            }),
+          }),
+        }),
+        storage: {
+          from: () => ({
+            createSignedUploadUrl: mocks.createSignedUploadUrl,
+          }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [],
+      roles: ['guard'],
+      societyId,
+      societyStatus: 'active',
+      userId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      enabledModules: new Set(['delivery']),
+    });
+
+    const response = await issueUpload(
+      request('/api/files/upload-url', {
+        bucket: 'delivery-photos',
+        contentType: 'image/png',
+        sizeBytes: 1200,
+        unitId: '6a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await responseBody(response)).data).toMatchObject({
+      path: expect.stringMatching(
+        new RegExp(
+          `^${societyId}/6a696d6f-774c-41d1-ae47-6254d4a8f4cf/deliveries/.*\\.png$`,
+        ),
+      ),
+      signedUrl: 'https://storage.test/signed-upload',
+    });
+  });
+
   it('rejects unsupported MIME types, oversize files, cross-origin and excess count', async () => {
     const wrongType = await issueUpload(
       request('/api/files/upload-url', {
@@ -225,6 +273,55 @@ describe('private file URL routes', () => {
       signedUrl: 'https://storage.test/signed-view',
     });
     expect(mocks.createSignedUrl).toHaveBeenCalledWith(path, 300);
+  });
+
+  it('allows delivery photo views to gate and management roles only', async () => {
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: {
+        from: vi.fn(),
+        storage: {
+          from: () => ({ createSignedUrl: mocks.createSignedUrl }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [],
+      roles: ['guard'],
+      societyId,
+      societyStatus: 'active',
+      userId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      enabledModules: new Set(['delivery']),
+    });
+    const response = await issueView(
+      request('/api/files/url', {
+        bucket: 'delivery-photos',
+        path: deliveryPhotoPath,
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(mocks.createSignedUrl).toHaveBeenCalledWith(deliveryPhotoPath, 300);
+
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: { from: vi.fn(), storage: { from: vi.fn() } },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [],
+      roles: ['resident'],
+      societyId,
+      societyStatus: 'active',
+      userId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      enabledModules: new Set(['delivery']),
+    });
+    const residentView = await issueView(
+      request('/api/files/url', {
+        bucket: 'delivery-photos',
+        path: deliveryPhotoPath,
+      }),
+    );
+    expect(residentView.status).toBe(403);
+    expect(mocks.createSignedUrl).toHaveBeenCalledTimes(1);
   });
 
   it('rejects a path whose society segment contains regular-expression syntax', async () => {

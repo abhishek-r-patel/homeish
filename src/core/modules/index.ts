@@ -42,6 +42,13 @@ export const visitorSettingsSchema = z
     phone_required: z.boolean().optional(),
   })
   .strict();
+export const deliverySettingsSchema = z
+  .object({
+    response_timeout_minutes: z.number().int().min(1).max(30).optional(),
+    uncollected_days: z.number().int().min(1).max(90).optional(),
+    leave_at_gate_enabled: z.boolean().optional(),
+  })
+  .strict();
 
 export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   core: {
@@ -208,11 +215,22 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   delivery: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: {
+      response_timeout_minutes: 3,
+      uncollected_days: 3,
+      leave_at_gate_enabled: true,
+    },
     key: 'delivery',
     name: 'Delivery Management',
     navigation: {
       admin: [
+        {
+          href: '/admin/deliveries',
+          label: 'Deliveries',
+          permission: 'delivery:list',
+        },
+      ],
+      committee: [
         {
           href: '/admin/deliveries',
           label: 'Deliveries',
@@ -234,9 +252,18 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         },
       ],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'delivery:list': ['admin', 'committee', 'guard', 'resident'],
+      'delivery:create': ['admin', 'guard'],
+      'delivery:respond': ['resident'],
+      'delivery:override': ['guard'],
+      'delivery:collect': ['guard', 'resident'],
+      'delivery:preference:read': ['admin', 'committee', 'resident'],
+      'delivery:preference:manage': ['resident'],
+      'delivery:settings:manage': ['admin'],
+    },
+    settingsAccess: { delivery: 'admin' },
+    settingsSchema: deliverySettingsSchema,
   },
   billing: {
     core: false,
@@ -403,7 +430,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'amenity',
   ],
-  committee: ['core', 'billing', 'service_request'],
+  committee: ['core', 'billing', 'service_request', 'delivery'],
   guard: ['core', 'visitor', 'delivery'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [

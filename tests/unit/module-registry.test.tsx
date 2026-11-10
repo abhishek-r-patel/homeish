@@ -28,6 +28,16 @@ describe('module registry', () => {
   it('keeps permission and navigation declarations scoped to each module', () => {
     expect(hasPermission(['admin'], 'core', 'membership:manage')).toBe(true);
     expect(hasPermission(['admin'], 'visitor', 'visitor:list')).toBe(true);
+    expect(hasPermission(['committee'], 'delivery', 'delivery:list')).toBe(
+      true,
+    );
+    expect(getModuleNavigation('delivery', 'committee')).toEqual([
+      {
+        href: '/admin/deliveries',
+        label: 'Deliveries',
+        permission: 'delivery:list',
+      },
+    ]);
     expect(getModuleNavigation('visitor', 'guard')).toEqual([
       {
         href: '/guard/visitors',
@@ -118,6 +128,21 @@ describe('module registry', () => {
     expect(() =>
       parseModuleSettings('visitor', { approval_timeout_minutes: 0 }),
     ).toThrow();
+    expect(
+      parseModuleSettings('delivery', {
+        response_timeout_minutes: 3,
+        uncollected_days: 30,
+        leave_at_gate_enabled: false,
+      }),
+    ).toEqual({
+      response_timeout_minutes: 3,
+      uncollected_days: 30,
+      leave_at_gate_enabled: false,
+    });
+    expect(() =>
+      parseModuleSettings('delivery', { uncollected_days: 0 }),
+    ).toThrow();
+    expect(() => parseModuleSettings('delivery', { unknown: true })).toThrow();
   });
 
   it('renders a module-disabled page without implying its data was deleted', () => {

@@ -29,4 +29,9 @@ export {
   overrideVisitorPrivileged,
   validateVisitorCodePrivileged,
 } from './visitor';
+export {
+  collectDeliveryAsGuardPrivileged,
+  createDeliveryEntryPrivileged,
+  overrideDeliveryPrivileged,
+} from './delivery';
 export type { TransactionalEmail } from '../notifications/email';

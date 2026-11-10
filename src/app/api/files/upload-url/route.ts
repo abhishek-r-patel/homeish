@@ -32,6 +32,14 @@ const issueSchema = z.discriminatedUnion('bucket', [
       unitId: z.uuid(),
     })
     .strict(),
+  z
+    .object({
+      bucket: z.literal('delivery-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      unitId: z.uuid(),
+    })
+    .strict(),
 ]);
 
 const pathSchema = z
@@ -81,10 +89,19 @@ export async function POST(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(issueSchema, body);
-      if (input.bucket === 'visitor-photos') {
+      if (
+        input.bucket === 'visitor-photos' ||
+        input.bucket === 'delivery-photos'
+      ) {
+        const moduleKey =
+          input.bucket === 'visitor-photos' ? 'visitor' : 'delivery';
+        const permission =
+          input.bucket === 'visitor-photos'
+            ? 'visitor:create'
+            : 'delivery:create';
         authorizeRequest(context, {
-          moduleKey: 'visitor',
-          permission: 'visitor:create',
+          moduleKey,
+          permission,
           write: true,
         });
         const societyId = context.societyId;
@@ -108,14 +125,17 @@ export async function POST(request: Request) {
           context.requestId,
         );
         const extension = input.contentType === 'image/jpeg' ? 'jpg' : 'png';
-        const path = `${societyId}/${input.unitId}/visitors/${crypto.randomUUID()}.${extension}`;
+        const directory =
+          input.bucket === 'visitor-photos' ? 'visitors' : 'deliveries';
+        const path = `${societyId}/${input.unitId}/${directory}/${crypto.randomUUID()}.${extension}`;
         const { data, error } = await context.db.storage
           .from(input.bucket)
           .createSignedUploadUrl(path);
         if (error || !data) {
-          throw new Error('Could not issue the visitor photo upload token.', {
-            cause: error,
-          });
+          throw new Error(
+            `Could not issue the ${directory} photo upload token.`,
+            { cause: error },
+          );
         }
         return { path, signedUrl: data.signedUrl };
       }
