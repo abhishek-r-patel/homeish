@@ -5,7 +5,10 @@ const mocks = vi.hoisted(() => ({
   logUnexpectedError: vi.fn(),
   listDailyJobSocieties: vi.fn(),
   claimDailyJobRun: vi.fn(),
+  completeDailyJobRun: vi.fn(),
   runBillingDailyTaskPrivileged: vi.fn(),
+  runRetentionPrivileged: vi.fn(),
+  runVisitorExpirationPrivileged: vi.fn(),
   runServiceRequestAutoClosePrivileged: vi.fn(),
 }));
 
@@ -15,7 +18,10 @@ vi.mock('../../src/core/logging/error-logger', () => ({
 vi.mock('../../src/core/privileged', () => ({
   listDailyJobSocieties: mocks.listDailyJobSocieties,
   claimDailyJobRun: mocks.claimDailyJobRun,
+  completeDailyJobRun: mocks.completeDailyJobRun,
   runBillingDailyTaskPrivileged: mocks.runBillingDailyTaskPrivileged,
+  runRetentionPrivileged: mocks.runRetentionPrivileged,
+  runVisitorExpirationPrivileged: mocks.runVisitorExpirationPrivileged,
   runServiceRequestAutoClosePrivileged:
     mocks.runServiceRequestAutoClosePrivileged,
 }));
@@ -35,6 +41,7 @@ describe('daily jobs', () => {
       { id: 'society-2' },
     ]);
     mocks.claimDailyJobRun.mockResolvedValue(true);
+    mocks.completeDailyJobRun.mockResolvedValue(undefined);
   });
 
   it('uses the society operating day in IST', () => {
@@ -78,6 +85,7 @@ describe('daily jobs', () => {
     );
     expect(run).toHaveBeenCalledTimes(2);
     expect(mocks.claimDailyJobRun).toHaveBeenCalledTimes(4);
+    expect(mocks.completeDailyJobRun).toHaveBeenCalledTimes(2);
   });
 
   it('continues other societies and tasks after a task failure', async () => {
@@ -103,6 +111,48 @@ describe('daily jobs', () => {
     expect(firstTask).toHaveBeenCalledTimes(2);
     expect(secondTask).toHaveBeenCalledTimes(2);
     expect(mocks.logUnexpectedError).toHaveBeenCalledTimes(1);
+    expect(mocks.completeDailyJobRun).toHaveBeenCalledTimes(3);
+  });
+
+  it('runs global tasks once and uses the first society for run-key idempotency', async () => {
+    const run = vi.fn().mockResolvedValue(undefined);
+    await expect(
+      runDailyJobs({
+        now: new Date('2026-11-10T00:00:00.000Z'),
+        tasks: [{ name: 'housekeeping.retention', scope: 'global', run }],
+      }),
+    ).resolves.toEqual([
+      { job: 'housekeeping.retention', succeeded: 1, skipped: 0, failed: 0 },
+    ]);
+
+    expect(mocks.claimDailyJobRun).toHaveBeenCalledOnce();
+    expect(mocks.claimDailyJobRun).toHaveBeenCalledWith(
+      'society-1',
+      'housekeeping.retention',
+      '2026-11-10',
+    );
+    expect(run).toHaveBeenCalledOnce();
+    expect(mocks.completeDailyJobRun).toHaveBeenCalledWith(
+      'society-1',
+      'housekeeping.retention',
+      '2026-11-10',
+    );
+  });
+
+  it('runs idempotent global retention even when there are no active societies', async () => {
+    mocks.listDailyJobSocieties.mockResolvedValue([]);
+    const run = vi.fn().mockResolvedValue(undefined);
+    await expect(
+      runDailyJobs({
+        tasks: [{ name: 'housekeeping.retention', scope: 'global', run }],
+      }),
+    ).resolves.toEqual([
+      { job: 'housekeeping.retention', succeeded: 1, skipped: 0, failed: 0 },
+    ]);
+
+    expect(mocks.claimDailyJobRun).not.toHaveBeenCalled();
+    expect(run).toHaveBeenCalledOnce();
+    expect(mocks.completeDailyJobRun).not.toHaveBeenCalled();
   });
 
   it('registers billing work before service request auto-close', async () => {
@@ -112,7 +162,9 @@ describe('daily jobs', () => {
       'billing.late_fees',
       'billing.reminders',
       'billing.stale_payments',
+      'visitor.expire',
       'service_request.auto_close',
+      'housekeeping.retention',
     ]);
 
     await runDailyJobs({ now: new Date('2026-11-10T00:00:00.000Z') });
@@ -129,5 +181,10 @@ describe('daily jobs', () => {
       ['society-1', '2026-11-10'],
       ['society-2', '2026-11-10'],
     ]);
+    expect(mocks.runVisitorExpirationPrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
+    expect(mocks.runRetentionPrivileged).toHaveBeenCalledWith('2026-11-10');
   });
 });

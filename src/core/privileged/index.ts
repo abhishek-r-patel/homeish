@@ -18,8 +18,12 @@ export {
   isRegistrationCodeActive,
   lookupRegistrationSociety,
 } from './registration';
-export { checkDatabaseHealth } from './health-check';
-export { claimDailyJobRun, listDailyJobSocieties } from './daily-jobs';
+export { checkDailyJobHealth, checkDatabaseHealth } from './health-check';
+export {
+  claimDailyJobRun,
+  completeDailyJobRun,
+  listDailyJobSocieties,
+} from './daily-jobs';
 export { sendTransactionalEmail } from './transactional-email';
 export {
   checkInPreApprovedVisitorPrivileged,
@@ -27,6 +31,7 @@ export {
   checkOutVisitorPrivileged,
   createVisitorEntryPrivileged,
   overrideVisitorPrivileged,
+  runVisitorExpirationPrivileged,
   validateVisitorCodePrivileged,
 } from './visitor';
 export {
@@ -40,5 +45,7 @@ export {
   type BillingDailyTask,
   type BillingReceiptEmail,
 } from './billing';
+export { runRetentionPrivileged } from './retention';
+export { runUserErasurePrivileged } from './user-erasure';
 export { runServiceRequestAutoClosePrivileged } from './service-requests';
 export type { TransactionalEmail } from '../notifications/email';

@@ -47,7 +47,21 @@ describe('logUnexpectedError', () => {
     );
     expect(mocks.captureSentryException).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.objectContaining({ route: '/api/private' }),
+      expect.objectContaining({ route: '/api/private', severity: 'error' }),
+    );
+  });
+
+  it('passes critical severity to Sentry alert tags', async () => {
+    await logUnexpectedError(new Error('Critical failure.'), {
+      requestId: '4f05ab7e-17d6-4d74-8a8b-3b37304c83f0',
+      route: '/api/private',
+      source: 'server',
+      severity: 'critical',
+    });
+
+    expect(mocks.captureSentryException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ severity: 'critical' }),
     );
   });
 

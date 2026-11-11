@@ -10,6 +10,9 @@ vi.mock('server-only', () => ({}));
 vi.mock('../../src/core/tenancy/request-context', () => ({
   buildRequestContext: vi.fn(),
 }));
+vi.mock('../../src/core/privileged', () => ({
+  runUserErasurePrivileged: vi.fn(),
+}));
 
 describe('developer console query schemas', () => {
   it('accepts only supported page sizes and defaults to 25', () => {
