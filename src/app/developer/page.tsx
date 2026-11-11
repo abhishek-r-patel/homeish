@@ -43,12 +43,20 @@ export default async function DeveloperHomePage({
             Set up each society and its Core Platform access.
           </p>
         </div>
-        <Link
-          className="inline-flex min-h-12 items-center justify-center rounded-md border border-brand bg-brand px-space-4 text-body-strong text-on-brand hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          href="/developer/societies/new"
-        >
-          Create Society
-        </Link>
+        <div className="flex flex-wrap gap-space-2">
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-md border border-rule-strong px-space-4 text-body-strong text-ink hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            href="/developer/users/erase"
+          >
+            Erase User
+          </Link>
+          <Link
+            className="inline-flex min-h-12 items-center justify-center rounded-md border border-brand bg-brand px-space-4 text-body-strong text-on-brand hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+            href="/developer/societies/new"
+          >
+            Create Society
+          </Link>
+        </div>
       </header>
       <SocietyList result={result} />
     </section>
