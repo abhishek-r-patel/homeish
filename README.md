@@ -46,7 +46,7 @@ Approved hosting topology (2026-11-09), following Civic Pulse's two-project patt
 
 `APP_DEPLOYMENT=shared` serves the website and demo entries; `APP_DEPLOYMENT=beta` serves beta only. `APP_BASE_DOMAIN` defaults to `homeish.vercel.app`. Unknown society hosts return 404, never another society or the public demo. Provider-supplied deployment aliases resolve only to their own project's website/beta entry. Hostnames select a screen, not an authenticated society or permission.
 
-The demo is a browser-memory illustration with invented data, manual reset and a 15-minute automatic reset while open. It is not a database-backed visitor workflow. Maplewood's address is reserved in code (`src/core/config/societies.ts`) with status `disabled`: its host shows only a noindexed "Maplewood is not open yet" page, and every other path returns 404. No society record, sign-in, data or onboarding is provisioned. The owner will onboard them through a future create-society script after MVP. Beta has no backend configured. No real society data or credentials are provisioned by this work.
+The demo is a browser-memory illustration with invented data, manual reset and a 15-minute automatic reset while open. It is not a database-backed visitor workflow. Maplewood's address is reserved in code (`src/core/config/societies.ts`) with status `disabled`: its host shows only a noindexed "Maplewood is not open yet" page, and every other path returns 404. No society record, sign-in, data or onboarding is provisioned. The owner will onboard them through a future create-society script after MVP. Beta uses the shared non-production `homeish-testdb` backend with synthetic data only (see Beta configuration below). No real society data or credentials are provisioned by this work.
 
 For local beta, stop the shared dev server, set `$env:APP_DEPLOYMENT='beta'` and run `npm run dev`; visit http://beta.localhost:3000. Remove that variable to return to the shared site. Do not run both dev modes against the same Next.js output directory.
 
@@ -67,6 +67,12 @@ Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_A
 - Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. `APP_BASE_DOMAIN` is `homeish.vercel.app` in both projects. The planned canonical beta URL is `https://beta.homeish.vercel.app`; use the attached `https://beta-homeish.vercel.app` address for current hosted testing. Verify deployment success, HTTPS and host isolation after merging. Attaching additional domains and activating societies remain separate work.
 - Local verification passed: formatting, lint, type checking, 33 unit tests, four browser tests (including automated accessibility and the exact 15-minute reset), and production build. This is not hosted verification, manual assistive-technology testing or launch approval.
 - Hosted smoke check on 2026-11-09: `https://homeish.vercel.app` served the public marketing page and `https://beta-homeish.vercel.app` served the beta scaffold over HTTPS. This does not verify database connectivity, real society workflows or production readiness.
+
+### Beta configuration (2026-11-11)
+
+- `beta-homeish` is connected to the shared non-production `homeish-testdb` project (synthetic data only), with Brevo transactional email, Sentry error reporting and an external uptime monitor. Its Production target uses `NEXT_PUBLIC_APP_ENV=staging`. See [Operations](docs/OPERATIONS.md) for monitoring, email and configuration-change procedures.
+- Beta runs the P5–P7 release (`9010a32`). After a cache-free rebuild, `https://beta-homeish.vercel.app/api/health` returned `200`. P9 is not yet released.
+- `homeish` and the paused `homeish-live` project are unchanged; no real society credentials are connected.
 
 ## Checks
 

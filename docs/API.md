@@ -325,7 +325,7 @@ P7 implements the full billing module. Admin billing lives at `/admin/billing`, 
 
 Payment screenshots use `/api/files/upload-url` with `bucket: "payment-proofs"`, a `unitId`, an image content type and size. The caller needs `billing:payments:submit` and an **active occupancy of that unit through their own active membership**; an admin role alone is not enough. Paths are `{society_id}/{unit_id}/payments/{random_uuid}.jpg|png`. Viewing a proof through `/api/files/url` is limited to admins and committee.
 
-The daily runner calls billing tasks in this order: `late_fees`, `reminders`, `stale_payments`, then `service_request.auto_close` (DATABASE 6.10 and 7).
+The daily runner calls billing tasks in this order: `late_fees`, `reminders`, `stale_payments`, followed by visitor expiry, service-request auto-close and global retention (DATABASE 6.10, 7 and 11.3).
 
 `billing_charge_save` accepts `p_id` (null when creating), `p_name`, `p_method`, integer `p_amount_paise` (null only for `custom`), `p_active`, `p_expected_updated_at` and `p_request_id`, with society derived from the session at the server boundary. The shared form schema converts decimal rupee text to exact safe-integer paise without floating-point multiplication. Updating or deactivating a charge never edits an existing bill.
 
@@ -376,20 +376,23 @@ Rules for all routes:
 
 The scheduler sends `POST` with `Authorization: Bearer <CRON_SECRET>`. A missing or incorrect secret returns `401`; the attempt is logged without recording the supplied token. The secret comparison is constant-time. Responses are `no-store` and use the standard JSON envelope; success returns `{ ok: true, data: { jobs: [{ job, succeeded, skipped, failed }] } }`. Only per-job counts are returned.
 
-Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each registered task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. Each task/society failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
+Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each society-scoped task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. A global task claims one run key using the first eligible society; if there are no eligible societies, the retention task still runs because its database operations are idempotent. Each task failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
 
 | Task                          | Behavior                                                                                     |
 | ----------------------------- | -------------------------------------------------------------------------------------------- |
 | Late fees                     | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                   |
 | Reminders                     | Due-soon, due-today and overdue notifications (BIL-10)                                       |
 | Stale payments                | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                  |
-| Visitor/delivery housekeeping | Finalises expired pending entries; lists uncollected parcels (DEL-5); overstay flags (VIS-9) |
+| Visitor expiry                | Finalises pending entries after their response deadline (VIS-4, VIS-7)                      |
+| Delivery overdue view          | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)        |
 | Request auto-close            | Closes `resolved` requests after the society's days (SRQ-3)                                  |
 | Module reminders (post-MVP)   | AMC expiry, low stock                                                                        |
-| Retention                     | Purges and anonymises per DATABASE 11.3; clears old rate-limit counters                      |
-| Backup export                 | Nightly database export is run by the CI scheduler, not by this route (DATABASE 15.2)        |
+| Retention                     | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket |
+| Backup export                 | Nightly PostgreSQL 17 dump is uploaded to Cloudflare R2 by GitHub Actions; the weekly storage-file copy is deferred (DATABASE 15.2) |
 
 A task failure is logged (error log + Sentry) and does not stop the other tasks; the next day's run retries unfinished work because tasks are idempotent.
+
+The off-site database backup runs separately from this route on the `main` branch. It uses `SUPABASE_DB_URL` and a bucket-scoped R2 token from GitHub Actions configuration; database dumps are retained for 30 days. It does not use or require the Supabase service-role key.
 
 ### 6.2 File upload flow
 
@@ -505,6 +508,8 @@ Names only; values are kept in the host's secret store and never committed (ARCH
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY`                         | Public                                                       | Public client key; safe because the database rules decide access                                     | All                         |
 | `SUPABASE_SERVICE_ROLE_KEY`                             | **Server secret**                                            | Privileged identity (only the isolated server module, ARCHITECTURE 8.4)                              | All except local-only tools |
 | `SUPABASE_DB_URL`                                       | **Server secret (CI/migrations/backup only, never runtime)** | Direct database connection                                                                           | CI                          |
+| `R2_ACCOUNT_ID`, `R2_BUCKET_NAME`                       | GitHub Actions variable                                      | Cloudflare R2 account endpoint and dedicated backup bucket                                            | `main` backup workflow     |
+| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`              | **GitHub Actions secret**                                    | R2 S3 credentials scoped to the dedicated backup bucket                                               | `main` backup workflow     |
 | `BREVO_API_KEY`                                         | **Server secret**                                            | Send receipts and alerts                                                                             | Staging, production         |
 | `BREVO_DAILY_EMAIL_QUOTA`                               | Server                                                       | Per-deployment daily sending cap; an alert is sent at 80%                                            | Staging, production         |
 | `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`                 | Server                                                       | Verified sender                                                                                      | Staging, production         |
