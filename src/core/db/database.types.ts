@@ -1039,6 +1039,7 @@ export type Database = {
       };
       job_run_keys: {
         Row: {
+          completed_at: string | null;
           job_name: string;
           period_key: string;
           ran_at: string;
@@ -1046,12 +1047,14 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          completed_at?: string | null;
           job_name: string;
           period_key: string;
           ran_at?: string;
           society_id: string;
         };
         Update: {
+          completed_at?: string | null;
           job_name?: string;
           period_key?: string;
           ran_at?: string;
@@ -2591,6 +2594,10 @@ export type Database = {
         Returns: string;
       };
       developer_health_summary: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      daily_job_health_summary: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
