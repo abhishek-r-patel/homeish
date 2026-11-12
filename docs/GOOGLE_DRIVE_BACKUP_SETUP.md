@@ -221,6 +221,7 @@ Under **Secrets**, add these **Repository secrets** one at a time:
 | `GOOGLE_DRIVE_CLIENT_ID`     | Your own Client ID            |
 | `GOOGLE_DRIVE_CLIENT_SECRET` | Your own Client secret        |
 | `GOOGLE_DRIVE_REFRESH_TOKEN` | The refresh token from step 8 |
+| `SUPABASE_TESTDB_URL`        | Connection URL from `.env.testdb.local`; test only |
 
 Under **Variables**, add these **Repository variables**:
 
@@ -234,7 +235,10 @@ after saving. Keep the originals in your password manager for controlled
 rotation/recovery; report only that the names were saved, not their values.
 
 Do not change `SUPABASE_DB_URL` or connect `homeish-live` during these steps.
-The source database must be verified separately before any backup run.
+The manual test backup reads only `SUPABASE_TESTDB_URL`, checks that its project
+reference is `homeish-testdb`, and uploads without pruning. Keep
+`SUPABASE_DB_URL` unchanged; scheduled backups remain disabled and use that
+separate secret only after their source is deliberately approved.
 
 ## 11. Stop here and hand back
 
@@ -248,13 +252,22 @@ normal commit, release, and hosted-database approvals:
    Actions secret `BACKUP_ENCRYPTION_KEY` through an approved secure mechanism.
    You must keep a separate offline/password-manager recovery copy. Do not
    store it in Drive with the backups; losing it makes the archives unusable.
-2. Verify OAuth and folder access from an approved runner. If Google APIs are
-   blocked on the corporate laptop, use an approved runner, not a bypass.
-3. Verify the source is the intended non-production database for the first
-   test; produce an encrypted backup and verify its remote size/checksum.
-4. Download and authenticate/decrypt it; restore to a **new, empty** approved
-   target and run the integrity checks.
-5. Verify failure notifications and storage capacity, then separately approve
+2. Verify OAuth and folder access from an approved runner: in GitHub Actions,
+   run **Off-site Database Backup** manually on `feature-build-1`. The
+   `verify-configuration` job checks OAuth, the encryption key, and the private
+   Drive folder. After it passes, `manual-test-backup` checks the test database
+   project reference, creates a PostgreSQL 17 dump, encrypts it, and verifies
+   the Drive copy's size and checksum. It does not prune existing Drive files.
+   The scheduled backup job remains main-only and opt-in.
+3. The dependent `manual-restore-drill` job downloads that exact Drive archive,
+   verifies its size/checksum, and authenticates/decrypts it. It restores all
+   archived schemas to a **new, empty** Supabase-compatible PostgreSQL 17
+   database on the approved runner and runs the integrity checks. No hosted
+   target is touched, no database artifact is published, and the disposable
+   database and temporary files are removed even on failure. This does not
+   recover omitted owner/ACL settings, Supabase Storage file contents, or hosted
+   service configuration; those require separate recovery verification.
+4. Verify failure notifications and storage capacity, then separately approve
    activation and the normal release to `main`.
 
 The scheduled workflow stays **main-only** and opt-in. Feature-branch publication

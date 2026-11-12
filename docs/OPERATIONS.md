@@ -26,12 +26,13 @@ to notify the on-call contact. Investigate a failure in the hosting logs and the
 developer health page; do not expose internal health details through the public
 endpoint.
 
-Beta status, 2026-11-11: UptimeRobot (Free plan) monitor `804629935` checks
+Beta status, 2026-11-12: UptimeRobot (Free plan) monitor `804629935` checks
 `https://beta-homeish.vercel.app/api/health` every five minutes and emails the
 owner. Its test notification was received, and it recorded beta's outage before
-configuration and the recovery afterwards. Beta still runs the P5–P7 release,
-whose health route predates the daily-job freshness check. Confirm the monitor
-again after P9 is deployed.
+configuration and the recovery afterwards. P9 is deployed; health returned 200
+and an authenticated manual daily-job request returned 200. The shared test
+database had no active or trial societies at verification, so no
+society-scoped task ran; this does not prove a populated unattended day cycle.
 
 ### Sentry critical-error alert
 
@@ -45,9 +46,8 @@ alert.
 Configured 2026-11-11: issue alert `1480537` ("Homeish critical errors") fires
 when an event's `severity` tag equals `critical` and emails the owner, at most
 once every 60 minutes. A synthetic critical event triggered it, and the test
-issue was resolved. Beta's deployed release predates P9's severity-tag changes;
-repeat the test with an application-originated critical error after P9 is
-deployed.
+issue was resolved. P9's severity-tag changes are now deployed to beta; a
+controlled application-originated critical event still needs verification.
 
 ### Email quota
 
@@ -82,6 +82,8 @@ Beta email, 2026-11-11:
    and hosting logs for the affected time.
 2. Open the developer console's Platform Health and Error Logs pages. Search
    using the error reference ID where available.
+   Failed daily-job tasks are logged as `critical` and trigger the configured
+   Sentry alert.
 3. Check that the scheduled caller still sends the configured `CRON_SECRET`.
    Rotate it in the secret store and scheduler together if it may be exposed.
 4. Do not delete `job_run_keys` to force a retry. Investigate the failed task;
@@ -89,10 +91,19 @@ Beta email, 2026-11-11:
 
 ## Database backups and restore
 
-Google Drive replaces the disabled R2 implementation. Owner authorization is
-pending; no off-site backup has been produced or restore-tested. Follow the
-[phone-friendly Google API setup guide](GOOGLE_DRIVE_BACKUP_SETUP.md). Do not
-store the Google account password or enable the workflow before verification.
+Google Drive replaces the disabled R2 implementation. The encrypted
+homeish-testdb backup and disposable compatible restore drill passed in GitHub
+Actions run
+[43222943511](https://github.com/abhishek-r-patel/homeish/actions/runs/43222943511);
+all 13 read-only integrity checks passed. This verifies the test database only,
+not the future production source or full service recovery. Keep scheduled
+backups disabled and do not store the Google account password.
+
+The monthly **Database Integrity** workflow is pinned to `homeish-testdb`. It
+requires the repository Actions variable `SUPABASE_TESTDB_CA_CERT`, containing
+the server root certificate downloaded from that project's Database Settings.
+The checker uses it as a trust root and retains `verify-full` hostname
+verification.
 
 The main-only workflow requires `GOOGLE_DRIVE_BACKUPS_ENABLED=true`, the private
 app-created `GOOGLE_DRIVE_FOLDER_ID` variable, and Actions secrets
@@ -122,6 +133,12 @@ The runner's plaintext dump and temporary encrypted file are cleaned up. Do not
 upload database dumps as GitHub artifacts. These dumps do not contain Supabase
 Storage files.
 
+The scheduled job remains disabled (`GOOGLE_DRIVE_BACKUPS_ENABLED=false`). The
+Testdb archives and any future production archives would share the current
+Drive folder and marker; production retention could therefore remove expired
+testdb archives. Before production activation, add an exact production-project
+guard and isolate the source-specific archive retention/folder.
+
 For an approved local check, copy `.env.backup.example` to ignored
 `.env.backup.local`, populate OAuth/folder/key values securely, and run:
 
@@ -131,21 +148,36 @@ node --env-file=.env.backup.local scripts/backup-google-drive.mjs check
 
 This backup profile is separate from application profiles and is loaded
 explicitly with Node, not `scripts/with-env.mjs`. If corporate policy/network
-blocks Google APIs, use an approved runner. Do not disable TLS verification.
+blocks Google APIs, use an approved runner: dispatching **Off-site Database
+Backup** manually runs the `verify-configuration` job, which performs only this
+check with the repository secrets (no database access or upload). Dispatching
+it on `feature-build-1` also enables a test-only backup job, which requires
+`SUPABASE_TESTDB_URL`, verifies the `homeish-testdb` project reference, and
+never prunes Drive files. Its `manual-restore-drill` follow-up downloads that
+exact archive from Drive, verifies its size/checksum, authenticates/decrypts it,
+and restores all archived schemas into a new disposable database on the runner.
+The installed Supabase CLI supplies compatible PostgreSQL 17 and native
+extensions such as Supabase Vault; plain PostgreSQL without those extensions
+cannot certify a complete restore. The drill runs the read-only integrity checks
+and always removes the disposable database, dump, and private diagnostic files.
+It never uses a hosted restore-target credential or publishes database artifacts.
+Do not disable TLS verification or bypass corporate access restrictions.
 Retain an offline recovery copy of the encryption key separately from Drive.
 On key rotation, retain old keys until every archive encrypted with them has
 expired, with a private record of the key's applicable backup dates.
 
 For a restore drill or recovery:
 
-1. Create a **new, empty Supabase project** for the restore. Never restore into
-   the live project or a project containing data that must be preserved.
+1. Use the approved disposable runner drill above, or create a **new, empty
+   Supabase project** for manual recovery. Never restore into the live project
+   or a project containing data that must be preserved.
 2. Download the chosen `homeish-db-...dump.enc` archive from the private Drive
    folder using the authorized backup account. Obtain its recovery key from
    the separate secure store and populate `BACKUP_ENCRYPTION_KEY` in the
    ignored backup profile. Authenticate/decrypt to a new, unused local path:
 
    ```powershell
+   node --env-file=.env.backup.local scripts/backup-google-drive.mjs download-database "homeish-db-YYYYMMDDTHHMMSSZ.dump.enc" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump.enc"
    node --env-file=.env.backup.local scripts/backup-google-drive.mjs decrypt-database "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump.enc" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
    pg_restore --list "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
    ```
@@ -156,11 +188,14 @@ For a restore drill or recovery:
    URL:
 
    ```powershell
-   pg_restore --no-owner --no-privileges --dbname "$env:RESTORE_DB_URL" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
+   pg_restore --no-owner --no-privileges --exit-on-error --single-transaction --dbname "$env:RESTORE_DB_URL" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
    ```
 
    Resolve any Supabase-managed schema or extension errors before considering
-   the restore successful. Do not add destructive clean/drop options.
+   the restore successful. Do not skip schemas or add destructive clean/drop
+   options. Vault secrets require their project-bound encryption-key recovery;
+   the disposable drill fails if restored `vault.secrets` is nonempty rather
+   than claiming those secrets are recoverable with an unrelated local key.
 
 4. Point `SUPABASE_DB_URL` at the new project for the integrity check and run
    `npm run integrity:check`. Investigate every failed check before accepting
@@ -169,6 +204,9 @@ For a restore drill or recovery:
    failures, and measured RTO in the restricted incident record. Remove the
    temporary connection variable and decrypted local dump when finished.
 
+The dump intentionally omits owner/ACL settings; the drill verifies the archived
+schema and data, not reconstruction of role attributes, grants, or hosted service
+configuration. Those must be reapplied and verified before service recovery.
 The database-only backup cannot restore photos, payment proofs, QR codes, or
 logos. File-copy backups remain deferred pending an approved least-privilege
 source credential. A restore with referenced files missing is not a complete
@@ -177,8 +215,9 @@ file recovery; retain the integrity report and disclose this limitation.
 For a local test database configured in `.env.testdb.local`, run
 `npm run integrity:check:testdb`. The checker is read-only, reports counts by
 invariant, and exits nonzero if any check fails. It never repairs or deletes
-data. Run it after each restore and monthly; the main-branch workflow also runs
-it monthly and can be dispatched manually.
+data. Run it after each restore and monthly; the main-branch workflow checks
+only the guarded `homeish-testdb` project monthly and can be dispatched
+manually. Its result has not yet been verified in GitHub Actions.
 
 ## Incidents and administrative actions
 

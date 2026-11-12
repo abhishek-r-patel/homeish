@@ -108,4 +108,20 @@ describe('/api/jobs/daily', () => {
       expect.objectContaining({ requestId: expect.any(String) }),
     );
   });
+
+  it('logs a failed daily-job runner as critical', async () => {
+    mocks.runDailyJobs.mockRejectedValue(new Error('society discovery failed'));
+    const response = await GET(
+      new Request('https://homeish.test/api/jobs/daily', {
+        method: 'GET',
+        headers: { authorization: 'Bearer scheduled-secret' },
+      }),
+    );
+
+    expect(response.status).toBe(500);
+    expect(mocks.logUnexpectedError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ severity: 'critical' }),
+    );
+  });
 });

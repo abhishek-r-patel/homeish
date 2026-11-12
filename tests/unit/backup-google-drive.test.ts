@@ -20,6 +20,7 @@ import {
 } from '../../scripts/backup-crypto.mjs';
 import {
   createDriveClient,
+  downloadDatabaseDump,
   pruneExpiredDatabaseBackups,
   uploadDatabaseDump,
   verifyBackupFolder,
@@ -146,6 +147,53 @@ function mockUpload({
     getArchive: () => archive,
     getArchivePath: () => archivePath,
   };
+}
+
+function mockDownload(
+  contents: Buffer,
+  {
+    fileChanges = {},
+    pageChanges = {},
+    downloadContents = contents,
+  }: {
+    fileChanges?: Record<string, unknown>;
+    pageChanges?: Record<string, unknown>;
+    downloadContents?: Buffer | null;
+  } = {},
+) {
+  const request = vi.fn(
+    async (path: string, options?: { timeoutMs?: number }) => {
+      const url = new URL(path, 'https://www.googleapis.com');
+      if (url.pathname === `/drive/v3/files/${FOLDER_ID}`) {
+        return Response.json(folder());
+      }
+      if (url.pathname === '/drive/v3/files') {
+        return Response.json({
+          files: [
+            {
+              ...backup(FILE_ID, NOW.toISOString()),
+              size: String(contents.length),
+              md5Checksum: createHash('md5').update(contents).digest('hex'),
+              shared: false,
+              trashed: false,
+              ownedByMe: true,
+              ...fileChanges,
+            },
+          ],
+          ...pageChanges,
+        });
+      }
+      if (url.pathname === `/drive/v3/files/${FILE_ID}`) {
+        expect(url.searchParams.get('alt')).toBe('media');
+        expect(options?.timeoutMs).toBe(30 * 60_000);
+        return new Response(
+          downloadContents === null ? null : new Uint8Array(downloadContents),
+        );
+      }
+      throw new Error('Unexpected Google API request.');
+    },
+  );
+  return { client: { request }, request };
 }
 
 afterEach(async () => {
@@ -351,6 +399,30 @@ describe('encrypted Drive database uploads', () => {
     expect(urls.at(-1)).toContain('/drive/v3/files?');
   });
 
+  it('can upload a manual test backup without listing or pruning existing files', async () => {
+    const directory = await temporaryDirectory();
+    const filePath = join(directory, NAME);
+    await writeFile(filePath, 'private database contents');
+    const { fetchMock } = mockUpload();
+    const result = await uploadDatabaseDump({
+      client: createDriveClient(ENVIRONMENT, fetchMock),
+      folderId: FOLDER_ID,
+      filePath,
+      key: KEY,
+      pruneExpired: false,
+      now: NOW,
+    });
+    expect(result.deletedCount).toBe(0);
+    expect(
+      fetchMock.mock.calls.some(
+        ([url]) => new URL(String(url)).pathname === '/drive/v3/files',
+      ),
+    ).toBe(false);
+    expect(
+      fetchMock.mock.calls.some(([, options]) => options?.method === 'DELETE'),
+    ).toBe(false);
+  });
+
   it.each([
     { uploadStatus: 503 },
     { corruptChecksum: true },
@@ -405,6 +477,150 @@ describe('encrypted Drive database uploads', () => {
       }),
     ).rejects.toThrow('filename');
     expect(client.request).not.toHaveBeenCalled();
+  });
+});
+
+describe('verified Drive database downloads', () => {
+  it('downloads the named private archive and authenticates its recovered contents', async () => {
+    const directory = await temporaryDirectory();
+    const original = join(directory, NAME);
+    const encrypted = join(directory, 'original.enc');
+    const outputPath = join(directory, 'downloaded.enc');
+    const restored = join(directory, 'restored.dump');
+    await writeFile(original, 'private database contents');
+    await encryptDatabaseDump({
+      filePath: original,
+      outputPath: encrypted,
+      key: KEY,
+    });
+    const contents = await readFile(encrypted);
+    const { client, request } = mockDownload(contents);
+    await expect(
+      downloadDatabaseDump({
+        client,
+        folderId: FOLDER_ID,
+        archiveName: `${NAME}.enc`,
+        outputPath,
+      }),
+    ).resolves.toEqual({
+      fileId: FILE_ID,
+      encryptedSizeBytes: contents.length,
+    });
+    expect(await readFile(outputPath)).toEqual(contents);
+    await decryptDatabaseDump({
+      filePath: outputPath,
+      outputPath: restored,
+      key: KEY,
+    });
+    expect(await readFile(restored, 'utf8')).toBe('private database contents');
+    expect(request).toHaveBeenCalledTimes(3);
+    expect(
+      (await readdir(directory)).filter((name) =>
+        name.startsWith('.homeish-download-'),
+      ),
+    ).toEqual([]);
+  });
+
+  it.each([
+    { shared: true },
+    { trashed: true },
+    { ownedByMe: false },
+    { name: 'other.dump.enc' },
+    { mimeType: 'text/plain' },
+    { parents: ['elsewhere'] },
+    { appProperties: {} },
+    { size: '0' },
+    { size: 'not-a-size' },
+    { md5Checksum: 'invalid' },
+  ])('refuses unsafe archive metadata: %j', async (fileChanges) => {
+    const directory = await temporaryDirectory();
+    const outputPath = join(directory, 'downloaded.enc');
+    const { client, request } = mockDownload(Buffer.from('ciphertext'), {
+      fileChanges,
+    });
+    await expect(
+      downloadDatabaseDump({
+        client,
+        folderId: FOLDER_ID,
+        archiveName: `${NAME}.enc`,
+        outputPath,
+      }),
+    ).rejects.toThrow('unsafe backup metadata');
+    expect(request).toHaveBeenCalledTimes(2);
+    await expect(access(outputPath)).rejects.toThrow();
+  });
+
+  it.each([
+    { files: [] },
+    { files: [{ id: 'one' }, { id: 'two' }] },
+    { incompleteSearch: true },
+    { nextPageToken: 'next' },
+  ])(
+    'refuses incomplete or ambiguous archive lookups: %j',
+    async (pageChanges) => {
+      const directory = await temporaryDirectory();
+      const outputPath = join(directory, 'downloaded.enc');
+      const { client, request } = mockDownload(Buffer.from('ciphertext'), {
+        pageChanges,
+      });
+      await expect(
+        downloadDatabaseDump({
+          client,
+          folderId: FOLDER_ID,
+          archiveName: `${NAME}.enc`,
+          outputPath,
+        }),
+      ).rejects.toThrow('exactly one');
+      expect(request).toHaveBeenCalledTimes(2);
+      await expect(access(outputPath)).rejects.toThrow();
+    },
+  );
+
+  it.each([null, Buffer.from('short'), Buffer.from('tampered!!')])(
+    'does not publish an empty, truncated, or corrupt download',
+    async (downloadContents) => {
+      const directory = await temporaryDirectory();
+      const outputPath = join(directory, 'downloaded.enc');
+      const { client } = mockDownload(Buffer.from('ciphertext'), {
+        downloadContents,
+      });
+      await expect(
+        downloadDatabaseDump({
+          client,
+          folderId: FOLDER_ID,
+          archiveName: `${NAME}.enc`,
+          outputPath,
+        }),
+      ).rejects.toThrow();
+      await expect(access(outputPath)).rejects.toThrow();
+      expect(await readdir(directory)).toEqual([]);
+    },
+  );
+
+  it('refuses invalid names and never overwrites an existing output', async () => {
+    const directory = await temporaryDirectory();
+    const outputPath = join(directory, 'existing.enc');
+    await writeFile(outputPath, 'keep');
+    const { client, request } = mockDownload(Buffer.from('ciphertext'));
+    await expect(
+      downloadDatabaseDump({
+        client,
+        folderId: FOLDER_ID,
+        archiveName: '../other.enc',
+        outputPath,
+      }),
+    ).rejects.toThrow('filename');
+    expect(request).not.toHaveBeenCalled();
+    await expect(
+      downloadDatabaseDump({
+        client,
+        folderId: FOLDER_ID,
+        archiveName: `${NAME}.enc`,
+        outputPath,
+      }),
+    ).rejects.toThrow();
+    expect(await readFile(outputPath, 'utf8')).toBe('keep');
+    expect(await readdir(directory)).toEqual(['existing.enc']);
   });
 });
 
@@ -516,4 +732,67 @@ it('keeps scheduled backups opt-in on main, validates dumps, and cleans plaintex
   expect(workflow).toContain('rm -f -- "$DATABASE_DUMP"');
   expect(workflow).not.toContain('R2_');
   expect(workflow).not.toContain('upload-artifact');
+});
+
+it('offers a manual, check-only configuration job without database access', () => {
+  const workflow = readFileSync(
+    new URL('../../.github/workflows/offsite-backup.yml', import.meta.url),
+    'utf8',
+  );
+  const verifyJob = workflow.slice(
+    workflow.indexOf('verify-configuration:'),
+    workflow.indexOf('\n  manual-test-backup:'),
+  );
+  expect(verifyJob).toContain("if: github.event_name == 'workflow_dispatch'");
+  expect(verifyJob).toContain('npm run backup:drive:check');
+  expect(verifyJob).not.toContain('SUPABASE_DB_URL');
+  expect(verifyJob).not.toContain('backup:drive:database');
+});
+
+it('restricts manual test backups to homeish-testdb on the feature branch', () => {
+  const workflow = readFileSync(
+    new URL('../../.github/workflows/offsite-backup.yml', import.meta.url),
+    'utf8',
+  );
+  const testJob = workflow.slice(
+    workflow.indexOf('manual-test-backup:'),
+    workflow.indexOf('\n  manual-restore-drill:'),
+  );
+  expect(testJob).toContain(
+    "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'",
+  );
+  expect(testJob).toContain('needs: verify-configuration');
+  expect(testJob).toContain('secrets.SUPABASE_TESTDB_URL');
+  expect(testJob).toContain('oqyagsabodaueghtrocv');
+  expect(testJob).toContain('--skip-prune');
+  expect(testJob).not.toContain('secrets.SUPABASE_DB_URL');
+  expect(testJob).not.toContain('GOOGLE_DRIVE_BACKUPS_ENABLED');
+});
+
+it('rehearses the Drive copy on disposable compatible PostgreSQL without hosted target credentials', () => {
+  const workflow = readFileSync(
+    new URL('../../.github/workflows/offsite-backup.yml', import.meta.url),
+    'utf8',
+  );
+  const restoreJob = workflow.slice(
+    workflow.indexOf('manual-restore-drill:'),
+    workflow.indexOf('\n  backup:'),
+  );
+  expect(restoreJob).toContain(
+    "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'",
+  );
+  expect(restoreJob).toContain('needs: manual-test-backup');
+  expect(restoreJob).toContain('supabase db start --workdir');
+  expect(restoreJob).toContain('supabase_vault');
+  expect(restoreJob).toContain('TEMPLATE template0');
+  expect(restoreJob).toContain('backup:drive:download');
+  expect(restoreJob).toContain('backup:drive:decrypt');
+  expect(restoreJob).toContain('--exit-on-error --single-transaction');
+  expect(restoreJob).toContain('npm run integrity:check');
+  expect(restoreJob).toContain('if: always()');
+  expect(restoreJob).toContain('--no-backup');
+  expect(restoreJob).not.toContain('secrets.SUPABASE_TESTDB_URL');
+  expect(restoreJob).not.toContain('secrets.SUPABASE_DB_URL');
+  expect(restoreJob).not.toContain('--exclude-schema');
+  expect(restoreJob).not.toContain('upload-artifact');
 });

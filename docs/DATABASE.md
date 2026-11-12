@@ -980,7 +980,7 @@ The main-branch backup job remains opt-in via `GOOGLE_DRIVE_BACKUPS_ENABLED=true
 
 The weekly file copy is intentionally deferred. Supabase's generated Storage S3 key grants access to every Storage bucket and bypasses RLS; that credential has not been approved for GitHub Actions. Do not add a Supabase service-role key to the backup workflow. Revisit the file-copy design when a narrower source credential or a separately approved execution environment is available.
 
-### 15.3 Integrity checks (run after any restore, and monthly in production)
+### 15.3 Integrity checks (run after any restore, and monthly)
 
 1. Every bill's `paid_paise` equals the sum of its allocations.
 2. A payment's allocations never exceed its amount.
@@ -994,11 +994,12 @@ The weekly file copy is intentionally deferred. Supabase's generated Storage S3 
 Run the read-only suite with `npm run integrity:check` after setting
 `SUPABASE_DB_URL` for the intended database. Use
 `npm run integrity:check:testdb` for the configured local test database. The
-main-branch GitHub Actions workflow runs the same checks monthly and supports
-manual dispatch. It reports counts only and exits nonzero on any violation; it
-never changes data. The profile `photo_path` field currently has no associated
-Storage bucket, so a non-null value is reported as unmapped and needs an
-explicitly approved storage design before it can be treated as valid.
+main-branch GitHub Actions workflow runs the same checks monthly against the
+verified `homeish-testdb` project and supports manual dispatch. It reports
+counts only and exits nonzero on any violation; it never changes data. The
+profile `photo_path` field currently has no associated Storage bucket, so a
+non-null value is reported as unmapped and needs an explicitly approved storage
+design before it can be treated as valid.
 
 ### 15.4 Data corrections
 

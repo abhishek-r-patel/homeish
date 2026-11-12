@@ -158,7 +158,7 @@ export async function developerSignIn(
 
   return {
     step: 'enroll',
-    qrCode: `data:image/svg+xml;utf8,${encodeURIComponent(enrollment.totp.qr_code)}`,
+    qrCode: enrollment.totp.qr_code,
     secret: enrollment.totp.secret,
   };
 }

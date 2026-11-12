@@ -80,7 +80,7 @@ describe('developer authentication', () => {
         id: factorId,
         type: 'totp',
         totp: {
-          qr_code: '<svg/>',
+          qr_code: 'data:image/svg+xml;utf-8,<svg/>',
           secret: 'TOTPSECRET',
           uri: 'otpauth://totp',
         },
@@ -122,7 +122,7 @@ describe('developer authentication', () => {
 
     expect(result).toEqual({
       step: 'enroll',
-      qrCode: `data:image/svg+xml;utf8,${encodeURIComponent('<svg/>')}`,
+      qrCode: 'data:image/svg+xml;utf-8,<svg/>',
       secret: 'TOTPSECRET',
     });
     expect(mocks.enforceRateLimit).toHaveBeenCalledWith(

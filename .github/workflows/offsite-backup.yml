@@ -13,6 +13,233 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Manual, read-only check of the Drive/OAuth/encryption settings; never touches the database.
+  verify-configuration:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - run: npm ci
+      - name: Verify OAuth, encryption configuration, and private Drive folder
+        run: npm run backup:drive:check
+        env:
+          GOOGLE_DRIVE_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_CLIENT_ID }}
+          GOOGLE_DRIVE_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}
+          GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+
+  manual-test-backup:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'
+    needs: verify-configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      archive_name: ${{ steps.upload.outputs.archive_name }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - run: npm ci
+      - name: Confirm the connection targets homeish-testdb
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_TESTDB_URL }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const expectedProjectRef = 'oqyagsabodaueghtrocv';
+          const value = process.env.SUPABASE_DB_URL;
+          if (!value) {
+            console.error('SUPABASE_TESTDB_URL is not configured.');
+            process.exit(1);
+          }
+          let url;
+          try {
+            url = new URL(value);
+          } catch {
+            console.error('SUPABASE_TESTDB_URL is malformed.');
+            process.exit(1);
+          }
+          const projectRef =
+            url.hostname.match(/^db\.([^.]+)\.supabase\.co$/)?.[1] ??
+            url.username.match(/^postgres\.([a-z0-9]+)$/i)?.[1];
+          if (url.protocol !== 'postgresql:' || projectRef !== expectedProjectRef) {
+            console.error('SUPABASE_TESTDB_URL does not target homeish-testdb.');
+            process.exit(1);
+          }
+          console.info('Verified source: homeish-testdb.');
+          NODE
+      - name: Create PostgreSQL 17 custom-format test dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_TESTDB_URL }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/homeish-backup"
+          file="homeish-db-$(date -u +%Y%m%dT%H%M%SZ).dump"
+          echo "DATABASE_DUMP=$RUNNER_TEMP/homeish-backup/$file" >> "$GITHUB_ENV"
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --volume "$RUNNER_TEMP/homeish-backup:/backup" \
+            --env SUPABASE_DB_URL \
+            --env PGSSLMODE=require \
+            --env DUMP_NAME="$file" \
+            postgres:17 \
+            sh -ec '
+              pg_dump --dbname="$SUPABASE_DB_URL" \
+                --format=custom --compress=9 --no-owner --no-acl \
+                --file="/backup/$DUMP_NAME"
+              pg_restore --list "/backup/$DUMP_NAME" > /dev/null
+            '
+      - name: Encrypt, upload, and verify without pruning
+        id: upload
+        run: |
+          set -euo pipefail
+          npm run backup:drive:database -- "$DATABASE_DUMP" --skip-prune
+          echo "archive_name=$(basename "$DATABASE_DUMP").enc" >> "$GITHUB_OUTPUT"
+        env:
+          GOOGLE_DRIVE_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_CLIENT_ID }}
+          GOOGLE_DRIVE_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}
+          GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+      - name: Remove the runner's plaintext dump
+        if: always()
+        run: |
+          if [[ -n "${DATABASE_DUMP:-}" ]]; then
+            rm -f -- "$DATABASE_DUMP"
+          fi
+
+  manual-restore-drill:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'
+    needs: manual-test-backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - run: npm ci
+      - name: Start an isolated Supabase-compatible PostgreSQL 17 target
+        run: |
+          set -euo pipefail
+          umask 077
+          work="$RUNNER_TEMP/homeish-restore-drill"
+          mkdir -p "$work/supabase"
+          echo "RESTORE_WORK=$work" >> "$GITHUB_ENV"
+          echo "RESTORE_STARTED_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
+          cat > "$work/supabase/config.toml" <<'TOML'
+          project_id = "homeish-restore-drill"
+          [db]
+          port = 54327
+          shadow_port = 54328
+          major_version = 17
+          [db.migrations]
+          enabled = false
+          [db.seed]
+          enabled = false
+          TOML
+          npx supabase db start --workdir "$work"
+          container="$(docker inspect --format '{{.Id}}' supabase_db_homeish-restore-drill)"
+          echo "RESTORE_CONTAINER_ID=$container" >> "$GITHUB_ENV"
+          password="$(openssl rand -hex 32)"
+          echo "::add-mask::$password"
+          echo "SUPABASE_DB_URL=postgresql://supabase_admin:$password@127.0.0.1:54327/homeish_restore_drill" >> "$GITHUB_ENV"
+          docker exec -i --user postgres "$container" \
+            psql --username supabase_admin --dbname postgres \
+            --set=ON_ERROR_STOP=1 --set=restore_password="$password" <<'SQL'
+          SELECT current_setting('server_version') AS restore_server_version;
+          DO $$
+          BEGIN
+            IF current_setting('server_version_num')::integer / 10000 <> 17 THEN
+              RAISE EXCEPTION 'The restore target must be PostgreSQL 17';
+            END IF;
+            IF EXISTS (
+              SELECT 1
+              FROM (VALUES ('citext'), ('pg_stat_statements'), ('pgcrypto'),
+                ('supabase_vault'), ('uuid-ossp')) AS required(name)
+              LEFT JOIN pg_available_extensions AS available USING (name)
+              WHERE available.name IS NULL
+            ) THEN
+              RAISE EXCEPTION 'The restore target is missing required Supabase extensions';
+            END IF;
+          END $$;
+          ALTER ROLE supabase_admin LOGIN PASSWORD :'restore_password';
+          CREATE DATABASE homeish_restore_drill TEMPLATE template0 OWNER supabase_admin;
+          SQL
+      - name: Download the verified Drive archive and authenticate decryption
+        run: |
+          set -euo pipefail
+          umask 077
+          npm run backup:drive:download -- "$ARCHIVE_NAME" "$RESTORE_WORK/backup.dump.enc"
+          npm run backup:drive:decrypt -- "$RESTORE_WORK/backup.dump.enc" "$RESTORE_WORK/restored.dump"
+        env:
+          ARCHIVE_NAME: ${{ needs.manual-test-backup.outputs.archive_name }}
+          GOOGLE_DRIVE_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_CLIENT_ID }}
+          GOOGLE_DRIVE_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}
+          GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+      - name: Restore all archived schemas into the new disposable database
+        run: |
+          set -euo pipefail
+          docker exec -i --user postgres "$RESTORE_CONTAINER_ID" \
+            pg_restore --list < "$RESTORE_WORK/restored.dump" > "$RESTORE_WORK/archive.list"
+          if ! docker exec -i --user postgres "$RESTORE_CONTAINER_ID" \
+            pg_restore --username supabase_admin --dbname homeish_restore_drill \
+            --no-owner --no-privileges --exit-on-error --single-transaction \
+            < "$RESTORE_WORK/restored.dump" > "$RESTORE_WORK/restore.log" 2>&1; then
+            echo "::error::Database restore failed. Raw restore diagnostics were not published because they may contain database data."
+            exit 1
+          fi
+          count="$(docker exec --user postgres "$RESTORE_CONTAINER_ID" \
+            psql --username supabase_admin --dbname homeish_restore_drill \
+            --set=ON_ERROR_STOP=1 --tuples-only --no-align \
+            --command='SELECT count(*) FROM vault.secrets;')"
+          if [[ "$count" != "0" ]]; then
+            echo "::error::Vault contains project-key-bound secrets; their separate recovery must be verified before accepting this drill."
+            exit 1
+          fi
+      - name: Run read-only integrity checks against the restored database
+        run: npm run integrity:check
+      - name: Record the database-only recovery result
+        run: |
+          elapsed=$(( $(date +%s) - RESTORE_STARTED_EPOCH ))
+          echo "Database restore and integrity checks passed in ${elapsed}s." >> "$GITHUB_STEP_SUMMARY"
+          echo "This schema/data drill does not recover archived owners/ACLs, Supabase Storage file contents, or hosted service configuration." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove the disposable database, dumps, and private restore diagnostics
+        if: always()
+        run: |
+          set -uo pipefail
+          status=0
+          if [[ -n "${RESTORE_WORK:-}" ]]; then
+            if ! npx supabase stop --workdir "$RESTORE_WORK" --no-backup; then
+              echo "::error::Disposable database cleanup failed."
+              status=1
+            fi
+            if ! rm -f -- "$RESTORE_WORK/restored.dump" "$RESTORE_WORK/backup.dump.enc" \
+              "$RESTORE_WORK/archive.list" "$RESTORE_WORK/restore.log"; then
+              echo "::error::Temporary restore file cleanup failed."
+              status=1
+            fi
+          fi
+          exit "$status"
+
   backup:
     if: github.ref == 'refs/heads/main' && vars.GOOGLE_DRIVE_BACKUPS_ENABLED == 'true'
     runs-on: ubuntu-latest

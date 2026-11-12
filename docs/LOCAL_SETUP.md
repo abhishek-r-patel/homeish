@@ -19,6 +19,10 @@ Some company networks inspect secure web traffic with their own certificate. Win
 $env:NODE_USE_SYSTEM_CA = '1'
 ```
 
+Direct PostgreSQL integrity checks also require Supabase's server root
+certificate in `SUPABASE_DB_CA_CERT`; system CA trust alone is not a
+substitute. Keep `verify-full` enabled.
+
 ## 3. Supabase projects
 
 | Project          | Ref                    | Use                                                      | State  |
