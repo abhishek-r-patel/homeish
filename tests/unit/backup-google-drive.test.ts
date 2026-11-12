@@ -351,6 +351,30 @@ describe('encrypted Drive database uploads', () => {
     expect(urls.at(-1)).toContain('/drive/v3/files?');
   });
 
+  it('can upload a manual test backup without listing or pruning existing files', async () => {
+    const directory = await temporaryDirectory();
+    const filePath = join(directory, NAME);
+    await writeFile(filePath, 'private database contents');
+    const { fetchMock } = mockUpload();
+    const result = await uploadDatabaseDump({
+      client: createDriveClient(ENVIRONMENT, fetchMock),
+      folderId: FOLDER_ID,
+      filePath,
+      key: KEY,
+      pruneExpired: false,
+      now: NOW,
+    });
+    expect(result.deletedCount).toBe(0);
+    expect(
+      fetchMock.mock.calls.some(
+        ([url]) => new URL(String(url)).pathname === '/drive/v3/files',
+      ),
+    ).toBe(false);
+    expect(
+      fetchMock.mock.calls.some(([, options]) => options?.method === 'DELETE'),
+    ).toBe(false);
+  });
+
   it.each([
     { uploadStatus: 503 },
     { corruptChecksum: true },
@@ -525,10 +549,30 @@ it('offers a manual, check-only configuration job without database access', () =
   );
   const verifyJob = workflow.slice(
     workflow.indexOf('verify-configuration:'),
-    workflow.indexOf('\n  backup:'),
+    workflow.indexOf('\n  manual-test-backup:'),
   );
   expect(verifyJob).toContain("if: github.event_name == 'workflow_dispatch'");
   expect(verifyJob).toContain('npm run backup:drive:check');
   expect(verifyJob).not.toContain('SUPABASE_DB_URL');
   expect(verifyJob).not.toContain('backup:drive:database');
+});
+
+it('restricts manual test backups to homeish-testdb on the feature branch', () => {
+  const workflow = readFileSync(
+    new URL('../../.github/workflows/offsite-backup.yml', import.meta.url),
+    'utf8',
+  );
+  const testJob = workflow.slice(
+    workflow.indexOf('manual-test-backup:'),
+    workflow.indexOf('\n  backup:'),
+  );
+  expect(testJob).toContain(
+    "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'",
+  );
+  expect(testJob).toContain('needs: verify-configuration');
+  expect(testJob).toContain('secrets.SUPABASE_TESTDB_URL');
+  expect(testJob).toContain('oqyagsabodaueghtrocv');
+  expect(testJob).toContain('--skip-prune');
+  expect(testJob).not.toContain('secrets.SUPABASE_DB_URL');
+  expect(testJob).not.toContain('GOOGLE_DRIVE_BACKUPS_ENABLED');
 });

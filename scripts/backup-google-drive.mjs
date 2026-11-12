@@ -238,6 +238,7 @@ export async function uploadDatabaseDump({
   folderId,
   filePath,
   key,
+  pruneExpired = true,
   now = new Date(),
 }) {
   const fileName = basename(filePath);
@@ -334,12 +335,14 @@ export async function uploadDatabaseDump({
         'Google Drive backup verification failed; existing backups were not pruned.',
       );
     }
-    const deletedCount = await pruneExpiredDatabaseBackups({
-      client,
-      folderId,
-      keepFileId: fileId,
-      now,
-    });
+    const deletedCount = pruneExpired
+      ? await pruneExpiredDatabaseBackups({
+          client,
+          folderId,
+          keepFileId: fileId,
+          now,
+        })
+      : 0;
     return {
       fileId,
       sizeBytes: source.size,
@@ -362,10 +365,15 @@ async function main(args) {
   }
   if (
     (args.length !== 1 || args[0] !== 'check') &&
-    (args.length !== 2 || args[0] !== 'upload-database')
+    (args.length !== 2 || args[0] !== 'upload-database') &&
+    !(
+      args.length === 3 &&
+      args[0] === 'upload-database' &&
+      args[2] === '--skip-prune'
+    )
   ) {
     throw new Error(
-      'Usage: node scripts/backup-google-drive.mjs check | upload-database <dump-file> | decrypt-database <archive> <new-output-file>',
+      'Usage: node scripts/backup-google-drive.mjs check | upload-database <dump-file> [--skip-prune] | decrypt-database <archive> <new-output-file>',
     );
   }
   const key = readBackupKey();
@@ -383,9 +391,14 @@ async function main(args) {
     folderId,
     filePath: args[1],
     key,
+    pruneExpired: args[2] !== '--skip-prune',
   });
+  const retention =
+    args[2] === '--skip-prune'
+      ? 'retention pruning skipped'
+      : `permanently removed ${result.deletedCount} expired backup(s)`;
   console.info(
-    `Verified encrypted database backup ${result.fileId} (${result.encryptedSizeBytes} bytes); permanently removed ${result.deletedCount} expired backup(s).`,
+    `Verified encrypted database backup ${result.fileId} (${result.encryptedSizeBytes} bytes); ${retention}.`,
   );
 }
 
