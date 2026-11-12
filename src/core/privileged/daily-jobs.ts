@@ -1,17 +1,13 @@
 // Provide narrow service-role operations for idempotent scheduled jobs.
+import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { privilegedClient } from './server-client';
 
 export async function listDailyJobSocieties(): Promise<{ id: string }[]> {
-  const { data, error } = await privilegedClient
-    .from('societies')
-    .select('id')
-    .in('status', ['trial', 'active']);
-  if (error) {
-    throw new Error('Could not load societies for daily jobs.', {
-      cause: error,
-    });
-  }
-  return data ?? [];
+  return invokeUntypedRpc<{ id: string }[]>(
+    privilegedClient,
+    'daily_job_societies',
+    {},
+  );
 }
 
 export async function claimDailyJobRun(

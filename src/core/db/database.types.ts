@@ -2666,6 +2666,12 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      daily_job_societies: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          id: string;
+        }[];
+      };
       deactivate_member: {
         Args: {
           p_membership_id: string;

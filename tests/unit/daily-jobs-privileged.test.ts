@@ -3,14 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
-  select: vi.fn(),
-  in: vi.fn(),
+  rpc: vi.fn(),
   upsert: vi.fn(),
   maybeSingle: vi.fn(),
 }));
 
 vi.mock('../../src/core/privileged/server-client', () => ({
-  privilegedClient: { from: mocks.from },
+  privilegedClient: { from: mocks.from, rpc: mocks.rpc },
 }));
 
 import {
@@ -21,13 +20,8 @@ import {
 describe('privileged daily-job operations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.from.mockImplementation((table: string) =>
-      table === 'societies'
-        ? { select: mocks.select, in: mocks.in }
-        : { upsert: mocks.upsert },
-    );
-    mocks.select.mockReturnValue({ in: mocks.in });
-    mocks.in.mockResolvedValue({
+    mocks.from.mockReturnValue({ upsert: mocks.upsert });
+    mocks.rpc.mockResolvedValue({
       data: [{ id: 'society-1' }],
       error: null,
     });
@@ -44,9 +38,7 @@ describe('privileged daily-job operations', () => {
     await expect(listDailyJobSocieties()).resolves.toEqual([
       { id: 'society-1' },
     ]);
-    expect(mocks.from).toHaveBeenCalledWith('societies');
-    expect(mocks.select).toHaveBeenCalledWith('id');
-    expect(mocks.in).toHaveBeenCalledWith('status', ['trial', 'active']);
+    expect(mocks.rpc).toHaveBeenCalledWith('daily_job_societies', {});
   });
 
   it('atomically inserts a composite run key and treats duplicates as unclaimed', async () => {

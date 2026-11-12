@@ -168,6 +168,10 @@ export async function createTestDatabase(options?: {
               "select set_config('request.jwt.claims', $1, true)",
               [JSON.stringify({ role, ...claims })],
             );
+            await client.query(
+              "select set_config('request.jwt.claim.role', $1, true)",
+              [role],
+            );
             return fn(client);
           },
           options.commit === true,
