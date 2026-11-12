@@ -59,7 +59,7 @@ events; it must not replace the transactional database-function path.
 
 | Severity   | Use                                                                  |
 | ---------- | -------------------------------------------------------------------- |
-| `critical` | Gate, payment or tenant-isolation failure requiring immediate action |
+| `critical` | Gate, payment or tenant-isolation failure, or daily-job failure leaving scheduled work incomplete; requires immediate action |
 | `error`    | An operation failed and no safe fallback completed it                |
 | `warning`  | A recoverable failure or degraded path needing review                |
 | `info`     | Operational event useful for diagnosis without user impact           |
