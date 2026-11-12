@@ -1,0 +1,55 @@
+name: Off-site Database Backup
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offsite-database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: github.ref == 'refs/heads/main' && vars.R2_BACKUPS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - run: npm ci
+      - name: Create PostgreSQL 17 custom-format dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$SUPABASE_DB_URL" ]]; then
+            echo "::error::SUPABASE_DB_URL is not configured."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/homeish-backup"
+          file="homeish-db-$(date -u +%Y%m%dT%H%M%SZ).dump"
+          docker run --rm \
+            --volume "$RUNNER_TEMP/homeish-backup:/backup" \
+            --env SUPABASE_DB_URL \
+            --env PGSSLMODE=require \
+            postgres:17 \
+            pg_dump --dbname="$SUPABASE_DB_URL" \
+              --format=custom --compress=9 --no-owner --no-acl \
+              --file="/backup/$file"
+          echo "DATABASE_DUMP=$RUNNER_TEMP/homeish-backup/$file" >> "$GITHUB_ENV"
+      - name: Upload to Cloudflare R2 and prune backups older than 30 days
+        run: npm run backup:r2:database -- "$DATABASE_DUMP"
+        env:
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ vars.R2_BUCKET_NAME }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

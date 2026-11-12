@@ -1,17 +1,30 @@
-// Run registered daily work once per society and IST calendar day.
+// Run registered daily work per society or globally for the IST calendar day.
 import { logUnexpectedError } from '../logging/error-logger';
 import {
   claimDailyJobRun,
+  completeDailyJobRun,
   listDailyJobSocieties,
   runBillingDailyTaskPrivileged,
+  runRetentionPrivileged,
+  runServiceRequestAutoClosePrivileged,
+  runVisitorExpirationPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
 
-export interface DailyJobTask {
+export interface DailySocietyJobTask {
   name: string;
+  scope?: 'society';
   run: (societyId: string, periodKey: string) => Promise<void>;
 }
+
+export interface DailyGlobalJobTask {
+  name: string;
+  scope: 'global';
+  run: (periodKey: string) => Promise<void>;
+}
+
+export type DailyJobTask = DailySocietyJobTask | DailyGlobalJobTask;
 
 export interface DailyJobCount {
   job: string;
@@ -20,10 +33,10 @@ export interface DailyJobCount {
   failed: number;
 }
 
-function billingTask(name: BillingDailyTask): DailyJobTask {
+function billingTask(name: BillingDailyTask): DailySocietyJobTask {
   return {
     name,
-    run: async (societyId, periodKey) => {
+    run: async (societyId: string, periodKey: string) => {
       await runBillingDailyTaskPrivileged(name, societyId, periodKey);
     },
   };
@@ -34,6 +47,25 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
   billingTask('billing.late_fees'),
   billingTask('billing.reminders'),
   billingTask('billing.stale_payments'),
+  {
+    name: 'visitor.expire',
+    run: async (societyId: string) => {
+      await runVisitorExpirationPrivileged(societyId);
+    },
+  },
+  {
+    name: 'service_request.auto_close',
+    run: async (societyId: string, periodKey: string) => {
+      await runServiceRequestAutoClosePrivileged(societyId, periodKey);
+    },
+  },
+  {
+    name: 'housekeeping.retention',
+    scope: 'global',
+    run: async (periodKey) => {
+      await runRetentionPrivileged(periodKey);
+    },
+  },
 ];
 
 export function dailyPeriodKey(now: Date): string {
@@ -71,6 +103,41 @@ export async function runDailyJobs(
       skipped: 0,
       failed: 0,
     };
+    if (task.scope === 'global') {
+      try {
+        const keySociety = societies[0];
+        if (
+          keySociety &&
+          !(await claimDailyJobRun(keySociety.id, task.name, periodKey))
+        ) {
+          count.skipped = 1;
+          counts.push(count);
+          continue;
+        }
+
+        await task.run(periodKey);
+        if (keySociety) {
+          await completeDailyJobRun(keySociety.id, task.name, periodKey);
+        }
+        count.succeeded = 1;
+      } catch (error) {
+        count.failed = 1;
+        await logUnexpectedError(error, {
+          requestId,
+          route: '/api/jobs/daily',
+          source: 'job',
+          moduleKey: task.name.split('.')[0],
+        }).catch(() => {
+          console.error('Homeish daily job failure could not be logged.', {
+            requestId,
+            job: task.name,
+          });
+        });
+      }
+      counts.push(count);
+      continue;
+    }
+
     for (const society of societies) {
       try {
         const claimed = await claimDailyJobRun(
@@ -84,6 +151,7 @@ export async function runDailyJobs(
         }
 
         await task.run(society.id, periodKey);
+        await completeDailyJobRun(society.id, task.name, periodKey);
         count.succeeded += 1;
       } catch (error) {
         count.failed += 1;

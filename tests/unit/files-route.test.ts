@@ -318,6 +318,72 @@ describe('private file URL routes', () => {
     });
   });
 
+  it('issues owner-scoped request photo links only for enabled request access', async () => {
+    const userId = '8a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+    const requestId = '9a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+    mocks.buildRequestContext.mockResolvedValue({
+      db: {
+        storage: {
+          from: () => ({ createSignedUploadUrl: mocks.createSignedUploadUrl }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [{ societyId, roles: ['resident'] }],
+      roles: ['resident'],
+      societyId,
+      societyStatus: 'active',
+      requestId: 'request-file-test',
+      userId,
+      enabledModules: new Set(['service_request']),
+    });
+
+    const response = await issueUpload(
+      request('/api/files/upload-url', {
+        bucket: 'request-files',
+        contentType: 'image/jpeg',
+        sizeBytes: 1200,
+        requestId,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await responseBody(response)).data?.path).toMatch(
+      new RegExp(
+        `^${societyId}/${userId}/requests/${requestId}/[0-9a-f-]+\\.jpg$`,
+      ),
+    );
+    expect(mocks.enforceRateLimit).toHaveBeenCalledWith(
+      'fileUploadUserHourly',
+      userId,
+      'request-file-test',
+    );
+
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: { storage: { from: vi.fn() } },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [{ societyId, roles: ['resident'] }],
+      roles: ['resident'],
+      societyId,
+      societyStatus: 'active',
+      userId,
+      enabledModules: new Set(),
+    });
+    const disabled = await issueUpload(
+      request('/api/files/upload-url', {
+        bucket: 'request-files',
+        contentType: 'image/jpeg',
+        sizeBytes: 1200,
+        requestId,
+      }),
+    );
+    expect(disabled.status).toBe(403);
+    expect(mocks.createSignedUploadUrl).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects unsupported MIME types, oversize files, cross-origin and excess count', async () => {
     const wrongType = await issueUpload(
       request('/api/files/upload-url', {

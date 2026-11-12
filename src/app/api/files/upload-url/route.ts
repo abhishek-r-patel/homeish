@@ -51,6 +51,14 @@ const issueSchema = z.discriminatedUnion('bucket', [
       unitId: z.uuid(),
     })
     .strict(),
+  z
+    .object({
+      bucket: z.literal('request-files'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      requestId: z.uuid(),
+    })
+    .strict(),
 ]);
 
 const pathSchema = z
@@ -146,6 +154,32 @@ export async function POST(request: Request) {
           .createSignedUploadUrl(path);
         if (error || !data) {
           throw new Error('Could not issue the payment proof upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'request-files') {
+        authorizeRequest(context, {
+          moduleKey: 'service_request',
+          permission: 'request:create',
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension = input.contentType === 'image/jpeg' ? 'jpg' : 'png';
+        const directory = `${societyId}/${context.userId}/requests/${input.requestId}`;
+        const path = `${directory}/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the request photo upload token.', {
             cause: error,
           });
         }

@@ -12,6 +12,7 @@ import {
   SOCIETY_LOGO_CONTENT_TYPES,
   verifyFileAttachment,
 } from '../files/attachments';
+import { runUserErasurePrivileged } from '../privileged';
 
 export { societyStatusSchema } from './status';
 export type { DeveloperSocietyStatus } from './status';
@@ -115,6 +116,24 @@ export type DeveloperActionResult =
       fieldErrors?: Readonly<Record<string, string>>;
       retryAfterSeconds?: number;
     };
+
+export async function eraseUser(
+  context: RequestContext,
+  userId: string,
+): Promise<void> {
+  if (!context.isDeveloper || !context.mfaVerified) {
+    throw new AppError('FORBIDDEN');
+  }
+  const parsedUserId = z.uuid().safeParse(userId);
+  if (!parsedUserId.success) {
+    throw new ValidationError({ userId: 'Choose a valid user account.' });
+  }
+  await runUserErasurePrivileged(
+    parsedUserId.data,
+    context.userId,
+    context.requestId,
+  );
+}
 
 export async function requireDeveloperContext(
   requestId = createRequestId(),
@@ -608,6 +627,11 @@ export async function listDeveloperAudit(filters: AuditFilters) {
 export async function getDeveloperHealthSummary() {
   const context = await requireDeveloperContext();
   return rpc(context, 'developer_health_summary', {});
+}
+
+export async function getDeveloperDailyJobHealthSummary() {
+  const context = await requireDeveloperContext();
+  return rpc(context, 'daily_job_health_summary', {});
 }
 
 function toJson(value: unknown): Json {

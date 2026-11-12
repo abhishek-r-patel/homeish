@@ -10,6 +10,10 @@ import {
   billingSettingsSchema,
   DEFAULT_BILLING_SETTINGS,
 } from '../billing/validation';
+import {
+  DEFAULT_SERVICE_REQUEST_SETTINGS,
+  serviceRequestSettingsSchema,
+} from '../service-requests/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -325,7 +329,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   service_request: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_SERVICE_REQUEST_SETTINGS,
     key: 'service_request',
     name: 'Service Requests',
     navigation: {
@@ -347,9 +351,21 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         { href: '/requests', label: 'Requests', permission: 'request:list' },
       ],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'request:list': ['admin', 'committee', 'resident'],
+      'request:create': ['admin', 'resident'],
+      'request:categories:manage': ['admin'],
+      'request:assign': ['admin'],
+      'request:update': ['admin', 'committee', 'resident'],
+      'request:reject': ['admin'],
+      'request:close': ['resident'],
+      'request:rate': ['resident'],
+      'request:comment': ['admin', 'committee', 'resident'],
+      'request:assignees:list': ['admin'],
+      'request:report': ['admin', 'committee'],
+    },
+    settingsAccess: { auto_close_days: 'developer' },
+    settingsSchema: serviceRequestSettingsSchema,
   },
   staff: {
     core: false,

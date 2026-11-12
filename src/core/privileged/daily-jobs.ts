@@ -39,3 +39,24 @@ export async function claimDailyJobRun(
   }
   return data !== null;
 }
+
+export async function completeDailyJobRun(
+  societyId: string,
+  jobName: string,
+  periodKey: string,
+): Promise<void> {
+  const { data, error } = await privilegedClient
+    .from('job_run_keys')
+    .update({ completed_at: new Date().toISOString() })
+    .eq('society_id', societyId)
+    .eq('job_name', jobName)
+    .eq('period_key', periodKey)
+    .is('completed_at', null)
+    .select('society_id')
+    .maybeSingle();
+  if (error || !data) {
+    throw new Error('Could not mark a daily job run complete.', {
+      cause: error,
+    });
+  }
+}

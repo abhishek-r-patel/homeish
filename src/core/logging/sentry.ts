@@ -107,7 +107,12 @@ export function initializeSentry(): void {
 
 export function captureSentryException(
   error: unknown,
-  context: { requestId: string; route: string; source: string },
+  context: {
+    requestId: string;
+    route: string;
+    source: string;
+    severity: 'critical' | 'error' | 'warning' | 'info';
+  },
 ): void {
   if (!enabled) {
     return;
@@ -116,7 +121,7 @@ export function captureSentryException(
   Sentry.withScope((scope) => {
     scope.setTag('request_id', scrubLogText(context.requestId));
     scope.setTag('source', scrubLogText(context.source));
-    scope.setTag('severity', 'error');
+    scope.setTag('severity', context.severity);
     scope.setTag('route', scrubLogText(context.route.split('?')[0] ?? ''));
     Sentry.captureException(error);
   });
