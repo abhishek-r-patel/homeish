@@ -23,7 +23,7 @@ function isAuthorized(request: Request): boolean {
   return timingSafeEqual(suppliedDigest, expectedDigest);
 }
 
-export async function POST(request: Request): Promise<Response> {
+async function handleDailyJobRequest(request: Request): Promise<Response> {
   const requestId = createRequestId(request.headers.get(REQUEST_ID_HEADER));
   const headers = {
     'Cache-Control': 'no-store',
@@ -63,4 +63,12 @@ export async function POST(request: Request): Promise<Response> {
       headers,
     });
   }
+}
+
+export async function GET(request: Request): Promise<Response> {
+  return handleDailyJobRequest(request);
+}
+
+export async function POST(request: Request): Promise<Response> {
+  return handleDailyJobRequest(request);
 }

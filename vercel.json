@@ -8,5 +8,11 @@
       "*": false
     }
   },
+  "crons": [
+    {
+      "path": "/api/jobs/daily",
+      "schedule": "30 18 * * *"
+    }
+  ],
   "ignoreCommand": "node scripts/vercel-ignore-build.mjs"
 }

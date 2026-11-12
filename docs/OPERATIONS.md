@@ -14,6 +14,13 @@ and whether every expected daily task for active societies, including global
 retention, completed within 36 hours. With no active societies, daily-job
 freshness is not applicable.
 
+The beta Vercel project schedules `GET /api/jobs/daily` daily at 18:30 UTC
+(00:00 India Standard Time). Vercel sends the configured `CRON_SECRET` as a
+bearer token. Cron Jobs use UTC and are not retried after a failed invocation;
+check the Vercel function logs and developer health page after an alert. The
+daily run keys make a duplicate invocation safe. Verify the configured job
+after deployment with `vercel crons list --project beta-homeish --scope arp-dev`.
+
 The health endpoint does not itself send alerts. Configure the external monitor
 to notify the on-call contact. Investigate a failure in the hosting logs and the
 developer health page; do not expose internal health details through the public
@@ -109,6 +116,7 @@ For a restore drill or recovery:
 
    Resolve any Supabase-managed schema or extension errors before considering
    the restore successful. Do not add destructive clean/drop options.
+
 4. Point `SUPABASE_DB_URL` at the new project for the integrity check and run
    `npm run integrity:check`. Investigate every failed check before accepting
    the restore.
