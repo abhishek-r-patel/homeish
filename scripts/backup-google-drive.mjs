@@ -1,9 +1,11 @@
-// Upload encrypted PostgreSQL dumps to a private Google Drive folder and retain 30 days.
+// Transfer encrypted PostgreSQL dumps through private Google Drive and retain 30 days.
 import { createHash } from 'node:crypto';
-import { createReadStream } from 'node:fs';
-import { mkdtemp, rm, stat } from 'node:fs/promises';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { link, mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { pathToFileURL } from 'node:url';
 import {
   decryptDatabaseDump,
@@ -233,6 +235,90 @@ async function fileMd5(filePath) {
   return hash.digest('hex');
 }
 
+export async function downloadDatabaseDump({
+  client,
+  folderId,
+  archiveName,
+  outputPath,
+}) {
+  if (!ARCHIVE_NAME_PATTERN.test(archiveName)) {
+    throw new Error(
+      'Database archive filename does not match the backup format.',
+    );
+  }
+  await verifyBackupFolder({ client, folderId });
+  const query = new URLSearchParams({
+    q: `'${folderId}' in parents and name = '${archiveName}' and trashed = false and appProperties has { key='homeishBackup' and value='${BACKUP_MARKER}' }`,
+    fields:
+      'nextPageToken,incompleteSearch,files(id,name,mimeType,size,md5Checksum,parents,appProperties,trashed,shared,ownedByMe)',
+    spaces: 'drive',
+    pageSize: '2',
+  });
+  const listing = await readJson(
+    await client.request(`/drive/v3/files?${query}`),
+  );
+  if (
+    !Array.isArray(listing?.files) ||
+    listing.files.length !== 1 ||
+    listing.incompleteSearch === true ||
+    listing.nextPageToken !== undefined
+  ) {
+    throw new Error(
+      'Expected exactly one complete, app-marked backup matching the archive name.',
+    );
+  }
+  const stored = listing.files[0];
+  const fileId = requireDriveId(stored?.id);
+  const size = Number(stored?.size);
+  if (
+    stored.name !== archiveName ||
+    stored.mimeType !== 'application/octet-stream' ||
+    typeof stored.size !== 'string' ||
+    !/^[1-9]\d*$/.test(stored.size) ||
+    !Number.isSafeInteger(size) ||
+    typeof stored.md5Checksum !== 'string' ||
+    !/^[a-f0-9]{32}$/i.test(stored.md5Checksum) ||
+    !Array.isArray(stored.parents) ||
+    !stored.parents.includes(folderId) ||
+    stored.appProperties?.homeishBackup !== BACKUP_MARKER ||
+    stored.trashed !== false ||
+    stored.shared !== false ||
+    stored.ownedByMe !== true
+  ) {
+    throw new Error('Google Drive returned invalid or unsafe backup metadata.');
+  }
+  const directory = await mkdtemp(
+    join(dirname(resolve(outputPath)), '.homeish-download-'),
+  );
+  const temporaryPath = join(directory, archiveName);
+  try {
+    const response = await client.request(
+      `/drive/v3/files/${fileId}?alt=media`,
+      { timeoutMs: 30 * 60_000 },
+    );
+    if (!response.body) {
+      throw new Error('Google Drive returned an empty backup download.');
+    }
+    await pipeline(
+      Readable.fromWeb(response.body),
+      createWriteStream(temporaryPath, { flags: 'wx', mode: 0o600 }),
+    );
+    const downloaded = await stat(temporaryPath);
+    if (
+      downloaded.size !== size ||
+      (await fileMd5(temporaryPath)) !== stored.md5Checksum.toLowerCase()
+    ) {
+      throw new Error(
+        'The downloaded backup size or checksum does not match Drive.',
+      );
+    }
+    await link(temporaryPath, outputPath);
+    return { fileId, encryptedSizeBytes: downloaded.size };
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
 export async function uploadDatabaseDump({
   client,
   folderId,
@@ -355,6 +441,18 @@ export async function uploadDatabaseDump({
 }
 
 async function main(args) {
+  if (args.length === 3 && args[0] === 'download-database') {
+    const result = await downloadDatabaseDump({
+      client: createDriveClient(),
+      folderId: requiredEnvironment('GOOGLE_DRIVE_FOLDER_ID'),
+      archiveName: args[1],
+      outputPath: args[2],
+    });
+    console.info(
+      `Verified encrypted database download ${args[1]} (${result.encryptedSizeBytes} bytes).`,
+    );
+    return;
+  }
   if (args.length === 3 && args[0] === 'decrypt-database') {
     const key = readBackupKey();
     await decryptDatabaseDump({ filePath: args[1], outputPath: args[2], key });
@@ -373,7 +471,7 @@ async function main(args) {
     )
   ) {
     throw new Error(
-      'Usage: node scripts/backup-google-drive.mjs check | upload-database <dump-file> [--skip-prune] | decrypt-database <archive> <new-output-file>',
+      'Usage: node scripts/backup-google-drive.mjs check | upload-database <dump-file> [--skip-prune] | download-database <archive-name> <new-output-file> | decrypt-database <archive> <new-output-file>',
     );
   }
   const key = readBackupKey();

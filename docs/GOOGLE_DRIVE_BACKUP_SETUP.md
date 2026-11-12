@@ -253,14 +253,20 @@ normal commit, release, and hosted-database approvals:
    You must keep a separate offline/password-manager recovery copy. Do not
    store it in Drive with the backups; losing it makes the archives unusable.
 2. Verify OAuth and folder access from an approved runner: in GitHub Actions,
-   run **Off-site Database Backup** manually on `feature-build-1**. The
+   run **Off-site Database Backup** manually on `feature-build-1`. The
    `verify-configuration` job checks OAuth, the encryption key, and the private
    Drive folder. After it passes, `manual-test-backup` checks the test database
    project reference, creates a PostgreSQL 17 dump, encrypts it, and verifies
    the Drive copy's size and checksum. It does not prune existing Drive files.
    The scheduled backup job remains main-only and opt-in.
-3. Download and authenticate/decrypt the encrypted test backup, then restore it
-   to a **different, new, empty** approved target and run the integrity checks.
+3. The dependent `manual-restore-drill` job downloads that exact Drive archive,
+   verifies its size/checksum, and authenticates/decrypts it. It restores all
+   archived schemas to a **new, empty** Supabase-compatible PostgreSQL 17
+   database on the approved runner and runs the integrity checks. No hosted
+   target is touched, no database artifact is published, and the disposable
+   database and temporary files are removed even on failure. This does not
+   recover omitted owner/ACL settings, Supabase Storage file contents, or hosted
+   service configuration; those require separate recovery verification.
 4. Verify failure notifications and storage capacity, then separately approve
    activation and the normal release to `main`.
 

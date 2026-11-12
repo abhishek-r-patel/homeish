@@ -136,21 +136,31 @@ Backup** manually runs the `verify-configuration` job, which performs only this
 check with the repository secrets (no database access or upload). Dispatching
 it on `feature-build-1` also enables a test-only backup job, which requires
 `SUPABASE_TESTDB_URL`, verifies the `homeish-testdb` project reference, and
-never prunes Drive files. Do not disable TLS verification.
+never prunes Drive files. Its `manual-restore-drill` follow-up downloads that
+exact archive from Drive, verifies its size/checksum, authenticates/decrypts it,
+and restores all archived schemas into a new disposable database on the runner.
+The installed Supabase CLI supplies compatible PostgreSQL 17 and native
+extensions such as Supabase Vault; plain PostgreSQL without those extensions
+cannot certify a complete restore. The drill runs the read-only integrity checks
+and always removes the disposable database, dump, and private diagnostic files.
+It never uses a hosted restore-target credential or publishes database artifacts.
+Do not disable TLS verification or bypass corporate access restrictions.
 Retain an offline recovery copy of the encryption key separately from Drive.
 On key rotation, retain old keys until every archive encrypted with them has
 expired, with a private record of the key's applicable backup dates.
 
 For a restore drill or recovery:
 
-1. Create a **new, empty Supabase project** for the restore. Never restore into
-   the live project or a project containing data that must be preserved.
+1. Use the approved disposable runner drill above, or create a **new, empty
+   Supabase project** for manual recovery. Never restore into the live project
+   or a project containing data that must be preserved.
 2. Download the chosen `homeish-db-...dump.enc` archive from the private Drive
    folder using the authorized backup account. Obtain its recovery key from
    the separate secure store and populate `BACKUP_ENCRYPTION_KEY` in the
    ignored backup profile. Authenticate/decrypt to a new, unused local path:
 
    ```powershell
+   node --env-file=.env.backup.local scripts/backup-google-drive.mjs download-database "homeish-db-YYYYMMDDTHHMMSSZ.dump.enc" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump.enc"
    node --env-file=.env.backup.local scripts/backup-google-drive.mjs decrypt-database "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump.enc" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
    pg_restore --list "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
    ```
@@ -161,11 +171,14 @@ For a restore drill or recovery:
    URL:
 
    ```powershell
-   pg_restore --no-owner --no-privileges --dbname "$env:RESTORE_DB_URL" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
+   pg_restore --no-owner --no-privileges --exit-on-error --single-transaction --dbname "$env:RESTORE_DB_URL" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
    ```
 
    Resolve any Supabase-managed schema or extension errors before considering
-   the restore successful. Do not add destructive clean/drop options.
+   the restore successful. Do not skip schemas or add destructive clean/drop
+   options. Vault secrets require their project-bound encryption-key recovery;
+   the disposable drill fails if restored `vault.secrets` is nonempty rather
+   than claiming those secrets are recoverable with an unrelated local key.
 
 4. Point `SUPABASE_DB_URL` at the new project for the integrity check and run
    `npm run integrity:check`. Investigate every failed check before accepting
@@ -174,6 +187,9 @@ For a restore drill or recovery:
    failures, and measured RTO in the restricted incident record. Remove the
    temporary connection variable and decrypted local dump when finished.
 
+The dump intentionally omits owner/ACL settings; the drill verifies the archived
+schema and data, not reconstruction of role attributes, grants, or hosted service
+configuration. Those must be reapplied and verified before service recovery.
 The database-only backup cannot restore photos, payment proofs, QR codes, or
 logos. File-copy backups remain deferred pending an approved least-privilege
 source credential. A restore with referenced files missing is not a complete
