@@ -90,9 +90,10 @@ describe('daily jobs', () => {
 
   it('continues other societies and tasks after a task failure', async () => {
     mocks.claimDailyJobRun.mockResolvedValue(true);
+    const failure = new Error('task failed');
     const firstTask = vi
       .fn()
-      .mockRejectedValueOnce(new Error('task failed'))
+      .mockRejectedValueOnce(failure)
       .mockResolvedValue(undefined);
     const secondTask = vi.fn().mockResolvedValue(undefined);
 
@@ -111,7 +112,29 @@ describe('daily jobs', () => {
     expect(firstTask).toHaveBeenCalledTimes(2);
     expect(secondTask).toHaveBeenCalledTimes(2);
     expect(mocks.logUnexpectedError).toHaveBeenCalledTimes(1);
+    expect(mocks.logUnexpectedError).toHaveBeenCalledWith(
+      failure,
+      expect.objectContaining({ severity: 'critical' }),
+    );
     expect(mocks.completeDailyJobRun).toHaveBeenCalledTimes(3);
+  });
+
+  it('marks a failed global task as critical', async () => {
+    const failure = new Error('retention failed');
+    const run = vi.fn().mockRejectedValue(failure);
+
+    await expect(
+      runDailyJobs({
+        tasks: [{ name: 'housekeeping.retention', scope: 'global', run }],
+      }),
+    ).resolves.toEqual([
+      { job: 'housekeeping.retention', succeeded: 0, skipped: 0, failed: 1 },
+    ]);
+
+    expect(mocks.logUnexpectedError).toHaveBeenCalledWith(
+      failure,
+      expect.objectContaining({ severity: 'critical' }),
+    );
   });
 
   it('runs global tasks once and uses the first society for run-key idempotency', async () => {
