@@ -126,6 +126,7 @@ export async function runDailyJobs(
           requestId,
           route: '/api/jobs/daily',
           source: 'job',
+          severity: 'critical',
           moduleKey: task.name.split('.')[0],
         }).catch(() => {
           console.error('Homeish daily job failure could not be logged.', {
@@ -159,6 +160,7 @@ export async function runDailyJobs(
           requestId,
           route: '/api/jobs/daily',
           source: 'job',
+          severity: 'critical',
           societyId: society.id,
           moduleKey: task.name.split('.')[0],
         }).catch(() => {

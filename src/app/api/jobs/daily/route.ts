@@ -56,6 +56,7 @@ async function handleDailyJobRequest(request: Request): Promise<Response> {
       requestId,
       route: '/api/jobs/daily',
       source: 'job',
+      severity: 'critical',
     });
     const internalError = new AppError('INTERNAL_ERROR', { referenceId });
     return Response.json(failureEnvelope(internalError), {
