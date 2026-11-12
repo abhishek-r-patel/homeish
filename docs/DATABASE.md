@@ -166,6 +166,8 @@ No API grants: rows are added only by a database administrator (ARCHITECTURE 8.1
 
 Constraints: unique `(id)` and implicit tenant root; `unit_label`, `status`, `gate_login_mode`, `guard_identification` checks. Editable by: developer (all columns); admin (profile columns, `unit_label`, `gate_login_mode`, `guard_identification` only) through a function.
 
+Daily jobs discover trial and active society IDs through the service-role-only `daily_job_societies()` function; direct table access remains revoked.
+
 ### 3.4 `modules` — reference data
 
 | Column     | Type    | Null | Notes                                                                                                            |
