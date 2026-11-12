@@ -113,8 +113,11 @@ the new archive and unrelated files. Listing, authorization, privacy, upload,
 verification, or deletion failures fail the job rather than report success.
 Interrupted uploads fail without pruning; rerunning starts a new upload.
 
-Keep the folder Restricted and monitor Drive storage quota. GitHub Actions
-failure notifications must reach the operator; a skipped job is not a backup.
+Keep the folder Restricted and monitor the account's free 15 GB storage, which
+is shared with its Gmail and Photos; about 30 daily archives must fit. GitHub
+Actions failure notifications must reach the operator; a skipped job is not a
+backup. GitHub disables schedules in this public repository after 60 days
+without repository activity; confirm the workflow remains enabled.
 The runner's plaintext dump and temporary encrypted file are cleaned up. Do not
 upload database dumps as GitHub artifacts. These dumps do not contain Supabase
 Storage files.

@@ -25,6 +25,26 @@ backup is verified, and a restore drill passes. Publishing this guide on
 Keep a password manager open for temporary secure storage. Do not copy secret
 values into repository files, issues, screenshots, email, or chat messages.
 
+## Cost: free tier only
+
+Backups go into the backup account's normal Google Drive (**My Drive**) and use
+its free 15 GB storage. That storage is shared with the account's Gmail and
+Google Photos, so keep those unused. The Cloud project only registers your free
+OAuth app. This setup does not use Google Cloud Storage, Google Workspace,
+Google One, a service account, or a shared drive.
+
+- Do not add a billing account or card, start a Google Cloud free trial, or buy
+  storage. Nothing in this guide needs them.
+- Google lists standard Drive API use at no additional cost. A daily backup
+  makes about seven Drive API calls (under 300 quota units), far below Google's
+  daily billing threshold of 400,000,000 quota units per project.
+- `drive.file` is a non-sensitive scope. Full Drive access is restricted and
+  requires additional Google verification, including a security assessment.
+- Expired backups are permanently deleted, not moved to Trash. About 30 daily
+  encrypted backups are kept.
+- The backup job runs on GitHub Actions standard runners, which are free for
+  this public repository.
+
 ## 1. Sign in to the backup account
 
 1. Open [Google Cloud Console](https://console.cloud.google.com/).
@@ -32,10 +52,9 @@ values into repository files, issues, screenshots, email, or chat messages.
 3. Configure two-step verification and recovery options for that account.
 4. Accept Google's terms if prompted.
 
-The Drive account's storage quota applies to these backups. Enabling the Drive
-API does not purchase extra Drive storage. If a page asks you to enable paid
-billing or buy a subscription, stop and review it rather than approving it
-automatically.
+If Google Cloud offers a free trial or asks for billing or card details, close
+or skip it; this setup does not need them. If a required step cannot continue
+without billing, stop and report that step number.
 
 ## 2. Create the Cloud project
 
@@ -253,8 +272,8 @@ approved secure channel into ignored `.env.backup.local`, using
 | Works briefly, then `invalid_grant` | Default Playground client (24 hours), Testing status (7 days), revoked access, or expired consent; fix the setup and replace the refresh-token secret       |
 | Folder inaccessible / HTTP 404      | Correct folder ID and same OAuth client; folder created through step 9, not only the Drive UI                                                               |
 | Folder privacy check fails          | Folder is Restricted, untrashed, owned by this account, has the exact marker, and permits new files                                                         |
-| Upload quota/storage error          | Check Drive storage usage and API quotas; do not broaden permissions or silently skip the backup                                                            |
-| No scheduled run                    | Workflow must be released to `main`, explicitly enabled, and have all credentials configured; a skipped job is not a backup                                 |
+| Upload quota/storage error          | Check the account's 15 GB usage across Drive, Gmail and Photos, and API quotas; do not broaden permissions or silently skip the backup                      |
+| No scheduled run                    | Released to `main`, enabled, and configured; GitHub disables public-repo schedules after 60 days without repository activity; skipped jobs are not backups  |
 
 ## Official references
 
