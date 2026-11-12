@@ -89,24 +89,66 @@ Beta email, 2026-11-11:
 
 ## Database backups and restore
 
-No off-site backup destination is currently configured. R2 activation was
-declined because it requires usage-based billing. Its implementation is retained
-but disabled: the main-branch job requires the Actions variable
-`R2_BACKUPS_ENABLED=true` as well as the documented variables and secrets.
-Do not enable it without an approved R2 subscription.
+Google Drive replaces the disabled R2 implementation. Owner authorization is
+pending; no off-site backup has been produced or restore-tested. Follow the
+[phone-friendly Google API setup guide](GOOGLE_DRIVE_BACKUP_SETUP.md). Do not
+store the Google account password or enable the workflow before verification.
 
-Once explicitly enabled and configured, the workflow creates a PostgreSQL 17
-custom-format database dump each day and stores it in the private R2 bucket
-under `database/`. It removes objects older than 30 days only after a successful
-upload. A green workflow run is required to confirm a backup was produced.
-Database dumps do not contain Supabase Storage files.
+The main-only workflow requires `GOOGLE_DRIVE_BACKUPS_ENABLED=true`, the private
+app-created `GOOGLE_DRIVE_FOLDER_ID` variable, and Actions secrets
+`GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`,
+`GOOGLE_DRIVE_REFRESH_TOKEN`, `BACKUP_ENCRYPTION_KEY`, and `SUPABASE_DB_URL`.
+Keep credentials scoped to backup steps, not the application or npm installation.
+Use a separate folder/configuration per database environment and verify the
+approved source URL before activation; never silently repoint it to live.
+
+Once explicitly enabled, it runs daily at 02:15 UTC. PostgreSQL 17 creates and
+lists a custom-format dump before AES-256-GCM encryption. The archive is named
+`homeish-db-YYYYMMDDTHHMMSSZ.dump.enc`. Only ciphertext is uploaded. Drive's
+reported byte count and MD5 transport checksum must match the local archive
+before retention starts; AES-GCM provides content authentication during recovery.
+The script permanently deletes only matching app-marked archives in the selected
+folder whose Drive creation time is strictly older than 30 days. It preserves
+the new archive and unrelated files. Listing, authorization, privacy, upload,
+verification, or deletion failures fail the job rather than report success.
+Interrupted uploads fail without pruning; rerunning starts a new upload.
+
+Keep the folder Restricted and monitor Drive storage quota. GitHub Actions
+failure notifications must reach the operator; a skipped job is not a backup.
+The runner's plaintext dump and temporary encrypted file are cleaned up. Do not
+upload database dumps as GitHub artifacts. These dumps do not contain Supabase
+Storage files.
+
+For an approved local check, copy `.env.backup.example` to ignored
+`.env.backup.local`, populate OAuth/folder/key values securely, and run:
+
+```powershell
+node --env-file=.env.backup.local scripts/backup-google-drive.mjs check
+```
+
+This backup profile is separate from application profiles and is loaded
+explicitly with Node, not `scripts/with-env.mjs`. If corporate policy/network
+blocks Google APIs, use an approved runner. Do not disable TLS verification.
+Retain an offline recovery copy of the encryption key separately from Drive.
+On key rotation, retain old keys until every archive encrypted with them has
+expired, with a private record of the key's applicable backup dates.
 
 For a restore drill or recovery:
 
 1. Create a **new, empty Supabase project** for the restore. Never restore into
    the live project or a project containing data that must be preserved.
-2. Download the chosen `homeish-db-...dump` object from R2 using an authorized
-   operator account. Keep the dump and connection details private.
+2. Download the chosen `homeish-db-...dump.enc` archive from the private Drive
+   folder using the authorized backup account. Obtain its recovery key from
+   the separate secure store and populate `BACKUP_ENCRYPTION_KEY` in the
+   ignored backup profile. Authenticate/decrypt to a new, unused local path:
+
+   ```powershell
+   node --env-file=.env.backup.local scripts/backup-google-drive.mjs decrypt-database "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump.enc" "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
+   pg_restore --list "C:\secure\path\homeish-db-YYYYMMDDTHHMMSSZ.dump"
+   ```
+
+   A wrong key, tampered/truncated archive, or existing output file fails without
+   publishing plaintext. Keep the decrypted dump and connection details private.
 3. Use PostgreSQL 17 client tools and restore to the new project's connection
    URL:
 
@@ -122,7 +164,7 @@ For a restore drill or recovery:
    the restore.
 5. Record restore start/end time, selected backup timestamp, target project,
    failures, and measured RTO in the restricted incident record. Remove the
-   temporary connection variable when finished.
+   temporary connection variable and decrypted local dump when finished.
 
 The database-only backup cannot restore photos, payment proofs, QR codes, or
 logos. File-copy backups remain deferred pending an approved least-privilege

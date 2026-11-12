@@ -388,11 +388,11 @@ Runs once a day (the free scheduler tier allows only one run per day and may sta
 | Request auto-close            | Closes `resolved` requests after the society's days (SRQ-3)                                  |
 | Module reminders (post-MVP)   | AMC expiry, low stock                                                                        |
 | Retention                     | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket |
-| Backup export                 | Nightly PostgreSQL 17 dump is uploaded to Cloudflare R2 by GitHub Actions; the weekly storage-file copy is deferred (DATABASE 15.2) |
+| Backup export                 | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2) |
 
 A task failure is logged (error log + Sentry) and does not stop the other tasks; the next day's run retries unfinished work because tasks are idempotent.
 
-The off-site database backup runs separately from this route on the `main` branch. It uses `SUPABASE_DB_URL` and a bucket-scoped R2 token from GitHub Actions configuration; database dumps are retained for 30 days. It does not use or require the Supabase service-role key.
+The off-site database backup runs separately from this route, only on `main` with `GOOGLE_DRIVE_BACKUPS_ENABLED=true`. It uses `SUPABASE_DB_URL`, OAuth `drive.file` credentials, a private app-created folder, and a separate encryption key from GitHub Actions configuration. Matching encrypted archives are retained for 30 days, with pruning only after remote size/checksum verification. It does not use or require the Supabase service-role key. Owner setup and the first verified backup/restore remain pending; see [the Google Drive guide](GOOGLE_DRIVE_BACKUP_SETUP.md).
 
 ### 6.2 File upload flow
 
@@ -508,8 +508,9 @@ Names only; values are kept in the host's secret store and never committed (ARCH
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY`                         | Public                                                       | Public client key; safe because the database rules decide access                                     | All                         |
 | `SUPABASE_SERVICE_ROLE_KEY`                             | **Server secret**                                            | Privileged identity (only the isolated server module, ARCHITECTURE 8.4)                              | All except local-only tools |
 | `SUPABASE_DB_URL`                                       | **Server secret (CI/migrations/backup only, never runtime)** | Direct database connection                                                                           | CI                          |
-| `R2_ACCOUNT_ID`, `R2_BUCKET_NAME`                       | GitHub Actions variable                                      | Cloudflare R2 account endpoint and dedicated backup bucket                                            | `main` backup workflow     |
-| `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`              | **GitHub Actions secret**                                    | R2 S3 credentials scoped to the dedicated backup bucket                                               | `main` backup workflow     |
+| `GOOGLE_DRIVE_FOLDER_ID`, `GOOGLE_DRIVE_BACKUPS_ENABLED` | GitHub Actions variable                                    | Private app-created backup folder; explicit opt-in (default disabled)                                | `main` backup workflow     |
+| `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REFRESH_TOKEN` | **GitHub Actions secret**                 | Own OAuth app and offline `drive.file` authorization, never the Google account password              | `main` backup workflow     |
+| `BACKUP_ENCRYPTION_KEY`                                 | **GitHub Actions secret; separate offline recovery copy**    | 32-byte AES-256-GCM key encoded as 64 hex characters; never stored alongside archives                  | Backup/restore tooling    |
 | `BREVO_API_KEY`                                         | **Server secret**                                            | Send receipts and alerts                                                                             | Staging, production         |
 | `BREVO_DAILY_EMAIL_QUOTA`                               | Server                                                       | Per-deployment daily sending cap; an alert is sent at 80%                                            | Staging, production         |
 | `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`                 | Server                                                       | Verified sender                                                                                      | Staging, production         |
