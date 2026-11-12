@@ -79,6 +79,7 @@ export async function logUnexpectedError(
       requestId: context.requestId,
       route,
       source: context.source,
+      severity,
     });
   } catch {
     console.error('Homeish Sentry reporting failed.', {

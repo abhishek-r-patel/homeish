@@ -548,8 +548,8 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
 | P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired entries and uncollected parcels, request auto-close) and verify run-key idempotency across all of them | M    |
 | P9.2 | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                            | L    |
-| P9.3 | Anonymise-user function for erasure requests (developer-run) and its audit                                                                                                                              | M    |
-| P9.4 | Nightly off-site database export workflow (scheduled in CI), encrypted storage, 30-day retention; weekly file copy for payment screenshots and assets                                                   | M    |
+| P9.3 | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                         | M    |
+| P9.4 | Google Drive replaces disabled R2 support: encrypted export, verification, and 30-day retention; OAuth setup, first backup, and restore drill pending. Weekly file copy still needs an approved source credential | M    |
 | P9.5 | Monitoring: uptime check on the health route, Sentry alert rules for critical errors, "last daily run" age alert (36 hours), email-quota alert, developer health page additions                         | M    |
 | P9.6 | Integrity-check script suite from DATABASE 15.3 runnable on demand and monthly                                                                                                                          | M    |
 
@@ -558,6 +558,21 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 **Tests:** each task idempotent (run twice, same result); retention removes exactly what the schedule says and keeps money records; anonymise keeps history valid; integrity checks detect a deliberately corrupted sample on a test database; alert rules fire in staging.
 
 **Completion criteria:** a full day cycle runs on staging unattended; a missed run is detected; a backup is produced and restorable to a **new** project (the first restore drill, DATABASE 15.2).
+
+**P9 external setup status, 2026-11-11:** beta (`beta-homeish`, on the shared
+`homeish-testdb` project) has its full staging environment, an external uptime
+monitor, a Sentry critical-error alert, and Brevo transactional email. The
+monitor's notification and recovery, the alert rule (with a synthetic event),
+and a real Brevo delivery to the alert inbox were verified (OPERATIONS.md). Beta
+still runs the P5–P7 release (`9010a32`). When P9 is released, apply its
+migrations to the hosted test database and verify daily-job freshness detection,
+application-originated critical alerts, and an unattended day cycle on beta.
+
+**Operational setup still required outside the repository:** complete
+Google Drive OAuth configuration using the [phone setup guide](GOOGLE_DRIVE_BACKUP_SETUP.md),
+produce a verified encrypted backup and perform a restore drill in a new project.
+Google Drive has been selected; R2 support is replaced, not enabled. The weekly
+Storage-file backup remains deferred as noted in DATABASE 15.2.
 
 ---
 

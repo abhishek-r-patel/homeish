@@ -1,6 +1,21 @@
 // Verify installable assets and browser interactions for the foundation fixture.
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
+
+async function expectPopoverWithinViewport(
+  popover: Locator,
+  width: number,
+  height: number,
+) {
+  await expect(async () => {
+    const bounds = await popover.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(height);
+  }).toPass({ timeout: 5000 });
+}
 
 test('serves Homeish install metadata and icons', async ({ page, request }) => {
   const manifestResponse = await request.get('/manifest.webmanifest');
@@ -132,12 +147,7 @@ test('foundation controls support keyboard, focus, calendar and file interaction
     page.getByRole('button', { name: 'Close filters' }),
   ).toBeFocused();
   await page.setViewportSize({ width: 768, height: 600 });
-  const popoverBounds = await filterDialog.boundingBox();
-  expect(popoverBounds).not.toBeNull();
-  expect(popoverBounds!.x).toBeGreaterThanOrEqual(0);
-  expect(popoverBounds!.y).toBeGreaterThanOrEqual(0);
-  expect(popoverBounds!.x + popoverBounds!.width).toBeLessThanOrEqual(768);
-  expect(popoverBounds!.y + popoverBounds!.height).toBeLessThanOrEqual(600);
+  await expectPopoverWithinViewport(filterDialog, 768, 600);
   await page.keyboard.press('Escape');
   await expect(filterDialog).not.toBeVisible();
   await expect(filtersTrigger).toBeFocused();
@@ -173,4 +183,27 @@ test('foundation controls support keyboard, focus, calendar and file interaction
   await expect(page.getByText('sample.pdf')).toBeVisible();
   await page.getByRole('button', { name: 'Remove sample.pdf' }).click();
   await expect(page.getByText('sample.pdf')).not.toBeVisible();
+});
+
+test('filter popovers stay within resized viewports with offscreen triggers', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/fixtures/foundation');
+  const filtersTrigger = page.getByRole('button', { name: /^Filters/ });
+  await filtersTrigger.click();
+  const filterDialog = page.getByRole('dialog', { name: 'Filters' });
+  await expect(filterDialog).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Close filters' }),
+  ).toBeFocused();
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.setViewportSize({ width: 768, height: 600 });
+  await expect
+    .poll(() =>
+      filtersTrigger.evaluate((trigger) => trigger.getBoundingClientRect().top),
+    )
+    .toBeGreaterThan(600);
+  await expectPopoverWithinViewport(filterDialog, 768, 600);
 });

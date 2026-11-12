@@ -2,7 +2,10 @@
 import Link from 'next/link';
 import { Card, StatusChip } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
-import { getDeveloperHealthSummary } from '@/core/developer/console';
+import {
+  getDeveloperDailyJobHealthSummary,
+  getDeveloperHealthSummary,
+} from '@/core/developer/console';
 import type { Json } from '@/core/db/database.types';
 import type { ProductStatus } from '@/components/ui/data-display';
 
@@ -16,6 +19,14 @@ type HealthSummary = {
   last24HoursBySeverity: Partial<Record<Severity, number>>;
   topRoutes: { route: string; total: number }[];
   societyErrors: { societyId: string; societyName: string; total: number }[];
+};
+
+type DailyJobHealth = {
+  lastDailyRunAt: string | null;
+  ageHours: number | null;
+  staleAfterHours: 36;
+  missingTaskCount: number;
+  isFresh: boolean;
 };
 
 function isRecord(
@@ -90,6 +101,33 @@ function parseHealthSummary(value: Json): HealthSummary | null {
   };
 }
 
+function parseDailyJobHealth(value: Json): DailyJobHealth | null {
+  if (
+    !isRecord(value) ||
+    (value.lastDailyRunAt !== null &&
+      (typeof value.lastDailyRunAt !== 'string' ||
+        Number.isNaN(Date.parse(value.lastDailyRunAt)))) ||
+    (value.ageHours !== null &&
+      (typeof value.ageHours !== 'number' ||
+        !Number.isInteger(value.ageHours) ||
+        value.ageHours < 0)) ||
+    value.staleAfterHours !== 36 ||
+    typeof value.missingTaskCount !== 'number' ||
+    !Number.isInteger(value.missingTaskCount) ||
+    value.missingTaskCount < 0 ||
+    typeof value.isFresh !== 'boolean'
+  ) {
+    return null;
+  }
+  return {
+    lastDailyRunAt: value.lastDailyRunAt,
+    ageHours: value.ageHours,
+    staleAfterHours: 36,
+    missingTaskCount: value.missingTaskCount,
+    isFresh: value.isFresh,
+  };
+}
+
 const severities: readonly Severity[] = [
   'critical',
   'error',
@@ -105,8 +143,13 @@ const severityStatuses: Readonly<Record<Severity, ProductStatus>> = {
 };
 
 export default async function DeveloperHealthPage() {
-  const summary = parseHealthSummary(await getDeveloperHealthSummary());
-  if (!summary) {
+  const [summaryValue, dailyJobHealthValue] = await Promise.all([
+    getDeveloperHealthSummary(),
+    getDeveloperDailyJobHealthSummary(),
+  ]);
+  const summary = parseHealthSummary(summaryValue);
+  const dailyJobHealth = parseDailyJobHealth(dailyJobHealthValue);
+  if (!summary || !dailyJobHealth) {
     return (
       <ErrorPanel
         message="The health summary could not be read. Try again or review the error logs."
@@ -188,6 +231,27 @@ export default async function DeveloperHealthPage() {
               )}
             </ol>
           )}
+        </Card>
+        <Card title="Daily jobs">
+          <div className="grid gap-space-2">
+            <p className="text-body-strong">
+              {dailyJobHealth.isFresh
+                ? 'Expected daily jobs completed within the last 36 hours.'
+                : `${dailyJobHealth.missingTaskCount} expected daily job run(s) are missing or overdue.`}
+            </p>
+            <p className="text-caption text-ink-muted">
+              Last completed run:{' '}
+              {dailyJobHealth.lastDailyRunAt
+                ? new Date(dailyJobHealth.lastDailyRunAt).toLocaleString()
+                : 'No completed run recorded'}
+            </p>
+            {dailyJobHealth.ageHours !== null && (
+              <p className="text-caption text-ink-muted">
+                Age: {dailyJobHealth.ageHours} hours; alert threshold:{' '}
+                {dailyJobHealth.staleAfterHours} hours.
+              </p>
+            )}
+          </div>
         </Card>
       </div>
     </section>

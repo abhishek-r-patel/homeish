@@ -14,6 +14,9 @@ it('enables only release branch deployments with the project build gate', () => 
     '*': false,
   });
   expect(config.ignoreCommand).toBe('node scripts/vercel-ignore-build.mjs');
+  expect(config.crons).toEqual([
+    { path: '/api/jobs/daily', schedule: '30 18 * * *' },
+  ]);
 });
 
 it.each([

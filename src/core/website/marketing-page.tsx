@@ -203,6 +203,9 @@ export function MarketingPage({
       <footer className="border-t border-rule">
         <div className="mx-auto flex max-w-content-marketing flex-wrap justify-between gap-space-4 px-space-5 py-space-6 text-caption text-ink-muted">
           <p>Homeish. A little more like home.</p>
+          <Link className="underline underline-offset-4" href="/privacy">
+            Privacy policy
+          </Link>
           <p>In development. Not open for live society use.</p>
         </div>
       </footer>

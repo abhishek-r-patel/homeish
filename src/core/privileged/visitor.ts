@@ -1,5 +1,7 @@
 // Keep guard-sensitive visitor mutations behind server-verified guard sessions.
+import 'server-only';
 import { invokeUntypedRpc } from '../db/untyped-rpc';
+import { createRequestId } from '../errors';
 import { privilegedClient } from './server-client';
 
 type CreateVisitorEntryArgs = {
@@ -76,4 +78,13 @@ export function checkInPreApprovedVisitorPrivileged<T>(args: {
     'visitor_pre_approval_check_in',
     args,
   );
+}
+
+export async function runVisitorExpirationPrivileged(
+  societyId: string,
+): Promise<number> {
+  return invokeUntypedRpc<number>(privilegedClient, 'visitor_expire_run', {
+    p_society_id: societyId,
+    p_request_trace: createRequestId(),
+  });
 }

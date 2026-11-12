@@ -253,6 +253,84 @@ describe.skipIf(!hasDatabase)('database visitors', () => {
         { commit: true },
       );
 
+      const expiredEntryId = await database.asRole(
+        'service_role',
+        null,
+        async (client) => {
+          const result = await client.query<{ id: string }>(
+            `select id
+             from public.visitor_create_entry(
+               $1, $2, $3, $4, 'Expired Visitor', null, 'guest', 1,
+               null, null, $5, 'visitor-expiry-create'
+             )`,
+            [
+              fixture.guardId,
+              fixture.societyId,
+              fixture.unitId,
+              fixture.guardRosterId,
+              '6e4d44d0-76a7-45e8-bfa8-83b8e3f8637a',
+            ],
+          );
+          return result.rows[0]?.id;
+        },
+        { commit: true },
+      );
+      if (!expiredEntryId) {
+        throw new Error('Pending visitor expiry fixture was not created.');
+      }
+      await database.asSuperuser((client) =>
+        client.query(
+          `update public.visitor_entries
+           set respond_by = clock_timestamp() - interval '1 minute'
+           where id = $1`,
+          [expiredEntryId],
+        ),
+      );
+
+      const directExpiry = await dbError(
+        database.asRole('authenticated', { sub: fixture.adminId }, (client) =>
+          client.query(
+            `select public.visitor_expire_run($1, 'visitor-expiry-direct')`,
+            [fixture.societyId],
+          ),
+        ),
+      );
+      expect(directExpiry.code).toBe('42501');
+
+      const expiryCounts = await database.asRole(
+        'service_role',
+        null,
+        async (client) => {
+          const first = await client.query<{ visitor_expire_run: number }>(
+            `select public.visitor_expire_run(
+              $1, 'visitor-expiry-run'
+            )`,
+            [fixture.societyId],
+          );
+          const repeated = await client.query<{
+            visitor_expire_run: number;
+          }>(
+            `select public.visitor_expire_run(
+              $1, 'visitor-expiry-retry'
+            )`,
+            [fixture.societyId],
+          );
+          return [
+            first.rows[0]?.visitor_expire_run,
+            repeated.rows[0]?.visitor_expire_run,
+          ];
+        },
+        { commit: true },
+      );
+      expect(expiryCounts).toEqual([1, 0]);
+      const expiredEntry = await database.asSuperuser((client) =>
+        client.query<{ status: string }>(
+          `select status from public.visitor_entries where id = $1`,
+          [expiredEntryId],
+        ),
+      );
+      expect(expiredEntry.rows[0]?.status).toBe('expired');
+
       const forbiddenUnit = await dbError(
         database.asRole(
           'authenticated',

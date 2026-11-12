@@ -14,6 +14,7 @@ import {
 import {
   createFirstAdmin,
   createSociety,
+  eraseUser,
   firstAdminSchema,
   requireDeveloperContext,
   setErrorStatus,
@@ -121,6 +122,9 @@ const errorStatusSchema = z
       .max(500)
       .transform((value) => value || null),
   })
+  .strict();
+const userErasureSchema = z
+  .object({ userId: z.uuid(), confirmation: z.literal('ERASE') })
   .strict();
 
 export async function createSocietyAction(
@@ -260,5 +264,22 @@ export async function setErrorStatusAction(
     revalidatePath('/developer/errors');
     revalidatePath(`/developer/errors/${input.errorId}`);
     return { ok: true, message: 'Error status updated.' };
+  });
+}
+
+export async function eraseUserAction(
+  formData: FormData,
+): Promise<DeveloperActionResult> {
+  return runDeveloperAction('developer.users.erase', async (requestId) => {
+    const context = await requireDeveloperContext(requestId);
+    const { userId } = parseForm(userErasureSchema, formData);
+    await eraseUser(context, userId);
+    revalidatePath('/developer');
+    revalidatePath('/developer/audit');
+    revalidatePath('/developer/errors');
+    return {
+      ok: true,
+      message: 'Auth account deleted; historical records remain anonymized.',
+    };
   });
 }

@@ -18,6 +18,25 @@ test('loads the root route with no automated accessibility violations', async ({
   expect(accessibility.violations).toEqual([]);
 });
 
+test('links the marketing footer to an accessible privacy policy', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page
+    .getByRole('contentinfo')
+    .getByRole('link', { name: 'Privacy policy' })
+    .click();
+  // The dev server compiles /privacy on first visit, which can exceed 5s under parallel load.
+  await expect(page).toHaveURL('/privacy', { timeout: 20_000 });
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Privacy policy' }),
+  ).toBeVisible();
+  const googleSection = page.getByRole('region', { name: 'Google user data' });
+  await expect(googleSection).toContainText('drive.file');
+  await expect(googleSection).toContainText('Limited Use requirements');
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
 test('renders the email-code sign-in screen accessibly', async ({ page }) => {
   await page.goto('/login');
   await expect(
