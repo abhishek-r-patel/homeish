@@ -18,6 +18,7 @@ describe('database integrity workflow', () => {
     expect(job).toContain('secrets.SUPABASE_TESTDB_URL');
     expect(job).toContain('oqyagsabodaueghtrocv');
     expect(job).toContain('npm run integrity:check');
+    expect(job).toContain("NODE_USE_SYSTEM_CA: '1'");
     expect(job).not.toContain('secrets.SUPABASE_DB_URL');
     expect(job).not.toContain('upload-artifact');
   });

@@ -60,4 +60,5 @@ jobs:
       - name: Run read-only database integrity checks
         run: npm run integrity:check
         env:
+          NODE_USE_SYSTEM_CA: '1'
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_TESTDB_URL }}
