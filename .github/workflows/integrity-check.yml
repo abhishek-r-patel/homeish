@@ -9,12 +9,15 @@ permissions:
   contents: read
 
 concurrency:
-  group: database-integrity-main
+  group: database-integrity-testdb
   cancel-in-progress: false
 
 jobs:
-  integrity:
-    if: github.ref == 'refs/heads/main'
+  testdb-integrity:
+    if: >-
+      github.ref == 'refs/heads/main' ||
+      (github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/feature-build-1')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -26,7 +29,35 @@ jobs:
           node-version: 24.20.0
           cache: npm
       - run: npm ci
+      - name: Confirm the connection targets homeish-testdb
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_TESTDB_URL }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          const expectedProjectRef = 'oqyagsabodaueghtrocv';
+          const value = process.env.SUPABASE_DB_URL;
+          if (!value) {
+            console.error('SUPABASE_TESTDB_URL is not configured.');
+            process.exit(1);
+          }
+          let url;
+          try {
+            url = new URL(value);
+          } catch {
+            console.error('SUPABASE_TESTDB_URL is malformed.');
+            process.exit(1);
+          }
+          const projectRef =
+            url.hostname.match(/^db\.([^.]+)\.supabase\.co$/)?.[1] ??
+            url.username.match(/^postgres\.([a-z0-9]+)$/i)?.[1];
+          if (url.protocol !== 'postgresql:' || projectRef !== expectedProjectRef) {
+            console.error('SUPABASE_TESTDB_URL does not target homeish-testdb.');
+            process.exit(1);
+          }
+          console.info('Verified integrity-check source: homeish-testdb.');
+          NODE
       - name: Run read-only database integrity checks
         run: npm run integrity:check
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_TESTDB_URL }}
