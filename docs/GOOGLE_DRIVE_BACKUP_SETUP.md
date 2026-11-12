@@ -248,8 +248,10 @@ normal commit, release, and hosted-database approvals:
    Actions secret `BACKUP_ENCRYPTION_KEY` through an approved secure mechanism.
    You must keep a separate offline/password-manager recovery copy. Do not
    store it in Drive with the backups; losing it makes the archives unusable.
-2. Verify OAuth and folder access from an approved runner. If Google APIs are
-   blocked on the corporate laptop, use an approved runner, not a bypass.
+2. Verify OAuth and folder access from an approved runner: in GitHub Actions,
+   run **Off-site Database Backup** manually. Its `verify-configuration` job
+   runs only the check (no database access, no upload). The scheduled backup job
+   still runs only on `main` once enabled.
 3. Verify the source is the intended non-production database for the first
    test; produce an encrypted backup and verify its remote size/checksum.
 4. Download and authenticate/decrypt it; restore to a **new, empty** approved

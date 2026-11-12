@@ -13,6 +13,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Manual, read-only check of the Drive/OAuth/encryption settings; never touches the database.
+  verify-configuration:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - run: npm ci
+      - name: Verify OAuth, encryption configuration, and private Drive folder
+        run: npm run backup:drive:check
+        env:
+          GOOGLE_DRIVE_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_CLIENT_ID }}
+          GOOGLE_DRIVE_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}
+          GOOGLE_DRIVE_REFRESH_TOKEN: ${{ secrets.GOOGLE_DRIVE_REFRESH_TOKEN }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ vars.GOOGLE_DRIVE_FOLDER_ID }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+
   backup:
     if: github.ref == 'refs/heads/main' && vars.GOOGLE_DRIVE_BACKUPS_ENABLED == 'true'
     runs-on: ubuntu-latest

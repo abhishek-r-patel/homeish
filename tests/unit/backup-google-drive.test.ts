@@ -517,3 +517,18 @@ it('keeps scheduled backups opt-in on main, validates dumps, and cleans plaintex
   expect(workflow).not.toContain('R2_');
   expect(workflow).not.toContain('upload-artifact');
 });
+
+it('offers a manual, check-only configuration job without database access', () => {
+  const workflow = readFileSync(
+    new URL('../../.github/workflows/offsite-backup.yml', import.meta.url),
+    'utf8',
+  );
+  const verifyJob = workflow.slice(
+    workflow.indexOf('verify-configuration:'),
+    workflow.indexOf('\n  backup:'),
+  );
+  expect(verifyJob).toContain("if: github.event_name == 'workflow_dispatch'");
+  expect(verifyJob).toContain('npm run backup:drive:check');
+  expect(verifyJob).not.toContain('SUPABASE_DB_URL');
+  expect(verifyJob).not.toContain('backup:drive:database');
+});

@@ -131,7 +131,10 @@ node --env-file=.env.backup.local scripts/backup-google-drive.mjs check
 
 This backup profile is separate from application profiles and is loaded
 explicitly with Node, not `scripts/with-env.mjs`. If corporate policy/network
-blocks Google APIs, use an approved runner. Do not disable TLS verification.
+blocks Google APIs, use an approved runner: dispatching **Off-site Database
+Backup** manually runs the `verify-configuration` job, which performs only this
+check with the repository secrets (no database access or upload). Do not
+disable TLS verification.
 Retain an offline recovery copy of the encryption key separately from Drive.
 On key rotation, retain old keys until every archive encrypted with them has
 expired, with a private record of the key's applicable backup dates.
