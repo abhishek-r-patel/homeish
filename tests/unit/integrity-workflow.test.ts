@@ -16,9 +16,9 @@ describe('database integrity workflow', () => {
       "github.event_name == 'workflow_dispatch' &&\n      github.ref == 'refs/heads/feature-build-1'",
     );
     expect(job).toContain('secrets.SUPABASE_TESTDB_URL');
+    expect(job).toContain('vars.SUPABASE_TESTDB_CA_CERT');
     expect(job).toContain('oqyagsabodaueghtrocv');
     expect(job).toContain('npm run integrity:check');
-    expect(job).toContain("NODE_USE_SYSTEM_CA: '1'");
     expect(job).not.toContain('secrets.SUPABASE_DB_URL');
     expect(job).not.toContain('upload-artifact');
   });

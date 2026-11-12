@@ -32,11 +32,13 @@ jobs:
       - name: Confirm the connection targets homeish-testdb
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_TESTDB_URL }}
+          SUPABASE_DB_CA_CERT: ${{ vars.SUPABASE_TESTDB_CA_CERT }}
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
           const expectedProjectRef = 'oqyagsabodaueghtrocv';
           const value = process.env.SUPABASE_DB_URL;
+          const rootCertificate = process.env.SUPABASE_DB_CA_CERT?.trim();
           if (!value) {
             console.error('SUPABASE_TESTDB_URL is not configured.');
             process.exit(1);
@@ -55,10 +57,15 @@ jobs:
             console.error('SUPABASE_TESTDB_URL does not target homeish-testdb.');
             process.exit(1);
           }
+          if (!rootCertificate?.startsWith('-----BEGIN CERTIFICATE-----') ||
+              !rootCertificate.includes('-----END CERTIFICATE-----')) {
+            console.error('SUPABASE_TESTDB_CA_CERT is not configured as a PEM certificate.');
+            process.exit(1);
+          }
           console.info('Verified integrity-check source: homeish-testdb.');
           NODE
       - name: Run read-only database integrity checks
         run: npm run integrity:check
         env:
-          NODE_USE_SYSTEM_CA: '1'
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_TESTDB_URL }}
+          SUPABASE_DB_CA_CERT: ${{ vars.SUPABASE_TESTDB_CA_CERT }}

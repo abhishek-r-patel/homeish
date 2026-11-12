@@ -99,6 +99,12 @@ all 13 read-only integrity checks passed. This verifies the test database only,
 not the future production source or full service recovery. Keep scheduled
 backups disabled and do not store the Google account password.
 
+The monthly **Database Integrity** workflow is pinned to `homeish-testdb`. It
+requires the repository Actions variable `SUPABASE_TESTDB_CA_CERT`, containing
+the server root certificate downloaded from that project's Database Settings.
+The checker uses it as a trust root and retains `verify-full` hostname
+verification.
+
 The main-only workflow requires `GOOGLE_DRIVE_BACKUPS_ENABLED=true`, the private
 app-created `GOOGLE_DRIVE_FOLDER_ID` variable, and Actions secrets
 `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`,

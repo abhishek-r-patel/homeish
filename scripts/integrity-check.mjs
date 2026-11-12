@@ -378,6 +378,32 @@ export async function runIntegrityChecks(client) {
   return results;
 }
 
+export function databasePoolOptions(databaseUrl, rootCertificate) {
+  const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(
+    databaseUrl.hostname,
+  );
+  // SSL URL params can override the explicit TLS options below in `pg`.
+  for (const parameter of [
+    'ssl',
+    'sslmode',
+    'sslcert',
+    'sslkey',
+    'sslrootcert',
+    'sslpassword',
+    'sslnegotiation',
+    'uselibpqcompat',
+  ]) {
+    databaseUrl.searchParams.delete(parameter);
+  }
+  const ca = isLocal ? undefined : rootCertificate?.trim();
+  return {
+    connectionString: databaseUrl.toString(),
+    max: 1,
+    connectionTimeoutMillis: 10_000,
+    ssl: isLocal ? false : { rejectUnauthorized: true, ...(ca ? { ca } : {}) },
+  };
+}
+
 function requiredDatabaseUrl(environment = process.env) {
   const value = environment.SUPABASE_DB_URL?.trim();
   if (!value) {
@@ -392,24 +418,9 @@ function requiredDatabaseUrl(environment = process.env) {
 
 async function main() {
   const databaseUrl = requiredDatabaseUrl();
-  const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(
-    databaseUrl.hostname,
+  const pool = new Pool(
+    databasePoolOptions(databaseUrl, process.env.SUPABASE_DB_CA_CERT),
   );
-  for (const parameter of [
-    'sslmode',
-    'sslcert',
-    'sslkey',
-    'sslrootcert',
-    'sslpassword',
-  ]) {
-    databaseUrl.searchParams.delete(parameter);
-  }
-  databaseUrl.searchParams.set('sslmode', isLocal ? 'disable' : 'verify-full');
-  const pool = new Pool({
-    connectionString: databaseUrl.toString(),
-    max: 1,
-    connectionTimeoutMillis: 10_000,
-  });
 
   try {
     const client = await pool.connect();
