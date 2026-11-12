@@ -23,7 +23,7 @@ vi.mock('../../src/core/jobs/daily', () => ({
   runDailyJobs: mocks.runDailyJobs,
 }));
 
-import { POST } from '../../src/app/api/jobs/daily/route';
+import { GET, POST } from '../../src/app/api/jobs/daily/route';
 
 describe('/api/jobs/daily', () => {
   beforeEach(() => {
@@ -90,6 +90,20 @@ describe('/api/jobs/daily', () => {
         jobs: [{ job: 'core.reminders', succeeded: 1, skipped: 2, failed: 0 }],
       },
     });
+    expect(mocks.runDailyJobs).toHaveBeenCalledWith(
+      expect.objectContaining({ requestId: expect.any(String) }),
+    );
+  });
+
+  it('accepts authenticated GET requests from the Vercel scheduler', async () => {
+    const response = await GET(
+      new Request('https://homeish.test/api/jobs/daily', {
+        method: 'GET',
+        headers: { authorization: 'Bearer scheduled-secret' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
     expect(mocks.runDailyJobs).toHaveBeenCalledWith(
       expect.objectContaining({ requestId: expect.any(String) }),
     );
