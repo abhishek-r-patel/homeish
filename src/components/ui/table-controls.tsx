@@ -430,10 +430,15 @@ export function FilterBar({
       );
 
       panel.style.maxHeight = `${height}px`;
+      const renderedHeight = panel.getBoundingClientRect().height;
+      const top = placeAbove
+        ? anchorRect.top - gap - renderedHeight
+        : anchorRect.bottom + gap;
       panel.style.left = `${left}px`;
-      panel.style.top = placeAbove
-        ? `${Math.max(margin, anchorRect.top - gap - height)}px`
-        : `${anchorRect.bottom + gap}px`;
+      panel.style.top = `${Math.max(
+        margin,
+        Math.min(top, window.innerHeight - margin - renderedHeight),
+      )}px`;
       panel.style.visibility = 'visible';
     }
 
