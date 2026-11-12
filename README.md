@@ -74,6 +74,14 @@ Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_A
 - Beta runs the P5–P7 release (`9010a32`). After a cache-free rebuild, `https://beta-homeish.vercel.app/api/health` returned `200`. P9 is not yet released.
 - `homeish` and the paused `homeish-live` project are unchanged; no real society credentials are connected.
 
+### Off-site backup setup
+
+Google Drive replaces the disabled R2 backup implementation. Follow the
+[phone-friendly Google API setup guide](docs/GOOGLE_DRIVE_BACKUP_SETUP.md) for
+owner authorization, then the [backup/restore runbook](docs/OPERATIONS.md#database-backups-and-restore).
+Automation remains disabled until credentials, an encrypted backup, and a restore
+drill are verified. No Google account password is used.
+
 ## Checks
 
 ```powershell
