@@ -362,6 +362,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'request:reject': ['admin'],
       'request:close': ['resident'],
       'request:rate': ['resident'],
+      'request:upvote': ['resident'],
       'request:comment': ['admin', 'committee', 'resident'],
       'request:assignees:list': ['admin'],
       'request:report': ['admin', 'committee'],

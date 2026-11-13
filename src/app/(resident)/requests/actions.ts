@@ -12,6 +12,7 @@ import {
   rejectServiceRequest,
   reopenServiceRequest,
   saveServiceRequestCategory,
+  setServiceRequestUpvote,
   updateServiceRequestStatus,
 } from '@/core/service-requests/operations';
 
@@ -117,5 +118,19 @@ export async function addServiceRequestCommentAction(formData: FormData) {
     const result = await addServiceRequestComment(input, requestId);
     refreshRequestViews(result.request_id);
     return { data: result, message: 'Your comment was added.' };
+  });
+}
+
+export async function setServiceRequestUpvoteAction(formData: FormData) {
+  return runServerAction('request.upvote', async (requestId) => {
+    const result = await setServiceRequestUpvote(
+      parseInput(formData),
+      requestId,
+    );
+    refreshRequestViews(result.request_id);
+    return {
+      data: result,
+      message: result.has_upvoted ? 'Upvote added.' : 'Upvote removed.',
+    };
   });
 }

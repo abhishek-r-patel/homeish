@@ -33,10 +33,12 @@ export default async function AdminRequestsPage({
   const categoryId = z.uuid().safeParse(rawCategoryId).success
     ? rawCategoryId
     : undefined;
+  const sort = single(params, 'sort') === 'votes' ? 'votes' : 'default';
   const workspace = await getServiceRequestWorkspace({
     status,
     categoryId,
     limit: 50,
+    sort,
   });
   if (!workspace.canReport) {
     return (
@@ -142,6 +144,21 @@ export default async function AdminRequestsPage({
                   ))}
                 </select>
               </label>
+              <label
+                className="grid gap-space-1 text-body-strong"
+                htmlFor="admin-request-sort"
+              >
+                Sort
+                <select
+                  className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+                  defaultValue={sort}
+                  id="admin-request-sort"
+                  name="sort"
+                >
+                  <option value="default">Overdue first, then newest</option>
+                  <option value="votes">Most upvoted</option>
+                </select>
+              </label>
               <button
                 className="min-h-12 rounded-md border border-rule-strong px-space-4 font-semibold"
                 type="submit"
@@ -212,6 +229,9 @@ export default async function AdminRequestsPage({
                       {request.assignee_name ??
                         request.assigned_vendor_name ??
                         'nobody'}
+                      {request.location_type === 'common_area'
+                        ? ` · ${request.upvote_count} ${request.upvote_count === 1 ? 'upvote' : 'upvotes'}`
+                        : ''}
                     </span>
                   </Link>
                 </li>

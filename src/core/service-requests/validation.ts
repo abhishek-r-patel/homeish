@@ -87,6 +87,17 @@ export const serviceRequestSummarySchema = serviceRequestSchema.extend({
   requester_name: z.string().nullable(),
   assignee_name: z.string().nullable(),
   is_overdue: z.boolean(),
+  upvote_count: z.number().int().nonnegative(),
+  has_upvoted: z.boolean(),
+});
+
+export const serviceRequestUpvoteInputSchema = z
+  .object({ requestId: uuid, upvoted: z.boolean() })
+  .strict();
+export const serviceRequestUpvoteSchema = z.object({
+  request_id: uuid,
+  upvote_count: z.number().int().nonnegative(),
+  has_upvoted: z.boolean(),
 });
 
 export const serviceRequestCommentSchema = z.object({

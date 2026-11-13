@@ -2,8 +2,10 @@
 import Link from 'next/link';
 import { EmptyState } from '@/components/ui/feedback';
 import { StatusChip } from '@/components/ui/data-display';
+import { ServiceRequestUpvote } from '@/components/service-requests/upvote';
 import { getServiceRequestWorkspace } from '@/core/service-requests/operations';
 import { serviceRequestStatusSchema } from '@/core/service-requests/validation';
+import { setServiceRequestUpvoteAction } from './actions';
 
 export const metadata = {
   title: 'Requests | Homeish',
@@ -99,6 +101,20 @@ export default async function ResidentRequestsPage({
                   {request.is_overdue ? ' · Overdue' : ''}
                 </span>
               </Link>
+              {request.location_type === 'common_area' ? (
+                <div className="mt-space-3">
+                  <ServiceRequestUpvote
+                    action={setServiceRequestUpvoteAction}
+                    canVote={
+                      workspace.canUpvote &&
+                      !['closed', 'rejected'].includes(request.status)
+                    }
+                    count={request.upvote_count}
+                    requestId={request.id}
+                    upvoted={request.has_upvoted}
+                  />
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
