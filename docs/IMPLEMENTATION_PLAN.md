@@ -643,7 +643,7 @@ Each follows the same pattern: a migration group, module registration, permissio
 | Phase | Module                      | PRD        | Status                                                                          |
 | ----- | --------------------------- | ---------- | ------------------------------------------------------------------------------- |
 | P11   | Notice board (`notice`)     | §5.8, D-21 | Built on `feature-build-1`; awaiting the testdb migration push and owner review |
-| P12   | Staff (`staff`)             | §5.5, P2-1 | Not started                                                                     |
+| P12   | Staff (`staff`)             | §5.5, P2-1 | Built and locally verified on `feature-build-1`; hosted migration awaits approval |
 | P13   | Housekeeping inventory      | §5.6, P2-2 | Not started                                                                     |
 | P14   | AMC (`amc`)                 | §5.7, P2-3 | Not started                                                                     |
 | P15   | Amenity booking (`amenity`) | §5.9, D-22 | Not started                                                                     |
@@ -654,6 +654,13 @@ Each follows the same pattern: a migration group, module registration, permissio
 - Core layer in `src/core/notices/` and permissions `notice:list`, `notice:create`, `notice:manage` and `notice:archive`.
 - Screens: `/notices` and `/notices/{id}` for residents; `/admin/notices` (current and archive), `/admin/notices/new`, `/admin/notices/{id}` and `/admin/notices/{id}/edit` for admin and committee.
 - Tests: `tests/integration/database-notices.test.ts`, `tests/unit/notice-board.test.ts`, `tests/e2e/notices.spec.ts` and the `/fixtures/notices` screen in the accessibility sweep.
+
+**P12 Staff management** is implemented and locally verified; the hosted testdb migration remains pending separate approval:
+
+- Migration `20261115130000_staff_module.sql`: domestic and society staff profiles, unit links and review state, private photos, unit-day blocks, gate attendance and society-shift attendance.
+- Resident/admin/guard workflows are available under `/staff`, `/admin/staff` and `/guard/staff`. Approval is required by default; duplicate-phone matches create pending unit links; resident day blocks are unit-only; guards receive no phone or ID details; entry and exit are explicit.
+- Local validation passed: the full repository gate (including 411 unit tests), 105 PostgreSQL integration tests (9 skipped), 71 browser tests and the optimized production build. Staff browser workflows use a development-only in-memory fixture; database integration tests exercise the RPCs against local PostgreSQL.
+- Do not apply this migration to `homeish-testdb` until separately approved.
 
 Also deferred until triggered: SMS/WhatsApp and mobile-number login (PRD D-06, A-35), payment gateway, native apps, offline mode (ARCHITECTURE Section 3).
 

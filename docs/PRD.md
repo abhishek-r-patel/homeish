@@ -329,6 +329,10 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `STF-6` Resident can notify "do not allow today" for a staff member (one-day block). **[A-20]** P2 within module.
 - `STF-7` Admin can block a staff member society-wide; guard sees blocked warning.
 - `STF-8` Society staff: simple shift attendance (present/absent/leave) marked by admin; payroll is out of scope. **[D-19 — Approved 2026-11-09]**
+- `STF-9` A resident may submit a staff member whose phone matches an existing society profile; the new unit link stays pending for administrator review, and the matched profile is not exposed to that resident before approval.
+- `STF-10` A resident's one-day block denies entry only to that resident's unit; it does not block entry to other linked units.
+- `STF-11` Guard staff views show only name, photo, role and entry warnings; phone and ID details remain hidden.
+- `STF-12` A staff member can have only one open gate attendance at a time; gate entry and exit are explicit actions.
 
 **User Stories**
 
@@ -806,8 +810,8 @@ Staff, Housekeeping inventory, AMC, Notice board, Amenity booking (in that order
 | A-16 | Advance payments kept as credit                                                                                                                   |
 | A-17 | Bills immutable once published; corrections via adjustments                                                                                       |
 | A-18 | Vendors are text records, not users                                                                                                               |
-| A-19 | Domestic staff add flow requires admin approval by setting                                                                                        |
-| A-20 | Per-day staff block is P2                                                                                                                         |
+| A-19 | Domestic staff add flow requires admin approval by setting; default is required, and matching profiles require review before linking                 |
+| A-20 | Per-day staff block is P2; the block applies only to the requesting resident's unit                                                                |
 | A-21 | AMC–service request link is P2                                                                                                                    |
 | A-22 | Scale: 100 societies, 100k users in year 1                                                                                                        |
 | A-23 | DPDP Act principles apply                                                                                                                         |
@@ -868,6 +872,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 | D-35 | Percentage late-fee precision and limit          | **Approved 2026-11-10:** allow up to two decimal places, greater than 0% and capped at 100%; fixed fees use whole paise; late fees remain off by default                                                                                                                                 | Closed   |
 | D-36 | Billing due date and area-charge rounding        | **Approved 2026-11-10:** each society chooses a due day (1–31 or last day of the month) and rounds per-square-foot charges to the nearest rupee or paise, half up; defaults are the 10th and nearest rupee                                                                               | Closed   |
 | D-29 | Dues ownership on tenant/owner change            | **Approved 2026-11-09:** balance stays with the unit and is billed to the current owner                                                                                                                                                                                                  | Closed   |
+| D-37 | Staff registration, gate and block behavior       | **Approved during P12 kickoff:** approval required by default; matching profiles create a pending link; day blocks are unit-only; guards do not see phone or ID details; entry/exit is explicit with one open attendance; society shifts are one status per person/date | Closed   |
 
 ---
 

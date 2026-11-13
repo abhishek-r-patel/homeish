@@ -433,6 +433,9 @@ Defined in Section 9.
 | UPI pay panel         | R-04                  | Payee name, UPI ID with Copy, QR, Pay with UPI App button, "last changed" line                                         |
 | Payment review row    | A-07                  | Unit, amount, reference with Copy, screenshot thumbnail, submitted time, Confirm / Reject                              |
 | Ledger row            | R-04, A-07            | Date, description, debit, credit, running balance (table)                                                              |
+| Staff profile editor  | R-06, A-13            | Name, phone, role, photo upload, optional ID type + last four, verification flag, linked units and society status     |
+| Staff gate card       | G-01                  | Name, photo, role, destination-unit block warning and one explicit Check in or Check out action; no phone or ID       |
+| Society shift row     | A-13                  | Staff name, date and Present / Absent / Leave; existing dates remain editable                                          |
 | Module toggle row     | D-03                  | Module name, description, On/Off switch with text, last changed by/at, settings link                                   |
 | Log detail panel      | D-05                  | Header (severity, reference ID, status), context list, stack trace (monospace, wrap + copy), actions (Resolve, Ignore) |
 | Rating input          | R-05                  | Five 48px star buttons as radio group with text value, labelled "1 of 5" etc.                                          |
@@ -666,6 +669,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **G-04 Inside now / today:** segmented (Inside Now, Today, All); list items with name, unit, time in, duration, "Still inside" chip when overdue; trailing **Check Out** button (56px).
 - **G-05 Deliveries:** form as 7.3; list of waiting responses and **Uncollected parcels** section with Mark Collected. MVP+ (A-14): a read-only **Expected deliveries** card above the waiting list shows unit, platform and time window of resident pre-announcements.
 - Guard UI uses `guard-action` text and 56–64px targets, high-contrast status banners with large icons, minimal reading, and never relies on small text. Pending-count badges and live updates are central.
+- **G-06 Staff entry (P12):** select a destination unit, find linked domestic staff or enter a staff code, then use an explicit Check in / Check out action. Show the unit-only or society-wide blocked warning without exposing phone or ID details. Keep entry as the primary action and targets at least 56px.
 
 ### 12.3 Resident (R-01 – R-08)
 
@@ -701,6 +705,12 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **Notification inbox (S-11):** list items grouped Today / Earlier; unread indicator dot plus visible text for assistive tech; tapping opens the deep link and marks read; "Mark all read" in header.
 - **Profile (S-12):** read-only facts (name, mobile, society, role, unit) and editable name/photo and font preference (Homeish fonts or device default); sign out at the bottom; "Help and support" with copyable session ID (11.5).
 - **Error / no-access / module-disabled (S-13):** full-region states per 9.3.
+
+### 12.7 Staff management (P12)
+
+- **R-06 My staff:** unit-linked staff, pending registration state, same-month entry/exit history and an explicitly confirmed unit-only block for today. Registration asks for a photo, name, phone, role and optional ID type/last four; it never asks for a full ID document.
+- **A-13 Staff:** add/edit staff, assign domestic staff to units, block profiles society-wide, review pending unit links (including duplicate matches), configure the default-on approval requirement and record or correct one society-staff shift status per date.
+- The guard screen is deliberately minimal: staff name, portrait, role and access warning only. Avoid showing contact or ID data in guard cards and action responses.
 
 ---
 
