@@ -487,6 +487,7 @@ Counters live in the database (`rate_limits`, ARCHITECTURE AD-05) with hashed ke
 | Other write operations (soft guard) | 120 per minute                                          | User                           |
 
 - **Fail-safe behavior:** if the counter store is unavailable, security-sensitive limits (sign-in codes, PIN, code validation, society code lookup) **fail closed** (the action is refused with a retry message); the rest **fail open** and the failure is logged.
+- **Non-production sign-in limits:** when `NEXT_PUBLIC_APP_ENV` is not `production` (local, preview and staging/beta), the `auth.requestCode` and `auth.verifyCode` hourly and cooldown counters allow 50 per window so testers can sign in and out repeatedly. The per-code wrong-try lock and developer sign-in limits are unchanged, and production keeps the values above.
 - **Email quota guard:** each transactional email, including the operational alert, reserves one send against `BREVO_DAILY_EMAIL_QUOTA`; one developer alert is sent at 80% and sends over the configured cap are held. Provider timeouts and 5xx responses receive one retry; all adapter failures are logged without recipient or response-body details and never fail the originating action.
 - Reads are not individually limited by the app; platform protection (DDoS, bot rules) is provided by the host.
 

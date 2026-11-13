@@ -125,6 +125,28 @@ export const RATE_LIMIT_POLICIES = {
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES;
 
+// Repeated sign-in/sign-out during testing would otherwise exhaust the strict production limits.
+const NON_PRODUCTION_AUTH_LIMIT = 50;
+const NON_PRODUCTION_RELAXED_POLICIES: ReadonlySet<RateLimitPolicyName> =
+  new Set([
+    'authRequestCodeEmailCooldown',
+    'authRequestCodeEmailHourly',
+    'authRequestCodeIpHourly',
+    'authVerifyCodeEmailHourly',
+    'authVerifyCodeIpHourly',
+  ]);
+
+function effectiveLimit(policyName: RateLimitPolicyName): number {
+  const { limit } = RATE_LIMIT_POLICIES[policyName];
+  if (
+    serverEnvironment.public.NEXT_PUBLIC_APP_ENV !== 'production' &&
+    NON_PRODUCTION_RELAXED_POLICIES.has(policyName)
+  ) {
+    return Math.max(limit, NON_PRODUCTION_AUTH_LIMIT);
+  }
+  return limit;
+}
+
 async function hashIdentifier(scope: string, identifier: string) {
   const material = [
     serverEnvironment.server.RATE_LIMIT_HASH_SALT,
@@ -171,7 +193,11 @@ export async function enforceRateLimit(
   let result: Awaited<ReturnType<typeof consumeRateLimitKey>>;
   try {
     const key = await hashIdentifier(policy.key, identifier);
-    result = await consumeRateLimitKey(key, policy.limit, policy.windowSeconds);
+    result = await consumeRateLimitKey(
+      key,
+      effectiveLimit(policyName),
+      policy.windowSeconds,
+    );
   } catch {
     console.error('Homeish rate-limit store unavailable.', {
       requestId: scrubLogText(requestId),
