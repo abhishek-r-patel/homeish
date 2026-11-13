@@ -2,7 +2,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { parseRoutingEnvironment } from './core/config/env-schema';
-import { resolveSiteSurface } from './core/config/host-routing';
+import {
+  resolveSiteSurface,
+  resolveSociety,
+  societyServesPath,
+} from './core/config/host-routing';
 import { supabaseAuthCookieOptions } from './core/db/auth-cookie-options';
 import {
   buildContentSecurityPolicy,
@@ -11,11 +15,15 @@ import {
 } from './core/security/headers';
 
 export async function proxy(request: NextRequest) {
-  const surface = resolveSiteSurface(
-    request.headers.get('host'),
-    parseRoutingEnvironment(process.env),
-  );
-  if (!surface || (surface === 'society' && request.nextUrl.pathname !== '/')) {
+  const host = request.headers.get('host');
+  const routing = parseRoutingEnvironment(process.env);
+  const surface = resolveSiteSurface(host, routing);
+  const society = surface === 'society' ? resolveSociety(host, routing) : null;
+  if (
+    !surface ||
+    (surface === 'society' &&
+      (!society || !societyServesPath(society, request.nextUrl.pathname)))
+  ) {
     return new NextResponse('This Homeish address is not configured.', {
       status: 404,
       headers: {

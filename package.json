@@ -22,6 +22,7 @@
     "test:integration:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-integration-local.ps1",
     "integrity:check": "node scripts/integrity-check.mjs",
     "integrity:check:testdb": "node scripts/with-env.mjs testdb node scripts/integrity-check.mjs",
+    "society:create": "node scripts/with-env.mjs testdb node scripts/create-society.mjs",
     "backup:drive:check": "node scripts/backup-google-drive.mjs check",
     "backup:drive:database": "node scripts/backup-google-drive.mjs upload-database",
     "backup:drive:download": "node scripts/backup-google-drive.mjs download-database",

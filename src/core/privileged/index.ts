@@ -18,6 +18,7 @@ export {
   isRegistrationCodeActive,
   lookupRegistrationSociety,
 } from './registration';
+export { lookupSocietyHost, type SocietyHostRecord } from './society-hosts';
 export { checkDailyJobHealth, checkDatabaseHealth } from './health-check';
 export {
   claimDailyJobRun,
