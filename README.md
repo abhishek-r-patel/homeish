@@ -122,3 +122,6 @@ Radix UI, Lucide, React Hook Form, Sentry, Web Push and PDF tooling are intentio
 - [Agent instructions](docs/AGENTS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
 - [Local setup](docs/LOCAL_SETUP.md)
+- [Deployment](docs/DEPLOYMENT.md)
+- [Accessibility manual checklist](docs/ACCESSIBILITY_CHECKLIST.md)
+- [UAT script](docs/UAT_SCRIPT.md)

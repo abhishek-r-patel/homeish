@@ -4,10 +4,12 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { Card, StatusChip } from '@/components/ui/data-display';
 import { ServiceRequestDetailControls } from '@/components/service-requests/detail-controls';
+import { ServiceRequestUpvote } from '@/components/service-requests/upvote';
 import {
   getServiceRequestAssignees,
   getServiceRequestDetail,
 } from '@/core/service-requests/operations';
+import { setServiceRequestUpvoteAction } from '../actions';
 
 export const metadata = {
   title: 'Request | Homeish',
@@ -55,6 +57,15 @@ export default async function ServiceRequestDetailPage({
             : 'Common area'}
           {' · '}Submitted {dateTime(request.created_at)}
         </p>
+        {request.location_type === 'common_area' ? (
+          <ServiceRequestUpvote
+            action={setServiceRequestUpvoteAction}
+            canVote={detail.capabilities.canUpvote}
+            count={request.upvote_count}
+            requestId={request.id}
+            upvoted={request.has_upvoted}
+          />
+        ) : null}
       </header>
       <Card className="min-w-0" title="Issue">
         <div className="grid gap-space-3">

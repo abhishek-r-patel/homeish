@@ -801,6 +801,84 @@ export type Database = {
           },
         ];
       };
+      delivery_pre_announcements: {
+        Row: {
+          cancelled_at: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          expected_from: string;
+          expected_to: string;
+          id: string;
+          platform: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          cancelled_at?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by?: string;
+          expected_from: string;
+          expected_to: string;
+          id?: string;
+          platform: string;
+          society_id: string;
+          status?: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          cancelled_at?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          expected_from?: string;
+          expected_to?: string;
+          id?: string;
+          platform?: string;
+          society_id?: string;
+          status?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'delivery_pre_announcements_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'delivery_pre_announcements_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'delivery_pre_announcements_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'delivery_pre_announcements_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       delivery_preferences: {
         Row: {
           rule: string;
@@ -1685,6 +1763,50 @@ export type Database = {
           },
         ];
       };
+      service_request_upvotes: {
+        Row: {
+          created_at: string;
+          request_id: string;
+          society_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          request_id: string;
+          society_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          request_id?: string;
+          society_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'service_request_upvotes_request_same_society_fkey';
+            columns: ['society_id', 'request_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'service_request_upvotes_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_upvotes_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       service_requests: {
         Row: {
           assigned_membership_id: string | null;
@@ -1820,6 +1942,7 @@ export type Database = {
           logo_path: string | null;
           name: string;
           plan: string | null;
+          slug: string | null;
           status: string;
           timezone: string;
           unit_label: string;
@@ -1842,6 +1965,7 @@ export type Database = {
           logo_path?: string | null;
           name: string;
           plan?: string | null;
+          slug?: string | null;
           status?: string;
           timezone?: string;
           unit_label?: string;
@@ -1863,6 +1987,7 @@ export type Database = {
           logo_path?: string | null;
           name?: string;
           plan?: string | null;
+          slug?: string | null;
           status?: string;
           timezone?: string;
           unit_label?: string;
@@ -2249,6 +2374,75 @@ export type Database = {
           },
           {
             foreignKeyName: 'visitor_entries_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      visitor_frequent_visitors: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          last_used_at: string | null;
+          society_id: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          vehicle_no: string | null;
+          visitor_name: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          last_used_at?: string | null;
+          society_id: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          vehicle_no?: string | null;
+          visitor_name: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          last_used_at?: string | null;
+          society_id?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          vehicle_no?: string | null;
+          visitor_name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'visitor_frequent_visitors_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'visitor_frequent_visitors_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'visitor_frequent_visitors_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'visitor_frequent_visitors_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -2861,6 +3055,78 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      delivery_pre_announce_cancel: {
+        Args: {
+          p_announcement_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: {
+          cancelled_at: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          expected_from: string;
+          expected_to: string;
+          id: string;
+          platform: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'delivery_pre_announcements';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      delivery_pre_announce_create: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_from: string;
+          p_expected_to: string;
+          p_platform: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: {
+          cancelled_at: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          expected_from: string;
+          expected_to: string;
+          id: string;
+          platform: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'delivery_pre_announcements';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      delivery_pre_announce_list: {
+        Args: { p_society_id: string; p_unit_id?: string };
+        Returns: {
+          created_at: string;
+          expected_from: string;
+          expected_to: string;
+          id: string;
+          platform: string;
+          status: string;
+          unit_id: string;
+        }[];
+      };
       delivery_preference_get: {
         Args: { p_society_id: string; p_unit_id: string };
         Returns: {
@@ -2962,6 +3228,22 @@ export type Database = {
         };
         Returns: string;
       };
+      developer_create_society_with_slug: {
+        Args: {
+          p_address: string;
+          p_city: string;
+          p_contact_email: string;
+          p_contact_phone: string;
+          p_currency: string;
+          p_name: string;
+          p_plan: string;
+          p_request_id: string;
+          p_slug: string;
+          p_timezone: string;
+          p_unit_label: string;
+        };
+        Returns: string;
+      };
       developer_health_summary: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
@@ -3001,6 +3283,37 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      developer_set_society_slug: {
+        Args: { p_request_id: string; p_slug: string; p_society_id: string };
+        Returns: {
+          address: string | null;
+          city: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          gate_login_mode: string;
+          guard_identification: string;
+          id: string;
+          join_code: string | null;
+          logo_path: string | null;
+          name: string;
+          plan: string | null;
+          slug: string | null;
+          status: string;
+          timezone: string;
+          unit_label: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'societies';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       developer_set_society_status: {
         Args: { p_request_id: string; p_society_id: string; p_status: string };
         Returns: {
@@ -3018,6 +3331,7 @@ export type Database = {
           logo_path: string | null;
           name: string;
           plan: string | null;
+          slug: string | null;
           status: string;
           timezone: string;
           unit_label: string;
@@ -3030,6 +3344,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      developer_society_onboarding_status: {
+        Args: { p_name: string; p_slug: string };
+        Returns: Json;
       };
       developer_toggle_module: {
         Args: {
@@ -3104,6 +3422,7 @@ export type Database = {
           logo_path: string | null;
           name: string;
           plan: string | null;
+          slug: string | null;
           status: string;
           timezone: string;
           unit_label: string;
@@ -3138,6 +3457,7 @@ export type Database = {
           logo_path: string | null;
           name: string;
           plan: string | null;
+          slug: string | null;
           status: string;
           timezone: string;
           unit_label: string;
@@ -3504,6 +3824,7 @@ export type Database = {
           p_limit?: number;
           p_offset?: number;
           p_society_id: string;
+          p_sort?: string;
           p_status?: string;
           p_to?: string;
           p_unit_id?: string;
@@ -3663,6 +3984,15 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      request_upvote_set: {
+        Args: {
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_upvoted: boolean;
+        };
+        Returns: Json;
+      };
       reserve_auth_code_attempt: {
         Args: { p_email_key: string };
         Returns: {
@@ -3699,6 +4029,14 @@ export type Database = {
           p_request_id: string;
         };
         Returns: undefined;
+      };
+      society_host_lookup: {
+        Args: { p_slug: string };
+        Returns: {
+          id: string;
+          name: string;
+          status: string;
+        }[];
       };
       start_auth_code_challenge: {
         Args: { p_email_key: string };
@@ -3918,6 +4256,93 @@ export type Database = {
       visitor_expire_run: {
         Args: { p_request_trace: string; p_society_id: string };
         Returns: number;
+      };
+      visitor_frequent_list: {
+        Args: { p_society_id: string; p_unit_id: string };
+        Returns: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          last_used_at: string | null;
+          society_id: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          vehicle_no: string | null;
+          visitor_name: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'visitor_frequent_visitors';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      visitor_frequent_pre_approve: {
+        Args: {
+          p_frequent_visitor_id: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_valid_from: string;
+          p_valid_to: string;
+        };
+        Returns: {
+          code: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          used_at: string | null;
+          valid_from: string;
+          valid_to: string;
+          vehicle_no: string | null;
+          visitor_name: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'visitor_pre_approvals';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      visitor_frequent_remove: {
+        Args: {
+          p_frequent_visitor_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      visitor_frequent_save: {
+        Args: {
+          p_request_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+          p_vehicle_no: string;
+          p_visitor_name: string;
+        };
+        Returns: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          last_used_at: string | null;
+          society_id: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          vehicle_no: string | null;
+          visitor_name: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'visitor_frequent_visitors';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       visitor_list_blacklist: {
         Args: { p_society_id: string };

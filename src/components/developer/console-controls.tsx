@@ -29,7 +29,7 @@ import { SocietyLogoUpload } from './society-logo-upload';
 
 type SocietyRow = Omit<
   Database['public']['Tables']['societies']['Row'],
-  'join_code'
+  'join_code' | 'slug'
 >;
 
 function ActionMessage({ state }: { state: DeveloperActionResult | null }) {

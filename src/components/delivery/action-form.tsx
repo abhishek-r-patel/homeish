@@ -115,6 +115,9 @@ export function DeliveryActionForm({
           role="status"
         >
           {result.message}
+          {!result.ok && result.referenceId
+            ? ` Reference: ${result.referenceId}`
+            : ''}
         </p>
       ) : null}
       <span aria-live="polite" className="sr-only" role="status">

@@ -119,7 +119,7 @@ A module is **done** only when all of the following are true:
 | P0.8 | Create the project README (setup, commands, structure, document links)                                                                                                                                     | S    |
 | P0.9 | D-34: build the marketing root, allow-listed demo and isolated beta entry; synthetic browser preview with resets; configure main/beta hosting and document actual external verification                    | M    |
 
-P0.9 local implementation includes public marketing, exact-host routing, an illustrative browser-memory demo and beta entry. It does not complete P1-P4 or activate real workflows. The owner approved implementation, documentation and live Git/Vercel setup on 2026-11-09, then deferred Maplewood onboarding until a future create-society script after MVP; its address is reserved in code as a disabled placeholder. External deployment status is recorded in README after verification. Full interactive society demo/reset jobs and real society activation remain gated on backend/auth/module completion and isolation tests. No real society data is seeded.
+P0.9 local implementation includes public marketing, exact-host routing, an illustrative browser-memory demo and beta entry. It does not complete P1-P4 or activate real workflows. The owner approved implementation, documentation and live Git/Vercel setup on 2026-11-09, then deferred Maplewood onboarding until after MVP, when the owner will run the create-society script (`scripts/create-society.mjs`, OPERATIONS "Society onboarding"); its address is reserved in code as a disabled placeholder. External deployment status is recorded in README after verification. Full interactive society demo/reset jobs and real society activation remain gated on backend/auth/module completion and isolation tests. No real society data is seeded.
 
 **P0.9 status, 2026-11-09:** the foundation passed local formatting/lint/type checks, 33 unit tests, four browser tests and production build. Projects `homeish`/`beta-homeish` are linked to `abhishek-r-patel/homeish` under team `arp-dev`, tracking `main`/`beta` respectively, with scaffold-only configuration. The owner approved resuming hosting after a temporary pause and committing/pushing the deployment changes through feature branch -> beta -> main. `vercel.json` enables the two release branches; the existing build gate isolates each project. Preview branch tracking is disabled and Production domain assignment is automatic. The attached addresses are `homeish.vercel.app` and `beta-homeish.vercel.app`; no nested demo/beta or Maplewood host is attached. Verify both automatic releases and hosted HTTPS/routing during this release sequence. Full backend/auth workflows and real society launch approval remain open.
 
@@ -544,14 +544,18 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 
 **Prerequisites:** P5–P8 (or whichever modules exist) complete. OPERATIONS.md and ERROR_LOGGING.md written.
 
-| ID   | Task                                                                                                                                                                                                    | Size |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired entries and uncollected parcels, request auto-close) and verify run-key idempotency across all of them | M    |
-| P9.2 | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                            | L    |
-| P9.3 | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                         | M    |
-| P9.4 | Google Drive encrypted database export and compatible restore drill verified for homeish-testdb; scheduled backups remain paused pending production safeguards. Weekly file copy is deferred for lack of an approved least-privilege credential | M    |
-| P9.5 | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. Still verify a populated staging day cycle and an application-originated critical alert | M    |
-| P9.6 | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; verify the guarded testdb workflow in GitHub Actions                                                                 | M    |
+**Status: complete for the approved testdb/staging scope (2026-11-13).** Scheduled
+backups remain paused; production backup activation and Storage-file backup
+remain explicitly deferred as described below.
+
+| ID   | Task                                                                                                                                                                                                                                                        | Size |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired visitor entries, request auto-close); delivery overdue status is computed on read, not by a daily task. Verify run-key idempotency across the tasks        | M    |
+| P9.2 | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                                                                                | L    |
+| P9.3 | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                                                                             | M    |
+| P9.4 | Google Drive encrypted database export and compatible restore drill verified for homeish-testdb; scheduled backups remain paused pending production safeguards. Weekly file copy is deferred for lack of an approved least-privilege credential             | M    |
+| P9.5 | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. The day cycle, idempotency, resident reminder, uptime outage/recovery email, and application-originated critical alert/email were verified | M    |
+| P9.6 | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; guarded testdb workflow passed in GitHub Actions on 2026-11-12                                                                                                    | M    |
 
 **Database changes:** retention/anonymise functions; no new tables. **API changes:** none beyond the daily route's task list.
 
@@ -559,20 +563,27 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 
 **Completion criteria:** a full day cycle runs on staging with representative test data and no unintended real notifications; a missed run is detected; a backup restores to a new isolated compatible target (DATABASE 15.2). The approved testdb backup/restore drill is complete; production backup activation and Storage-file backup remain explicitly deferred.
 
-**P9 external setup status, 2026-11-12:** beta (`beta-homeish`, on the shared
+**P9 external setup status, 2026-11-13:** beta (`beta-homeish`, on the shared
 `homeish-testdb` project) has the P8/P9 release, an external uptime monitor, a
 Sentry critical-error alert, Brevo transactional email, and the daily schedule.
-The monitor's notification/recovery, Sentry's synthetic critical event, and a
-real Brevo delivery were verified (OPERATIONS.md). Beta health and the scheduled
-route are healthy, but the test database currently has no active or trial
-societies; a manual cron request therefore did not exercise society-scoped tasks.
-Still verify a safe populated day cycle, a missed-run notification, and an
-application-originated critical alert before calling P9 complete.
+The monitor's setup notification, Sentry's synthetic critical event, and a
+real Brevo delivery were verified (OPERATIONS.md). The active validation
+society's 2026-11-13 IST cycle completed all six tasks; two authenticated local
+repeats skipped them, confirming run-key idempotency. The INR 1 test bill was
+generated after that cycle; its reminder was later run directly and appeared in
+the resident Notifications page. The stale-health test returned 503 and
+recovered to 200; the owner confirmed receipt of its UptimeRobot outage/recovery
+email. A one-off synthetic failure through the real application runner locally,
+using testdb and staging Sentry configuration, persisted a critical log and
+reached Sentry. The owner confirmed its alert email; the matching Sentry issue
+and Developer Console error were resolved (OPERATIONS.md). All six real job
+keys were unchanged by that drill. The guarded testdb integrity workflow passed
+on 2026-11-12. The request-dashboard grouping error was fixed by migration
+`20261113060000` and verified against the existing synthetic request.
 
 **Backup status:** a manual encrypted homeish-testdb archive was downloaded,
 authenticated, restored into a disposable Supabase-compatible PostgreSQL 17
-target, and passed all 13 integrity checks in GitHub Actions run
-43222943511. Keep scheduled backups disabled. Before production activation,
+target, and passed all 13 integrity checks in GitHub Actions run 43222943511. Keep scheduled backups disabled. Before production activation,
 verify the production source and recovery path and isolate production retention
 from test archives. Weekly Storage-file backup remains deferred as noted in
 DATABASE 15.2.
@@ -599,6 +610,20 @@ DATABASE 15.2.
 
 **Tests/verification:** all earlier suites green on staging; manual checklists recorded; PRD success metrics collected.
 
+**Status (2026-11-14):**
+
+| ID    | Status                                                                                                                                                                                                                                                                          |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P10.1 | Done; see OPERATIONS.md "Security re-check". No open critical or high findings; four low findings fixed.                                                                                                                                                                        |
+| P10.2 | Automated part done: `tests/e2e/accessibility.spec.ts` (WCAG 2.2 AA with axe, 640px and 320px reflow, visible focus) passes on all public and fixture pages. Owner's TalkBack, VoiceOver and outdoor checks pending ([ACCESSIBILITY_CHECKLIST.md](ACCESSIBILITY_CHECKLIST.md)). |
+| P10.3 | Done; see OPERATIONS.md "Performance at target scale". One migration fixed per-row checks; no indexes needed.                                                                                                                                                                   |
+| P10.4 | Done; see OPERATIONS.md "Failure drills". Five fixes made.                                                                                                                                                                                                                      |
+| P10.5 | Not started (production; waits for the first society).                                                                                                                                                                                                                          |
+| P10.6 | Local drill from a testdb dump and the guarded GitHub drill both passed (OPERATIONS.md "Restore drill results"). Repeat from the production backup during P10.5.                                                                                                                |
+| P10.7 | Script ready ([UAT_SCRIPT.md](UAT_SCRIPT.md)); the owner runs it on Beta.                                                                                                                                                                                                       |
+| P10.8 | Not started. Onboarding script ready (`npm run society:create`, OPERATIONS.md "Society onboarding").                                                                                                                                                                            |
+| P10.9 | Not started.                                                                                                                                                                                                                                                                    |
+
 **Completion criteria:**
 
 - No open critical or high security findings; no cross-tenant leakage in tests.
@@ -606,6 +631,8 @@ DATABASE 15.2.
 - Restore drill passed and the integrity checks are clean.
 - The pilot society's admin can run daily operations; errors are being captured with reference IDs and reviewed.
 - The owner signs off the MVP.
+
+**MVP+ in-module additions (owner-approved, 2026-11-14):** frequent visitors (A-10), delivery pre-announce (A-14 / DEL-4) and upvotes on common-area service requests (D-17 / SRQ-7). Each one adds a single migration and its database tests, and stays behind its module toggle. The P10.4 duplicate-submission drill found that a lost unique-key race (`23505`) showed "already decided". The visitor, delivery and service-request create calls now retry once, so the user gets the original record.
 
 ---
 

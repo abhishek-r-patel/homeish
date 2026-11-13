@@ -5,7 +5,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createNotificationBrowserClient } from '@/core/notifications/browser-client';
 
-export function DeliveryRealtimeRefresh({ societyId }: { societyId: string }) {
+export function DeliveryRealtimeRefresh({
+  societyId,
+  gate = false,
+}: {
+  societyId: string;
+  gate?: boolean;
+}) {
   const router = useRouter();
   const [online, setOnline] = useState(true);
 
@@ -61,7 +67,9 @@ export function DeliveryRealtimeRefresh({ societyId }: { societyId: string }) {
       <span>
         {online
           ? 'Delivery updates refresh automatically. Unsent details remain in the form if a request fails.'
-          : 'Connection lost. Keep this page open; unsent details remain in the form.'}
+          : gate
+            ? "Can't reach the server. Call the resident to confirm; unsent details remain in the form."
+            : 'Connection lost. Keep this page open; unsent details remain in the form.'}
       </span>
       <button
         className="min-h-11 rounded-md border border-rule-strong px-space-3 font-semibold focus-visible:outline-2 focus-visible:outline-focus"

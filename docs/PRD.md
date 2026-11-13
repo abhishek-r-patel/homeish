@@ -96,7 +96,7 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 ### 4.0 Public website, society hosts and beta (D-34)
 
-**Approved 2026-11-09:** `homeish.vercel.app` is the public marketing website, not a login screen. `demo.homeish.vercel.app` is a public interactive synthetic demo, periodically reset. Future societies use their own configured subdomains of the same application, not separate branches. **Owner clarification:** Maplewood is a real society: its address is prepared but disabled (placeholder page only). Do not onboard it now; the owner will do that through a future create-society script once MVP is ready.
+**Approved 2026-11-09:** `homeish.vercel.app` is the public marketing website, not a login screen. `demo.homeish.vercel.app` is a public interactive synthetic demo, periodically reset. Future societies use their own configured subdomains of the same application, not separate branches. **Owner clarification:** Maplewood is a real society: its address is prepared but disabled (placeholder page only). Do not onboard it now; the owner will do that with the create-society script (`scripts/create-society.mjs`, see OPERATIONS "Society onboarding") once MVP is ready.
 
 `beta.homeish.vercel.app` belongs to a separate Vercel project deploying the `beta` branch for testing and later new features. Verified changes are merged into `main` for the shared website/society deployment. Beta must never use real society data or the production database. **Database projects (2026-11-09, ARCHITECTURE AD-14):** `homeish-testdb` for development/testing/beta, `homeish-demo` for the synthetic demo, and `homeish-live` for all onboarded societies; the database-backed demo will move to its own Vercel project `demo-homeish` so the main deployment never holds demo credentials. This preserves D-24: live societies share a database with enforced society isolation; it does not copy Civic Pulse's per-society database model.
 
@@ -190,7 +190,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 
 1. _Walk-in visitor_: Guard logs visitor (name, phone, purpose, unit, optional photo, vehicle no.) → resident gets push notification → approves/denies → guard allows/denies → guard marks check-out.
 2. _Pre-approved visitor_: Resident creates an invite (name, date/time window, optional vehicle) → system generates a 6-digit code/QR → guard validates at gate → auto-checked-in, resident notified.
-3. _Frequent visitors_ (guest, relative): Resident saves as "frequent" for faster pre-approval. **[A-10]** P2 — not MVP.
+3. _Frequent visitors_ (guest, relative): Resident saves as "frequent" for faster pre-approval. **[A-10]** Originally P2; delivered in MVP+ (2026-11-14): residents save, pre-approve from and remove frequent visitors on the visitors page.
 
 **Functional Requirements**
 
@@ -230,7 +230,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `DEL-1` Guard logs a delivery: company/platform (list + other), delivery person name (optional), unit, type (Food, Parcel, Grocery, Other), optional photo.
 - `DEL-2` Resident notified; options: **Allow at gate/Send inside**, **Leave at gate/security desk**, **Deny/Return**.
 - `DEL-3` Resident can set a standing preference per unit: "Always allow", "Always leave at gate", "Ask me" (default). **[A-13]**
-- `DEL-4` Resident can pre-announce an expected delivery (platform, window) so the guard sees it as expected. **[A-14]** P2.
+- `DEL-4` Resident can pre-announce an expected delivery (platform, window) so the guard sees it as expected. **[A-14]** Originally P2; delivered in MVP+ (2026-11-14): window up to 24 hours, residents can cancel, guards see a read-only "Expected deliveries" list.
 - `DEL-5` For parcels left at the security desk: status `Received → Collected` and resident marks/guard marks collection, with timestamp. Uncollected parcels older than N days are listed for the guard/admin (default 3).
 - `DEL-6` Delivery history per unit; society-wide log for guard/admin.
 - `DEL-7` Delivery statuses: `Pending response → Allowed / Left at gate / Denied → Collected / Closed`.
@@ -302,7 +302,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `SRQ-4` Comment thread on each request. The requester, admin and assignee (if a user) may post; other residents may read common-area request threads but cannot comment. **[D-17]**
 - `SRQ-5` Resident rates resolution (1–5) after closure with optional comment.
 - `SRQ-6` Target resolution time per category (set by admin); overdue requests flagged on admin dashboard.
-- `SRQ-7` Filters: status, category, unit, date, assignee. Residents see their own requests and may read all common-area requests; they cannot change or comment on common-area requests in MVP. Upvoting is deferred to P2. **[D-17 — Approved 2026-11-09]**
+- `SRQ-7` Filters: status, category, unit, date, assignee. Residents see their own requests and may read all common-area requests; they cannot change or comment on common-area requests in MVP. Upvoting was deferred to P2 and is now delivered in MVP+ (2026-11-14): residents can upvote open common-area requests once and remove the vote; counts show on lists and detail, and admins can sort by most upvoted. **[D-17 — Approved 2026-11-09]**
 - `SRQ-8` Notifications on every status change and new comment.
 - `SRQ-9` Report: counts by category/status, average resolution time, average rating.
 
@@ -786,11 +786,11 @@ Staff, Housekeeping inventory, AMC, Notice board, Amenity booking (in that order
 | A-07 | One user can belong to multiple societies                                                                                                         |
 | A-08 | Module settings are developer-only in MVP                                                                                                         |
 | A-09 | Error logs kept 90 days; audit logs 2 years                                                                                                       |
-| A-10 | Frequent visitors are P2                                                                                                                          |
+| A-10 | Frequent visitors are P2 (delivered in MVP+ 2026-11-14)                                                                                           |
 | A-11 | Any approver for the unit can approve; first response wins                                                                                        |
 | A-12 | Blacklist only warns the guard (does not auto-block)                                                                                              |
 | A-13 | Unit-level delivery preference setting                                                                                                            |
-| A-14 | Delivery pre-announce is P2                                                                                                                       |
+| A-14 | Delivery pre-announce is P2 (delivered in MVP+ 2026-11-14)                                                                                        |
 | A-15 | Payments allocated to oldest dues first                                                                                                           |
 | A-16 | Advance payments kept as credit                                                                                                                   |
 | A-17 | Bills immutable once published; corrections via adjustments                                                                                       |
@@ -837,7 +837,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 | D-14 | Payment gateway                                  | **Approved 2026-11-09:** none in MVP; UPI direct to society, admin confirms                                                                                                                                                                                                        | Closed   |
 | D-15 | Funds flow (society account vs platform)         | **Approved 2026-11-09:** direct to the society's UPI account                                                                                                                                                                                                                       | Closed   |
 | D-16 | Gateway fee bearer                               | Not applicable in MVP (no gateway)                                                                                                                                                                                                                                                 | Closed   |
-| D-17 | Common-area requests visibility                  | **Approved 2026-11-09:** all residents may read; no resident edits or comments in MVP                                                                                                                                                                                              | Closed   |
+| D-17 | Common-area requests visibility                  | **Approved 2026-11-09:** all residents may read; no resident edits or comments in MVP; upvoting delivered in MVP+ 2026-11-14                                                                                                                                                       | Closed   |
 | D-18 | ID proof handling for staff                      | **Approved 2026-11-09:** optional ID type + last four digits; no full document                                                                                                                                                                                                     | Closed   |
 | D-19 | Payroll for society staff                        | **Approved 2026-11-09:** out of scope                                                                                                                                                                                                                                              | Closed   |
 | D-20 | Housekeeping = inventory only                    | **Approved 2026-11-09:** stock tracking only; no cleaning schedules or QR area logs                                                                                                                                                                                                | Closed   |
@@ -853,7 +853,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 | D-31 | Protection of society UPI details                | **Approved 2026-11-09:** admin edits; audited; admins and committee notified; residents see last-changed date                                                                                                                                                                      | Closed   |
 | D-32 | How a UPI payment is marked paid                 | **Approved 2026-11-09:** resident submits UTR (optional screenshot); admin confirms or rejects                                                                                                                                                                                     | Closed   |
 | D-33 | First-ten society offer                          | **Approved 2026-11-09:** first ten live societies pay no Homeish subscription; production hosting remains separately funded; decide later pricing before society eleven is invited                                                                                                 | Closed   |
-| D-34 | Public website, society subdomains and beta      | **Approved 2026-11-09:** public marketing root; interactive synthetic demo with periodic resets; future society subdomains, Maplewood address reserved but disabled, onboarding via post-MVP create-society script; separate beta Vercel project/branch; beta-to-main release flow | Closed   |
+| D-34 | Public website, society subdomains and beta      | **Approved 2026-11-09:** public marketing root; interactive synthetic demo with periodic resets; future society subdomains, Maplewood address reserved but disabled, onboarding via the create-society script (post-MVP); separate beta Vercel project/branch; beta-to-main release flow | Closed   |
 | D-35 | Percentage late-fee precision and limit          | **Approved 2026-11-10:** allow up to two decimal places, greater than 0% and capped at 100%; fixed fees use whole paise; late fees remain off by default                                                                                                                           | Closed   |
 | D-36 | Billing due date and area-charge rounding        | **Approved 2026-11-10:** each society chooses a due day (1–31 or last day of the month) and rounds per-square-foot charges to the nearest rupee or paise, half up; defaults are the 10th and nearest rupee                                                                         | Closed   |
 | D-29 | Dues ownership on tenant/owner change            | **Approved 2026-11-09:** balance stays with the unit and is billed to the current owner                                                                                                                                                                                            | Closed   |

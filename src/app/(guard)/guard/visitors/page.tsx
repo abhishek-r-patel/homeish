@@ -51,7 +51,7 @@ export default async function GuardVisitorsPage() {
         </p>
         <h1 className="text-title font-semibold">Visitors</h1>
       </header>
-      <VisitorRealtimeRefresh societyId={societyId} />
+      <VisitorRealtimeRefresh gate societyId={societyId} />
 
       <Card
         description="Send a request to the unit's active approvers."

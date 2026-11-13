@@ -1,6 +1,6 @@
 // Verify installable assets and browser interactions for the foundation fixture.
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test, type Locator } from './fixtures';
 
 async function expectPopoverWithinViewport(
   popover: Locator,

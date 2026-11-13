@@ -5,6 +5,7 @@ import {
   resolveSiteSurface,
   resolveSociety,
   siteOrigin,
+  societyServesPath,
 } from '../../src/core/config/host-routing';
 
 const shared = parseRoutingEnvironment({ VERCEL: '1' });
@@ -64,6 +65,46 @@ describe('host routing', () => {
     ]) {
       expect(resolveSiteSurface(host, shared)).toBeNull();
     }
+  });
+
+  it('serves active societies with the app but never on beta or the developer console', () => {
+    const societies = [
+      { slug: 'maplewood', name: 'Maplewood', status: 'disabled' },
+      { slug: 'oak-grove', name: 'Oak Grove', status: 'active' },
+    ] as const;
+    const active = resolveSociety(
+      'oak-grove.homeish.vercel.app',
+      shared,
+      societies,
+    );
+    expect(active).toEqual(societies[1]);
+    expect(
+      resolveSiteSurface('oak-grove.homeish.vercel.app', shared, societies),
+    ).toBe('society');
+    expect(
+      resolveSiteSurface('oak-grove.homeish.vercel.app', beta, societies),
+    ).toBeNull();
+    expect(
+      resolveSiteSurface('oak-grove.localhost:3000', localBetaFor(), societies),
+    ).toBeNull();
+    expect(
+      resolveSiteSurface('oak-grove.homeish.vercel.app', shared),
+    ).toBeNull();
+    for (const host of [
+      'x.oak-grove.homeish.vercel.app',
+      'oak-grove.homeish.vercel.app:3000',
+      'oak-grove.homeish.vercel.app.attacker.test',
+    ]) {
+      expect(resolveSiteSurface(host, shared, societies)).toBeNull();
+    }
+    for (const path of ['/', '/login', '/session', '/admin/billing']) {
+      expect(societyServesPath(active!, path)).toBe(true);
+    }
+    for (const path of ['/developer', '/developer/login']) {
+      expect(societyServesPath(active!, path)).toBe(false);
+    }
+    expect(societyServesPath(societies[0], '/')).toBe(true);
+    expect(societyServesPath(societies[0], '/login')).toBe(false);
   });
 
   it('accepts only explicitly supplied deployment aliases', () => {
