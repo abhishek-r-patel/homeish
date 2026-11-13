@@ -19,7 +19,7 @@
 
 ## 1. Database Technology
 
-D-34 environment boundary (approved 2026-11-09): society subdomains do not change D-24's shared live database/RLS design. Beta must have a separate synthetic-only backend. The public demo needs a synthetic-only reset boundary before database-backed writes are introduced. Current marketing/demo/beta entry pages make no database calls; demo state is browser memory only. Maplewood's hostname is reserved in code as a disabled placeholder; all real society provisioning is deferred until MVP and a future create-society script. No database projects, migrations, live society records or reset jobs are created by this website work.
+D-34 environment boundary (approved 2026-11-09): society subdomains do not change D-24's shared live database/RLS design. Beta must have a separate synthetic-only backend. The public demo needs a synthetic-only reset boundary before database-backed writes are introduced. Current marketing/demo/beta entry pages make no database calls; demo state is browser memory only. Maplewood's hostname is reserved in code as a disabled placeholder. Real societies are provisioned with `scripts/create-society.mjs` (OPERATIONS "Society onboarding"), which sets the unique, immutable `societies.slug` that matches the host (migration `20261114090000`). No database projects, migrations, live society records or reset jobs are created by this website work.
 
 | Item               | Choice                                                                                                            | Reason                                                                                                |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -446,6 +446,10 @@ Constraints: **unique `(society_id, code)` among `active` rows** so a code ident
 
 Unique `(society_id, phone)` among active rows. MVP warns only (A-12).
 
+### 4.4 `visitor_frequent_visitors` (MVP+, A-10)
+
+A unit's saved list of regular visitors for faster pre-approval. Migration `20261114070000_visitor_frequent_visitors.sql`. All occupants of the unit share one list. Residents read only rows for units they occupy, and only while the visitor module is enabled. Changes go through the RPCs `visitor_frequent_save`, `visitor_frequent_remove` and `visitor_frequent_pre_approve`, which check society writability and the module and write `audit_logs`. `visitor_frequent_pre_approve` creates a normal `visitor_pre_approvals` row from a saved visitor; repeating it with the same request ID returns the same pre-approval. `visitor_frequent_list` reads the list.
+
 ---
 
 ## 5. Delivery Module Tables
@@ -483,6 +487,27 @@ Uncollected parcels are `left_at_gate` rows with `received_at` older than the so
 | rule       | text        | no      | `ask` (default), `always_allow`, `always_leave_at_gate` (A-13) |
 | updated_at | timestamptz | no      | Maintained by the common update trigger                        |
 | updated_by | uuid        | yes     | → `profiles`                                                   |
+
+### 5.3 `delivery_pre_announcements` (MVP+, A-14 / DEL-4)
+
+A resident tells the gate that a delivery is expected. Migration `20261114080000_delivery_pre_announce.sql`.
+
+| Column            | Type        | Null | Notes                                                          |
+| ----------------- | ----------- | ---- | -------------------------------------------------------------- |
+| Standard columns  |             |      | Includes `created_by`, `updated_at`, `updated_by`              |
+| unit_id           | uuid        | no   | Same-society FK to a unit                                      |
+| platform          | text        | no   | Free text, 1–60 characters                                     |
+| expected_from/to  | timestamptz | no   | `to` is after `from`; the window is at most 24 hours           |
+| status            | text        | no   | `expected` or `cancelled`; `cancelled_at` set when cancelled   |
+| client_request_id | uuid        | no   | Idempotency key, unique per society and creator                |
+
+RLS lets admins, committee members and guards read rows, and occupants read their own unit's rows, while the delivery module is enabled. Writes go only through these RPCs:
+
+- `delivery_pre_announce_create`: an active resident occupant of the unit in a writable society. The window must end in the future and start within 30 days. There is a limit of 20 upcoming announcements per unit (`54000`). A repeat with the same `client_request_id` returns the original row.
+- `delivery_pre_announce_cancel`: occupants of the unit only. Repeating it is safe.
+- `delivery_pre_announce_list`: returns active announcements whose window has not ended. Staff get the whole society; occupants pass their unit.
+
+Create and cancel are audited (`delivery.pre_announce.create` / `.cancel`).
 
 ---
 
@@ -691,6 +716,18 @@ At most 3 attachments on the request itself (function check).
 
 Exists because residents must see the timeline (DESIGN 6.15) but cannot read `audit_logs`. Routine request transitions are **not** duplicated in `audit_logs`.
 
+### 7.6 `service_request_upvotes` (MVP+, D-17 / SRQ-7)
+
+One row per resident vote on a common-area request. Migration `20261114083000_service_request_upvotes.sql`. The primary key is `(society_id, request_id, user_id)`, so each user has at most one vote. The FK to `service_requests` cascades on delete. RLS shows users only their own votes, so voter identities are never exposed.
+
+- `request_upvote_set(p_society_id, p_request_id, p_upvoted, p_request_trace)` sets or removes the caller's vote and returns `{request_id, upvote_count, has_upvoted}`.
+  - Only residents of a writable society with the module enabled can vote.
+  - Only common-area requests can be voted on. Other requests, including those in another society, return `P0002`.
+  - New votes on closed or rejected requests are refused (`23514`), but an existing vote can still be removed.
+  - An audit entry is written only when the vote changes.
+- `request_list` has a new `p_sort` argument: `default` keeps the old order, and `votes` puts the most upvoted first.
+- `request_list` and `request_get` now also return `upvote_count` and `has_upvoted`.
+
 ---
 
 ## 8. Constraint and Validation Summary
@@ -854,6 +891,8 @@ The application roles (`admin`, `guard`, resident, etc.) are **data** (`membersh
 Policies check **membership data in the database**, not JWT claims alone, so revoking a role or deactivating a person takes effect on the next request (PRD CORE-10).
 
 The initial helper migration defines fail-closed stubs. The membership migration replaces `is_member`, `has_role`, `module_enabled` and `society_writable` with checks against current database state; `is_developer` remains false until the developer MFA flow is implemented. The member-and-occupant migration adds `occupies_unit` and `is_household_manager`, both of which recheck active membership and occupancy state from the database. Core is always enabled, while other modules require an enabled `module_configs` row. The `private` schema is not exposed through PostgREST. Only `authenticated` and `service_role` can execute the helpers; `anon` has no schema access.
+
+Helpers are security definer functions, so PostgreSQL calls them once per row when they appear in a row filter. On large tables, call a helper whose arguments do not depend on the row once per query: as a sub-select in policies (`(SELECT private.is_developer())`) or a variable in list functions. Resident list functions first narrow rows with `private.current_user_unit_ids(society)` (units the caller actively occupies; it never grants access), then keep the `occupies_unit` check (P10.3, OPERATIONS "Performance at target scale").
 
 The base-table migration adds identity and society profile constraints, the ten module reference rows, and RLS/grants on the initial five tables. The membership migration adds self/manager-only reads and no direct membership writes. Society and module-config reads now require an active membership. Society/module configuration writes and developer registration remain reserved for later database functions or administrator migrations.
 

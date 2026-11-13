@@ -150,7 +150,8 @@ The shared error model in `src/core/errors/` owns the closed error-code and conf
 
 ### 3.6 Idempotency and double submission
 
-- Operations that create user-submitted records (`visitor.createEntry`, `delivery.createEntry`, `billing.submitPayment`, `request.create`, `request.addComment`) take a **`clientRequestId`** generated once per form open. A repeat with the same ID returns the original result instead of creating a second record (DATABASE 1.1).
+- Operations that create user-submitted records (`visitor.createEntry`, `delivery.createEntry`, `delivery.preAnnounce`, `billing.submitPayment`, `request.create`, `request.addComment`) take a **`clientRequestId`** generated once per form open. A repeat with the same ID returns the original result instead of creating a second record (DATABASE 1.1).
+- Two copies of the same submission can arrive at the same moment. When that happens, the losing call can hit a unique-key race (`23505`). `visitor.createEntry`, `delivery.createEntry` and `request.create` then retry the call once, so the user gets the original record instead of an "already decided" conflict.
 - Operations with a natural rule are protected by the database instead: UTR uniqueness, one bill line per unit/period/charge type, one late fee per overdue bill and month, first-response-wins decisions.
 - State-changing operations on an existing record (confirm payment, decide visitor, waive) are **safe to repeat**: a second call returns `CONFLICT` with reason `already_decided`/`invalid_state` and the current status, never a second effect.
 - The submit button also goes into a loading state (DESIGN 6.1), but that is a convenience, not the protection.
@@ -287,6 +288,8 @@ All require MFA (2.2). All actions are audited.
 | `visitor.preApproval.checkIn`          | G                               | Create the entry from a valid code and mark the code used                       | Single use                                                                                                                      |
 | `visitor.blacklist.list/add/remove`    | A (write), A/C/G (list)         | Manage blacklist                                                                | Warn only (A-12)                                                                                                                |
 | `visitor.settings.get/update`          | A                               | Read and change timeout, overstay, photo, phone and override rules              | Updates are audited; writes are denied for suspended societies                                                                  |
+| `visitor.frequent.list/save/remove`    | R (own unit)                    | Keep a list of regular visitors (MVP+, A-10)                                    | Audited; writes are denied for suspended societies                                                                              |
+| `visitor.frequent.preApprove`          | R (own unit)                    | Create a pre-approval from a saved frequent visitor                             | Same code, QR and rules as `visitor.preApproval.create`                                                                         |
 
 ### 5.6 Delivery (`delivery`)
 
@@ -299,6 +302,9 @@ All require MFA (2.2). All actions are audited.
 | `delivery.list/get`            | G, A, C; R (own unit)               | Logs; includes the uncollected-parcel view | Society threshold and timezone are applied by the database                             |
 | `delivery.preference.get/set`  | R (approver of own unit), A/C (get) | Read or change a unit standing rule        | Writes require an active unit approver                                                 |
 | `delivery.settings.get/update` | G/A/C (get), A (update)             | Read and update delivery module settings   | Timeout, uncollected threshold and leave-at-gate toggle; writes are audited            |
+| `delivery.preAnnounce`         | R (occupant of the unit)            | Tell the gate a delivery is expected       | MVP+ (A-14); `clientRequestId`; window ≤ 24 h; 20 upcoming per unit (`limit_reached`)  |
+| `delivery.preAnnounce.cancel`  | R (occupant of the unit)            | Cancel an expected delivery                | Safe to repeat; audited                                                                |
+| `delivery.preAnnounce.list`    | G, A, C (society); R (own units)    | Expected deliveries whose window is open   | Guards see them on `/guard/deliveries`                                                 |
 
 ### 5.7 Billing (`billing`)
 
@@ -346,6 +352,7 @@ For private QR uploads, `/api/files/upload-url` accepts `bucket: "society-assets
 | `request.confirmClose` / `request.reopen` | R (requester)                                      | Close or reopen within the allowed days                  | Auto-close by the daily job after the society's days                                               |
 | `request.rate`                            | R (requester)                                      | 1–5 stars and comment after closing                      | Once                                                                                               |
 | `request.addComment`                      | R (requester), A, assignee                         | Comment thread                                           | `clientRequestId`; notifies the other side; residents reading a common-area request cannot comment |
+| `request.upvote`                          | R                                                  | Add or remove one's vote on an open common-area request  | MVP+ (D-17); one vote per user; returns the new count; `request.list` accepts `sort: votes`        |
 
 Residents use `/requests`, `/requests/new` and `/requests/{requestId}`. Admins and committee members use `/admin/requests` for filtering and dashboard reports; admins can also manage categories, assign requests, update statuses and reject with a reason. Request detail displays the timeline and signed photo links only to users authorized for the parent request.
 
@@ -486,7 +493,7 @@ Counters live in the database (`rate_limits`, ARCHITECTURE AD-05) with hashed ke
 | Exports and reports                 | 5 per hour                                              | User                           |
 | Other write operations (soft guard) | 120 per minute                                          | User                           |
 
-- **Fail-safe behavior:** if the counter store is unavailable, security-sensitive limits (sign-in codes, PIN, code validation, society code lookup) **fail closed** (the action is refused with a retry message); the rest **fail open** and the failure is logged.
+- **Fail-safe behavior:** if the counter store is unavailable, security-sensitive limits (sign-in codes, PIN, code validation, society code lookup) **fail closed** (the action is refused with `INTEGRATION_FAILED`, "A connected service is temporarily unavailable", rather than a misleading "too many attempts"); the rest **fail open** and the failure is logged.
 - **Non-production sign-in limits:** when `NEXT_PUBLIC_APP_ENV` is not `production` (local, preview and staging/beta), the `auth.requestCode` and `auth.verifyCode` hourly and cooldown counters allow 50 per window so testers can sign in and out repeatedly. The per-code wrong-try lock and developer sign-in limits are unchanged, and production keeps the values above.
 - **Email quota guard:** each transactional email, including the operational alert, reserves one send against `BREVO_DAILY_EMAIL_QUOTA`; one developer alert is sent at 80% and sends over the configured cap are held. Provider timeouts and 5xx responses receive one retry; all adapter failures are logged without recipient or response-body details and never fail the originating action.
 - Reads are not individually limited by the app; platform protection (DDoS, bot rules) is provided by the host.
@@ -533,7 +540,7 @@ Notes:
 - Startup validates this list with a schema; a missing or malformed value fails fast with a clear message (names only, never values).
 - Local, preview and staging share the non-production `homeish-testdb` Supabase project and its keys (ARCHITECTURE AD-13); the demo uses `homeish-demo` keys only in the `demo-homeish` deployment; production uses `homeish-live`, whose keys live only in the host secret stores and are never used elsewhere (AD-14).
 - The public website/entry scaffold makes no backend calls. Hosted scaffolds may use `preview` with nonfunctional `.invalid` backend URLs and placeholder keys, never real society credentials. Do not treat this as staging/production readiness. Full demo and beta backends remain unconfigured.
-- D-34 host routing adds no authenticated operations, society lookup API or reset endpoint. Unknown hosts return 404; non-marketing hosts carry `X-Robots-Tag: noindex, nofollow`; host-routed pages are private/no-store. The reserved Maplewood host serves only a disabled `/` placeholder; its other paths return 404, and onboarding and login remain unavailable. A hostname is not a society authorization credential.
+- D-34 host routing adds no authenticated operations, public society lookup API or reset endpoint. Server-side page rendering resolves an `active` society host through the service-role-only `society_host_lookup(slug)` RPC (id, name, status; archived societies are hidden); onboarding uses the developer RPCs `developer_create_society_with_slug`, `developer_set_society_slug` and `developer_society_onboarding_status` (OPERATIONS "Society onboarding"). Unknown hosts return 404; non-marketing hosts carry `X-Robots-Tag: noindex, nofollow`; host-routed pages are private/no-store. The reserved Maplewood host serves only a disabled `/` placeholder; its other paths return 404, and onboarding and login remain unavailable. An `active` society host serves sign-in and the app, but never `/developer`. A hostname is not a society authorization credential.
 - The owner approved resuming scaffold hosting on `homeish.vercel.app` and `beta-homeish.vercel.app`: `beta` deploys to `beta-homeish`, then verified beta merges into `main` to deploy `homeish`. Both projects use their Production target with automatic domain assignment; feature-branch Preview tracking is disabled. `APP_BASE_DOMAIN` remains `homeish.vercel.app`; nested demo/beta example domains are not yet attached. Each project's `NEXT_PUBLIC_APP_URL` must match its approved canonical address before connected workflows are enabled. Scaffold deployment does not provision real integrations or change any API contract.
 
 ---
