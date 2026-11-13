@@ -1360,6 +1360,187 @@ export type Database = {
         };
         Relationships: [];
       };
+      notice_blocks: {
+        Row: {
+          block_id: string;
+          notice_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id: string;
+          notice_id: string;
+          society_id: string;
+        };
+        Update: {
+          block_id?: string;
+          notice_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notice_blocks_block_same_society_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'notice_blocks_notice_same_society_fkey';
+            columns: ['society_id', 'notice_id'];
+            isOneToOne: false;
+            referencedRelation: 'notices';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'notice_blocks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      notice_reads: {
+        Row: {
+          notice_id: string;
+          read_at: string;
+          society_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          notice_id: string;
+          read_at?: string;
+          society_id: string;
+          user_id: string;
+        };
+        Update: {
+          notice_id?: string;
+          read_at?: string;
+          society_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notice_reads_notice_same_society_fkey';
+            columns: ['society_id', 'notice_id'];
+            isOneToOne: false;
+            referencedRelation: 'notices';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'notice_reads_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notice_reads_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      notices: {
+        Row: {
+          attachment_content_type: string | null;
+          attachment_path: string | null;
+          attachment_size_bytes: number | null;
+          audience: string;
+          body: string;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          edited_at: string | null;
+          expires_at: string | null;
+          id: string;
+          pinned: boolean;
+          society_id: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          withdrawn_at: string | null;
+          withdrawn_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          attachment_content_type?: string | null;
+          attachment_path?: string | null;
+          attachment_size_bytes?: number | null;
+          audience?: string;
+          body: string;
+          client_request_id: string;
+          created_at?: string;
+          created_by?: string;
+          edited_at?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          pinned?: boolean;
+          society_id: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Update: {
+          attachment_content_type?: string | null;
+          attachment_path?: string | null;
+          attachment_size_bytes?: number | null;
+          audience?: string;
+          body?: string;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          edited_at?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          pinned?: boolean;
+          society_id?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notices_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notices_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notices_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notices_withdrawn_by_fkey';
+            columns: ['withdrawn_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       notifications: {
         Row: {
           body: string;
@@ -3575,6 +3756,70 @@ export type Database = {
           p_target_unit_id: string;
         };
         Returns: string;
+      };
+      notice_create: {
+        Args: {
+          p_attachment: Json;
+          p_audience: string;
+          p_block_ids: string[];
+          p_body: string;
+          p_client_request_id: string;
+          p_expires_at: string;
+          p_pinned: boolean;
+          p_request_trace: string;
+          p_society_id: string;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      notice_get: {
+        Args: { p_notice_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      notice_list: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+          p_view?: string;
+        };
+        Returns: Json;
+      };
+      notice_mark_read: {
+        Args: { p_notice_id: string; p_society_id: string };
+        Returns: undefined;
+      };
+      notice_set_pinned: {
+        Args: {
+          p_notice_id: string;
+          p_pinned: boolean;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      notice_update: {
+        Args: {
+          p_attachment: Json;
+          p_audience: string;
+          p_block_ids: string[];
+          p_body: string;
+          p_expected_updated_at: string;
+          p_expires_at: string;
+          p_notice_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      notice_withdraw: {
+        Args: {
+          p_notice_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
       };
       record_developer_mfa: {
         Args: Record<PropertyKey, never>;
