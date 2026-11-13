@@ -128,6 +128,7 @@ describe('private file URL routes', () => {
       path: expect.stringMatching(new RegExp(`^${societyId}/logos/.*\\.png$`)),
       signedUrl: 'https://storage.test/signed-upload',
     });
+
     expect(mocks.createSignedUploadUrl).toHaveBeenCalledWith(
       expect.stringMatching(new RegExp(`^${societyId}/logos/.*\\.png$`)),
     );
@@ -136,6 +137,57 @@ describe('private file URL routes', () => {
       societyId,
       'test-request-id',
     );
+  });
+
+  it('lets residents delete only their own unreferenced staff photos', async () => {
+    const userId = '8a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+    const otherUploaderId = '9a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+    const staffPhotoPath = `${societyId}/staff/${userId}/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
+    mocks.buildRequestContext.mockResolvedValue({
+      db: {
+        storage: {
+          from: () => ({ remove: mocks.remove }),
+        },
+      },
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      mfaVerified: false,
+      memberships: [],
+      roles: ['resident'],
+      societyId,
+      societyStatus: 'active',
+      requestId: 'test-request-id',
+      userId,
+      enabledModules: new Set(['staff']),
+      logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+    });
+    mocks.remove.mockResolvedValueOnce({
+      data: [{ name: staffPhotoPath }],
+      error: null,
+    });
+
+    const allowed = await deleteUpload(
+      request(
+        '/api/files/upload-url',
+        { bucket: 'staff-photos', path: staffPhotoPath },
+        'DELETE',
+      ),
+    );
+    expect(allowed.status).toBe(200);
+    expect(mocks.remove).toHaveBeenCalledWith([staffPhotoPath]);
+
+    const denied = await deleteUpload(
+      request(
+        '/api/files/upload-url',
+        {
+          bucket: 'staff-photos',
+          path: `${societyId}/staff/${otherUploaderId}/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`,
+        },
+        'DELETE',
+      ),
+    );
+    expect(denied.status).toBe(403);
+    expect(mocks.remove).toHaveBeenCalledOnce();
   });
 
   function billingContext(roles = ['admin'], enabled = true) {

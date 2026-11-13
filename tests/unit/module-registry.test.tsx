@@ -28,6 +28,15 @@ describe('module registry', () => {
   it('keeps permission and navigation declarations scoped to each module', () => {
     expect(hasPermission(['admin'], 'core', 'membership:manage')).toBe(true);
     expect(hasPermission(['admin'], 'visitor', 'visitor:list')).toBe(true);
+    expect(hasPermission(['guard'], 'staff', 'staff:gate')).toBe(true);
+    expect(hasPermission(['committee'], 'staff', 'staff:manage')).toBe(false);
+    expect(getModuleNavigation('staff', 'guard')).toEqual([
+      {
+        href: '/guard/staff',
+        label: 'Staff entry',
+        permission: 'staff:gate',
+      },
+    ]);
     expect(hasPermission(['committee'], 'delivery', 'delivery:list')).toBe(
       true,
     );
@@ -108,6 +117,16 @@ describe('module registry', () => {
   });
 
   it('validates settings through each module schema', () => {
+    expect(parseModuleSettings('staff', {})).toEqual({});
+    expect(
+      parseModuleSettings('staff', { resident_approval_required: true }),
+    ).toEqual({ resident_approval_required: true });
+    expect(() =>
+      parseModuleSettings('staff', { resident_approval_required: 'yes' }),
+    ).toThrow();
+    expect(getModuleDefinition('staff').defaultSettings).toEqual({
+      resident_approval_required: true,
+    });
     expect(parseModuleSettings('visitor', {})).toEqual({});
     expect(
       parseModuleSettings('visitor', {

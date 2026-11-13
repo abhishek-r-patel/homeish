@@ -14,6 +14,10 @@ import {
   DEFAULT_SERVICE_REQUEST_SETTINGS,
   serviceRequestSettingsSchema,
 } from '../service-requests/validation';
+import {
+  DEFAULT_STAFF_SETTINGS,
+  staffSettingsSchema,
+} from '../staff/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -372,17 +376,34 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   staff: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_STAFF_SETTINGS,
     key: 'staff',
     name: 'Staff Management',
     navigation: {
       admin: [
         { href: '/admin/staff', label: 'Staff', permission: 'staff:list' },
       ],
+      guard: [
+        {
+          href: '/guard/staff',
+          label: 'Staff entry',
+          permission: 'staff:gate',
+        },
+      ],
+      resident: [{ href: '/staff', label: 'Staff', permission: 'staff:list' }],
     },
-    permissions: {},
+    permissions: {
+      'staff:list': ['admin', 'resident'],
+      'staff:manage': ['admin'],
+      'staff:review': ['admin'],
+      'staff:settings:manage': ['admin'],
+      'staff:register': ['resident'],
+      'staff:attendance': ['admin', 'resident'],
+      'staff:day_block': ['resident'],
+      'staff:gate': ['guard'],
+    },
     settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    settingsSchema: staffSettingsSchema,
   },
   housekeeping: {
     core: false,
@@ -495,7 +516,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'amenity',
   ],
   committee: ['core', 'billing', 'service_request', 'delivery', 'notice'],
-  guard: ['core', 'visitor', 'delivery'],
+  guard: ['core', 'visitor', 'delivery', 'staff'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
     'core',
@@ -503,6 +524,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'billing',
     'service_request',
     'delivery',
+    'staff',
     'notice',
     'amenity',
   ],

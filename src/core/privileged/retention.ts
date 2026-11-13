@@ -59,4 +59,20 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
     'housekeeping_retention_run',
     { p_today: today, p_request_trace: createRequestId() },
   );
+
+  const staffResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'staff_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (
+    typeof staffResult !== 'object' ||
+    staffResult === null ||
+    !('staffAttendanceDeleted' in staffResult) ||
+    typeof staffResult.staffAttendanceDeleted !== 'number' ||
+    !Number.isInteger(staffResult.staffAttendanceDeleted) ||
+    staffResult.staffAttendanceDeleted < 0
+  ) {
+    throw new Error('Staff retention returned an invalid response.');
+  }
 }
