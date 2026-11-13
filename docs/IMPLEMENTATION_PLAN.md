@@ -636,9 +636,26 @@ DATABASE 15.2.
 
 ---
 
-# Post-MVP (not planned in detail)
+# Post-MVP phases (P11–P15)
 
-Each follows the same pattern: a migration group, module registration, permission map, screens, tests, module gate, ships disabled. Order per PRD: **Staff** (P2-1), **Housekeeping inventory** (P2-2), **AMC** (P2-3), **Notice board** (P2-4, if approved), **Amenity booking** (P2-5, if approved). Also deferred until triggered: SMS/WhatsApp and mobile-number login (PRD D-06, A-35), payment gateway, native apps, offline mode (ARCHITECTURE Section 3).
+Each follows the same pattern: a migration group, module registration, permission map, screens, tests, module gate, ships disabled. Order per PRD and owner decision (2026-11-13):
+
+| Phase | Module                      | PRD        | Status                                                                          |
+| ----- | --------------------------- | ---------- | ------------------------------------------------------------------------------- |
+| P11   | Notice board (`notice`)     | §5.8, D-21 | Built on `feature-build-1`; awaiting the testdb migration push and owner review |
+| P12   | Staff (`staff`)             | §5.5, P2-1 | Not started                                                                     |
+| P13   | Housekeeping inventory      | §5.6, P2-2 | Not started                                                                     |
+| P14   | AMC (`amc`)                 | §5.7, P2-3 | Not started                                                                     |
+| P15   | Amenity booking (`amenity`) | §5.9, D-22 | Not started                                                                     |
+
+**P11 Notice board** delivers:
+
+- Migration `20261115110000_notice_board.sql`: `notices`, `notice_blocks` and `notice_reads`, the private `notice-files` bucket, and the RPCs `notice_create`, `notice_update`, `notice_set_pinned`, `notice_withdraw`, `notice_list`, `notice_get` and `notice_mark_read`.
+- Core layer in `src/core/notices/` and permissions `notice:list`, `notice:create`, `notice:manage` and `notice:archive`.
+- Screens: `/notices` and `/notices/{id}` for residents; `/admin/notices` (current and archive), `/admin/notices/new`, `/admin/notices/{id}` and `/admin/notices/{id}/edit` for admin and committee.
+- Tests: `tests/integration/database-notices.test.ts`, `tests/unit/notice-board.test.ts`, `tests/e2e/notices.spec.ts` and the `/fixtures/notices` screen in the accessibility sweep.
+
+Also deferred until triggered: SMS/WhatsApp and mobile-number login (PRD D-06, A-35), payment gateway, native apps, offline mode (ARCHITECTURE Section 3).
 
 ---
 
