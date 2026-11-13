@@ -2,6 +2,7 @@
 const ENTITY_PATHS: Readonly<Record<string, string>> = {
   billing_bill: '/bills',
   delivery_entry: '/deliveries',
+  notice: '/notices',
   service_request: '/requests',
   visitor_entry: '/visitors',
 };

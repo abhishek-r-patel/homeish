@@ -437,7 +437,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         { href: '/notices', label: 'Notices', permission: 'notice:list' },
       ],
     },
-    permissions: {},
+    permissions: {
+      'notice:list': ['admin', 'committee', 'resident'],
+      'notice:create': ['admin', 'committee'],
+      'notice:manage': ['admin', 'committee'],
+      'notice:archive': ['admin', 'committee'],
+    },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
@@ -489,7 +494,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'amenity',
   ],
-  committee: ['core', 'billing', 'service_request', 'delivery'],
+  committee: ['core', 'billing', 'service_request', 'delivery', 'notice'],
   guard: ['core', 'visitor', 'delivery'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
