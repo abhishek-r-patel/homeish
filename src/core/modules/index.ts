@@ -269,6 +269,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'delivery:collect': ['guard', 'resident'],
       'delivery:preference:read': ['admin', 'committee', 'resident'],
       'delivery:preference:manage': ['resident'],
+      'delivery:announce': ['resident'],
       'delivery:settings:manage': ['admin'],
     },
     settingsAccess: { delivery: 'admin' },

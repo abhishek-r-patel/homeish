@@ -2,6 +2,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { AppError, createRequestId, ValidationError } from '../errors';
+import { retryOnceOnDuplicate } from '../db/retry-on-duplicate';
 import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { verifyFileAttachment } from '../files/attachments';
 import {
@@ -38,6 +39,25 @@ const preferenceSchema = z.enum([
   'always_allow',
   'always_leave_at_gate',
 ]);
+const preAnnounceSchema = z
+  .object({
+    unitId: uuid,
+    platform: z.string().trim().min(1).max(60),
+    expectedFrom: z.iso.datetime({ offset: true }),
+    expectedTo: z.iso.datetime({ offset: true }),
+    clientRequestId: uuid,
+  })
+  .strict()
+  .refine(
+    ({ expectedFrom, expectedTo }) => {
+      const span = Date.parse(expectedTo) - Date.parse(expectedFrom);
+      return span > 0 && span <= 24 * 60 * 60 * 1000;
+    },
+    {
+      path: ['expectedTo'],
+      message: 'End within 24 hours after the start.',
+    },
+  );
 
 type DeliveryRpcError = { code?: string };
 
@@ -91,7 +111,8 @@ async function getContext(
     | 'delivery:collect'
     | 'delivery:preference:read'
     | 'delivery:preference:manage'
-    | 'delivery:settings:manage',
+    | 'delivery:settings:manage'
+    | 'delivery:announce',
   write = false,
 ) {
   const context = await buildRequestContext(createRequestId());
@@ -128,6 +149,12 @@ function throwRpcError(label: string, error: unknown): never {
   }
   if (cause.code === '22023') {
     throw new ValidationError({ form: 'Check the delivery details.' });
+  }
+  if (cause.code === '54000') {
+    throw new AppError('CONFLICT', {
+      reason: 'limit_reached',
+      message: 'This unit already has 20 expected deliveries.',
+    });
   }
   throw new Error(label, { cause: error });
 }
@@ -384,18 +411,20 @@ export async function createDeliveryEntry(input: unknown, requestId: string) {
     });
   }
   return privilegedRpc(
-    createDeliveryEntryPrivileged<DeliveryEntry>({
-      p_actor_id: context.userId,
-      p_society_id: societyId,
-      p_unit_id: parsed.unitId,
-      p_guard_id: guardId,
-      p_company: parsed.company,
-      p_delivery_person: parsed.deliveryPerson,
-      p_delivery_type: parsed.deliveryType,
-      p_photo_path: parsed.photoPath,
-      p_client_request_id: parsed.clientRequestId,
-      p_request_id: requestId,
-    }),
+    retryOnceOnDuplicate(() =>
+      createDeliveryEntryPrivileged<DeliveryEntry>({
+        p_actor_id: context.userId,
+        p_society_id: societyId,
+        p_unit_id: parsed.unitId,
+        p_guard_id: guardId,
+        p_company: parsed.company,
+        p_delivery_person: parsed.deliveryPerson,
+        p_delivery_type: parsed.deliveryType,
+        p_photo_path: parsed.photoPath,
+        p_client_request_id: parsed.clientRequestId,
+        p_request_id: requestId,
+      }),
+    ),
     'Could not create the delivery entry.',
   );
 }
@@ -520,5 +549,92 @@ export async function setDeliveryPreference(
       p_request_id: requestId,
     },
     'Could not update the delivery preference.',
+  );
+}
+
+export type DeliveryPreAnnouncement = {
+  id: string;
+  unit_id: string;
+  platform: string;
+  expected_from: string;
+  expected_to: string;
+  status: 'expected' | 'cancelled';
+  created_at: string;
+};
+
+export async function listDeliveryPreAnnouncements(
+  unitIds?: string[],
+): Promise<DeliveryPreAnnouncement[]> {
+  const { context, societyId } = await getContext('delivery:list');
+  const staff = context.roles.some((role) =>
+    ['admin', 'committee', 'guard'].includes(role),
+  );
+  let scope: (string | null)[];
+  if (unitIds) {
+    const parsed = z.array(uuid).max(50).safeParse(unitIds);
+    if (!parsed.success)
+      throw new ValidationError({ unitId: 'Choose a unit.' });
+    scope = parsed.data;
+  } else if (staff) {
+    scope = [null];
+  } else {
+    throw new AppError('FORBIDDEN');
+  }
+  const result = await Promise.all(
+    scope.map((unitId) =>
+      rpc<DeliveryPreAnnouncement[]>(
+        context,
+        'delivery_pre_announce_list',
+        { p_society_id: societyId, p_unit_id: unitId },
+        'Could not load expected deliveries.',
+      ),
+    ),
+  );
+  return result
+    .flat()
+    .sort((left, right) =>
+      left.expected_from.localeCompare(right.expected_from),
+    );
+}
+
+export async function preAnnounceDelivery(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext('delivery:announce', true);
+  const parsed = parseInput(preAnnounceSchema, input);
+  return rpc<DeliveryPreAnnouncement>(
+    context,
+    'delivery_pre_announce_create',
+    {
+      p_society_id: societyId,
+      p_unit_id: parsed.unitId,
+      p_platform: parsed.platform,
+      p_expected_from: parsed.expectedFrom,
+      p_expected_to: parsed.expectedTo,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_id: requestId,
+    },
+    'Could not save the expected delivery.',
+  );
+}
+
+export async function cancelDeliveryPreAnnouncement(
+  announcementId: string,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext('delivery:announce', true);
+  const parsedId = uuid.safeParse(announcementId);
+  if (!parsedId.success) {
+    throw new ValidationError({
+      announcementId: 'Choose an expected delivery.',
+    });
+  }
+  return rpc<DeliveryPreAnnouncement>(
+    context,
+    'delivery_pre_announce_cancel',
+    {
+      p_society_id: societyId,
+      p_announcement_id: parsedId.data,
+      p_request_id: requestId,
+    },
+    'Could not cancel the expected delivery.',
   );
 }
