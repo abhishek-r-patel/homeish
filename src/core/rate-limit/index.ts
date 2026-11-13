@@ -205,9 +205,8 @@ export async function enforceRateLimit(
       failureMode: policy.failureMode,
     });
     if (policy.failureMode === 'closed') {
-      throw new AppError('RATE_LIMITED', {
-        retryAfterSeconds: policy.windowSeconds,
-      });
+      // Still refuse, but say the service is down rather than blaming the user.
+      throw new AppError('INTEGRATION_FAILED');
     }
     return;
   }

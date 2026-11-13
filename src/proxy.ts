@@ -83,9 +83,12 @@ export async function proxy(request: NextRequest) {
       },
     });
     const { error } = await supabase.auth.getUser();
+    // An outage must not end the session or bypass the app's error page: keep
+    // the cookies and let the page report the failure with a reference ID.
     if (error && error.status !== 401) {
-      throw new Error('Could not refresh the sign-in session.', {
-        cause: error,
+      console.error('Homeish session refresh failed.', {
+        status: error.status ?? null,
+        name: error.name,
       });
     }
   }

@@ -144,6 +144,9 @@ export function VisitorActionForm({
           role="status"
         >
           {result.message}
+          {!result.ok && result.referenceId
+            ? ` Reference: ${result.referenceId}`
+            : ''}
         </p>
       ) : null}
       {approval ? (
@@ -242,8 +245,9 @@ export function VisitorCodeControl({
     startTransition(async () => {
       const result = await checkInAction(formData);
       setMessage(
-        result.message ??
-          (result.ok ? 'Visitor checked in.' : 'Check-in failed.'),
+        result.ok
+          ? (result.message ?? 'Visitor checked in.')
+          : `${result.message}${result.referenceId ? ` Reference: ${result.referenceId}` : ''}`,
       );
       if (result.ok) {
         setCode('');
@@ -306,7 +310,7 @@ export function VisitorCodeControl({
                 ? 'This visitor code has already been used.'
                 : validation.ok
                   ? 'This visitor code is invalid.'
-                  : validation.message}
+                  : `${validation.message}${validation.referenceId ? ` Reference: ${validation.referenceId}` : ''}`}
         </p>
       ) : null}
       {validation?.ok && reason === 'valid' ? (

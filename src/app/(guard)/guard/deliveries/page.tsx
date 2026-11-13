@@ -67,7 +67,7 @@ export default async function GuardDeliveriesPage() {
         </p>
         <h1 className="text-title font-semibold">Deliveries</h1>
       </header>
-      <DeliveryRealtimeRefresh societyId={societyId} />
+      <DeliveryRealtimeRefresh gate societyId={societyId} />
 
       <Card
         description="The unit's standing preference is applied automatically; otherwise residents are asked."

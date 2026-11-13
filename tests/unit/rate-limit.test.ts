@@ -117,10 +117,7 @@ describe('rate-limit service', () => {
 
     await expect(
       enforceRateLimit('authVerifyCodeIpHourly', '192.0.2.42', requestId),
-    ).rejects.toMatchObject({
-      code: 'RATE_LIMITED',
-      retryAfterSeconds: 3600,
-    });
+    ).rejects.toMatchObject({ code: 'INTEGRATION_FAILED' });
     expect(platformError).toHaveBeenCalledWith(
       'Homeish rate-limit store unavailable.',
       expect.objectContaining({
