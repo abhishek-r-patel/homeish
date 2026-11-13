@@ -3,6 +3,7 @@ import 'server-only';
 import { z } from 'zod';
 import { AppError, createRequestId, ValidationError } from '../errors';
 import { verifyFileAttachment } from '../files/attachments';
+import { retryOnceOnDuplicate } from '../db/retry-on-duplicate';
 import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { authorizeRequest } from '../permissions/authorize';
 import {
@@ -43,6 +44,24 @@ const preApprovalSchema = z
     validFrom: z.iso.datetime({ offset: true }),
     validTo: z.iso.datetime({ offset: true }),
     vehicleNo: z.string().trim().max(20).nullable(),
+  })
+  .strict()
+  .refine((value) => Date.parse(value.validTo) > Date.parse(value.validFrom), {
+    path: ['validTo'],
+    message: 'End time must be after start time.',
+  });
+const frequentVisitorSchema = z
+  .object({
+    unitId: uuid,
+    visitorName: z.string().trim().min(1).max(120),
+    vehicleNo: z.string().trim().max(20).nullable(),
+  })
+  .strict();
+const frequentPreApprovalSchema = z
+  .object({
+    frequentVisitorId: uuid,
+    validFrom: z.iso.datetime({ offset: true }),
+    validTo: z.iso.datetime({ offset: true }),
   })
   .strict()
   .refine((value) => Date.parse(value.validTo) > Date.parse(value.validFrom), {
@@ -94,6 +113,14 @@ export type VisitorPreApproval = {
   is_expired?: boolean;
 };
 
+export type VisitorFrequentVisitor = {
+  id: string;
+  unit_id: string;
+  visitor_name: string;
+  vehicle_no: string | null;
+  last_used_at: string | null;
+};
+
 export type VisitorUnitOption = {
   id: string;
   number: string;
@@ -109,6 +136,7 @@ async function getContext(
     | 'visitor:check_in'
     | 'visitor:preapproval:create'
     | 'visitor:preapproval:cancel'
+    | 'visitor:frequent:manage'
     | 'visitor:settings:manage'
     | 'visitor:blacklist:read'
     | 'visitor:blacklist:manage',
@@ -148,6 +176,12 @@ function throwRpcError(label: string, error: unknown): never {
   }
   if (cause.code === '22023') {
     throw new ValidationError({ form: 'Check the visitor details.' });
+  }
+  if (cause.code === '54000') {
+    throw new AppError('CONFLICT', {
+      reason: 'limit_reached',
+      message: 'This unit already has 50 frequent visitors. Remove one first.',
+    });
   }
   throw new Error(label, { cause: error });
 }
@@ -372,20 +406,22 @@ export async function createVisitorEntry(input: unknown, requestId: string) {
     });
   }
   const entry = await privilegedRpc(
-    createVisitorEntryPrivileged<VisitorEntry>({
-      p_actor_id: context.userId,
-      p_society_id: societyId,
-      p_unit_id: parsed.unitId,
-      p_guard_id: guardId,
-      p_visitor_name: parsed.visitorName,
-      p_visitor_phone: parsed.visitorPhone,
-      p_purpose: parsed.purpose,
-      p_people_count: parsed.peopleCount,
-      p_vehicle_no: parsed.vehicleNo,
-      p_photo_path: parsed.photoPath,
-      p_client_request_id: parsed.clientRequestId,
-      p_request_id: requestId,
-    }),
+    retryOnceOnDuplicate(() =>
+      createVisitorEntryPrivileged<VisitorEntry>({
+        p_actor_id: context.userId,
+        p_society_id: societyId,
+        p_unit_id: parsed.unitId,
+        p_guard_id: guardId,
+        p_visitor_name: parsed.visitorName,
+        p_visitor_phone: parsed.visitorPhone,
+        p_purpose: parsed.purpose,
+        p_people_count: parsed.peopleCount,
+        p_vehicle_no: parsed.vehicleNo,
+        p_photo_path: parsed.photoPath,
+        p_client_request_id: parsed.clientRequestId,
+        p_request_id: requestId,
+      }),
+    ),
     'Could not create the visitor entry.',
   );
   const blacklisted = parsed.visitorPhone
@@ -535,6 +571,95 @@ export async function cancelVisitorPreApproval(
     'visitor_pre_approval_cancel',
     { p_approval_id: approvalId, p_request_id: requestId },
     'Could not cancel the visitor pre-approval.',
+  );
+}
+
+export async function listFrequentVisitors(
+  unitId: string,
+): Promise<VisitorFrequentVisitor[]> {
+  const { context, societyId } = await getContext('visitor:frequent:manage');
+  const parsedUnit = uuid.safeParse(unitId);
+  if (!parsedUnit.success) {
+    throw new ValidationError({ unitId: 'Choose a unit.' });
+  }
+  return rpc<VisitorFrequentVisitor[]>(
+    context,
+    'visitor_frequent_list',
+    { p_society_id: societyId, p_unit_id: parsedUnit.data },
+    'Could not load frequent visitors.',
+  );
+}
+
+export async function saveFrequentVisitor(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'visitor:frequent:manage',
+    true,
+  );
+  const parsed = parseInput(frequentVisitorSchema, input);
+  return rpc<VisitorFrequentVisitor>(
+    context,
+    'visitor_frequent_save',
+    {
+      p_society_id: societyId,
+      p_unit_id: parsed.unitId,
+      p_visitor_name: parsed.visitorName,
+      p_vehicle_no: parsed.vehicleNo,
+      p_request_id: requestId,
+    },
+    'Could not save the frequent visitor.',
+  );
+}
+
+export async function removeFrequentVisitor(
+  frequentVisitorId: string,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'visitor:frequent:manage',
+    true,
+  );
+  if (!uuid.safeParse(frequentVisitorId).success) {
+    throw new ValidationError({
+      frequentVisitorId: 'Choose a frequent visitor.',
+    });
+  }
+  return rpc<void>(
+    context,
+    'visitor_frequent_remove',
+    {
+      p_society_id: societyId,
+      p_frequent_visitor_id: frequentVisitorId,
+      p_request_id: requestId,
+    },
+    'Could not remove the frequent visitor.',
+  );
+}
+
+export async function preApproveFrequentVisitor(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'visitor:frequent:manage',
+    true,
+  );
+  authorizeRequest(context, {
+    moduleKey: 'visitor',
+    permission: 'visitor:preapproval:create',
+    write: true,
+  });
+  const parsed = parseInput(frequentPreApprovalSchema, input);
+  return rpc<VisitorPreApproval>(
+    context,
+    'visitor_frequent_pre_approve',
+    {
+      p_society_id: societyId,
+      p_frequent_visitor_id: parsed.frequentVisitorId,
+      p_valid_from: parsed.validFrom,
+      p_valid_to: parsed.validTo,
+      p_request_id: requestId,
+    },
+    'Could not pre-approve the frequent visitor.',
   );
 }
 

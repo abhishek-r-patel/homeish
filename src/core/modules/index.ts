@@ -214,6 +214,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'visitor:check_in': ['admin', 'guard'],
       'visitor:preapproval:create': ['resident'],
       'visitor:preapproval:cancel': ['admin', 'committee', 'resident'],
+      'visitor:frequent:manage': ['resident'],
       'visitor:blacklist:read': ['admin', 'committee', 'guard'],
       'visitor:blacklist:manage': ['admin'],
       'visitor:settings:manage': ['admin'],
