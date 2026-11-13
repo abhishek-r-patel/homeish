@@ -26,13 +26,22 @@ to notify the on-call contact. Investigate a failure in the hosting logs and the
 developer health page; do not expose internal health details through the public
 endpoint.
 
-Beta status, 2026-11-12: UptimeRobot (Free plan) monitor `804629935` checks
+Beta status, 2026-11-13: UptimeRobot (Free plan) monitor `804629935` checks
 `https://beta-homeish.vercel.app/api/health` every five minutes and emails the
-owner. Its test notification was received, and it recorded beta's outage before
-configuration and the recovery afterwards. P9 is deployed; health returned 200
-and an authenticated manual daily-job request returned 200. The shared test
-database had no active or trial societies at verification, so no
-society-scoped task ran; this does not prove a populated unattended day cycle.
+owner. Its setup test notification was received, and it recorded beta's outage
+before configuration and the recovery afterwards. In a separate controlled
+stale-health test, the endpoint returned 503 for six minutes, then returned 200
+after the original marker was restored. The owner confirmed receipt of that
+test's outage/recovery email on 2026-11-13, after initially being unable to check
+during a reported Outlook.com outage.
+Health returned 200 and the active validation society's 2026-11-13 IST cycle
+completed all six daily tasks. Two authenticated local repeats returned 200 and
+skipped all six. The INR 1 test bill was generated after that cycle; its
+reminder was later run directly and the resident Notifications page showed
+“Society dues are overdue.” No email was sent. The request dashboard's
+category-grouping error was fixed in testdb by migration `20261113060000` and
+verified against the synthetic request. The guarded testdb integrity workflow
+passed on 2026-11-12.
 
 ### Sentry critical-error alert
 
@@ -46,8 +55,26 @@ alert.
 Configured 2026-11-11: issue alert `1480537` ("Homeish critical errors") fires
 when an event's `severity` tag equals `critical` and emails the owner, at most
 once every 60 minutes. A synthetic critical event triggered it, and the test
-issue was resolved. P9's severity-tag changes are now deployed to beta; a
-controlled application-originated critical event still needs verification.
+issue was resolved. P9's severity-tag changes are now deployed to beta.
+
+Application-originated verification, 2026-11-13 at 12:26 IST: a one-off synthetic
+task ran locally through the real `runDailyJobs` failure handler,
+`logUnexpectedError`, and scrubbed Sentry adapter, using `homeish-testdb` and
+staging Sentry configuration. Sentry accepted event
+`a7fb195ed0c14740a66bfb22d2a4c039` with HTTP 200. Its tags were
+`severity:critical`, `source:job`, and `route:/api/jobs/daily`; the scrubbed
+outbound event contained no user, request, extra, breadcrumb, or context objects.
+The owner confirmed the alert email arrived. The matching
+[HOMEISH-4 issue](https://abhishek-patel-a0.sentry.io/issues/160792766/) was
+resolved and its resolved state verified after reload. Developer Console error
+`ERR-4E0BC92A93` was also verified and resolved with a drill note.
+
+This was a local application-runner drill, not an induced failure of beta's
+deployed cron endpoint. All six real job keys were unchanged. The drill used the
+separate non-scheduled `core.p9_alert_drill_20261113` run key and synthetic
+operational records. No settings or permissions were changed. The temporary live
+test and private configuration file were removed. P9 monitoring validation is
+complete.
 
 ### Email quota
 
@@ -217,7 +244,9 @@ For a local test database configured in `.env.testdb.local`, run
 invariant, and exits nonzero if any check fails. It never repairs or deletes
 data. Run it after each restore and monthly; the main-branch workflow checks
 only the guarded `homeish-testdb` project monthly and can be dispatched
-manually. Its result has not yet been verified in GitHub Actions.
+manually. Guarded manual run
+[43268107270](https://github.com/abhishek-r-patel/homeish/actions/runs/43268107270)
+passed on 2026-11-12.
 
 ## Incidents and administrative actions
 

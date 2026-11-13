@@ -544,14 +544,18 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 
 **Prerequisites:** P5–P8 (or whichever modules exist) complete. OPERATIONS.md and ERROR_LOGGING.md written.
 
+**Status: complete for the approved testdb/staging scope (2026-11-13).** Scheduled
+backups remain paused; production backup activation and Storage-file backup
+remain explicitly deferred as described below.
+
 | ID   | Task                                                                                                                                                                                                    | Size |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired entries and uncollected parcels, request auto-close) and verify run-key idempotency across all of them | M    |
+| P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired visitor entries, request auto-close); delivery overdue status is computed on read, not by a daily task. Verify run-key idempotency across the tasks | M    |
 | P9.2 | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                            | L    |
 | P9.3 | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                         | M    |
 | P9.4 | Google Drive encrypted database export and compatible restore drill verified for homeish-testdb; scheduled backups remain paused pending production safeguards. Weekly file copy is deferred for lack of an approved least-privilege credential | M    |
-| P9.5 | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. Still verify a populated staging day cycle and an application-originated critical alert | M    |
-| P9.6 | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; verify the guarded testdb workflow in GitHub Actions                                                                 | M    |
+| P9.5 | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. The day cycle, idempotency, resident reminder, uptime outage/recovery email, and application-originated critical alert/email were verified | M    |
+| P9.6 | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; guarded testdb workflow passed in GitHub Actions on 2026-11-12                                                                 | M    |
 
 **Database changes:** retention/anonymise functions; no new tables. **API changes:** none beyond the daily route's task list.
 
@@ -559,15 +563,23 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 
 **Completion criteria:** a full day cycle runs on staging with representative test data and no unintended real notifications; a missed run is detected; a backup restores to a new isolated compatible target (DATABASE 15.2). The approved testdb backup/restore drill is complete; production backup activation and Storage-file backup remain explicitly deferred.
 
-**P9 external setup status, 2026-11-12:** beta (`beta-homeish`, on the shared
+**P9 external setup status, 2026-11-13:** beta (`beta-homeish`, on the shared
 `homeish-testdb` project) has the P8/P9 release, an external uptime monitor, a
 Sentry critical-error alert, Brevo transactional email, and the daily schedule.
-The monitor's notification/recovery, Sentry's synthetic critical event, and a
-real Brevo delivery were verified (OPERATIONS.md). Beta health and the scheduled
-route are healthy, but the test database currently has no active or trial
-societies; a manual cron request therefore did not exercise society-scoped tasks.
-Still verify a safe populated day cycle, a missed-run notification, and an
-application-originated critical alert before calling P9 complete.
+The monitor's setup notification, Sentry's synthetic critical event, and a
+real Brevo delivery were verified (OPERATIONS.md). The active validation
+society's 2026-11-13 IST cycle completed all six tasks; two authenticated local
+repeats skipped them, confirming run-key idempotency. The INR 1 test bill was
+generated after that cycle; its reminder was later run directly and appeared in
+the resident Notifications page. The stale-health test returned 503 and
+recovered to 200; the owner confirmed receipt of its UptimeRobot outage/recovery
+email. A one-off synthetic failure through the real application runner locally,
+using testdb and staging Sentry configuration, persisted a critical log and
+reached Sentry. The owner confirmed its alert email; the matching Sentry issue
+and Developer Console error were resolved (OPERATIONS.md). All six real job
+keys were unchanged by that drill. The guarded testdb integrity workflow passed
+on 2026-11-12. The request-dashboard grouping error was fixed by migration
+`20261113060000` and verified against the existing synthetic request.
 
 **Backup status:** a manual encrypted homeish-testdb archive was downloaded,
 authenticated, restored into a disposable Supabase-compatible PostgreSQL 17
