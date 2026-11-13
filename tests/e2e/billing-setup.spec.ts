@@ -1,6 +1,6 @@
 // Check synthetic billing setup interactions, role visibility and phone accessibility.
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('billing setup fits phones and remains accessible through charge editing', async ({
   page,

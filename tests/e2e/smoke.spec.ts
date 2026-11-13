@@ -1,6 +1,6 @@
 // Browser checks for marketing, synthetic interactions and host boundaries.
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('loads the root route with no automated accessibility violations', async ({
   page,

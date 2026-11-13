@@ -13,7 +13,8 @@ function isRecord(value: Json | undefined): value is {
 }
 
 function safeCell(value: string) {
-  const formulaSafe = /^[=+\-@]/.test(value) ? `'${value}` : value;
+  // Spreadsheets treat these leading characters as formula or control prefixes.
+  const formulaSafe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
   return `"${formulaSafe.replaceAll('"', '""')}"`;
 }
 
