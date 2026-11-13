@@ -4,6 +4,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../db/database.types';
+import { supabaseAuthCookieOptions } from '../db/auth-cookie-options';
 
 let client: SupabaseClient<Database> | undefined;
 
@@ -13,6 +14,8 @@ export function createNotificationBrowserClient() {
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase public environment is not configured.');
   }
-  client ??= createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  client ??= createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookieOptions: supabaseAuthCookieOptions(),
+  });
   return client;
 }

@@ -1,6 +1,6 @@
 // Verify resident request creation, photos, comments, close, rating and responsive access.
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 
 const corsHeaders = {
   'access-control-allow-origin': '*',

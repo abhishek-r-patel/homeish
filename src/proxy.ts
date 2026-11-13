@@ -2,14 +2,28 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { parseRoutingEnvironment } from './core/config/env-schema';
-import { resolveSiteSurface } from './core/config/host-routing';
+import {
+  resolveSiteSurface,
+  resolveSociety,
+  societyServesPath,
+} from './core/config/host-routing';
+import { supabaseAuthCookieOptions } from './core/db/auth-cookie-options';
+import {
+  buildContentSecurityPolicy,
+  createNonce,
+  NONCE_HEADER,
+} from './core/security/headers';
 
 export async function proxy(request: NextRequest) {
-  const surface = resolveSiteSurface(
-    request.headers.get('host'),
-    parseRoutingEnvironment(process.env),
-  );
-  if (!surface || (surface === 'society' && request.nextUrl.pathname !== '/')) {
+  const host = request.headers.get('host');
+  const routing = parseRoutingEnvironment(process.env);
+  const surface = resolveSiteSurface(host, routing);
+  const society = surface === 'society' ? resolveSociety(host, routing) : null;
+  if (
+    !surface ||
+    (surface === 'society' &&
+      (!society || !societyServesPath(society, request.nextUrl.pathname)))
+  ) {
     return new NextResponse('This Homeish address is not configured.', {
       status: 404,
       headers: {
@@ -18,7 +32,21 @@ export async function proxy(request: NextRequest) {
       },
     });
   }
-  let response = NextResponse.next({ request });
+  const nonce = createNonce();
+  const contentSecurityPolicy = buildContentSecurityPolicy({
+    nonce,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    isDevelopment: process.env.NODE_ENV === 'development',
+    isHttps: request.nextUrl.protocol === 'https:',
+  });
+  // Next.js reads the nonce from the request's CSP header while rendering.
+  const forward = () => {
+    const headers = new Headers(request.headers);
+    headers.set('Content-Security-Policy', contentSecurityPolicy);
+    headers.set(NONCE_HEADER, nonce);
+    return NextResponse.next({ request: { headers } });
+  };
+  let response = forward();
   const pathname = request.nextUrl.pathname;
   const shouldRefreshSession =
     pathname === '/session' ||
@@ -38,6 +66,7 @@ export async function proxy(request: NextRequest) {
       throw new Error('Supabase public environment is not configured.');
     }
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookieOptions: supabaseAuthCookieOptions(),
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -46,7 +75,7 @@ export async function proxy(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          response = forward();
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
@@ -54,12 +83,16 @@ export async function proxy(request: NextRequest) {
       },
     });
     const { error } = await supabase.auth.getUser();
+    // An outage must not end the session or bypass the app's error page: keep
+    // the cookies and let the page report the failure with a reference ID.
     if (error && error.status !== 401) {
-      throw new Error('Could not refresh the sign-in session.', {
-        cause: error,
+      console.error('Homeish session refresh failed.', {
+        status: error.status ?? null,
+        name: error.name,
       });
     }
   }
+  response.headers.set('Content-Security-Policy', contentSecurityPolicy);
   response.headers.set('Cache-Control', 'private, no-store');
   if (surface !== 'website') {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');

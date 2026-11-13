@@ -134,6 +134,37 @@ describe.skipIf(!hasDatabase)('database service requests', () => {
     await database?.drop();
   });
 
+  it('aggregates the dashboard by individual request category', async () => {
+    await createRequest('resident');
+    const dashboard = await database.asRole(
+      'authenticated',
+      { sub: users.admin },
+      async (client) =>
+        (
+          await client.query<{
+            result: {
+              total_open: number;
+              by_status: Record<string, number>;
+              by_category: Array<{
+                category_id: string;
+                category: string;
+                total: number;
+              }>;
+            };
+          }>(`select public.request_dashboard($1) as result`, [societyId])
+        ).rows[0]!.result,
+    );
+
+    expect(dashboard.total_open).toBe(1);
+    expect(dashboard.by_status).toEqual({ open: 1 });
+    expect(dashboard.by_category).toHaveLength(8);
+    expect(
+      dashboard.by_category.find(
+        (category) => category.category_id === categoryId,
+      ),
+    ).toMatchObject({ category: 'Plumbing', total: 1 });
+  });
+
   function uploadPhoto(role: Role, path: string) {
     return database.asRole('authenticated', { sub: users[role] }, (client) =>
       client.query(

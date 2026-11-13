@@ -1,4 +1,4 @@
-// Show unit delivery preferences, pending decisions and resident history.
+// Show unit delivery preferences, expected deliveries, pending decisions and history.
 import { Card } from '@/components/ui/data-display';
 import { DeliveryActionForm } from '@/components/delivery/action-form';
 import { DeliveryRealtimeRefresh } from '@/components/delivery/realtime-refresh';
@@ -8,11 +8,14 @@ import {
   getDeliverySettings,
   getDeliverySocietyTimezone,
   listDeliveryEntries,
+  listDeliveryPreAnnouncements,
   listDeliveryUnits,
   requireDeliveryResident,
 } from '@/core/delivery/operations';
 import {
+  cancelDeliveryPreAnnouncementAction,
   collectDeliveryAction,
+  preAnnounceDeliveryAction,
   respondToDeliveryAction,
   setDeliveryPreferenceAction,
 } from './actions';
@@ -49,6 +52,10 @@ export default async function ResidentDeliveriesPage() {
       preference: await getDeliveryPreference(unit.id),
     })),
   );
+  const expected = units.length
+    ? await listDeliveryPreAnnouncements(units.map((unit) => unit.id))
+    : [];
+  const announceRequestId = crypto.randomUUID();
   const unitLabels = new Map(units.map((unit) => [unit.id, unitLabel(unit)]));
   const approverUnitIds = new Set(
     units.filter((unit) => unit.canManagePreference).map((unit) => unit.id),
@@ -141,6 +148,142 @@ export default async function ResidentDeliveriesPage() {
         ) : (
           <p className="text-body text-ink-muted">
             Your account has no active unit occupancy.
+          </p>
+        )}
+      </Card>
+
+      <Card
+        description="Tell the gate about a delivery you expect. Guards see it until the window ends."
+        title="Expected deliveries"
+      >
+        {units.length ? (
+          <DeliveryActionForm
+            action={preAnnounceDeliveryAction}
+            className="grid gap-space-3"
+          >
+            <input
+              name="clientRequestId"
+              type="hidden"
+              value={announceRequestId}
+            />
+            <label
+              className="grid gap-space-1 text-body-strong"
+              htmlFor="announce-unit"
+            >
+              Unit
+              <select
+                className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
+                id="announce-unit"
+                name="unitId"
+                required
+              >
+                {units.map((unit) => (
+                  <option key={unit.id} value={unit.id}>
+                    {unitLabel(unit)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label
+              className="grid gap-space-1 text-body-strong"
+              htmlFor="announce-platform"
+            >
+              Platform or sender
+              <input
+                autoComplete="off"
+                className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
+                id="announce-platform"
+                maxLength={60}
+                name="platform"
+                placeholder="For example, Amazon"
+                required
+              />
+            </label>
+            <div className="grid gap-space-3 sm:grid-cols-2">
+              <label
+                className="grid min-w-0 gap-space-1 text-body-strong"
+                htmlFor="announce-from"
+              >
+                Expected from
+                <input
+                  className="min-h-12 min-w-0 rounded-md border border-rule bg-surface px-space-3"
+                  id="announce-from"
+                  name="expectedFrom"
+                  required
+                  type="datetime-local"
+                />
+              </label>
+              <label
+                className="grid min-w-0 gap-space-1 text-body-strong"
+                htmlFor="announce-to"
+              >
+                Expected until
+                <input
+                  aria-describedby="announce-window-help"
+                  className="min-h-12 min-w-0 rounded-md border border-rule bg-surface px-space-3"
+                  id="announce-to"
+                  name="expectedTo"
+                  required
+                  type="datetime-local"
+                />
+              </label>
+            </div>
+            <p
+              className="text-caption text-ink-muted"
+              id="announce-window-help"
+            >
+              Society time ({timezone}). The window can be up to 24 hours.
+            </p>
+            <button
+              className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white focus-visible:outline-2 focus-visible:outline-focus"
+              type="submit"
+            >
+              Tell the gate
+            </button>
+          </DeliveryActionForm>
+        ) : (
+          <p className="text-body text-ink-muted">
+            Your account has no active unit occupancy.
+          </p>
+        )}
+        {expected.length ? (
+          <ul className="mt-space-4 grid gap-space-3">
+            {expected.map((announcement) => (
+              <li
+                className="grid gap-space-2 rounded-md border border-rule p-space-3"
+                key={announcement.id}
+              >
+                <div>
+                  <p className="text-body-strong">{announcement.platform}</p>
+                  <p className="text-caption text-ink-muted">
+                    {unitLabels.get(announcement.unit_id) ?? 'Your unit'} ·{' '}
+                    {dateTime(announcement.expected_from, timezone)} to{' '}
+                    {dateTime(announcement.expected_to, timezone)}
+                  </p>
+                </div>
+                <DeliveryActionForm
+                  action={cancelDeliveryPreAnnouncementAction}
+                  className="w-fit"
+                >
+                  <input
+                    name="announcementId"
+                    type="hidden"
+                    value={announcement.id}
+                  />
+                  <button
+                    aria-label={`Cancel expected ${announcement.platform} delivery`}
+                    className="min-h-12 rounded-md border border-rule-strong px-space-4 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
+                    type="submit"
+                  >
+                    Cancel
+                  </button>
+                </DeliveryActionForm>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-space-4 text-body text-ink-muted">
+            No expected deliveries.
           </p>
         )}
       </Card>

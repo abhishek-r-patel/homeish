@@ -2,6 +2,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { AppError, CONFLICT_REASONS, ValidationError } from '../errors';
+import { retryOnceOnDuplicate } from '../db/retry-on-duplicate';
 import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { authorizeRequest } from '../permissions/authorize';
 import type { RequestContext } from '../tenancy/request-context';
@@ -21,10 +22,14 @@ export async function serviceRequestRpc<T>(
   name: string,
   args: Record<string, unknown>,
   schema: z.ZodType<T>,
+  options: { retryOnDuplicate?: boolean } = {},
 ): Promise<T> {
   let result: unknown;
   try {
-    result = await invokeUntypedRpc<unknown>(context.db, name, args);
+    const call = () => invokeUntypedRpc<unknown>(context.db, name, args);
+    result = await (options.retryOnDuplicate
+      ? retryOnceOnDuplicate(call)
+      : call());
   } catch (error) {
     const cause = z
       .object({
@@ -96,6 +101,7 @@ export type ServiceRequestListFilters = {
   to?: string;
   limit?: number;
   offset?: number;
+  sort?: 'default' | 'votes';
 };
 
 export async function readServiceRequests(
@@ -121,6 +127,7 @@ export async function readServiceRequests(
       p_to: filters.to ?? null,
       p_limit: filters.limit ?? 50,
       p_offset: filters.offset ?? 0,
+      p_sort: filters.sort ?? 'default',
     },
     requestListSchema,
   );

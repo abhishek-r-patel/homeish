@@ -50,13 +50,14 @@ const registrationDecisionSchema = z
     reason: z.string().trim().max(200).optional(),
   })
   .strict();
+const formCheckboxSchema = z.preprocess((value) => value === 'on', z.boolean());
 const occupancySchema = z
   .object({
     unitId: z.uuid(),
     membershipId: z.uuid(),
     relationship: z.enum(['owner', 'tenant', 'family']),
-    isPrimary: z.boolean(),
-    isApprover: z.boolean(),
+    isPrimary: formCheckboxSchema,
+    isApprover: formCheckboxSchema,
     startedAt: z.preprocess(
       (value) => (value === '' || value === null ? undefined : value),
       z.iso.date().optional(),

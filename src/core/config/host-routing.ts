@@ -1,6 +1,10 @@
 // Resolve explicit public hosts without treating a hostname as authorization.
 import type { parseRoutingEnvironment } from './env-schema';
-import { findReservedSociety, type ReservedSociety } from './societies';
+import {
+  findReservedSociety,
+  reservedSocieties,
+  type ReservedSociety,
+} from './societies';
 
 export type RoutingConfiguration = ReturnType<typeof parseRoutingEnvironment>;
 export type SiteSurface = 'website' | 'demo' | 'beta' | 'society';
@@ -19,6 +23,7 @@ export function parseRequestHost(host: string | null) {
 export function resolveSociety(
   host: string | null,
   configuration: RoutingConfiguration,
+  societies: readonly ReservedSociety[] = reservedSocieties,
 ): ReservedSociety | null {
   const parsed = parseRequestHost(host);
   if (!parsed || configuration.APP_DEPLOYMENT === 'beta') return null;
@@ -31,16 +36,23 @@ export function resolveSociety(
   }
   if (!suffix || !hostname.endsWith(suffix)) return null;
   const slug = hostname.slice(0, -suffix.length);
-  return slug.includes('.') ? null : findReservedSociety(slug);
+  return slug.includes('.') ? null : findReservedSociety(slug, societies);
+}
+
+// Disabled hosts serve only the placeholder; active hosts serve the app but never the developer console.
+export function societyServesPath(society: ReservedSociety, pathname: string) {
+  if (society.status !== 'active') return pathname === '/';
+  return pathname !== '/developer' && !pathname.startsWith('/developer/');
 }
 
 export function resolveSiteSurface(
   host: string | null,
   configuration: RoutingConfiguration,
+  societies: readonly ReservedSociety[] = reservedSocieties,
 ): SiteSurface | null {
   const parsed = parseRequestHost(host);
   if (!parsed) return null;
-  if (resolveSociety(host, configuration)) return 'society';
+  if (resolveSociety(host, configuration, societies)) return 'society';
   const { hostname, port } = parsed;
   const isBeta = configuration.APP_DEPLOYMENT === 'beta';
   const base = configuration.APP_BASE_DOMAIN;

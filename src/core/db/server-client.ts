@@ -3,6 +3,7 @@ import 'server-only';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { serverEnvironment } from '../config/server-env';
+import { supabaseAuthCookieOptions } from './auth-cookie-options';
 import type { Database } from './database.types';
 
 export const ACTIVE_SOCIETY_COOKIE = 'homeish-active-society';
@@ -13,6 +14,7 @@ export async function createUserSupabaseClient() {
     serverEnvironment.public.NEXT_PUBLIC_SUPABASE_URL,
     serverEnvironment.public.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      cookieOptions: supabaseAuthCookieOptions(),
       cookies: {
         getAll() {
           return cookieStore.getAll();

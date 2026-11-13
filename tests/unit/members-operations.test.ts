@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   authorizeRequest: vi.fn(),
   buildRequestContext: vi.fn(),
   invokeUntypedRpc: vi.fn(),
+  rpc: vi.fn(),
   sendNotificationPushesForRequest: vi.fn(),
 }));
 
@@ -26,6 +27,7 @@ vi.mock('../../src/core/privileged/notification-delivery', () => ({
 }));
 
 import {
+  assignOccupant,
   approveSocietyRegistration,
   rejectSocietyRegistration,
 } from '../../src/core/members/operations';
@@ -33,8 +35,9 @@ import {
 const membershipId = 'c0d55fc3-0751-4b79-86c1-5b3e25942392';
 const requestId = 'a0d55fc3-0751-4b79-86c1-5b3e25942392';
 const societyId = 'b0d55fc3-0751-4b79-86c1-5b3e25942392';
+const unitId = 'd0d55fc3-0751-4b79-86c1-5b3e25942392';
 
-describe('registration decision push delivery', () => {
+describe('membership operations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.buildRequestContext.mockResolvedValue({
@@ -42,6 +45,7 @@ describe('registration decision push delivery', () => {
       societyId,
     });
     mocks.invokeUntypedRpc.mockResolvedValue(undefined);
+    mocks.rpc.mockResolvedValue({ error: null });
     mocks.sendNotificationPushesForRequest.mockResolvedValue({
       failed: 0,
       pruned: 0,
@@ -80,6 +84,50 @@ describe('registration decision push delivery', () => {
       );
     },
   );
+
+  it('parses checked occupancy form fields as booleans', async () => {
+    const formData = new FormData();
+    formData.set('unitId', unitId);
+    formData.set('membershipId', membershipId);
+    formData.set('relationship', 'owner');
+    formData.set('isPrimary', 'on');
+    formData.set('isApprover', 'on');
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: { rpc: mocks.rpc },
+      societyId,
+    });
+
+    await assignOccupant(formData, requestId);
+
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      'assign_unit_occupant',
+      expect.objectContaining({
+        p_is_primary: true,
+        p_is_approver: true,
+      }),
+    );
+  });
+
+  it('treats omitted occupancy checkboxes as false', async () => {
+    const formData = new FormData();
+    formData.set('unitId', unitId);
+    formData.set('membershipId', membershipId);
+    formData.set('relationship', 'owner');
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: { rpc: mocks.rpc },
+      societyId,
+    });
+
+    await assignOccupant(formData, requestId);
+
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      'assign_unit_occupant',
+      expect.objectContaining({
+        p_is_primary: false,
+        p_is_approver: false,
+      }),
+    );
+  });
 
   it('does not dispatch a push when the decision transaction fails', async () => {
     mocks.invokeUntypedRpc.mockRejectedValue(

@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   consumeRateLimitKey: vi.fn(),
+  publicEnvironment: { NEXT_PUBLIC_APP_ENV: 'production' },
 }));
 
 vi.mock('server-only', () => ({}));
 vi.mock('../../src/core/config/server-env', () => ({
   serverEnvironment: {
+    public: mocks.publicEnvironment,
     server: { RATE_LIMIT_HASH_SALT: 's'.repeat(32) },
   },
 }));
@@ -24,6 +26,7 @@ const requestId = '4f05ab7e-17d6-4d74-8a8b-3b37304c83f0';
 
 describe('rate-limit service', () => {
   beforeEach(() => {
+    mocks.publicEnvironment.NEXT_PUBLIC_APP_ENV = 'production';
     mocks.consumeRateLimitKey.mockReset().mockResolvedValue({
       allowed: true,
       count: 1,
@@ -62,6 +65,29 @@ describe('rate-limit service', () => {
     expect(windowSeconds).toBe(30);
   });
 
+  it.each(['local', 'preview', 'staging'])(
+    'raises only sign-in limits to 50 outside production (%s)',
+    async (appEnvironment) => {
+      mocks.publicEnvironment.NEXT_PUBLIC_APP_ENV = appEnvironment;
+
+      await enforceRateLimit(
+        'authRequestCodeEmailCooldown',
+        'user@example.test',
+        requestId,
+      );
+      await enforceRateLimit('authVerifyCodeIpHourly', '192.0.2.42', requestId);
+      await enforceRateLimit(
+        'developerAuthFailures',
+        'user@example.test',
+        requestId,
+      );
+
+      expect(
+        mocks.consumeRateLimitKey.mock.calls.map(([, limit]) => limit),
+      ).toEqual([50, 50, 5]);
+    },
+  );
+
   it('returns a retryable rate-limit error after the counter exceeds its limit', async () => {
     mocks.consumeRateLimitKey.mockResolvedValue({
       allowed: false,
@@ -91,10 +117,7 @@ describe('rate-limit service', () => {
 
     await expect(
       enforceRateLimit('authVerifyCodeIpHourly', '192.0.2.42', requestId),
-    ).rejects.toMatchObject({
-      code: 'RATE_LIMITED',
-      retryAfterSeconds: 3600,
-    });
+    ).rejects.toMatchObject({ code: 'INTEGRATION_FAILED' });
     expect(platformError).toHaveBeenCalledWith(
       'Homeish rate-limit store unavailable.',
       expect.objectContaining({

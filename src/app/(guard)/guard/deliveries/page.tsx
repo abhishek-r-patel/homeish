@@ -1,4 +1,4 @@
-// Show the guard delivery workflow, waiting responses and uncollected parcels.
+// Show the guard delivery workflow, expected deliveries, waiting responses and parcels.
 import { Card } from '@/components/ui/data-display';
 import { DeliveryActionForm } from '@/components/delivery/action-form';
 import { DeliveryPhotoUpload } from '@/components/delivery/photo-upload';
@@ -9,6 +9,7 @@ import {
   getDeliverySocietyTimezone,
   getDeliverySettings,
   listDeliveryEntries,
+  listDeliveryPreAnnouncements,
   listDeliveryUnits,
 } from '@/core/delivery/operations';
 import {
@@ -44,6 +45,7 @@ export default async function GuardDeliveriesPage() {
     settings,
     societyId,
     timezone,
+    expected,
   ] = await Promise.all([
     requireIdentifiedGuard(),
     listDeliveryUnits(),
@@ -53,6 +55,7 @@ export default async function GuardDeliveriesPage() {
     getDeliverySettings(),
     getDeliveryRealtimeSocietyId(),
     getDeliverySocietyTimezone(),
+    listDeliveryPreAnnouncements(),
   ]);
   const unitLabels = new Map(units.map((unit) => [unit.id, unitLabel(unit)]));
 
@@ -64,7 +67,7 @@ export default async function GuardDeliveriesPage() {
         </p>
         <h1 className="text-title font-semibold">Deliveries</h1>
       </header>
-      <DeliveryRealtimeRefresh societyId={societyId} />
+      <DeliveryRealtimeRefresh gate societyId={societyId} />
 
       <Card
         description="The unit's standing preference is applied automatically; otherwise residents are asked."
@@ -160,6 +163,31 @@ export default async function GuardDeliveriesPage() {
           <p className="text-body text-ink-muted">
             No active units are available.
           </p>
+        )}
+      </Card>
+
+      <Card
+        description="Residents told the gate about these deliveries."
+        title="Expected deliveries"
+      >
+        {expected.length ? (
+          <ul className="grid gap-space-3">
+            {expected.map((announcement) => (
+              <li
+                className="grid gap-space-1 rounded-md border border-rule p-space-3"
+                key={announcement.id}
+              >
+                <p className="text-body-strong">{announcement.platform}</p>
+                <p className="text-caption text-ink-muted">
+                  {unitLabels.get(announcement.unit_id) ?? 'Unit'} ·{' '}
+                  {dateTime(announcement.expected_from, timezone)} to{' '}
+                  {dateTime(announcement.expected_to, timezone)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-body text-ink-muted">No expected deliveries.</p>
         )}
       </Card>
 

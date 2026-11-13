@@ -1,4 +1,4 @@
-// Show resident visitor requests, history and pre-approvals for their own units.
+// Show resident visitor requests, history, pre-approvals and frequent visitors.
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import { Card, CodeDisplay } from '@/components/ui/data-display';
@@ -7,6 +7,7 @@ import { VisitorRealtimeRefresh } from '@/components/visitor/realtime-refresh';
 import {
   getVisitorRealtimeSocietyId,
   getVisitorSocietyTimezone,
+  listFrequentVisitors,
   listVisitorEntries,
   listVisitorPreApprovals,
   listVisitorUnits,
@@ -17,6 +18,9 @@ import {
   cancelVisitorPreApprovalAction,
   createVisitorPreApprovalAction,
   decideVisitorAction,
+  preApproveFrequentVisitorAction,
+  removeFrequentVisitorAction,
+  saveFrequentVisitorAction,
 } from './actions';
 
 export const metadata = {
@@ -39,6 +43,12 @@ export default async function ResidentVisitorsPage() {
   const preApprovals = (
     await Promise.all(units.map((unit) => listVisitorPreApprovals(unit.id)))
   ).flat();
+  const frequentByUnit = await Promise.all(
+    units.map(async (unit) => ({
+      unit,
+      visitors: await listFrequentVisitors(unit.id),
+    })),
+  );
   const approvalCards = await Promise.all(
     preApprovals.map(async (approval: VisitorPreApproval) => ({
       approval,
@@ -193,6 +203,157 @@ export default async function ResidentVisitorsPage() {
               Create pre-approval
             </button>
           </VisitorActionForm>
+        ) : (
+          <p className="text-body text-ink-muted">
+            Your account has no active unit occupancy.
+          </p>
+        )}
+      </Card>
+
+      <Card
+        description="Save people who visit often, then create a one-time code for them in one step."
+        title="Frequent visitors"
+      >
+        {units.length ? (
+          <div className="grid gap-space-4">
+            <VisitorActionForm
+              action={saveFrequentVisitorAction}
+              className="grid gap-space-3"
+            >
+              <label
+                className="grid gap-space-1 text-body-strong"
+                htmlFor="frequent-unit"
+              >
+                Unit
+                <select
+                  className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
+                  id="frequent-unit"
+                  name="unitId"
+                  required
+                >
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unitLabel(unit)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label
+                className="grid gap-space-1 text-body-strong"
+                htmlFor="frequent-name"
+              >
+                Visitor name
+                <input
+                  className="min-h-12 rounded-md border border-rule px-space-3"
+                  id="frequent-name"
+                  maxLength={120}
+                  name="visitorName"
+                  required
+                />
+              </label>
+              <label
+                className="grid gap-space-1 text-body-strong"
+                htmlFor="frequent-vehicle"
+              >
+                Vehicle number (optional)
+                <input
+                  className="min-h-12 rounded-md border border-rule px-space-3"
+                  id="frequent-vehicle"
+                  maxLength={20}
+                  name="vehicleNo"
+                />
+              </label>
+              <button
+                className="min-h-12 w-fit rounded-md border border-rule-strong px-space-4 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
+                type="submit"
+              >
+                Save frequent visitor
+              </button>
+            </VisitorActionForm>
+            {frequentByUnit.some(({ visitors }) => visitors.length) ? (
+              <ul className="grid gap-space-3">
+                {frequentByUnit.flatMap(({ unit, visitors }) =>
+                  visitors.map((visitor) => (
+                    <li
+                      className="grid gap-space-3 rounded-md border border-rule p-space-4"
+                      key={visitor.id}
+                    >
+                      <div>
+                        <h2 className="text-body-strong">
+                          {visitor.visitor_name}
+                        </h2>
+                        <p className="text-caption text-ink-muted">
+                          {unitLabel(unit)}
+                          {visitor.vehicle_no ? ` · ${visitor.vehicle_no}` : ''}
+                        </p>
+                      </div>
+                      <VisitorActionForm
+                        action={preApproveFrequentVisitorAction}
+                        className="grid gap-space-2"
+                      >
+                        <input
+                          name="frequentVisitorId"
+                          type="hidden"
+                          value={visitor.id}
+                        />
+                        <label
+                          className="grid gap-space-1 text-caption"
+                          htmlFor={`frequent-from-${visitor.id}`}
+                        >
+                          Valid from (society time)
+                          <input
+                            className="min-h-11 rounded-md border border-rule px-space-3"
+                            id={`frequent-from-${visitor.id}`}
+                            name="validFrom"
+                            required
+                            type="datetime-local"
+                          />
+                        </label>
+                        <label
+                          className="grid gap-space-1 text-caption"
+                          htmlFor={`frequent-to-${visitor.id}`}
+                        >
+                          Valid until (society time)
+                          <input
+                            className="min-h-11 rounded-md border border-rule px-space-3"
+                            id={`frequent-to-${visitor.id}`}
+                            name="validTo"
+                            required
+                            type="datetime-local"
+                          />
+                        </label>
+                        <button
+                          aria-label={`Pre-approve ${visitor.visitor_name}`}
+                          className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white focus-visible:outline-2 focus-visible:outline-focus"
+                          type="submit"
+                        >
+                          Pre-approve
+                        </button>
+                      </VisitorActionForm>
+                      <VisitorActionForm action={removeFrequentVisitorAction}>
+                        <input
+                          name="frequentVisitorId"
+                          type="hidden"
+                          value={visitor.id}
+                        />
+                        <button
+                          aria-label={`Remove ${visitor.visitor_name} from frequent visitors`}
+                          className="min-h-11 rounded-md border border-rule-strong px-space-3 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
+                          type="submit"
+                        >
+                          Remove
+                        </button>
+                      </VisitorActionForm>
+                    </li>
+                  )),
+                )}
+              </ul>
+            ) : (
+              <p className="text-body text-ink-muted">
+                You have no saved frequent visitors.
+              </p>
+            )}
+          </div>
         ) : (
           <p className="text-body text-ink-muted">
             Your account has no active unit occupancy.

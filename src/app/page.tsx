@@ -8,8 +8,10 @@ import {
   resolveSociety,
   siteOrigin,
 } from '@/core/config/host-routing';
+import { lookupSocietyHost } from '@/core/privileged';
 import { EnvironmentPage } from '@/core/website/environment-page';
 import { MarketingPage } from '@/core/website/marketing-page';
+import { SocietyHomePage } from '@/core/website/society-home-page';
 import { SocietyUnavailablePage } from '@/core/website/society-unavailable-page';
 
 async function requestSite() {
@@ -53,6 +55,19 @@ export default async function HomePage() {
   const websiteOrigin = siteOrigin('website', host, configuration);
   if (surface === 'society') {
     if (!society) notFound();
+    // The code entry alone never opens a host: the database society must carry the same slug.
+    const record =
+      society.status === 'active'
+        ? await lookupSocietyHost(society.slug)
+        : null;
+    if (record) {
+      return (
+        <SocietyHomePage
+          societyName={record.name}
+          websiteOrigin={websiteOrigin}
+        />
+      );
+    }
     return (
       <SocietyUnavailablePage society={society} websiteOrigin={websiteOrigin} />
     );

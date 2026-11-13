@@ -31,6 +31,8 @@ import {
   serviceRequestRateInputSchema,
   serviceRequestSchema,
   serviceRequestStatusInputSchema,
+  serviceRequestUpvoteInputSchema,
+  serviceRequestUpvoteSchema,
 } from './validation';
 
 type RequestPermission =
@@ -44,7 +46,8 @@ type RequestPermission =
   | 'request:rate'
   | 'request:comment'
   | 'request:assignees:list'
-  | 'request:report';
+  | 'request:report'
+  | 'request:upvote';
 
 async function getContext(
   permission: RequestPermission,
@@ -94,6 +97,7 @@ export async function getServiceRequestWorkspace(
     requests,
     dashboard,
     canManage: context.roles.includes('admin'),
+    canUpvote: context.roles.includes('resident'),
     canReport: context.roles.some(
       (role) => role === 'admin' || role === 'committee',
     ),
@@ -209,6 +213,10 @@ export async function getServiceRequestDetail(requestId: string) {
         ['admin', 'committee'].includes(role),
       ),
       canUpdate,
+      canUpvote:
+        context.roles.includes('resident') &&
+        detail.request.location_type === 'common_area' &&
+        !['closed', 'rejected'].includes(detail.request.status),
       isRequester,
     },
   };
@@ -312,6 +320,7 @@ export async function createServiceRequest(input: unknown, requestId: string) {
       p_request_id: context.requestId,
     },
     serviceRequestSchema,
+    { retryOnDuplicate: true },
   );
 }
 
@@ -465,6 +474,29 @@ export async function addServiceRequestComment(
       p_request_trace: context.requestId,
     },
     serviceRequestDetailSchema.shape.comments.element,
+  );
+}
+
+export async function setServiceRequestUpvote(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:upvote',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestUpvoteInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_upvote_set',
+    {
+      p_society_id: societyId,
+      p_request_id: parsed.requestId,
+      p_upvoted: parsed.upvoted,
+      p_request_trace: context.requestId,
+    },
+    serviceRequestUpvoteSchema,
   );
 }
 

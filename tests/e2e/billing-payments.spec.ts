@@ -1,6 +1,6 @@
 // Check synthetic UPI payment submission, admin review, upload failures and download denial.
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 
 const corsHeaders = {
   'access-control-allow-origin': '*',
