@@ -8,6 +8,7 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
+  amenity_booking: '/amenities',
   amc: '/admin/amc',
   housekeeping: '/housekeeping',
   billing_payment: '/bills?tab=payments',

@@ -501,8 +501,20 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       resident: [
         { href: '/amenities', label: 'Amenities', permission: 'amenity:list' },
       ],
+      committee: [
+        {
+          href: '/admin/amenities',
+          label: 'Amenities',
+          permission: 'amenity:list',
+        },
+      ],
     },
-    permissions: {},
+    permissions: {
+      'amenity:list': ['admin', 'committee', 'resident'],
+      'amenity:manage': ['admin'],
+      'amenity:book': ['admin', 'resident'],
+      'amenity:cancel': ['admin', 'resident'],
+    },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
@@ -541,6 +553,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'housekeeping',
     'amc',
+    'amenity',
   ],
   guard: ['core', 'visitor', 'delivery', 'staff'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],

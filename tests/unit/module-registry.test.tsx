@@ -33,6 +33,14 @@ describe('module registry', () => {
     expect(hasPermission(['committee'], 'amc', 'amc:list')).toBe(true);
     expect(hasPermission(['committee'], 'amc', 'amc:manage')).toBe(false);
     expect(hasPermission(['resident'], 'amc', 'amc:list')).toBe(false);
+    expect(hasPermission(['committee'], 'amenity', 'amenity:list')).toBe(true);
+    expect(hasPermission(['committee'], 'amenity', 'amenity:book')).toBe(false);
+    expect(hasPermission(['resident'], 'amenity', 'amenity:book')).toBe(true);
+    expect(
+      getRoleNavigation(['committee'], ['amc', 'amenity'])
+        .filter(({ moduleKey }) => moduleKey !== 'core')
+        .map(({ href }) => href),
+    ).toEqual(['/admin/amc', '/admin/amenities']);
     expect(hasPermission(['committee'], 'housekeeping', 'stock:list')).toBe(
       true,
     );
