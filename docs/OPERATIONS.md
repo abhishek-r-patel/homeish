@@ -178,7 +178,7 @@ explicitly with Node, not `scripts/with-env.mjs`. If corporate policy/network
 blocks Google APIs, use an approved runner: dispatching **Off-site Database
 Backup** manually runs the `verify-configuration` job, which performs only this
 check with the repository secrets (no database access or upload). Dispatching
-it on `feature-build-1` also enables a test-only backup job, which requires
+it on `feature-build-2` also enables a test-only backup job, which requires
 `SUPABASE_TESTDB_URL`, verifies the `homeish-testdb` project reference, and
 never prunes Drive files. Its `manual-restore-drill` follow-up downloads that
 exact archive from Drive, verifies its size/checksum, authenticates/decrypts it,

@@ -37,7 +37,7 @@ jobs:
           BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
 
   manual-test-backup:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-2'
     needs: verify-configuration
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -122,7 +122,7 @@ jobs:
           fi
 
   manual-restore-drill:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-2'
     needs: manual-test-backup
     runs-on: ubuntu-latest
     timeout-minutes: 30
