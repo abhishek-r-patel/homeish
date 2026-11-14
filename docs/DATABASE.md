@@ -492,14 +492,14 @@ Uncollected parcels are `left_at_gate` rows with `received_at` older than the so
 
 A resident tells the gate that a delivery is expected. Migration `20261114080000_delivery_pre_announce.sql`.
 
-| Column            | Type        | Null | Notes                                                          |
-| ----------------- | ----------- | ---- | -------------------------------------------------------------- |
-| Standard columns  |             |      | Includes `created_by`, `updated_at`, `updated_by`              |
-| unit_id           | uuid        | no   | Same-society FK to a unit                                      |
-| platform          | text        | no   | Free text, 1–60 characters                                     |
-| expected_from/to  | timestamptz | no   | `to` is after `from`; the window is at most 24 hours           |
-| status            | text        | no   | `expected` or `cancelled`; `cancelled_at` set when cancelled   |
-| client_request_id | uuid        | no   | Idempotency key, unique per society and creator                |
+| Column            | Type        | Null | Notes                                                        |
+| ----------------- | ----------- | ---- | ------------------------------------------------------------ |
+| Standard columns  |             |      | Includes `created_by`, `updated_at`, `updated_by`            |
+| unit_id           | uuid        | no   | Same-society FK to a unit                                    |
+| platform          | text        | no   | Free text, 1–60 characters                                   |
+| expected_from/to  | timestamptz | no   | `to` is after `from`; the window is at most 24 hours         |
+| status            | text        | no   | `expected` or `cancelled`; `cancelled_at` set when cancelled |
+| client_request_id | uuid        | no   | Idempotency key, unique per society and creator              |
 
 RLS lets admins, committee members and guards read rows, and occupants read their own unit's rows, while the delivery module is enabled. Writes go only through these RPCs:
 
@@ -754,17 +754,77 @@ One row per resident vote on a common-area request. Migration `20261114083000_se
 
 ---
 
-## 9. Post-MVP Modules (outline only — no migrations until the module starts)
+## 9. Post-MVP Modules
 
-| Module                | Tables (planned)                                        | Key notes                                                                                                |
+| Module                | Tables                                                  | Key notes                                                                                                |
 | --------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `staff` (P2-1)        | `staff_members`, `staff_unit_links`, `staff_attendance` | Store ID type + last 4 digits only (PRD D-18); entry/exit created by the guard roster; no payroll (D-19) |
+| `staff` (P2-1)        | `staff_members`, `staff_unit_links`, `staff_attendance`, `staff_day_blocks`, `staff_shift_attendance` | Built in P12; ID type + last four only (D-18); guard entry/exit; one open visit; unit-only day blocks; no payroll (D-19) |
 | `housekeeping` (P2-2) | `housekeeping_items`, `housekeeping_transactions`       | Append-only transactions; stock = sum; check blocks negative stock (HKP-3)                               |
 | `amc` (P2-3)          | `amc_contracts`, `amc_visits`                           | "Expiring soon/Expired" derived from `end_date`; documents in a private bucket                           |
-| `notice` (P2-4)       | `notices`, `notice_reads`                               | Audience filter by block/owner; read receipts aggregate-only                                             |
+| `notice` (P2-4)       | `notices`, `notice_blocks`, `notice_reads`              | Built in P11; see Section 9.1                                                                            |
 | `amenity` (P2-5)      | `amenities`, `amenity_bookings`                         | Exclusion constraint prevents overlapping bookings per amenity                                           |
 
 Each follows the same rules: `society_id`, same-society keys, RLS plus module-enabled check, append-only where money or stock is involved.
+
+### 9.1 Notice board tables (P11)
+
+Migration `20261115110000_notice_board.sql`. Every function checks that the notice module is enabled; writes also need a writable society.
+
+- `notices`: title (1–120 characters), body (1–5000), `audience` (`all`, `blocks` or `owners`), `pinned`, optional `expires_at` (after `created_at`), `status` (`published` or `withdrawn`, with `withdrawn_at`/`withdrawn_by`), `edited_at`, and an optional attachment (path, JPEG/PNG/PDF type, 1 byte to 5 MiB). `(society_id, created_by, client_request_id)` is unique, so a resubmitted create returns the original notice.
+- `notice_blocks`: the target blocks of a `blocks` notice, with same-society keys to `notices` and `blocks`. Only active blocks can be chosen.
+- `notice_reads`: one row per audience member who opened the notice. Users see only their own rows; managers get counts only.
+- `private.notice_visible` lets admins and committee members see every notice. Other members see only published, unexpired notices whose audience includes them. Guards never see notices.
+- RPCs:
+  - `notice_create` and `notice_update` validate and save a notice. Create notifies the audience in the app and by push. Update needs `expectedUpdatedAt` (`23505` with hint `stale_record` when stale), sets `edited_at` and sends nothing.
+  - `notice_set_pinned` and `notice_withdraw`. Admins manage every notice; committee members manage only their own.
+  - `notice_list(p_view)`: `current` (pinned first, newest first) or `archive` (withdrawn or expired, newest first, managers only).
+  - `notice_get` adds `audience_count` for managers.
+  - `notice_mark_read` records a read for audience members and clears the caller's in-app alert for the notice. It does nothing when the society is read-only.
+- Every notice response includes `has_read`, `read_count` (managers only) and `can_manage`. Changes are audited.
+
+### 9.2 Staff management tables (P12)
+
+Migration `20261115130000_staff_module.sql`. All staff RPCs check the `staff` module; writes also require a writable society and the relevant role. Direct table access is revoked.
+
+- `staff_members` stores domestic or society staff. Domestic phone numbers are unique per society to detect a matching profile; staff codes are unique per society. Only ID type and last four characters are stored. Staff photos are private objects in `staff-photos`.
+- `staff_unit_links` represents unit-specific access and review. A resident submission is pending by default; a matching domestic profile always creates a pending link. Administrators may activate or reject submissions, and may mark an active link inactive when unlinking a unit.
+- `staff_attendance` stores guard entry/exit with guard identities and one partial-unique open visit per staff member. A unit-day block is checked against the destination unit only. Closed gate attendance older than one year is removed by `staff_retention_run`; open visits are retained.
+- `staff_day_blocks` is keyed by society, staff, unit and local date. Residents may create a block only for a domestic staff member actively linked to their occupied unit.
+- `staff_shift_attendance` has one row per society staff member and date, with `present`, `absent` or `leave`. Administrators can correct a prior date; future dates are rejected. Payroll is out of scope.
+- `staff_settings_update` changes the audited `resident_approval_required` setting (default `true`). `staff_list` limits residents to their unit-linked domestic staff and hides a duplicate profile until its link is approved. `staff_gate_list` returns only name, photo, role, status and unit/day-block state; phone and ID details are omitted.
+- The database RPCs implement registration, settings, profile/link management, review, day blocks, gate entry/exit, monthly attendance, society shifts and retention. The daily retention job removes expired closed staff attendance.
+
+### 9.3 Housekeeping inventory tables (P13)
+
+Migration `20261115140000_housekeeping_inventory.sql`. Both tables deny direct authenticated access; security-definer RPCs authorize the enabled module and writable society where required.
+
+- `housekeeping_items` contains society-unique names, category, unit, exact `numeric(16,3)` minimum stock, active state, optimistic edit timestamp and last low-stock alert date. Units cannot change after transactions exist.
+- `housekeeping_transactions` is append-only, with signed exact quantity, effective date, insertion sequence, optional receipt vendor/cost or issue purpose, actor and client retry UUID. Opening stock is a receipt; adjustments need a reason. Future dates are rejected.
+- An item row lock serializes writes. The cumulative balance ordered by `(effective_date, sequence)` must never be negative, including after a backdated entry. A unique actor/society/client UUID and advisory lock prevent duplicate committed transactions after retries.
+- Stock is derived, not independently editable. Notifications are created atomically and deduplicated per item/society-local day. `housekeeping_low_stock_run` is service-role-only and skips disabled or unwritable societies.
+- Admins and housekeeping supervisors manage inventory; committee members may read quantities, costs and reports. No resident or guard access is granted.
+
+Hosted inventory migrations require owner approval and the normal release checks; local verification does not constitute production go-live approval.
+
+### 9.4 AMC management tables (P14)
+
+Migration `20261115150000_amc_management.sql` adds `amc_contracts`, `amc_visits`, `amc_request_links` and private `amc-files`. Direct table writes are revoked. Admins manage contracts and optimistically versioned visit corrections; committee members read contracts, costs, documents and reports. Changes are audited.
+
+Renewals create a single successor through a same-society predecessor FK; old contracts, documents and visits remain intact. File paths are uploader-owned, metadata is reverified at both application and database boundaries, and residents cannot read documents. `amc_request_label` reuses the existing request authorization and returns only a label when both modules are enabled.
+
+`amc_reminders_run` is service-role-only. It selects the most urgent due threshold from developer-managed `reminder_days` (default `[60,30,7]`), deduplicates reminders and skips superseded contracts. Status uses `expiring_soon_days` (default 30). Delivery is in-app and push, with no email or vendor accounting.
+
+### 9.5 Amenity booking tables (P15)
+
+Migration `20261115160000_amenity_booking.sql` adds `amenities`, retained recurring `amenity_slots` and immutable `amenity_bookings`. `btree_gist` supports exclusion constraints for active weekday schedules and confirmed reservation time ranges. Capacity limits guests per exclusive reservation, not concurrent bookings.
+
+- Slot times use the society timezone; nonexistent DST times are rejected. Creation requires active unit occupancy and at least 24 hours' lead. No horizon or daily unit cap is imposed.
+- Bookings snapshot times, name, capacity, guests, fee and acknowledged rules. Schedule edits retire prior slots rather than altering existing bookings.
+- Paid creation requires billing enabled and atomically appends an `adjustment` debit to `billing_ledger_entries`. Cancellation appends a matching full credit, including after billing is disabled. Same-society/unit ledger FKs and stable request UUIDs prevent cross-unit charges and duplicate financial entries.
+- Residents cancel only their own booking while still occupying the unit and before the slot begins. Admins can cancel with a reason and notify residents. Row locks make repeated and competing cancellations idempotent. No ledger row is edited or deleted.
+- Admins and committee read society bookings. Household members read their occupied units' bookings; the availability payload for other units contains only amenity and time interval, never booking IDs, unit, booker, fee or rules.
+
+P14 and P15 migrations are local only; hosted application requires separate owner approval.
 
 ---
 
@@ -788,6 +848,7 @@ Defaults apply when a key is absent. Editable by developer unless marked **A** (
 | billing         | `reminders`                       | `{before_due_days: 3, on_due: true, overdue_every_days: 7}` | BIL-10; before may be 0; overdue interval must be positive                                                                                    |
 | billing         | `pending_confirmation_alert_days` | 3                                                           | BIL-17                                                                                                                                        |
 | service_request | `auto_close_days`                 | 3                                                           | SRQ-3                                                                                                                                         |
+| staff           | `resident_approval_required`       | `true`                                                      | **A**; audited. Matching profiles always require administrator review (PRD D-37)                                                              |
 
 UPI details are **not** settings: they have their own table with a format check (Section 6.8).
 
@@ -835,6 +896,7 @@ P7A registers billing settings as developer-managed, validates the same closed s
 | Jobs                                                        | 90 days                                                           | Delete                                                                                      |
 | Bills, payments, allocations, ledger, receipts, UPI details | **Kept forever in MVP** **[DBD-2, approved]**                     | None                                                                                        |
 | Rate-limit counters                                         | 1 day                                                             | Delete                                                                                      |
+| Closed staff gate attendance                                | 1 year (A-28)                                                     | Delete; open visits remain until checked out                                                |
 | Push subscriptions                                          | Until the push service reports them gone or the user removes them | Delete                                                                                      |
 
 All purges are performed by the daily job (idempotent, logged). It removes expired visitor, delivery and request files through the Supabase Storage API before changing or deleting their database rows. If Storage removal fails, the database purge is not attempted; if a file still has a Storage object row, its owning record is retained for a later retry. The audit entry reports unreferenced files by private bucket but does not delete them. Purging a pre-approval detaches any retained visitor entry from that approval while preserving the entry's `pre_approved` source. The retention function is service-role-only; its narrowly scoped append-only trigger exception is enabled only inside that function's transaction.
@@ -847,15 +909,17 @@ A developer with a current MFA-verified session can request erasure. The process
 
 ## 12. Storage (files)
 
-| Bucket            | Content         | Path                                                                            | Who reads                                  | Who writes                         |
-| ----------------- | --------------- | ------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------- |
-| `visitor-photos`  | Visitor photos  | `{society_id}/{unit_id}/visitors/{random_uuid}.jpg or .png`                     | Admin, committee, guard                    | Guard/admin when logging the entry |
-| `delivery-photos` | Parcel photos   | `{society_id}/{entry_id}/…`                                                     | Same as above                              | Guard/admin                        |
-| `request-files`   | Request photos  | `{society_id}/{user_id}/requests/{client_request_id}/{random_uuid}.jpg or .png` | Members allowed to read the parent request | Requester or admin                 |
-| `payment-proofs`  | UPI screenshots | `{society_id}/{payment_id}/…`                                                   | Admin, committee, the submitter            | Submitter                          |
-| `society-assets`  | Logo, UPI QR    | `{society_id}/…`                                                                | Every member of the society                | Admin                              |
+| Bucket            | Content            | Path                                                                            | Who reads                                                                          | Who writes                                                          |
+| ----------------- | ------------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `visitor-photos`  | Visitor photos     | `{society_id}/{unit_id}/visitors/{random_uuid}.jpg or .png`                     | Admin, committee, guard                                                            | Guard/admin when logging the entry                                  |
+| `delivery-photos` | Parcel photos      | `{society_id}/{entry_id}/…`                                                     | Same as above                                                                      | Guard/admin                                                         |
+| `request-files`   | Request photos     | `{society_id}/{user_id}/requests/{client_request_id}/{random_uuid}.jpg or .png` | Members allowed to read the parent request, and the uploader before it is attached | Requester or admin                                                  |
+| `notice-files`    | Notice attachments | `{society_id}/notices/{upload_id}/{random_uuid}.jpg, .png or .pdf`              | Admin, committee, and members who can see the notice                               | Admin or committee; they can delete only files no notice references |
+| `staff-photos`    | Staff photos       | `{society_id}/staff/{uploader_user_id}/{random_uuid}.jpg or .png`                | Admin, linked residents, and guards with active staff links                         | Admin or uploader; only while no staff profile references the file    |
+| `payment-proofs`  | UPI screenshots    | `{society_id}/{payment_id}/…`                                                   | Admin, committee, the submitter                                                    | Submitter                                                           |
+| `society-assets`  | Logo, UPI QR       | `{society_id}/…`                                                                | Every member of the society                                                        | Admin                                                               |
 
-Every bucket is provisioned private, with a 5 MiB limit and an allow-list of MIME types. `storage.objects` RLS derives the society UUID only from a valid first path segment and uses `private.is_member`, `private.has_role`, and `private.is_developer`; malformed and cross-society paths fail closed. These policies are a database backstop: route handlers additionally authorize the owning record before minting a signed URL. The upload route supports society logos, visitor/delivery photos, billing QR images and request photos. Request uploads require a writable society, an enabled service-request module and `request:create`; their owner/request-scoped paths are verified again for object existence, image MIME type and actual size before attachment. Request photo reads are checked through the parent request's row policy. Entry photo uploads require their enabled module, an authorized guard/admin, and an active same-society unit. Billing QR uploads require a writable, billing-enabled society and its administrator, and allow one pending image alongside the saved image. Unattached QR images can be removed from Payment Settings; no automatic orphan sweep is registered. Other bucket/owner combinations are denied rather than treated as generic society access. Entry photo reads are limited to admin, committee and guard roles by Storage RLS.
+Every bucket is provisioned private, with a 5 MiB limit and an allow-list of MIME types. `storage.objects` RLS derives the society UUID only from a valid first path segment and uses `private.is_member`, `private.has_role`, and `private.is_developer`; malformed and cross-society paths fail closed. These policies are a database backstop: route handlers additionally authorize the owning record before minting a signed URL. The upload route supports society logos, visitor/delivery photos, billing QR images, request photos and staff photos. Request uploads require a writable society, an enabled service-request module and `request:create`; their owner/request-scoped paths are verified again for object existence, image MIME type and actual size before attachment. Request photo reads are checked through the parent request's row policy; before the photo is attached, only its uploader (the owner segment of the path) can read it, so the save can verify it. Replacing or removing a notice attachment deletes the former file after the notice is saved; a failed delete is logged and left for the orphan report. Entry photo uploads require their enabled module, an authorized guard/admin, and an active same-society unit. Billing QR uploads require a writable, billing-enabled society and its administrator, and allow one pending image alongside the saved image. Unattached QR images can be removed from Payment Settings; no automatic orphan sweep is registered. Other bucket/owner combinations are denied rather than treated as generic society access. Entry photo reads are limited to admin, committee and guard roles by Storage RLS.
 
 The P4G logo path is `{society_id}/logos/{random_uuid}.jpg|png`. Upload URL issuance checks the signed-in admin or MFA-verified developer, the society, the image MIME type, declared byte size, and the per-society pending/stored logo count. The society update operation rechecks the path, object metadata, MIME type and actual stored size before saving it. Replacing or clearing a logo audits the path change and then removes the former object; unattached uploads can be deleted through the upload-url route. An automatic scheduled orphan sweep is not registered yet.
 
@@ -1007,8 +1071,8 @@ Database backups **do not include stored files** (photos, screenshots, logos). R
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Objectives                    | PRD NFR-10: RPO ≤ 24 h, RTO ≤ 4 h                                                                                                                                                                                                                                                                |
 | Production plan               | `homeish-live` (AD-14) starts on the free plan, paused until go-live, and moves to the Pro plan when the first society starts paying (ARCHITECTURE AD-06 as amended 2026-11-09). Until then there are no provider backups, so our own nightly off-site copy must run from the first live society |
-| Own off-site copy             | Google Drive selected on 2026-11-12, replacing disabled R2 support. OAuth setup, activation, first verified encrypted backup, and restore drill remain pending; see the Google Drive setup guide                                                                                                                                                              |
-| Files                         | Weekly copy of `payment-proofs` and `society-assets` remains planned; deferred until a least-privilege source-storage credential is approved. Visitor, delivery and request photos are not copied                                                                                                                                                              |
+| Own off-site copy             | Google Drive selected on 2026-11-12, replacing disabled R2 support. OAuth setup, activation, first verified encrypted backup, and restore drill remain pending; see the Google Drive setup guide                                                                                                 |
+| Files                         | Weekly copy of `payment-proofs` and `society-assets` remains planned; deferred until a least-privilege source-storage credential is approved. Visitor, delivery and request photos are not copied                                                                                                |
 | Before risky migrations       | Manual dump first                                                                                                                                                                                                                                                                                |
 | Restore drill                 | Before the first production society, and then every quarter: restore to a **new** project, run the integrity checks below, time it                                                                                                                                                               |
 | Money records after a restore | Anything confirmed after the restore point is re-derivable: residents' UTRs and the bank/UPI statement identify the payments, and admins re-confirm them. Document this runbook in OPERATIONS.md                                                                                                 |
@@ -1028,7 +1092,7 @@ The weekly file copy is intentionally deferred. Supabase's generated Storage S3 
 5. Every confirmed payment has a receipt number and a confirming admin.
 6. No unit has two active primary occupants; no membership without a profile or invited email.
 7. No row references a different society than its parent (same-society keys make this a guard against manual edits).
-8. Every supported file path stored in a row exists in storage, and vice versa (orphan report). A non-null `profiles.photo_path` is separately reported as unmapped because no profile-photo bucket is configured.
+8. Every supported file path stored in a row exists in storage, and vice versa (orphan report, including unattached `notice-files`). A non-null `profiles.photo_path` is separately reported as unmapped because no profile-photo bucket is configured.
 
 Run the read-only suite with `npm run integrity:check` after setting
 `SUPABASE_DB_URL` for the intended database. Use

@@ -128,7 +128,7 @@ describe.skipIf(!hasDatabase)('cross-society RPC isolation', () => {
               `select c.table_name from information_schema.columns c
                where c.table_schema = 'public' and c.column_name = 'society_id'
                  and has_table_privilege('authenticated',
-                   format('public.%I', c.table_name), 'SELECT')
+                   format('%I.%I', c.table_schema, c.table_name), 'SELECT')
                order by c.table_name`,
             );
             const showing: string[] = [];

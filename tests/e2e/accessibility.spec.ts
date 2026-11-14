@@ -13,6 +13,7 @@ const screens = [
   '/fixtures/billing-payments',
   '/fixtures/service-requests',
   '/fixtures/service-requests-admin',
+  '/fixtures/notices',
 ];
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];

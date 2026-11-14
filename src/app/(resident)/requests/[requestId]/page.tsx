@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Card, StatusChip } from '@/components/ui/data-display';
 import { ServiceRequestDetailControls } from '@/components/service-requests/detail-controls';
 import { ServiceRequestUpvote } from '@/components/service-requests/upvote';
+import { AmcRequestLinkForm } from '@/components/amc/controls';
 import {
   getServiceRequestAssignees,
   getServiceRequestDetail,
@@ -84,6 +85,18 @@ export default async function ServiceRequestDetailPage({
           </p>
         </div>
       </Card>
+      {detail.amc.assetLabel || detail.amc.contracts.length ? (
+        <Card className="min-w-0" title="AMC asset">
+          <p>{detail.amc.assetLabel ?? 'No AMC asset linked.'}</p>
+          {detail.capabilities.canManage && detail.amc.contracts.length ? (
+            <AmcRequestLinkForm
+              requestId={request.id}
+              contracts={detail.amc.contracts}
+              contractId={detail.amc.contractId}
+            />
+          ) : null}
+        </Card>
+      ) : null}
       {detail.attachments.length ? (
         <Card className="min-w-0" title="Photos">
           <ul className="grid gap-space-2">

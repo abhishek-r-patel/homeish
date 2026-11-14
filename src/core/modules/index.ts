@@ -14,6 +14,11 @@ import {
   DEFAULT_SERVICE_REQUEST_SETTINGS,
   serviceRequestSettingsSchema,
 } from '../service-requests/validation';
+import {
+  DEFAULT_STAFF_SETTINGS,
+  staffSettingsSchema,
+} from '../staff/validation';
+import { amcSettingsSchema, DEFAULT_AMC_SETTINGS } from '../amc/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -372,17 +377,34 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   staff: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_STAFF_SETTINGS,
     key: 'staff',
     name: 'Staff Management',
     navigation: {
       admin: [
         { href: '/admin/staff', label: 'Staff', permission: 'staff:list' },
       ],
+      guard: [
+        {
+          href: '/guard/staff',
+          label: 'Staff entry',
+          permission: 'staff:gate',
+        },
+      ],
+      resident: [{ href: '/staff', label: 'Staff', permission: 'staff:list' }],
     },
-    permissions: {},
+    permissions: {
+      'staff:list': ['admin', 'resident'],
+      'staff:manage': ['admin'],
+      'staff:review': ['admin'],
+      'staff:settings:manage': ['admin'],
+      'staff:register': ['resident'],
+      'staff:attendance': ['admin', 'resident'],
+      'staff:day_block': ['resident'],
+      'staff:gate': ['guard'],
+    },
     settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    settingsSchema: staffSettingsSchema,
   },
   housekeeping: {
     core: false,
@@ -404,22 +426,39 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           permission: 'stock:list',
         },
       ],
+      committee: [
+        {
+          href: '/admin/housekeeping',
+          label: 'Housekeeping',
+          permission: 'stock:list',
+        },
+      ],
     },
-    permissions: {},
+    permissions: {
+      'stock:list': ['admin', 'hk_supervisor', 'committee'],
+      'stock:manage': ['admin', 'hk_supervisor'],
+    },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
   amc: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_AMC_SETTINGS,
     key: 'amc',
     name: 'AMC Management',
     navigation: {
       admin: [{ href: '/admin/amc', label: 'AMC', permission: 'amc:list' }],
+      committee: [{ href: '/admin/amc', label: 'AMC', permission: 'amc:list' }],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'amc:list': ['admin', 'committee'],
+      'amc:manage': ['admin'],
+    },
+    settingsAccess: {
+      reminder_days: 'developer',
+      expiring_soon_days: 'developer',
+    },
+    settingsSchema: amcSettingsSchema,
   },
   notice: {
     core: false,
@@ -437,7 +476,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         { href: '/notices', label: 'Notices', permission: 'notice:list' },
       ],
     },
-    permissions: {},
+    permissions: {
+      'notice:list': ['admin', 'committee', 'resident'],
+      'notice:create': ['admin', 'committee'],
+      'notice:manage': ['admin', 'committee'],
+      'notice:archive': ['admin', 'committee'],
+    },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
@@ -457,8 +501,20 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       resident: [
         { href: '/amenities', label: 'Amenities', permission: 'amenity:list' },
       ],
+      committee: [
+        {
+          href: '/admin/amenities',
+          label: 'Amenities',
+          permission: 'amenity:list',
+        },
+      ],
     },
-    permissions: {},
+    permissions: {
+      'amenity:list': ['admin', 'committee', 'resident'],
+      'amenity:manage': ['admin'],
+      'amenity:book': ['admin', 'resident'],
+      'amenity:cancel': ['admin', 'resident'],
+    },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
@@ -489,8 +545,17 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'amenity',
   ],
-  committee: ['core', 'billing', 'service_request', 'delivery'],
-  guard: ['core', 'visitor', 'delivery'],
+  committee: [
+    'core',
+    'billing',
+    'service_request',
+    'delivery',
+    'notice',
+    'housekeeping',
+    'amc',
+    'amenity',
+  ],
+  guard: ['core', 'visitor', 'delivery', 'staff'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
     'core',
@@ -498,6 +563,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'billing',
     'service_request',
     'delivery',
+    'staff',
     'notice',
     'amenity',
   ],

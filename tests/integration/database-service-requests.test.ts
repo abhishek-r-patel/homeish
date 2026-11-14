@@ -608,6 +608,32 @@ describe.skipIf(!hasDatabase)('database service requests', () => {
     expect(crossSociety).toMatchObject({ code: '42501' });
   });
 
+  it('lets only the uploader read a photo before it is attached', async () => {
+    const path = `${societyId}/${users.resident}/requests/${id()}/${id()}.jpg`;
+    await database.asSuperuser((client) =>
+      client.query(
+        `insert into storage.objects (bucket_id, name)
+           values ('request-files', $1)`,
+        [path],
+      ),
+    );
+    const visibleTo = (role: Role) =>
+      database.asRole('authenticated', { sub: users[role] }, async (client) =>
+        Number(
+          (
+            await client.query<{ count: string }>(
+              `select count(*) from storage.objects
+               where bucket_id = 'request-files' and name = $1`,
+              [path],
+            )
+          ).rows[0]!.count,
+        ),
+      );
+    expect(await visibleTo('resident')).toBe(1);
+    expect(await visibleTo('neighbour')).toBe(0);
+    expect(await visibleTo('worker')).toBe(0);
+  });
+
   it('blocks writes when the society is suspended or the module is disabled', async () => {
     await database.asSuperuser((client) =>
       client.query(
