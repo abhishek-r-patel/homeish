@@ -15,6 +15,7 @@ const expectedBuckets = [
   'society-assets',
   'notice-files',
   'staff-photos',
+  'amc-files',
 ];
 
 describe.skipIf(!hasDatabase)('database private file storage', () => {

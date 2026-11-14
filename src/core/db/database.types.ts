@@ -11,6 +11,209 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      amc_contracts: {
+        Row: {
+          asset_label: string;
+          client_request_id: string;
+          cost_paise: number;
+          created_by: string;
+          document_path: string | null;
+          end_date: string;
+          id: string;
+          last_reminder_days: number | null;
+          payment_terms: string;
+          predecessor_id: string | null;
+          society_id: string;
+          start_date: string;
+          updated_at: string;
+          updated_by: string;
+          vendor_contact: string;
+          vendor_name: string;
+          visit_frequency: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          asset_label: string;
+          client_request_id: string;
+          cost_paise: number;
+          created_by: string;
+          document_path?: string | null;
+          end_date: string;
+          id?: string;
+          last_reminder_days?: number | null;
+          payment_terms: string;
+          predecessor_id?: string | null;
+          society_id: string;
+          start_date: string;
+          updated_at?: string;
+          updated_by: string;
+          vendor_contact: string;
+          vendor_name: string;
+          visit_frequency: string;
+        };
+        Update: {
+          asset_label?: string;
+          client_request_id?: string;
+          cost_paise?: number;
+          created_by?: string;
+          document_path?: string | null;
+          end_date?: string;
+          id?: string;
+          last_reminder_days?: number | null;
+          payment_terms?: string;
+          predecessor_id?: string | null;
+          society_id?: string;
+          start_date?: string;
+          updated_at?: string;
+          updated_by?: string;
+          vendor_contact?: string;
+          vendor_name?: string;
+          visit_frequency?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amc_contracts_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_contracts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_contracts_society_id_predecessor_id_fkey';
+            columns: ['society_id', 'predecessor_id'];
+            isOneToOne: false;
+            referencedRelation: 'amc_contracts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amc_contracts_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      amc_request_links: {
+        Row: {
+          contract_id: string;
+          request_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          contract_id: string;
+          request_id: string;
+          society_id: string;
+        };
+        Update: {
+          contract_id?: string;
+          request_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amc_request_links_society_id_contract_id_fkey';
+            columns: ['society_id', 'contract_id'];
+            isOneToOne: false;
+            referencedRelation: 'amc_contracts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amc_request_links_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_request_links_society_id_request_id_fkey';
+            columns: ['society_id', 'request_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      amc_visits: {
+        Row: {
+          client_request_id: string;
+          contract_id: string;
+          created_by: string;
+          document_path: string | null;
+          id: string;
+          society_id: string;
+          summary: string;
+          technician: string;
+          updated_at: string;
+          updated_by: string;
+          visit_date: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          contract_id: string;
+          created_by: string;
+          document_path?: string | null;
+          id?: string;
+          society_id: string;
+          summary: string;
+          technician: string;
+          updated_at?: string;
+          updated_by: string;
+          visit_date: string;
+        };
+        Update: {
+          client_request_id?: string;
+          contract_id?: string;
+          created_by?: string;
+          document_path?: string | null;
+          id?: string;
+          society_id?: string;
+          summary?: string;
+          technician?: string;
+          updated_at?: string;
+          updated_by?: string;
+          visit_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amc_visits_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_visits_society_id_contract_id_fkey';
+            columns: ['society_id', 'contract_id'];
+            isOneToOne: false;
+            referencedRelation: 'amc_contracts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amc_visits_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_visits_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           action: string;
@@ -3243,6 +3446,59 @@ export type Database = {
         };
         Returns: undefined;
       };
+      amc_contract_save: {
+        Args: {
+          p_asset_label: string;
+          p_client_request_id: string;
+          p_contract_id: string;
+          p_cost_paise: number;
+          p_document_path: string;
+          p_end_date: string;
+          p_expected_updated_at: string;
+          p_payment_terms: string;
+          p_predecessor_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_start_date: string;
+          p_vendor_contact: string;
+          p_vendor_name: string;
+          p_visit_frequency: string;
+        };
+        Returns: string;
+      };
+      amc_reminders_run: {
+        Args: { p_request_trace: string; p_society_id: string };
+        Returns: number;
+      };
+      amc_request_label: {
+        Args: { p_request_id: string; p_society_id: string };
+        Returns: string;
+      };
+      amc_request_link: {
+        Args: {
+          p_contract_id: string;
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      amc_visit_save: {
+        Args: {
+          p_client_request_id: string;
+          p_contract_id: string;
+          p_document_path: string;
+          p_expected_updated_at: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_summary: string;
+          p_technician: string;
+          p_visit_date: string;
+          p_visit_id: string;
+        };
+        Returns: string;
+      };
+      amc_workspace: { Args: { p_society_id: string }; Returns: Json };
       approve_society_registration: {
         Args: {
           p_membership_id: string;
