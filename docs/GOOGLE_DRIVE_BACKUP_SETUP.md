@@ -253,7 +253,7 @@ normal commit, release, and hosted-database approvals:
    You must keep a separate offline/password-manager recovery copy. Do not
    store it in Drive with the backups; losing it makes the archives unusable.
 2. Verify OAuth and folder access from an approved runner: in GitHub Actions,
-   run **Off-site Database Backup** manually on `feature-build-1`. The
+   run **Off-site Database Backup** manually on `feature-build-2`. The
    `verify-configuration` job checks OAuth, the encryption key, and the private
    Drive folder. After it passes, `manual-test-backup` checks the test database
    project reference, creates a PostgreSQL 17 dump, encrypts it, and verifies

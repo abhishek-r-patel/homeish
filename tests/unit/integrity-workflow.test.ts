@@ -13,7 +13,7 @@ describe('database integrity workflow', () => {
     expect(workflow).toContain("cron: '15 3 1 * *'");
     expect(job).toContain("github.ref == 'refs/heads/main'");
     expect(job).toContain(
-      "github.event_name == 'workflow_dispatch' &&\n      github.ref == 'refs/heads/feature-build-1'",
+      "github.event_name == 'workflow_dispatch' &&\n      github.ref == 'refs/heads/feature-build-2'",
     );
     expect(job).toContain('secrets.SUPABASE_TESTDB_URL');
     expect(job).toContain('vars.SUPABASE_TESTDB_CA_CERT');

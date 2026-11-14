@@ -850,7 +850,7 @@ it('restricts manual test backups to homeish-testdb on the feature branch', () =
     workflow.indexOf('\n  manual-restore-drill:'),
   );
   expect(testJob).toContain(
-    "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'",
+    "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-2'",
   );
   expect(testJob).toContain('needs: verify-configuration');
   expect(testJob).toContain('secrets.SUPABASE_TESTDB_URL');
@@ -870,7 +870,7 @@ it('rehearses the Drive copy on disposable compatible PostgreSQL without hosted 
     workflow.indexOf('\n  backup:'),
   );
   expect(restoreJob).toContain(
-    "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-1'",
+    "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feature-build-2'",
   );
   expect(restoreJob).toContain('needs: manual-test-backup');
   expect(restoreJob).toContain('supabase db start --workdir');
