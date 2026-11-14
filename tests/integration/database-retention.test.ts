@@ -28,7 +28,8 @@ type RetentionRunResult = {
     | 'delivery-photos'
     | 'request-files'
     | 'payment-proofs'
-    | 'society-assets',
+    | 'society-assets'
+    | 'notice-files',
     number
   >;
 };
@@ -202,7 +203,8 @@ describe.skipIf(!hasDatabase)('database retention', () => {
          values ('visitor-photos', 'visitor/old.jpg'),
                 ('delivery-photos', 'delivery/old.jpg'),
                 ('request-files', 'requests/old.jpg'),
-                ('visitor-photos', 'visitor/orphan.jpg')`,
+                ('visitor-photos', 'visitor/orphan.jpg'),
+                ('notice-files', 'notices/orphan.pdf')`,
       );
     });
   });
@@ -265,6 +267,7 @@ describe.skipIf(!hasDatabase)('database retention', () => {
         'request-files': 0,
         'payment-proofs': 0,
         'society-assets': 0,
+        'notice-files': 1,
       },
     });
 
@@ -288,6 +291,7 @@ describe.skipIf(!hasDatabase)('database retention', () => {
       'request-files': 0,
       'payment-proofs': 0,
       'society-assets': 0,
+      'notice-files': 1,
     });
 
     await database.asSuperuser(async (client) => {

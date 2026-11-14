@@ -1,6 +1,7 @@
 // Enforce module permissions, validate inputs and re-check request attachments.
 import 'server-only';
 import { z } from 'zod';
+import { getRequestAmcLink } from '../amc/operations';
 import { AppError, createRequestId, ValidationError } from '../errors';
 import {
   FILE_CONTENT_TYPES,
@@ -207,6 +208,7 @@ export async function getServiceRequestDetail(requestId: string) {
   return {
     ...detail,
     attachments,
+    amc: await getRequestAmcLink(context, societyId, requestId),
     capabilities: {
       canManage: isAdmin,
       canSeeAdminWorkspace: context.roles.some((role) =>

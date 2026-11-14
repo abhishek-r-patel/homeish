@@ -636,9 +636,39 @@ DATABASE 15.2.
 
 ---
 
-# Post-MVP (not planned in detail)
+# Post-MVP phases (P11–P15)
 
-Each follows the same pattern: a migration group, module registration, permission map, screens, tests, module gate, ships disabled. Order per PRD: **Staff** (P2-1), **Housekeeping inventory** (P2-2), **AMC** (P2-3), **Notice board** (P2-4, if approved), **Amenity booking** (P2-5, if approved). Also deferred until triggered: SMS/WhatsApp and mobile-number login (PRD D-06, A-35), payment gateway, native apps, offline mode (ARCHITECTURE Section 3).
+Each follows the same pattern: a migration group, module registration, permission map, screens, tests, module gate, ships disabled. Order per PRD and owner decision (2026-11-13):
+
+| Phase | Module                      | PRD        | Status                                                                          |
+| ----- | --------------------------- | ---------- | ------------------------------------------------------------------------------- |
+| P11   | Notice board (`notice`)     | §5.8, D-21 | Built and locally verified; owner UAT pending |
+| P12   | Staff (`staff`)             | §5.5, P2-1 | Built and locally verified; owner UAT pending |
+| P13   | Housekeeping inventory      | §5.6, P2-2 | Built and locally verified; owner UAT pending |
+| P14   | AMC (`amc`)                 | §5.7, P2-3 | Built and locally verified; owner UAT pending |
+| P15   | Amenity booking (`amenity`) | §5.9, D-22 | Built and locally verified; owner UAT pending |
+
+**P11 Notice board** delivers:
+
+- Migration `20261115110000_notice_board.sql`: `notices`, `notice_blocks` and `notice_reads`, the private `notice-files` bucket, and the RPCs `notice_create`, `notice_update`, `notice_set_pinned`, `notice_withdraw`, `notice_list`, `notice_get` and `notice_mark_read`.
+- Core layer in `src/core/notices/` and permissions `notice:list`, `notice:create`, `notice:manage` and `notice:archive`.
+- Screens: `/notices` and `/notices/{id}` for residents; `/admin/notices` (current and archive), `/admin/notices/new`, `/admin/notices/{id}` and `/admin/notices/{id}/edit` for admin and committee.
+- Tests: `tests/integration/database-notices.test.ts`, `tests/unit/notice-board.test.ts`, `tests/e2e/notices.spec.ts` and the `/fixtures/notices` screen in the accessibility sweep.
+
+**P12 Staff management** is implemented and locally verified:
+
+- Migration `20261115130000_staff_module.sql`: domestic and society staff profiles, unit links and review state, private photos, unit-day blocks, gate attendance and society-shift attendance.
+- Resident/admin/guard workflows are available under `/staff`, `/admin/staff` and `/guard/staff`. Approval is required by default; duplicate-phone matches create pending unit links; resident day blocks are unit-only; guards receive no phone or ID details; entry and exit are explicit.
+- Local validation passed: the full repository gate (including 411 unit tests), 105 PostgreSQL integration tests (9 skipped), 71 browser tests and the optimized production build. Staff browser workflows use a development-only in-memory fixture; database integration tests exercise the RPCs against local PostgreSQL.
+- Apply hosted migrations only through the owner-approved release process.
+
+Also deferred until triggered: SMS/WhatsApp and mobile-number login (PRD D-06, A-35), payment gateway, native apps, offline mode (ARCHITECTURE Section 3).
+
+**P13–P15 local build scope:** inventory uses exact three-decimal, historically nonnegative append-only stock; AMC uses preserved successor contracts, audited visit corrections, private documents and catch-up reminders; amenities use exclusive recurring slots, immutable booking snapshots and atomic unit-ledger debit/full-credit entries. Supervisor/admin/resident screens and read-only committee access are included. Unit, PostgreSQL and development-only browser workflow tests cover each phase.
+
+The final combined local gate passed: `npm run check` (Prettier, ESLint, TypeScript, 425 unit tests and repository boundary checks), `npm run test:integration:local` (108 passed, 9 skipped), `npx playwright test` (74 passed) and `npm run build`. Browser fixtures use simulated actions; real RPC authorization, concurrency, history and financial behavior are tested against disposable local PostgreSQL. Amenity database cases include concurrent booking/cancellation, full credits after billing is disabled, unlimited horizon, cancellation at the start boundary and DST-invalid local slots.
+
+Commit promotion and hosted migrations follow the owner-approved release process in [DEPLOYMENT.md](./DEPLOYMENT.md). Local verification does not constitute owner UAT or production go-live approval.
 
 ---
 

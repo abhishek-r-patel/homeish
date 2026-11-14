@@ -30,7 +30,8 @@ describe('retention privileged task', () => {
         { bucket: 'visitor-photos', path: 'society/old.jpg' },
         { bucket: 'request-files', path: 'society/request/old.jpg' },
       ])
-      .mockResolvedValueOnce({});
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 });
   });
 
   it('deduplicates and removes listed files before the database purge', async () => {
@@ -45,7 +46,20 @@ describe('retention privileged task', () => {
     expect(mocks.invokeUntypedRpc.mock.calls.map((call) => call[1])).toEqual([
       'housekeeping_retention_files_list',
       'housekeeping_retention_run',
+      'staff_retention_run',
     ]);
+  });
+
+  it('fails when the staff retention result is malformed', async () => {
+    mocks.invokeUntypedRpc.mockReset();
+    mocks.invokeUntypedRpc
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 'unknown' });
+
+    await expect(runRetentionPrivileged('2026-11-10')).rejects.toThrow(
+      'Staff retention returned an invalid response.',
+    );
   });
 
   it('does not purge rows when storage deletion fails', async () => {

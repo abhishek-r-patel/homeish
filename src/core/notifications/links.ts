@@ -2,11 +2,15 @@
 const ENTITY_PATHS: Readonly<Record<string, string>> = {
   billing_bill: '/bills',
   delivery_entry: '/deliveries',
+  notice: '/notices',
   service_request: '/requests',
   visitor_entry: '/visitors',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
+  amenity_booking: '/amenities',
+  amc: '/admin/amc',
+  housekeeping: '/housekeeping',
   billing_payment: '/bills?tab=payments',
   billing_payment_details: '/admin/billing?tab=payment-settings',
   billing_payment_review: '/admin/billing?tab=payments',

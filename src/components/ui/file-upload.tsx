@@ -2,7 +2,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
 import { Button } from './button';
 
@@ -80,6 +80,10 @@ function formatFileSize(bytes: number) {
   return `${Number((bytes / (1024 * 1024)).toFixed(1))} MB`;
 }
 
+function subscribeToHydration() {
+  return () => {};
+}
+
 export function FileUpload({
   acceptedTypes = defaultAcceptedTypes,
   capturePhoto = false,
@@ -94,6 +98,11 @@ export function FileUpload({
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const acceptedTypeList = acceptedTypes.join(', ');
   const acceptedTypeLabel = acceptedTypes
@@ -102,7 +111,7 @@ export function FileUpload({
   const maximumSizeLabel = formatFileSize(maxFileBytes);
 
   function addFiles(fileList: FileList | null) {
-    if (!fileList) {
+    if (!fileList || !isHydrated) {
       return;
     }
 
@@ -150,7 +159,11 @@ export function FileUpload({
   }
 
   return (
-    <section aria-labelledby={`${id}-label`} className="grid gap-space-3">
+    <section
+      aria-busy={!isHydrated}
+      aria-labelledby={`${id}-label`}
+      className="grid gap-space-3"
+    >
       <h2 className="text-body-strong" id={`${id}-label`}>
         {label}
       </h2>
@@ -170,6 +183,7 @@ export function FileUpload({
           {capturePhoto ? (
             <Button
               className="medium:hidden"
+              disabled={!isHydrated}
               onClick={() => cameraInputRef.current?.click()}
               variant="secondary"
             >
@@ -177,6 +191,7 @@ export function FileUpload({
             </Button>
           ) : null}
           <Button
+            disabled={!isHydrated}
             onClick={() => fileInputRef.current?.click()}
             variant="secondary"
           >
@@ -188,6 +203,7 @@ export function FileUpload({
         accept={acceptedTypeList}
         aria-label={label}
         className="sr-only"
+        disabled={!isHydrated}
         id={id}
         multiple={maxFiles > 1}
         onChange={handleInputChange}
@@ -200,6 +216,7 @@ export function FileUpload({
           aria-label="Take a photo"
           capture="environment"
           className="sr-only"
+          disabled={!isHydrated}
           multiple={false}
           onChange={handleInputChange}
           ref={cameraInputRef}

@@ -60,14 +60,14 @@ export async function encryptDatabaseDump({ filePath, outputPath, key }) {
 
 export async function decryptDatabaseDump({ filePath, outputPath, key }) {
   requireKey(key);
-  const source = await stat(filePath);
-  if (!source.isFile() || source.size <= HEADER_LENGTH + TAG_LENGTH) {
-    throw new Error('The encrypted database backup is empty or truncated.');
-  }
   const input = await open(filePath, 'r');
-  const header = Buffer.alloc(HEADER_LENGTH);
-  const tag = Buffer.alloc(TAG_LENGTH);
   try {
+    const source = await input.stat();
+    if (!source.isFile() || source.size <= HEADER_LENGTH + TAG_LENGTH) {
+      throw new Error('The encrypted database backup is empty or truncated.');
+    }
+    const header = Buffer.alloc(HEADER_LENGTH);
+    const tag = Buffer.alloc(TAG_LENGTH);
     const headerRead = await input.read(header, 0, header.length, 0);
     const tagRead = await input.read(
       tag,
@@ -82,37 +82,38 @@ export async function decryptDatabaseDump({ filePath, outputPath, key }) {
     ) {
       throw new Error('The database backup format is not supported.');
     }
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      key,
+      header.subarray(MAGIC.length),
+    );
+    decipher.setAAD(header);
+    decipher.setAuthTag(tag);
+    const directory = await mkdtemp(
+      join(dirname(resolve(outputPath)), '.homeish-restore-'),
+    );
+    const temporaryPath = join(directory, 'verified.dump');
+    try {
+      await pipeline(
+        input.createReadStream({
+          start: HEADER_LENGTH,
+          end: source.size - TAG_LENGTH - 1,
+          autoClose: false,
+        }),
+        decipher,
+        createWriteStream(temporaryPath, { flags: 'wx', mode: 0o600 }),
+      );
+      // Publish only authenticated plaintext, without overwriting an existing file.
+      await link(temporaryPath, outputPath);
+    } catch (error) {
+      throw new Error(
+        'Could not decrypt the backup. Check the recovery key, archive integrity, and unused output path.',
+        { cause: error },
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   } finally {
     await input.close();
-  }
-  const decipher = createDecipheriv(
-    'aes-256-gcm',
-    key,
-    header.subarray(MAGIC.length),
-  );
-  decipher.setAAD(header);
-  decipher.setAuthTag(tag);
-  const directory = await mkdtemp(
-    join(dirname(resolve(outputPath)), '.homeish-restore-'),
-  );
-  const temporaryPath = join(directory, 'verified.dump');
-  try {
-    await pipeline(
-      createReadStream(filePath, {
-        start: HEADER_LENGTH,
-        end: source.size - TAG_LENGTH - 1,
-      }),
-      decipher,
-      createWriteStream(temporaryPath, { flags: 'wx', mode: 0o600 }),
-    );
-    // Publish only authenticated plaintext, without overwriting an existing file.
-    await link(temporaryPath, outputPath);
-  } catch (error) {
-    throw new Error(
-      'Could not decrypt the backup. Check the recovery key, archive integrity, and unused output path.',
-      { cause: error },
-    );
-  } finally {
-    await rm(directory, { recursive: true, force: true });
   }
 }

@@ -11,6 +11,449 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      amc_contracts: {
+        Row: {
+          asset_label: string;
+          client_request_id: string;
+          cost_paise: number;
+          created_by: string;
+          document_path: string | null;
+          end_date: string;
+          id: string;
+          last_reminder_days: number | null;
+          payment_terms: string;
+          predecessor_id: string | null;
+          society_id: string;
+          start_date: string;
+          updated_at: string;
+          updated_by: string;
+          vendor_contact: string;
+          vendor_name: string;
+          visit_frequency: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          asset_label: string;
+          client_request_id: string;
+          cost_paise: number;
+          created_by: string;
+          document_path?: string | null;
+          end_date: string;
+          id?: string;
+          last_reminder_days?: number | null;
+          payment_terms: string;
+          predecessor_id?: string | null;
+          society_id: string;
+          start_date: string;
+          updated_at?: string;
+          updated_by: string;
+          vendor_contact: string;
+          vendor_name: string;
+          visit_frequency: string;
+        };
+        Update: {
+          asset_label?: string;
+          client_request_id?: string;
+          cost_paise?: number;
+          created_by?: string;
+          document_path?: string | null;
+          end_date?: string;
+          id?: string;
+          last_reminder_days?: number | null;
+          payment_terms?: string;
+          predecessor_id?: string | null;
+          society_id?: string;
+          start_date?: string;
+          updated_at?: string;
+          updated_by?: string;
+          vendor_contact?: string;
+          vendor_name?: string;
+          visit_frequency?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amc_contracts_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_contracts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_contracts_society_id_predecessor_id_fkey';
+            columns: ['society_id', 'predecessor_id'];
+            isOneToOne: false;
+            referencedRelation: 'amc_contracts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amc_contracts_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      amc_request_links: {
+        Row: {
+          contract_id: string;
+          request_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          contract_id: string;
+          request_id: string;
+          society_id: string;
+        };
+        Update: {
+          contract_id?: string;
+          request_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amc_request_links_society_id_contract_id_fkey';
+            columns: ['society_id', 'contract_id'];
+            isOneToOne: false;
+            referencedRelation: 'amc_contracts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amc_request_links_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_request_links_society_id_request_id_fkey';
+            columns: ['society_id', 'request_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      amc_visits: {
+        Row: {
+          client_request_id: string;
+          contract_id: string;
+          created_by: string;
+          document_path: string | null;
+          id: string;
+          society_id: string;
+          summary: string;
+          technician: string;
+          updated_at: string;
+          updated_by: string;
+          visit_date: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          contract_id: string;
+          created_by: string;
+          document_path?: string | null;
+          id?: string;
+          society_id: string;
+          summary: string;
+          technician: string;
+          updated_at?: string;
+          updated_by: string;
+          visit_date: string;
+        };
+        Update: {
+          client_request_id?: string;
+          contract_id?: string;
+          created_by?: string;
+          document_path?: string | null;
+          id?: string;
+          society_id?: string;
+          summary?: string;
+          technician?: string;
+          updated_at?: string;
+          updated_by?: string;
+          visit_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amc_visits_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_visits_society_id_contract_id_fkey';
+            columns: ['society_id', 'contract_id'];
+            isOneToOne: false;
+            referencedRelation: 'amc_contracts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amc_visits_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amc_visits_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      amenities: {
+        Row: {
+          active: boolean;
+          capacity: number;
+          client_request_id: string;
+          created_by: string;
+          fee_paise: number;
+          id: string;
+          name: string;
+          rules: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          capacity: number;
+          client_request_id: string;
+          created_by: string;
+          fee_paise?: number;
+          id?: string;
+          name: string;
+          rules?: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          active?: boolean;
+          capacity?: number;
+          client_request_id?: string;
+          created_by?: string;
+          fee_paise?: number;
+          id?: string;
+          name?: string;
+          rules?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amenities_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenities_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenities_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      amenity_bookings: {
+        Row: {
+          amenity_id: string;
+          amenity_name: string;
+          booked_by: string;
+          booking_span: unknown;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          capacity: number;
+          charge_ledger_id: number | null;
+          client_request_id: string;
+          created_at: string;
+          credit_ledger_id: number | null;
+          ends_at: string;
+          fee_paise: number;
+          guest_count: number;
+          id: string;
+          rules_accepted: boolean;
+          rules_snapshot: string;
+          slot_id: string;
+          society_id: string;
+          starts_at: string;
+          status: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amenity_id: string;
+          amenity_name: string;
+          booked_by: string;
+          booking_span?: never;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          capacity: number;
+          charge_ledger_id?: number | null;
+          client_request_id: string;
+          created_at?: string;
+          credit_ledger_id?: number | null;
+          ends_at: string;
+          fee_paise: number;
+          guest_count: number;
+          id?: string;
+          rules_accepted: boolean;
+          rules_snapshot: string;
+          slot_id: string;
+          society_id: string;
+          starts_at: string;
+          status?: string;
+          unit_id: string;
+        };
+        Update: {
+          amenity_id?: string;
+          amenity_name?: string;
+          booked_by?: string;
+          booking_span?: never;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          capacity?: number;
+          charge_ledger_id?: number | null;
+          client_request_id?: string;
+          created_at?: string;
+          credit_ledger_id?: number | null;
+          ends_at?: string;
+          fee_paise?: number;
+          guest_count?: number;
+          id?: string;
+          rules_accepted?: boolean;
+          rules_snapshot?: string;
+          slot_id?: string;
+          society_id?: string;
+          starts_at?: string;
+          status?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amenity_bookings_booked_by_fkey';
+            columns: ['booked_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_cancelled_by_fkey';
+            columns: ['cancelled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_amenity_id_slot_id_fkey';
+            columns: ['society_id', 'amenity_id', 'slot_id'];
+            isOneToOne: false;
+            referencedRelation: 'amenity_slots';
+            referencedColumns: ['society_id', 'amenity_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_unit_id_charge_ledger_id_fkey';
+            columns: ['society_id', 'unit_id', 'charge_ledger_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_ledger_entries';
+            referencedColumns: ['society_id', 'unit_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_unit_id_credit_ledger_id_fkey';
+            columns: ['society_id', 'unit_id', 'credit_ledger_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_ledger_entries';
+            referencedColumns: ['society_id', 'unit_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      amenity_slots: {
+        Row: {
+          active: boolean;
+          amenity_id: string;
+          ends_local: string;
+          id: string;
+          society_id: string;
+          starts_local: string;
+          weekday: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          amenity_id: string;
+          ends_local: string;
+          id?: string;
+          society_id: string;
+          starts_local: string;
+          weekday: number;
+        };
+        Update: {
+          active?: boolean;
+          amenity_id?: string;
+          ends_local?: string;
+          id?: string;
+          society_id?: string;
+          starts_local?: string;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amenity_slots_society_id_amenity_id_fkey';
+            columns: ['society_id', 'amenity_id'];
+            isOneToOne: false;
+            referencedRelation: 'amenities';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_slots_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           action: string;
@@ -1115,6 +1558,142 @@ export type Database = {
           },
         ];
       };
+      housekeeping_items: {
+        Row: {
+          active: boolean;
+          category: string;
+          created_by: string;
+          id: string;
+          last_low_alert_date: string | null;
+          minimum_stock: number;
+          name: string;
+          society_id: string;
+          unit_of_measure: string;
+          updated_at: string;
+          updated_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          category: string;
+          created_by: string;
+          id?: string;
+          last_low_alert_date?: string | null;
+          minimum_stock?: number;
+          name: string;
+          society_id: string;
+          unit_of_measure: string;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          active?: boolean;
+          category?: string;
+          created_by?: string;
+          id?: string;
+          last_low_alert_date?: string | null;
+          minimum_stock?: number;
+          name?: string;
+          society_id?: string;
+          unit_of_measure?: string;
+          updated_at?: string;
+          updated_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'housekeeping_items_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'housekeeping_items_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'housekeeping_items_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      housekeeping_transactions: {
+        Row: {
+          client_request_id: string;
+          cost_paise: number | null;
+          created_at: string;
+          created_by: string;
+          effective_date: string;
+          id: string;
+          item_id: string;
+          kind: string;
+          purpose: string | null;
+          quantity: number;
+          sequence: number;
+          society_id: string;
+          vendor: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          cost_paise?: number | null;
+          created_at?: string;
+          created_by: string;
+          effective_date: string;
+          id?: string;
+          item_id: string;
+          kind: string;
+          purpose?: string | null;
+          quantity: number;
+          sequence?: never;
+          society_id: string;
+          vendor?: string | null;
+        };
+        Update: {
+          client_request_id?: string;
+          cost_paise?: number | null;
+          created_at?: string;
+          created_by?: string;
+          effective_date?: string;
+          id?: string;
+          item_id?: string;
+          kind?: string;
+          purpose?: string | null;
+          quantity?: number;
+          sequence?: never;
+          society_id?: string;
+          vendor?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'housekeeping_transactions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'housekeeping_transactions_item_same_society_fkey';
+            columns: ['society_id', 'item_id'];
+            isOneToOne: false;
+            referencedRelation: 'housekeeping_items';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'housekeeping_transactions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       job_run_keys: {
         Row: {
           completed_at: string | null;
@@ -1359,6 +1938,187 @@ export type Database = {
           sort_order?: number;
         };
         Relationships: [];
+      };
+      notice_blocks: {
+        Row: {
+          block_id: string;
+          notice_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id: string;
+          notice_id: string;
+          society_id: string;
+        };
+        Update: {
+          block_id?: string;
+          notice_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notice_blocks_block_same_society_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'notice_blocks_notice_same_society_fkey';
+            columns: ['society_id', 'notice_id'];
+            isOneToOne: false;
+            referencedRelation: 'notices';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'notice_blocks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      notice_reads: {
+        Row: {
+          notice_id: string;
+          read_at: string;
+          society_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          notice_id: string;
+          read_at?: string;
+          society_id: string;
+          user_id: string;
+        };
+        Update: {
+          notice_id?: string;
+          read_at?: string;
+          society_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notice_reads_notice_same_society_fkey';
+            columns: ['society_id', 'notice_id'];
+            isOneToOne: false;
+            referencedRelation: 'notices';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'notice_reads_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notice_reads_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      notices: {
+        Row: {
+          attachment_content_type: string | null;
+          attachment_path: string | null;
+          attachment_size_bytes: number | null;
+          audience: string;
+          body: string;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          edited_at: string | null;
+          expires_at: string | null;
+          id: string;
+          pinned: boolean;
+          society_id: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          withdrawn_at: string | null;
+          withdrawn_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          attachment_content_type?: string | null;
+          attachment_path?: string | null;
+          attachment_size_bytes?: number | null;
+          audience?: string;
+          body: string;
+          client_request_id: string;
+          created_at?: string;
+          created_by?: string;
+          edited_at?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          pinned?: boolean;
+          society_id: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Update: {
+          attachment_content_type?: string | null;
+          attachment_path?: string | null;
+          attachment_size_bytes?: number | null;
+          audience?: string;
+          body?: string;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          edited_at?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          pinned?: boolean;
+          society_id?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+          withdrawn_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notices_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notices_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notices_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notices_withdrawn_by_fkey';
+            columns: ['withdrawn_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       notifications: {
         Row: {
@@ -2011,6 +2771,359 @@ export type Database = {
           },
         ];
       };
+      staff_attendance: {
+        Row: {
+          check_in_guard_id: string;
+          check_out_guard_id: string | null;
+          checked_in_at: string;
+          checked_in_by: string;
+          checked_out_at: string | null;
+          checked_out_by: string | null;
+          id: string;
+          society_id: string;
+          staff_id: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          check_in_guard_id: string;
+          check_out_guard_id?: string | null;
+          checked_in_at?: string;
+          checked_in_by: string;
+          checked_out_at?: string | null;
+          checked_out_by?: string | null;
+          id?: string;
+          society_id: string;
+          staff_id: string;
+          unit_id: string;
+        };
+        Update: {
+          check_in_guard_id?: string;
+          check_out_guard_id?: string | null;
+          checked_in_at?: string;
+          checked_in_by?: string;
+          checked_out_at?: string | null;
+          checked_out_by?: string | null;
+          id?: string;
+          society_id?: string;
+          staff_id?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'staff_attendance_checked_in_by_fkey';
+            columns: ['checked_in_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_attendance_checked_out_by_fkey';
+            columns: ['checked_out_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_attendance_checkin_guard_same_society_fkey';
+            columns: ['society_id', 'check_in_guard_id'];
+            isOneToOne: false;
+            referencedRelation: 'guard_roster';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'staff_attendance_checkout_guard_same_society_fkey';
+            columns: ['society_id', 'check_out_guard_id'];
+            isOneToOne: false;
+            referencedRelation: 'guard_roster';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'staff_attendance_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_attendance_staff_same_society_fkey';
+            columns: ['society_id', 'staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'staff_attendance_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      staff_day_blocks: {
+        Row: {
+          block_date: string;
+          created_at: string;
+          created_by: string;
+          society_id: string;
+          staff_id: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_date: string;
+          created_at?: string;
+          created_by?: string;
+          society_id: string;
+          staff_id: string;
+          unit_id: string;
+        };
+        Update: {
+          block_date?: string;
+          created_at?: string;
+          created_by?: string;
+          society_id?: string;
+          staff_id?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'staff_day_blocks_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_day_blocks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_day_blocks_staff_same_society_fkey';
+            columns: ['society_id', 'staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'staff_day_blocks_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      staff_members: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          full_name: string;
+          id: string;
+          id_last_four: string | null;
+          id_type: string | null;
+          job_role: string;
+          phone: string;
+          photo_path: string | null;
+          police_verified: boolean;
+          society_id: string;
+          staff_code: string;
+          staff_type: string;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string;
+          full_name: string;
+          id?: string;
+          id_last_four?: string | null;
+          id_type?: string | null;
+          job_role: string;
+          phone: string;
+          photo_path?: string | null;
+          police_verified?: boolean;
+          society_id: string;
+          staff_code?: string;
+          staff_type: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          full_name?: string;
+          id?: string;
+          id_last_four?: string | null;
+          id_type?: string | null;
+          job_role?: string;
+          phone?: string;
+          photo_path?: string | null;
+          police_verified?: boolean;
+          society_id?: string;
+          staff_code?: string;
+          staff_type?: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'staff_members_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_members_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_members_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      staff_shift_attendance: {
+        Row: {
+          attendance_date: string;
+          marked_by: string;
+          society_id: string;
+          staff_id: string;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          attendance_date: string;
+          marked_by?: string;
+          society_id: string;
+          staff_id: string;
+          status: string;
+          updated_at?: string;
+        };
+        Update: {
+          attendance_date?: string;
+          marked_by?: string;
+          society_id?: string;
+          staff_id?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'staff_shift_attendance_marked_by_fkey';
+            columns: ['marked_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_shift_attendance_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_shift_attendance_staff_same_society_fkey';
+            columns: ['society_id', 'staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      staff_unit_links: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          id: string;
+          request_id: string | null;
+          society_id: string;
+          staff_id: string;
+          status: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          id?: string;
+          request_id?: string | null;
+          society_id: string;
+          staff_id: string;
+          status?: string;
+          unit_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          id?: string;
+          request_id?: string | null;
+          society_id?: string;
+          staff_id?: string;
+          status?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'staff_unit_links_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_unit_links_decided_by_fkey';
+            columns: ['decided_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_unit_links_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_unit_links_staff_same_society_fkey';
+            columns: ['society_id', 'staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'staff_unit_links_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       unit_occupants: {
         Row: {
           created_at: string;
@@ -2572,6 +3685,103 @@ export type Database = {
           p_society_id: string;
         };
         Returns: undefined;
+      };
+      amc_contract_save: {
+        Args: {
+          p_asset_label: string;
+          p_client_request_id: string;
+          p_contract_id: string;
+          p_cost_paise: number;
+          p_document_path: string;
+          p_end_date: string;
+          p_expected_updated_at: string;
+          p_payment_terms: string;
+          p_predecessor_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_start_date: string;
+          p_vendor_contact: string;
+          p_vendor_name: string;
+          p_visit_frequency: string;
+        };
+        Returns: string;
+      };
+      amc_reminders_run: {
+        Args: { p_request_trace: string; p_society_id: string };
+        Returns: number;
+      };
+      amc_request_label: {
+        Args: { p_request_id: string; p_society_id: string };
+        Returns: string;
+      };
+      amc_request_link: {
+        Args: {
+          p_contract_id: string;
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      amc_visit_save: {
+        Args: {
+          p_client_request_id: string;
+          p_contract_id: string;
+          p_document_path: string;
+          p_expected_updated_at: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_summary: string;
+          p_technician: string;
+          p_visit_date: string;
+          p_visit_id: string;
+        };
+        Returns: string;
+      };
+      amc_workspace: { Args: { p_society_id: string }; Returns: Json };
+      amenity_book: {
+        Args: {
+          p_amenity_id: string;
+          p_client_request_id: string;
+          p_date: string;
+          p_expected_updated_at: string;
+          p_guest_count: number;
+          p_request_trace: string;
+          p_rules_accepted: boolean;
+          p_slot_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      amenity_cancel: {
+        Args: {
+          p_booking_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      amenity_save: {
+        Args: {
+          p_active: boolean;
+          p_amenity_id: string;
+          p_capacity: number;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_fee_paise: number;
+          p_name: string;
+          p_request_trace: string;
+          p_rules: string;
+          p_slots: Json;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      amenity_workspace: {
+        Args: { p_date: string; p_society_id: string };
+        Returns: Json;
       };
       approve_society_registration: {
         Args: {
@@ -3514,6 +4724,28 @@ export type Database = {
         }[];
       };
       has_signin_access: { Args: { p_email: string }; Returns: boolean };
+      housekeeping_item_save: {
+        Args: {
+          p_active: boolean;
+          p_category: string;
+          p_expected_updated_at: string;
+          p_item_id: string;
+          p_minimum_stock: number;
+          p_name: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_unit_of_measure: string;
+        };
+        Returns: string;
+      };
+      housekeeping_items_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      housekeeping_low_stock_run: {
+        Args: { p_request_trace: string; p_society_id: string };
+        Returns: number;
+      };
       housekeeping_retention_files_list: {
         Args: { p_today: string };
         Returns: {
@@ -3523,6 +4755,30 @@ export type Database = {
       };
       housekeeping_retention_run: {
         Args: { p_request_trace: string; p_today: string };
+        Returns: Json;
+      };
+      housekeeping_stock_record: {
+        Args: {
+          p_client_request_id: string;
+          p_cost_paise: number;
+          p_effective_date: string;
+          p_item_id: string;
+          p_kind: string;
+          p_purpose: string;
+          p_quantity: number;
+          p_request_trace: string;
+          p_society_id: string;
+          p_vendor: string;
+        };
+        Returns: string;
+      };
+      housekeeping_transactions_list: {
+        Args: {
+          p_from: string;
+          p_item_id: string;
+          p_society_id: string;
+          p_to: string;
+        };
         Returns: Json;
       };
       list_household_members: {
@@ -3575,6 +4831,70 @@ export type Database = {
           p_target_unit_id: string;
         };
         Returns: string;
+      };
+      notice_create: {
+        Args: {
+          p_attachment: Json;
+          p_audience: string;
+          p_block_ids: string[];
+          p_body: string;
+          p_client_request_id: string;
+          p_expires_at: string;
+          p_pinned: boolean;
+          p_request_trace: string;
+          p_society_id: string;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      notice_get: {
+        Args: { p_notice_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      notice_list: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+          p_view?: string;
+        };
+        Returns: Json;
+      };
+      notice_mark_read: {
+        Args: { p_notice_id: string; p_society_id: string };
+        Returns: undefined;
+      };
+      notice_set_pinned: {
+        Args: {
+          p_notice_id: string;
+          p_pinned: boolean;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      notice_update: {
+        Args: {
+          p_attachment: Json;
+          p_audience: string;
+          p_block_ids: string[];
+          p_body: string;
+          p_expected_updated_at: string;
+          p_expires_at: string;
+          p_notice_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      notice_withdraw: {
+        Args: {
+          p_notice_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
       };
       record_developer_mfa: {
         Args: Record<PropertyKey, never>;
@@ -4038,6 +5358,113 @@ export type Database = {
           status: string;
         }[];
       };
+      staff_admin_save: {
+        Args: {
+          p_full_name: string;
+          p_id_last_four: string;
+          p_id_type: string;
+          p_job_role: string;
+          p_phone: string;
+          p_photo_path: string;
+          p_police_verified: boolean;
+          p_request_id: string;
+          p_society_id: string;
+          p_staff_id: string;
+          p_staff_type: string;
+          p_status: string;
+          p_unit_ids: string[];
+        };
+        Returns: string;
+      };
+      staff_attendance_list: {
+        Args: { p_month: string; p_society_id: string; p_staff_id: string };
+        Returns: Json;
+      };
+      staff_check_in: {
+        Args: {
+          p_guard_id: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_staff_code: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      staff_check_out: {
+        Args: {
+          p_attendance_id: string;
+          p_guard_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      staff_gate_list: {
+        Args: { p_society_id: string; p_unit_id: string };
+        Returns: Json;
+      };
+      staff_list: { Args: { p_society_id: string }; Returns: Json };
+      staff_resident_day_block: {
+        Args: {
+          p_request_id: string;
+          p_society_id: string;
+          p_staff_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      staff_resident_register: {
+        Args: {
+          p_full_name: string;
+          p_id_last_four: string;
+          p_id_type: string;
+          p_job_role: string;
+          p_phone: string;
+          p_photo_path: string;
+          p_police_verified: boolean;
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: Json;
+      };
+      staff_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: Json;
+      };
+      staff_review_link: {
+        Args: {
+          p_decision: string;
+          p_link_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      staff_settings_update: {
+        Args: {
+          p_request_id: string;
+          p_resident_approval_required: boolean;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      staff_shift_list: {
+        Args: { p_month: string; p_society_id: string };
+        Returns: Json;
+      };
+      staff_shift_mark: {
+        Args: {
+          p_attendance_date: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_staff_id: string;
+          p_status: string;
+        };
+        Returns: undefined;
+      };
+      staff_units_list: { Args: { p_society_id: string }; Returns: Json };
       start_auth_code_challenge: {
         Args: { p_email_key: string };
         Returns: string;

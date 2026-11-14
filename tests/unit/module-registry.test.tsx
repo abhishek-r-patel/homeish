@@ -28,6 +28,32 @@ describe('module registry', () => {
   it('keeps permission and navigation declarations scoped to each module', () => {
     expect(hasPermission(['admin'], 'core', 'membership:manage')).toBe(true);
     expect(hasPermission(['admin'], 'visitor', 'visitor:list')).toBe(true);
+    expect(hasPermission(['guard'], 'staff', 'staff:gate')).toBe(true);
+    expect(hasPermission(['committee'], 'staff', 'staff:manage')).toBe(false);
+    expect(hasPermission(['committee'], 'amc', 'amc:list')).toBe(true);
+    expect(hasPermission(['committee'], 'amc', 'amc:manage')).toBe(false);
+    expect(hasPermission(['resident'], 'amc', 'amc:list')).toBe(false);
+    expect(hasPermission(['committee'], 'amenity', 'amenity:list')).toBe(true);
+    expect(hasPermission(['committee'], 'amenity', 'amenity:book')).toBe(false);
+    expect(hasPermission(['resident'], 'amenity', 'amenity:book')).toBe(true);
+    expect(
+      getRoleNavigation(['committee'], ['amc', 'amenity'])
+        .filter(({ moduleKey }) => moduleKey !== 'core')
+        .map(({ href }) => href),
+    ).toEqual(['/admin/amc', '/admin/amenities']);
+    expect(hasPermission(['committee'], 'housekeeping', 'stock:list')).toBe(
+      true,
+    );
+    expect(hasPermission(['committee'], 'housekeeping', 'stock:manage')).toBe(
+      false,
+    );
+    expect(getModuleNavigation('staff', 'guard')).toEqual([
+      {
+        href: '/guard/staff',
+        label: 'Staff entry',
+        permission: 'staff:gate',
+      },
+    ]);
     expect(hasPermission(['committee'], 'delivery', 'delivery:list')).toBe(
       true,
     );
@@ -108,6 +134,16 @@ describe('module registry', () => {
   });
 
   it('validates settings through each module schema', () => {
+    expect(parseModuleSettings('staff', {})).toEqual({});
+    expect(
+      parseModuleSettings('staff', { resident_approval_required: true }),
+    ).toEqual({ resident_approval_required: true });
+    expect(() =>
+      parseModuleSettings('staff', { resident_approval_required: 'yes' }),
+    ).toThrow();
+    expect(getModuleDefinition('staff').defaultSettings).toEqual({
+      resident_approval_required: true,
+    });
     expect(parseModuleSettings('visitor', {})).toEqual({});
     expect(
       parseModuleSettings('visitor', {

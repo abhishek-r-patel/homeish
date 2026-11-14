@@ -59,11 +59,45 @@ const issueSchema = z.discriminatedUnion('bucket', [
       requestId: z.uuid(),
     })
     .strict(),
+  z
+    .object({
+      bucket: z.literal('notice-files'),
+      contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      requestId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('amc-files'),
+      contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      requestId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('staff-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
 ]);
 
-const pathSchema = z
-  .object({ bucket: z.literal('society-assets'), path: z.string().max(500) })
-  .strict();
+const pathSchema = z.discriminatedUnion('bucket', [
+  z
+    .object({
+      bucket: z.literal('society-assets'),
+      path: z.string().max(500),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('staff-photos'),
+      path: z.string().max(500),
+    })
+    .strict(),
+]);
 
 function parse<T>(schema: z.ZodType<T>, body: unknown): T {
   const parsed = schema.safeParse(body);
@@ -180,6 +214,72 @@ export async function POST(request: Request) {
           .createSignedUploadUrl(path);
         if (error || !data) {
           throw new Error('Could not issue the request photo upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'notice-files' || input.bucket === 'amc-files') {
+        authorizeRequest(context, {
+          moduleKey: input.bucket === 'notice-files' ? 'notice' : 'amc',
+          permission:
+            input.bucket === 'notice-files' ? 'notice:create' : 'amc:manage',
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension =
+          input.contentType === 'image/jpeg'
+            ? 'jpg'
+            : input.contentType === 'image/png'
+              ? 'png'
+              : 'pdf';
+        const directory =
+          input.bucket === 'notice-files'
+            ? `${societyId}/notices/${input.requestId}`
+            : `${societyId}/${context.userId}/amc`;
+        const path = `${directory}/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error(
+            'Could not issue the private attachment upload token.',
+            {
+              cause: error,
+            },
+          );
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'staff-photos') {
+        const permission = context.roles.includes('admin')
+          ? 'staff:manage'
+          : 'staff:register';
+        authorizeRequest(context, {
+          moduleKey: 'staff',
+          permission,
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension = input.contentType === 'image/jpeg' ? 'jpg' : 'png';
+        const path = `${societyId}/staff/${context.userId}/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the staff photo upload token.', {
             cause: error,
           });
         }
@@ -322,6 +422,40 @@ export async function DELETE(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(pathSchema, body);
+      if (input.bucket === 'staff-photos') {
+        const match = input.path.match(
+          /^([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/staff\/([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png)$/i,
+        );
+        const societyId = match?.[1];
+        const uploaderId = match?.[2];
+        if (!societyId || !uploaderId || context.societyId !== societyId) {
+          throw new ValidationError({
+            path: 'Choose a valid staff photo.',
+          });
+        }
+        authorizeRequest(context, {
+          moduleKey: 'staff',
+          permission: context.roles.includes('admin')
+            ? 'staff:manage'
+            : 'staff:register',
+          write: true,
+        });
+        if (!context.roles.includes('admin') && uploaderId !== context.userId) {
+          throw new AppError('FORBIDDEN');
+        }
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .remove([input.path]);
+        if (error) {
+          throw new Error('Could not remove the unattached staff photo.', {
+            cause: error,
+          });
+        }
+        if (!data?.some(({ name }) => name === input.path)) {
+          throw new ConflictError('invalid_state');
+        }
+        return {};
+      }
       const billingSocietyId = input.path.split('/')[0] ?? '';
       if (isBillingQrPath(input.path, billingSocietyId)) {
         authorizeRequest(context, {
