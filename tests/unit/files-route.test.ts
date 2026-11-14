@@ -128,7 +128,6 @@ describe('private file URL routes', () => {
       path: expect.stringMatching(new RegExp(`^${societyId}/logos/.*\\.png$`)),
       signedUrl: 'https://storage.test/signed-upload',
     });
-
     expect(mocks.createSignedUploadUrl).toHaveBeenCalledWith(
       expect.stringMatching(new RegExp(`^${societyId}/logos/.*\\.png$`)),
     );
@@ -137,6 +136,45 @@ describe('private file URL routes', () => {
       societyId,
       'test-request-id',
     );
+  });
+  it('issues owner-scoped AMC PDF uploads only to admins with the module enabled', async () => {
+    const base = await mocks.buildRequestContext();
+    const context = {
+      ...base,
+      isDeveloper: false,
+      isDeveloperAccount: false,
+      roles: ['admin'],
+      societyId,
+      societyStatus: 'active',
+      memberships: [{ societyId, roles: ['admin'] }],
+      enabledModules: new Set(['amc']),
+    };
+    mocks.buildRequestContext.mockResolvedValue(context);
+    const body = {
+      bucket: 'amc-files',
+      contentType: 'application/pdf',
+      sizeBytes: 50,
+      requestId: societyId,
+    };
+    const allowed = await issueUpload(request('/api/files/upload-url', body));
+    expect(allowed.status).toBe(200);
+    expect((await responseBody(allowed)).data?.path).toMatch(
+      new RegExp(`^${societyId}/${context.userId}/amc/[0-9a-f-]+\\.pdf$`),
+    );
+    for (const roles of [['committee'], ['resident']]) {
+      mocks.buildRequestContext.mockResolvedValue({ ...context, roles });
+      expect(
+        (await issueUpload(request('/api/files/upload-url', body))).status,
+      ).toBe(403);
+    }
+    mocks.buildRequestContext.mockResolvedValue({
+      ...context,
+      enabledModules: new Set(),
+    });
+    expect(
+      (await issueUpload(request('/api/files/upload-url', body))).status,
+    ).toBe(403);
+    expect(mocks.createSignedUploadUrl).toHaveBeenCalledTimes(1);
   });
 
   it('lets residents delete only their own unreferenced staff photos', async () => {

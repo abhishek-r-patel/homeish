@@ -22,6 +22,7 @@ export type StorageBucket =
   | 'payment-proofs'
   | 'society-assets'
   | 'notice-files'
+  | 'amc-files'
   | 'staff-photos';
 
 const SOCIETY_LOGO_PATH_PATTERN =
@@ -38,6 +39,7 @@ const STORAGE_BUCKETS: readonly StorageBucket[] = [
   'payment-proofs',
   'society-assets',
   'notice-files',
+  'amc-files',
   'staff-photos',
 ];
 const BUCKET_CONTENT_TYPES: Readonly<
@@ -49,6 +51,7 @@ const BUCKET_CONTENT_TYPES: Readonly<
   'payment-proofs': ['image/jpeg', 'image/png'],
   'society-assets': FILE_CONTENT_TYPES,
   'notice-files': FILE_CONTENT_TYPES,
+  'amc-files': FILE_CONTENT_TYPES,
   'staff-photos': ['image/jpeg', 'image/png'],
 };
 

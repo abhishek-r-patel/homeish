@@ -51,3 +51,4 @@ export { runUserErasurePrivileged } from './user-erasure';
 export { runServiceRequestAutoClosePrivileged } from './service-requests';
 export { runInventoryRemindersPrivileged } from './housekeeping';
 export type { TransactionalEmail } from '../notifications/email';
+export { runAmcRemindersPrivileged } from './amc';

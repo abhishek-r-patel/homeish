@@ -18,6 +18,7 @@ import {
   DEFAULT_STAFF_SETTINGS,
   staffSettingsSchema,
 } from '../staff/validation';
+import { amcSettingsSchema, DEFAULT_AMC_SETTINGS } from '../amc/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -442,15 +443,22 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   amc: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_AMC_SETTINGS,
     key: 'amc',
     name: 'AMC Management',
     navigation: {
       admin: [{ href: '/admin/amc', label: 'AMC', permission: 'amc:list' }],
+      committee: [{ href: '/admin/amc', label: 'AMC', permission: 'amc:list' }],
     },
-    permissions: {},
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    permissions: {
+      'amc:list': ['admin', 'committee'],
+      'amc:manage': ['admin'],
+    },
+    settingsAccess: {
+      reminder_days: 'developer',
+      expiring_soon_days: 'developer',
+    },
+    settingsSchema: amcSettingsSchema,
   },
   notice: {
     core: false,
@@ -532,6 +540,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'delivery',
     'notice',
     'housekeeping',
+    'amc',
   ],
   guard: ['core', 'visitor', 'delivery', 'staff'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],

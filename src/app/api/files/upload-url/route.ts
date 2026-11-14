@@ -69,6 +69,14 @@ const issueSchema = z.discriminatedUnion('bucket', [
     .strict(),
   z
     .object({
+      bucket: z.literal('amc-files'),
+      contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      requestId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
       bucket: z.literal('staff-photos'),
       contentType: z.enum(['image/jpeg', 'image/png']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
@@ -211,10 +219,11 @@ export async function POST(request: Request) {
         }
         return { path, signedUrl: data.signedUrl };
       }
-      if (input.bucket === 'notice-files') {
+      if (input.bucket === 'notice-files' || input.bucket === 'amc-files') {
         authorizeRequest(context, {
-          moduleKey: 'notice',
-          permission: 'notice:create',
+          moduleKey: input.bucket === 'notice-files' ? 'notice' : 'amc',
+          permission:
+            input.bucket === 'notice-files' ? 'notice:create' : 'amc:manage',
           write: true,
         });
         const societyId = context.societyId;
@@ -230,14 +239,21 @@ export async function POST(request: Request) {
             : input.contentType === 'image/png'
               ? 'png'
               : 'pdf';
-        const path = `${societyId}/notices/${input.requestId}/${crypto.randomUUID()}.${extension}`;
+        const directory =
+          input.bucket === 'notice-files'
+            ? `${societyId}/notices/${input.requestId}`
+            : `${societyId}/${context.userId}/amc`;
+        const path = `${directory}/${crypto.randomUUID()}.${extension}`;
         const { data, error } = await context.db.storage
           .from(input.bucket)
           .createSignedUploadUrl(path);
         if (error || !data) {
-          throw new Error('Could not issue the notice file upload token.', {
-            cause: error,
-          });
+          throw new Error(
+            'Could not issue the private attachment upload token.',
+            {
+              cause: error,
+            },
+          );
         }
         return { path, signedUrl: data.signedUrl };
       }

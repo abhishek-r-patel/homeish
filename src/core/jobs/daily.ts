@@ -9,6 +9,7 @@ import {
   runServiceRequestAutoClosePrivileged,
   runVisitorExpirationPrivileged,
   runInventoryRemindersPrivileged,
+  runAmcRemindersPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -64,6 +65,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'housekeeping.low_stock',
     run: async (societyId: string) => {
       await runInventoryRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'amc.reminders',
+    run: async (societyId: string) => {
+      await runAmcRemindersPrivileged(societyId);
     },
   },
   {
