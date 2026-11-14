@@ -214,6 +214,246 @@ export type Database = {
           },
         ];
       };
+      amenities: {
+        Row: {
+          active: boolean;
+          capacity: number;
+          client_request_id: string;
+          created_by: string;
+          fee_paise: number;
+          id: string;
+          name: string;
+          rules: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          capacity: number;
+          client_request_id: string;
+          created_by: string;
+          fee_paise?: number;
+          id?: string;
+          name: string;
+          rules?: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          active?: boolean;
+          capacity?: number;
+          client_request_id?: string;
+          created_by?: string;
+          fee_paise?: number;
+          id?: string;
+          name?: string;
+          rules?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amenities_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenities_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenities_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      amenity_bookings: {
+        Row: {
+          amenity_id: string;
+          amenity_name: string;
+          booked_by: string;
+          booking_span: unknown;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          capacity: number;
+          charge_ledger_id: number | null;
+          client_request_id: string;
+          created_at: string;
+          credit_ledger_id: number | null;
+          ends_at: string;
+          fee_paise: number;
+          guest_count: number;
+          id: string;
+          rules_accepted: boolean;
+          rules_snapshot: string;
+          slot_id: string;
+          society_id: string;
+          starts_at: string;
+          status: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amenity_id: string;
+          amenity_name: string;
+          booked_by: string;
+          booking_span?: never;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          capacity: number;
+          charge_ledger_id?: number | null;
+          client_request_id: string;
+          created_at?: string;
+          credit_ledger_id?: number | null;
+          ends_at: string;
+          fee_paise: number;
+          guest_count: number;
+          id?: string;
+          rules_accepted: boolean;
+          rules_snapshot: string;
+          slot_id: string;
+          society_id: string;
+          starts_at: string;
+          status?: string;
+          unit_id: string;
+        };
+        Update: {
+          amenity_id?: string;
+          amenity_name?: string;
+          booked_by?: string;
+          booking_span?: never;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          capacity?: number;
+          charge_ledger_id?: number | null;
+          client_request_id?: string;
+          created_at?: string;
+          credit_ledger_id?: number | null;
+          ends_at?: string;
+          fee_paise?: number;
+          guest_count?: number;
+          id?: string;
+          rules_accepted?: boolean;
+          rules_snapshot?: string;
+          slot_id?: string;
+          society_id?: string;
+          starts_at?: string;
+          status?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amenity_bookings_booked_by_fkey';
+            columns: ['booked_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_cancelled_by_fkey';
+            columns: ['cancelled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_amenity_id_slot_id_fkey';
+            columns: ['society_id', 'amenity_id', 'slot_id'];
+            isOneToOne: false;
+            referencedRelation: 'amenity_slots';
+            referencedColumns: ['society_id', 'amenity_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_unit_id_charge_ledger_id_fkey';
+            columns: ['society_id', 'unit_id', 'charge_ledger_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_ledger_entries';
+            referencedColumns: ['society_id', 'unit_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_unit_id_credit_ledger_id_fkey';
+            columns: ['society_id', 'unit_id', 'credit_ledger_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_ledger_entries';
+            referencedColumns: ['society_id', 'unit_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_bookings_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      amenity_slots: {
+        Row: {
+          active: boolean;
+          amenity_id: string;
+          ends_local: string;
+          id: string;
+          society_id: string;
+          starts_local: string;
+          weekday: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          amenity_id: string;
+          ends_local: string;
+          id?: string;
+          society_id: string;
+          starts_local: string;
+          weekday: number;
+        };
+        Update: {
+          active?: boolean;
+          amenity_id?: string;
+          ends_local?: string;
+          id?: string;
+          society_id?: string;
+          starts_local?: string;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amenity_slots_society_id_amenity_id_fkey';
+            columns: ['society_id', 'amenity_id'];
+            isOneToOne: false;
+            referencedRelation: 'amenities';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_slots_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           action: string;
@@ -3499,6 +3739,50 @@ export type Database = {
         Returns: string;
       };
       amc_workspace: { Args: { p_society_id: string }; Returns: Json };
+      amenity_book: {
+        Args: {
+          p_amenity_id: string;
+          p_client_request_id: string;
+          p_date: string;
+          p_expected_updated_at: string;
+          p_guest_count: number;
+          p_request_trace: string;
+          p_rules_accepted: boolean;
+          p_slot_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      amenity_cancel: {
+        Args: {
+          p_booking_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      amenity_save: {
+        Args: {
+          p_active: boolean;
+          p_amenity_id: string;
+          p_capacity: number;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_fee_paise: number;
+          p_name: string;
+          p_request_trace: string;
+          p_rules: string;
+          p_slots: Json;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      amenity_workspace: {
+        Args: { p_date: string; p_society_id: string };
+        Returns: Json;
+      };
       approve_society_registration: {
         Args: {
           p_membership_id: string;
