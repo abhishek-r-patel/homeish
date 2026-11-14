@@ -9,6 +9,7 @@ describe('safeReturnPath', () => {
     ['/guard', '/guard'],
     ['/admin/societies', '/admin/societies'],
     ['/housekeeping', '/housekeeping'],
+    ['/amenities?date=2099-01-05', '/amenities'],
     ['/developer/errors?reference=123#top', '/developer/errors'],
   ])('allows local application path %s', (candidate, expected) => {
     expect(safeReturnPath(candidate)).toBe(expected);
@@ -20,6 +21,7 @@ describe('safeReturnPath', () => {
     '/\\attacker.test',
     '/login',
     '/session-evil',
+    '/amenities-evil',
     'session',
     null,
     7,
