@@ -4,10 +4,14 @@ import { readFileSync } from 'node:fs';
 import {
   access,
   mkdtemp,
+  open,
   readFile,
   readdir,
+  rename,
   rm,
+  stat,
   writeFile,
+  type FileHandle,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -25,6 +29,15 @@ import {
   uploadDatabaseDump,
   verifyBackupFolder,
 } from '../../scripts/backup-google-drive.mjs';
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+  return {
+    ...actual,
+    open: vi.fn(actual.open),
+    stat: vi.fn(actual.stat),
+  };
+});
 
 const KEY = Buffer.from('ab'.repeat(32), 'hex');
 const FOLDER_ID = 'folder-1';
@@ -198,6 +211,8 @@ function mockDownload(
 
 afterEach(async () => {
   vi.useRealTimers();
+  vi.mocked(open).mockReset();
+  vi.mocked(stat).mockReset();
   await Promise.all(
     directories
       .splice(0)
@@ -246,6 +261,70 @@ describe('database backup encryption', () => {
     ).rejects.toThrow();
   });
 
+  it('keeps the validated archive when its pathname is replaced', async () => {
+    const actual =
+      await vi.importActual<typeof import('node:fs/promises')>(
+        'node:fs/promises',
+      );
+    const directory = await temporaryDirectory();
+    const dump = join(directory, NAME);
+    const archive = join(directory, 'selected.enc');
+    const replacement = join(directory, 'replacement.enc');
+    const outputPath = join(directory, 'restored.dump');
+    const original = Buffer.from('original database contents');
+    const substituted = Buffer.from('replaced database contents');
+    expect(original.length).toBe(substituted.length);
+    await writeFile(dump, original);
+    await encryptDatabaseDump({
+      filePath: dump,
+      outputPath: archive,
+      key: KEY,
+    });
+    await writeFile(dump, substituted);
+    await encryptDatabaseDump({
+      filePath: dump,
+      outputPath: replacement,
+      key: KEY,
+    });
+
+    let replaced = false;
+    async function replaceArchive() {
+      if (replaced) return;
+      replaced = true;
+      await rename(archive, join(directory, 'original.enc'));
+      await rename(replacement, archive);
+    }
+    vi.mocked(stat).mockImplementationOnce(async (inputPath) => {
+      const metadata = await actual.stat(inputPath);
+      await replaceArchive();
+      return metadata;
+    });
+    const inputs: FileHandle[] = [];
+    vi.mocked(open).mockImplementationOnce(async (inputPath, flags, mode) => {
+      const input = await actual.open(inputPath, flags, mode);
+      inputs.push(input);
+      const inputStat = input.stat.bind(input);
+      vi.spyOn(input, 'stat').mockImplementationOnce(async () => {
+        const metadata = await inputStat();
+        await replaceArchive();
+        return metadata;
+      });
+      return input;
+    });
+
+    await decryptDatabaseDump({ filePath: archive, outputPath, key: KEY });
+
+    expect(replaced).toBe(true);
+    expect(await readFile(outputPath)).toEqual(original);
+    expect(inputs).toHaveLength(1);
+    expect(inputs[0]?.fd).toBe(-1);
+    expect(
+      (await readdir(directory)).filter((name) =>
+        name.startsWith('.homeish-restore-'),
+      ),
+    ).toEqual([]);
+  });
+
   it.each(['wrong-key', 'tampered-content', 'tampered-header', 'truncated'])(
     'does not publish plaintext for %s',
     async (failure) => {
@@ -265,6 +344,16 @@ describe('database backup encryption', () => {
       } else if (failure === 'truncated') {
         await writeFile(archive, contents.subarray(0, 10));
       }
+      const actual =
+        await vi.importActual<typeof import('node:fs/promises')>(
+          'node:fs/promises',
+        );
+      const inputs: FileHandle[] = [];
+      vi.mocked(open).mockImplementationOnce(async (inputPath, flags, mode) => {
+        const input = await actual.open(inputPath, flags, mode);
+        inputs.push(input);
+        return input;
+      });
       await expect(
         decryptDatabaseDump({
           filePath: archive,
@@ -273,6 +362,8 @@ describe('database backup encryption', () => {
         }),
       ).rejects.toThrow();
       await expect(access(outputPath)).rejects.toThrow();
+      expect(inputs).toHaveLength(1);
+      expect(inputs[0]?.fd).toBe(-1);
       expect(
         (await readdir(directory)).filter((name) =>
           name.startsWith('.homeish-restore-'),

@@ -210,7 +210,9 @@ For a restore drill or recovery:
    ```
 
    A wrong key, tampered/truncated archive, or existing output file fails without
-   publishing plaintext. Keep the decrypted dump and connection details private.
+   publishing plaintext. Validation and decryption use one open file handle, so
+   replacing the archive's pathname cannot select another backup mid-restore.
+   Keep the decrypted dump and connection details private.
 
 3. Use PostgreSQL 17 client tools and restore to the new project's connection
    URL:
