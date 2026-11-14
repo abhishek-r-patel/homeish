@@ -174,14 +174,13 @@ test('failed QR uploads are explicit and cannot be silently saved', async ({
     }),
   );
   await page.goto('/fixtures/billing?tab=payment-settings');
-  await page
-    .locator('input[type="file"]')
-    .first()
-    .setInputFiles({
-      name: 'synthetic-qr.png',
-      mimeType: 'image/png',
-      buffer: Buffer.from('synthetic image content'),
-    });
+  const qrInput = page.locator('input[type="file"]').first();
+  await expect(qrInput).toBeEnabled();
+  await qrInput.setInputFiles({
+    name: 'synthetic-qr.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('synthetic image content'),
+  });
   await expect(
     page
       .getByText(
