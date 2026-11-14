@@ -712,6 +712,14 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **A-13 Staff:** add/edit staff, assign domestic staff to units, block profiles society-wide, review pending unit links (including duplicate matches), configure the default-on approval requirement and record or correct one society-staff shift status per date.
 - The guard screen is deliberately minimal: staff name, portrait, role and access warning only. Avoid showing contact or ID data in guard cards and action responses.
 
+### 12.8 Housekeeping inventory, AMC and amenities (P13–P15)
+
+- Inventory cards show exact current/minimum stock, low-stock state, append-only entry controls and dated reports. Admin/supervisor controls include optional receipt costs; committee views are read-only. Corrections are signed adjustments, never edits.
+- AMC cards show expiry state, private contract details, linked renewals and visit history. Admin corrections are versioned/audited; committee controls are absent. Documents use short-lived private links. Service-request detail gives residents only an asset label.
+- Amenity definitions use repeatable weekday/time fieldsets and exact fee inputs. The date picker shows exclusive slots, the 24-hour lead and guest limit. Each booking explicitly acknowledges current rules. Household booking cards retain original time, fee and accepted rules after schedule edits. Administrator cancellation asks for a reason and confirmation; any fee receives a full ledger credit.
+- Navigation comes from current membership roles and enabled modules. Read-only committee shells omit write permissions. Edit controls remount when their optimistic version changes; booking acknowledgement resets when the date, rules version or slot changes.
+- Development-only fixtures exercise these controls with synthetic in-memory state. Browser checks cover 320/390/768/1280-pixel reflow, accessibility, lost-response inventory retries, preserved AMC history and amenity fee/rules/time snapshots.
+
 ---
 
 ## 13. Iconography and Imagery

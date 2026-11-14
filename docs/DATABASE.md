@@ -794,6 +794,38 @@ Migration `20261115130000_staff_module.sql`. All staff RPCs check the `staff` mo
 - `staff_settings_update` changes the audited `resident_approval_required` setting (default `true`). `staff_list` limits residents to their unit-linked domestic staff and hides a duplicate profile until its link is approved. `staff_gate_list` returns only name, photo, role, status and unit/day-block state; phone and ID details are omitted.
 - The database RPCs implement registration, settings, profile/link management, review, day blocks, gate entry/exit, monthly attendance, society shifts and retention. The daily retention job removes expired closed staff attendance.
 
+### 9.3 Housekeeping inventory tables (P13)
+
+Migration `20261115140000_housekeeping_inventory.sql`. Both tables deny direct authenticated access; security-definer RPCs authorize the enabled module and writable society where required.
+
+- `housekeeping_items` contains society-unique names, category, unit, exact `numeric(16,3)` minimum stock, active state, optimistic edit timestamp and last low-stock alert date. Units cannot change after transactions exist.
+- `housekeeping_transactions` is append-only, with signed exact quantity, effective date, insertion sequence, optional receipt vendor/cost or issue purpose, actor and client retry UUID. Opening stock is a receipt; adjustments need a reason. Future dates are rejected.
+- An item row lock serializes writes. The cumulative balance ordered by `(effective_date, sequence)` must never be negative, including after a backdated entry. A unique actor/society/client UUID and advisory lock prevent duplicate committed transactions after retries.
+- Stock is derived, not independently editable. Notifications are created atomically and deduplicated per item/society-local day. `housekeeping_low_stock_run` is service-role-only and skips disabled or unwritable societies.
+- Admins and housekeeping supervisors manage inventory; committee members may read quantities, costs and reports. No resident or guard access is granted.
+
+Hosted inventory migrations require owner approval and the normal release checks; local verification does not constitute production go-live approval.
+
+### 9.4 AMC management tables (P14)
+
+Migration `20261115150000_amc_management.sql` adds `amc_contracts`, `amc_visits`, `amc_request_links` and private `amc-files`. Direct table writes are revoked. Admins manage contracts and optimistically versioned visit corrections; committee members read contracts, costs, documents and reports. Changes are audited.
+
+Renewals create a single successor through a same-society predecessor FK; old contracts, documents and visits remain intact. File paths are uploader-owned, metadata is reverified at both application and database boundaries, and residents cannot read documents. `amc_request_label` reuses the existing request authorization and returns only a label when both modules are enabled.
+
+`amc_reminders_run` is service-role-only. It selects the most urgent due threshold from developer-managed `reminder_days` (default `[60,30,7]`), deduplicates reminders and skips superseded contracts. Status uses `expiring_soon_days` (default 30). Delivery is in-app and push, with no email or vendor accounting.
+
+### 9.5 Amenity booking tables (P15)
+
+Migration `20261115160000_amenity_booking.sql` adds `amenities`, retained recurring `amenity_slots` and immutable `amenity_bookings`. `btree_gist` supports exclusion constraints for active weekday schedules and confirmed reservation time ranges. Capacity limits guests per exclusive reservation, not concurrent bookings.
+
+- Slot times use the society timezone; nonexistent DST times are rejected. Creation requires active unit occupancy and at least 24 hours' lead. No horizon or daily unit cap is imposed.
+- Bookings snapshot times, name, capacity, guests, fee and acknowledged rules. Schedule edits retire prior slots rather than altering existing bookings.
+- Paid creation requires billing enabled and atomically appends an `adjustment` debit to `billing_ledger_entries`. Cancellation appends a matching full credit, including after billing is disabled. Same-society/unit ledger FKs and stable request UUIDs prevent cross-unit charges and duplicate financial entries.
+- Residents cancel only their own booking while still occupying the unit and before the slot begins. Admins can cancel with a reason and notify residents. Row locks make repeated and competing cancellations idempotent. No ledger row is edited or deleted.
+- Admins and committee read society bookings. Household members read their occupied units' bookings; the availability payload for other units contains only amenity and time interval, never booking IDs, unit, booker, fee or rules.
+
+P14 and P15 migrations are local only; hosted application requires separate owner approval.
+
 ---
 
 ## 10. Reference: Module Settings Keys (`module_configs.settings`)

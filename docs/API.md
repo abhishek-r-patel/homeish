@@ -386,6 +386,42 @@ Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members
 
 Residents use `/staff`; admins use `/admin/staff`; identified guards use `/guard/staff`. Each server action re-authorizes the caller and validates a strict payload before calling the database RPC.
 
+### 5.11 Housekeeping inventory (`housekeeping`, P13)
+
+Admins use `/admin/housekeeping`; supervisors use `/housekeeping`. Committee members can read the admin workspace and download reports but cannot write.
+
+| RPC | Purpose | Access |
+|---|---|---|
+| `housekeeping_items_list` | Current stock, item metadata and low-stock state | Admin, supervisor, committee |
+| `housekeeping_item_save` | Create or optimistically update an item | Admin, supervisor |
+| `housekeeping_stock_record` | Append a receipt, issue or signed adjustment with a stable retry UUID | Admin, supervisor |
+| `housekeeping_transactions_list` | Filter immutable history by item and date range | Admin, supervisor, committee |
+| `housekeeping_low_stock_run` | Create deduplicated daily alerts | Service role only |
+
+`GET /api/housekeeping/export?type=stock|usage|low_stock|transactions&from=YYYY-MM-DD&to=YYYY-MM-DD[&itemId=UUID]` returns a formula-safe, authorized CSV with `no-store` caching. Usage counts explicit stock-out entries, not corrections. All quantities retain exact three-decimal precision. Opening balances are receipts; future dates and any historically negative balance are rejected.
+
+The daily runner invokes `housekeeping.low_stock` for each society before global retention. Notification contents are minimal; item details remain behind module permissions.
+
+### 5.12 AMC management (`amc`, P14)
+
+`/admin/amc` supports admin contract creation/editing, successor renewals, visit logs/corrections, status/vendor/asset filters and authorized CSV exports. Committee access is read-only, including private documents and costs.
+
+- RPCs: `amc_workspace`, `amc_contract_save`, `amc_visit_save`, `amc_request_link`, `amc_request_label`; service-role-only `amc_reminders_run`.
+- `GET /api/amc/export?type=contracts|visits[&status=active|expiring|expired&vendor=TEXT&asset=TEXT]` downloads a formula-safe CSV.
+- `/api/files/upload-url` accepts the private `amc-files` bucket (JPEG/PNG/PDF, 5 MB maximum), admin only. Saved files are reverified and five-minute view links are issued only to managers.
+- Service-request detail exposes only the linked asset label to residents. Admins choose a contract or remove the link; both modules must be enabled.
+- The daily `amc.reminders` task delivers only the most urgent due catch-up reminder to admins/committee, with in-app and push delivery.
+
+### 5.13 Amenity booking (`amenity`, P15)
+
+Residents use `/amenities`; admin/committee use `/admin/amenities`. A date picker loads society-local recurring slots and private bookings through `amenity_workspace`. Other units' occupancy is anonymous. Committee controls are read-only.
+
+- `amenity_save`: admin definition of name, exclusive guest capacity, exact fee, rules and recurring weekday slots. Edits retain old slots and booking snapshots.
+- `amenity_book`: active occupancy, exact current version/rules acknowledgement, guest limit and 24-hour lead are enforced again in PostgreSQL. Paid bookings require billing enabled and append a unit-ledger debit atomically. Stable client UUIDs protect retries.
+- `amenity_cancel`: the resident booker may cancel before the start; admins require a reason and notify residents. Every paid cancellation appends a full credit, never an edit or deletion, even if billing is subsequently disabled.
+
+Bookings confirm immediately. There is no booking horizon, daily unit cap, payment gateway or shared-capacity reservation model.
+
 ---
 
 ## 6. HTTP Routes

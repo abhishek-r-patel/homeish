@@ -355,6 +355,8 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `HKP-6` Basic report: current stock, usage over a date range, low-stock list (CSV export).
 - `HKP-7` Housekeeping covers inventory stock only. Task checklists, cleaning schedules and QR-scanned area cleaning logs are **out of scope**. **[D-20 — Approved 2026-11-09]**
 
+**P13 owner decisions:** Quantities support three decimal places. Opening stock is a receipt. Past dates are allowed, future dates are rejected, and every dated historical balance must remain nonnegative. History is immutable; signed adjustments require a reason. Low-stock notifications use in-app and push delivery, at most once per item per society-local day until restocked. Admins and supervisors manage inventory; committee members have read-only access including costs and reports. Residents and guards have no inventory access.
+
 **User Stories**
 
 - As a supervisor, I record 10 phenyl bottles issued today and see what is low.
@@ -374,6 +376,8 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `AMC-5` List & filter by status, vendor, asset; CSV export.
 - `AMC-6` Optional link: a service request can reference an AMC asset (only when both modules are enabled). **[A-21]** P2.
 - `AMC-7` Vendor payments/accounting against AMC are out of scope.
+
+**P14 owner decisions:** Renewal creates a linked successor and preserves the previous contract and visits. Admin visit corrections are audited. Admins and committee receive in-app and push reminders, not email; defaults are 60/30/7 days. A missed run or late creation sends only the most urgent due catch-up reminder. Admins can link service requests when both modules are enabled; residents receive only the safe asset label, never vendor, contact, cost or documents.
 
 **User Stories**
 
@@ -407,6 +411,8 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `AMN-1` Admin defines amenities (Clubhouse, Hall, Court), slots, capacity, fee (optional, links to billing if enabled), rules text.
 - `AMN-2` Resident books a free slot; admin can cancel; no double-booking.
 - `AMN-3` Booking list for admin; cancellation by resident until X hours before.
+
+**P15 owner decisions:** Amenities use exclusive recurring weekday slots; capacity is the maximum guest count, not shared reservations. Free and paid bookings confirm immediately. Fees are snapshotted and atomically debited to the existing unit ledger; paid amenities require billing enabled. Resident cancellation is allowed until the slot starts (0-hour cutoff); all allowed resident cancellations and admin cancellations append a full ledger credit. Admin cancellation requires a reason and resident notification. The minimum lead is 24 hours; the booking horizon and active per-unit/per-amenity daily limit are unlimited (0). Active occupancy is required; household members see their occupied unit's bookings, while other units' occupied slots remain anonymous. Each booking acknowledges current rules when present. Schedule edits do not change existing times, fees or accepted rules. No payment gateway is included.
 
 > Further ideas (polls, community forum, parking management, emergency SOS, vehicle registry, document vault, marketplace) are **not** included. They should be added only upon your explicit request.
 
