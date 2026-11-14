@@ -111,5 +111,9 @@ test('resident, administrator and guard complete staff workflows accessibly', as
   await expect(
     gate.getByRole('button', { name: 'Check in Fixture Domestic Staff' }),
   ).toBeVisible();
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  // Route refreshes can settle after the client-side gate state changes.
+  await expect(page).toHaveTitle('Homeish');
+  await expect
+    .poll(async () => (await new AxeBuilder({ page }).analyze()).violations)
+    .toEqual([]);
 });
