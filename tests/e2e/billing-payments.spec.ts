@@ -15,6 +15,7 @@ const screenshot = {
 };
 
 async function storageOrigin(page: Page) {
+  await expect(page.locator('input[type="file"]').first()).toBeEnabled();
   const origin = await page.locator('main').getAttribute('data-storage-origin');
   if (!origin) throw new Error('The fixture did not expose a storage origin.');
   return origin;
@@ -221,7 +222,21 @@ test('failed screenshot uploads are explicit and can be retried', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto('/fixtures/billing-payments');
+  const hydration = Promise.withResolvers<void>();
+  await page.route(/\/_next\/static\/.*\.js(?:\?.*)?$/, async (route) => {
+    await hydration.promise;
+    await route.continue();
+  });
+  try {
+    await page.goto('/fixtures/billing-payments', { waitUntil: 'commit' });
+    await expect(
+      page.getByRole('button', { name: 'Choose File', exact: true }),
+    ).toBeDisabled();
+    await expect(page.locator('input[type="file"]').first()).toBeDisabled();
+  } finally {
+    hydration.resolve();
+    await page.unrouteAll({ behavior: 'wait' });
+  }
   const origin = await storageOrigin(page);
   let issueFailures = 1;
   await page.route('**/api/files/upload-url', async (route) => {

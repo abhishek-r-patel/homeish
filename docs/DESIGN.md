@@ -332,6 +332,7 @@ Rules:
 ### 6.6 File and photo upload
 
 - Large dashed-rule drop area on desktop; "Take Photo" and "Choose File" buttons on `compact`.
+- Keep pickers disabled until browser handlers are attached; mark the upload region busy during that preparation.
 - Constraints shown up front (JPG/PNG/PDF, max 5 MB, DAT-5). Thumbnails with remove buttons; per-file progress; per-file retry on failure.
 - Guard photo capture opens the camera directly; photo is optional unless society setting requires it, then it is validated before submit.
 
