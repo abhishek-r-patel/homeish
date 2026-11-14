@@ -4,6 +4,7 @@ const RETURNABLE_ROUTE_PREFIXES = [
   '/resident',
   '/guard',
   '/admin',
+  '/housekeeping',
   '/developer',
 ];
 

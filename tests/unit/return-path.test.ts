@@ -8,6 +8,7 @@ describe('safeReturnPath', () => {
     ['/resident/visitors', '/resident/visitors'],
     ['/guard', '/guard'],
     ['/admin/societies', '/admin/societies'],
+    ['/housekeeping', '/housekeeping'],
     ['/developer/errors?reference=123#top', '/developer/errors'],
   ])('allows local application path %s', (candidate, expected) => {
     expect(safeReturnPath(candidate)).toBe(expected);
