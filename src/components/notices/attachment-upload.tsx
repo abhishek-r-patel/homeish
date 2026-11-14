@@ -22,8 +22,12 @@ async function readEnvelope(response: Response): Promise<UploadEnvelope> {
 
 export function NoticeAttachmentUpload({
   initialPath = null,
+  bucket = 'notice-files',
+  id = 'notice-attachment',
 }: {
   initialPath?: string | null;
+  bucket?: 'notice-files' | 'amc-files';
+  id?: string;
 }) {
   const [path, setPath] = useState<string | null>(initialPath);
   const [label, setLabel] = useState<string | null>(
@@ -48,7 +52,7 @@ export function NoticeAttachmentUpload({
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          bucket: 'notice-files',
+          bucket,
           contentType: file.type,
           sizeBytes: file.size,
           requestId: crypto.randomUUID(),
@@ -101,16 +105,13 @@ export function NoticeAttachmentUpload({
         type="hidden"
         value={uploading ? 'true' : 'false'}
       />
-      <label
-        className="grid min-w-0 gap-space-1 text-body-strong"
-        htmlFor="notice-attachment"
-      >
+      <label className="grid min-w-0 gap-space-1 text-body-strong" htmlFor={id}>
         Attachment (optional: JPEG, PNG or PDF up to 5 MB)
         <input
           accept={ACCEPTED_TYPES.join(',')}
           className="min-h-12 w-full min-w-0 max-w-full rounded-md border border-rule px-space-3 py-space-2"
           disabled={uploading}
-          id="notice-attachment"
+          id={id}
           onChange={(event) => void upload(event.currentTarget.files?.[0])}
           ref={inputRef}
           type="file"
