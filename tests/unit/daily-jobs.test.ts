@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   runRetentionPrivileged: vi.fn(),
   runVisitorExpirationPrivileged: vi.fn(),
   runServiceRequestAutoClosePrivileged: vi.fn(),
+  runInventoryRemindersPrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -24,6 +25,7 @@ vi.mock('../../src/core/privileged', () => ({
   runVisitorExpirationPrivileged: mocks.runVisitorExpirationPrivileged,
   runServiceRequestAutoClosePrivileged:
     mocks.runServiceRequestAutoClosePrivileged,
+  runInventoryRemindersPrivileged: mocks.runInventoryRemindersPrivileged,
 }));
 
 import {
@@ -187,6 +189,7 @@ describe('daily jobs', () => {
       'billing.stale_payments',
       'visitor.expire',
       'service_request.auto_close',
+      'housekeeping.low_stock',
       'housekeeping.retention',
     ]);
 
@@ -209,5 +212,9 @@ describe('daily jobs', () => {
       ['society-2'],
     ]);
     expect(mocks.runRetentionPrivileged).toHaveBeenCalledWith('2026-11-10');
+    expect(mocks.runInventoryRemindersPrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
   });
 });

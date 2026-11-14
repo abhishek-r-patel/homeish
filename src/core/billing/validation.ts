@@ -668,6 +668,16 @@ export function calculatePerSqftPaise(
   return Number(paise);
 }
 
+export const nonnegativeRupeesSchema = z.union([
+  z
+    .string()
+    .trim()
+    .max(32)
+    .regex(/^0+(?:\.0{1,2})?$/)
+    .transform(() => 0),
+  rupeesSchema,
+]);
+
 export function rupeesFromPaise(paise: number | string): string {
   if (
     (typeof paise === 'number' &&

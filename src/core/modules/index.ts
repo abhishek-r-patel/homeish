@@ -425,8 +425,18 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           permission: 'stock:list',
         },
       ],
+      committee: [
+        {
+          href: '/admin/housekeeping',
+          label: 'Housekeeping',
+          permission: 'stock:list',
+        },
+      ],
     },
-    permissions: {},
+    permissions: {
+      'stock:list': ['admin', 'hk_supervisor', 'committee'],
+      'stock:manage': ['admin', 'hk_supervisor'],
+    },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
@@ -515,7 +525,14 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'amenity',
   ],
-  committee: ['core', 'billing', 'service_request', 'delivery', 'notice'],
+  committee: [
+    'core',
+    'billing',
+    'service_request',
+    'delivery',
+    'notice',
+    'housekeeping',
+  ],
   guard: ['core', 'visitor', 'delivery', 'staff'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [

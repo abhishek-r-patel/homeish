@@ -30,6 +30,12 @@ describe('module registry', () => {
     expect(hasPermission(['admin'], 'visitor', 'visitor:list')).toBe(true);
     expect(hasPermission(['guard'], 'staff', 'staff:gate')).toBe(true);
     expect(hasPermission(['committee'], 'staff', 'staff:manage')).toBe(false);
+    expect(hasPermission(['committee'], 'housekeeping', 'stock:list')).toBe(
+      true,
+    );
+    expect(hasPermission(['committee'], 'housekeeping', 'stock:manage')).toBe(
+      false,
+    );
     expect(getModuleNavigation('staff', 'guard')).toEqual([
       {
         href: '/guard/staff',
