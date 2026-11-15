@@ -77,6 +77,14 @@ const issueSchema = z.discriminatedUnion('bucket', [
     .strict(),
   z
     .object({
+      bucket: z.literal('expense-files'),
+      contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      requestId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
       bucket: z.literal('staff-photos'),
       contentType: z.enum(['image/jpeg', 'image/png']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
@@ -219,11 +227,21 @@ export async function POST(request: Request) {
         }
         return { path, signedUrl: data.signedUrl };
       }
-      if (input.bucket === 'notice-files' || input.bucket === 'amc-files') {
+      if (
+        input.bucket === 'notice-files' ||
+        input.bucket === 'amc-files' ||
+        input.bucket === 'expense-files'
+      ) {
+        const target = {
+          'notice-files': { moduleKey: 'notice', permission: 'notice:create' },
+          'amc-files': { moduleKey: 'amc', permission: 'amc:manage' },
+          'expense-files': {
+            moduleKey: 'expense',
+            permission: 'expense:manage',
+          },
+        } as const;
         authorizeRequest(context, {
-          moduleKey: input.bucket === 'notice-files' ? 'notice' : 'amc',
-          permission:
-            input.bucket === 'notice-files' ? 'notice:create' : 'amc:manage',
+          ...target[input.bucket],
           write: true,
         });
         const societyId = context.societyId;
@@ -242,7 +260,9 @@ export async function POST(request: Request) {
         const directory =
           input.bucket === 'notice-files'
             ? `${societyId}/notices/${input.requestId}`
-            : `${societyId}/${context.userId}/amc`;
+            : input.bucket === 'amc-files'
+              ? `${societyId}/${context.userId}/amc`
+              : `${societyId}/${context.userId}/expense`;
         const path = `${directory}/${crypto.randomUUID()}.${extension}`;
         const { data, error } = await context.db.storage
           .from(input.bucket)

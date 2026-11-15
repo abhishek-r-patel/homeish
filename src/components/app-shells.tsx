@@ -86,6 +86,7 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
   amenity: 'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z',
   directory:
     'M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8-3v6m-3-3h6',
+  expense: 'M4 4h16v16H4zM8 8h8M8 12h8m-8 4h4',
 };
 
 function isActivePath(pathname: string, href: string) {

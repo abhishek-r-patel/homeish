@@ -19,6 +19,10 @@ import {
   staffSettingsSchema,
 } from '../staff/validation';
 import { amcSettingsSchema, DEFAULT_AMC_SETTINGS } from '../amc/validation';
+import {
+  DEFAULT_EXPENSE_SETTINGS,
+  expenseSettingsSchema,
+} from '../expense/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -562,6 +566,39 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
+  expense: {
+    core: false,
+    defaultSettings: DEFAULT_EXPENSE_SETTINGS,
+    key: 'expense',
+    name: 'Society Expenses & Accounts',
+    navigation: {
+      admin: [
+        {
+          href: '/admin/expenses',
+          label: 'Accounts',
+          permission: 'expense:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/expenses',
+          label: 'Accounts',
+          permission: 'expense:list',
+        },
+      ],
+    },
+    permissions: {
+      'expense:list': ['admin', 'committee'],
+      'expense:manage': ['admin'],
+      'expense:approve': ['committee'],
+    },
+    // Admins change these through the validated expense setup screen.
+    settingsAccess: {
+      approval_threshold_paise: 'developer',
+      billing_income_account_id: 'developer',
+    },
+    settingsSchema: expenseSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -589,10 +626,12 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'amenity',
     'directory',
+    'expense',
   ],
   committee: [
     'core',
     'billing',
+    'expense',
     'service_request',
     'delivery',
     'notice',

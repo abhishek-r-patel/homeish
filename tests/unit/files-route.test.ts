@@ -176,6 +176,38 @@ describe('private file URL routes', () => {
     ).toBe(403);
     expect(mocks.createSignedUploadUrl).toHaveBeenCalledTimes(1);
   });
+  it('issues owner-scoped expense receipt uploads only to admins with accounts enabled', async () => {
+    const base = await mocks.buildRequestContext();
+    const context = {
+      ...base,
+      isDeveloper: false,
+      isDeveloperAccount: false,
+      roles: ['admin'],
+      societyId,
+      societyStatus: 'active',
+      memberships: [{ societyId, roles: ['admin'] }],
+      enabledModules: new Set(['expense']),
+    };
+    mocks.buildRequestContext.mockResolvedValue(context);
+    const body = {
+      bucket: 'expense-files',
+      contentType: 'image/jpeg',
+      sizeBytes: 50,
+      requestId: societyId,
+    };
+    const allowed = await issueUpload(request('/api/files/upload-url', body));
+    expect(allowed.status).toBe(200);
+    expect((await responseBody(allowed)).data?.path).toMatch(
+      new RegExp(`^${societyId}/${context.userId}/expense/[0-9a-f-]+\\.jpe?g$`),
+    );
+    for (const roles of [['committee'], ['resident']]) {
+      mocks.buildRequestContext.mockResolvedValue({ ...context, roles });
+      expect(
+        (await issueUpload(request('/api/files/upload-url', body))).status,
+      ).toBe(403);
+    }
+    expect(mocks.createSignedUploadUrl).toHaveBeenCalledTimes(1);
+  });
 
   it('lets residents delete only their own unreferenced staff photos', async () => {
     const userId = '8a696d6f-774c-41d1-ae47-6254d4a8f4cf';

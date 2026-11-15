@@ -48,6 +48,22 @@ describe('module registry', () => {
     expect(
       hasPermission(['resident'], 'directory', 'directory:lookup_vehicle'),
     ).toBe(false);
+    expect(hasPermission(['committee'], 'expense', 'expense:list')).toBe(true);
+    expect(hasPermission(['committee'], 'expense', 'expense:approve')).toBe(
+      true,
+    );
+    expect(hasPermission(['committee'], 'expense', 'expense:manage')).toBe(
+      false,
+    );
+    expect(hasPermission(['admin'], 'expense', 'expense:manage')).toBe(true);
+    expect(hasPermission(['admin'], 'expense', 'expense:approve')).toBe(false);
+    expect(hasPermission(['resident'], 'expense', 'expense:list')).toBe(false);
+    expect(getRoleNavigation(['resident'], ['expense'])).not.toContainEqual(
+      expect.objectContaining({ moduleKey: 'expense' }),
+    );
+    expect(
+      getModuleNavigation('expense', 'committee').map(({ href }) => href),
+    ).toEqual(['/admin/expenses']);
     expect(
       getRoleNavigation(['committee'], ['amc', 'amenity'])
         .filter(({ moduleKey }) => moduleKey !== 'core')
