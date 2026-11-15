@@ -71,6 +71,7 @@ create table storage.objects (
   name text not null,
   owner uuid,
   metadata jsonb,
+  created_at timestamptz not null default now(),
   unique (bucket_id, name)
 );
 alter table storage.objects owner to postgres;

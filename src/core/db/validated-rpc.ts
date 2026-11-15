@@ -35,6 +35,12 @@ export async function callModuleRpc<T>(
     const code = cause.success ? cause.data.code : undefined;
     if (code === '42501') throw new AppError('FORBIDDEN');
     if (code === 'P0002') throw new AppError('NOT_FOUND');
+    if (code === '40001') {
+      throw new ConflictError(
+        'stale_version',
+        'This record changed. Refresh it before trying again.',
+      );
+    }
     if (code === '23505') {
       throw new ConflictError(
         'invalid_state',

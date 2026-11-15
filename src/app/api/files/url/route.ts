@@ -10,8 +10,24 @@ import { readBillingPaymentDetails } from '../../../../core/billing/queries';
 import { runFileRoute } from '../../../../core/files/http';
 import { authorizeRequest } from '../../../../core/permissions/authorize';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
+import { authoriseTenancyDocumentView } from '../../../../core/tenancy/moves/files';
+import { tenancyDocumentPathSchema } from '../../../../core/tenancy/moves/validation';
+import { authoriseParkingPhotoView } from '../../../../core/parking/files';
+import { parkingPhotoPathSchema } from '../../../../core/parking/validation';
 
 const viewSchema = z.discriminatedUnion('bucket', [
+  z
+    .object({
+      bucket: z.literal('parking-photos'),
+      path: parkingPhotoPathSchema,
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('tenancy-files'),
+      path: tenancyDocumentPathSchema,
+    })
+    .strict(),
   z
     .object({
       bucket: z.literal('society-assets'),
@@ -36,6 +52,15 @@ function parseBody(body: unknown) {
   const parsed = viewSchema.safeParse(body);
   if (!parsed.success) {
     throw new ValidationError({ body: 'The file request is invalid.' });
+  }
+  if (
+    parsed.data.bucket === 'tenancy-files' ||
+    parsed.data.bucket === 'parking-photos'
+  ) {
+    return {
+      ...parsed.data,
+      societyId: parsed.data.path.split('/')[0] ?? '',
+    };
   }
   if (parsed.data.bucket === 'delivery-photos') {
     const match = parsed.data.path.match(
@@ -90,7 +115,11 @@ async function authorizeView(context: RequestContext, societyId: string) {
 export async function POST(request: Request) {
   return runFileRoute(request, '/api/files/url', async (context, body) => {
     const input = parseBody(body);
-    if (input.bucket === 'delivery-photos') {
+    if (input.bucket === 'parking-photos') {
+      await authoriseParkingPhotoView(context, input.path);
+    } else if (input.bucket === 'tenancy-files') {
+      await authoriseTenancyDocumentView(context, input.path);
+    } else if (input.bucket === 'delivery-photos') {
       authorizeRequest(context, {
         moduleKey: 'delivery',
         permission: 'delivery:list',

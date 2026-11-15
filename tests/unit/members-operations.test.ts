@@ -29,6 +29,7 @@ vi.mock('../../src/core/privileged/notification-delivery', () => ({
 import {
   assignOccupant,
   approveSocietyRegistration,
+  moveOccupant,
   rejectSocietyRegistration,
 } from '../../src/core/members/operations';
 
@@ -141,4 +142,34 @@ describe('membership operations', () => {
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
     expect(mocks.sendNotificationPushesForRequest).not.toHaveBeenCalled();
   });
+
+  it.each([assignOccupant, moveOccupant])(
+    'explains the tenancy workflow when Core would activate a tenant early',
+    async (operation) => {
+      mocks.buildRequestContext.mockResolvedValueOnce({
+        db: { rpc: mocks.rpc },
+        societyId,
+      });
+      mocks.rpc.mockResolvedValueOnce({
+        error: {
+          code: '23514',
+          message: 'Tenant access requires a completed move-in workflow.',
+        },
+      });
+      const formData = new FormData();
+      formData.set('unitId', unitId);
+      if (operation === assignOccupant) {
+        formData.set('membershipId', membershipId);
+        formData.set('relationship', 'tenant');
+      } else {
+        formData.set('occupantId', membershipId);
+      }
+
+      await expect(operation(formData, requestId)).rejects.toMatchObject({
+        code: 'CONFLICT',
+        reason: 'invalid_state',
+        message: expect.stringContaining('Complete their move-in'),
+      });
+    },
+  );
 });

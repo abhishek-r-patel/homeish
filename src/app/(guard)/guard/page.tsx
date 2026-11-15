@@ -19,7 +19,10 @@ export default async function GuardHomePage() {
   const gateLinks = getRoleNavigation(context.roles, [
     ...context.enabledModules,
   ]).filter(
-    (item) => item.moduleKey === 'visitor' || item.moduleKey === 'delivery',
+    (item) =>
+      item.moduleKey === 'visitor' ||
+      item.moduleKey === 'delivery' ||
+      item.moduleKey === 'tenancy',
   );
   return (
     <section className="grid gap-space-4">

@@ -357,14 +357,23 @@ export type AppliedFilter = {
   label: string;
 };
 
-type FilterBarProps = {
+type FilterBarSearchProps =
+  | {
+      onSearchChange: (value: string) => void;
+      searchLabel: string;
+      searchValue: string;
+    }
+  | {
+      onSearchChange?: never;
+      searchLabel?: never;
+      searchValue?: never;
+    };
+
+type FilterBarProps = FilterBarSearchProps & {
   appliedFilters: readonly AppliedFilter[];
   children: ReactNode;
   onClearAll: () => void;
   onRemoveFilter: (id: string) => void;
-  onSearchChange: (value: string) => void;
-  searchLabel: string;
-  searchValue: string;
 };
 
 export function FilterBar({
@@ -496,15 +505,17 @@ export function FilterBar({
   return (
     <div className="grid min-w-0 gap-space-3">
       <div className="flex min-w-0 flex-col gap-space-3 medium:flex-row medium:items-end">
-        <div className="min-w-0 w-full flex-1">
-          <SearchInput
-            id={`list-search-${id}`}
-            label={searchLabel}
-            onChange={(event) => onSearchChange(event.currentTarget.value)}
-            onClear={() => onSearchChange('')}
-            value={searchValue}
-          />
-        </div>
+        {onSearchChange && searchLabel ? (
+          <div className="min-w-0 w-full flex-1">
+            <SearchInput
+              id={`list-search-${id}`}
+              label={searchLabel}
+              onChange={(event) => onSearchChange(event.currentTarget.value)}
+              onClear={() => onSearchChange('')}
+              value={searchValue}
+            />
+          </div>
+        ) : null}
         <Button
           aria-expanded={open}
           aria-haspopup="dialog"

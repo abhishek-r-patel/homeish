@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   runServiceRequestAutoClosePrivileged: vi.fn(),
   runInventoryRemindersPrivileged: vi.fn(),
   runAmcRemindersPrivileged: vi.fn(),
+  runTenancyRemindersPrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -28,6 +29,7 @@ vi.mock('../../src/core/privileged', () => ({
     mocks.runServiceRequestAutoClosePrivileged,
   runInventoryRemindersPrivileged: mocks.runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged: mocks.runAmcRemindersPrivileged,
+  runTenancyRemindersPrivileged: mocks.runTenancyRemindersPrivileged,
 }));
 
 import {
@@ -193,6 +195,7 @@ describe('daily jobs', () => {
       'service_request.auto_close',
       'housekeeping.low_stock',
       'amc.reminders',
+      'tenancy.reminders',
       'housekeeping.retention',
     ]);
 
@@ -220,6 +223,10 @@ describe('daily jobs', () => {
       ['society-2'],
     ]);
     expect(mocks.runAmcRemindersPrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
+    expect(mocks.runTenancyRemindersPrivileged.mock.calls).toEqual([
       ['society-1'],
       ['society-2'],
     ]);

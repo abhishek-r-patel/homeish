@@ -191,5 +191,6 @@ describe.skipIf(!hasDatabase)('cross-society RPC isolation', () => {
     } finally {
       await database.drop();
     }
-  });
+    // Calls every society-scoped RPC in turn, so it grows with each module.
+  }, 180_000);
 });

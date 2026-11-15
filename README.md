@@ -17,7 +17,7 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000 for the public marketing page or http://demo.localhost:3000 for a synthetic interactive preview. The checked-in environment file contains placeholders only. The app code does not connect to Supabase yet. Because Docker Desktop cannot be installed on the developer machine, development, automated database tests and staging/beta share one free Supabase project, `homeish-testdb` (Mumbai), with synthetic data only, managed through the Supabase CLI (ARCHITECTURE AD-13). It is never used for real society data. Two more projects exist but stay paused until needed: `homeish-demo` (synthetic showcase, later served by its own Vercel project `demo-homeish`) and `homeish-live` (all onboarded societies; schema changes reach it only through approved CI, never from a laptop). See ARCHITECTURE AD-14. CLI sign-in, linking, migrations and type generation are described in [Local setup](docs/LOCAL_SETUP.md).
+Open http://localhost:3000 for the public marketing page or http://demo.localhost:3000 for a synthetic interactive preview. The checked-in environment file contains placeholders only; authenticated workflows need configured Supabase credentials. Development and staging/beta share `homeish-testdb` (Mumbai), with synthetic data only, managed through the Supabase CLI (ARCHITECTURE AD-13). Automated database tests instead use disposable local PostgreSQL and refuse remote hosts; hosted migrations, seeds and Auth checks require explicit owner approval. Neither environment is for real society data. Two more projects exist but stay paused until needed: `homeish-demo` (synthetic showcase, later served by its own Vercel project `demo-homeish`) and `homeish-live` (all onboarded societies; schema changes reach it only through approved CI, never from a laptop). See ARCHITECTURE AD-14. CLI sign-in, linking, migrations and type generation are described in [Local setup](docs/LOCAL_SETUP.md).
 
 Line endings are normalised to LF by `.gitattributes`, so formatting checks behave the same on Windows and CI.
 
@@ -40,13 +40,17 @@ Approved hosting topology (2026-11-09), following Civic Pulse's two-project patt
 | Host                           | Vercel project | Git branch | Purpose                                         |
 | ------------------------------ | -------------- | ---------- | ----------------------------------------------- |
 | `homeish.vercel.app`           | `homeish`      | `main`     | Public marketing website                        |
-| `demo.homeish.vercel.app`      | `homeish`      | `main`     | Synthetic interactive preview                   |
+| `demo.homeish.vercel.app`      | `homeish`      | `main`     | Deferred synthetic demo; not connected          |
 | `<society>.homeish.vercel.app` | `homeish`      | `main`     | Future society host, provisioned only after MVP |
 | `beta.homeish.vercel.app`      | `beta-homeish` | `beta`     | Isolated testing and future features            |
 
 `APP_DEPLOYMENT=shared` serves the website and demo entries; `APP_DEPLOYMENT=beta` serves beta only. `APP_BASE_DOMAIN` defaults to `homeish.vercel.app`. Unknown society hosts return 404, never another society or the public demo. Provider-supplied deployment aliases resolve only to their own project's website/beta entry. Hostnames select a screen, not an authenticated society or permission.
 
 The demo is a browser-memory illustration with invented data, manual reset and a 15-minute automatic reset while open. It is not a database-backed visitor workflow. Maplewood's address is reserved in code (`src/core/config/societies.ts`) with status `disabled`: its host shows only a noindexed "Maplewood is not open yet" page, and every other path returns 404. No society record, sign-in, data or onboarding is provisioned. The owner will onboard them through a future create-society script after MVP. Beta uses the shared non-production `homeish-testdb` backend with synthetic data only (see Beta configuration below). No real society data or credentials are provisioned by this work.
+
+**Homepage refresh (H1/H2, owner-authorised 2026-11-15):** committee-first copy distinguishes modules released for testing, local-only expenses/directory work and the separate planned roadmap. Product previews are original screenshots of synthetic development fixtures, not a connected demo or proof of live availability. **Try demo** stays disabled with **Demo coming soon**, no demo URL and no inline substitute (PRD D-49). The owner deferred demo hosting and connection until the product is ready; they require separate approval and verification. Existing local demo-host behavior is preserved. No new dependency, route, backend or tracker is introduced.
+
+**Tenancy (P18 T1–T3, 2026-11-15):** the disabled-by-default move workflow, private proofs/NOC, Core occupancy integration and authenticated screens are implemented and verified locally. Owner UAT, real Storage/Auth-provider checks and an approved release remain pending. The development-only `/fixtures/tenancy` uses synthetic records and in-memory file transport by default; it is not present in production. Local implementation does not change public roadmap availability. See [the implementation plan](docs/IMPLEMENTATION_PLAN.md#phase-p18--tenancy-move-in-and-move-out-tenancy) for evidence and remaining gates.
 
 For local beta, stop the shared dev server, set `$env:APP_DEPLOYMENT='beta'` and run `npm run dev`; visit http://beta.localhost:3000. Remove that variable to return to the shared site. Do not run both dev modes against the same Next.js output directory.
 
@@ -96,11 +100,11 @@ npm run build
 ## Project structure
 
 - `src/app/`: route groups, layouts and route handlers only
-- `src/core/`: shared platform configuration, public website/preview screens and later core services
+- `src/core/`: platform configuration, public website/preview screens and existing domain services
+- `src/components/`: domain UI
 - `src/components/ui/`: shared design-system controls
 - `src/styles/`: Tailwind theme and global tokens
 - `public/`: Homeish logo and later PWA assets
-- `src/modules/`: isolated product modules, added as their phases begin
 - `supabase/`: CLI config, migrations, synthetic seed data and database tests
 - `src/core/db/`: generated database types (`npm run db:types`)
 - `tests/`: unit, database integration and browser tests
@@ -110,7 +114,7 @@ npm run build
 
 Runtime foundations: Next.js 16.4.5, React 19.3.1, Tailwind CSS 4.3.5, Supabase SSR 0.12.7, Supabase JS 2.119.0, Zod 4.6.7, and self-hosted Manrope and Sora 5.3.0. Development foundations: TypeScript 5.9.3, ESLint 10.14.0, Prettier 3.9.10, Vitest 5.1.0, Playwright 1.65.0 and axe 4.14.0. `package-lock.json` records exact transitive versions.
 
-Radix UI, Lucide, React Hook Form, Sentry, Web Push and PDF tooling are intentionally deferred until their first use. No feature modules or database schema are implemented in this foundation. Public website and host-aware environment entry screens are implemented separately from product modules.
+Use `package.json` and `package-lock.json` as the dependency source of truth, rather than the original foundation snapshot above. Core services, database schema and product modules are implemented; their local, released and acceptance status is recorded in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 ## Project documents
 
