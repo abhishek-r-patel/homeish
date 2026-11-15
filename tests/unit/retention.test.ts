@@ -21,7 +21,7 @@ import { runRetentionPrivileged } from '../../src/core/privileged/retention';
 
 describe('retention privileged task', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mocks.from.mockReturnValue({ remove: mocks.remove });
     mocks.remove.mockResolvedValue({ error: null });
     mocks.invokeUntypedRpc
@@ -31,7 +31,12 @@ describe('retention privileged task', () => {
         { bucket: 'request-files', path: 'society/request/old.jpg' },
       ])
       .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 });
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
+      .mockResolvedValueOnce({
+        vehicles_deleted: 0,
+        emergency_contacts_deleted: 0,
+        preferences_deleted: 0,
+      });
   });
 
   it('deduplicates and removes listed files before the database purge', async () => {
@@ -47,6 +52,7 @@ describe('retention privileged task', () => {
       'housekeeping_retention_files_list',
       'housekeeping_retention_run',
       'staff_retention_run',
+      'directory_retention_run',
     ]);
   });
 
@@ -59,6 +65,22 @@ describe('retention privileged task', () => {
 
     await expect(runRetentionPrivileged('2026-11-10')).rejects.toThrow(
       'Staff retention returned an invalid response.',
+    );
+  });
+
+  it('fails when directory retention returns malformed purge counts', async () => {
+    mocks.invokeUntypedRpc.mockReset();
+    mocks.invokeUntypedRpc
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
+      .mockResolvedValueOnce({
+        vehicles_deleted: -1,
+        emergency_contacts_deleted: 0,
+        preferences_deleted: 0,
+      });
+    await expect(runRetentionPrivileged('2026-11-15')).rejects.toThrow(
+      'Directory retention returned an invalid response.',
     );
   });
 

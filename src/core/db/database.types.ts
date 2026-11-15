@@ -1393,6 +1393,251 @@ export type Database = {
           },
         ];
       };
+      directory_emergency_contacts: {
+        Row: {
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          full_name: string;
+          id: string;
+          membership_id: string;
+          phone: string;
+          purge_after: string | null;
+          relationship: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          full_name: string;
+          id?: string;
+          membership_id: string;
+          phone: string;
+          purge_after?: string | null;
+          relationship: string;
+          society_id: string;
+          status?: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          full_name?: string;
+          id?: string;
+          membership_id?: string;
+          phone?: string;
+          purge_after?: string | null;
+          relationship?: string;
+          society_id?: string;
+          status?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'directory_emergency_contacts_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'directory_emergency_contacts_membership_same_society_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'directory_emergency_contacts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'directory_emergency_contacts_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'directory_emergency_contacts_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      directory_preferences: {
+        Row: {
+          membership_id: string;
+          name_visible: boolean;
+          phone_visible: boolean;
+          purge_after: string | null;
+          society_id: string;
+          unit_visible: boolean;
+          updated_at: string;
+          updated_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          membership_id: string;
+          name_visible?: boolean;
+          phone_visible?: boolean;
+          purge_after?: string | null;
+          society_id: string;
+          unit_visible?: boolean;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          membership_id?: string;
+          name_visible?: boolean;
+          phone_visible?: boolean;
+          purge_after?: string | null;
+          society_id?: string;
+          unit_visible?: boolean;
+          updated_at?: string;
+          updated_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'directory_preferences_membership_same_society_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: true;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'directory_preferences_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'directory_preferences_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      directory_vehicles: {
+        Row: {
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          membership_id: string;
+          purge_after: string | null;
+          registration_number: string;
+          society_id: string;
+          status: string;
+          tag_number: string | null;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          vehicle_type: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          membership_id: string;
+          purge_after?: string | null;
+          registration_number: string;
+          society_id: string;
+          status?: string;
+          tag_number?: string | null;
+          unit_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          vehicle_type: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          membership_id?: string;
+          purge_after?: string | null;
+          registration_number?: string;
+          society_id?: string;
+          status?: string;
+          tag_number?: string | null;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          vehicle_type?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'directory_vehicles_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'directory_vehicles_membership_same_society_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'directory_vehicles_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'directory_vehicles_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'directory_vehicles_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'directory_vehicles_verified_by_fkey';
+            columns: ['verified_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       error_logs: {
         Row: {
           app_version: string | null;
@@ -4680,6 +4925,106 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      directory_emergency_contact_deactivate: {
+        Args: { p_contact_id: string; p_society_id: string };
+        Returns: undefined;
+      };
+      directory_emergency_contact_save: {
+        Args: {
+          p_client_request_id: string;
+          p_contact_id: string;
+          p_full_name: string;
+          p_membership_id: string;
+          p_phone: string;
+          p_relationship: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      directory_emergency_contacts_list: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: Json;
+      };
+      directory_guard_vehicle_lookup: {
+        Args: { p_registration_number: string; p_society_id: string };
+        Returns: {
+          unit_number: string;
+          vehicle_type: string;
+        }[];
+      };
+      directory_my_households: {
+        Args: { p_society_id: string };
+        Returns: {
+          membership_id: string;
+          unit_id: string;
+          unit_number: string;
+        }[];
+      };
+      directory_my_preferences: {
+        Args: { p_society_id: string };
+        Returns: {
+          name_visible: boolean;
+          phone_visible: boolean;
+          unit_visible: boolean;
+        }[];
+      };
+      directory_resident_list: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_search?: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      directory_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: Json;
+      };
+      directory_set_visibility: {
+        Args: {
+          p_name_visible: boolean;
+          p_phone_visible: boolean;
+          p_society_id: string;
+          p_unit_visible: boolean;
+        };
+        Returns: undefined;
+      };
+      directory_vehicle_deactivate: {
+        Args: { p_society_id: string; p_vehicle_id: string };
+        Returns: undefined;
+      };
+      directory_vehicle_list: {
+        Args: { p_limit?: number; p_offset?: number; p_society_id: string };
+        Returns: Json;
+      };
+      directory_vehicle_save: {
+        Args: {
+          p_client_request_id: string;
+          p_membership_id: string;
+          p_registration_number: string;
+          p_society_id: string;
+          p_tag_number: string;
+          p_unit_id: string;
+          p_vehicle_id: string;
+          p_vehicle_type: string;
+        };
+        Returns: string;
+      };
+      directory_vehicle_verify: {
+        Args: {
+          p_is_verified: boolean;
+          p_society_id: string;
+          p_vehicle_id: string;
+        };
+        Returns: undefined;
       };
       disable_society_join_code: {
         Args: { p_request_id: string; p_society_id: string };

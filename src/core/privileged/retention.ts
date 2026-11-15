@@ -75,4 +75,24 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
   ) {
     throw new Error('Staff retention returned an invalid response.');
   }
+
+  const directoryResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'directory_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (
+    typeof directoryResult !== 'object' ||
+    directoryResult === null ||
+    ![
+      'vehicles_deleted',
+      'emergency_contacts_deleted',
+      'preferences_deleted',
+    ].every((key) => {
+      const value = Reflect.get(directoryResult, key);
+      return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+    })
+  ) {
+    throw new Error('Directory retention returned an invalid response.');
+  }
 }

@@ -10,6 +10,7 @@ export const MODULE_KEYS = [
   'amc',
   'notice',
   'amenity',
+  'directory',
 ];
 
 const modulePattern = MODULE_KEYS.join('|');

@@ -36,6 +36,18 @@ describe('module registry', () => {
     expect(hasPermission(['committee'], 'amenity', 'amenity:list')).toBe(true);
     expect(hasPermission(['committee'], 'amenity', 'amenity:book')).toBe(false);
     expect(hasPermission(['resident'], 'amenity', 'amenity:book')).toBe(true);
+    expect(hasPermission(['admin'], 'directory', 'directory:manage')).toBe(
+      true,
+    );
+    expect(hasPermission(['committee'], 'directory', 'directory:manage')).toBe(
+      false,
+    );
+    expect(
+      hasPermission(['guard'], 'directory', 'directory:lookup_vehicle'),
+    ).toBe(true);
+    expect(
+      hasPermission(['resident'], 'directory', 'directory:lookup_vehicle'),
+    ).toBe(false);
     expect(
       getRoleNavigation(['committee'], ['amc', 'amenity'])
         .filter(({ moduleKey }) => moduleKey !== 'core')
@@ -133,6 +145,28 @@ describe('module registry', () => {
     ).toEqual(['/home', '/household', '/visitors']);
   });
 
+  it('exposes enabled directory routes for each permitted role', () => {
+    expect(
+      getRoleNavigation(['resident'], ['directory'])
+        .filter(({ moduleKey }) => moduleKey === 'directory')
+        .map(({ href }) => href),
+    ).toEqual(['/directory']);
+    expect(
+      getRoleNavigation(['resident'], []).some(
+        ({ moduleKey }) => moduleKey === 'directory',
+      ),
+    ).toBe(false);
+    expect(
+      getModuleNavigation('directory', 'guard').map(({ href }) => href),
+    ).toEqual(['/guard/directory']);
+    expect(
+      getModuleNavigation('directory', 'admin').map(({ href }) => href),
+    ).toEqual(['/admin/directory']);
+    expect(
+      getModuleNavigation('directory', 'committee').map(({ href }) => href),
+    ).toEqual(['/admin/directory']);
+  });
+
   it('validates settings through each module schema', () => {
     expect(parseModuleSettings('staff', {})).toEqual({});
     expect(
@@ -144,6 +178,7 @@ describe('module registry', () => {
     expect(getModuleDefinition('staff').defaultSettings).toEqual({
       resident_approval_required: true,
     });
+
     expect(parseModuleSettings('visitor', {})).toEqual({});
     expect(
       parseModuleSettings('visitor', {

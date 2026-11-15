@@ -518,6 +518,50 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
+  directory: {
+    core: false,
+    defaultSettings: emptySettings,
+    key: 'directory',
+    name: 'Resident & Vehicle Directory',
+    navigation: {
+      admin: [
+        {
+          href: '/admin/directory',
+          label: 'Directory',
+          permission: 'directory:list',
+        },
+      ],
+      resident: [
+        {
+          href: '/directory',
+          label: 'Directory',
+          permission: 'directory:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/directory',
+          label: 'Directory',
+          permission: 'directory:list',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/directory',
+          label: 'Vehicle lookup',
+          permission: 'directory:lookup_vehicle',
+        },
+      ],
+    },
+    permissions: {
+      'directory:list': ['admin', 'committee', 'resident'],
+      'directory:manage': ['admin'],
+      'directory:manage_household': ['resident'],
+      'directory:lookup_vehicle': ['guard'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: emptySettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -544,6 +588,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'amc',
     'notice',
     'amenity',
+    'directory',
   ],
   committee: [
     'core',
@@ -554,8 +599,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'housekeeping',
     'amc',
     'amenity',
+    'directory',
   ],
-  guard: ['core', 'visitor', 'delivery', 'staff'],
+  guard: ['core', 'visitor', 'delivery', 'staff', 'directory'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
     'core',
@@ -566,6 +612,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'staff',
     'notice',
     'amenity',
+    'directory',
   ],
 };
 
