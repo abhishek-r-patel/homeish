@@ -5,6 +5,8 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
   notice: '/notices',
   service_request: '/requests',
   visitor_entry: '/visitors',
+  tenancy_move: '/tenancy',
+  tenancy_admin: '/admin/tenancy',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
@@ -15,6 +17,7 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   billing_payment: '/bills?tab=payments',
   billing_payment_details: '/admin/billing?tab=payment-settings',
   billing_payment_review: '/admin/billing?tab=payments',
+  tenancy_schedule: '/guard/tenancy',
 };
 
 export function notificationPath(

@@ -1,10 +1,12 @@
 // Delete expired private storage files before purging their database records.
 import 'server-only';
+import { z } from 'zod';
 import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { createRequestId } from '../errors';
 import { privilegedClient } from './server-client';
 
-type RetentionBucket = 'visitor-photos' | 'delivery-photos' | 'request-files';
+type RetentionBucket =
+  'visitor-photos' | 'delivery-photos' | 'request-files' | 'tenancy-files';
 
 type RetentionFile = {
   bucket: RetentionBucket;
@@ -17,7 +19,8 @@ function isRetentionFile(value: unknown): value is RetentionFile {
   return (
     (file.bucket === 'visitor-photos' ||
       file.bucket === 'delivery-photos' ||
-      file.bucket === 'request-files') &&
+      file.bucket === 'request-files' ||
+      file.bucket === 'tenancy-files') &&
     typeof file.path === 'string' &&
     file.path.length > 0
   );
@@ -32,9 +35,24 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
   if (!Array.isArray(files) || !files.every(isRetentionFile)) {
     throw new Error('Retention file list returned an invalid response.');
   }
+  const tenancyFiles = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'tenancy_retention_files_list',
+    { p_today: today },
+  );
+  if (
+    !Array.isArray(tenancyFiles) ||
+    !tenancyFiles.every(
+      (file) => isRetentionFile(file) && file.bucket === 'tenancy-files',
+    )
+  ) {
+    throw new Error(
+      'Tenancy retention file list returned an invalid response.',
+    );
+  }
 
   const pathsByBucket = new Map<RetentionBucket, Set<string>>();
-  for (const { bucket, path } of files) {
+  for (const { bucket, path } of [...files, ...tenancyFiles]) {
     const paths = pathsByBucket.get(bucket) ?? new Set<string>();
     paths.add(path);
     pathsByBucket.set(bucket, paths);
@@ -94,5 +112,21 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
     })
   ) {
     throw new Error('Directory retention returned an invalid response.');
+  }
+  const tenancyResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'tenancy_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (
+    !z
+      .object({
+        documents_deleted: z.number().int().nonnegative(),
+        preparations_cleared: z.number().int().nonnegative(),
+      })
+      .strict()
+      .safeParse(tenancyResult).success
+  ) {
+    throw new Error('Tenancy retention returned an invalid response.');
   }
 }

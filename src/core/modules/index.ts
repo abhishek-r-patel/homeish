@@ -23,6 +23,10 @@ import {
   DEFAULT_EXPENSE_SETTINGS,
   expenseSettingsSchema,
 } from '../expense/validation';
+import {
+  DEFAULT_TENANCY_SETTINGS,
+  tenancySettingsSchema,
+} from '../tenancy/moves/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -599,6 +603,52 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     },
     settingsSchema: expenseSettingsSchema,
   },
+  tenancy: {
+    core: false,
+    defaultSettings: DEFAULT_TENANCY_SETTINGS,
+    key: 'tenancy',
+    name: 'Move-in, Move-out & Tenancy',
+    navigation: {
+      resident: [
+        {
+          href: '/tenancy',
+          label: 'Move-in / Move-out',
+          permission: 'tenancy:list',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/tenancy',
+          label: 'Move-in / Move-out',
+          permission: 'tenancy:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/tenancy',
+          label: 'Moving schedule',
+          permission: 'tenancy:list',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/tenancy',
+          label: 'Moving schedule',
+          permission: 'tenancy:guard',
+        },
+      ],
+    },
+    permissions: {
+      'tenancy:list': ['admin', 'committee', 'resident'],
+      'tenancy:create': ['admin', 'resident'],
+      'tenancy:consent': ['resident'],
+      'tenancy:manage': ['admin'],
+      'tenancy:files': ['admin', 'resident'],
+      'tenancy:guard': ['guard'],
+    },
+    settingsAccess: { police_verification_required: 'admin' },
+    settingsSchema: tenancySettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -627,6 +677,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'amenity',
     'directory',
     'expense',
+    'tenancy',
   ],
   committee: [
     'core',
@@ -639,8 +690,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'amc',
     'amenity',
     'directory',
+    'tenancy',
   ],
-  guard: ['core', 'visitor', 'delivery', 'staff', 'directory'],
+  guard: ['core', 'visitor', 'delivery', 'staff', 'directory', 'tenancy'],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
     'core',
@@ -652,6 +704,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'notice',
     'amenity',
     'directory',
+    'tenancy',
   ],
 };
 

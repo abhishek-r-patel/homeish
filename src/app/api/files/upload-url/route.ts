@@ -7,6 +7,7 @@ import {
 } from '../../../../core/errors';
 import {
   MAX_FILE_BYTES,
+  FILE_CONTENT_TYPES,
   SOCIETY_LOGO_CONTENT_TYPES,
   isBillingQrPath,
   isSocietyLogoPath,
@@ -15,9 +16,20 @@ import { readBillingPaymentDetails } from '../../../../core/billing/queries';
 import { runFileRoute } from '../../../../core/files/http';
 import { enforceRateLimit } from '../../../../core/rate-limit';
 import { authorizeRequest } from '../../../../core/permissions/authorize';
+import { prepareTenancyProofUpload } from '../../../../core/tenancy/moves/files';
+import { tenancyProofKindSchema } from '../../../../core/tenancy/moves/validation';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 
 const issueSchema = z.discriminatedUnion('bucket', [
+  z
+    .object({
+      bucket: z.literal('tenancy-files'),
+      moveId: z.uuid(),
+      kind: tenancyProofKindSchema,
+      contentType: z.enum(FILE_CONTENT_TYPES),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
   z
     .object({
       bucket: z.literal('society-assets'),
@@ -150,6 +162,23 @@ export async function POST(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(issueSchema, body);
+      if (input.bucket === 'tenancy-files') {
+        const path = await prepareTenancyProofUpload(context, input);
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the tenant proof upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
       if (input.bucket === 'payment-proofs') {
         authorizeRequest(context, {
           moduleKey: 'billing',

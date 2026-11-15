@@ -2,13 +2,8 @@
 import 'server-only';
 import { AppError } from '../errors';
 import type { RequestContext } from '../tenancy/request-context';
-
-export const MAX_FILE_BYTES = 5 * 1024 * 1024;
-export const FILE_CONTENT_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'application/pdf',
-] as const;
+import { FILE_CONTENT_TYPES, MAX_FILE_BYTES } from './constraints';
+export { FILE_CONTENT_TYPES, MAX_FILE_BYTES } from './constraints';
 export type FileContentType = (typeof FILE_CONTENT_TYPES)[number];
 export const SOCIETY_LOGO_CONTENT_TYPES = [
   'image/jpeg',
@@ -24,6 +19,7 @@ export type StorageBucket =
   | 'notice-files'
   | 'amc-files'
   | 'expense-files'
+  | 'tenancy-files'
   | 'staff-photos';
 
 const SOCIETY_LOGO_PATH_PATTERN =
@@ -42,6 +38,7 @@ const STORAGE_BUCKETS: readonly StorageBucket[] = [
   'notice-files',
   'amc-files',
   'expense-files',
+  'tenancy-files',
   'staff-photos',
 ];
 const BUCKET_CONTENT_TYPES: Readonly<
@@ -55,6 +52,7 @@ const BUCKET_CONTENT_TYPES: Readonly<
   'notice-files': FILE_CONTENT_TYPES,
   'amc-files': FILE_CONTENT_TYPES,
   'expense-files': FILE_CONTENT_TYPES,
+  'tenancy-files': FILE_CONTENT_TYPES,
   'staff-photos': ['image/jpeg', 'image/png'],
 };
 

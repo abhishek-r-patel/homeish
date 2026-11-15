@@ -34,6 +34,43 @@ const societyId = '4a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const otherSocietyId = '7a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const path = `${societyId}/logos/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
 const deliveryPhotoPath = `${societyId}/6a696d6f-774c-41d1-ae47-6254d4a8f4cf/deliveries/44a696d6-774c-41d1-ae47-6254d4a8f4cf.png`;
+const tenancyMoveId = '6a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+const tenancyPath = `${societyId}/moves/${tenancyMoveId}/rental_agreement/44a696d6-774c-41d1-ae47-6254d4a8f4cf.pdf`;
+const tenancyDetail = {
+  move: {
+    id: tenancyMoveId,
+    unit_id: otherSocietyId,
+    unit_number: 'A-101',
+    kind: 'move_in',
+    status: 'awaiting_consent',
+    starts_at: '2027-01-02T03:30:00Z',
+    ends_at: '2027-01-02T04:30:00Z',
+    version: 2,
+    can_view_details: true,
+  },
+  tenant_membership_id: societyId,
+  tenant_name: 'Synthetic Tenant',
+  agreement_expires_on: '2027-12-31',
+  amenity_booking_id: null,
+  completed_at: null,
+  owner_consent_valid: false,
+  police_verification_required: false,
+  can_manage: false,
+  can_consent: true,
+  can_cancel: false,
+  documents: [
+    {
+      id: otherSocietyId,
+      kind: 'rental_agreement',
+      path: tenancyPath,
+      content_type: 'application/pdf',
+      size_bytes: 2048,
+      created_at: '2026-11-15T10:00:00Z',
+    },
+  ],
+  events: [],
+  dues: null,
+};
 
 function request(
   url: string,
@@ -85,6 +122,7 @@ describe('private file URL routes', () => {
     mocks.logUnexpectedError.mockResolvedValue('safe-reference');
     mocks.buildRequestContext.mockResolvedValue({
       db: {
+        rpc: mocks.rpc,
         from: () => ({
           select: () => ({
             eq: () => ({ maybeSingle: mocks.maybeSingle }),
@@ -111,6 +149,134 @@ describe('private file URL routes', () => {
       enabledModules: new Set(),
       logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
     });
+  });
+
+  it('authorises the specific tenancy parent before issuing a bounded proof upload', async () => {
+    const base = await mocks.buildRequestContext();
+    mocks.buildRequestContext.mockResolvedValue({
+      ...base,
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      societyId,
+      societyStatus: 'active',
+      roles: ['resident'],
+      enabledModules: new Set(['core', 'tenancy']),
+    });
+    mocks.rpc.mockResolvedValue({ data: tenancyPath, error: null });
+    const body = {
+      bucket: 'tenancy-files',
+      moveId: tenancyMoveId,
+      kind: 'rental_agreement',
+      contentType: 'application/pdf',
+      sizeBytes: 5 * 1024 * 1024,
+    };
+    expect(
+      (await issueUpload(request('/api/files/upload-url', body))).status,
+    ).toBe(200);
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      'tenancy_proof_upload_path',
+      expect.objectContaining({
+        p_society_id: societyId,
+        p_move_id: tenancyMoveId,
+        p_kind: 'rental_agreement',
+        p_size_bytes: 5 * 1024 * 1024,
+      }),
+    );
+    expect(mocks.createSignedUploadUrl).toHaveBeenCalledWith(tenancyPath);
+    for (const invalid of [
+      { ...body, sizeBytes: body.sizeBytes + 1 },
+      { ...body, kind: 'noc' },
+      { ...body, kind: 'aadhaar' },
+      { ...body, contentType: 'application/javascript' },
+      { ...body, societyId: otherSocietyId },
+    ]) {
+      expect(
+        (await issueUpload(request('/api/files/upload-url', invalid))).status,
+      ).toBe(400);
+    }
+    expect(mocks.createSignedUploadUrl).toHaveBeenCalledOnce();
+    mocks.rpc.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'P0002', message: 'Unavailable move' },
+    });
+    expect(
+      (await issueUpload(request('/api/files/upload-url', body))).status,
+    ).toBe(404);
+    expect(mocks.createSignedUploadUrl).toHaveBeenCalledOnce();
+  });
+
+  it('issues a five-minute tenancy view only for an attached document in the current society', async () => {
+    const base = await mocks.buildRequestContext();
+    mocks.buildRequestContext.mockResolvedValue({
+      ...base,
+      isDeveloperAccount: false,
+      isDeveloper: false,
+      societyId,
+      societyStatus: 'active',
+      roles: ['resident'],
+      enabledModules: new Set(['core', 'tenancy']),
+    });
+    mocks.rpc.mockResolvedValue({ data: tenancyDetail, error: null });
+    const body = { bucket: 'tenancy-files', path: tenancyPath };
+    expect((await issueView(request('/api/files/url', body))).status).toBe(200);
+    expect(mocks.createSignedUrl).toHaveBeenCalledWith(tenancyPath, 300);
+    mocks.rpc.mockResolvedValueOnce({
+      data: { ...tenancyDetail, documents: [] },
+      error: null,
+    });
+    expect((await issueView(request('/api/files/url', body))).status).toBe(404);
+    expect(
+      (
+        await issueView(
+          request('/api/files/url', {
+            ...body,
+            path: tenancyPath.replace(societyId, otherSocietyId),
+          }),
+        )
+      ).status,
+    ).toBe(403);
+    expect(mocks.createSignedUrl).toHaveBeenCalledOnce();
+  });
+
+  it('never gives committee, guards, supervisors or a developer-only account a tenancy file bypass', async () => {
+    const base = await mocks.buildRequestContext();
+    for (const roles of [['committee'], ['guard'], ['hk_supervisor'], []]) {
+      mocks.buildRequestContext.mockResolvedValue({
+        ...base,
+        societyId,
+        societyStatus: 'active',
+        roles,
+        enabledModules: new Set(['core', 'tenancy']),
+        isDeveloperAccount: roles.length === 0,
+        isDeveloper: roles.length === 0,
+      });
+      expect(
+        (
+          await issueView(
+            request('/api/files/url', {
+              bucket: 'tenancy-files',
+              path: tenancyPath,
+            }),
+          )
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await issueUpload(
+            request('/api/files/upload-url', {
+              bucket: 'tenancy-files',
+              moveId: tenancyMoveId,
+              kind: 'rental_agreement',
+              contentType: 'application/pdf',
+              sizeBytes: 100,
+            }),
+          )
+        ).status,
+      ).toBe(403);
+    }
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.createSignedUrl).not.toHaveBeenCalled();
+    expect(mocks.createSignedUploadUrl).not.toHaveBeenCalled();
   });
 
   it('issues a private logo upload link after owner, type, size and count checks', async () => {
