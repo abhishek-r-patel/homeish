@@ -805,6 +805,57 @@ Core unit moves transfer only the moving person's active vehicles/contacts, clea
 
 **Next pickup after this block:** owner P17 UAT and approval remain separate from local engineering acceptance. P16 was completed locally in a follow-up block (see above); its owner UAT is also pending.
 
+## Remaining work in 6-hour blocks
+
+**Added 2026-11-15.** Remaining work is cut into blocks of about 6 focused hours. The sizes follow the observed P16/P17 pace: **S ≈ 1 block, M ≈ 2 blocks, L ≈ 3 blocks**. Each block must:
+
+- start from a green baseline, with that phase's kickoff decisions already answered (asked before the block, not during it);
+- end at a safe pause point: the local gate passes (`npm run check`, the phase's local integration tests, targeted Playwright with axe, `npm run build`) and docs record the status;
+- cut screens or polish if time runs short, never privacy, role checks or tests;
+- stay local: no commits, pushes, hosted migrations or live enablement without separate owner approval.
+
+### Homepage refresh (2 blocks)
+
+| Block | Work                                                                                                                                                                                                                             | Exit evidence                                                                                 |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| H1    | Inventory released vs. planned modules and the real demo destination; update DESIGN §18; new committee-first copy; hero with **Try demo**, delivered-module sections, resident benefits, separate labelled roadmap, FAQ refresh | Owner approves copy; existing website/host-routing tests updated and green; 320–1280 px + axe |
+| H2    | Synthetic product screenshots from fixture pages, screenshot gallery, closing CTA, final polish; homepage acceptance checks from P0.9 follow-up                                                                                   | Every CTA/link verified; no testimonials, logos or invented statistics; full local gate       |
+
+H2 is about half a block and can share a block with release work or owner UAT fixes.
+
+### P3 wave remainder (P18–P21: 9 blocks)
+
+| Block | Phase | Work                                                                                                                                                                                  | Exit evidence                                                                                                                 |
+| ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| T1    | P18   | Module registration and settings (required documents, approver, fee/deposit); move-request table and state machine; owner consent; Core occupancy add/end on approval                 | DB tests: roles, society isolation, consent, state transitions, occupancy integration with directory lifecycle                |
+| T2    | P18   | Private document uploads; billing dues check when enabled; NOC PDF; guard notification of scheduled moves; agreement-expiry reminders in the daily job; server operations and actions | Unit and DB tests for uploads, dues check with billing on/off, NOC content, reminders and repeat runs                         |
+| T3    | P18   | Resident, owner, admin and guard screens; synthetic fixtures; docs                                                                                                                    | Playwright flows per role + axe and 320 px; full local gate                                                                   |
+| D1    | P19   | Folders, audiences (all/owners/committee), versions, archive-not-delete, private storage, signed links, download audit                                                                | DB tests for audience isolation, versioning and audit                                                                         |
+| D2    | P19   | Admin and resident screens; unit-issued documents (links P18 NOCs when both enabled)                                                                                                  | Playwright + axe; full local gate                                                                                             |
+| K1    | P20   | Slots, allocation, waitlist in request order; links to directory vehicles                                                                                                             | DB tests for allocation, waitlist order and concurrency                                                                       |
+| K2    | P20   | Visitor parking passes (with `visitor`), wrong-parking reports with optional photo and notifications; screens                                                                         | Playwright + axe; module on/off combinations; full local gate                                                                 |
+| S1    | P21   | SOS table and RPCs: raise, acknowledge, update, close with reason; per-unit rate limit; Realtime and in-app alerts to on-duty guards, admins and committee                             | DB tests for routing, rate limit, audit trail                                                                                 |
+| S2    | P21   | One-tap resident SOS with confirmation, persistent responder alert with sound, society emergency-contact list, "not a replacement for emergency services" notice                     | Playwright + axe including alert persistence and acknowledgement; full local gate                                             |
+
+### Later waves (block counts only; split into rows at each phase's kickoff)
+
+| Phase | Size | Blocks | Phase | Size | Blocks |
+| ----- | ---- | ------ | ----- | ---- | ------ |
+| P22   | L    | 3      | P28   | S    | 1      |
+| P23   | M    | 2      | P29   | L    | 3      |
+| P24   | M    | 2      | P30   | M    | 2      |
+| P25   | M    | 2      | P31   | S    | 1      |
+| P26   | M    | 2      | P32   | S    | 1      |
+| P27   | M    | 2      | P33   | L    | 3+     |
+|       |      |        | P34   | L    | 3+     |
+
+P4 wave: 13 blocks. P5 wave: about 14 blocks. P33 and P34 touch every screen or the tenancy model, so plan them only after their kickoff answers.
+
+### Work that is not a build block
+
+- **Release:** committing and releasing P16/P17 through the commit/release workflow takes about half a block, mostly CI waits. Owner approval is required.
+- **Owner-only:** UAT for P11–P17; P10.2 TalkBack/VoiceOver and outdoor checks; P10.5, P10.8 and P10.9 go-live steps. These gate live-society enablement, not local builds.
+
 ## P22 Civic Pulse port (PRD D-40)
 
 Civic Pulse (`arp-civic-pulse`) remains a standalone product with one Supabase project per society. Homeish reuses its **design and rules**, not its runtime:
