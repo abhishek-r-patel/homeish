@@ -15,6 +15,9 @@ const screens = [
   '/fixtures/service-requests-admin',
   '/fixtures/notices',
   '/fixtures/tenancy',
+  '/fixtures/document',
+  '/fixtures/parking',
+  '/fixtures/sos',
 ];
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];

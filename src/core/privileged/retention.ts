@@ -6,7 +6,12 @@ import { createRequestId } from '../errors';
 import { privilegedClient } from './server-client';
 
 type RetentionBucket =
-  'visitor-photos' | 'delivery-photos' | 'request-files' | 'tenancy-files';
+  | 'visitor-photos'
+  | 'delivery-photos'
+  | 'request-files'
+  | 'tenancy-files'
+  | 'parking-photos'
+  | 'document-files';
 
 type RetentionFile = {
   bucket: RetentionBucket;
@@ -20,7 +25,9 @@ function isRetentionFile(value: unknown): value is RetentionFile {
     (file.bucket === 'visitor-photos' ||
       file.bucket === 'delivery-photos' ||
       file.bucket === 'request-files' ||
-      file.bucket === 'tenancy-files') &&
+      file.bucket === 'tenancy-files' ||
+      file.bucket === 'parking-photos' ||
+      file.bucket === 'document-files') &&
     typeof file.path === 'string' &&
     file.path.length > 0
   );
@@ -50,9 +57,44 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
       'Tenancy retention file list returned an invalid response.',
     );
   }
+  const parkingFiles = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'parking_retention_files_list',
+    { p_today: today },
+  );
+  if (
+    !Array.isArray(parkingFiles) ||
+    !parkingFiles.every(
+      (file) => isRetentionFile(file) && file.bucket === 'parking-photos',
+    )
+  ) {
+    throw new Error(
+      'Parking retention file list returned an invalid response.',
+    );
+  }
+  const documentFiles = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'document_retention_files_list',
+    { p_today: today },
+  );
+  if (
+    !Array.isArray(documentFiles) ||
+    !documentFiles.every(
+      (file) => isRetentionFile(file) && file.bucket === 'document-files',
+    )
+  ) {
+    throw new Error(
+      'Document retention file list returned an invalid response.',
+    );
+  }
 
   const pathsByBucket = new Map<RetentionBucket, Set<string>>();
-  for (const { bucket, path } of [...files, ...tenancyFiles]) {
+  for (const { bucket, path } of [
+    ...files,
+    ...tenancyFiles,
+    ...parkingFiles,
+    ...documentFiles,
+  ]) {
     const paths = pathsByBucket.get(bucket) ?? new Set<string>();
     paths.add(path);
     pathsByBucket.set(bucket, paths);
@@ -128,5 +170,18 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
       .safeParse(tenancyResult).success
   ) {
     throw new Error('Tenancy retention returned an invalid response.');
+  }
+  const parkingResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'parking_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (
+    !z
+      .object({ photos_deleted: z.number().int().nonnegative() })
+      .strict()
+      .safeParse(parkingResult).success
+  ) {
+    throw new Error('Parking retention returned an invalid response.');
   }
 }

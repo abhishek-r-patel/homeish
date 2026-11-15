@@ -18,9 +18,17 @@ import { enforceRateLimit } from '../../../../core/rate-limit';
 import { authorizeRequest } from '../../../../core/permissions/authorize';
 import { prepareTenancyProofUpload } from '../../../../core/tenancy/moves/files';
 import { tenancyProofKindSchema } from '../../../../core/tenancy/moves/validation';
+import { prepareParkingPhotoUpload } from '../../../../core/parking/files';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 
 const issueSchema = z.discriminatedUnion('bucket', [
+  z
+    .object({
+      bucket: z.literal('parking-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
   z
     .object({
       bucket: z.literal('tenancy-files'),
@@ -162,6 +170,23 @@ export async function POST(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(issueSchema, body);
+      if (input.bucket === 'parking-photos') {
+        const path = await prepareParkingPhotoUpload(context, input);
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the parking photo upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
       if (input.bucket === 'tenancy-files') {
         const path = await prepareTenancyProofUpload(context, input);
         await enforceRateLimit(

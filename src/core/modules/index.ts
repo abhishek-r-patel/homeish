@@ -27,6 +27,15 @@ import {
   DEFAULT_TENANCY_SETTINGS,
   tenancySettingsSchema,
 } from '../tenancy/moves/validation';
+import {
+  DEFAULT_DOCUMENT_SETTINGS,
+  documentSettingsSchema,
+} from '../document/validation';
+import {
+  DEFAULT_PARKING_SETTINGS,
+  parkingSettingsSchema,
+} from '../parking/validation';
+import { DEFAULT_SOS_SETTINGS, sosSettingsSchema } from '../sos/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -649,6 +658,114 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: { police_verification_required: 'admin' },
     settingsSchema: tenancySettingsSchema,
   },
+  document: {
+    core: false,
+    defaultSettings: DEFAULT_DOCUMENT_SETTINGS,
+    key: 'document',
+    name: 'Document Repository',
+    navigation: {
+      resident: [
+        {
+          href: '/documents',
+          label: 'Documents',
+          permission: 'document:list',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/documents',
+          label: 'Documents',
+          permission: 'document:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/documents',
+          label: 'Documents',
+          permission: 'document:list',
+        },
+      ],
+    },
+    permissions: {
+      'document:list': ['admin', 'committee', 'resident'],
+      'document:manage': ['admin'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: documentSettingsSchema,
+  },
+  parking: {
+    core: false,
+    defaultSettings: DEFAULT_PARKING_SETTINGS,
+    key: 'parking',
+    name: 'Parking',
+    navigation: {
+      resident: [
+        { href: '/parking', label: 'Parking', permission: 'parking:list' },
+      ],
+      admin: [
+        {
+          href: '/admin/parking',
+          label: 'Parking',
+          permission: 'parking:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/parking',
+          label: 'Parking',
+          permission: 'parking:list',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/parking',
+          label: 'Parking',
+          permission: 'parking:guard',
+        },
+      ],
+    },
+    permissions: {
+      'parking:list': ['admin', 'committee', 'resident'],
+      'parking:manage': ['admin'],
+      'parking:request': ['resident'],
+      'parking:visitor_pass': ['resident'],
+      'parking:report': ['guard', 'resident'],
+      'parking:guard': ['guard'],
+    },
+    settingsAccess: { photo_retention_days: 'admin' },
+    settingsSchema: parkingSettingsSchema,
+  },
+  sos: {
+    core: false,
+    defaultSettings: DEFAULT_SOS_SETTINGS,
+    key: 'sos',
+    name: 'Emergency & SOS',
+    navigation: {
+      resident: [{ href: '/sos', label: 'Emergency', permission: 'sos:raise' }],
+      admin: [
+        { href: '/admin/sos', label: 'Emergency', permission: 'sos:list' },
+      ],
+      committee: [
+        { href: '/admin/sos', label: 'Emergency', permission: 'sos:list' },
+      ],
+      guard: [
+        { href: '/guard/sos', label: 'Emergency', permission: 'sos:respond' },
+      ],
+    },
+    permissions: {
+      'sos:raise': ['guard', 'resident'],
+      'sos:list': ['admin', 'committee', 'guard', 'resident'],
+      'sos:respond': ['admin', 'committee', 'guard'],
+      'sos:manage': ['admin'],
+    },
+    settingsAccess: {
+      notify_guards: 'admin',
+      notify_admins: 'admin',
+      notify_committee: 'admin',
+      resident_scope: 'admin',
+    },
+    settingsSchema: sosSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -678,6 +795,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'directory',
     'expense',
     'tenancy',
+    'sos',
+    'document',
+    'parking',
   ],
   committee: [
     'core',
@@ -691,8 +811,20 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'amenity',
     'directory',
     'tenancy',
+    'sos',
+    'document',
+    'parking',
   ],
-  guard: ['core', 'visitor', 'delivery', 'staff', 'directory', 'tenancy'],
+  guard: [
+    'core',
+    'visitor',
+    'delivery',
+    'staff',
+    'directory',
+    'tenancy',
+    'sos',
+    'parking',
+  ],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
     'core',
@@ -705,6 +837,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'amenity',
     'directory',
     'tenancy',
+    'sos',
+    'document',
+    'parking',
   ],
 };
 

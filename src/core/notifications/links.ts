@@ -18,6 +18,14 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   billing_payment_details: '/admin/billing?tab=payment-settings',
   billing_payment_review: '/admin/billing?tab=payments',
   tenancy_schedule: '/guard/tenancy',
+  parking: '/parking',
+  parking_admin: '/admin/parking',
+  parking_guard: '/guard/parking',
+  sos_alert: '/sos',
+  sos_admin: '/admin/sos',
+  sos_guard: '/guard/sos',
+  document: '/documents',
+  document_admin: '/admin/documents',
 };
 
 export function notificationPath(
