@@ -1,12 +1,12 @@
 # Homeish — Implementation Plan (IMPLEMENTATION_PLAN.md)
 
-| Field      | Value                                                                                                                                                          |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product    | Homeish (PRD D-01 approved 2026-11-09)                                                                                                                         |
-| Version    | 0.1 (Draft for approval)                                                                                                                                       |
-| Date       | 2026-11-09                                                                                                                                                     |
-| Depends on | [PRD.md](./PRD.md), [DESIGN.md](./DESIGN.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [AGENTS.md](./AGENTS.md) |
-| Scope      | MVP only: Core, Visitor, Delivery, Billing, Service Request (PRD D-02, approved). Post-MVP modules are outlined at the end                                     |
+| Field      | Value                                                                                                                                                                       |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product    | Homeish (PRD D-01 approved 2026-11-09)                                                                                                                                      |
+| Version    | 0.1 (Draft for approval)                                                                                                                                                    |
+| Date       | 2026-11-09                                                                                                                                                                  |
+| Depends on | [PRD.md](./PRD.md), [DESIGN.md](./DESIGN.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [AGENTS.md](./AGENTS.md)              |
+| Scope      | MVP: Core, Visitor, Delivery, Billing, Service Request (PRD D-02, approved). Post-MVP modules (P11–P15) and the approved expansion phases P16–P34 (PRD D-38) are at the end |
 
 **How to read this plan**
 
@@ -143,6 +143,26 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 - The pipeline is green on the main branch and blocks bad changes.
 - No secrets exist in the repository; the example file contains names and placeholders only.
 - Scaffold hosting is approved: verify the website at `homeish.vercel.app` and beta at `beta-homeish.vercel.app`, with unknown hosts failing closed. Nested demo/beta domains require separate attachment and verification. Real society launch is not approved by this scaffold release.
+
+## P0.9 follow-up — Public homepage refresh
+
+**Status (2026-11-14): direction approved; planning only; implementation not started.** The owner requested inspiration from [Multi-School ERP](https://multischoolerp.com/) for Homeish's society-management homepage and confirmed the kickoff choices below. The verified reference observations, proposed section hierarchy and product/brand/privacy guardrails are in PRD Section 4.0.1. This is a bounded follow-up to P0.9, not a new numbered phase or society module. It must not pause, expand or become a prerequisite for the resident-directory build; schedule homepage delivery separately.
+
+**Scope:** the existing public marketing homepage only, with **Try demo** as its only marketing CTA. Preserve D-34 host routing, society-address utility entry and synthetic-demo boundaries. No request-walkthrough/contact CTA, enquiry form, new society activation, authentication flow, backend module, lead-storage system, tracking service or pricing decision is included.
+
+**Proposed work for a separately authorised homepage implementation task:**
+
+1. **Content and evidence:** inventory what is released, awaiting owner UAT/live activation, in development or planned using the phase records and release evidence. Record the actual linked demo's behavior and reachable destination; do not assume an example nested demo domain is live. Prepare original Homeish copy for committees/admins with resident benefits, synthetic product screenshots only and a compact wireframe following PRD 4.0.1; get owner approval of the final claims and assets.
+2. **Design and delivery:** update DESIGN Section 18 before or alongside a separate homepage implementation task. Reuse approved Homeish branding, tokens/components and responsive patterns; do not reproduce the reference's text, assets, brand or pixel layout. Put planned modules in a separate clearly labelled roadmap section; no promised release dates or fabricated social proof. Use **Try demo** only as the marketing CTA; no enquiry/contact flow.
+3. **Homepage acceptance:** verify every **Try demo** action, existing-society entry and policy link, synthetic-data/reset notices, correct module-availability wording and unchanged public/demo/society host behavior. Run the existing targeted phone/desktop browser and accessibility checks; record keyboard, screen-reader, 200% zoom/320px reflow and reduced-motion checks. Confirm screenshot-only proof, no testimonials/customer logos/society references or fabricated adoption/statistics, no enquiry form, and no real society/resident data or new third-party collection.
+
+**Homepage kickoff decisions (owner-confirmed 2026-11-14):** the demo-only scope has no unresolved kickoff questions. These decisions do not authorise implementation or change approved branding, platform, pricing boundaries or society-activation gates.
+
+1. **Lead audience — Approved:** society committees/admins first, with resident benefits.
+2. **Marketing CTA — Approved:** **Try demo** only. No request-walkthrough/contact CTA or enquiry form in this refresh; existing-society entry remains utility navigation.
+3. **Enquiry destination — Deliberately deferred:** decide later, outside this demo-only scope. This is not a blocker for the homepage refresh or directory work.
+4. **Roadmap prominence — Approved:** show planned modules in a separate clearly labelled roadmap section, distinct from delivered functionality.
+5. **Public proof and assets — Approved:** synthetic product screenshots only, while retaining approved Homeish branding. No testimonials, customer/society logos or references, or fabricated adoption/statistics in this refresh.
 
 ---
 
@@ -640,8 +660,8 @@ DATABASE 15.2.
 
 Each follows the same pattern: a migration group, module registration, permission map, screens, tests, module gate, ships disabled. Order per PRD and owner decision (2026-11-13):
 
-| Phase | Module                      | PRD        | Status                                                                          |
-| ----- | --------------------------- | ---------- | ------------------------------------------------------------------------------- |
+| Phase | Module                      | PRD        | Status                                                           |
+| ----- | --------------------------- | ---------- | ---------------------------------------------------------------- |
 | P11   | Notice board (`notice`)     | §5.8, D-21 | Released to beta and main; migrated to testdb; owner UAT pending |
 | P12   | Staff (`staff`)             | §5.5, P2-1 | Released to beta and main; migrated to testdb; owner UAT pending |
 | P13   | Housekeeping inventory      | §5.6, P2-2 | Released to beta and main; migrated to testdb; owner UAT pending |
@@ -673,6 +693,143 @@ Commit promotion and hosted migrations follow the owner-approved release process
 
 ---
 
+# Expansion phases (P16–P34)
+
+Approved roadmap (PRD D-38, 2026-11-14). Requirements are in PRD Section 5.10. Each module phase follows the same pattern as P11–P15: kickoff decisions recorded first, then one migration group with RLS and database tests, module registration and permission map, screens with all states, unit/integration/end-to-end/accessibility tests, the module completion gate (Section 2.2), and the module ships switched off.
+
+**Timing:** these phases may be built in parallel with P10 pilot hardening, but no expansion module is enabled for a live society until P10.5, P10.6 and the production Storage-file recovery plan are complete ([pilot-readiness audit](./audits/pilot-readiness-audit.md)). P10 work takes priority when both compete.
+
+```mermaid
+flowchart LR
+  P10[P10 Pilot hardening] -.parallel.-> W3
+  subgraph W3[Wave P3 - must-have]
+    P16[P16 Expenses] ~~~ P17[P17 Directory]
+    P17 --> P18[P18 Tenancy]
+    P19[P19 Documents]
+    P17 --> P20[P20 Parking]
+    P21[P21 SOS]
+  end
+  subgraph W4[Wave P4 - high value]
+    P22[P22 Polls] --> P23[P23 Meetings]
+    P16 --> P24[P24 Vendors]
+    P25[P25 Patrol]
+    P26[P26 Metering]
+    P27[P27 Analytics]
+  end
+  subgraph W5[Wave P5 - good to have]
+    P28[P28 Assets] ~~~ P29[P29 Community] ~~~ P30[P30 Events] ~~~ P31[P31 Home services]
+    P32[P32 SLA escalation] ~~~ P33[P33 Multi-language] ~~~ P34[P34 Multi-society]
+  end
+  W3 --> W4 --> W5
+```
+
+Arrows are recommended build order. At runtime every module works on its own; links to other optional modules activate only when those are enabled (PRD A-36).
+
+| Phase | Module / enhancement              | Key               | PRD           | Size | Builds on                                   | Status                                                                                            |
+| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | Core; reads `billing` payments when enabled | Implemented and verified locally (2026-11-15); owner UAT, hosted migration and enablement pending |
+| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | Core unit occupants                         | Local engineering gate passed; owner UAT/live enablement pending                                  |
+| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | Core occupants, files; `billing` dues check | Not started                                                                                       |
+| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | Core files                                  | Not started                                                                                       |
+| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | `directory` vehicles; `visitor` passes      | Not started                                                                                       |
+| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | Core notifications and Realtime             | Not started                                                                                       |
+| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | Core units/occupants                        | Not started                                                                                       |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | `poll` resolutions; `document` minutes      | Not started                                                                                       |
+| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | `expense` drafts                            | Not started                                                                                       |
+| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | Core guards and gate settings               | Not started                                                                                       |
+| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | `billing` charges                           | Not started                                                                                       |
+| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | Read models of enabled modules              | Not started                                                                                       |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | `amc` contracts                             | Not started                                                                                       |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | Core files, notifications                   | Not started                                                                                       |
+| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | `billing` contributions                     | Not started                                                                                       |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | Core                                        | Not started                                                                                       |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | `service_request`, daily runner             | Not started                                                                                       |
+| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | All screens                                 | Not started                                                                                       |
+| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | Core memberships, tenancy model (D-24)      | Not started                                                                                       |
+
+## Kickoff decisions per phase (PRD D-43)
+
+Resolve these with the owner at the start of each phase; record answers in the PRD module section, as for P12–P15.
+
+| Phase | Decisions needed before build                                                                                                                                                                                                                                                           |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P16   | **Resolved (D-44):** standard categories; cash and one or more banks with opening balances; committee approval over ₹50,000 (society-configurable); closed months locked, admin reopen with audited reason; financial year 1 April–31 March                                             |
+| P17   | **Resolved (D-45/D-46):** name and unit visible by default; phone hidden unless opted in; guards see vehicle unit but no phone and cannot see emergency contacts; committee may view emergency contacts; no vehicle cap; deactivate at move-out and erase directory data after one year |
+| P18   | Required tenant documents; whether police verification is mandatory; move fee/deposit (as a billing charge) or none; who approves (admin, committee); NOC template text                                                                                                                 |
+| P19   | Folder structure and audiences; file types and size limits; whether residents can request documents                                                                                                                                                                                     |
+| P20   | Slot types; allocation rules (one per unit, paid extra slots via billing); waitlist priority; visitor-pass duration                                                                                                                                                                     |
+| P21   | Who receives alerts (all on-duty guards, admins, committee, neighbours on the same floor?); acknowledgement timeout and re-alert; SOS categories; abuse handling                                                                                                                        |
+| P22   | See "Civic Pulse port" below                                                                                                                                                                                                                                                            |
+| P23   | Meeting types; quorum rule (percentage of units); notice period; proxy attendance allowed or not                                                                                                                                                                                        |
+| P24   | Number of quotes required above which amount; number of approvers; vendor rating scale                                                                                                                                                                                                  |
+| P25   | QR checkpoint printing; patrol frequency; guard device requirements (camera access); incident severity levels                                                                                                                                                                           |
+| P26   | Meter types; rate slabs vs flat rate; who records readings; reading cycle relative to bill generation                                                                                                                                                                                   |
+| P27   | Dashboard metrics and periods; whether committee sees financial figures                                                                                                                                                                                                                 |
+| P28   | Asset categories and depreciation (none recommended)                                                                                                                                                                                                                                    |
+| P29   | Moderation model (pre- or post-moderation); allowed listing categories; reporting and ban rules; retention                                                                                                                                                                              |
+| P30   | Event visibility; RSVP limits; contribution handling                                                                                                                                                                                                                                    |
+| P31   | Who adds providers (admin only or residents with approval); rating rules                                                                                                                                                                                                                |
+| P32   | Escalation levels and intervals per category; notification channels                                                                                                                                                                                                                     |
+| P33   | Languages and order; translation source and review; date/number formats                                                                                                                                                                                                                 |
+| P34   | Who is a group operator; whether group users can act in societies or only view; how society admins consent; billing implications                                                                                                                                                        |
+
+**P17 progress (2026-11-15):** the local implementation now includes resident privacy/vehicle/contact self-service, admin management, committee read-only review and guard exact-registration lookup with the standard authenticated-action rate limit. List filtering/counting/pagination run in PostgreSQL (1–100 rows); the UI uses 10/25/50/100 rows, explicit search submission, clear/reset behavior and recoverable read errors. Manager target selection uses bounded resident search pages rather than an unbounded Core member download. Direct directory-table access remains revoked.
+
+Core unit moves transfer only the moving person's active vehicles/contacts, clear verification and preserve visibility preferences. Occupancy end deactivates records immediately and anchors one-year retention to recorded `ended_at`, including backdated/future dates and previously inactive records. Lifecycle cleanup also runs with the module disabled, and membership deactivation/erasure schedules cleanup. Reactivation clears old purge dates; the daily service-role purge protects active memberships/occupancies and validates deletion counts. Required audits exclude names, phones, plates and free-text contact relationships.
+
+**Verified local evidence:** `npm run check` passed with 441 unit tests and all formatting/lint/type/boundary checks. The full disposable-PostgreSQL suite passed (44 files; 109 tests passed, 9 skipped). Seven targeted Chromium cases passed, covering CRUD/retry-ID preservation, read-error recovery, admin verification/editing, committee read-only UI, guard field minimization, search/paging, focus, responsive layout and zero axe violations. Resident browsing was checked at 320/390/768/1280 pixels; all four workflow roles at 320/1280 pixels. The production build passed. Database types were generated from the migrated disposable local schema, not hosted Supabase. Owner UAT, real-device assistive-technology checks and launch/enablement approval remain outstanding; local checks do not replace them.
+
+**P16 bounded follow-on:** after the P17 local gate passed before hour 9, migration `20261115190000_expense_foundation.sql` staged the account, category and expense tables (the draft table later became `expenses`). It was storage-only until the P16 completion block below.
+
+**P16 completion (2026-11-15, local only):** migration `20261115200000_expense_workflows.sql` registers `expense`, seeds the ten standard categories on enable, and adds the append-only cash and bank book, month locks, the `expense-files` receipt bucket, billing-income posting and audited RPCs (DATABASE.md §9.7, API.md §5.15). Admins record expenses and income, reverse entries, manage accounts/categories/settings and close or reopen finished months. Committee members read everything and approve or reject expenses above the threshold that someone else recorded. `/admin/expenses`, `/admin/expenses/reports` and `/admin/expenses/setup` provide the UI, with CSV/PDF export. Decisions taken at kickoff: any one other committee member approves; billing income posts to an admin-chosen account; residents see nothing. Assumptions to confirm in UAT: billing payments confirmed before the income account was chosen are not backfilled; expenses are corrected by reversal, not edits; an expense above the threshold stays pending if no other committee member exists. Evidence: full disposable-PostgreSQL suite (45 files passed, 1 skipped; 111 tests passed, 9 skipped), `npm run check`, the full Playwright suite (82 tests, including the expense flow: setup, threshold approval, reversal, 320–1280 px, zero axe violations) and the production build; types were generated from a disposable local schema. No hosted migrations, live enablement, commits or pushes were performed.
+
+### Approved engineering block: 8–10 focused hours
+
+**Status:** the owner gave “go” on 2026-11-15 at 01:09 IST. P17 passed its local engineering gate before hour 9; the bounded P16 storage foundation followed. Work paused at the verified handoff at 09:58 IST, before the 11:09 IST hard stop. Final `npm run check` and production build passed with locally generated P16/P17 types; focused directory/expense/catalog validation passed (3 files, 7 tests). A 10:00–10:12 IST re-verification passed the full local database suite (45 files passed, 1 skipped; 110 tests passed, 9 skipped), `npm run check` (441 unit tests), all 7 directory Playwright tests and `npm run build`. All work remains local/disposable: no hosted migrations, real-society module enablement, commits or pushes without separate approval. P10 backup/restore and Storage recovery remain live-society launch gates.
+
+**Confirmed kickoff choices (2026-11-14):** admins and committee may see verified phone data despite resident-directory opt-out; committee remains read-only; Core occupancy end deactivates directory access immediately and the one-year retention clock uses recorded `ended_at`; use the standard authenticated-action guard lookup rate limit; the target society size is unknown, so add database-side pagination; when a resident moves units within a society, transfer active vehicles and emergency contacts with audited changes, require vehicle re-verification and keep visibility preference attached to the person. No kickoff decisions remain open.
+
+| Elapsed    | Work                                                                                                                                                                                                                                 | Exit evidence                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 0:00–0:20  | Inspect current branch/local DB and confirm baseline                                                                                                                                                                                 | Final scope recorded; no hosted DB operations                                                                                        |
+| 0:20–2:00  | Resident self-service: privacy settings and active-household vehicle/emergency-contact add, edit and deactivate                                                                                                                      | Resident route/action tests; manager phone visibility follows the approved exception                                                 |
+| 2:00–3:15  | Admin directory workspace and management; committee has read-only access                                                                                                                                                             | Role/access tests prove admin writes, committee policy and society isolation                                                         |
+| 3:15–4:00  | Guard exact-registration lookup UI with approved rate limiting                                                                                                                                                                       | Guard-flow test proves only verified vehicle type and unit are exposed                                                               |
+| 4:00–5:30  | Integrate active vehicle/contact transfer on in-society unit moves; immediate, unit-scoped deactivation on occupancy end; persist the approved retention anchor; add the daily one-year purge while retaining required audit records | Local DB tests cover transfers/re-verification, co-occupants, move-out timing, cutoff boundary, repeat runs and audit PII exclusions |
+| 5:30–6:30  | Add database-side pagination for directory lists and generate types from a disposable local schema                                                                                                                                   | Bounded page/count contract and types verified without hosted Supabase                                                               |
+| 6:30–8:00  | Complete cross-role/module/society database and operation tests; resident/admin/guard browser, keyboard, mobile and accessibility checks                                                                                             | Local integration and targeted Playwright suites pass                                                                                |
+| 8:00–9:00  | Run repository gate, local integration, production build and migration checks; reconcile docs/status                                                                                                                                 | Green test/build evidence and accurate P17 acceptance note                                                                           |
+| 9:00–10:00 | If P17 acceptance is green, begin the P16 accounts/expense data-model foundation from D-44 using a local migration and focused tests; otherwise use this hour for P17 fixes and pause                                                | P16 work is deliberately a small, unhosted foundation; stop at 10 hours                                                              |
+
+**Cutline:** P17 privacy, role checks, move-out/retention tests and the local gate are not sacrificed for more screens or P16. If P17 is not green by hour 9, do not start P16. P16 remains incomplete at this block’s end; no homepage implementation, full P16 workflows, P18 tenancy or live-society activation is included.
+
+**Next pickup after this block:** owner P17 UAT and approval remain separate from local engineering acceptance. P16 was completed locally in a follow-up block (see above); its owner UAT is also pending.
+
+## P22 Civic Pulse port (PRD D-40)
+
+Civic Pulse (`arp-civic-pulse`) remains a standalone product with one Supabase project per society. Homeish reuses its **design and rules**, not its runtime:
+
+- **Reuse:** PUBLIC poll and PRIVATE election rules, lifecycle (Draft, Scheduled, Active, Completed, Cancelled) and freezing, atomic submission and deadline enforcement, the privacy boundary (participation stored separately from aggregate counters; no PRIVATE per-ballot rows), result visibility rules, export content rules, and its test cases as the acceptance baseline.
+- **Adapt:** every table gains `society_id` with same-society foreign keys and Homeish RLS; Civic Pulse's household register is replaced by Homeish units and occupants; Civic Pulse roles map to Homeish roles (`rwa-admin` → admin, `rwa-readonly` → committee read-only, `voter` → the unit's voting representative); sign-in uses Homeish's existing email code and memberships; PDF exports use Homeish's existing `pdf-lib` instead of `pdfkit`, so no new dependency is added; notifications use Homeish's in-app channel.
+- **Do not port:** per-society project provisioning, tenant routing, Civic Pulse's own sign-in, register CSV import (Homeish already has unit/resident import), SMTP relay and operator scripts.
+- **No data migration** from Civic Pulse societies is planned. A society moving from Civic Pulse to Homeish starts new votes in Homeish; past results stay in Civic Pulse or are archived as PDFs in `document`.
+- **Divergence:** after the port, the two codebases evolve separately. Security fixes to voting rules found in either product are reviewed for the other.
+- **P22 kickoff decisions:** how a unit's voting representative is designated (primary occupant by default, changeable by the owner?); tenant voting setting (off by default, D-42); whether committee observers see live turnout; retention of PUBLIC responses and participation records; the target scale for the load test (Civic Pulse targets 500 households and about 100 concurrent voters).
+
+**P22 tasks (outline):**
+
+| ID    | Task                                                                                                                                       | Size |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| P22.1 | Map Civic Pulse tables, functions and privacy rules to the Homeish schema; record the mapping in DATABASE.md; owner approves               | M    |
+| P22.2 | Migration: votes, options, offices/candidates, electorate, participation, public responses, closed tallies; RLS and same-society keys      | L    |
+| P22.3 | Lifecycle and submission functions (activate, schedule, submit, change PUBLIC response, complete, cancel) with atomic, deadline-safe rules | L    |
+| P22.4 | Port Civic Pulse's database tests for duplicate, partial and late ballots and PRIVATE privacy; add cross-society and role-matrix tests     | L    |
+| P22.5 | Admin screens (create, preview, schedule, monitor, results) and resident voting screens                                                    | L    |
+| P22.6 | PDF/CSV exports with `pdf-lib`, following the Civic Pulse privacy rules                                                                    | M    |
+| P22.7 | Load test at the agreed scale; module gate; ships disabled                                                                                 | M    |
+
+---
+
 # Documents to Write Alongside the Build
 
 | Document         | Needed before | Purpose                                                                                                          |
@@ -693,6 +850,7 @@ Commit promotion and hosted migrations follow the owner-approved release process
 | IPD-1 | Free tiers only for local/staging synthetic data; paid production hosting before the first live society, including the first-ten free offer (AD-06, D-33) | **Approved 2026-11-09; amended 2026-11-09:** production upgrades to paid when the first society starts paying (AD-06) |
 | IPD-2 | Whether the guard alert sound/haptic (DESIGN DD-03) is built in P5.9                                                                                      | **Approved 2026-11-09:** include it with a mute control                                                               |
 | IPD-3 | Brand colour and name final before P2                                                                                                                     | **Approved 2026-11-09:** Homeish and the documented brand palette                                                     |
+| IPD-4 | Expansion phases P16–P34 may run in parallel with P10; none is enabled for a live society before the pilot go-live gates close                            | **Approved 2026-11-14** (PRD D-38)                                                                                    |
 
 ---
 

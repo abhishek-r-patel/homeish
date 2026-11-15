@@ -84,11 +84,34 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 **[D-02] Module order and MVP boundary — Approved 2026-11-09.** MVP = Core + Visitor + Delivery + Billing + Service Request. Staff, Housekeeping, AMC are the first post-MVP wave.
 
+**Expansion roadmap (D-38 — approved 2026-11-14).** The modules below are planned in three waves (P3 must-have, P4 high value, P5 good to have). Each still needs its phase-kickoff decisions (Section 5.10) before it is built, ships switched off, and follows the module completion gate. Build may run in parallel with pilot hardening, but no expansion module is enabled for a live society before the pilot go-live gates are closed.
+
+| #   | Module                                   | Key             | Disableable | Release |
+| --- | ---------------------------------------- | --------------- | ----------- | ------- |
+| 10  | Society Expenses & Accounts              | `expense`       | Yes         | P3-1    |
+| 11  | Resident & Vehicle Directory             | `directory`     | Yes         | P3-2    |
+| 12  | Move-in / Move-out & Tenancy             | `tenancy`       | Yes         | P3-3    |
+| 13  | Document Repository                      | `document`      | Yes         | P3-4    |
+| 14  | Parking Management                       | `parking`       | Yes         | P3-5    |
+| 15  | Emergency & SOS                          | `sos`           | Yes         | P3-6    |
+| 16  | Polls & Voting (ported from Civic Pulse) | `poll`          | Yes         | P4-1    |
+| 17  | Meetings & AGM                           | `meeting`       | Yes         | P4-2    |
+| 18  | Vendors & Purchase Approvals             | `vendor`        | Yes         | P4-3    |
+| 19  | Guard Patrol & Incident Log              | `patrol`        | Yes         | P4-4    |
+| 20  | Utility Metering                         | `metering`      | Yes         | P4-5    |
+| 21  | Asset Register                           | `asset`         | Yes         | P5-1    |
+| 22  | Resident Community & Marketplace         | `community`     | Yes         | P5-2    |
+| 23  | Events & RSVPs                           | `event`         | Yes         | P5-3    |
+| 24  | Home-Services Directory                  | `home_services` | Yes         | P5-4    |
+
+Platform enhancements in the same waves (not separate modules): committee analytics dashboard (P4-6), service-request SLA escalation (P5-5, inside `service_request`), multi-language (P5-6, Core) and multi-society / federation view (P5-7, Core).
+
 **Module dependencies**
 
 - `delivery` is independent of `visitor`; it shares only Core notification and unit data. **[A-05]** (Avoids coupling so modules toggle independently.)
 - `staff`, `housekeeping`, `amc` are independent of each other. `amc` may link to `service_request` optionally if both enabled (P2).
 - Enabling/disabling a module never deletes its data (see MOD-4).
+- Expansion modules use optional links only: `parking` and `tenancy` read `directory` vehicles/contacts when it is enabled; `vendor` and `metering` post to `expense`/`billing` only when those are enabled; `meeting` can attach `poll` resolutions; `asset` can link to `amc` contracts. A module never requires another optional module to be enabled. **[A-36]**
 
 ---
 
@@ -103,6 +126,26 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 Current delivery is the marketing page, host allow-list, beta entry and a browser-only synthetic demo illustration (manual and 15-minute resets). Authentication, actual modules, isolated backend provisioning and database-backed demo resets remain prerequisites for a full working demo or any real society activation. Maplewood's reserved host shows a disabled "not open yet" page; all other society hosts fail closed as unconfigured. No society directory is published.
 
 **Hosting approval, 2026-11-09:** Vercel reported the originally requested product address is assigned to another project, so the owner chose the name Homeish (D-01). `homeish.vercel.app` is attached to `homeish` and `beta-homeish.vercel.app` to `beta-homeish`, under team `arp-dev`. After a temporary pause, the owner approved resuming both scaffold projects and automatic deployment: merge a feature branch into `beta` to deploy `beta-homeish`, verify it, then merge `beta` into `main` to deploy `homeish`. The owner also approved committing/pushing and performing this initial release sequence. `vercel.json` enables only the two release branches; the project build gate isolates them. Preview branch tracking stays disabled and Production domain assignment is automatic. This does not activate authentication, backends, modules or real societies. The nested demo/beta example URLs above are not confirmed live addresses; current hosted beta testing uses `beta-homeish.vercel.app`.
+
+#### 4.0.1 Public homepage refresh direction (planning only)
+
+**Owner request recorded 2026-11-14:** take high-level inspiration from [Multi-School ERP's public homepage](https://multischoolerp.com/), adapted to society management. This is a follow-up to the existing public website (D-34), not a new app module or permission to start implementation. **Approved 2026-11-14:** society committees/admins are the primary audience, with resident benefits; **Try demo** is the only marketing CTA; planned modules belong in a separate clearly labelled roadmap; proof assets are synthetic product screenshots only. Any future enquiry destination is deliberately deferred outside this demo-only refresh and is not a blocker. Detailed composition and copy remain planning work; the confirmed choices are recorded in IMPLEMENTATION_PLAN, "P0.9 follow-up — Public homepage refresh". Resident-directory work continues independently.
+
+**Verified reference observations (2026-11-14):** the public HTML/page text presents an audience-led hero with purchase and demo actions, a trust-summary strip, deliverable cards, role-specific demo links, screenshot-led feature explanations, a module catalogue and UI gallery, testimonials, purchase details, FAQs, getting-started steps, repeated closing actions and policy links. This records the page's content structure only: its demos, customer statements, security claims and product completeness were not independently tested.
+
+**Proposed Homeish section hierarchy (within the approved decisions):**
+
+1. **Header and hero:** retain the Homeish name, selected logo and "A little more like home." tagline; lead with society committees/admins choosing the product and explain resident benefits in plain language. The only marketing CTA is **Try demo**, linking to the clearly labelled synthetic preview. Preserve existing-society address/sign-in entry as separate utility navigation, not another marketing CTA. No request-walkthrough/contact CTA or enquiry form is included.
+2. **Trust summary:** short, evidenced explanations of society isolation, role-based access and privacy, with honest rollout limits. Proof assets are synthetic Homeish product screenshots only: no testimonials, customer/society logos or references, fabricated adoption/statistics, certifications or unsupported uptime/security guarantees.
+3. **People and everyday workflows:** show how residents, guards, admins/managers and committee members use visitor/delivery handling, dues and service requests. Use original synthetic Homeish product screenshots only, with brief outcome-led explanations, not school terminology or borrowed artwork.
+4. **Module overview and separate roadmap:** a scannable society-module catalogue with short descriptions and explicit availability labels, followed by a separate clearly labelled **Planned modules** roadmap section. Do not imply any roadmap module is usable now or enabled for every society.
+5. **Preview and setup:** explain what the linked synthetic demo actually supports, its resets and limitations, then outline society setup and role-based use. Preserve D-34 host boundaries and disabled/unconfigured society behavior; do not present a browser illustration as a connected production system.
+6. **Practical FAQs:** cover society onboarding, module enablement, privacy, the installable web app and connectivity limits, and UPI submission followed by admin confirmation. Subscription/offer wording must follow D-08/D-33; do not import the reference's source-code sale, one-time price, native-app downloads or delivery promises.
+7. **Closing action and footer:** repeat **Try demo** at the verified preview destination; preserve existing-society entry as utility navigation and include available privacy/terms links. Do not introduce a contact/request-walkthrough action or enquiry form; enquiry destination remains deliberately deferred.
+
+**Availability and evidence rule:** distinguish released beta functionality awaiting owner UAT/live activation, in-development previews and planned modules from production-enabled functionality. A roadmap entry, passing local tests or code merged to `main` is not proof of live availability. Check release evidence, module completion gates and production approval when finalising copy; never advertise an unfinished directory or another incomplete module as available.
+
+**Brand, accessibility and privacy guardrails:** use Homeish's existing paper/ink/blue palette, Manrope/Sora typography, logo, tokens and plain-language voice (DESIGN Sections 1, 14 and 18). Create original copy, imagery and composition: no copied text, assets, branding or pixel layout. Preserve WCAG 2.2 AA, semantic headings/skip link, keyboard access and visible focus, meaningful alt text, 48px targets, 320px reflow/200% zoom, reduced motion and lightweight mobile delivery. Use synthetic data only in public previews; never publish resident names/contact details, emergency contacts, vehicles or a society directory. No new lead-data collection, third-party trackers or embedded services without separate approval and a documented purpose.
 
 ### 4.1 Features and Functional Requirements
 
@@ -414,7 +457,121 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 
 **P15 owner decisions:** Amenities use exclusive recurring weekday slots; capacity is the maximum guest count, not shared reservations. Free and paid bookings confirm immediately. Fees are snapshotted and atomically debited to the existing unit ledger; paid amenities require billing enabled. Resident cancellation is allowed until the slot starts (0-hour cutoff); all allowed resident cancellations and admin cancellations append a full ledger credit. Admin cancellation requires a reason and resident notification. The minimum lead is 24 hours; the booking horizon and active per-unit/per-amenity daily limit are unlimited (0). Active occupancy is required; household members see their occupied unit's bookings, while other units' occupied slots remain anonymous. Each booking acknowledges current rules when present. Schedule edits do not change existing times, fees or accepted rules. No payment gateway is included.
 
-> Further ideas (polls, community forum, parking management, emergency SOS, vehicle registry, document vault, marketplace) are **not** included. They should be added only upon your explicit request.
+> Modules beyond 5.9 are planned in Section 5.10 (D-38). Their requirements are proposals until each phase's kickoff decisions are recorded.
+
+### 5.10 Expansion Modules (planned — D-38)
+
+Requirement IDs are provisional and are refined at each phase kickoff, as was done for P12–P15. Every module is society-scoped, uses the existing roles (admin, committee, guard, resident, supervisor where relevant), audits management changes, stores files in private buckets, and uses only approved services (Supabase, Brevo email, in-app notifications, Realtime). Nothing below adds SMS, WhatsApp, a payment gateway, a new vendor or native apps.
+
+#### 5.10.1 Society Expenses & Accounts (`expense`) — P3-1
+
+Simple society bookkeeping, not double-entry accounting (D-39). **P16 kickoff decisions (approved 2026-11-14):** default categories are repairs, utilities, staff, housekeeping, security, AMC, insurance/taxes, administration, events and other; accounts include cash and one or more banks with opening balances; committee approval is required above ₹50,000, configurable by society admins; closed months are locked, with admin reopening only by an audited reason; financial year is 1 April–31 March.
+
+- `EXP-1` Admin records expenses with date, category, payee, amount (paise), payment mode (cash, bank, UPI, cheque), reference and an optional receipt (JPEG/PNG/PDF).
+- `EXP-2` Expense categories are society-defined, with defaults created on enable.
+- `EXP-3` Cash and bank books: named accounts with an opening balance, append-only entries and reversal instead of deletion.
+- `EXP-4` Confirmed `billing` payments appear as income automatically when billing is enabled; other income (donations, interest) is entered manually.
+- `EXP-5` Reports: income vs expense by month/category, account balances, outstanding dues summary (from billing), CSV and PDF export.
+- `EXP-6` Optional committee approval above a society-set amount; committee read-only access otherwise.
+
+**P16 implementation choices (approved 2026-11-15, D-44):** any one committee member other than the person who recorded an expense approves it above the threshold; at or below it, expenses post immediately. Admins choose the account that receives confirmed billing payments as income. Exports are CSV and PDF. Residents see nothing in this module. Expenses are not edited; they are rejected or reversed and recorded again. An expense above the threshold stays pending if no other committee member exists.
+
+#### 5.10.2 Resident & Vehicle Directory (`directory`) — P3-2
+
+Builds on Core unit occupants (owner, tenant, family). **P17 kickoff decisions (approved 2026-11-14):** resident-visible directory shows name and unit by default, phone is hidden unless the person opts in; admins and committee may still see verified contact phones regardless of resident-directory phone opt-in; committee directory access is read-only; guards see the unit for a matched vehicle but never phone; there is no vehicle-per-unit cap; when Core ends an occupancy, directory/vehicle access is deactivated immediately and personal directory data is deleted one year after its recorded `ended_at`, except required audit records. Guard lookup uses the existing standard authenticated-action rate-limit policy. A society's supported maximum size is not yet known, so database-side pagination is required before fetching directory lists. **D-48 (approved 2026-11-14):** when an active resident moves to another unit in the same society, transfer active vehicles and emergency contacts to the new unit, audit each transfer, and require vehicle re-verification; keep visibility preferences attached to the person.
+
+- `DIR-1` Residents manage household membership through Core and add emergency contacts and vehicles (type, registration number, optional sticker/tag number) for their unit; admin can add and verify.
+- `DIR-2` Each person controls resident-directory visibility of their name and unit (visible by default) and phone (hidden by default); admin and committee can see verified contact phone data regardless of that directory preference.
+- `DIR-3` Guards can search vehicles by registration number to identify resident vehicles and their unit; guards never see phone numbers.
+- `DIR-4` Registration numbers are normalised and unique per society among active vehicles.
+- `DIR-5` Vehicle and emergency-contact data are deactivated when the occupant moves out and erased after one year; only required audit records are retained.
+- `DIR-6` Emergency-contact numbers are visible to the active household, admin and committee; guards do not have directory access (D-46).
+
+#### 5.10.3 Move-in / Move-out & Tenancy (`tenancy`) — P3-3
+
+- `TEN-1` A resident or admin raises a move-in or move-out request with date, time window, and lift/loading-bay booking if the society uses it.
+- `TEN-2` Tenant move-in requires uploads configured by the society (rental agreement, police verification) and owner consent from the unit owner.
+- `TEN-3` Move-out shows a dues clearance check from `billing` when enabled; admin issues a no-objection certificate (NOC) PDF.
+- `TEN-4` Approval adds or ends the tenant occupancy in Core and notifies guards of the scheduled move.
+- `TEN-5` Agreement expiry reminders to owner and admin.
+
+#### 5.10.4 Document Repository (`document`) — P3-4
+
+- `DOC-1` Admin uploads society documents (bylaws, minutes, audit reports, NOCs, circulars) into folders with an audience: all residents, owners only, committee only.
+- `DOC-2` Versions are kept; documents are archived, not deleted.
+- `DOC-3` Residents can download unit-specific documents issued to their unit (for example a NOC).
+- `DOC-4` Access uses signed private-file links; download events are audited for committee-only documents.
+
+#### 5.10.5 Parking Management (`parking`) — P3-5
+
+- `PRK-1` Admin defines parking slots (level, number, type: car/two-wheeler/visitor/EV) and allocates them to units.
+- `PRK-2` Waitlist for unallocated requests in request order.
+- `PRK-3` Residents issue visitor parking passes linked to a visitor entry when `visitor` is enabled.
+- `PRK-4` Guards and residents report wrong parking with an optional photo; the slot holder and admin are notified.
+
+#### 5.10.6 Emergency & SOS (`sos`) — P3-6
+
+Delivered through in-app notifications and Realtime only (D-41); no SMS, WhatsApp, calls or push dependency.
+
+- `SOS-1` Resident raises an SOS (medical, fire, security, other) with one confirmed tap from the home screen.
+- `SOS-2` On-duty guards and admin/committee receive an in-app alert that stays visible until acknowledged, with the guard alert sound used for gate alerts.
+- `SOS-3` Responders acknowledge, update and close the alert; every step is timestamped and audited.
+- `SOS-4` Society emergency contacts (hospital, fire, police, security agency) are listed for all residents.
+- `SOS-5` Abuse protection: rate limit per unit and a required close reason. The UI states clearly that Homeish does not replace emergency services.
+
+#### 5.10.7 Polls & Voting (`poll`) — P4-1
+
+A native Homeish module ported from the Civic Pulse voting design (D-40). Civic Pulse remains a separate standalone product.
+
+- `POL-1` PUBLIC polls: single or multi-select options, named responses visible to authorized management, a voter may change their selection until closing.
+- `POL-2` PRIVATE elections: offices and candidates; only aggregate totals are ever stored or shown; participation is recorded separately from choices (application-level privacy, not cryptographic anonymity).
+- `POL-3` Lifecycle: Draft, Scheduled, Active, Completed, Cancelled; the vote is frozen once active; deadlines enforced in the database.
+- `POL-4` Entitlement: one vote per unit, cast by the unit's designated voting representative. Owners vote by default; tenant voting is a society setting, off by default (D-42).
+- `POL-5` Results shown in-app after completion; management downloads PDF/CSV exports with the Civic Pulse privacy rules (PRIVATE exports list who voted, never choices).
+- `POL-6` Zero duplicate, partial or post-deadline ballots, enforced atomically in the database.
+
+#### 5.10.8 Meetings & AGM (`meeting`) — P4-2
+
+- `MTG-1` Admin schedules a meeting (AGM, SGM, committee) with agenda, venue/online link and notice period check.
+- `MTG-2` Attendance by unit with a quorum indicator.
+- `MTG-3` Resolutions can be linked to a `poll` vote when enabled.
+- `MTG-4` Minutes and action items with owners and due dates; published minutes are stored in `document` when enabled.
+
+#### 5.10.9 Vendors & Purchase Approvals (`vendor`) — P4-3
+
+- `VEN-1` Vendor directory with category, contact, GST number (optional), documents and a rating from admin/committee.
+- `VEN-2` Purchase request with up to several quotes; approval by a society-configured number of committee approvers.
+- `VEN-3` Approved purchases create an expense draft when `expense` is enabled.
+- `VEN-4` No vendor logins (Section 14.3).
+
+#### 5.10.10 Guard Patrol & Incident Log (`patrol`) — P4-4
+
+- `PAT-1` Admin defines patrol checkpoints with printable QR codes and patrol schedules.
+- `PAT-2` Guards scan checkpoints during a round; missed checkpoints are flagged.
+- `PAT-3` Incident reports with category, description, photos and follow-up; serious incidents notify admin immediately.
+- `PAT-4` Shift handover notes between guards.
+
+#### 5.10.11 Utility Metering (`metering`) — P4-5
+
+- `MTR-1` Admin defines meters (water, electricity, DG/gas) per unit or common area, with a rate per unit of consumption.
+- `MTR-2` Readings entered by staff, admin or resident (with photo); readings lower than the previous one need a reason.
+- `MTR-3` Consumption charges are added to the next bill when `billing` is enabled.
+- `MTR-4` Consumption reports and unusual-usage flags.
+
+#### 5.10.12 Committee Analytics Dashboard (Core) — P4-6
+
+- `ANL-1` One dashboard for admin and committee: dues ageing, collection trend, expense vs income, request SLA performance, amenity use, visitor trends, and only sections for enabled modules.
+- `ANL-2` Aggregate figures only; no personal data beyond what the viewer can already see.
+
+#### 5.10.13 Later-wave modules and enhancements (P5)
+
+- **Asset Register (`asset`, P5-1):** common assets (lifts, pumps, generators, CCTV) with location, purchase/warranty details, AMC link and maintenance history.
+- **Resident Community & Marketplace (`community`, P5-2):** moderated discussion groups, buy/sell/give-away and lost-and-found listings; admin moderation, reporting and removal; no payments.
+- **Events & RSVPs (`event`, P5-3):** event announcements, RSVP with guest count, optional contribution recorded as a billing charge when enabled.
+- **Home-Services Directory (`home_services`, P5-4):** society-curated local service providers (plumber, electrician) with resident ratings; no provider logins or bookings.
+- **SLA escalation (P5-5, `service_request`):** requests past their SLA escalate to the next level (assignee → admin → committee) at configurable intervals.
+- **Multi-language (P5-6, Core):** translated interface starting with Hindi, then a regional language; user-selected language; content entered by users is not translated.
+- **Multi-society / federation view (P5-7, Core):** a group account for builders or management companies to view and administer several societies they are authorized for, without weakening per-society isolation.
 
 ---
 
@@ -736,16 +893,18 @@ Integration rules:
 
 Staff, Housekeeping inventory, AMC, Notice board, Amenity booking (in that order, per D-02/D-21/D-22).
 
+Expansion waves P3–P5 (D-38, Section 3 and Section 5.10): expenses, directory, tenancy, documents, parking, SOS; then polls, meetings, vendors, patrol, metering, analytics; then asset register, community, events, home services, SLA escalation, multi-language and multi-society view.
+
 ### 14.3 Explicitly Out of Scope (until you request)
 
 - Native iOS/Android apps (unless D-23 changes it)
-- Accounting/general ledger, expense & vendor payments, budgeting, payroll
+- Full double-entry accounting (general ledger, trial balance, balance sheet), budgeting, payroll, and paying vendors from within the app (D-39 limits `expense` to simple bookkeeping)
 - In-app SaaS subscription billing for societies
 - Hardware integrations (intercom, boom barriers, RFID, ANPR, CCTV)
 - Offline mode (unless D-25 changes it)
-- Multi-language, regional languages
-- Resident marketplace, forum, polls, parking management, SOS/panic, vehicle registry, document vault, event management
-- Vendor/technician logins
+- SMS, WhatsApp or phone-call alerts, including for SOS (D-41)
+- Payments inside the marketplace or events
+- Vendor/technician/service-provider logins
 - White-label per-society branding beyond logo
 - Developer impersonation of users
 - AI features, chatbots
@@ -816,8 +975,8 @@ Staff, Housekeeping inventory, AMC, Notice board, Amenity booking (in that order
 | A-16 | Advance payments kept as credit                                                                                                                   |
 | A-17 | Bills immutable once published; corrections via adjustments                                                                                       |
 | A-18 | Vendors are text records, not users                                                                                                               |
-| A-19 | Domestic staff add flow requires admin approval by setting; default is required, and matching profiles require review before linking                 |
-| A-20 | Per-day staff block is P2; the block applies only to the requesting resident's unit                                                                |
+| A-19 | Domestic staff add flow requires admin approval by setting; default is required, and matching profiles require review before linking              |
+| A-20 | Per-day staff block is P2; the block applies only to the requesting resident's unit                                                               |
 | A-21 | AMC–service request link is P2                                                                                                                    |
 | A-22 | Scale: 100 societies, 100k users in year 1                                                                                                        |
 | A-23 | DPDP Act principles apply                                                                                                                         |
@@ -833,6 +992,7 @@ Staff, Housekeeping inventory, AMC, Notice board, Amenity booking (in that order
 | A-33 | Admin confirms UPI payments manually from the bank/UPI statement; there is no bank integration                                                    |
 | A-34 | Email is the unique login identity in MVP; mobile numbers are optional profile data                                                               |
 | A-35 | Login methods are separated from user identity so mobile OTP, passwords and social login can be added later without migrating users               |
+| A-36 | Expansion modules link to other optional modules only when those are enabled; none requires another optional module                               |
 
 ---
 
@@ -840,45 +1000,56 @@ Staff, Housekeeping inventory, AMC, Notice board, Amenity booking (in that order
 
 Items marked **High** block design/build of the affected module; resolve them before that module starts.
 
-| ID   | Decision                                         | Recommendation                                                                                                                                                                                                                                                                           | Priority |
-| ---- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| D-01 | Product name                                     | **Approved 2026-11-09:** Homeish, tagline "A little more like home." (chosen the same day because the originally requested `.vercel.app` address was unavailable; existing logo mark kept)                                                                                               | Closed   |
-| D-02 | MVP module set & order                           | **Approved 2026-11-09:** Core + Visitor + Delivery + Billing + Service Request; Staff/HK/AMC next                                                                                                                                                                                        | Closed   |
-| D-03 | Login method                                     | **Approved 2026-11-09:** email + code now; mobile OTP, passwords and Google later                                                                                                                                                                                                        | Closed   |
-| D-04 | Developer login security                         | **Approved 2026-11-09:** email + password + TOTP MFA, separate route                                                                                                                                                                                                                     | Closed   |
-| D-05 | Resident onboarding                              | **Approved 2026-11-09:** email invite or society-code request with admin approval                                                                                                                                                                                                        | Closed   |
-| D-06 | Notification channels in MVP                     | **Approved 2026-11-09:** in-app + push + email; SMS/WhatsApp post-MVP                                                                                                                                                                                                                    | Closed   |
-| D-07 | Suspended society behavior                       | **Approved 2026-11-09:** read-only access                                                                                                                                                                                                                                                | Closed   |
-| D-08 | SaaS subscription billing in-app                 | **Approved 2026-11-09:** no in-app billing; invoice outside Homeish                                                                                                                                                                                                                      | Closed   |
-| D-09 | Error tracking approach                          | **Approved 2026-11-09:** Sentry plus Homeish ErrorLog                                                                                                                                                                                                                                    | Closed   |
-| D-10 | No-response visitor policy                       | **Approved 2026-11-09:** guard may allow by society setting, with a required reason and audit entry                                                                                                                                                                                      | Closed   |
-| D-11 | QR vs code for pre-approvals                     | **Approved 2026-11-09:** QR and the same readable 6-digit code in MVP                                                                                                                                                                                                                    | Closed   |
-| D-12 | Billing calculation methods                      | **Approved 2026-11-09:** fixed per unit, per sq ft, custom per unit                                                                                                                                                                                                                      | Closed   |
-| D-13 | Late fee rule                                    | **Approved 2026-11-09:** fixed amount or percentage after grace period; no compounding                                                                                                                                                                                                   | Closed   |
-| D-14 | Payment gateway                                  | **Approved 2026-11-09:** none in MVP; UPI direct to society, admin confirms                                                                                                                                                                                                              | Closed   |
-| D-15 | Funds flow (society account vs platform)         | **Approved 2026-11-09:** direct to the society's UPI account                                                                                                                                                                                                                             | Closed   |
-| D-16 | Gateway fee bearer                               | Not applicable in MVP (no gateway)                                                                                                                                                                                                                                                       | Closed   |
-| D-17 | Common-area requests visibility                  | **Approved 2026-11-09:** all residents may read; no resident edits or comments in MVP; upvoting delivered in MVP+ 2026-11-14                                                                                                                                                             | Closed   |
-| D-18 | ID proof handling for staff                      | **Approved 2026-11-09:** optional ID type + last four digits; no full document                                                                                                                                                                                                           | Closed   |
-| D-19 | Payroll for society staff                        | **Approved 2026-11-09:** out of scope                                                                                                                                                                                                                                                    | Closed   |
-| D-20 | Housekeeping = inventory only                    | **Approved 2026-11-09:** stock tracking only; no cleaning schedules or QR area logs                                                                                                                                                                                                      | Closed   |
-| D-21 | Add Notice Board module                          | **Approved 2026-11-09:** include as P2-4                                                                                                                                                                                                                                                 | Closed   |
-| D-22 | Add Amenity Booking module                       | **Approved 2026-11-09:** include as optional P2-5                                                                                                                                                                                                                                        | Closed   |
-| D-23 | Client platform                                  | **Approved 2026-11-09:** installable web app (PWA) for all roles                                                                                                                                                                                                                         | Closed   |
-| D-24 | Tenancy model                                    | **Approved 2026-11-09 (with stack approval):** shared database, separated per society                                                                                                                                                                                                    | Closed   |
-| D-25 | Offline support for guards                       | **Approved 2026-11-09:** not in MVP                                                                                                                                                                                                                                                      | Closed   |
-| D-26 | Committee approval for waivers                   | **Approved 2026-11-09:** admin-only by default; optional society setting enables committee approval                                                                                                                                                                                      | Closed   |
-| D-27 | Developer impersonation                          | **Approved 2026-11-09:** no impersonation or view-as access                                                                                                                                                                                                                              | Closed   |
-| D-28 | Message provider                                 | **Approved 2026-11-09:** Brevo for email now; SMS provider decided later (post-MVP)                                                                                                                                                                                                      | Closed   |
-| D-30 | Guard identification in shared gate-account mode | **Approved 2026-11-09:** RWA admin chooses per society: pick name or personal PIN                                                                                                                                                                                                        | Closed   |
-| D-31 | Protection of society UPI details                | **Approved 2026-11-09:** admin edits; audited; admins and committee notified; residents see last-changed date                                                                                                                                                                            | Closed   |
-| D-32 | How a UPI payment is marked paid                 | **Approved 2026-11-09:** resident submits UTR (optional screenshot); admin confirms or rejects                                                                                                                                                                                           | Closed   |
-| D-33 | First-ten society offer                          | **Approved 2026-11-09:** first ten live societies pay no Homeish subscription; production hosting remains separately funded; decide later pricing before society eleven is invited                                                                                                       | Closed   |
-| D-34 | Public website, society subdomains and beta      | **Approved 2026-11-09:** public marketing root; interactive synthetic demo with periodic resets; future society subdomains, Maplewood address reserved but disabled, onboarding via the create-society script (post-MVP); separate beta Vercel project/branch; beta-to-main release flow | Closed   |
-| D-35 | Percentage late-fee precision and limit          | **Approved 2026-11-10:** allow up to two decimal places, greater than 0% and capped at 100%; fixed fees use whole paise; late fees remain off by default                                                                                                                                 | Closed   |
-| D-36 | Billing due date and area-charge rounding        | **Approved 2026-11-10:** each society chooses a due day (1–31 or last day of the month) and rounds per-square-foot charges to the nearest rupee or paise, half up; defaults are the 10th and nearest rupee                                                                               | Closed   |
-| D-29 | Dues ownership on tenant/owner change            | **Approved 2026-11-09:** balance stays with the unit and is billed to the current owner                                                                                                                                                                                                  | Closed   |
-| D-37 | Staff registration, gate and block behavior       | **Approved during P12 kickoff:** approval required by default; matching profiles create a pending link; day blocks are unit-only; guards do not see phone or ID details; entry/exit is explicit with one open attendance; society shifts are one status per person/date | Closed   |
+| ID   | Decision                                          | Recommendation                                                                                                                                                                                                                                                                                                                                                                    | Priority |
+| ---- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| D-01 | Product name                                      | **Approved 2026-11-09:** Homeish, tagline "A little more like home." (chosen the same day because the originally requested `.vercel.app` address was unavailable; existing logo mark kept)                                                                                                                                                                                        | Closed   |
+| D-02 | MVP module set & order                            | **Approved 2026-11-09:** Core + Visitor + Delivery + Billing + Service Request; Staff/HK/AMC next                                                                                                                                                                                                                                                                                 | Closed   |
+| D-03 | Login method                                      | **Approved 2026-11-09:** email + code now; mobile OTP, passwords and Google later                                                                                                                                                                                                                                                                                                 | Closed   |
+| D-04 | Developer login security                          | **Approved 2026-11-09:** email + password + TOTP MFA, separate route                                                                                                                                                                                                                                                                                                              | Closed   |
+| D-05 | Resident onboarding                               | **Approved 2026-11-09:** email invite or society-code request with admin approval                                                                                                                                                                                                                                                                                                 | Closed   |
+| D-06 | Notification channels in MVP                      | **Approved 2026-11-09:** in-app + push + email; SMS/WhatsApp post-MVP                                                                                                                                                                                                                                                                                                             | Closed   |
+| D-07 | Suspended society behavior                        | **Approved 2026-11-09:** read-only access                                                                                                                                                                                                                                                                                                                                         | Closed   |
+| D-08 | SaaS subscription billing in-app                  | **Approved 2026-11-09:** no in-app billing; invoice outside Homeish                                                                                                                                                                                                                                                                                                               | Closed   |
+| D-09 | Error tracking approach                           | **Approved 2026-11-09:** Sentry plus Homeish ErrorLog                                                                                                                                                                                                                                                                                                                             | Closed   |
+| D-10 | No-response visitor policy                        | **Approved 2026-11-09:** guard may allow by society setting, with a required reason and audit entry                                                                                                                                                                                                                                                                               | Closed   |
+| D-11 | QR vs code for pre-approvals                      | **Approved 2026-11-09:** QR and the same readable 6-digit code in MVP                                                                                                                                                                                                                                                                                                             | Closed   |
+| D-12 | Billing calculation methods                       | **Approved 2026-11-09:** fixed per unit, per sq ft, custom per unit                                                                                                                                                                                                                                                                                                               | Closed   |
+| D-13 | Late fee rule                                     | **Approved 2026-11-09:** fixed amount or percentage after grace period; no compounding                                                                                                                                                                                                                                                                                            | Closed   |
+| D-14 | Payment gateway                                   | **Approved 2026-11-09:** none in MVP; UPI direct to society, admin confirms                                                                                                                                                                                                                                                                                                       | Closed   |
+| D-15 | Funds flow (society account vs platform)          | **Approved 2026-11-09:** direct to the society's UPI account                                                                                                                                                                                                                                                                                                                      | Closed   |
+| D-16 | Gateway fee bearer                                | Not applicable in MVP (no gateway)                                                                                                                                                                                                                                                                                                                                                | Closed   |
+| D-17 | Common-area requests visibility                   | **Approved 2026-11-09:** all residents may read; no resident edits or comments in MVP; upvoting delivered in MVP+ 2026-11-14                                                                                                                                                                                                                                                      | Closed   |
+| D-18 | ID proof handling for staff                       | **Approved 2026-11-09:** optional ID type + last four digits; no full document                                                                                                                                                                                                                                                                                                    | Closed   |
+| D-19 | Payroll for society staff                         | **Approved 2026-11-09:** out of scope                                                                                                                                                                                                                                                                                                                                             | Closed   |
+| D-20 | Housekeeping = inventory only                     | **Approved 2026-11-09:** stock tracking only; no cleaning schedules or QR area logs                                                                                                                                                                                                                                                                                               | Closed   |
+| D-21 | Add Notice Board module                           | **Approved 2026-11-09:** include as P2-4                                                                                                                                                                                                                                                                                                                                          | Closed   |
+| D-22 | Add Amenity Booking module                        | **Approved 2026-11-09:** include as optional P2-5                                                                                                                                                                                                                                                                                                                                 | Closed   |
+| D-23 | Client platform                                   | **Approved 2026-11-09:** installable web app (PWA) for all roles                                                                                                                                                                                                                                                                                                                  | Closed   |
+| D-24 | Tenancy model                                     | **Approved 2026-11-09 (with stack approval):** shared database, separated per society                                                                                                                                                                                                                                                                                             | Closed   |
+| D-25 | Offline support for guards                        | **Approved 2026-11-09:** not in MVP                                                                                                                                                                                                                                                                                                                                               | Closed   |
+| D-26 | Committee approval for waivers                    | **Approved 2026-11-09:** admin-only by default; optional society setting enables committee approval                                                                                                                                                                                                                                                                               | Closed   |
+| D-27 | Developer impersonation                           | **Approved 2026-11-09:** no impersonation or view-as access                                                                                                                                                                                                                                                                                                                       | Closed   |
+| D-28 | Message provider                                  | **Approved 2026-11-09:** Brevo for email now; SMS provider decided later (post-MVP)                                                                                                                                                                                                                                                                                               | Closed   |
+| D-30 | Guard identification in shared gate-account mode  | **Approved 2026-11-09:** RWA admin chooses per society: pick name or personal PIN                                                                                                                                                                                                                                                                                                 | Closed   |
+| D-31 | Protection of society UPI details                 | **Approved 2026-11-09:** admin edits; audited; admins and committee notified; residents see last-changed date                                                                                                                                                                                                                                                                     | Closed   |
+| D-32 | How a UPI payment is marked paid                  | **Approved 2026-11-09:** resident submits UTR (optional screenshot); admin confirms or rejects                                                                                                                                                                                                                                                                                    | Closed   |
+| D-33 | First-ten society offer                           | **Approved 2026-11-09:** first ten live societies pay no Homeish subscription; production hosting remains separately funded; decide later pricing before society eleven is invited                                                                                                                                                                                                | Closed   |
+| D-34 | Public website, society subdomains and beta       | **Approved 2026-11-09:** public marketing root; interactive synthetic demo with periodic resets; future society subdomains, Maplewood address reserved but disabled, onboarding via the create-society script (post-MVP); separate beta Vercel project/branch; beta-to-main release flow                                                                                          | Closed   |
+| D-35 | Percentage late-fee precision and limit           | **Approved 2026-11-10:** allow up to two decimal places, greater than 0% and capped at 100%; fixed fees use whole paise; late fees remain off by default                                                                                                                                                                                                                          | Closed   |
+| D-36 | Billing due date and area-charge rounding         | **Approved 2026-11-10:** each society chooses a due day (1–31 or last day of the month) and rounds per-square-foot charges to the nearest rupee or paise, half up; defaults are the 10th and nearest rupee                                                                                                                                                                        | Closed   |
+| D-29 | Dues ownership on tenant/owner change             | **Approved 2026-11-09:** balance stays with the unit and is billed to the current owner                                                                                                                                                                                                                                                                                           | Closed   |
+| D-37 | Staff registration, gate and block behavior       | **Approved during P12 kickoff:** approval required by default; matching profiles create a pending link; day blocks are unit-only; guards do not see phone or ID details; entry/exit is explicit with one open attendance; society shifts are one status per person/date                                                                                                           | Closed   |
+| D-38 | Expansion module roadmap                          | **Approved 2026-11-14:** add the P3 (must-have), P4 (high value) and P5 (good to have) waves in Section 3/5.10; build may run in parallel with pilot hardening; no expansion module is enabled for a live society before the pilot go-live gates close                                                                                                                            | Closed   |
+| D-39 | Expenses & accounts depth                         | **Approved 2026-11-14:** simple bookkeeping (expenses, receipts, cash/bank books, income-vs-expense reports); no double-entry ledger                                                                                                                                                                                                                                              | Closed   |
+| D-40 | Polls & voting source                             | **Approved 2026-11-14:** port Civic Pulse's voting rules, privacy design, lifecycle and exports into a native `poll` module on Homeish's shared database; Civic Pulse continues as a standalone product                                                                                                                                                                           | Closed   |
+| D-41 | SOS delivery channels                             | **Approved 2026-11-14:** in-app notifications and Realtime only                                                                                                                                                                                                                                                                                                                   | Closed   |
+| D-42 | Voting entitlement                                | **Approved 2026-11-14:** one vote per unit by its designated representative; tenant voting is a society setting, off by default                                                                                                                                                                                                                                                   | Closed   |
+| D-43 | Phase-kickoff decisions for each expansion module | Open: resolved at the start of each phase (IMPLEMENTATION_PLAN "Expansion phases"), as was done for P12–P15                                                                                                                                                                                                                                                                       | High     |
+| D-44 | P16 expenses & accounts kickoff decisions         | **Approved 2026-11-14:** standard categories; cash and one or more bank accounts with opening balances; committee approval over ₹50,000 (society-configurable); closed months locked and admin reopen with audited reason; financial year 1 April–31 March                                                                                                                        | Closed   |
+| D-45 | P17 directory kickoff decisions                   | **Approved 2026-11-14:** residents see name/unit by default, phone hidden unless opted in; guard vehicle lookup shows unit but no phone; no per-unit vehicle cap; deactivate at move-out and erase personal directory data after one year, retaining required audit records                                                                                                       | Closed   |
+| D-46 | Emergency-contact visibility                      | **Approved 2026-11-14:** active household, admin and committee may view contacts; guards cannot view contacts                                                                                                                                                                                                                                                                     | Closed   |
+| D-47 | P17 directory follow-up policies                  | **Approved 2026-11-14:** admin/committee may see verified phone data despite resident-directory opt-out; committee is read-only; Core occupancy end deactivates directory access immediately and the one-year purge clock uses recorded `ended_at`; use the standard authenticated-action lookup rate limit; add database-side pagination because maximum society size is unknown | Closed   |
+| D-48 | Directory records on an in-society unit move      | **Approved 2026-11-14:** transfer active vehicles and emergency contacts to the new unit with audited changes; clear vehicle verification for re-verification; keep visibility preferences attached to the person                                                                                                                                                                 | Closed   |
 
 ---
 

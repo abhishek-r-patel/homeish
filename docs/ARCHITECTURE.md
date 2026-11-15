@@ -332,7 +332,7 @@ homeish/
 ├─ .gitignore
 ├─ .nvmrc
 ├─ .prettierrc.json
-├─ docs/                          Project docs, including name-logo-options.svg (unapproved concepts)
+├─ docs/                          Project docs; audits/pilot-readiness-audit.md and roadmap/deferred-features.md
 ├─ eslint.config.mjs
 ├─ next.config.ts
 ├─ package.json
