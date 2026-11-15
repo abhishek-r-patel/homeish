@@ -510,12 +510,16 @@ Builds on Core unit occupants (owner, tenant, family). **P17 kickoff decisions (
 - `DOC-3` Residents can download unit-specific documents issued to their unit (for example a NOC).
 - `DOC-4` Access uses signed private-file links; download events are audited for committee-only documents.
 
+**P19 owner decisions (D-51, approved 2026-11-15):** admin-managed folders, seeded with Bylaws, Minutes, Audit reports, Circulars and NOCs, which admins can rename, add and archive. Each folder has one audience: all residents, owners only, or committee and admins. Files are PDF/JPEG/PNG up to 5 MB. **Every** download is audited, not only committee-only documents. Residents cannot upload or request documents. Unit-issued documents are visible to all occupants or owners only, chosen per document; P18 NOCs appear read-only in the unit's documents when Tenancy is enabled. Versions are kept, documents are archived and never deleted, and access uses signed private links.
+
 #### 5.10.5 Parking Management (`parking`) — P3-5
 
 - `PRK-1` Admin defines parking slots (level, number, type: car/two-wheeler/visitor/EV) and allocates them to units.
 - `PRK-2` Waitlist for unallocated requests in request order.
 - `PRK-3` Residents issue visitor parking passes linked to a visitor entry when `visitor` is enabled.
 - `PRK-4` Guards and residents report wrong parking with an optional photo; the slot holder and admin are notified.
+
+**P20 owner decisions (D-52, approved 2026-11-15):** slot types car, two-wheeler, visitor and EV, each with a label and optional location note. Admins may allocate any number of slots to a unit, with no fees. One first-in, first-out waitlist per slot type; allocating out of order needs a written, audited reason. Admins and the unit's residents may optionally link the unit's directory vehicles to a slot: a car or EV slot holds at most one four-wheeler plus any number of two-wheelers, a two-wheeler slot holds two-wheelers only, and visitor slots are never allocated. Without Directory there are no links. Residents create visitor passes of up to 24 hours, optionally linked to a visitor entry; passes are unavailable when Visitor is off. Wrong-parking reports pick a slot or type a vehicle number and notify the matched unit (slot holder or directory vehicle) and admins; a reporter outside that unit is not told which unit matched. Report photos are kept for 3 days by default (admin-configurable 1–90).
 
 #### 5.10.6 Emergency & SOS (`sos`) — P3-6
 
@@ -526,6 +530,8 @@ Delivered through in-app notifications and Realtime only (D-41); no SMS, WhatsAp
 - `SOS-3` Responders acknowledge, update and close the alert; every step is timestamped and audited.
 - `SOS-4` Society emergency contacts (hospital, fire, police, security agency) are listed for all residents.
 - `SOS-5` Abuse protection: rate limit per unit and a required close reason. The UI states clearly that Homeish does not replace emergency services.
+
+**P21 owner decisions (D-53, approved 2026-11-15):** residents and guards can raise an SOS (medical, fire, security, other); the unit is attached automatically, with an optional short note. Admins configure recipients: signed-in guards (on by default), admins (on), committee (off) and residents (off, same floor, same block or whole society). There is no on-duty or shift concept; "on-duty guards" means users with the guard role. Delivery is in-app and Realtime only (D-41). Recipients see a persistent banner on any screen until they mark it seen or the alert ends, and guard devices repeat the alert sound every 30 seconds. Acknowledge, update and close are timestamped and audited. Close reasons are Resolved, False alarm, Duplicate, Test and Other, with a note required for False alarm and Other. The raiser may cancel before acknowledgement ("Raised by mistake"). One open SOS per unit and at most three per unit per hour. Emergency contacts are admin-managed and seeded with India 112, 108 (ambulance), 101 (fire) and 100 (police).
 
 #### 5.10.7 Polls & Voting (`poll`) — P4-1
 
@@ -682,6 +688,18 @@ Legend: **C**reate, **R**ead, **U**pdate, **D**elete/cancel, **A**pprove, `own` 
 - `PERM-4` Admin cannot see developer-only config or logs, nor modify their own society's module state.
 - `PERM-5` Role changes are audit-logged.
 - `PERM-6` Developers cannot impersonate or view the app as a society user. Support uses logs and reference IDs. **[D-27 — Approved 2026-11-09]**
+
+### 8.3 Portals and apps
+
+Homeish follows a "web portal for everyone, app for daily tasks" pattern (inspired by MultiSchoolERP, noted 2026-11-15):
+
+| Surface                           | Who uses it                                           | Status                                                                                                                                           |
+| --------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Developer console (web)           | `developer` (SuperAdmin)                              | Built; separate login and URL (CORE-4, D-04)                                                                                                     |
+| Society portal (web, installable) | Admin, committee, HK supervisor, residents and guards | Built; one responsive installable web app (D-23)                                                                                                 |
+| Homeish Android app (future)      | Residents and guards                                  | Reference draft only; one app with screens chosen by role, wrapper first and native only if needed (IMPLEMENTATION_PLAN, "Future — Android App") |
+
+The web portal remains the complete product for every role. The Android app is not committed until the owner changes D-23.
 
 ---
 
@@ -1060,6 +1078,9 @@ Items marked **High** block design/build of the affected module; resolve them be
 | D-48 | Directory records on an in-society unit move      | **Approved 2026-11-14:** transfer active vehicles and emergency contacts to the new unit with audited changes; clear vehicle verification for re-verification; keep visibility preferences attached to the person                                                                                                                                                                                                                                                                                                                                                                                                                                         | Closed   |
 | D-49 | Homepage delivery and deferred demo connection    | **Approved 2026-11-15:** implement H1 and H2 locally; defer separate demo setup until the product is ready, then connect it in a separately authorised task. Until then, show a disabled **Try demo** button with **Demo coming soon**, no demo URL and no inline substitute. Preserve host boundaries. Owner subsequently approved the delivered copy and three synthetic screenshots; real-device/manual acceptance and release remain pending.                                                                                                                                                                                                         | Closed   |
 | D-50 | P18 tenancy workflow, privacy and five-hour scope | **Approved 2026-11-15:** T1 first, then complete verified P18 slices within five hours, local only. Rental agreement required; police proof configurable/off by default; no government ID copies; private 5 MiB PDF/JPG/PNG with the access/retention policy in §5.10.3. Admin approval schedules; admin actual completion changes Core occupancy. Any one active owner consents to move-in, no bypass; no separate consent for move-out. No move fees/deposits. Positive dues block completion/NOC with Billing enabled, no override; disabled Billing is explicitly not checked. Approve the NOC template and 30/7/0-day in-app expiry reminders above. | Closed   |
+| D-51 | P19 document repository kickoff decisions         | **Approved 2026-11-15:** see §5.10.4. Seeded admin-managed folders with per-folder audience; PDF/JPEG/PNG up to 5 MB; every download audited; no resident uploads; unit documents for all occupants or owners only; tenancy NOCs read-only; versions kept, archive never delete; signed links.                                                                                                                                                                                                                                                                                                                                                            | Closed   |
+| D-52 | P20 parking kickoff decisions                     | **Approved 2026-11-15:** see §5.10.5. Car/two-wheeler/visitor/EV slots; unlimited allocation, no fees; FIFO waitlist per type with audited skip reason; optional directory vehicle links under the capacity rule; visitor passes up to 24 hours linked to visitor entries; reports notify the matched unit and admins; photos kept 3 days by default (1–90).                                                                                                                                                                                                                                                                                              | Closed   |
+| D-53 | P21 SOS kickoff decisions                         | **Approved 2026-11-15:** see §5.10.6. Residents and guards raise; configurable recipients (guards and admins on, committee off, residents off/floor/block/society); in-app and Realtime only (D-41); persistent banner and 30-second guard sound; audited acknowledge/update/close with reasons; raiser cancel before acknowledgement; one open per unit and three per unit per hour; seeded India emergency contacts; no shift concept.                                                                                                                                                                                                                  | Closed   |
 
 ---
 

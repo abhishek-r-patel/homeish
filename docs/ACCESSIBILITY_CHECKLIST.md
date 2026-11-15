@@ -10,7 +10,7 @@ Use Beta (`https://beta-homeish.vercel.app`) with the synthetic society on
 testdb. Record the device, OS, browser and date for each pass, and log any
 failure with its screen, step and what was heard.
 
-Homepage/P18 changes are local-only until an approved release. Use the synthetic local fixtures for preliminary checks, then repeat against beta after authorised rollout. Do not upload real personal proofs during fixture checks.
+Homepage/P18–P21 changes are local-only until an approved release. Use the synthetic local fixtures for preliminary checks, then repeat against beta after authorised rollout. Do not upload real personal proofs during fixture checks.
 
 ## Devices
 
@@ -60,6 +60,9 @@ Homepage/P18 changes are local-only until an approved release. Use the synthetic
 | 17  | Resident/owner  | Create a move, upload then attach proof, recover an error and give owner consent without early access              | [ ]      | [ ]       |
 | 18  | Admin           | Confirm a moving decision with a reason where required; complete only after checks; issue and reopen a private NOC | [ ]      | [ ]       |
 | 19  | Guard/committee | Filter and page the status-only moving schedule without tenant identity or document controls                       | [ ]      | [ ]       |
+| 20  | Resident        | Open a folder and download a document; hear its audience and any error                                             | [ ]      | [ ]       |
+| 21  | Resident/guard  | Join a parking waitlist, create a visitor pass, report wrong parking with a photo                                  | [ ]      | [ ]       |
+| 22  | Resident/guard  | Raise an SOS (confirm dialog), then acknowledge, update and close it as a responder                                | [ ]      | [ ]       |
 
 ## Homepage refresh (H1/H2)
 
@@ -84,6 +87,18 @@ These are manual checks, not results from an axe run or a simulated viewport. Ow
 - [ ] Confirm supported accented names are preserved in the NOC; unsupported scripts show an explicit font-support error without issuing a file or changing saved names.
 - [ ] At actual 200% zoom/enlarged phone text, check create, private detail, documents and the status-only schedule; repeat at 320px.
 - [ ] On a low-end phone, confirm long forms, file selection/progress and timeline controls remain usable.
+
+## Documents, parking and SOS (P19–P21)
+
+Preliminary checks use `/fixtures/document`, `/fixtures/parking` and `/fixtures/sos` with synthetic data.
+
+- [ ] Documents: folder names, audience labels, version numbers and archived states are read as text; the download button names the document and any failure is announced with its reference ID.
+- [ ] Parking: slot type, queue position, pass window and report status are read as words; the skip-reason and pass-duration fields read their labels and errors; a reporter outside the matched unit hears no unit number.
+- [ ] SOS screens: the **Not a replacement for emergency services** warning and its "Call 112" link are read before the raise action; contact numbers are reachable call links.
+- [ ] Raising an SOS asks for confirmation in a dialog that announces its title; focus returns to the trigger; success or the one-open/rate-limit message is announced once.
+- [ ] Close reasons are a labelled group; a missing note for False alarm or Other is announced and focused.
+- [ ] Alert banner: the heading is announced once when an alert arrives without moving focus; **Respond**, **Seen — stop alert**/**Dismiss** and **Mute/Unmute alert sound** (pressed state announced) are reachable by keyboard and screen reader on every screen.
+- [ ] Guard device: the alarm repeats about every 30 seconds; when sound is blocked, **Turn on alert sound** appears; muting stops sound but the banner stays visible; a new alert unmutes; the banner remains usable at 200% zoom and 320px without hiding page content permanently.
 
 ## Guard device outdoors
 
