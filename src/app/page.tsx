@@ -10,6 +10,7 @@ import {
 } from '@/core/config/host-routing';
 import { lookupSocietyHost } from '@/core/privileged';
 import { EnvironmentPage } from '@/core/website/environment-page';
+import { websiteContent } from '@/core/website/content';
 import { MarketingPage } from '@/core/website/marketing-page';
 import { SocietyHomePage } from '@/core/website/society-home-page';
 import { SocietyUnavailablePage } from '@/core/website/society-unavailable-page';
@@ -41,7 +42,9 @@ export async function generateMetadata(): Promise<Metadata> {
         ? 'Homeish | A little more like home'
         : `Homeish | ${surface}`,
     description:
-      'A little more like home. Explore Homeish’s planned visitor, delivery, maintenance and service-request tools for your society.',
+      surface === 'website'
+        ? websiteContent.metadataDescription
+        : 'A little more like home. Explore Homeish’s planned visitor, delivery, maintenance and service-request tools for your society.',
     robots:
       surface === 'website'
         ? { index: true, follow: true }
@@ -73,10 +76,7 @@ export default async function HomePage() {
     );
   }
   return surface === 'website' ? (
-    <MarketingPage
-      demoOrigin={siteOrigin('demo', host, configuration)}
-      websiteOrigin={websiteOrigin}
-    />
+    <MarketingPage websiteOrigin={websiteOrigin} />
   ) : (
     <EnvironmentPage surface={surface} websiteOrigin={websiteOrigin} />
   );

@@ -2,20 +2,114 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from './fixtures';
 
-test('loads the root route with no automated accessibility violations', async ({
+test('explains homepage availability and keeps the unconfigured demo disabled', async ({
   page,
 }) => {
   await page.goto('/');
 
   await expect(
-    page.getByRole('heading', { name: 'A calmer day, from gate to home.' }),
+    page.getByRole('heading', {
+      level: 1,
+      name: 'A clearer day for your committee. A calmer day for everyone.',
+    }),
   ).toBeVisible();
+  const demoActions = page.getByRole('button', {
+    name: 'Try demo',
+    exact: true,
+  });
+  await expect(demoActions).toHaveCount(2);
+  for (const action of await demoActions.all()) {
+    await expect(action).toBeDisabled();
+    await expect(action.locator('..')).toContainText('Demo coming soon');
+  }
+  await expect(page.locator('a[href*="demo."]')).toHaveCount(0);
+
+  const testing = page.getByRole('region', {
+    name: 'Built for the work that fills your day.',
+  });
+  await expect(testing).toContainText('not open for live society use');
   await expect(
-    page.getByRole('link', { name: 'Explore The Demo' }),
-  ).toHaveAttribute('href', 'http://demo.localhost:3000');
+    testing.getByRole('heading', { name: 'Dues and payments' }),
+  ).toBeVisible();
+  const development = page.getByRole('region', {
+    name: 'More work taking shape.',
+  });
+  await expect(development).toContainText('not released to beta');
+  await expect(
+    development.getByRole('heading', {
+      name: 'Resident and vehicle directory',
+    }),
+  ).toBeVisible();
+  const roadmap = page.getByRole('region', { name: 'Planned modules' });
+  await expect(roadmap).toContainText('not usable features');
+  await expect(roadmap).toContainText('Move-in, move-out and tenancy');
+  await expect(
+    roadmap.getByRole('heading', { name: 'Dues and payments' }),
+  ).toHaveCount(0);
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations).toEqual([]);
+});
+
+test('loads synthetic screenshots and resolves every homepage section link', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const gallery = page.getByRole('region', { name: 'A look inside Homeish.' });
+  await expect(gallery).toContainText('still images, not a connected demo');
+  const previews = page.getByRole('main').getByRole('img');
+  await expect(previews).toHaveCount(3);
+  for (const preview of await previews.all()) {
+    await preview.scrollIntoViewIfNeeded();
+    await expect(preview).toHaveAttribute('alt', /^Synthetic /);
+    await expect(preview).toHaveJSProperty('complete', true);
+    expect(
+      await preview.evaluate((image: HTMLImageElement) => image.naturalWidth),
+    ).toBeGreaterThan(0);
+  }
+
+  for (const link of await page
+    .getByRole('navigation')
+    .locator('a[href^="#"]')
+    .all()) {
+    const target = await link.getAttribute('href');
+    if (!target) throw new Error('The section link has no destination.');
+    await link.click();
+    await expect(page.locator(target)).toBeInViewport();
+  }
+  await expect(
+    page.getByRole('navigation', { name: 'Society access' }).getByRole('link', {
+      name: 'Sign in',
+      exact: true,
+    }),
+  ).toHaveAttribute('href', '/login');
+});
+
+test('supports the skip link and keyboard FAQ use with reduced motion', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.keyboard.press('Tab');
+  const skipLink = page.getByRole('link', { name: 'Skip to content' });
+  await expect(skipLink).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('main')).toBeFocused();
+
+  const question = page.getByText('Why is Try demo unavailable?', {
+    exact: true,
+  });
+  await question.focus();
+  await page.keyboard.press('Enter');
+  await expect(question.locator('..')).toHaveAttribute('open', '');
+  await expect(question.locator('..')).toContainText('button stays disabled');
+  await page.keyboard.press('Space');
+  await expect(question.locator('..')).not.toHaveAttribute('open', '');
+  expect(
+    await page.evaluate(
+      () => getComputedStyle(document.documentElement).scrollBehavior,
+    ),
+  ).toBe('auto');
 });
 
 test('links the marketing footer to an accessible privacy policy', async ({
@@ -75,14 +169,18 @@ test('returns an unauthenticated session to sign-in without an open redirect', a
   );
 });
 
-test('marketing fits a phone and society-address validation is explicit', async ({
+test('marketing reflows from phone to desktop and society-address errors stay explicit', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/');
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth),
-  ).toBeLessThanOrEqual(375);
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
   await page
     .getByLabel('Society address name', { exact: true })
     .fill('https://bad.test');
