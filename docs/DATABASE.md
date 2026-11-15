@@ -55,17 +55,19 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 
 ### 2.1 Table inventory (MVP: 36 tables)
 
-| Module                  | Tables                                                                                                                                                                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Core (18)**           | `profiles`, `developers`, `societies`, `modules`, `module_configs`, `blocks`, `units`, `memberships`, `unit_occupants`, `guard_roster`, `notifications`, `push_subscriptions`, `audit_logs`, `error_logs`, `jobs`, `job_run_keys`, `rate_limits`, `auth_code_challenges` |
-| **Visitor (3)**         | `visitor_entries`, `visitor_pre_approvals`, `visitor_blacklist`                                                                                                                                                                                                          |
-| **Delivery (2)**        | `delivery_entries`, `delivery_preferences`                                                                                                                                                                                                                               |
-| **Billing (8)**         | `billing_charge_types`, `billing_bills`, `billing_bill_lines`, `billing_payments`, `billing_payment_allocations`, `billing_ledger_entries`, `billing_payment_details`, `billing_receipt_counters`                                                                        |
-| **Service Request (5)** | `service_request_categories`, `service_requests`, `service_request_comments`, `service_request_attachments`, `service_request_events`                                                                                                                                    |
+| Module                         | Tables                                                                                                                                                                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Core (18)**                  | `profiles`, `developers`, `societies`, `modules`, `module_configs`, `blocks`, `units`, `memberships`, `unit_occupants`, `guard_roster`, `notifications`, `push_subscriptions`, `audit_logs`, `error_logs`, `jobs`, `job_run_keys`, `rate_limits`, `auth_code_challenges` |
+| **Visitor (3)**                | `visitor_entries`, `visitor_pre_approvals`, `visitor_blacklist`                                                                                                                                                                                                          |
+| **Delivery (2)**               | `delivery_entries`, `delivery_preferences`                                                                                                                                                                                                                               |
+| **Billing (8)**                | `billing_charge_types`, `billing_bills`, `billing_bill_lines`, `billing_payments`, `billing_payment_allocations`, `billing_ledger_entries`, `billing_payment_details`, `billing_receipt_counters`                                                                        |
+| **Service Request (5)**        | `service_request_categories`, `service_requests`, `service_request_comments`, `service_request_attachments`, `service_request_events`                                                                                                                                    |
+| **Directory (P17 foundation)** | `directory_preferences`, `directory_vehicles`, `directory_emergency_contacts`                                                                                                                                                                                            |
+| **Expense (P16)**              | `expense_accounts`, `expense_categories`, `expenses`, `expense_book_entries`, `expense_month_locks`                                                                                                                                                                      |
 
-Total: 18 + 3 + 2 + 8 + 5 = **36**.
+Inventory above: **36 MVP tables + 3 P17 directory tables + 5 P16 expense tables**; other post-MVP module tables are described in Section 9.
 
-Post-MVP modules (staff, housekeeping, AMC, notice, amenity) are outlined in Section 9 and get migrations only when their module starts.
+Post-MVP modules (staff, housekeeping, AMC, notice, amenity, directory, expense) are outlined in Section 9. P17 and P16 have been tested locally only; module status follows the implementation plan.
 
 ### 2.2 Entity relationship diagram (MVP)
 
@@ -756,13 +758,13 @@ One row per resident vote on a common-area request. Migration `20261114083000_se
 
 ## 9. Post-MVP Modules
 
-| Module                | Tables                                                  | Key notes                                                                                                |
-| --------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Module                | Tables                                                                                                | Key notes                                                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `staff` (P2-1)        | `staff_members`, `staff_unit_links`, `staff_attendance`, `staff_day_blocks`, `staff_shift_attendance` | Built in P12; ID type + last four only (D-18); guard entry/exit; one open visit; unit-only day blocks; no payroll (D-19) |
-| `housekeeping` (P2-2) | `housekeeping_items`, `housekeeping_transactions`       | Append-only transactions; stock = sum; check blocks negative stock (HKP-3)                               |
-| `amc` (P2-3)          | `amc_contracts`, `amc_visits`                           | "Expiring soon/Expired" derived from `end_date`; documents in a private bucket                           |
-| `notice` (P2-4)       | `notices`, `notice_blocks`, `notice_reads`              | Built in P11; see Section 9.1                                                                            |
-| `amenity` (P2-5)      | `amenities`, `amenity_bookings`                         | Exclusion constraint prevents overlapping bookings per amenity                                           |
+| `housekeeping` (P2-2) | `housekeeping_items`, `housekeeping_transactions`                                                     | Append-only transactions; stock = sum; check blocks negative stock (HKP-3)                                               |
+| `amc` (P2-3)          | `amc_contracts`, `amc_visits`                                                                         | "Expiring soon/Expired" derived from `end_date`; documents in a private bucket                                           |
+| `notice` (P2-4)       | `notices`, `notice_blocks`, `notice_reads`                                                            | Built in P11; see Section 9.1                                                                                            |
+| `amenity` (P2-5)      | `amenities`, `amenity_bookings`                                                                       | Exclusion constraint prevents overlapping bookings per amenity                                                           |
 
 Each follows the same rules: `society_id`, same-society keys, RLS plus module-enabled check, append-only where money or stock is involved.
 
@@ -826,6 +828,42 @@ Migration `20261115160000_amenity_booking.sql` adds `amenities`, retained recurr
 
 P14 and P15 migrations are local only; hosted application requires separate owner approval.
 
+### 9.6 Resident & vehicle directory tables (P17)
+
+Migration `20261115170000_directory_foundation.sql` registers `directory` disabled by default and adds the first three P17 tables. Directory data tables revoke direct access from all API roles; narrow security-definer functions return only the fields needed by each audience.
+
+- `directory_preferences` stores one membership's resident visibility choices. Defaults are name and unit visible, phone hidden. A resident may change only their own settings through `directory_set_visibility`; changes are audited.
+- `directory_vehicles` links a vehicle to one current unit occupant. Registration values are stored uppercase without spaces or hyphens; an active registration is unique within a society. Guard lookup only returns verified vehicles and returns vehicle type + unit number, never the owner's name, email or phone.
+- `directory_emergency_contacts` stores a unit occupant's contact name, relationship and phone; it is private, soft-deactivated and has no direct table access.
+- `directory_resident_list` returns active occupants to active residents using visibility preferences; admin/committee see full resident contact data. A hidden name removes that entry from the resident list; hidden unit/phone values return NULL.
+- `directory_vehicle_save` and `directory_emergency_contact_save` enforce active unit membership, support request-ID retries, and audit changes without copying names, registration numbers, contact phones or free-text relationships into the audit payload. Residents edit only their own records; admins may manage any active occupant's records. `directory_vehicle_verify` is admin-only; changes to plate/type/unit/occupant, deactivation and reactivation clear verification.
+- `directory_vehicle_list` returns vehicles to residents for their units and to admin/committee for the society. `directory_emergency_contacts_list` exposes contacts to the owning unit's active residents and to admin/committee (D-46); guards never receive contact details.
+- Migration `20261115180000_directory_lifecycle_pagination.sql` adds bounded `{ items, total, limit, offset }` list RPCs (1–100 rows, default 25). Resident name/unit search runs after privacy filtering, with hidden unit IDs also returned as NULL. Resident self-service reads use `directory_my_preferences` and `directory_my_households`; management uses bounded resident pages for target selection.
+- Core `move_unit_occupant` transfers only the moving person's active vehicles/contacts and clears verification, with one audit entry per transfer. Preferences survive a move. Core `end_unit_occupancy` immediately deactivates all records for that person/unit, including previously inactive records, and sets `purge_after` to recorded `ended_at` plus one year. Preferences are scheduled only after the last occupancy ends. Existing ended occupancies are reconciled during migration.
+- Lifecycle maintenance runs even when the optional directory module is disabled; toggling the module alone neither erases nor deactivates records. Membership deactivation (including erasure preparation) schedules the same cleanup using `left_at`, or today when missing. Directory writes, moves, occupancy ends and membership cleanup serialize through a society-scoped advisory lock; household writes also lock the active occupancy.
+- The service-role-only `directory_retention_run` deletes eligible inactive vehicles/contacts and expired preferences, never records protected by a current active membership/occupancy. Reactivation clears a record's old purge date. Counts are validated by the daily privileged runner; purge audits contain counts only and repeat runs do not generate duplicate deletion events.
+- All lookups require the module enabled and an active society membership with the relevant role. Resident/admin/committee/guard routes and Server Actions enforce this boundary. Generated TypeScript types come from the fully migrated disposable local schema.
+
+Both directory migrations have been tested only against disposable local PostgreSQL; neither has been applied to a hosted database. Owner UAT and launch gates still precede live enablement.
+
+### 9.7 Society expenses & accounts (P16)
+
+Migration `20261115190000_expense_foundation.sql` adds the master data and expense records:
+
+- `expense_accounts`: named cash/bank accounts, signed integer-paise opening balance and opening date, active flag and actor/timestamps. A partial unique index permits one active cash account per society; multiple bank accounts are allowed.
+- `expense_categories`: society-defined, case-insensitively unique names with active flag and actor/timestamps.
+- `expenses`: date, payee, positive integer-paise amount, cash/bank/UPI/cheque mode, optional reference/description/receipt path, same-society account/category, status `pending_approval | posted | rejected`, approval flag, decision actor/note/time and unique `(society_id, created_by, client_request_id)`.
+
+Migration `20261115200000_expense_workflows.sql` registers `expense` (disabled by default, sort order 11) and adds:
+
+- `expense_book_entries`: the append-only cash and bank book. Each row is one `in` or `out` movement on one account with source `expense`, `income` (donation/interest/other), `billing_payment` or `reversal`. Uniques prevent a second posting per expense, billing payment or reversed entry and make client retries idempotent. A trigger rejects update, delete and truncate, serializes postings with a per-society advisory lock, and rejects entry dates before the account opened or inside a closed month.
+- `expense_month_locks`: one row per closed month. Only finished months can be closed, and not while expenses dated in that month await approval. Reopening deletes the lock and requires an audited reason.
+- Enabling the module seeds the ten standard categories (D-44). Confirmed `billing_payments` post as income to the admin-chosen account (`settings.billing_income_account_id`); payments confirmed before the setting was chosen are not backfilled. If a payment date precedes the account opening or falls in a closed month, the entry is booked on the society's local date, or skipped if that is also invalid. The chosen account cannot be deactivated.
+- Private bucket `expense-files` (JPEG/PNG/PDF, 5 MB) for receipts; administrators upload, administrators and committee read through five-minute signed links.
+- Security-definer RPCs, granted only to `authenticated`: `expense_settings_update`, `expense_account_save`, `expense_category_save`, `expense_record`, `expense_decide`, `expense_income_record`, `expense_entry_reverse`, `expense_month_close`, `expense_month_reopen`, `expense_workspace`, `expense_expenses_page`, `expense_entries_page` and `expense_report`. Admins manage; committee members read and approve; residents, guards and supervisors have no access. All writes require a writable society and are audited.
+
+Expenses at or below the threshold (default ₹50,000, `settings.approval_threshold_paise`) post immediately. Larger expenses wait until a committee member who did not record them approves; rejection needs a note. Expenses are not edited: reject or reverse and record again. Only expense and income entries can be reversed, once each. Opening details are fixed once an account has entries or pending expenses, or when the opening date falls in a closed month. Balances are opening balance plus entries up to the requested date. Reports cover up to two years, default to the April–March financial year, and include outstanding billing dues when billing is enabled. Every table enables RLS and revokes direct table access from every API role. These migrations and the generated types were verified against disposable local PostgreSQL only.
+
 ---
 
 ## 10. Reference: Module Settings Keys (`module_configs.settings`)
@@ -848,7 +886,9 @@ Defaults apply when a key is absent. Editable by developer unless marked **A** (
 | billing         | `reminders`                       | `{before_due_days: 3, on_due: true, overdue_every_days: 7}` | BIL-10; before may be 0; overdue interval must be positive                                                                                    |
 | billing         | `pending_confirmation_alert_days` | 3                                                           | BIL-17                                                                                                                                        |
 | service_request | `auto_close_days`                 | 3                                                           | SRQ-3                                                                                                                                         |
-| staff           | `resident_approval_required`       | `true`                                                      | **A**; audited. Matching profiles always require administrator review (PRD D-37)                                                              |
+| staff           | `resident_approval_required`      | `true`                                                      | **A**; audited. Matching profiles always require administrator review (PRD D-37)                                                              |
+| expense         | `approval_threshold_paise`        | 5000000 (₹50,000)                                           | **A** via `expense_settings_update`; audited. Expenses above it need committee approval (EXP-6, D-44)                                         |
+| expense         | `billing_income_account_id`       | `null` (off)                                                | **A**; audited. Active account that receives confirmed billing payments as income (EXP-4)                                                     |
 
 UPI details are **not** settings: they have their own table with a format check (Section 6.8).
 
@@ -885,19 +925,20 @@ P7A registers billing settings as developer-managed, validates the same closed s
 
 ### 11.3 Retention (PRD A-09, A-28, DAT-4; your decision on financial records)
 
-| Data                                                        | Retention                                                         | Action at end                                                                               |
-| ----------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Visitor entries, delivery entries                           | 1 year (A-28)                                                     | Anonymise: clear visitor name, phone, vehicle, photo (file deleted); keep counts/timestamps |
-| Pre-approvals                                               | 1 year after validity                                             | Delete                                                                                      |
-| Service requests, comments, attachments                     | 2 years after closing **[DBA-03]**                                | Delete files and rows                                                                       |
-| Notifications                                               | 180 days **[DBA-04]**                                             | Delete                                                                                      |
-| Error logs                                                  | 90 days                                                           | Delete                                                                                      |
-| Audit logs                                                  | 2 years                                                           | Delete                                                                                      |
-| Jobs                                                        | 90 days                                                           | Delete                                                                                      |
-| Bills, payments, allocations, ledger, receipts, UPI details | **Kept forever in MVP** **[DBD-2, approved]**                     | None                                                                                        |
-| Rate-limit counters                                         | 1 day                                                             | Delete                                                                                      |
-| Closed staff gate attendance                                | 1 year (A-28)                                                     | Delete; open visits remain until checked out                                                |
-| Push subscriptions                                          | Until the push service reports them gone or the user removes them | Delete                                                                                      |
+| Data                                                        | Retention                                                                                                         | Action at end                                                                                                   |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Visitor entries, delivery entries                           | 1 year (A-28)                                                                                                     | Anonymise: clear visitor name, phone, vehicle, photo (file deleted); keep counts/timestamps                     |
+| Pre-approvals                                               | 1 year after validity                                                                                             | Delete                                                                                                          |
+| Service requests, comments, attachments                     | 2 years after closing **[DBA-03]**                                                                                | Delete files and rows                                                                                           |
+| Notifications                                               | 180 days **[DBA-04]**                                                                                             | Delete                                                                                                          |
+| Error logs                                                  | 90 days                                                                                                           | Delete                                                                                                          |
+| Audit logs                                                  | 2 years                                                                                                           | Delete                                                                                                          |
+| Jobs                                                        | 90 days                                                                                                           | Delete                                                                                                          |
+| Bills, payments, allocations, ledger, receipts, UPI details | **Kept forever in MVP** **[DBD-2, approved]**                                                                     | None                                                                                                            |
+| Rate-limit counters                                         | 1 day                                                                                                             | Delete                                                                                                          |
+| Closed staff gate attendance                                | 1 year (A-28)                                                                                                     | Delete; open visits remain until checked out                                                                    |
+| Directory vehicles, emergency contacts and preferences      | 1 year after recorded occupancy end; preferences after the last occupancy; membership deactivation uses `left_at` | Delete eligible inactive records; protect current active memberships/occupancies; retain required audit records |
+| Push subscriptions                                          | Until the push service reports them gone or the user removes them                                                 | Delete                                                                                                          |
 
 All purges are performed by the daily job (idempotent, logged). It removes expired visitor, delivery and request files through the Supabase Storage API before changing or deleting their database rows. If Storage removal fails, the database purge is not attempted; if a file still has a Storage object row, its owning record is retained for a later retry. The audit entry reports unreferenced files by private bucket but does not delete them. Purging a pre-approval detaches any retained visitor entry from that approval while preserving the entry's `pre_approved` source. The retention function is service-role-only; its narrowly scoped append-only trigger exception is enabled only inside that function's transaction.
 
@@ -915,7 +956,7 @@ A developer with a current MFA-verified session can request erasure. The process
 | `delivery-photos` | Parcel photos      | `{society_id}/{entry_id}/…`                                                     | Same as above                                                                      | Guard/admin                                                         |
 | `request-files`   | Request photos     | `{society_id}/{user_id}/requests/{client_request_id}/{random_uuid}.jpg or .png` | Members allowed to read the parent request, and the uploader before it is attached | Requester or admin                                                  |
 | `notice-files`    | Notice attachments | `{society_id}/notices/{upload_id}/{random_uuid}.jpg, .png or .pdf`              | Admin, committee, and members who can see the notice                               | Admin or committee; they can delete only files no notice references |
-| `staff-photos`    | Staff photos       | `{society_id}/staff/{uploader_user_id}/{random_uuid}.jpg or .png`                | Admin, linked residents, and guards with active staff links                         | Admin or uploader; only while no staff profile references the file    |
+| `staff-photos`    | Staff photos       | `{society_id}/staff/{uploader_user_id}/{random_uuid}.jpg or .png`               | Admin, linked residents, and guards with active staff links                        | Admin or uploader; only while no staff profile references the file  |
 | `payment-proofs`  | UPI screenshots    | `{society_id}/{payment_id}/…`                                                   | Admin, committee, the submitter                                                    | Submitter                                                           |
 | `society-assets`  | Logo, UPI QR       | `{society_id}/…`                                                                | Every member of the society                                                        | Admin                                                               |
 
