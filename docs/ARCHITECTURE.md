@@ -97,22 +97,22 @@ flowchart LR
 
 ## 3. MVP vs Future Scalability
 
-| Concern              | MVP (build now)                                                                                | Future (only when triggered)                                         | Trigger                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------- |
-| Deployment           | One Next.js app; Supabase projects for live, demo and shared non-production use (AD-13, AD-14) | Read replica, region pinning                                         | p95 latency or load issues                                |
-| Tenancy              | Shared DB, `society_id` + RLS (PRD D-24)                                                       | Dedicated DB for a large/enterprise society                          | Contractual isolation request                             |
-| Jobs                 | Set-based SQL functions + one daily scheduled endpoint + lazy expiry                           | Queue (e.g., a managed queue)                                        | Jobs exceed function time limits or need retries at scale |
-| Realtime             | Supabase Realtime + polling fallback                                                           | Dedicated pub/sub                                                    | Connection limits reached                                 |
-| Search/reports       | SQL queries with indexes, CSV export                                                           | Materialised views, read replica, analytics store                    | Reports > 2 s at target scale                             |
-| Notifications        | In-app + Web Push + email                                                                      | SMS/WhatsApp for alerts and mobile OTP, preference center (PRD D-06) | User demand                                               |
-| Payments             | UPI direct to society + admin confirmation                                                     | Payment gateway with automatic confirmation                          | Admin confirmation workload becomes a burden              |
-| Login methods        | Email code                                                                                     | Mobile OTP, email + password, mobile + password, Google (PRD A-35)   | User demand                                               |
-| Mobile               | Responsive PWA                                                                                 | Native/React Native wrapper                                          | PRD D-23 changes (iOS push limits)                        |
-| Offline              | None (clear offline state)                                                                     | Guard offline queue                                                  | PRD D-25 changes                                          |
-| Files                | Supabase Storage                                                                               | CDN/image transformation                                             | Storage/bandwidth cost                                    |
-| Observability        | Sentry + `error_logs` + `audit_logs`                                                           | Metrics/tracing stack                                                | Multiple on-call needs                                    |
-| Subscription billing | Manual (PRD D-08)                                                                              | In-app plan billing                                                  | PRD change                                                |
-| Languages            | English, strings externalised                                                                  | i18n catalogs                                                        | PRD NFR-13                                                |
+| Concern              | MVP (build now)                                                                                | Future (only when triggered)                                                                                                  | Trigger                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Deployment           | One Next.js app; Supabase projects for live, demo and shared non-production use (AD-13, AD-14) | Read replica, region pinning                                                                                                  | p95 latency or load issues                                                          |
+| Tenancy              | Shared DB, `society_id` + RLS (PRD D-24)                                                       | Dedicated DB for a large/enterprise society                                                                                   | Contractual isolation request                                                       |
+| Jobs                 | Set-based SQL functions + one daily scheduled endpoint + lazy expiry                           | Queue (e.g., a managed queue)                                                                                                 | Jobs exceed function time limits or need retries at scale                           |
+| Realtime             | Supabase Realtime + polling fallback                                                           | Dedicated pub/sub                                                                                                             | Connection limits reached                                                           |
+| Search/reports       | SQL queries with indexes, CSV export                                                           | Materialised views, read replica, analytics store                                                                             | Reports > 2 s at target scale                                                       |
+| Notifications        | In-app + Web Push + email                                                                      | SMS/WhatsApp for alerts and mobile OTP, preference center (PRD D-06)                                                          | User demand                                                                         |
+| Payments             | UPI direct to society + admin confirmation                                                     | Payment gateway with automatic confirmation                                                                                   | Admin confirmation workload becomes a burden                                        |
+| Login methods        | Email code                                                                                     | Mobile OTP, email + password, mobile + password, Google (PRD A-35)                                                            | User demand                                                                         |
+| Mobile               | Responsive PWA                                                                                 | Android app for residents and guards: TWA, then Capacitor, native only if needed (IMPLEMENTATION_PLAN "Future — Android App") | PRD D-23 changes (Play Store listing, push or SOS sound reliability, offline needs) |
+| Offline              | None (clear offline state)                                                                     | Guard offline queue                                                                                                           | PRD D-25 changes                                                                    |
+| Files                | Supabase Storage                                                                               | CDN/image transformation                                                                                                      | Storage/bandwidth cost                                                              |
+| Observability        | Sentry + `error_logs` + `audit_logs`                                                           | Metrics/tracing stack                                                                                                         | Multiple on-call needs                                                              |
+| Subscription billing | Manual (PRD D-08)                                                                              | In-app plan billing                                                                                                           | PRD change                                                                          |
+| Languages            | English, strings externalised                                                                  | i18n catalogs                                                                                                                 | PRD NFR-13                                                                          |
 
 Scale target for MVP design (PRD NFR-4): 100 societies, 100k users, ≤ 1,500 units per society. This is comfortably within a single managed Postgres instance with proper indexes.
 
@@ -138,7 +138,7 @@ Principle: **the database enforces what must never happen; the service layer enf
 
 - **Server Components by default** for data-bearing pages; **Client Components** only for interactivity (forms, dialogs, realtime widgets, pickers).
 - Mutations use **Server Actions** calling module services. No client-side `fetch` to internal endpoints for ordinary reads/writes.
-- Realtime subscriptions are client-side, scoped by society and RLS, and **only** for: visitor status (guard waiting panel, resident pending approvals), delivery response status, notification inbox count. Everything else uses fetch-on-navigation or refresh.
+- Realtime subscriptions are client-side, scoped by society and RLS, and **only** for: visitor status (guard waiting panel, resident pending approvals), delivery response status, notification inbox count, and the P21 SOS alert banner (a hint from the user's own `notifications` inserts). Everything else uses fetch-on-navigation or refresh.
 - No global client state library. State lives in the URL (filters, page, sort), server data, and local component state. Forms use React Hook Form.
 
 ### 5.2 App shells (DESIGN.md Section 5)
@@ -153,7 +153,17 @@ One Next.js app, role-specific route groups with distinct layouts:
 | `(admin)`    | Admin, committee, HK supervisor | Bottom tabs / sidebar                                        |
 | `developer`  | Platform developer              | Dark top bar, separate login, separate cookie/session policy |
 
-The shared shells accept the active society's enabled modules, roles, society switcher data, and notification count, then build navigation from the module registry and role permissions (DESIGN.md 5.3). Core navigation is always retained; disabled or unauthorized modules produce no item, heading, or gap. The current route-group layouts provide fixed role shells and a core-only module fallback until authenticated request-context wiring; they must not invent a user or society session. The host-aware marketing/environment entry page stays at the app root so it is not framed by the unauthenticated shell. A disabled module renders no nav item, and its routes return the module-disabled page.
+The shared shells accept the active society's enabled modules, roles, society switcher data, and notification count, then build navigation from the module registry and role permissions (DESIGN.md 5.3). Core navigation is always retained; disabled or unauthorized modules produce no item, heading, or gap. Resident and administrative route-group layouts load authenticated request context and pass its enabled modules; the administrative layout selects the admin or committee shell from the current roles. Shared shells retain a Core-only fallback for callers that omit enabled-module data. Layouts must not invent a user or society session. The host-aware marketing/environment entry page stays at the app root so it is not framed by the unauthenticated shell. A disabled module renders no nav item, and its routes return the module-disabled page.
+
+The H1/H2 public homepage reuses `core/website/marketing-page.tsx`, its central copy in `content.ts`, shared controls and the existing society-address form. It server-renders curated availability copy and local synthetic fixture screenshots, without module queries, authenticated data or new routes. Public JPEG assets live in the existing `public/` folder and use static imports with Next Image's responsive delivery. The installed framework's internal optimiser requests omit the Host header, so string public-path sources are rejected by Homeish's exact-host proxy. Static imports emit `/_next/static/media/` sources covered by the existing framework-static matcher exclusion; do not weaken host validation or CSP to work around this. Browser tests verify that all three images actually decode, including against a production build. PRD D-49 keeps **Try demo** natively disabled with **Demo coming soon**, no destination and no inline substitute; separate demo setup/connection is deferred until product readiness and explicit rollout approval. Existing host routing and browser-memory demo/reset code are unchanged.
+
+P18's optional move workflow lives in `src/core/tenancy/moves/`; the existing `core/tenancy/request-context.ts` and `session.ts` remain always-on platform code. The module registry imports only its pure settings/validation definitions. Authenticated screens call authorised operations, which validate inputs/results around transactional database RPCs; no screen queries tenancy tables. Approval schedules and admin-confirmed completion changes Core occupancy, preserving invitation privacy and P17 lifecycle. File handling reuses private Storage and the existing file-route boundary, never a developer-wide document bypass. This local build is gated by D-50 and the implementation plan, not a deployment.
+
+The resident, administrative and guard tenancy routes reuse role shells, loading boundaries and registry navigation. Page loaders first request target-free capabilities; only writable creation views fetch scoped tenant/unit/booking choices. Committee and guard screens receive status-only projections; administrative private detail requires admin capability even for a committee member who also owns a unit. Shared controls handle forms, status-only filters, exact pagination, versioned confirmations and file states. Client-safe file constraints are separate from server-only attachment verification. Upload/view URLs are bound to the exact Storage endpoint and parent path, and aborted/stale uploads cannot replace a newer selection. Synthetic tenancy fixtures inject all seven actions and use in-memory file transport by default; intercepted browser tests explicitly block real Server Actions and hosted requests.
+
+P19 Document Repository (`document`), P20 Parking (`parking`) and P21 Emergency & SOS (`sos`) follow the same pattern, all disabled by default. Their services live in `src/core/document/`, `src/core/parking/` and `src/core/sos/` (validation, operations, presentation, and `files.ts` for document and parking). The registry imports only their settings schemas; screens call authorised operations around security-definer RPCs, and no screen queries module tables. Document uploads and downloads are issued by the module's own Server Actions, so every download is audited before a signed link exists; parking photos use the shared file routes. Each module has resident, administrative and (for parking and SOS) guard routes with loading boundaries, and a synthetic development-only fixture at `/fixtures/document`, `/fixtures/parking` and `/fixtures/sos`.
+
+The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client component rendered by the shared app shell for guards and for any user whose society has `sos` enabled. It loads `sos_my_alerts` on mount, rechecks every 30 seconds, and treats Realtime inserts on the user's own `notifications` rows as a hint to reload, so it adds no Realtime table. It stays on every screen while the alert is open until the recipient dismisses their own copy ("Seen — stop alert" for responders, who also get a Respond link; "Dismiss" for residents); acknowledging, updating and closing happen on the SOS screens. On guard devices it plays a short Web Audio alarm every 30 seconds, with visible mute/unmute and "turn on alert sound" controls when the browser blocks autoplay; a device that cannot play sound shows a "keep this screen in view" message. Delivery is in-app and Realtime only, with no push, SMS or calls (PRD D-41).
 
 ### 5.3 PWA scope (PRD D-23)
 
@@ -218,6 +228,8 @@ Every server entry point constructs a **RequestContext** containing: request ID,
 ### 6.3.1 `jobs` table use
 
 Long-running admin actions write a job row (type, status, progress, result summary, society, created by). The UI shows it in the Jobs list (DESIGN.md 11.3). No external queue is introduced in MVP.
+
+The global privileged retention task (`src/core/privileged/retention.ts`) also covers the `parking-photos` and `document-files` buckets. It lists candidates with `parking_retention_files_list` (report photos past `photo_retention_days`, unattached uploads older than 24 hours) and `document_retention_files_list` (unattached uploads older than 24 hours), removes the Storage objects first, then calls `parking_retention_run` to mark deleted photos and validates its `{ photos_deleted }` count. Documents have no row-level purge; SOS records, passes and reports are kept.
 
 ---
 
@@ -313,6 +325,7 @@ Allowed only in a single isolated server module (`src/core/privileged/`), never 
 3. Push notification sender (reading subscriptions).
 4. Sign-in invitation check: `public.has_signin_access(email)` is service-role-only and returns only a boolean, so codes are sent only to expected people while the user-visible answer stays generic (API 2.1). `public.claim_memberships()` is callable only by an authenticated user and links that user's verified-email invitations.
 5. Developer-console cross-society reads after the developer check passes.
+6. Tenancy NOC artifact attestation (owner approved 2026-11-15): compare the immutable stored PDF byte-for-byte with the approved server rendering, then attest only that society/move/path/version/issuer preparation. The final issue RPC still runs under the administrator's own session and rechecks current role, state and authoritative dues. Authenticated callers cannot attest files or replace/delete an uploaded tenancy object.
 
 Confirming a payment, changing UPI details and similar admin actions are **not** privileged: they run under the admin's own session and are checked by RLS and SQL functions.
 
@@ -322,7 +335,21 @@ Each privileged function takes an explicit society ID and re-checks it; none ret
 
 ## 9. Folder Structure
 
-Single repository, single Next.js app. Module folders are self-contained and registered in one place.
+Single repository, single Next.js app. The diagram describes the target module layout, not a second source tree to create. Current domain services remain under `src/core/<domain>/`, domain UI under `src/components/<domain>/`, and registration in `src/core/modules/index.ts` (see AGENTS.md Section 04).
+
+P18 adds the following folders within that existing implementation:
+
+- `src/core/tenancy/moves/`: the optional move workflow, schemas, operations, queries, files and NOC rendering; existing platform session/request-context files remain always on.
+- `src/components/tenancy/`: shared schedules, private details, forms, document controls and server-page loaders.
+- `src/app/(resident)/tenancy/`, `src/app/(admin)/admin/tenancy/` and `src/app/(guard)/guard/tenancy/`: thin authenticated routes and loading boundaries.
+- `src/app/fixtures/tenancy/`: synthetic development-only UI; `page.fixture.tsx` is excluded from production.
+
+P19–P21 add, in the same way:
+
+- `src/core/document/`, `src/core/parking/` and `src/core/sos/`: validation (settings schemas used by the registry), operations, presentation and, for document and parking, server-only file helpers.
+- `src/components/document/`, `src/components/parking/` and `src/components/sos/` (including the app-shell `alert-banner.tsx`).
+- `src/app/(resident)/{documents,parking,sos}/`, `src/app/(admin)/admin/{documents,parking,sos}/` and `src/app/(guard)/guard/{parking,sos}/`: thin routes, Server Actions and loading boundaries.
+- `src/app/fixtures/{document,parking,sos}/`: synthetic development-only UI.
 
 ```
 homeish/
@@ -332,7 +359,7 @@ homeish/
 ├─ .gitignore
 ├─ .nvmrc
 ├─ .prettierrc.json
-├─ docs/                          Project docs, including name-logo-options.svg (unapproved concepts)
+├─ docs/                          Project docs; audits/pilot-readiness-audit.md and roadmap/deferred-features.md
 ├─ eslint.config.mjs
 ├─ next.config.ts
 ├─ package.json
@@ -400,7 +427,7 @@ homeish/
 └─ vitest.integration.config.ts
 ```
 
-Foundation status: the Next.js shell, route-group boundaries, health route, shared Button/TextInput primitives, design tokens, environment validation and baseline CI checks are implemented. Public marketing, host allow-listing, browser-only synthetic preview and beta entry are also implemented. Maplewood's host is reserved as a disabled placeholder; active society hosts, module routes, database configuration and role shells are still pending their planned phases.
+Current phase and validation status is recorded in IMPLEMENTATION_PLAN.md. Authenticated role shells and domain implementations already exist in the current `src/core/` and `src/components/` locations; do not recreate them from the target `src/modules/` diagram. Implemented or locally verified code is not proof of hosted rollout or society enablement.
 
 Rules:
 

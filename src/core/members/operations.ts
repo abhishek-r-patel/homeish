@@ -214,7 +214,11 @@ function raiseRpcError(
   if (error.code === '23505' || error.code === '23514') {
     throw new AppError('CONFLICT', {
       reason: 'invalid_state',
-      message: 'This change conflicts with the current society records.',
+      message:
+        error.code === '23514' &&
+        error.message === 'Tenant access requires a completed move-in workflow.'
+          ? 'Use Move-in / Move-out for this tenant. Complete their move-in before granting unit access; for a transfer, complete move-out first and request move-in to the new unit.'
+          : 'This change conflicts with the current society records.',
     });
   }
   if (error.code === '22023') {

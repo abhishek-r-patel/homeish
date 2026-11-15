@@ -5,15 +5,27 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
   notice: '/notices',
   service_request: '/requests',
   visitor_entry: '/visitors',
+  tenancy_move: '/tenancy',
+  tenancy_admin: '/admin/tenancy',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
   amenity_booking: '/amenities',
   amc: '/admin/amc',
+  expense: '/admin/expenses',
   housekeeping: '/housekeeping',
   billing_payment: '/bills?tab=payments',
   billing_payment_details: '/admin/billing?tab=payment-settings',
   billing_payment_review: '/admin/billing?tab=payments',
+  tenancy_schedule: '/guard/tenancy',
+  parking: '/parking',
+  parking_admin: '/admin/parking',
+  parking_guard: '/guard/parking',
+  sos_alert: '/sos',
+  sos_admin: '/admin/sos',
+  sos_guard: '/guard/sos',
+  document: '/documents',
+  document_admin: '/admin/documents',
 };
 
 export function notificationPath(

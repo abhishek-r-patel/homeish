@@ -19,6 +19,23 @@ import {
   staffSettingsSchema,
 } from '../staff/validation';
 import { amcSettingsSchema, DEFAULT_AMC_SETTINGS } from '../amc/validation';
+import {
+  DEFAULT_EXPENSE_SETTINGS,
+  expenseSettingsSchema,
+} from '../expense/validation';
+import {
+  DEFAULT_TENANCY_SETTINGS,
+  tenancySettingsSchema,
+} from '../tenancy/moves/validation';
+import {
+  DEFAULT_DOCUMENT_SETTINGS,
+  documentSettingsSchema,
+} from '../document/validation';
+import {
+  DEFAULT_PARKING_SETTINGS,
+  parkingSettingsSchema,
+} from '../parking/validation';
+import { DEFAULT_SOS_SETTINGS, sosSettingsSchema } from '../sos/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -518,6 +535,237 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
+  directory: {
+    core: false,
+    defaultSettings: emptySettings,
+    key: 'directory',
+    name: 'Resident & Vehicle Directory',
+    navigation: {
+      admin: [
+        {
+          href: '/admin/directory',
+          label: 'Directory',
+          permission: 'directory:list',
+        },
+      ],
+      resident: [
+        {
+          href: '/directory',
+          label: 'Directory',
+          permission: 'directory:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/directory',
+          label: 'Directory',
+          permission: 'directory:list',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/directory',
+          label: 'Vehicle lookup',
+          permission: 'directory:lookup_vehicle',
+        },
+      ],
+    },
+    permissions: {
+      'directory:list': ['admin', 'committee', 'resident'],
+      'directory:manage': ['admin'],
+      'directory:manage_household': ['resident'],
+      'directory:lookup_vehicle': ['guard'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: emptySettingsSchema,
+  },
+  expense: {
+    core: false,
+    defaultSettings: DEFAULT_EXPENSE_SETTINGS,
+    key: 'expense',
+    name: 'Society Expenses & Accounts',
+    navigation: {
+      admin: [
+        {
+          href: '/admin/expenses',
+          label: 'Accounts',
+          permission: 'expense:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/expenses',
+          label: 'Accounts',
+          permission: 'expense:list',
+        },
+      ],
+    },
+    permissions: {
+      'expense:list': ['admin', 'committee'],
+      'expense:manage': ['admin'],
+      'expense:approve': ['committee'],
+    },
+    // Admins change these through the validated expense setup screen.
+    settingsAccess: {
+      approval_threshold_paise: 'developer',
+      billing_income_account_id: 'developer',
+    },
+    settingsSchema: expenseSettingsSchema,
+  },
+  tenancy: {
+    core: false,
+    defaultSettings: DEFAULT_TENANCY_SETTINGS,
+    key: 'tenancy',
+    name: 'Move-in, Move-out & Tenancy',
+    navigation: {
+      resident: [
+        {
+          href: '/tenancy',
+          label: 'Move-in / Move-out',
+          permission: 'tenancy:list',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/tenancy',
+          label: 'Move-in / Move-out',
+          permission: 'tenancy:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/tenancy',
+          label: 'Moving schedule',
+          permission: 'tenancy:list',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/tenancy',
+          label: 'Moving schedule',
+          permission: 'tenancy:guard',
+        },
+      ],
+    },
+    permissions: {
+      'tenancy:list': ['admin', 'committee', 'resident'],
+      'tenancy:create': ['admin', 'resident'],
+      'tenancy:consent': ['resident'],
+      'tenancy:manage': ['admin'],
+      'tenancy:files': ['admin', 'resident'],
+      'tenancy:guard': ['guard'],
+    },
+    settingsAccess: { police_verification_required: 'admin' },
+    settingsSchema: tenancySettingsSchema,
+  },
+  document: {
+    core: false,
+    defaultSettings: DEFAULT_DOCUMENT_SETTINGS,
+    key: 'document',
+    name: 'Document Repository',
+    navigation: {
+      resident: [
+        {
+          href: '/documents',
+          label: 'Documents',
+          permission: 'document:list',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/documents',
+          label: 'Documents',
+          permission: 'document:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/documents',
+          label: 'Documents',
+          permission: 'document:list',
+        },
+      ],
+    },
+    permissions: {
+      'document:list': ['admin', 'committee', 'resident'],
+      'document:manage': ['admin'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: documentSettingsSchema,
+  },
+  parking: {
+    core: false,
+    defaultSettings: DEFAULT_PARKING_SETTINGS,
+    key: 'parking',
+    name: 'Parking',
+    navigation: {
+      resident: [
+        { href: '/parking', label: 'Parking', permission: 'parking:list' },
+      ],
+      admin: [
+        {
+          href: '/admin/parking',
+          label: 'Parking',
+          permission: 'parking:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/parking',
+          label: 'Parking',
+          permission: 'parking:list',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/parking',
+          label: 'Parking',
+          permission: 'parking:guard',
+        },
+      ],
+    },
+    permissions: {
+      'parking:list': ['admin', 'committee', 'resident'],
+      'parking:manage': ['admin'],
+      'parking:request': ['resident'],
+      'parking:visitor_pass': ['resident'],
+      'parking:report': ['guard', 'resident'],
+      'parking:guard': ['guard'],
+    },
+    settingsAccess: { photo_retention_days: 'admin' },
+    settingsSchema: parkingSettingsSchema,
+  },
+  sos: {
+    core: false,
+    defaultSettings: DEFAULT_SOS_SETTINGS,
+    key: 'sos',
+    name: 'Emergency & SOS',
+    navigation: {
+      resident: [{ href: '/sos', label: 'Emergency', permission: 'sos:raise' }],
+      admin: [
+        { href: '/admin/sos', label: 'Emergency', permission: 'sos:list' },
+      ],
+      committee: [
+        { href: '/admin/sos', label: 'Emergency', permission: 'sos:list' },
+      ],
+      guard: [
+        { href: '/guard/sos', label: 'Emergency', permission: 'sos:respond' },
+      ],
+    },
+    permissions: {
+      'sos:raise': ['guard', 'resident'],
+      'sos:list': ['admin', 'committee', 'guard', 'resident'],
+      'sos:respond': ['admin', 'committee', 'guard'],
+      'sos:manage': ['admin'],
+    },
+    settingsAccess: {
+      notify_guards: 'admin',
+      notify_admins: 'admin',
+      notify_committee: 'admin',
+      resident_scope: 'admin',
+    },
+    settingsSchema: sosSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -544,18 +792,39 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'amc',
     'notice',
     'amenity',
+    'directory',
+    'expense',
+    'tenancy',
+    'sos',
+    'document',
+    'parking',
   ],
   committee: [
     'core',
     'billing',
+    'expense',
     'service_request',
     'delivery',
     'notice',
     'housekeeping',
     'amc',
     'amenity',
+    'directory',
+    'tenancy',
+    'sos',
+    'document',
+    'parking',
   ],
-  guard: ['core', 'visitor', 'delivery', 'staff'],
+  guard: [
+    'core',
+    'visitor',
+    'delivery',
+    'staff',
+    'directory',
+    'tenancy',
+    'sos',
+    'parking',
+  ],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
     'core',
@@ -566,6 +835,11 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'staff',
     'notice',
     'amenity',
+    'directory',
+    'tenancy',
+    'sos',
+    'document',
+    'parking',
   ],
 };
 

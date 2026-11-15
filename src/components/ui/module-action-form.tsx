@@ -8,7 +8,9 @@ import {
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
+import { ZodError } from 'zod';
 import type { ServerActionResult } from '@/core/actions/server-action';
+import { ValidationError } from '@/core/errors';
 import { Button } from './button';
 
 export type ModuleFormAction = (
@@ -24,15 +26,17 @@ export function ModuleActionForm({
   confirmMessage,
   onSaved,
   refresh = true,
+  submitDisabled = false,
 }: {
   action: ModuleFormAction;
   children: ReactNode;
-  input: (formData: FormData) => unknown;
+  input: (formData: FormData, clientRequestId: string | null) => unknown;
   submitLabel: string;
   idempotent?: boolean;
   confirmMessage?: string;
   onSaved?: (data: unknown) => void;
   refresh?: boolean;
+  submitDisabled?: boolean;
 }) {
   const router = useRouter();
   const retryId = useRef<string | null>(null);
@@ -50,17 +54,23 @@ export function ModuleActionForm({
       return;
     }
     try {
-      let payload = input(formData);
+      if (idempotent) retryId.current ??= crypto.randomUUID();
+      let payload = input(formData, idempotent ? retryId.current : null);
       if (idempotent) {
         if (typeof payload !== 'object' || payload === null) {
           throw new Error('The request could not be prepared.');
         }
-        retryId.current ??= crypto.randomUUID();
         payload = { ...payload, clientRequestId: retryId.current };
       }
       formData.set('input', JSON.stringify(payload));
-    } catch {
-      setLocalError('Check the form details and retry.');
+    } catch (error) {
+      setLocalError(
+        error instanceof ZodError
+          ? (error.issues[0]?.message ?? 'Check the form details and retry.')
+          : error instanceof ValidationError
+            ? (Object.values(error.fieldErrors ?? {})[0] ?? error.message)
+            : 'Check the form details and retry.',
+      );
       return;
     }
     setLocalError(null);
@@ -109,7 +119,11 @@ export function ModuleActionForm({
           ) : null}
         </div>
       ) : null}
-      <Button type="submit" disabled={pending} loading={pending}>
+      <Button
+        type="submit"
+        disabled={pending || submitDisabled}
+        loading={pending}
+      >
         {submitLabel}
       </Button>
     </form>

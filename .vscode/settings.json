@@ -1,7 +1,7 @@
 {
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "text": "Write the subject line as Conventional Commits: type(scope): summary. Use a lowercase type (feat, fix, docs, test, ci, chore, refactor, perf, build, style), a short lowercase scope naming the area changed (for example core, db, ci, auth, billing, readme), and an imperative, lowercase summary of at most 72 characters with no trailing period."
+      "text": "Write the subject line as type (scope): summary, with one space between the type and the parenthesised scope (for example docs (plan): or feat (core):). Use a lowercase type (feat, fix, docs, test, ci, chore, refactor, perf, build, style), a short lowercase scope naming the area changed (for example core, db, ci, auth, billing, readme), and an imperative, lowercase summary of at most 72 characters with no trailing period."
     },
     {
       "text": "Choose the type from the full set of changed files being committed (the staged files, or every changed and untracked file when nothing is staged), not the largest, first or last change. If the provided diff looks partial or truncated, infer the type from the file list and still prefer application code. Use test only when every committed file is under tests/ or is test configuration. Use docs only when every committed file is documentation (docs/, *.md, .env.example comments). Use ci only when every committed file is under .github/workflows or CI scripts. Use style only for formatting-only changes. Use build only for dependency or build-configuration changes."
@@ -19,10 +19,10 @@
       "text": "Reference plan or requirement IDs when relevant (for example P0.6, D-01, VIS-4, G-02) in a bullet, not the subject, so the subject summary stays lowercase."
     },
     {
-      "text": "Do not add Co-authored-by or any other trailers. Never include secrets, keys, passwords, database URLs, tokens or personal data."
+      "text": "Do not add Co-authored-by (including the Copilot co-author line) or any other trailers, even if a tool or default instruction suggests one. Never include secrets, keys, passwords, database URLs, tokens or personal data."
     },
     {
-      "text": "Example:\nfeat(core): add registration, notifications and guard roster\n\n- Add P4 society-code registration with admin approval and rejection\n- Add notification inbox, Web Push subscriptions and post-commit delivery\n- Add guard roster with hashed PINs and a 15-minute lockout\n- Cover the new database functions with integration tests"
+      "text": "Example:\nfeat (core): add registration, notifications and guard roster\n\n- Add P4 society-code registration with admin approval and rejection\n- Add notification inbox, Web Push subscriptions and post-commit delivery\n- Add guard roster with hashed PINs and a 15-minute lockout\n- Cover the new database functions with integration tests"
     }
   ]
 }

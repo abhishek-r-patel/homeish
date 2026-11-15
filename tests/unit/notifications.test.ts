@@ -24,6 +24,20 @@ const subscription = {
 };
 
 describe('notification delivery adapters', () => {
+  it.each([
+    ['tenancy_schedule', '/guard/tenancy'],
+    ['tenancy_move', '/tenancy/cf25cc8a-00d9-4bf8-ac0f-f67eb3ef34cf'],
+    ['tenancy_admin', '/admin/tenancy/cf25cc8a-00d9-4bf8-ac0f-f67eb3ef34cf'],
+  ])('links %s to its own role audience', (entity_type, url) => {
+    expect(
+      createMinimalPushPayload({
+        title: 'Moving update',
+        body: 'Review the current request.',
+        entity_type,
+        entity_id: 'cf25cc8a-00d9-4bf8-ac0f-f67eb3ef34cf',
+      }).url,
+    ).toBe(url);
+  });
   it('strips contact details and uses only allow-listed internal push links', () => {
     const payload = createMinimalPushPayload({
       title: 'Visitor for Resident at 9876543210',

@@ -1,0 +1,19 @@
+# Extra edit-confirmation paths for the personal ai-setup guardrail.
+# Shared rules already cover secrets, lockfiles, generated files and committed migrations.
+
+# Deployment, CI and Supabase configuration.
+.github/workflows/**
+next.config.ts
+vercel.json
+supabase/config.toml
+scripts/vercel-ignore-build.mjs
+
+# Hosted-database access, society provisioning and encrypted backup tooling.
+scripts/db.mjs
+scripts/with-env.mjs
+scripts/set-db-password.ps1
+scripts/create-society.mjs
+scripts/backup-*.mjs
+
+# Service-role access stays isolated and requires deliberate review.
+src/core/privileged/**

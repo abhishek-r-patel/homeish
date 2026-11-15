@@ -26,7 +26,7 @@ export function NoticeAttachmentUpload({
   id = 'notice-attachment',
 }: {
   initialPath?: string | null;
-  bucket?: 'notice-files' | 'amc-files';
+  bucket?: 'notice-files' | 'amc-files' | 'expense-files';
   id?: string;
 }) {
   const [path, setPath] = useState<string | null>(initialPath);

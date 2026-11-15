@@ -7,6 +7,7 @@ import {
 } from '../../../../core/errors';
 import {
   MAX_FILE_BYTES,
+  FILE_CONTENT_TYPES,
   SOCIETY_LOGO_CONTENT_TYPES,
   isBillingQrPath,
   isSocietyLogoPath,
@@ -15,9 +16,28 @@ import { readBillingPaymentDetails } from '../../../../core/billing/queries';
 import { runFileRoute } from '../../../../core/files/http';
 import { enforceRateLimit } from '../../../../core/rate-limit';
 import { authorizeRequest } from '../../../../core/permissions/authorize';
+import { prepareTenancyProofUpload } from '../../../../core/tenancy/moves/files';
+import { tenancyProofKindSchema } from '../../../../core/tenancy/moves/validation';
+import { prepareParkingPhotoUpload } from '../../../../core/parking/files';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 
 const issueSchema = z.discriminatedUnion('bucket', [
+  z
+    .object({
+      bucket: z.literal('parking-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('tenancy-files'),
+      moveId: z.uuid(),
+      kind: tenancyProofKindSchema,
+      contentType: z.enum(FILE_CONTENT_TYPES),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
   z
     .object({
       bucket: z.literal('society-assets'),
@@ -70,6 +90,14 @@ const issueSchema = z.discriminatedUnion('bucket', [
   z
     .object({
       bucket: z.literal('amc-files'),
+      contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      requestId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('expense-files'),
       contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
       requestId: z.uuid(),
@@ -142,6 +170,40 @@ export async function POST(request: Request) {
     '/api/files/upload-url',
     async (context, body) => {
       const input = parse(issueSchema, body);
+      if (input.bucket === 'parking-photos') {
+        const path = await prepareParkingPhotoUpload(context, input);
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the parking photo upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'tenancy-files') {
+        const path = await prepareTenancyProofUpload(context, input);
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the tenant proof upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
       if (input.bucket === 'payment-proofs') {
         authorizeRequest(context, {
           moduleKey: 'billing',
@@ -219,11 +281,21 @@ export async function POST(request: Request) {
         }
         return { path, signedUrl: data.signedUrl };
       }
-      if (input.bucket === 'notice-files' || input.bucket === 'amc-files') {
+      if (
+        input.bucket === 'notice-files' ||
+        input.bucket === 'amc-files' ||
+        input.bucket === 'expense-files'
+      ) {
+        const target = {
+          'notice-files': { moduleKey: 'notice', permission: 'notice:create' },
+          'amc-files': { moduleKey: 'amc', permission: 'amc:manage' },
+          'expense-files': {
+            moduleKey: 'expense',
+            permission: 'expense:manage',
+          },
+        } as const;
         authorizeRequest(context, {
-          moduleKey: input.bucket === 'notice-files' ? 'notice' : 'amc',
-          permission:
-            input.bucket === 'notice-files' ? 'notice:create' : 'amc:manage',
+          ...target[input.bucket],
           write: true,
         });
         const societyId = context.societyId;
@@ -242,7 +314,9 @@ export async function POST(request: Request) {
         const directory =
           input.bucket === 'notice-files'
             ? `${societyId}/notices/${input.requestId}`
-            : `${societyId}/${context.userId}/amc`;
+            : input.bucket === 'amc-files'
+              ? `${societyId}/${context.userId}/amc`
+              : `${societyId}/${context.userId}/expense`;
         const path = `${directory}/${crypto.randomUUID()}.${extension}`;
         const { data, error } = await context.db.storage
           .from(input.bucket)
