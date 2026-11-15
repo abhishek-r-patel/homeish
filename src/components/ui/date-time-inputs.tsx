@@ -325,49 +325,55 @@ export function TimePicker({
         {label}
         {required ? ' (required)' : ''}
       </legend>
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-space-2">
-        <SelectInput
-          id={`${id}-hour`}
-          label="Hour"
-          onChange={(event) =>
-            onChange({ ...value, hour: event.currentTarget.value })
-          }
-          options={hourOptions}
-          aria-describedby={describedBy}
-          aria-invalid={Boolean(error) || undefined}
-          required={required}
-          value={value.hour}
-        />
-        <SelectInput
-          id={`${id}-minute`}
-          label="Minute"
-          onChange={(event) =>
-            onChange({ ...value, minute: event.currentTarget.value })
-          }
-          options={minuteOptions}
-          aria-describedby={describedBy}
-          aria-invalid={Boolean(error) || undefined}
-          required={required}
-          value={value.minute}
-        />
-        <SelectInput
-          id={`${id}-period`}
-          label="AM/PM"
-          onChange={(event) => {
-            const period = event.currentTarget.value;
-            if (period === 'AM' || period === 'PM') {
-              onChange({ ...value, period });
+      <div className="flex flex-wrap items-end gap-space-2">
+        <div className="min-w-28 flex-1">
+          <SelectInput
+            id={`${id}-hour`}
+            label="Hour"
+            onChange={(event) =>
+              onChange({ ...value, hour: event.currentTarget.value })
             }
-          }}
-          options={[
-            { label: 'AM', value: 'AM' },
-            { label: 'PM', value: 'PM' },
-          ]}
-          aria-describedby={describedBy}
-          aria-invalid={Boolean(error) || undefined}
-          required={required}
-          value={value.period}
-        />
+            options={hourOptions}
+            aria-describedby={describedBy}
+            aria-invalid={Boolean(error) || undefined}
+            required={required}
+            value={value.hour}
+          />
+        </div>
+        <div className="min-w-28 flex-1">
+          <SelectInput
+            id={`${id}-minute`}
+            label="Minute"
+            onChange={(event) =>
+              onChange({ ...value, minute: event.currentTarget.value })
+            }
+            options={minuteOptions}
+            aria-describedby={describedBy}
+            aria-invalid={Boolean(error) || undefined}
+            required={required}
+            value={value.minute}
+          />
+        </div>
+        <div className="min-w-28 flex-1">
+          <SelectInput
+            id={`${id}-period`}
+            label="AM/PM"
+            onChange={(event) => {
+              const period = event.currentTarget.value;
+              if (period === 'AM' || period === 'PM') {
+                onChange({ ...value, period });
+              }
+            }}
+            options={[
+              { label: 'AM', value: 'AM' },
+              { label: 'PM', value: 'PM' },
+            ]}
+            aria-describedby={describedBy}
+            aria-invalid={Boolean(error) || undefined}
+            required={required}
+            value={value.period}
+          />
+        </div>
       </div>
       {timeZone ? (
         <p className="text-caption text-ink-muted">Time zone: {timeZone}</p>

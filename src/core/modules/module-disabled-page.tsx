@@ -6,17 +6,20 @@ type ModuleDisabledPageProps = {
   moduleKey: ModuleKey;
   returnHref?: string;
   returnLabel?: string;
+  embedded?: boolean;
 };
 
 export function ModuleDisabledPage({
   moduleKey,
   returnHref = '/',
   returnLabel = 'Back to Home',
+  embedded = false,
 }: ModuleDisabledPageProps) {
   const moduleName = MODULE_REGISTRY[moduleKey].name;
+  const Container = embedded ? 'section' : 'main';
 
   return (
-    <main className="mx-auto grid min-h-[50dvh] w-full max-w-content-narrow content-center gap-space-4 p-space-4">
+    <Container className="mx-auto grid min-h-[50dvh] w-full max-w-content-narrow content-center gap-space-4 p-space-4">
       <h1 className="text-title">{moduleName} is not available</h1>
       <p className="text-body text-ink-muted">
         This module is not enabled for your society. Existing information has
@@ -28,6 +31,6 @@ export function ModuleDisabledPage({
       >
         {returnLabel}
       </a>
-    </main>
+    </Container>
   );
 }

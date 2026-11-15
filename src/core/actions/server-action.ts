@@ -6,8 +6,23 @@ import {
   createRequestId,
   requestIdFromHeaders,
   type ErrorCode,
+  ValidationError,
 } from '../errors';
 import { logUnexpectedError } from '../logging/error-logger';
+
+export function readModuleActionInput(formData: FormData): unknown {
+  const raw = formData.get('input');
+  if (typeof raw !== 'string') {
+    throw new ValidationError({ form: 'The form details are missing. Retry.' });
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new ValidationError({
+      form: 'The form details are invalid. Check and retry.',
+    });
+  }
+}
 
 export type ServerActionResult<TData = never> =
   | { ok: true; message?: string; data?: TData }
