@@ -3757,6 +3757,324 @@ export type Database = {
           },
         ];
       };
+      tenancy_documents: {
+        Row: {
+          content_type: string;
+          created_at: string;
+          created_by: string;
+          deleted_at: string | null;
+          dues_checked_at: string | null;
+          dues_status: string | null;
+          id: string;
+          kind: string;
+          move_id: string;
+          path: string;
+          purge_after: string | null;
+          size_bytes: number;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          content_type: string;
+          created_at?: string;
+          created_by: string;
+          deleted_at?: string | null;
+          dues_checked_at?: string | null;
+          dues_status?: string | null;
+          id?: string;
+          kind: string;
+          move_id: string;
+          path: string;
+          purge_after?: string | null;
+          size_bytes: number;
+          society_id: string;
+        };
+        Update: {
+          content_type?: string;
+          created_at?: string;
+          created_by?: string;
+          deleted_at?: string | null;
+          dues_checked_at?: string | null;
+          dues_status?: string | null;
+          id?: string;
+          kind?: string;
+          move_id?: string;
+          path?: string;
+          purge_after?: string | null;
+          size_bytes?: number;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_documents_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_documents_move_fkey';
+            columns: ['society_id', 'move_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_moves';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_documents_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tenancy_events: {
+        Row: {
+          action: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          move_id: string;
+          reason: string | null;
+          request_id: string;
+          society_id: string;
+          status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          move_id: string;
+          reason?: string | null;
+          request_id: string;
+          society_id: string;
+          status: string;
+        };
+        Update: {
+          action?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          move_id?: string;
+          reason?: string | null;
+          request_id?: string;
+          society_id?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_events_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_events_move_fkey';
+            columns: ['society_id', 'move_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_moves';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_events_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tenancy_moves: {
+        Row: {
+          agreement_expires_on: string | null;
+          amenity_booking_id: string | null;
+          approved_at: string | null;
+          approved_by: string | null;
+          client_request_id: string;
+          completed_at: string | null;
+          completed_by: string | null;
+          completion_in_progress: boolean;
+          consented_at: string | null;
+          consented_by: string | null;
+          created_at: string;
+          created_by: string;
+          ends_at: string;
+          id: string;
+          kind: string;
+          last_expiry_reminder_days: number | null;
+          noc_artifact_verified_at: string | null;
+          noc_prepared_at: string | null;
+          noc_prepared_by: string | null;
+          noc_prepared_path: string | null;
+          noc_prepared_snapshot: Json | null;
+          occupancy_id: string;
+          owner_consent_occupancy_id: string | null;
+          society_id: string;
+          starts_at: string;
+          status: string;
+          tenant_membership_id: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          agreement_expires_on?: string | null;
+          amenity_booking_id?: string | null;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          client_request_id: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          completion_in_progress?: boolean;
+          consented_at?: string | null;
+          consented_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          ends_at: string;
+          id?: string;
+          kind: string;
+          last_expiry_reminder_days?: number | null;
+          noc_artifact_verified_at?: string | null;
+          noc_prepared_at?: string | null;
+          noc_prepared_by?: string | null;
+          noc_prepared_path?: string | null;
+          noc_prepared_snapshot?: Json | null;
+          occupancy_id: string;
+          owner_consent_occupancy_id?: string | null;
+          society_id: string;
+          starts_at: string;
+          status: string;
+          tenant_membership_id: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          agreement_expires_on?: string | null;
+          amenity_booking_id?: string | null;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          client_request_id?: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          completion_in_progress?: boolean;
+          consented_at?: string | null;
+          consented_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          ends_at?: string;
+          id?: string;
+          kind?: string;
+          last_expiry_reminder_days?: number | null;
+          noc_artifact_verified_at?: string | null;
+          noc_prepared_at?: string | null;
+          noc_prepared_by?: string | null;
+          noc_prepared_path?: string | null;
+          noc_prepared_snapshot?: Json | null;
+          occupancy_id?: string;
+          owner_consent_occupancy_id?: string | null;
+          society_id?: string;
+          starts_at?: string;
+          status?: string;
+          tenant_membership_id?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_moves_amenity_booking_fkey';
+            columns: ['society_id', 'amenity_booking_id'];
+            isOneToOne: false;
+            referencedRelation: 'amenity_bookings';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_approved_by_fkey';
+            columns: ['approved_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_completed_by_fkey';
+            columns: ['completed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_consented_by_fkey';
+            columns: ['consented_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_noc_prepared_by_fkey';
+            columns: ['noc_prepared_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_occupancy_fkey';
+            columns: ['society_id', 'occupancy_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_occupants';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_owner_consent_fkey';
+            columns: ['society_id', 'owner_consent_occupancy_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_occupants';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_tenant_fkey';
+            columns: ['society_id', 'tenant_membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_moves_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       unit_occupants: {
         Row: {
           created_at: string;
@@ -6341,6 +6659,141 @@ export type Database = {
           p_unit_id: string;
         };
         Returns: string;
+      };
+      tenancy_document_attach: {
+        Args: {
+          p_expected_version: number;
+          p_kind: string;
+          p_move_id: string;
+          p_path: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_move_complete: {
+        Args: {
+          p_expected_version: number;
+          p_move_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_move_consent: {
+        Args: {
+          p_expected_version: number;
+          p_move_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_move_create: {
+        Args: {
+          p_agreement_expires_on: string;
+          p_amenity_booking_id: string;
+          p_client_request_id: string;
+          p_ends_at: string;
+          p_kind: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_starts_at: string;
+          p_tenant_membership_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_move_decide: {
+        Args: {
+          p_decision: string;
+          p_expected_version: number;
+          p_move_id: string;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_move_get: {
+        Args: { p_move_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      tenancy_moves_page: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+          p_status?: string;
+        };
+        Returns: Json;
+      };
+      tenancy_noc_attest: {
+        Args: {
+          p_expected_version: number;
+          p_issuer_id: string;
+          p_move_id: string;
+          p_path: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_noc_issue: {
+        Args: {
+          p_expected_version: number;
+          p_move_id: string;
+          p_path: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_noc_prepare: {
+        Args: {
+          p_expected_version: number;
+          p_move_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      tenancy_proof_upload_path: {
+        Args: {
+          p_content_type: string;
+          p_kind: string;
+          p_move_id: string;
+          p_size_bytes: number;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_reminders_run: {
+        Args: { p_request_trace: string; p_society_id: string };
+        Returns: number;
+      };
+      tenancy_retention_files_list: {
+        Args: { p_today: string };
+        Returns: {
+          bucket: string;
+          path: string;
+        }[];
+      };
+      tenancy_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: Json;
+      };
+      tenancy_settings_update: {
+        Args: {
+          p_police_verification_required: boolean;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_workspace_get: {
+        Args: { p_include_targets?: boolean; p_society_id: string };
+        Returns: Json;
       };
       user_erasure_complete: {
         Args: { p_actor_id: string; p_request_id: string; p_user_id: string };

@@ -12,6 +12,7 @@ export const MODULE_KEYS = [
   'amenity',
   'directory',
   'expense',
+  'tenancy',
 ];
 
 const modulePattern = MODULE_KEYS.join('|');
