@@ -135,7 +135,6 @@ export function RadioGroup({
           checked: value === option.value,
           description: option.description,
           id: `${id}-option-${index}`,
-          key: option.value,
           label: option.label,
           name,
           onChange: () => onChange(option.value),
@@ -143,9 +142,9 @@ export function RadioGroup({
           value: option.value,
         };
         return variant === 'cards' ? (
-          <OptionCard {...sharedProps} />
+          <OptionCard key={option.value} {...sharedProps} />
         ) : (
-          <RadioInput {...sharedProps} />
+          <RadioInput key={option.value} {...sharedProps} />
         );
       })}
     </fieldset>
