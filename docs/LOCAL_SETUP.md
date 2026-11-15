@@ -1,6 +1,6 @@
 # Homeish — Local Setup (LOCAL_SETUP.md)
 
-Step-by-step setup for a Windows development machine. There is no local database: Docker Desktop cannot be installed, so development and automated database tests use the shared cloud project `homeish-testdb`, which only ever holds synthetic data (ARCHITECTURE AD-13, AD-14).
+Step-by-step setup for a Windows development machine. Docker Desktop cannot be installed, so the app does not use a local Supabase stack. Development and staging/beta share the synthetic-only cloud project `homeish-testdb` (ARCHITECTURE AD-13, AD-14). Automated database integration tests instead use disposable local PostgreSQL 17 with portable server tools, without Docker or hosted credentials (Section 6).
 
 ## 1. Tools
 
@@ -25,11 +25,11 @@ substitute. Keep `verify-full` enabled.
 
 ## 3. Supabase projects
 
-| Project          | Ref                    | Use                                                      | State  |
-| ---------------- | ---------------------- | -------------------------------------------------------- | ------ |
-| `homeish-testdb` | `oqyagsabodaueghtrocv` | Development, automated tests, staging/beta (synthetic)   | Active |
-| `homeish-demo`   | `iauusmylbymplqtheinp` | Synthetic showcase data only                             | Paused |
-| `homeish-live`   | `yhwadldjeyirkgbmoctb` | All onboarded societies — real data; changes only via CI | Paused |
+| Project          | Ref                    | Use                                                       | State  |
+| ---------------- | ---------------------- | --------------------------------------------------------- | ------ |
+| `homeish-testdb` | `oqyagsabodaueghtrocv` | Development, manual Auth checks, staging/beta (synthetic) | Active |
+| `homeish-demo`   | `iauusmylbymplqtheinp` | Synthetic showcase data only                              | Paused |
+| `homeish-live`   | `yhwadldjeyirkgbmoctb` | All onboarded societies — real data; changes only via CI  | Paused |
 
 All are in South Asia (Mumbai). Paused projects must be resumed before 14 Dec 2027 (AD-14).
 

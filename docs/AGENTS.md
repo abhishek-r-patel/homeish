@@ -1,24 +1,23 @@
 # Homeish — Agent Instructions (AGENTS.md)
 
-| Field | Value |
-|---|---|
-| Product | Homeish (PRD D-01 approved 2026-11-09) |
-| Version | 0.1 |
-| Date | 2026-11-09 |
-| Audience | The coding agent working in this repository |
-| Authority | Rules for *how* to work. What to build is defined by the project documents (Section 2) |
+| Field     | Value                                                                                  |
+| --------- | -------------------------------------------------------------------------------------- |
+| Product   | Homeish (PRD D-01 approved 2026-11-09)                                                 |
+| Version   | 0.1                                                                                    |
+| Date      | 2026-11-15                                                                             |
+| Audience  | The coding agent working in this repository                                            |
+| Authority | Rules for _how_ to work. What to build is defined by the project documents (Section 2) |
 
 These rules apply to every task, every session and every tool. If a rule here conflicts with a casual request, follow the rule and tell the user why; if the user explicitly overrides a rule, do what they ask and note the exception in the change summary.
 
 ---
 
-## 01 Who You Are Working With
+## 01 Owner and Approvals
 
-- The product owner is **not technical**. Explain choices in everyday words. Avoid jargon; when a technical term is unavoidable, add a one-line plain explanation.
-- **When something is unclear, ask before building.** Ask a small number of focused questions, give options in plain language with the trade-offs, and **mark your recommendation with a short reason**. Do not decide consequential matters silently (permissions, privacy, money, data deletion, failure behavior, what users see).
-- Do not treat an unanswered question as approval. Do not re-open decisions the documents mark as **Approved**; do ask about anything not yet approved.
-- Keep status updates short and non-technical: what changed, what to check, what is still open.
-- Never invent product requirements. If it is not in the documents, it is out of scope until the user adds it.
+Communication, safety and approval practices come from the owner's personal Copilot instructions. Homeish-specific additions:
+
+- Do not re-open decisions the documents mark as **Approved**; do ask about anything not yet approved.
+- Product scope comes from the governing documents. If a requirement is absent, it is out of scope until the owner adds it.
 
 ---
 
@@ -26,18 +25,19 @@ These rules apply to every task, every session and every tool. If a rule here co
 
 Read the relevant documents **before** changing behavior. Follow each document within its own domain.
 
-| Document | Authority |
-|---|---|
-| [PRD.md](./PRD.md) | What the product does: scope, roles, requirements, approved decisions (D-nn), assumptions (A-nn) |
-| [DESIGN.md](./DESIGN.md) | How it looks and behaves: tokens, components, states, accessibility, page layouts |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Stack, boundaries, folder structure, security model, testing and deployment |
-| [DATABASE.md](./DATABASE.md) | Tables, constraints, indexes, row-level security, retention, backups |
-| [API.md](./API.md) | Server operations, routes, error codes, rate limits, integrations, environment variables |
-| This file | Working rules |
+| Document                             | Authority                                                                                        |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| [PRD.md](./PRD.md)                   | What the product does: scope, roles, requirements, approved decisions (D-nn), assumptions (A-nn) |
+| [DESIGN.md](./DESIGN.md)             | How it looks and behaves: tokens, components, states, accessibility, page layouts                |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Stack, boundaries, folder structure, security model, testing and deployment                      |
+| [DATABASE.md](./DATABASE.md)         | Tables, constraints, indexes, row-level security, retention, backups                             |
+| [API.md](./API.md)                   | Server operations, routes, error codes, rate limits, integrations, environment variables         |
+| This file                            | Working rules                                                                                    |
 
 Precedence: **PRD** for behavior → **DESIGN** for appearance and interaction → **ARCHITECTURE/DATABASE/API** for technical choices. DATABASE governs schema; API governs contracts. A later document may not weaken a guarantee made by an earlier one.
 
 Rules:
+
 - Distinguish **proposed**, **implemented**, **tested** and **approved**. A document is not proof that code works; passing tests are not user approval.
 - If documents contradict each other, or a needed detail is missing, **stop and ask** (Section 01). Never silently choose the weaker or riskier option.
 - Every approved decision lives in its owning document. When a decision changes, update the owning document and every document that repeats it, in the same task.
@@ -46,33 +46,33 @@ Rules:
 
 ## 03 Start of Every Task (mandatory)
 
-1. **Restate the task** in one or two plain sentences and identify the affected module(s) (`core`, `visitor`, `delivery`, `billing`, `service_request`, or a post-MVP module).
-2. **Read the governing documents** for that area (requirement IDs such as `VIS-4`, screen IDs such as `G-02`, tables, operations).
-3. **Inspect the existing code before editing anything**: the files you will change, their callers, their tests, nearby modules doing something similar, the dependency manifest and tool configuration. Search for an existing helper, component or pattern before writing a new one.
-4. **Check the plan against the documents**: right module, right layer (Section 04), right permissions, right states (loading, empty, error).
-5. **Ask** if anything consequential is ambiguous.
-6. Make the **smallest complete change** (all layers the requirement touches: schema, function, service, screen, tests, docs) and nothing else.
-7. **Verify** (Section 14) and **report** (Section 15).
+Follow the personal instructions for inspecting the worktree, reading code, reusing patterns and keeping changes focused. For Homeish:
 
-Never edit a file you have not read in this session. Never assume file contents from memory or from a similar project.
+1. Identify the affected module(s) (`core`, `visitor`, `delivery`, `billing`, `service_request`, or a post-MVP module) and relevant requirement/screen IDs.
+2. Read the governing documents for that area and check the plan against the module, layer (Section 04), permissions and required screen states.
+3. Verify with the applicable checks (Section 14), update the owning documents (Section 15) and report real results.
 
 ### 03.1 Build order
+
 Modules are built one at a time in this order, each shippable behind its module toggle: **Core → Visitor → Delivery → Billing → Service Request**; then post-MVP modules as the user approves. Do not start a later module, or pull its tables, until the user asks. A new module ships **disabled** by default.
 
-### 03.2 Greenfield note
-Until the repository contains application code, do not scaffold or install anything on your own initiative. When the user says to start, create the structure in ARCHITECTURE Section 9 and record the real tool versions in the README.
+### 03.2 Existing application
+
+This is not a greenfield scaffold. Inspect the current implementation and [root code map](../AGENTS.md#current-code-map) before adding files; do not recreate already implemented modules from the target architecture diagram.
 
 ---
 
 ## 04 Project and Folder Structure
 
-Follow ARCHITECTURE Section 9. Key rules:
+ARCHITECTURE Section 9 describes the target structure. The current domain services live under `src/core/<domain>/`, domain UI under `src/components/<domain>/`, and the central registry and permission maps in `src/core/modules/index.ts`; there is no `src/modules/` tree today. Preserve the existing locations for focused changes. A move to the target structure needs a separately approved task, not a second implementation alongside existing code.
 
-- **Modular monolith.** One Next.js app. `src/core/` is the always-on platform; `src/modules/<key>/` holds one folder per module; `src/components/ui/` holds the shared design-system components; `src/app/` contains routing and layout only.
+Key boundaries still apply:
+
+- **Modular monolith.** One Next.js app. The target separates the always-on platform from toggleable modules; a domain's current location in `src/core/` does not exempt it from module-toggle checks. `src/components/ui/` holds shared controls; `src/app/` contains thin routing, layout and operation entry points.
 - **Layers inside a module** (ARCHITECTURE 6.1): screens → server operations (thin) → service (business rules) → queries (database access). Each layer calls only the one below it. Screens never touch the database; queries contain no business rules.
 - **Modules never import other modules.** Cross-module needs go through `core` (units, notifications, memberships) or a route link. A module imports only from `core`, `components/ui` and `lib`.
 - **Adding a module** = one folder, one registry entry, its migrations, its navigation items, its permission map. Touch nothing else.
-- Route groups map to roles: `(auth)`, `(resident)`, `(guard)`, `(admin)`, `developer`. Do not mix role shells.
+- Route groups map to roles: `(auth)`, `(resident)`, `(guard)`, `(admin)`, `(housekeeping)`, `developer`. Do not mix role shells.
 - Put new files where the documents say they belong. If no place fits, ask before inventing a new top-level folder.
 - Do not create generic "utils", "helpers" or "common" dumping grounds. Put code next to the thing it serves, or in `lib/` only if it is pure, small and used by several modules.
 - Do not create new top-level folders, new config systems or new abstractions "for later".
@@ -81,12 +81,10 @@ Follow ARCHITECTURE Section 9. Key rules:
 
 ## 05 Code Quality and Naming
 
-- **Smallest correct change.** Fix the cause, not the symptom. No drive-by refactors, reformatting, renames or "cleanups" in files you are not changing for the task. If you notice an unrelated problem, mention it in your report instead of fixing it.
-- **Match the existing style and patterns.** Use the project's formatter and linter configuration; do not change their rules to make code pass.
 - **Naming**
   - Files and folders: `kebab-case`. Components and types: `PascalCase`. Functions and variables: `camelCase`. Constants: `UPPER_SNAKE_CASE`. Database objects: `snake_case`, tables plural, module-prefixed (DATABASE 1).
   - Server operations are named `area.verbNoun` (API 3.1). Error codes, enumeration values and statuses use the exact spelling in API and DATABASE.
-  - Names describe the domain in the product's vocabulary (DESIGN Section 16): *visitor*, *delivery*, *dues*, *bill*, *unit*, *society*, *service request* — not synonyms. Never hard-code a society's custom wording; use the configured label.
+  - Names describe the domain in the product's vocabulary (DESIGN Section 16): _visitor_, _delivery_, _dues_, _bill_, _unit_, _society_, _service request_ — not synonyms. Never hard-code a society's custom wording; use the configured label.
   - No abbreviations that are not already in the documents. Booleans read as questions (`isActive`, `hasHistory`).
 - **Small, single-purpose functions** and components. Prefer clear code over clever code; avoid deep nesting; return early.
 - **No dead code, commented-out code, unused exports, leftover debug output or TODOs without an owner and a reason.**
@@ -152,6 +150,7 @@ Follow ARCHITECTURE 14 and API 3.5, 14.
 ## 10 Security and Secrets
 
 **Secrets**
+
 - **Never** put secrets in source code, logs, comments, tests, fixtures, screenshots, documentation, commit messages, error messages or browser-visible code. This includes the service-role key, database URLs, Brevo key, push private key, scheduler secret, guard-session secret, rate-limit salt and any token.
 - Secrets live only in the host's secret store and in ignored local environment files. Commit an example file with **names and placeholders only** (API Section 11).
 - Only variables explicitly marked public (`NEXT_PUBLIC_…`) may reach the browser. Never prefix a secret with the public marker. If you find a secret in the repository, stop, tell the user plainly, and do not copy it elsewhere.
@@ -159,6 +158,7 @@ Follow ARCHITECTURE 14 and API 3.5, 14.
 - Never use real people's data. Test data is synthetic, with emails on a reserved example domain (DATABASE 14.3).
 
 **Authentication and authorization (server-side only)**
+
 - Authorization is enforced on the server and in the database. Hiding a button is only a convenience.
 - Follow the pipeline in API 2.5 for every operation: authenticated → developer MFA (if developer) → society state → module enabled → role → ownership → database rules.
 - Derive identity from the verified session, never from a client-supplied user or society ID. Re-read roles from the database for each request.
@@ -166,6 +166,7 @@ Follow ARCHITECTURE 14 and API 3.5, 14.
 - Never use the service-role (privileged) identity outside the isolated privileged module and the cases listed in ARCHITECTURE 8.4. Anything that can run under the user's own session must.
 
 **General**
+
 - Treat all input as hostile: validate, encode, parameterise. No string-built queries, no raw HTML rendering of user text, no `eval`-style execution, no open redirects (redirect targets come from a fixed list).
 - CSV exports neutralise cells starting with `=`, `+`, `-`, `@`. Files: private storage, short-lived links, type and size checks (DATABASE 12).
 - Do not weaken security headers, content-security policy, same-origin rules, rate limits, cookie flags or session settings to make something work. If one blocks a feature, ask.
@@ -180,22 +181,25 @@ Follow ARCHITECTURE 14 and API 3.5, 14.
 Follow DATABASE and API exactly.
 
 **Schema and migrations**
+
 - All schema changes are **forward-only migration files**, one concern per file, named as in DATABASE 14.1. **Never edit a migration that has already been applied** anywhere shared; add a new one.
 - A new table ships **in the same migration** with: constraints, same-society keys, indexes, row-level security enabled, policies, minimal grants (nothing for the anonymous role), and rejecting triggers on append-only tables. Never "add security later".
 - Every tenant table has `society_id`, a same-society composite key to its parents, and an index starting with `society_id`.
 - Match DATABASE conventions: UUID keys, `timestamptz`, money as integer paise, `text` + check for statuses, length limits on free text, `ON DELETE RESTRICT`, soft delete or deactivate (no hard delete on money, entries, requests, audit).
 - **Append-only data stays append-only:** ledger, payments after confirmation, allocations, bill lines, visitor/delivery history, request events, audit logs. Corrections are new reasoned entries, never edits.
 - Update DATABASE.md in the same change as any migration; regenerate types.
-- **Never run migrations, seeds, resets or destructive statements against staging or production.** Work against the local database or a disposable test database. Production changes go through the reviewed pipeline (ARCHITECTURE 19) after the user's approval.
+- **Automated database tests use disposable local PostgreSQL**, never a hosted project. `homeish-testdb` is shared by development and staging/beta (AD-13), so hosted migrations, seeds, resets and manual Auth checks need the owner's explicit approval; do not treat its name as permission to reset it. Live changes go through the reviewed pipeline (ARCHITECTURE 19), never from this machine.
 - Never copy production data to any other environment. Never hand-edit production rows.
 
 **Data access**
+
 - Normal reads and writes use the **caller's own session** so row-level security applies. Multi-row, locked or audited changes are **single database functions** that run in one transaction (visitor decisions, bill generation, payment confirmation, module toggle, role change). The service calls the function; it does not stitch several calls together.
 - No ORM, no direct database connection from the running app, no database credentials in app code (the direct connection string is for migration/backup tooling only).
 - Business rules that must always hold live in the database (constraints, functions, row rules) **and** in the service for good error messages; do not rely on the screen.
 - Never trust a client-supplied amount, society ID, role or status. Compute money on the server.
 
 **Operations and routes**
+
 - Add or change an operation or route only if the requirement needs it, and **update API.md first or in the same change**: name, who may call it, purpose, input, output, errors, rate limit.
 - Follow the response envelope, error codes, idempotency (`clientRequestId`), concurrent-edit (`version`), pagination, sorting and filtering conventions (API Section 3). Keep personal data out of URLs.
 - Pages load data through server query functions; screens do not call internal HTTP endpoints for ordinary reads and writes. Do not add routes beyond API Section 6 without updating that section.
@@ -219,16 +223,17 @@ Follow DATABASE and API exactly.
 
 Follow ARCHITECTURE 18. A change is not finished until its tests exist and pass.
 
-| What you change | Required tests |
-|---|---|
-| Pure logic (money, dates, late fees, allocation, permission map, schemas, scrubber, error mapping) | Unit tests with edge cases (zero, boundary dates, rounding, duplicates) |
-| Table, policy, function or migration | Database tests: tenant isolation, each role/matrix cell allowed and denied, module-disabled denial, uniqueness and check rules, append-only protection, idempotency, concurrency (e.g., two approvers, double confirm) |
-| Service or server operation | Integration tests through the real development database (ARCHITECTURE AD-13) with fakes for outside services |
-| Screen or journey | End-to-end tests at phone and desktop sizes covering the happy path, loading, empty, error, no-permission and module-disabled states, plus an automated accessibility check |
-| Outside-service adapter | Tests against fakes; failure, timeout and retry behavior |
-| Bug fix | A test that fails before the fix and passes after |
+| What you change                                                                                    | Required tests                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pure logic (money, dates, late fees, allocation, permission map, schemas, scrubber, error mapping) | Unit tests with edge cases (zero, boundary dates, rounding, duplicates)                                                                                                                                                |
+| Table, policy, function or migration                                                               | Database tests: tenant isolation, each role/matrix cell allowed and denied, module-disabled denial, uniqueness and check rules, append-only protection, idempotency, concurrency (e.g., two approvers, double confirm) |
+| Service or server operation                                                                        | Integration tests against disposable local PostgreSQL for database behavior, with fakes for outside services; hosted Auth smoke checks are separate and require explicit approval                                      |
+| Screen or journey                                                                                  | End-to-end tests at phone and desktop sizes covering the happy path, loading, empty, error, no-permission and module-disabled states, plus an automated accessibility check                                            |
+| Outside-service adapter                                                                            | Tests against fakes; failure, timeout and retry behavior                                                                                                                                                               |
+| Bug fix                                                                                            | A test that fails before the fix and passes after                                                                                                                                                                      |
 
 Rules:
+
 - **Permission tests are generated from the same map the app uses**; a new capability without an allow and a deny test fails the build.
 - Test cross-society access explicitly for every new table or operation: it must be impossible.
 - Tests use synthetic data and fakes; they never call real email, push or payment services and never use real credentials.
@@ -241,7 +246,10 @@ Rules:
 
 ## 14 Verification Before You Say "Done"
 
-Run what exists and report real results; never assume.
+Use the [root command reference](../AGENTS.md#commands-and-database-safety) and run the checks relevant to the change; report real results. Documentation-only changes do not require application suites unless documentation tests exist. The full release gate in [root AGENTS.md](../AGENTS.md#commit-and-release-workflow) is unchanged.
+
+For application changes:
+
 1. Typecheck, lint and formatting pass without suppressions.
 2. Unit, database and integration tests for the affected area pass; the whole suite passes before a module is declared complete.
 3. Generated database types are current; no migration is edited after being applied; the CI checks listed in DATABASE 14.1 pass.
@@ -258,14 +266,14 @@ If you could not run something (missing tool, no database, no network), say so p
 
 Update documents **in the same task** as the code, without being asked.
 
-| If you change… | Update… |
-|---|---|
-| Behavior, roles, rules, scope | PRD (requirement, story, matrix, decisions) |
-| Visuals, components, states, copy rules | DESIGN (tokens, component, page layout) |
-| Structure, stack, boundaries, deployment | ARCHITECTURE |
-| Tables, columns, constraints, indexes, policies, retention | DATABASE |
-| Operations, routes, errors, limits, integrations, environment variables | API |
-| Working rules | This file |
+| If you change…                                                          | Update…                                     |
+| ----------------------------------------------------------------------- | ------------------------------------------- |
+| Behavior, roles, rules, scope                                           | PRD (requirement, story, matrix, decisions) |
+| Visuals, components, states, copy rules                                 | DESIGN (tokens, component, page layout)     |
+| Structure, stack, boundaries, deployment                                | ARCHITECTURE                                |
+| Tables, columns, constraints, indexes, policies, retention              | DATABASE                                    |
+| Operations, routes, errors, limits, integrations, environment variables | API                                         |
+| Working rules                                                           | This file                                   |
 
 - Keep document tables consistent: IDs (A-nn, D-nn, DD-nn, AA-nn, AD-nn, DBA-nn, DBD-nn, APA-nn, APD-nn) are never reused; approved decisions are marked **Approved** with the date; open ones stay visibly open.
 - After a decision change, search all documents for stale wording and fix it.
@@ -276,33 +284,24 @@ Update documents **in the same task** as the code, without being asked.
 
 ---
 
-## 16 Git and Change Discipline
+## 16 Git and Release Rules
 
-- **Inspect before changing:** check the working tree status first. Never overwrite, revert, stash or discard changes you did not make; they may be the user's in-progress work. If the tree is dirty with unrelated changes, work around them and say so.
-- **One task = one focused change.** Do not mix features, refactors, dependency updates and formatting in one change. Keep each change small enough to review.
+The personal instructions cover worktree safety, focused changes, approvals and safeguards. Project additions:
+
 - Work on a branch named for the task (e.g., `module-visitor/approval-flow`), not directly on the main branch.
-- **Commit messages:** `type(scope): summary` subject (lowercase, imperative, no trailing period), a blank line, then `- ` bullets describing each change and *why* when it is not obvious; reference plan, requirement or screen IDs (e.g., `P0.6`, `VIS-4`, `G-02`). No `Co-authored-by` trailers, no secrets, no personal data. VS Code's "Generate commit message" follows the same rules through `.vscode/settings.json`.
-- **Ask before any action that is hard to undo or affects shared systems:** pushing, opening or commenting on pull requests, force operations, rewriting history, deleting files or branches, resets, running anything against staging or production, rotating secrets, changing cloud settings, or sending messages. Do not do these on your own.
-- Never bypass safeguards: no skipping hooks or checks, no disabling CI steps, no deleting unfamiliar files to "clean up".
-- Do not rename, move or delete files unrelated to the task. Use the version-control move operation so history is preserved.
-- Do not change unrelated formatting, whitespace, comments, imports or generated files. Generated files change only through their generator.
-- Do not leave the repository in a broken state between steps: each step should build, or you must say it does not and why.
+- Follow the approval sequence and per-commit/full-release gates in [root AGENTS.md](../AGENTS.md#commit-and-release-workflow); do not duplicate or weaken that workflow here.
+- Commit messages follow [.vscode/settings.json](../.vscode/settings.json); put relevant plan, requirement or screen IDs (e.g., `P0.6`, `VIS-4`, `G-02`) in a bullet, not the subject.
 - Releases follow ARCHITECTURE 19: migrations before code, backward-compatible, modules shipped dark and enabled per society.
 
 ---
 
-## 17 Environment and Tooling (Windows)
+## 17 Local Tooling and Protected Paths
 
-The developer's machine runs Windows with PowerShell.
+Windows and PowerShell practices come from the owner's personal Copilot instructions. Project additions:
 
-- Inspect the dependency manifest, lockfile and tool configuration before running commands. Use the project's own scripts rather than ad-hoc commands.
-- Keep each PowerShell snippet **self-contained**: variables set in one call are not reliable in the next.
-- In paths containing square brackets (Next.js dynamic route folders like `[id]`), use literal-path options for copy, move, delete and existence checks, because brackets are treated as wildcards. Never run a recursive delete on a parent folder to "fix" a failed move.
-- Prefer the editor's search and read tools over shell text-processing for inspecting code.
-- Edit files with the editor tools, not by rewriting them through shell commands. For a **full-file rewrite**, delete the file and create it fresh, then verify its length and tail; partial reads of long files can hide trailing content.
-- After a batch edit, re-read the changed regions to confirm the edit landed as intended, including any trailing context lines that were meant to survive.
-- Do not store or echo secrets in terminal history, scripts or output. Do not run commands that need elevation, and never ask the user to paste secrets into the chat.
-- Use only local, disposable resources for experiments. Never point tools at production services.
+- Use the manifest scripts and [local setup guide](./LOCAL_SETUP.md), including the disposable PostgreSQL runner for database tests. Plain `npm run test:integration` may skip locally without a configured server; skipped tests are not a pass.
+- The personal guardrail reads [.github/copilot-protected.txt](../.github/copilot-protected.txt). It asks before edits to deployment/CI configuration, hosted-database and backup tooling, or `src/core/privileged/`. Secret files, generated files, lockfiles and committed migrations already have shared protection.
+- This list requests edit confirmation in Copilot; it does not guard every shell command, replace code review/CI or authorize hosted operations. The managed gitleaks pre-commit hook is installed locally, not committed with the app.
 
 ---
 
@@ -336,8 +335,5 @@ When you ask: state the question in plain words, list the options with simple pr
 - [ ] Short plain-language report delivered (below).
 
 ### Report format (end of each task)
-1. **What changed** — plain words, by area.
-2. **What to check** — how the user can see or try it.
-3. **What was verified** — exactly which checks ran and their results; what could not be run.
-4. **Open questions or risks** — with options and a recommendation.
-5. **Documents updated** — list.
+
+Use the five-part end-of-task report from the owner's personal Copilot instructions: what changed, what to check, what was verified, open questions or risks, documents updated.
