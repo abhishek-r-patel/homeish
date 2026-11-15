@@ -327,6 +327,7 @@ Rules:
 
 - Date: native date input on `compact`; custom calendar popover on `expanded`. Show the selected date in text form beside the control.
 - Time: 12-hour with AM/PM. Time zone shown as helper text when it matters (dues, visitor windows).
+- Hour, minute and AM/PM controls wrap to the available component width, including nested forms. Preserve readable selected values and full-size targets; page-level no-overflow alone is not sufficient.
 - Visitor pre-approval window: two paired fields (From, To) with inline validation that To is after From.
 
 ### 6.6 File and photo upload
@@ -434,8 +435,8 @@ Defined in Section 9.
 | UPI pay panel         | R-04                  | Payee name, UPI ID with Copy, QR, Pay with UPI App button, "last changed" line                                         |
 | Payment review row    | A-07                  | Unit, amount, reference with Copy, screenshot thumbnail, submitted time, Confirm / Reject                              |
 | Ledger row            | R-04, A-07            | Date, description, debit, credit, running balance (table)                                                              |
-| Staff profile editor  | R-06, A-13            | Name, phone, role, photo upload, optional ID type + last four, verification flag, linked units and society status     |
-| Staff gate card       | G-01                  | Name, photo, role, destination-unit block warning and one explicit Check in or Check out action; no phone or ID       |
+| Staff profile editor  | R-06, A-13            | Name, phone, role, photo upload, optional ID type + last four, verification flag, linked units and society status      |
+| Staff gate card       | G-01                  | Name, photo, role, destination-unit block warning and one explicit Check in or Check out action; no phone or ID        |
 | Society shift row     | A-13                  | Staff name, date and Present / Absent / Leave; existing dates remain editable                                          |
 | Module toggle row     | D-03                  | Module name, description, On/Off switch with text, last changed by/at, settings link                                   |
 | Log detail panel      | D-05                  | Header (severity, reference ID, status), context list, stack trace (monospace, wrap + copy), actions (Resolve, Ignore) |
@@ -713,13 +714,16 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **A-13 Staff:** add/edit staff, assign domestic staff to units, block profiles society-wide, review pending unit links (including duplicate matches), configure the default-on approval requirement and record or correct one society-staff shift status per date.
 - The guard screen is deliberately minimal: staff name, portrait, role and access warning only. Avoid showing contact or ID data in guard cards and action responses.
 
-### 12.8 Housekeeping inventory, AMC and amenities (P13–P15)
+### 12.8 Housekeeping inventory, AMC, amenities and tenancy (P13–P15, P18)
 
 - Inventory cards show exact current/minimum stock, low-stock state, append-only entry controls and dated reports. Admin/supervisor controls include optional receipt costs; committee views are read-only. Corrections are signed adjustments, never edits.
 - AMC cards show expiry state, private contract details, linked renewals and visit history. Admin corrections are versioned/audited; committee controls are absent. Documents use short-lived private links. Service-request detail gives residents only an asset label.
 - Amenity definitions use repeatable weekday/time fieldsets and exact fee inputs. The date picker shows exclusive slots, the 24-hour lead and guest limit. Each booking explicitly acknowledges current rules. Household booking cards retain original time, fee and accepted rules after schedule edits. Administrator cancellation asks for a reason and confirmation; any fee receives a full ledger credit.
 - Navigation comes from current membership roles and enabled modules. Read-only committee shells omit write permissions. Edit controls remount when their optimistic version changes; booking acknowledgement resets when the date, rules version or slot changes.
-- Development-only fixtures exercise these controls with synthetic in-memory state. Browser checks cover 320/390/768/1280-pixel reflow, accessibility, lost-response inventory retries, preserved AMC history and amenity fee/rules/time snapshots.
+- Tenancy (P18) uses the existing role shells: resident/owner requests and private detail, administrator/committee schedule and administrator private detail, and a status-only guard schedule. Lists use shared responsive tables, status filters and exact-total pagination. Committee and guard views load no tenant selectors or private details. Disabled, denied, suspended/read-only, loading, empty, filtered-empty and error states remain distinct.
+- Move forms choose an existing tenant/invitation, configured unit label, society-local future window, agreement expiry and optional existing amenity booking. Proofs are private, immutable PDF/JPG/PNG up to 5 MiB; rental agreement is mandatory, police proof only when enabled, and government ID copies are prohibited. The detail page separates owner consent, scheduling approval and confirmed actual completion; access changes only on completion. Consequential decisions require confirmation, rejection/cancellation requires a reason, dues states never describe disabled Billing as cleared, and issued NOCs and immutable history remain available to authorised readers.
+- Proof controls show upload and attachment as separate states, retain recoverable errors and reference IDs, allow retry/removal before attachment, and ignore cancelled or superseded upload results. Private links are requested on demand and removed after their returned lifetime, never embedded permanently in list data.
+- Development-only fixtures exercise these controls with synthetic in-memory state. Tenancy injects all actions and keeps default file transport in memory; automated tests explicitly opt into intercepted HTTP and block unmatched hosted requests or real Server Actions. Browser checks cover 320/390/768/1280-pixel reflow, accessibility, lost-response retries, exact pagination, stale-proof recovery, consent/completion separation, dues/NOC failures, preserved AMC history and amenity fee/rules/time snapshots.
 
 ---
 
@@ -810,11 +814,29 @@ Process: automated checks (axe or equivalent) on every page in CI do **not** rep
 
 ## 18. Public website and environment entries
 
-Approved 2026-11-09: the bare product host is a marketing website, separate from society sign-in. It reuses the paper, ink, blue, Manrope, Sora and selected logo direction. Sections: product introduction, planned MVP modules, setup steps, society-address entry and FAQs. Do not invent customer counts, testimonials, availability, contact details or paid pricing.
+Approved 2026-11-09: the bare product host is a marketing website, separate from society sign-in. It reuses the paper, ink, blue, Manrope, Sora and selected logo direction. H1/H2 implementation was authorised on 2026-11-15 (PRD 4.0.1, D-49), retaining those tokens and branding. Do not invent customer counts, testimonials, availability, contact details or paid pricing.
 
 Website-only tokens: `marketing-display` = 40px mobile / 64px expanded, weight 700, line height 1.1; `content-marketing` = 1200px. All other website values reuse existing tokens. Navigation wraps on phones; links and controls have 48px minimum targets; provide a skip link.
 
-The demo is labelled synthetic and an illustrative preview, with browser-memory interactions, manual reset and an automatic reset every 15 minutes while open. It is not a visitor module or a connected database. No real society entry is provisioned before MVP; societies are then onboarded with the create-society script. An active society host shows the society name and a sign-in link. The reserved Maplewood host shows only "Maplewood is not open yet" with a link back to the website—no form, button or sign-in. Unconfigured society hosts return 404. Beta shows a testing-only entry, never production society data. Non-marketing hosts are not indexed.
+**Homepage composition:**
+
+1. Wrapping brand/header navigation, with society address and sign-in in separately labelled utility navigation.
+2. Committee-first hero: "A clearer day for your committee. A calmer day for everyone.", resident benefits, explicit testing/onboarding limits, disabled **Try demo**, **Demo coming soon**, and an original synthetic payment-details screenshot.
+3. A short boundaries summary: society-scoped access, role permissions and synthetic public examples, without certifications or unsupported guarantees.
+4. Nine **Released for testing** module descriptions (P5-P8, P11-P15), explicitly not live-society availability.
+5. Separate **In development** expenses/directory descriptions: locally checked, not released to beta.
+6. Committee, admin, resident and guard benefits.
+7. A two-image static gallery from the existing development-only service-request and amenity fixtures; the payment-details screenshot appears once in the hero. Identify every image as synthetic; captions explain the workflow and important limits, including payment submission versus confirmation.
+8. A separate **Planned modules** section for P18-P34, grouped by roadmap wave, with no release dates or implication of availability.
+9. Future owner-led setup steps, existing-society address form, native expandable FAQs, repeated disabled demo action and the existing privacy-policy footer.
+
+**Demo state (D-49):** both **Try demo** buttons use the shared Button's native disabled state and an adjacent readable **Demo coming soon** note. Neither is an anchor, has a demo URL or opens an inline sample. The FAQ explains the deferral. No temporary contact/enquiry action replaces it. Separate demo setup and connection wait until product readiness and a separately authorised, verified rollout.
+
+**Screenshots:** use local assets `public/homeish-billing-preview.jpg`, `public/homeish-service-request-preview.jpg` and `public/homeish-amenity-preview.jpg`. Capture only invented fixture data, exclude development chrome and focused input outlines, and include no names, phones, vehicles or resident directory. Use static image imports with Next Image, intrinsic dimensions, responsive sizes and meaningful alternative text; only the hero image loads eagerly. The three source JPEGs total 128,943 bytes before responsive optimisation. Do not add a carousel, animation, lightbox, external embed or tracking service. **Owner approved the delivered copy and all three assets on 2026-11-15.**
+
+**States and access:** homepage copy is server-rendered and needs no authenticated data, loading spinner, empty-result state or permission request. Static image dimensions reserve space during loading; meaningful alt text and captions retain the explanation if an image cannot load. Unexpected page-render failures keep the existing app error boundary. FAQs work with native keyboard interaction; the skip link focuses `main`. The existing society form keeps its validation/error state and exact-host destination rules. Automated checks passed for 320/390/768/1280px reflow, axe, keyboard/visible focus, native FAQ disclosure, reduced motion and actual image decoding. Real-device TalkBack/VoiceOver, 200% zoom/enlarged text, low-end Android and iPhone Safari acceptance remain pending; these are not implied by owner copy/asset approval or automated evidence.
+
+The existing demo-host illustration remains labelled synthetic, with browser-memory interactions, manual reset and an automatic reset every 15 minutes while open. It is not a visitor module or a connected database; its presence in code is not proof of a hosted demo. No real society entry is provisioned by this refresh. An active society host shows the society name and a sign-in link. The reserved Maplewood host shows only "Maplewood is not open yet" with a link back to the website, no form, button or sign-in. Unconfigured society hosts return 404. Beta stays testing-only, never production society data. Non-marketing hosts are not indexed.
 
 ### 18.1 Out of Scope (Design)
 

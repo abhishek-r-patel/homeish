@@ -105,6 +105,12 @@ Key boundaries still apply:
 - Do not copy-paste a block a third time: extract it. Do not extract a block the second time unless it is clearly the same concept.
 - Follow the visitor/delivery/billing/request patterns already established by earlier modules rather than inventing a different approach for the next one.
 
+### Learnings
+
+- Use static imports for local Next Image sources under Homeish's host-aware proxy, for example importing a JPEG rather than passing `"/preview.jpg"`. The installed optimiser's internal public-path requests omit Host and are correctly rejected; static imports use the existing framework-static exclusion. Verify actual image decoding in browser tests, not just the presence of an image element. Do not weaken host validation or CSP to fix image loading.
+- P18 NOCs must preserve font-supported NFC names/labels. Check `PDFFont.getCharacterSet()` and explicitly reject unsupported text before upload; do not use the legacy ASCII `pdfSafeText()` replacement, which changes names. Existing Billing/Expense PDF behaviour remains unchanged unless separately approved.
+- Native selects can appear blank even when axe and page reflow pass: padding may consume the text area. Check the selected text against the control's content width at supported sizes, and wrap grouped time controls by their available width.
+
 ---
 
 ## 07 Dependency Management
