@@ -18,6 +18,8 @@ const expectedBuckets = [
   'amc-files',
   'expense-files',
   'tenancy-files',
+  'document-files',
+  'parking-photos',
 ];
 
 describe.skipIf(!hasDatabase)('database private file storage', () => {
@@ -41,7 +43,11 @@ describe.skipIf(!hasDatabase)('database private file storage', () => {
       expect(
         rows.every((bucket) => Number(bucket.file_size_limit) === 5242880),
       ).toBe(true);
-      for (const bucketId of ['request-files', 'tenancy-files']) {
+      for (const bucketId of [
+        'request-files',
+        'tenancy-files',
+        'document-files',
+      ]) {
         expect(
           rows.find(({ id }) => id === bucketId)?.allowed_mime_types.toSorted(),
         ).toEqual(['application/pdf', 'image/jpeg', 'image/png']);

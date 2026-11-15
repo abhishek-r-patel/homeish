@@ -1638,6 +1638,260 @@ export type Database = {
           },
         ];
       };
+      document_folders: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          audience: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          society_id: string;
+          sort_order: number;
+          system_key: string | null;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          audience: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          society_id: string;
+          sort_order?: number;
+          system_key?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          audience?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          society_id?: string;
+          sort_order?: number;
+          system_key?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_folders_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_folders_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_folders_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_folders_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      document_versions: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          content_type: string;
+          created_at: string;
+          created_by: string;
+          document_id: string;
+          file_name: string;
+          id: string;
+          note: string | null;
+          path: string;
+          size_bytes: number;
+          society_id: string;
+          version_number: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          content_type: string;
+          created_at?: string;
+          created_by: string;
+          document_id: string;
+          file_name: string;
+          id?: string;
+          note?: string | null;
+          path: string;
+          size_bytes: number;
+          society_id: string;
+          version_number: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          content_type?: string;
+          created_at?: string;
+          created_by?: string;
+          document_id?: string;
+          file_name?: string;
+          id?: string;
+          note?: string | null;
+          path?: string;
+          size_bytes?: number;
+          society_id?: string;
+          version_number?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_versions_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_versions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_versions_document_fkey';
+            columns: ['society_id', 'document_id'];
+            isOneToOne: false;
+            referencedRelation: 'documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'document_versions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      documents: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          folder_id: string | null;
+          id: string;
+          society_id: string;
+          title: string;
+          unit_audience: string | null;
+          unit_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          folder_id?: string | null;
+          id?: string;
+          society_id: string;
+          title: string;
+          unit_audience?: string | null;
+          unit_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          folder_id?: string | null;
+          id?: string;
+          society_id?: string;
+          title?: string;
+          unit_audience?: string | null;
+          unit_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'documents_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'documents_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'documents_folder_fkey';
+            columns: ['society_id', 'folder_id'];
+            isOneToOne: false;
+            referencedRelation: 'document_folders';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'documents_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'documents_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'documents_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       error_logs: {
         Row: {
           app_version: string | null;
@@ -2818,6 +3072,526 @@ export type Database = {
           },
         ];
       };
+      parking_allocations: {
+        Row: {
+          ended_at: string | null;
+          ended_by: string | null;
+          id: string;
+          skip_reason: string | null;
+          slot_id: string;
+          society_id: string;
+          started_at: string;
+          started_by: string;
+          unit_id: string;
+          waitlist_request_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          ended_at?: string | null;
+          ended_by?: string | null;
+          id?: string;
+          skip_reason?: string | null;
+          slot_id: string;
+          society_id: string;
+          started_at?: string;
+          started_by: string;
+          unit_id: string;
+          waitlist_request_id?: string | null;
+        };
+        Update: {
+          ended_at?: string | null;
+          ended_by?: string | null;
+          id?: string;
+          skip_reason?: string | null;
+          slot_id?: string;
+          society_id?: string;
+          started_at?: string;
+          started_by?: string;
+          unit_id?: string;
+          waitlist_request_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'parking_allocations_ended_by_fkey';
+            columns: ['ended_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_allocations_request_same_society_fkey';
+            columns: ['society_id', 'waitlist_request_id'];
+            isOneToOne: false;
+            referencedRelation: 'parking_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'parking_allocations_slot_same_society_fkey';
+            columns: ['society_id', 'slot_id'];
+            isOneToOne: false;
+            referencedRelation: 'parking_slots';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'parking_allocations_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_allocations_started_by_fkey';
+            columns: ['started_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_allocations_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      parking_reports: {
+        Row: {
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          matched_unit_id: string | null;
+          note: string | null;
+          photo_content_type: string | null;
+          photo_deleted_at: string | null;
+          photo_path: string | null;
+          photo_size_bytes: number | null;
+          reporter_role: string;
+          resolution_note: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          slot_id: string | null;
+          society_id: string;
+          status: string;
+          vehicle_number: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          matched_unit_id?: string | null;
+          note?: string | null;
+          photo_content_type?: string | null;
+          photo_deleted_at?: string | null;
+          photo_path?: string | null;
+          photo_size_bytes?: number | null;
+          reporter_role: string;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          slot_id?: string | null;
+          society_id: string;
+          status?: string;
+          vehicle_number?: string | null;
+        };
+        Update: {
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          matched_unit_id?: string | null;
+          note?: string | null;
+          photo_content_type?: string | null;
+          photo_deleted_at?: string | null;
+          photo_path?: string | null;
+          photo_size_bytes?: number | null;
+          reporter_role?: string;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          slot_id?: string | null;
+          society_id?: string;
+          status?: string;
+          vehicle_number?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'parking_reports_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_reports_resolved_by_fkey';
+            columns: ['resolved_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_reports_slot_same_society_fkey';
+            columns: ['society_id', 'slot_id'];
+            isOneToOne: false;
+            referencedRelation: 'parking_slots';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'parking_reports_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_reports_unit_same_society_fkey';
+            columns: ['society_id', 'matched_unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      parking_requests: {
+        Row: {
+          allocation_id: string | null;
+          client_request_id: string;
+          closed_at: string | null;
+          closed_by: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          note: string | null;
+          queue_seq: number;
+          slot_type: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_id?: string | null;
+          client_request_id: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          note?: string | null;
+          queue_seq?: never;
+          slot_type: string;
+          society_id: string;
+          status?: string;
+          unit_id: string;
+        };
+        Update: {
+          allocation_id?: string | null;
+          client_request_id?: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          note?: string | null;
+          queue_seq?: never;
+          slot_type?: string;
+          society_id?: string;
+          status?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'parking_requests_allocation_same_society_fkey';
+            columns: ['society_id', 'allocation_id'];
+            isOneToOne: false;
+            referencedRelation: 'parking_allocations';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'parking_requests_closed_by_fkey';
+            columns: ['closed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_requests_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_requests_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_requests_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      parking_slots: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          label: string;
+          location_note: string | null;
+          slot_type: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          label: string;
+          location_note?: string | null;
+          slot_type: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          label?: string;
+          location_note?: string | null;
+          slot_type?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'parking_slots_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_slots_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_slots_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_slots_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      parking_vehicle_links: {
+        Row: {
+          allocation_id: string;
+          created_at: string;
+          created_by: string;
+          ended_at: string | null;
+          ended_by: string | null;
+          id: string;
+          slot_type: string;
+          society_id: string;
+          vehicle_class: string;
+          vehicle_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_id: string;
+          created_at?: string;
+          created_by: string;
+          ended_at?: string | null;
+          ended_by?: string | null;
+          id?: string;
+          slot_type: string;
+          society_id: string;
+          vehicle_class: string;
+          vehicle_id: string;
+        };
+        Update: {
+          allocation_id?: string;
+          created_at?: string;
+          created_by?: string;
+          ended_at?: string | null;
+          ended_by?: string | null;
+          id?: string;
+          slot_type?: string;
+          society_id?: string;
+          vehicle_class?: string;
+          vehicle_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'parking_vehicle_links_allocation_same_society_fkey';
+            columns: ['society_id', 'allocation_id'];
+            isOneToOne: false;
+            referencedRelation: 'parking_allocations';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'parking_vehicle_links_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_vehicle_links_ended_by_fkey';
+            columns: ['ended_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_vehicle_links_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_vehicle_links_vehicle_same_society_fkey';
+            columns: ['society_id', 'vehicle_id'];
+            isOneToOne: false;
+            referencedRelation: 'directory_vehicles';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      parking_visitor_passes: {
+        Row: {
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          ends_at: string;
+          id: string;
+          slot_id: string;
+          society_id: string;
+          starts_at: string;
+          status: string;
+          unit_id: string;
+          vehicle_number: string | null;
+          visitor_entry_id: string | null;
+          visitor_name: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          ends_at: string;
+          id?: string;
+          slot_id: string;
+          society_id: string;
+          starts_at: string;
+          status?: string;
+          unit_id: string;
+          vehicle_number?: string | null;
+          visitor_entry_id?: string | null;
+          visitor_name: string;
+        };
+        Update: {
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          ends_at?: string;
+          id?: string;
+          slot_id?: string;
+          society_id?: string;
+          starts_at?: string;
+          status?: string;
+          unit_id?: string;
+          vehicle_number?: string | null;
+          visitor_entry_id?: string | null;
+          visitor_name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'parking_visitor_passes_cancelled_by_fkey';
+            columns: ['cancelled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_visitor_passes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_visitor_passes_entry_same_society_fkey';
+            columns: ['society_id', 'visitor_entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'visitor_entries';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'parking_visitor_passes_slot_same_society_fkey';
+            columns: ['society_id', 'slot_id'];
+            isOneToOne: false;
+            referencedRelation: 'parking_slots';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'parking_visitor_passes_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_visitor_passes_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -3397,6 +4171,281 @@ export type Database = {
           },
           {
             foreignKeyName: 'societies_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      sos_alert_events: {
+        Row: {
+          action: string;
+          alert_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          note: string | null;
+          request_id: string;
+          society_id: string;
+          status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          alert_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          note?: string | null;
+          request_id: string;
+          society_id: string;
+          status: string;
+        };
+        Update: {
+          action?: string;
+          alert_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          note?: string | null;
+          request_id?: string;
+          society_id?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'sos_alert_events_alert_fkey';
+            columns: ['society_id', 'alert_id'];
+            isOneToOne: false;
+            referencedRelation: 'sos_alerts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'sos_alert_events_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_alert_events_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      sos_alert_recipients: {
+        Row: {
+          acknowledged_at: string | null;
+          alert_id: string;
+          audience: string;
+          notified_at: string;
+          society_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string | null;
+          alert_id: string;
+          audience: string;
+          notified_at?: string;
+          society_id: string;
+          user_id: string;
+        };
+        Update: {
+          acknowledged_at?: string | null;
+          alert_id?: string;
+          audience?: string;
+          notified_at?: string;
+          society_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'sos_alert_recipients_alert_fkey';
+            columns: ['society_id', 'alert_id'];
+            isOneToOne: false;
+            referencedRelation: 'sos_alerts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'sos_alert_recipients_membership_fkey';
+            columns: ['society_id', 'user_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'user_id'];
+          },
+          {
+            foreignKeyName: 'sos_alert_recipients_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_alert_recipients_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      sos_alerts: {
+        Row: {
+          acknowledged_at: string | null;
+          acknowledged_by: string | null;
+          category: string;
+          client_request_id: string;
+          close_note: string | null;
+          close_reason: string | null;
+          closed_at: string | null;
+          closed_by: string | null;
+          id: string;
+          note: string | null;
+          raised_at: string;
+          raised_by: string;
+          raised_role: string;
+          society_id: string;
+          status: string;
+          unit_id: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string | null;
+          acknowledged_by?: string | null;
+          category: string;
+          client_request_id: string;
+          close_note?: string | null;
+          close_reason?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          id?: string;
+          note?: string | null;
+          raised_at?: string;
+          raised_by: string;
+          raised_role: string;
+          society_id: string;
+          status?: string;
+          unit_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          acknowledged_at?: string | null;
+          acknowledged_by?: string | null;
+          category?: string;
+          client_request_id?: string;
+          close_note?: string | null;
+          close_reason?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          id?: string;
+          note?: string | null;
+          raised_at?: string;
+          raised_by?: string;
+          raised_role?: string;
+          society_id?: string;
+          status?: string;
+          unit_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'sos_alerts_acknowledged_by_fkey';
+            columns: ['acknowledged_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_alerts_closed_by_fkey';
+            columns: ['closed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_alerts_raised_by_fkey';
+            columns: ['raised_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_alerts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_alerts_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      sos_contacts: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          label: string;
+          phone: string;
+          society_id: string;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label: string;
+          phone: string;
+          society_id: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string;
+          phone?: string;
+          society_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'sos_contacts_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_contacts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'sos_contacts_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -5736,6 +6785,117 @@ export type Database = {
         Args: { p_request_id: string; p_society_id: string };
         Returns: undefined;
       };
+      document_create: {
+        Args: {
+          p_client_request_id: string;
+          p_description: string;
+          p_file_name: string;
+          p_folder_id: string;
+          p_path: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_title: string;
+          p_unit_audience: string;
+          p_unit_id: string;
+        };
+        Returns: Json;
+      };
+      document_download_issue: {
+        Args: {
+          p_request_id: string;
+          p_society_id: string;
+          p_version_id: string;
+        };
+        Returns: Json;
+      };
+      document_folder_save: {
+        Args: {
+          p_audience: string;
+          p_expected_version: number;
+          p_folder_id: string;
+          p_name: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_folder_set_archived: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_folder_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_get: {
+        Args: { p_document_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      document_list: {
+        Args: {
+          p_folder_id: string;
+          p_include_archived: boolean;
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: Json;
+      };
+      document_retention_files_list: {
+        Args: { p_today: string };
+        Returns: {
+          bucket: string;
+          path: string;
+        }[];
+      };
+      document_set_archived: {
+        Args: {
+          p_archived: boolean;
+          p_document_id: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_update: {
+        Args: {
+          p_description: string;
+          p_document_id: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_title: string;
+          p_unit_audience: string;
+        };
+        Returns: Json;
+      };
+      document_version_add: {
+        Args: {
+          p_document_id: string;
+          p_expected_version: number;
+          p_file_name: string;
+          p_note: string;
+          p_path: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_version_set_archived: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_version_id: string;
+        };
+        Returns: Json;
+      };
+      document_workspace_get: { Args: { p_society_id: string }; Returns: Json };
       end_unit_occupancy: {
         Args: {
           p_ended_at: string;
@@ -6076,6 +7236,158 @@ export type Database = {
           p_society_id: string;
         };
         Returns: Json;
+      };
+      parking_admin_workspace: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      parking_allocate: {
+        Args: {
+          p_request_id: string;
+          p_skip_reason: string;
+          p_slot_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      parking_allocation_end: {
+        Args: {
+          p_allocation_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      parking_guard_board: {
+        Args: { p_query: string; p_society_id: string };
+        Returns: Json;
+      };
+      parking_pass_cancel: {
+        Args: { p_pass_id: string; p_request_id: string; p_society_id: string };
+        Returns: undefined;
+      };
+      parking_pass_create: {
+        Args: {
+          p_client_request_id: string;
+          p_ends_at: string;
+          p_request_id: string;
+          p_slot_id: string;
+          p_society_id: string;
+          p_starts_at: string;
+          p_unit_id: string;
+          p_vehicle_number: string;
+          p_visitor_entry_id: string;
+          p_visitor_name: string;
+        };
+        Returns: string;
+      };
+      parking_photo_access: {
+        Args: { p_path: string; p_society_id: string };
+        Returns: boolean;
+      };
+      parking_photo_upload_path: {
+        Args: {
+          p_content_type: string;
+          p_size_bytes: number;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      parking_report_create: {
+        Args: {
+          p_client_request_id: string;
+          p_note: string;
+          p_photo_path: string;
+          p_request_id: string;
+          p_slot_id: string;
+          p_society_id: string;
+          p_vehicle_number: string;
+        };
+        Returns: string;
+      };
+      parking_report_resolve: {
+        Args: {
+          p_report_id: string;
+          p_request_id: string;
+          p_resolution_note: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      parking_request_cancel: {
+        Args: {
+          p_request_id: string;
+          p_society_id: string;
+          p_waitlist_request_id: string;
+        };
+        Returns: undefined;
+      };
+      parking_request_create: {
+        Args: {
+          p_client_request_id: string;
+          p_note: string;
+          p_request_id: string;
+          p_slot_type: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      parking_resident_workspace: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      parking_retention_files_list: {
+        Args: { p_today: string };
+        Returns: {
+          bucket: string;
+          path: string;
+        }[];
+      };
+      parking_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: Json;
+      };
+      parking_settings_update: {
+        Args: {
+          p_photo_retention_days: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      parking_slot_archive: {
+        Args: {
+          p_expected_version: number;
+          p_request_id: string;
+          p_slot_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      parking_slot_save: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_label: string;
+          p_location_note: string;
+          p_request_id: string;
+          p_slot_id: string;
+          p_slot_type: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      parking_vehicle_link_set: {
+        Args: {
+          p_allocation_id: string;
+          p_linked: boolean;
+          p_request_id: string;
+          p_society_id: string;
+          p_vehicle_id: string;
+        };
+        Returns: undefined;
       };
       record_developer_mfa: {
         Args: Record<PropertyKey, never>;
@@ -6538,6 +7850,92 @@ export type Database = {
           name: string;
           status: string;
         }[];
+      };
+      sos_acknowledge: {
+        Args: {
+          p_alert_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      sos_add_update: {
+        Args: {
+          p_alert_id: string;
+          p_note: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      sos_alert_dismiss: {
+        Args: { p_alert_id: string; p_request_id: string };
+        Returns: undefined;
+      };
+      sos_cancel: {
+        Args: {
+          p_alert_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      sos_close: {
+        Args: {
+          p_alert_id: string;
+          p_note: string;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      sos_contact_save: {
+        Args: {
+          p_contact_id: string;
+          p_label: string;
+          p_phone: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_sort_order: number;
+        };
+        Returns: string;
+      };
+      sos_contact_set_archived: {
+        Args: {
+          p_archived: boolean;
+          p_contact_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      sos_my_alerts: { Args: Record<PropertyKey, never>; Returns: Json };
+      sos_raise: {
+        Args: {
+          p_category: string;
+          p_client_request_id: string;
+          p_note: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      sos_settings_update: {
+        Args: {
+          p_notify_admins: boolean;
+          p_notify_committee: boolean;
+          p_notify_guards: boolean;
+          p_request_id: string;
+          p_resident_scope: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      sos_workspace: {
+        Args: { p_limit?: number; p_offset?: number; p_society_id: string };
+        Returns: Json;
       };
       staff_admin_save: {
         Args: {
