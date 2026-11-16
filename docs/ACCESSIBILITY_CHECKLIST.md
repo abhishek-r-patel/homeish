@@ -152,6 +152,15 @@ accessibility spec.
 - [ ] The contribution preview and refund line are read as text and update as the headcount changes; full, closed and cancelled states are announced as text, not colour alone.
 - [ ] Admin and committee: publish and cancel confirmations are reachable by keyboard; the cancel reason is required and its error is announced; the RSVP table has headers and scrolls inside its own area at 320px.
 
+## Community & Marketplace (P29)
+
+Preliminary checks use `/fixtures/community` with synthetic scenarios; the fixture is included in the automated
+accessibility spec.
+
+- [ ] Resident: join and leave buttons name the group; the new-listing alert switch is a labelled checkbox; the mute banner states when posting returns, in text.
+- [ ] Post and listing forms label every field, announce errors and the photo limit; photos have alt text; status chips ("Awaiting review", "Hidden", "Closed", "Expired") are text, not colour alone.
+- [ ] Report, withdraw, close and admin approve, reject, remove, restore and mute controls are reachable by keyboard; required reasons announce their errors; the queue tabs keep focus visible at 320px.
+
 ## Guard patrol and incident log (P25)
 
 Preliminary checks use `/fixtures/patrol` with synthetic data; its role (guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the guard screen, the admin screen and the committee view-only screen.

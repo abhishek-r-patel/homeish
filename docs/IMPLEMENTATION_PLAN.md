@@ -137,7 +137,7 @@ Arrows are recommended build order; "after Pxx" inside a box marks a phase that 
 | P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅                                |
 | P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅                                |
 | P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅                                |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                    |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | 🟡 Locally verified and committed |
 | P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | 🟡 Locally verified and committed |
 | P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅                                |
 | P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅                                |
@@ -1263,23 +1263,27 @@ DATABASE 15.2.
 
 **Goal:** moderated discussion groups and buy/sell/give-away and lost-and-found listings, with no payments (PRD 5.10.13, P5-2).
 
-**Prerequisites:** Core files and notifications. Size L, about 3 blocks. **Kickoff decisions (open):** moderation model (pre- or post-moderation); allowed listing categories; reporting and ban rules; retention.
+**Prerequisites:** Core files and notifications. Size L, about 3 blocks. **Kickoff decisions (settled, D-64):** pre-moderation by the admin only (replies are not pre-moderated); admin-created groups residents join; sale, give-away, wanted, lost and found listings with up to 3 private photos and no payments; reports from 3 different flats hide an item until review; mutes for 7 days, 30 days or until lifted; listings expire after 30 days and can be renewed; rejected, removed and withdrawn content deleted after 30 days; new-listing alerts residents can turn off.
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                | Status |
-| ----- | ------------------------------------------------------------------- | ------ |
-| P29.1 | Migration: groups, posts, listings, private images and reports; RLS | ⬜     |
-| P29.2 | Discussion groups and posts                                         | ⬜     |
-| P29.3 | Buy/sell/give-away and lost-and-found listings; no payments         | ⬜     |
-| P29.4 | Admin moderation, reporting and removal                             | ⬜     |
-| P29.5 | Resident and admin screens                                          | ⬜     |
+| ID    | Task                                                                                                                                                        | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P29.1 | Migrations `20261122100000`–`20261122130000`: groups, posts, listings, replies, photos, reports, mutes and preferences; RLS, private bucket (DATABASE 9.21) | 🟡     |
+| P29.2 | Discussion groups with join/leave, pre-moderated posts and replies                                                                                          | 🟡     |
+| P29.3 | Sale, give-away, wanted, lost and found listings with close, renew and 30-day expiry; no payments                                                           | 🟡     |
+| P29.4 | Admin moderation queues, reports with auto-hide, removal, restore, mutes and retention (API 5.29)                                                           | 🟡     |
+| P29.5 | Resident `/community` and admin `/admin/community` screens; fixture `/fixtures/community`                                                                   | 🟡     |
 
 **Tests:** moderation states, reporting and removal, retention, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-18): locally verified and committed on the feature branch; not pushed, not migrated to testdb, and the module ships disabled.** The full local gate passed: `npm run check` (**740 unit tests**), the complete database suite on a disposable local PostgreSQL (**403 tests passed, 11 skipped**), `npm run build` and the complete Playwright suite (**168 tests**, including axe on `/fixtures/community`). A database safety review found no blocking issues; its four findings were fixed (fresh-upload check when attaching photos, serialised mutes, muted residents cannot edit pending items, retention index for removed replies). Still required: owner review of the assumptions below and owner UAT.
+
+**Assumptions for owner review:**
+
+- Restoring a hidden item does not notify its author.
+- Muted residents can still report items, withdraw their own items and close or renew listings, but cannot create or edit content.
+- Retention runs for every society even when the module is turned off, because it only deletes content that is already due.
 
 ---
 

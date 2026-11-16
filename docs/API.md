@@ -753,6 +753,30 @@ Pages are `/events`, `/events/{eventId}`, `/admin/events`, `/admin/events/new`, 
 `/admin/events/{eventId}/edit`. Notifications are in-app plus push through `sendNotificationPushesForRequest`. The
 `/fixtures/event` page uses synthetic scenarios and does not call production services.
 
+### 5.29 Resident Community & Marketplace (`community`, P29; D-64)
+
+Operations live in `src/core/community/`; Server Actions are in the resident and admin Community routes. The module
+ships disabled. Writes use the `otherWritesUserMinute` limit and an idempotency request ID. Permissions:
+`community:participate` (resident) and `community:moderate` (admin). Committee members, guards and housekeeping
+supervisors have no access. Errors: `community_invalid_state`, `community_group_archived` and
+`community_already_reported` map to a conflict; `community_muted` and `community_not_member` to forbidden;
+`community_own_item` and `community_photo_invalid` to validation errors.
+
+| Operation area              | Caller   | Contract                                                                                                                                                                                                                                              |
+| --------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home, groups and feed       | Resident | Join or leave active groups; only members see a group's approved posts (plus their own pending or hidden ones). The new-listing alert switch and any active mute are shown on `/community`.                                                           |
+| Posts, listings and replies | Resident | New posts and listings wait for admin approval; authors edit only while pending (not while muted) and can withdraw later; listing authors close or renew; replies appear at once on approved, open items. Up to 3 JPG/PNG photos per post or listing. |
+| Reports                     | Resident | One report per person and flat per item, never on your own; 3 different flats hide the item until review.                                                                                                                                             |
+| Moderation                  | Admin    | Queues pending, hidden, reported and removed; approve, reject (reason), remove (reason) and restore; groups create, rename and archive; mute for 7 days, 30 days or until lifted, and lift early.                                                     |
+
+Photos are uploaded through a community Server Action that calls `community_photo_upload_path` and returns a signed
+upload; view links last 300 seconds and are signed on the server only after `community_photo_access`. Pages are
+`/community`, `/community/groups/{groupId}`, `/community/posts/{postId}`, `/community/marketplace`,
+`/community/marketplace/new`, `/community/marketplace/{listingId}`, `/community/mine`, `/admin/community`,
+`/admin/community/items/{targetType}/{targetId}`, `/admin/community/groups` and `/admin/community/mutes`.
+Notifications are in-app plus push through `sendNotificationPushesForRequest`. The `/fixtures/community` page uses
+synthetic scenarios and does not call production services.
+
 ## 6. HTTP Routes
 
 | Route                               | Method       | Caller                         | Authentication                                                                                                                   | Purpose                                                                                                                                                                                                                           |

@@ -189,6 +189,12 @@ reuse the amenity booking approach: the RSVP function itself appends adjustment 
 billing ledger in the same transaction, so a charge and its RSVP can never disagree. A synthetic `/fixtures/event`
 page supports accessibility and journey checks.
 
+P29 Community & Marketplace (`community`) is disabled by default and follows the same module pattern in
+`src/core/community/`. Posts and listings are pre-moderated by the admin; photos live in the private
+`community-photos` bucket, uploaded through a community Server Action and viewed through five-minute links signed on
+the server after `community_photo_access`. A synthetic `/fixtures/community` page supports accessibility and journey
+checks.
+
 The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client component rendered by the shared app shell for guards and for any user whose society has `sos` enabled. It loads `sos_my_alerts` on mount, rechecks every 30 seconds, and treats Realtime inserts on the user's own `notifications` rows as a hint to reload, so it adds no Realtime table. It stays on every screen while the alert is open until the recipient dismisses their own copy ("Seen — stop alert" for responders, who also get a Respond link; "Dismiss" for residents); acknowledging, updating and closing happen on the SOS screens. On guard devices it plays a short Web Audio alarm every 30 seconds, with visible mute/unmute and "turn on alert sound" controls when the browser blocks autoplay; a device that cannot play sound shows a "keep this screen in view" message. Delivery is in-app and Realtime only, with no push, SMS or calls (PRD D-41).
 
 ### 5.3 PWA scope (PRD D-23)
@@ -264,6 +270,8 @@ P25 adds the `patrol-photos` bucket to the same task: `patrol_retention_files_li
 P26 adds the `metering-photos` bucket to the same task: `metering_retention_files_list` lists meter reading photos never attached within 24 hours, and the task removes them from Storage (rejecting any row that names another bucket). Attached reading photos are kept with the reading; no metering rows are purged. Utility Metering also writes Billing's tables: `private.metering_billing_post` inserts `billing_bills`, `billing_bill_lines` and `billing_ledger_entries` rows (one separate "Utility charges" bill per unit, lines without a charge type, Billing's `rounding` rule per line) and sends Billing's `billing_bill_generated` notification, only while `billing` is enabled. It runs automatically inside `billing_bills_generate` (replaced by `20261116232000_metering_billing_hook.sql` with an exact copy plus one call that runs only when `metering` is enabled, leaves a `metering.billing.generate` audit row and adds `utility` counts to the job summary and the `billing.bills.generate` audit row) and from the admin's manual "Run utility billing" catch-up. Both paths lock unit rows in id order before locking pending charges, so a reading is billed exactly once even when they overlap. With Billing disabled, readings and reports work and nothing is billed. The unusual-usage flag is computed on read in `src/core/metering/presentation.ts`; no scheduled job is added.
 
 P28 (assets) and P31 (home services) add no buckets, scheduled work or cross-module writes; assets only read AMC contracts and visits, and both keep every row (deactivate, retire or archive instead of delete). P32 adds the daily task `service_request.escalate`, registered right after `service_request.auto_close` so requests closed that day are not escalated. It calls the service-role-only `request_escalation_run`, which writes in-app notifications and timeline events in the database and returns the email list for `in_app_email` societies; the application then sends those through the existing transactional email adapter. One `service_request_escalations` row per request and level is the idempotency record, on top of the run key, so catch-up runs never notify twice.
+
+P29 adds the `community-photos` bucket to the global retention task: `community_retention_files_list` lists photos of posts and listings rejected, removed or withdrawn more than 30 days ago plus uploads never attached within 1 day, the task removes them from Storage (rejecting any row that names another bucket), then calls `community_retention_run`, which deletes those items with their photos, replies and reports, and removed replies older than 30 days. It runs for every society regardless of whether the module is enabled, because it only deletes content that is already due.
 
 P22 adds `poll.reconcile` and `poll.retention` to the daily runner. The privileged wrappers invoke service-role-only
 database routines to reconcile scheduled openings and deadline completions, send idempotent in-app notices, and
@@ -407,6 +415,9 @@ P27 adds `src/core/analytics/`, `src/components/analytics/`, the admin Analytics
 
 P30 adds `src/core/event/`, `src/core/privileged/event.ts`, `src/components/event/`, resident and admin Events
 routes, and the synthetic fixture at `src/app/fixtures/event/`.
+
+P29 adds `src/core/community/`, `src/components/community/`, resident and admin Community routes, and the synthetic
+fixture at `src/app/fixtures/community/`.
 
 ```
 homeish/

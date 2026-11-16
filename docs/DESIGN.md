@@ -450,6 +450,8 @@ Defined in Section 9.
 | Analytics range       | P27                   | 3 / 6 / 12 months as links with the current one marked; money metrics can switch to "This financial year"; money in ₹ with Indian grouping, missing values "—"                                                                                     |
 | Event RSVP form       | P30                   | Per flat: Going (with "How many people are coming?") or Not going as a labelled radio group; a live line states "₹X will be added to your flat's bill" or "₹X will be credited back"; full, closed and cancelled states replace the form with text |
 | Event editor          | P30                   | Contribution type and amount are read-only once published, with a note why; a warning shows when the event has a contribution and `billing` is off; times in IST                                                                                   |
+| Community item status | P29                   | Text chips "Awaiting review", "Hidden", "Removed", "Closed" and "Expired" on the author's and admin's views; other residents only ever see approved items; a muted resident sees a banner with the end time instead of create forms                |
+| Community photos      | P29                   | Up to 3 JPG/PNG photos per post or listing, with help text saying who can see them and "Remove one to add another" at the limit; numbered alt text ("Photo 1 of 3"); links expire after 5 minutes and reload on the next page view                 |
 
 ---
 
