@@ -22,6 +22,7 @@ export const MODULE_KEYS = [
   'asset',
   'home_services',
   'poll',
+  'meeting',
 ];
 
 const modulePattern = MODULE_KEYS.join('|');

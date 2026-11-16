@@ -39,6 +39,7 @@ describe.skipIf(!hasDatabase)('core database tables', () => {
         { key: 'asset', is_core: false },
         { key: 'home_services', is_core: false },
         { key: 'poll', is_core: false },
+        { key: 'meeting', is_core: false },
       ]);
 
       const userId = await database.asSuperuser((client) =>
@@ -116,7 +117,7 @@ describe.skipIf(!hasDatabase)('core database tables', () => {
         { sub: userId },
         (client) => client.query('select key from public.modules order by key'),
       );
-      expect(modules.rowCount).toBe(22);
+      expect(modules.rowCount).toBe(23);
 
       const profileError = await dbError(
         database.asRole('anon', null, (client) =>
