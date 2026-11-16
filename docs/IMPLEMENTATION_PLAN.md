@@ -132,9 +132,9 @@ Arrows are recommended build order; "after Pxx" inside a box marks a phase that 
 | P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
 | P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ⬜ Not started                                                                   |
 | P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ⬜ Not started                                                                   |
-| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
-| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
-| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
+| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
+| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
+| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
 | P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ⬜ Not started                                                                   |
 | P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ⬜ Not started                                                                   |
 | P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                                                                   |
@@ -1126,7 +1126,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD VEN-1 to VEN-4 verified; ships disabled.
 
-**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P24–P26 change: `npm run check` (**606 unit tests**), the complete database suite on a disposable local PostgreSQL (**186 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**126 tests**). Database safety reviews were done and their findings fixed. Still required: owner review of the assumptions below, owner UAT and real-device checks. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1160,7 +1160,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD PAT-1 to PAT-4 verified; ships disabled.
 
-**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P24–P26 change: `npm run check` (**606 unit tests**), the complete database suite on a disposable local PostgreSQL (**186 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**126 tests**). Database safety reviews were done and their findings fixed. Still required: owner review of the assumptions below, owner UAT and real-device checks. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1193,7 +1193,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD MTR-1 to MTR-4 verified; ships disabled.
 
-**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P24–P26 change: `npm run check` (**606 unit tests**), the complete database suite on a disposable local PostgreSQL (**186 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**126 tests**). Database safety reviews were done and their findings fixed. Still required: owner review of the assumptions below, owner UAT and real-device checks. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1457,7 +1457,7 @@ DATABASE 15.2.
 
 # Current Next Steps
 
-- **P24–P26:** built (2026-11-16) with the decisions in PRD D-54 to D-56; local checks passed. Uncommitted until the owner reviews the assumptions in each phase and approves a commit, testdb migration and release.
+- **P24–P26:** released to beta and main (2026-11-16) with the decisions in PRD D-54 to D-56, and migrated to `homeish-testdb`. Next: owner review of the assumptions listed in each phase, then owner UAT.
 - **Owner-only:** UAT for P11–P21; P10.2 TalkBack/VoiceOver and outdoor checks; P10.5, P10.8 and P10.9 go-live steps. These gate live-society enablement, not local builds.
 - **P16–P21:** released to beta and main and migrated to testdb (2026-11-15); owner UAT pending.
 - **Subscription:** decide the subscription price and offer terms after the first ten free societies before inviting society eleven.
