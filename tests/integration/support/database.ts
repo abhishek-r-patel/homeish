@@ -1,5 +1,5 @@
 // Real-PostgreSQL test harness: each test file gets its own freshly migrated, disposable database.
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -107,7 +107,9 @@ export interface TestDatabase {
 }
 
 // Cluster roles are created on first use, so database creation is serialised
-// across parallel test files with an advisory lock.
+// across parallel test files with an advisory lock. Migrations are replayed
+// once into a template per migration set; each test database is a quick copy,
+// so queueing for the lock stays short even on a busy machine.
 const CREATION_LOCK = 727_101;
 
 export function migrationFiles(): string[] {
@@ -129,20 +131,46 @@ async function provisionDatabase(
     throw new Error(`Migration baseline ${throughMigration} was not found.`);
   }
 
+  const stub = readFileSync(join(SUPPORT, 'supabase-stub.sql'), 'utf8');
+  const migrations = files
+    .slice(0, count)
+    .map((file) => readFileSync(join(MIGRATIONS, file), 'utf8'));
+  // Keyed by content so a long-lived server never reuses a stale schema.
+  const hash = createHash('sha256').update(stub);
+  for (const sql of migrations) {
+    hash.update('\0').update(sql);
+  }
+  const template = `homeish_it_tpl_${hash.digest('hex').slice(0, 16)}`;
+
   await withClient('supabase_admin', 'postgres', async (lockClient) => {
     await lockClient.query('select pg_advisory_lock($1)', [CREATION_LOCK]);
     try {
       await lockClient.query(readFileSync(join(SUPPORT, 'roles.sql'), 'utf8'));
-      await lockClient.query(`create database ${name} owner postgres`);
-      await withClient('supabase_admin', name, (client) =>
-        client.query(readFileSync(join(SUPPORT, 'supabase-stub.sql'), 'utf8')),
+      const existing = await lockClient.query<{ ready: boolean }>(
+        'select datistemplate as ready from pg_database where datname = $1',
+        [template],
       );
-      await withClient('postgres', name, async (client) => {
-        for (const file of files.slice(0, count)) {
-          const sql = readFileSync(join(MIGRATIONS, file), 'utf8');
-          await inTransaction(client, () => client.query(sql), true);
-        }
-      });
+      if (existing.rows[0]?.ready !== true) {
+        // A template left unmarked by an interrupted run is incomplete.
+        await lockClient.query(
+          `drop database if exists ${template} with (force)`,
+        );
+        await lockClient.query(`create database ${template} owner postgres`);
+        await withClient('supabase_admin', template, (client) =>
+          client.query(stub),
+        );
+        await withClient('postgres', template, async (client) => {
+          for (const sql of migrations) {
+            await inTransaction(client, () => client.query(sql), true);
+          }
+        });
+        await lockClient.query(
+          `alter database ${template} with is_template true`,
+        );
+      }
+      await lockClient.query(
+        `create database ${name} template ${template} owner postgres`,
+      );
     } finally {
       await lockClient.query('select pg_advisory_unlock($1)', [CREATION_LOCK]);
     }
