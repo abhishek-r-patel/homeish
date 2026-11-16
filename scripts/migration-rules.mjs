@@ -24,6 +24,7 @@ export const MODULE_KEYS = [
   'poll',
   'meeting',
   'event',
+  'community',
 ];
 
 const modulePattern = MODULE_KEYS.join('|');

@@ -1404,6 +1404,692 @@ export type Database = {
           },
         ];
       };
+      community_group_members: {
+        Row: {
+          group_id: string;
+          joined_at: string;
+          membership_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          group_id: string;
+          joined_at?: string;
+          membership_id: string;
+          society_id: string;
+        };
+        Update: {
+          group_id?: string;
+          joined_at?: string;
+          membership_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_group_members_group_fkey';
+            columns: ['society_id', 'group_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_groups';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_group_members_membership_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_group_members_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_groups: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          id: string;
+          name: string;
+          society_id: string;
+          status: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          society_id: string;
+          status?: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          society_id?: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_groups_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_groups_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_groups_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_listings: {
+        Row: {
+          approved_at: string | null;
+          author_membership_id: string;
+          author_name: string;
+          author_unit_label: string | null;
+          author_user_id: string;
+          client_request_id: string;
+          closed_at: string | null;
+          contact_phone: string | null;
+          created_at: string;
+          description: string | null;
+          expires_at: string | null;
+          id: string;
+          listing_type: string;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
+          price_paise: number | null;
+          society_id: string;
+          status: string;
+          status_changed_at: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          approved_at?: string | null;
+          author_membership_id: string;
+          author_name: string;
+          author_unit_label?: string | null;
+          author_user_id: string;
+          client_request_id: string;
+          closed_at?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          description?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          listing_type: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          price_paise?: number | null;
+          society_id: string;
+          status?: string;
+          status_changed_at?: string;
+          title: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          approved_at?: string | null;
+          author_membership_id?: string;
+          author_name?: string;
+          author_unit_label?: string | null;
+          author_user_id?: string;
+          client_request_id?: string;
+          closed_at?: string | null;
+          contact_phone?: string | null;
+          created_at?: string;
+          description?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          listing_type?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          price_paise?: number | null;
+          society_id?: string;
+          status?: string;
+          status_changed_at?: string;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_listings_author_membership_fkey';
+            columns: ['society_id', 'author_membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_listings_author_user_id_fkey';
+            columns: ['author_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_listings_moderated_by_fkey';
+            columns: ['moderated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_listings_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_mutes: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          duration: string;
+          id: string;
+          lifted_at: string | null;
+          lifted_by: string | null;
+          membership_id: string;
+          muted_until: string | null;
+          reason: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          duration: string;
+          id?: string;
+          lifted_at?: string | null;
+          lifted_by?: string | null;
+          membership_id: string;
+          muted_until?: string | null;
+          reason: string;
+          society_id: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          duration?: string;
+          id?: string;
+          lifted_at?: string | null;
+          lifted_by?: string | null;
+          membership_id?: string;
+          muted_until?: string | null;
+          reason?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_mutes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_mutes_lifted_by_fkey';
+            columns: ['lifted_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_mutes_membership_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_mutes_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_photos: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          listing_id: string | null;
+          position: number;
+          post_id: string | null;
+          society_id: string;
+          storage_path: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          listing_id?: string | null;
+          position: number;
+          post_id?: string | null;
+          society_id: string;
+          storage_path: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          listing_id?: string | null;
+          position?: number;
+          post_id?: string | null;
+          society_id?: string;
+          storage_path?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_photos_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_photos_listing_fkey';
+            columns: ['society_id', 'listing_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_listings';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_photos_post_fkey';
+            columns: ['society_id', 'post_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_posts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_photos_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_posts: {
+        Row: {
+          author_membership_id: string;
+          author_name: string;
+          author_unit_label: string | null;
+          author_user_id: string;
+          body: string;
+          client_request_id: string;
+          created_at: string;
+          group_id: string;
+          id: string;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
+          society_id: string;
+          status: string;
+          status_changed_at: string;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_membership_id: string;
+          author_name: string;
+          author_unit_label?: string | null;
+          author_user_id: string;
+          body: string;
+          client_request_id: string;
+          created_at?: string;
+          group_id: string;
+          id?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          society_id: string;
+          status?: string;
+          status_changed_at?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          author_membership_id?: string;
+          author_name?: string;
+          author_unit_label?: string | null;
+          author_user_id?: string;
+          body?: string;
+          client_request_id?: string;
+          created_at?: string;
+          group_id?: string;
+          id?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          society_id?: string;
+          status?: string;
+          status_changed_at?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_posts_author_membership_fkey';
+            columns: ['society_id', 'author_membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_posts_author_user_id_fkey';
+            columns: ['author_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_posts_group_fkey';
+            columns: ['society_id', 'group_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_groups';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_posts_moderated_by_fkey';
+            columns: ['moderated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_posts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_preferences: {
+        Row: {
+          membership_id: string;
+          new_listing_alerts: boolean;
+          society_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          membership_id: string;
+          new_listing_alerts?: boolean;
+          society_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          membership_id?: string;
+          new_listing_alerts?: boolean;
+          society_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_preferences_membership_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: true;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_preferences_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_replies: {
+        Row: {
+          author_membership_id: string;
+          author_name: string;
+          author_unit_label: string | null;
+          author_user_id: string;
+          body: string;
+          client_request_id: string;
+          created_at: string;
+          id: string;
+          listing_id: string | null;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
+          post_id: string | null;
+          society_id: string;
+          status: string;
+          status_changed_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          author_membership_id: string;
+          author_name: string;
+          author_unit_label?: string | null;
+          author_user_id: string;
+          body: string;
+          client_request_id: string;
+          created_at?: string;
+          id?: string;
+          listing_id?: string | null;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          post_id?: string | null;
+          society_id: string;
+          status?: string;
+          status_changed_at?: string;
+        };
+        Update: {
+          author_membership_id?: string;
+          author_name?: string;
+          author_unit_label?: string | null;
+          author_user_id?: string;
+          body?: string;
+          client_request_id?: string;
+          created_at?: string;
+          id?: string;
+          listing_id?: string | null;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          post_id?: string | null;
+          society_id?: string;
+          status?: string;
+          status_changed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_replies_author_membership_fkey';
+            columns: ['society_id', 'author_membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_replies_author_user_id_fkey';
+            columns: ['author_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_replies_listing_fkey';
+            columns: ['society_id', 'listing_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_listings';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_replies_moderated_by_fkey';
+            columns: ['moderated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_replies_post_fkey';
+            columns: ['society_id', 'post_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_posts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_replies_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      community_reports: {
+        Row: {
+          created_at: string;
+          id: string;
+          listing_id: string | null;
+          note: string | null;
+          post_id: string | null;
+          reason: string;
+          reply_id: string | null;
+          reporter_unit_id: string;
+          reporter_user_id: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          society_id: string;
+          status: string;
+          target_id: string | null;
+          target_type: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          listing_id?: string | null;
+          note?: string | null;
+          post_id?: string | null;
+          reason: string;
+          reply_id?: string | null;
+          reporter_unit_id: string;
+          reporter_user_id: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          society_id: string;
+          status?: string;
+          target_id?: never;
+          target_type: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          listing_id?: string | null;
+          note?: string | null;
+          post_id?: string | null;
+          reason?: string;
+          reply_id?: string | null;
+          reporter_unit_id?: string;
+          reporter_user_id?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          society_id?: string;
+          status?: string;
+          target_id?: never;
+          target_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'community_reports_listing_fkey';
+            columns: ['society_id', 'listing_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_listings';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_reports_post_fkey';
+            columns: ['society_id', 'post_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_posts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_reports_reply_fkey';
+            columns: ['society_id', 'reply_id'];
+            isOneToOne: false;
+            referencedRelation: 'community_replies';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_reports_reporter_unit_fkey';
+            columns: ['society_id', 'reporter_unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'community_reports_reporter_user_id_fkey';
+            columns: ['reporter_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_reports_resolved_by_fkey';
+            columns: ['resolved_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'community_reports_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       delivery_entries: {
         Row: {
           client_request_id: string;
@@ -9630,6 +10316,256 @@ export type Database = {
         Returns: undefined;
       };
       claim_memberships: { Args: Record<PropertyKey, never>; Returns: number };
+      community_admin_groups: { Args: { p_society_id: string }; Returns: Json };
+      community_admin_item_get: {
+        Args: {
+          p_society_id: string;
+          p_target_id: string;
+          p_target_type: string;
+        };
+        Returns: Json;
+      };
+      community_admin_mutes: { Args: { p_society_id: string }; Returns: Json };
+      community_admin_queue: {
+        Args: {
+          p_limit: number;
+          p_offset: number;
+          p_queue: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_group_archive: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_group_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_group_feed: {
+        Args: {
+          p_group_id: string;
+          p_limit: number;
+          p_offset: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_group_join: {
+        Args: {
+          p_group_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_group_leave: {
+        Args: {
+          p_group_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_group_save: {
+        Args: {
+          p_description: string;
+          p_expected_version: number;
+          p_group_id: string;
+          p_name: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_home: { Args: { p_society_id: string }; Returns: Json };
+      community_listing_close: {
+        Args: {
+          p_listing_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_listing_create: {
+        Args: {
+          p_client_request_id: string;
+          p_listing: Json;
+          p_photo_paths: string[];
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_listing_get: {
+        Args: { p_listing_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      community_listing_renew: {
+        Args: {
+          p_listing_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_listing_update: {
+        Args: {
+          p_expected_version: number;
+          p_listing: Json;
+          p_listing_id: string;
+          p_photo_paths: string[];
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_listing_withdraw: {
+        Args: {
+          p_listing_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_marketplace: {
+        Args: {
+          p_limit: number;
+          p_offset: number;
+          p_search: string;
+          p_society_id: string;
+          p_type: string;
+        };
+        Returns: Json;
+      };
+      community_member_options: {
+        Args: { p_limit: number; p_search: string; p_society_id: string };
+        Returns: Json;
+      };
+      community_moderate: {
+        Args: {
+          p_action: string;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_target_id: string;
+          p_target_type: string;
+        };
+        Returns: Json;
+      };
+      community_mute: {
+        Args: {
+          p_duration: string;
+          p_membership_id: string;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_my_items: { Args: { p_society_id: string }; Returns: Json };
+      community_photo_access: {
+        Args: { p_path: string; p_society_id: string };
+        Returns: boolean;
+      };
+      community_photo_upload_path: {
+        Args: {
+          p_content_type: string;
+          p_size_bytes: number;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      community_post_create: {
+        Args: {
+          p_body: string;
+          p_client_request_id: string;
+          p_group_id: string;
+          p_photo_paths: string[];
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_post_get: {
+        Args: { p_post_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      community_post_update: {
+        Args: {
+          p_body: string;
+          p_expected_version: number;
+          p_photo_paths: string[];
+          p_post_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_post_withdraw: {
+        Args: { p_post_id: string; p_request_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      community_preferences_set: {
+        Args: {
+          p_new_listing_alerts: boolean;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_reply_create: {
+        Args: {
+          p_body: string;
+          p_client_request_id: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_target_id: string;
+          p_target_type: string;
+        };
+        Returns: Json;
+      };
+      community_reply_delete: {
+        Args: {
+          p_reply_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      community_report: {
+        Args: {
+          p_note: string;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_target_id: string;
+          p_target_type: string;
+        };
+        Returns: Json;
+      };
+      community_retention_files_list: {
+        Args: { p_today: string };
+        Returns: {
+          bucket: string;
+          path: string;
+        }[];
+      };
+      community_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: Json;
+      };
+      community_unmute: {
+        Args: {
+          p_membership_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       consume_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };
         Returns: {

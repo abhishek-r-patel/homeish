@@ -23,6 +23,7 @@ const expectedBuckets = [
   'patrol-photos',
   'metering-photos',
   'vendor-files',
+  'community-photos',
 ];
 
 describe.skipIf(!hasDatabase)('database private file storage', () => {
