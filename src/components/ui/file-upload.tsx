@@ -208,6 +208,7 @@ export function FileUpload({
         multiple={maxFiles > 1}
         onChange={handleInputChange}
         ref={fileInputRef}
+        tabIndex={-1}
         type="file"
       />
       {capturePhoto ? (
