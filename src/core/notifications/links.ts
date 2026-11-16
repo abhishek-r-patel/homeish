@@ -13,6 +13,8 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
   meeting_admin: '/admin/meetings',
   event: '/events',
   event_admin: '/admin/events',
+  community_post: '/community/posts',
+  community_listing: '/community/marketplace',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
@@ -40,6 +42,7 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   home_services_admin: '/admin/home-services',
   meeting_action: '/meetings/actions',
   meeting_action_admin: '/admin/meetings/actions',
+  community_admin: '/admin/community',
 };
 
 export function notificationPath(

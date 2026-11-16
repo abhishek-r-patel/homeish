@@ -65,6 +65,10 @@ import {
   DEFAULT_EVENT_SETTINGS,
   eventSettingsSchema,
 } from '../event/validation';
+import {
+  DEFAULT_COMMUNITY_SETTINGS,
+  communitySettingsSchema,
+} from '../community/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -1044,6 +1048,34 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: eventSettingsSchema,
   },
+  community: {
+    core: false,
+    defaultSettings: DEFAULT_COMMUNITY_SETTINGS,
+    key: 'community',
+    name: 'Community & Marketplace',
+    navigation: {
+      resident: [
+        {
+          href: '/community',
+          label: 'Community',
+          permission: 'community:participate',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/community',
+          label: 'Community',
+          permission: 'community:moderate',
+        },
+      ],
+    },
+    permissions: {
+      'community:participate': ['resident'],
+      'community:moderate': ['admin'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: communitySettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -1084,6 +1116,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'poll',
     'meeting',
     'event',
+    'community',
   ],
   committee: [
     'core',
@@ -1141,6 +1174,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'poll',
     'meeting',
     'event',
+    'community',
   ],
 };
 
