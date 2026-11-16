@@ -143,6 +143,15 @@ accessibility spec.
 - [ ] Settings: checkboxes are grouped by module; metrics of a switched-off module are disabled and read "Module is off"; the selected count is announced as it changes; save success and the version-conflict message are announced.
 - [ ] Committee members find no Settings or Export controls and get the no-permission state on the settings page.
 
+## Events & RSVPs (P30)
+
+Preliminary checks use `/fixtures/event` with synthetic scenarios; the fixture is included in the automated
+accessibility spec.
+
+- [ ] Resident: the flat being answered for is named on the Save button; Going / Not going is a labelled radio group; the headcount field appears only for Going and its limit error is announced.
+- [ ] The contribution preview and refund line are read as text and update as the headcount changes; full, closed and cancelled states are announced as text, not colour alone.
+- [ ] Admin and committee: publish and cancel confirmations are reachable by keyboard; the cancel reason is required and its error is announced; the RSVP table has headers and scrolls inside its own area at 320px.
+
 ## Guard patrol and incident log (P25)
 
 Preliminary checks use `/fixtures/patrol` with synthetic data; its role (guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the guard screen, the admin screen and the committee view-only screen.

@@ -67,8 +67,9 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | **Polls (P22)**                | `poll_votes`, `poll_vote_blocks`, `poll_options`, `poll_offices`, `poll_candidates`, `poll_unit_representatives`, `poll_electorate`, `poll_participation`, `poll_public_responses`, `poll_private_tallies`                                                               |
 | **Meetings (P23)**             | `meetings`, `meeting_agenda_items`, `meeting_invitee_selections`, `meeting_invited_units`, `meeting_invited_members`, `meeting_attendance`, `meeting_resolutions`, `meeting_minutes`, `meeting_action_items`                                                             |
 | **Analytics (P27, Core)**      | `analytics_preferences`                                                                                                                                                                                                                                                  |
+| **Events (P30)**               | `events`, `event_audience_blocks`, `event_rsvps`, `event_rsvp_charges`                                                                                                                                                                                                   |
 
-Inventory above: **36 MVP tables + 3 P17 directory tables + 5 P16 expense tables + 10 P22 poll tables + 9 P23 meeting tables + 1 P27 analytics table**; other post-MVP module tables are described in Section 9.
+Inventory above: **36 MVP tables + 3 P17 directory tables + 5 P16 expense tables + 10 P22 poll tables + 9 P23 meeting tables + 1 P27 analytics table + 4 P30 event tables**; other post-MVP module tables are described in Section 9.
 
 Post-MVP modules (staff, housekeeping, AMC, notice, amenity, directory, expense, poll and meeting) and committee analytics are outlined in Section 9. P17, P16, P22, P23 and P27 have been tested locally only; module status follows the implementation plan.
 
@@ -1165,6 +1166,42 @@ are no summary, snapshot or materialised tables and no new indexes.
 The opt-in performance test (`PERF_ANALYTICS=1`) seeds 500 units and 12 months of data and requires the full
 49-metric dashboard in under 2 s; it measured about 1.2 s locally. The integration tests have run against disposable
 local PostgreSQL only.
+
+### 9.20 Events & RSVPs (P30; D-63)
+
+Migrations `20261121100000_core_register_event_module.sql`, `20261121110000_event_foundation.sql`,
+`20261121120000_event_lifecycle_rsvp.sql` and `20261121130000_event_reads_reminders.sql`. The module is disabled by
+default and has no settings. Every event table is society-scoped, carries the society id on every link, has RLS with a
+deny-all direct-access policy, revokes direct table privileges (including `service_role`) and rejects `TRUNCATE`;
+access is through authorized security-definer RPCs. Records are kept permanently because they back ledger entries.
+
+- `events`: draft/published/cancelled lifecycle ("past" is derived from `ends_at`); title, description, venue, start
+  and end (at most 14 days apart), optional RSVP deadline (on or before the start), optional `capacity` and
+  `max_per_unit`; `contribution_type` none/per_unit/per_head with `contribution_paise`; audience `all` or `blocks`;
+  optimistic `version`; idempotent create through `client_request_id`; `reminder_sent_at`. A trigger freezes the
+  contribution and publish fields once published, freezes cancelled events and allows deleting drafts only.
+- `event_audience_blocks`: the chosen blocks when the audience is `blocks`.
+- `event_rsvps`: one row per event and unit; `going` with headcount 1–100 or `not_going` with 0; optimistic version.
+  Rows are never deleted. A unit that answered keeps access after the audience is narrowed, so it can still withdraw.
+- `event_rsvp_charges` (append-only): every contribution debit and refund credit, each linked once to its
+  `billing_ledger_entries` row (`adjustment`, reasons `Event contribution: <title>` and `Event refund: <title>`)
+  through the same-society, same-unit composite key. Going charges immediately (per flat, or per person × headcount);
+  a per-person headcount change refunds the previous charge and charges the new amount; withdrawing before the
+  deadline refunds the net; cancelling refunds every unit with a net charge (in unit order, even if billing was later
+  switched off). The net per RSVP never goes below zero.
+- RSVPs, edits and cancellation lock the event row before reading the going total, so parallel answers never exceed
+  capacity, and capacity cannot be lowered below the current going headcount. Contributions require `billing`
+  enabled at publish and at each Going answer.
+- RPCs: `event_create`, `event_update`, `event_draft_delete`, `event_publish`, `event_cancel` (admin, committee),
+  `event_rsvp_set` (resident occupant), read models `event_admin_list`, `event_admin_get`, `event_block_options`,
+  `event_member_list` and `event_member_get`, and the service-role-only `event_reminders_run` (published events
+  starting on society-local tomorrow, once per event via `reminder_sent_at` and `SKIP LOCKED`; reset when the start
+  changes). Resident reads return only the caller's occupied units plus total going headcount and spots left;
+  drafts and events outside the caller's audience return `P0002`. Notification fan-out is capped at 2000 recipients.
+
+The integration tests cover society isolation, role and module gates, lifecycle triggers, audience by blocks, limits
+including 10 parallel RSVPs, every charge and refund path with billing on and off, and reminder idempotency; they have
+run against disposable local PostgreSQL only.
 
 ## 10. Reference: Module Settings Keys (`module_configs.settings`)
 

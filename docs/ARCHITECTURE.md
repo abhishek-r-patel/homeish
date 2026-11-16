@@ -184,6 +184,11 @@ full 49-metric dashboard stays under 2 s at target scale in the opt-in performan
 tables with plain CSS bars (no chart library); the admin-only export reuses `pdf-lib` and the formula-safe CSV
 pattern.
 
+P30 Events & RSVPs (`event`) is disabled by default and follows the module pattern in `src/core/event/`. Contributions
+reuse the amenity booking approach: the RSVP function itself appends adjustment debits and credits to the flat's
+billing ledger in the same transaction, so a charge and its RSVP can never disagree. A synthetic `/fixtures/event`
+page supports accessibility and journey checks.
+
 The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client component rendered by the shared app shell for guards and for any user whose society has `sos` enabled. It loads `sos_my_alerts` on mount, rechecks every 30 seconds, and treats Realtime inserts on the user's own `notifications` rows as a hint to reload, so it adds no Realtime table. It stays on every screen while the alert is open until the recipient dismisses their own copy ("Seen — stop alert" for responders, who also get a Respond link; "Dismiss" for residents); acknowledging, updating and closing happen on the SOS screens. On guard devices it plays a short Web Audio alarm every 30 seconds, with visible mute/unmute and "turn on alert sound" controls when the browser blocks autoplay; a device that cannot play sound shows a "keep this screen in view" message. Delivery is in-app and Realtime only, with no push, SMS or calls (PRD D-41).
 
 ### 5.3 PWA scope (PRD D-23)
@@ -271,9 +276,9 @@ P23 adds `meeting.action_reminders` after `poll.reconcile`. Its privileged wrapp
 overdue in-app reminder per open action item per society-local day; the wrapper then sends the matching push
 notifications for that request ID.
 
----
-
-## 7. Database Interaction
+P30 adds `event.reminders` after `meeting.action_reminders`. Its privileged wrapper (`src/core/privileged/event.ts`)
+calls the service-role-only `event_reminders_run`, which reminds Going flats once per event the day before it starts,
+then sends the matching push notifications for that request ID.
 
 ### 7.1 Access method
 
@@ -399,6 +404,9 @@ Meetings routes, and the synthetic fixture at `src/app/fixtures/meeting/`.
 
 P27 adds `src/core/analytics/`, `src/components/analytics/`, the admin Analytics routes, the export route under
 `src/app/api/analytics/`, and the synthetic fixture at `src/app/fixtures/analytics/`.
+
+P30 adds `src/core/event/`, `src/core/privileged/event.ts`, `src/components/event/`, resident and admin Events
+routes, and the synthetic fixture at `src/app/fixtures/event/`.
 
 ```
 homeish/

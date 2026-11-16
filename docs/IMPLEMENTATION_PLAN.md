@@ -117,32 +117,32 @@ flowchart TD
 
 Arrows are recommended build order; "after Pxx" inside a box marks a phase that builds on another phase. At runtime every module works on its own; links to other optional modules activate only when those are enabled (PRD A-36). Blocks are 6-hour work blocks (Section 2.5).
 
-| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status         |
-| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | -------------- |
-| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅             |
-| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅             |
-| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅             |
-| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅             |
-| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅             |
-| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅             |
-| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅             |
-| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅             |
-| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅             |
-| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅             |
-| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅             |
-| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ✅             |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ✅             |
-| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅             |
-| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅             |
-| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅             |
-| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅             |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅             |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started |
-| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅             |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅             |
-| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started |
-| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started |
+| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                            |
+| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | --------------------------------- |
+| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅                                |
+| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅                                |
+| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅                                |
+| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅                                |
+| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅                                |
+| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅                                |
+| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅                                |
+| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅                                |
+| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅                                |
+| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅                                |
+| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅                                |
+| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ✅                                |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ✅                                |
+| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅                                |
+| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅                                |
+| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅                                |
+| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅                                |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅                                |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                    |
+| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | 🟡 Locally verified and committed |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅                                |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅                                |
+| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                    |
+| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                    |
 
 Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 14 blocks, with P28, P31 and P32 released.
 
@@ -1287,22 +1287,26 @@ DATABASE 15.2.
 
 **Goal:** event announcements with RSVPs and optional contributions billed through the existing bills (PRD 5.10.13, P5-3).
 
-**Prerequisites:** `billing` contributions. Size M, about 2 blocks. **Kickoff decisions (open):** event visibility; RSVP limits; contribution handling.
+**Prerequisites:** `billing` contributions. Size M, about 2 blocks. **Kickoff decisions (settled, D-63):** admin and committee manage events for the whole society or chosen blocks; one answer per flat (Going with a headcount, or Not going); optional capacity, per-flat limit and deadline, no waitlist; optional per-flat or per-person contribution charged to the flat's bill when `billing` is on, refunded on withdrawal before the deadline or cancellation; in-app and push notices plus a day-before reminder; records kept permanently.
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                         | Status |
-| ----- | ---------------------------------------------------------------------------- | ------ |
-| P30.1 | Migration: events and RSVPs with guest count; RLS                            | ⬜     |
-| P30.2 | Event announcements and RSVP with guest count                                | ⬜     |
-| P30.3 | Optional contribution recorded as a billing charge when `billing` is enabled | ⬜     |
-| P30.4 | Admin and resident screens                                                   | ⬜     |
+| ID    | Task                                                                                                                                      | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P30.1 | Migrations `20261121100000`–`20261121130000`: events, audience blocks, RSVPs and append-only charge links; RLS and guards (DATABASE 9.20) | 🟡     |
+| P30.2 | Publish, edit, cancel and RSVP with headcount, capacity, per-flat limit and deadline; notifications and the `event.reminders` daily job   | 🟡     |
+| P30.3 | Contribution charged and refunded through billing ledger adjustments when `billing` is enabled (API 5.28)                                 | 🟡     |
+| P30.4 | Resident `/events` and admin `/admin/events` screens; fixture `/fixtures/event`                                                           | 🟡     |
 
 **Tests:** RSVP limits, billing on/off combinations, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-18): locally verified and committed on the feature branch; not pushed, not migrated to testdb, and the module ships disabled.** The full local gate passed: `npm run check` (**715 unit tests**), the complete database suite on a disposable local PostgreSQL (**353 tests passed, 11 skipped**), `npm run build` and the complete Playwright suite (**161 tests**, including axe on `/fixtures/event`). A database safety review found no blocking issues; its one finding (lock order when cancelling) was fixed. Still required: owner review of the assumptions below and owner UAT.
+
+**Assumptions for owner review:**
+
+- A flat that already answered keeps seeing the event after the audience is narrowed, so it can still withdraw.
+- Cancelling refunds every paid answer even if `billing` was switched off after people answered.
+- Changing the start time sends a fresh day-before reminder.
 
 ---
 
