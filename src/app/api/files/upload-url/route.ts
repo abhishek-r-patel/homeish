@@ -19,12 +19,28 @@ import { authorizeRequest } from '../../../../core/permissions/authorize';
 import { prepareTenancyProofUpload } from '../../../../core/tenancy/moves/files';
 import { tenancyProofKindSchema } from '../../../../core/tenancy/moves/validation';
 import { prepareParkingPhotoUpload } from '../../../../core/parking/files';
+import { preparePatrolPhotoUpload } from '../../../../core/patrol/files';
+import { prepareMeteringPhotoUpload } from '../../../../core/metering/files';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 
 const issueSchema = z.discriminatedUnion('bucket', [
   z
     .object({
+      bucket: z.literal('metering-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
+  z
+    .object({
       bucket: z.literal('parking-photos'),
+      contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('patrol-photos'),
       contentType: z.enum(['image/jpeg', 'image/png']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
     })
@@ -182,6 +198,40 @@ export async function POST(request: Request) {
           .createSignedUploadUrl(path);
         if (error || !data) {
           throw new Error('Could not issue the parking photo upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'patrol-photos') {
+        const path = await preparePatrolPhotoUpload(context, input);
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the incident photo upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'metering-photos') {
+        const path = await prepareMeteringPhotoUpload(context, input);
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the meter photo upload token.', {
             cause: error,
           });
         }

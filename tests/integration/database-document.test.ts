@@ -805,7 +805,9 @@ describe.skipIf(!hasDatabase)('database document repository', () => {
           [[stale, attachedPath]],
         ),
       );
-      const today = new Date().toISOString().slice(0, 10);
+      const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+      }).format(new Date());
       const listed = await database.asRole(
         'service_role',
         {},

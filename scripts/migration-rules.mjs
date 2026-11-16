@@ -16,6 +16,9 @@ export const MODULE_KEYS = [
   'document',
   'parking',
   'sos',
+  'vendor',
+  'patrol',
+  'metering',
 ];
 
 const modulePattern = MODULE_KEYS.join('|');
