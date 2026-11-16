@@ -23,6 +23,7 @@ export const MODULE_KEYS = [
   'home_services',
   'poll',
   'meeting',
+  'event',
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];

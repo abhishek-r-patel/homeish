@@ -11,6 +11,8 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
   poll: '/polls',
   meeting: '/meetings',
   meeting_admin: '/admin/meetings',
+  event: '/events',
+  event_admin: '/admin/events',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
