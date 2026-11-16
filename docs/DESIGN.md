@@ -426,21 +426,28 @@ Defined in Section 9.
 
 ### 6.20 Module-specific composites
 
-| Composite             | Used in               | Anatomy                                                                                                                |
-| --------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Visitor approval card | R-02 (push deep link) | Visitor photo or placeholder, name, purpose, vehicle, time, large Allow / Deny pair                                    |
-| Guard waiting panel   | G-02                  | Visitor summary, live status chip, elapsed timer, fallback actions after timeout (Call Resident, Allow By Guard)       |
-| Gate action tile      | G-01                  | 64px+ tile, 28px icon, `guard-action` label, pending-count badge                                                       |
-| Amount due hero       | R-04                  | Label, `display` amount, due date chip, primary Pay Now                                                                |
-| UPI pay panel         | R-04                  | Payee name, UPI ID with Copy, QR, Pay with UPI App button, "last changed" line                                         |
-| Payment review row    | A-07                  | Unit, amount, reference with Copy, screenshot thumbnail, submitted time, Confirm / Reject                              |
-| Ledger row            | R-04, A-07            | Date, description, debit, credit, running balance (table)                                                              |
-| Staff profile editor  | R-06, A-13            | Name, phone, role, photo upload, optional ID type + last four, verification flag, linked units and society status      |
-| Staff gate card       | G-01                  | Name, photo, role, destination-unit block warning and one explicit Check in or Check out action; no phone or ID        |
-| Society shift row     | A-13                  | Staff name, date and Present / Absent / Leave; existing dates remain editable                                          |
-| Module toggle row     | D-03                  | Module name, description, On/Off switch with text, last changed by/at, settings link                                   |
-| Log detail panel      | D-05                  | Header (severity, reference ID, status), context list, stack trace (monospace, wrap + copy), actions (Resolve, Ignore) |
-| Rating input          | R-05                  | Five 48px star buttons as radio group with text value, labelled "1 of 5" etc.                                          |
+| Composite             | Used in               | Anatomy                                                                                                                                                                                               |
+| --------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitor approval card | R-02 (push deep link) | Visitor photo or placeholder, name, purpose, vehicle, time, large Allow / Deny pair                                                                                                                   |
+| Guard waiting panel   | G-02                  | Visitor summary, live status chip, elapsed timer, fallback actions after timeout (Call Resident, Allow By Guard)                                                                                      |
+| Gate action tile      | G-01                  | 64px+ tile, 28px icon, `guard-action` label, pending-count badge                                                                                                                                      |
+| Amount due hero       | R-04                  | Label, `display` amount, due date chip, primary Pay Now                                                                                                                                               |
+| UPI pay panel         | R-04                  | Payee name, UPI ID with Copy, QR, Pay with UPI App button, "last changed" line                                                                                                                        |
+| Payment review row    | A-07                  | Unit, amount, reference with Copy, screenshot thumbnail, submitted time, Confirm / Reject                                                                                                             |
+| Ledger row            | R-04, A-07            | Date, description, debit, credit, running balance (table)                                                                                                                                             |
+| Staff profile editor  | R-06, A-13            | Name, phone, role, photo upload, optional ID type + last four, verification flag, linked units and society status                                                                                     |
+| Staff gate card       | G-01                  | Name, photo, role, destination-unit block warning and one explicit Check in or Check out action; no phone or ID                                                                                       |
+| Society shift row     | A-13                  | Staff name, date and Present / Absent / Leave; existing dates remain editable                                                                                                                         |
+| Module toggle row     | D-03                  | Module name, description, On/Off switch with text, last changed by/at, settings link                                                                                                                  |
+| Log detail panel      | D-05                  | Header (severity, reference ID, status), context list, stack trace (monospace, wrap + copy), actions (Resolve, Ignore)                                                                                |
+| Rating input          | R-05                  | Five 48px star buttons as radio group with text value, labelled "1 of 5" etc.                                                                                                                         |
+| Poll ballot           | P22                   | Names the unit being represented; PRIVATE ballots require a review step and never echo choices in the submission confirmation                                                                         |
+| Poll results          | P22                   | Reads turnout and permitted totals as text, distinguishes ties/no-votes/no-winner, and keeps private aggregate results separate from the completed voter roster                                       |
+| Meeting quorum        | P23                   | Shows present / invited and the required percentage as text under a "Quorum met" or "Quorum not met" banner title; it is an indicator and never blocks an action                                      |
+| Meeting notice banner | P23                   | Warning banner when the start is sooner than the society's notice days; it states given vs required days and does not block scheduling                                                                |
+| Minutes copy failed   | P23                   | After publish, an error banner says the minutes are published but the Documents copy failed, with a Retry button; publishing is never undone                                                          |
+| Analytics card        | P27                   | Metric name, module tag, short description, range caption and a "View in" link to the module; trends are a scrollable table with CSS bars, breakdowns a ranked list, today's figures big-number tiles |
+| Analytics range       | P27                   | 3 / 6 / 12 months as links with the current one marked; money metrics can switch to "This financial year"; money in ₹ with Indian grouping, missing values "—"                                        |
 
 ---
 
@@ -756,6 +763,25 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **Guard (`/guard/metering`, phone-first, 56px targets):** **Find a meter** by unit, label or serial, then **Meters** with the last reading and a quick entry form per meter (reading, date, optional photo, reason when lower); success says "Reading saved." and the guard's own **Recent readings** follow. Guards never see rates, charges or residents' photos.
 - **Admin (`/admin/metering`):** **Readings to review** first (meter, unit, submitted value against the previous reading, the photo through a short-lived link, the resident's reason, **Approve** and **Reject** with a required reason), then **Record a reading**, **Meters** (add or edit type, unit or common area, label, serial, initial reading and Active/Inactive; type, scope and unit are fixed after creation), **Rates** (rupees per kWh, kL or SCM per type with recent history; changes apply to readings not yet billed), **Utility billing** (waiting-to-bill count with how many need a rate, billed count and total, no-charge count, last billed time, and the manual catch-up **Add usage to bills** with a bill date, explaining that monthly bill generation already adds a separate utility bill per unit; a "Billing is turned off" banner when Billing is disabled), **Usage by month** (last 6 months per meter with flags **Unusually high**, more than twice the previous 3-month average, and **No usage**, an occupied unit's meter that used nothing) and **Recent readings**. Committee members see the same page with a **View only** banner and no forms or buttons.
 - Statuses are always words (Waiting for review, Approved, Rejected; To be billed, Billed, No charge), never colour alone. Route states: loading skeleton, error with retry, module disabled and access denied. Development-only fixture `/fixtures/metering` covers the resident, guard, admin and committee views in ready, empty and each route state with synthetic in-memory data.
+
+### 12.13 Asset register (P28)
+
+- **Workspace (`/admin/assets`, admin and committee):** **Asset Register** lists assets with category, location, status (Active, Under repair, Retired, always words) and the warranty state ("Under warranty until …", "Warranty ends soon, on …", "Warranty ended …"), with search and category, status and warranty filters; a note appears when only the first 1,000 assets are loaded. Admins see **Add an asset** and **Asset categories**; committee members see the same lists with no forms or buttons.
+- **Detail (`/admin/assets/[assetId]`):** **Details**, **Annual maintenance contract** (shown only when AMC is enabled and linked) and **Maintenance history**, which merges manual entries and AMC visits newest first; admins also get **Record maintenance** and a confirmed **Remove entry** on manual entries.
+- **Form (`/admin/assets/new`, `/admin/assets/[assetId]/edit`):** category, name, location, make, model, serial, supplier, purchase date and cost in rupees, warranty end, status, notes and, when AMC is enabled, the contract picker. With no categories the form says **Add a category first**. If the AMC setting changed after the form opened, saving asks the admin to reload.
+- **Categories (`/admin/assets/categories`, admin):** add, rename and turn categories on or off.
+- Route states: loading skeleton, error with retry, module disabled, access denied and not found. Development-only fixture `/fixtures/asset` covers admin and committee views with synthetic data.
+
+### 12.14 Home-services directory (P31)
+
+- **Resident (`/home-services`):** **Home services** lists approved providers by service type with the average stars as text ("4.5 out of 5 from 12 ratings"), search by name, area or notes and a type filter, and a tap-to-call phone link. A provider page shows **Contact**, the resident's own rating form (1–5 stars, optional comment, editable) and **Comments** without names. If an admin hid the resident's comment, **Your comment is hidden** explains that the stars still count. A note appears when the list was cut at 500.
+- **Admin and committee (`/admin/home-services`):** **Awaiting approval** (committee suggestions, with **Approve** and **Reject** with a reason for admins), **Listed providers**, **Archived and not approved** and **Recent comments** with the rater's name. Admins see **Add a provider**, edit, archive and **Hide comment**/**Show comment**; committee members see **Suggest a provider** and a **Committee view** banner. A hidden comment shows "Comment hidden by an admin." to committee members.
+- Route states: loading skeleton, error with retry, module disabled, access denied and not found. Development-only fixture `/fixtures/home-services` covers the resident, admin and committee views with synthetic data.
+
+### 12.15 Service-request SLA escalation (P32)
+
+- Request lists and details show an **Escalated to admins** or **Escalated to committee** chip (words, not colour alone) next to the overdue state, and the timeline shows the escalation entry. The requester never sees who was notified.
+- The admin **Categories** tab adds "Escalate to committee after (days)" (1–30, default 2) to each category and an **SLA escalation** card ("Send escalations by": **In-app** or **In-app + email**) explaining that recipients always get an in-app notification and residents see only that the request was escalated.
 
 ---
 

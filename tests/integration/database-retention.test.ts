@@ -343,6 +343,139 @@ describe.skipIf(!hasDatabase)('database retention', () => {
     });
   });
 
+  it('keeps old request history while an AMC link exists', async () => {
+    const linkedRequestId = await database.asSuperuser(async (client) => {
+      const categoryId = (
+        await client.query<{ id: string }>(
+          `select id
+           from public.service_request_categories
+           where society_id = $1
+           limit 1`,
+          [societyId],
+        )
+      ).rows[0]!.id;
+      const contractId = (
+        await client.query<{ id: string }>(
+          `insert into public.amc_contracts (
+             society_id, asset_label, vendor_name, vendor_contact, start_date,
+             end_date, cost_paise, payment_terms, visit_frequency, created_by,
+             updated_by, client_request_id
+           )
+           values (
+             $1, 'Lift', 'Service Co', '555-0101', '2024-01-01', '2027-01-01',
+             0, 'Annual', 'Annual', $2, $2, gen_random_uuid()
+           )
+           returning id`,
+          [societyId, adminId],
+        )
+      ).rows[0]!.id;
+      const requestId = (
+        await client.query<{ id: string }>(
+          `insert into public.service_requests (
+             society_id, created_by, category_id, location_type, description,
+             status, resolved_at, closed_at, client_request_id
+           )
+           values (
+             $1, $2, $3, 'common_area', 'Old AMC-linked request',
+             'closed', '2024-01-01', '2024-01-01', gen_random_uuid()
+           )
+           returning id`,
+          [societyId, residentId, categoryId],
+        )
+      ).rows[0]!.id;
+      await client.query(
+        `insert into public.amc_request_links (society_id, request_id, contract_id)
+         values ($1, $2, $3)`,
+        [societyId, requestId, contractId],
+      );
+      const commentId = (
+        await client.query<{ id: string }>(
+          `insert into public.service_request_comments (
+             society_id, created_by, request_id, body, client_request_id
+           )
+           values ($1, $2, $3, 'Retain this comment', gen_random_uuid())
+           returning id`,
+          [societyId, residentId, requestId],
+        )
+      ).rows[0]!.id;
+      await client.query(
+        `insert into public.service_request_attachments (
+           society_id, created_by, request_id, comment_id, storage_path,
+           content_type, size_bytes
+         )
+         values ($1, $2, $3, $4, 'requests/linked-old.jpg', 'image/jpeg', 1)`,
+        [societyId, residentId, requestId, commentId],
+      );
+      await client.query(
+        `insert into storage.objects (bucket_id, name)
+         values ('request-files', 'requests/linked-old.jpg')`,
+      );
+      await client.query(
+        `insert into public.service_request_events (
+           society_id, created_by, request_id, event_type, to_status
+         )
+         values ($1, $2, $3, 'created', 'open')`,
+        [societyId, residentId, requestId],
+      );
+      return requestId;
+    });
+
+    const result = await database.asRole(
+      'service_role',
+      null,
+      async (client) => {
+        const files = await client.query<{ bucket: string; path: string }>(
+          `select * from public.housekeeping_retention_files_list($1::date)`,
+          ['2026-11-10'],
+        );
+        // Exercise row cleanup when the Storage object is already missing.
+        await client.query(
+          `delete from storage.objects
+           where bucket_id = 'request-files'
+             and name = 'requests/linked-old.jpg'`,
+        );
+        const run = await client.query<{ result: RetentionRunResult }>(
+          `select public.housekeeping_retention_run($1::date, $2::text) as result`,
+          ['2026-11-10', 'retention-amc-link'],
+        );
+        return { files: files.rows, result: run.rows[0]!.result };
+      },
+      { commit: true },
+    );
+    expect(result.files).not.toContainEqual({
+      bucket: 'request-files',
+      path: 'requests/linked-old.jpg',
+    });
+    expect(result.result).toMatchObject({
+      requestAttachmentsDeleted: 0,
+      requestCommentsDeleted: 0,
+      requestEventsDeleted: 0,
+      requestsDeleted: 0,
+    });
+
+    const retainedHistory = await database.asSuperuser(async (client) =>
+      client.query<{
+        requests: number;
+        comments: number;
+        attachments: number;
+        events: number;
+      }>(
+        `select
+           (select count(*)::integer from public.service_requests where id = $1) as requests,
+           (select count(*)::integer from public.service_request_comments where request_id = $1) as comments,
+           (select count(*)::integer from public.service_request_attachments where request_id = $1) as attachments,
+           (select count(*)::integer from public.service_request_events where request_id = $1) as events`,
+        [linkedRequestId],
+      ),
+    );
+    expect(retainedHistory.rows[0]).toEqual({
+      requests: 1,
+      comments: 1,
+      attachments: 1,
+      events: 1,
+    });
+  });
+
   it('keeps retention functions and direct append-only deletion service-only', async () => {
     const denied = await dbError(
       database.asRole('authenticated', { sub: residentId }, (client) =>

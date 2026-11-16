@@ -111,6 +111,38 @@ Preliminary checks use `/fixtures/vendor` with synthetic data; its role (admin, 
 - [ ] Document and quote file uploads announce progress, success and failure; download buttons name the file.
 - [ ] Amount, GSTIN, phone and email fields read their labels, hints and errors; the lists and detail screens remain usable at 200% zoom and 320px.
 
+## Polls & Voting (P22)
+
+Preliminary checks use `/fixtures/poll` with synthetic roles and scenarios; the fixture is included in the automated
+accessibility spec.
+
+- [ ] Resident: the vote names the unit being represented; only the designated representative finds ballot controls, and an ineligible resident sees no submit action.
+- [ ] PUBLIC polls: option labels, selection limits, deadline in IST and the submitted acknowledgement are announced clearly; changing a selection replaces the prior set.
+- [ ] PRIVATE elections: review the complete ballot before the one-time submit; confirmation never repeats choices; active results expose turnout only, and completed aggregate results are separate from the voter roster.
+- [ ] Admin and committee: committee views have no write controls; committee sees no names while a vote is open; required reasons and readiness errors are announced and focus moves to the error.
+- [ ] At actual 200% zoom and 320px, test the draft editor, representative picker, ballot review, results and export controls by keyboard and screen reader.
+
+## Meetings & AGM (P23)
+
+Preliminary checks use `/fixtures/meeting` with synthetic roles and scenarios; the fixture is included in the
+automated accessibility spec.
+
+- [ ] Resident: meeting time, venue or online link and the unit being checked in are announced; **Check in** appears only while check-in is open, and the result is announced once.
+- [ ] Admin: the short-notice warning, quorum status and minutes-copy failure are read as text, not colour alone; Retry is reachable by keyboard.
+- [ ] Attendance board: mode (in person, online, proxy) is a labelled radio group; the proxy name field is required only for proxy and its error is announced.
+- [ ] Minutes editor, resolutions and action items keep labels, version-conflict errors and focus on the error at 200% zoom and 320px.
+- [ ] Committee views have no publish control; residents never see drafts or committee meetings.
+
+## Committee analytics (P27)
+
+Preliminary checks use `/fixtures/analytics` with synthetic data; the fixture is included in the automated
+accessibility spec.
+
+- [ ] Each trend table has a caption, scrolls inside its own focusable area at 320px, and its bars are hidden from screen readers so values are read once as text.
+- [ ] The range and financial-year links announce which choice is current; missing values read as "no data", not a symbol alone.
+- [ ] Settings: checkboxes are grouped by module; metrics of a switched-off module are disabled and read "Module is off"; the selected count is announced as it changes; save success and the version-conflict message are announced.
+- [ ] Committee members find no Settings or Export controls and get the no-permission state on the settings page.
+
 ## Guard patrol and incident log (P25)
 
 Preliminary checks use `/fixtures/patrol` with synthetic data; its role (guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the guard screen, the admin screen and the committee view-only screen.
@@ -131,6 +163,16 @@ Preliminary checks use `/fixtures/metering` with synthetic data; its role (resid
 - [ ] Reading status (Waiting for review, Approved, Rejected), charge status (To be billed, Billed, No charge), meter resets and usage flags (Unusually high, No usage) are read as words, never colour alone; a rejection reads the administrator's reason.
 - [ ] Guard: meter search and the per-meter quick entry work one-handed at 200% zoom and 320px with 56px targets; "Reading saved." is announced once.
 - [ ] Admin: **Approve** and **Reject** sit inside their reading, so meter, unit, values and photo link are read first; reject asks for a reason and returns focus; the monthly usage table has headers; committee hears the **View only** banner and finds no edit controls.
+
+## Asset register, home services and SLA escalation (P28, P31, P32)
+
+Preliminary checks use `/fixtures/asset` and `/fixtures/home-services` with synthetic data; both are in the automated accessibility spec.
+
+- [ ] Assets: status (Active, Under repair, Retired) and warranty state are read as words; the filter chips can be removed by keyboard; the asset form reads every label, hint and error, including the reload message when the AMC setting changed; **Remove entry** asks for confirmation and returns focus.
+- [ ] Assets: committee hears the read-only view and finds no forms or buttons; the register and detail screens work at 200% zoom and 320px.
+- [ ] Home services: each provider's average reads as "4.5 out of 5 from 12 ratings"; the star choice reads "1 star" to "5 stars"; the phone link names the provider; a hidden comment reads "Comment hidden by an admin." to committee members.
+- [ ] Home services: approve, reject (reason required, focus moves to the error), archive and **Hide comment**/**Show comment** are reachable by keyboard and return focus to the trigger.
+- [ ] Service requests: **Escalated to admins** and **Escalated to committee** are read as words in lists, details and the timeline; the "Send escalations by" radio group reads its legend.
 
 ## Guard device outdoors
 

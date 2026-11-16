@@ -48,7 +48,10 @@ export {
 } from './billing';
 export { runRetentionPrivileged } from './retention';
 export { runUserErasurePrivileged } from './user-erasure';
-export { runServiceRequestAutoClosePrivileged } from './service-requests';
+export {
+  runServiceRequestAutoClosePrivileged,
+  runServiceRequestEscalationPrivileged,
+} from './service-requests';
 export { runInventoryRemindersPrivileged } from './housekeeping';
 export type { TransactionalEmail } from '../notifications/email';
 export { runAmcRemindersPrivileged } from './amc';
@@ -56,3 +59,5 @@ export {
   attestTenancyNocPrivileged,
   runTenancyRemindersPrivileged,
 } from './tenancy';
+export { runPollReconcilePrivileged, runPollRetentionPrivileged } from './poll';
+export { runMeetingActionRemindersPrivileged } from './meeting';

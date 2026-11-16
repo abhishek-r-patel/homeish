@@ -34,13 +34,17 @@ export const serviceRequestCategorySchema = z.object({
   sla_hours: z.number().int().nullable(),
   sort_order: z.number().int(),
   active: z.boolean(),
+  committee_escalation_days: z.number().int().min(1).max(30),
 });
+
+export const DEFAULT_COMMITTEE_ESCALATION_DAYS = 2;
 
 export const serviceRequestCategoryInputSchema = z
   .object({
     id: uuid.nullable(),
     name: z.string().trim().min(2).max(80),
     slaHours: z.number().int().min(1).max(8760).nullable(),
+    committeeEscalationDays: z.number().int().min(1).max(30).optional(),
     sortOrder: z.number().int().min(0).max(10000),
     active: z.boolean(),
     expectedUpdatedAt: timestamp.nullable(),
@@ -89,6 +93,38 @@ export const serviceRequestSummarySchema = serviceRequestSchema.extend({
   is_overdue: z.boolean(),
   upvote_count: z.number().int().nonnegative(),
   has_upvoted: z.boolean(),
+  escalation_level: z.enum(['none', 'admin', 'committee']),
+});
+
+export const serviceRequestEscalationDeliverySchema = z.enum([
+  'in_app',
+  'in_app_email',
+]);
+
+export const serviceRequestEscalationSettingsSchema = z.object({
+  delivery: serviceRequestEscalationDeliverySchema,
+  updated_at: timestamp.nullable(),
+});
+
+export const serviceRequestEscalationSettingsInputSchema = z
+  .object({
+    delivery: serviceRequestEscalationDeliverySchema,
+    expectedUpdatedAt: timestamp.nullable(),
+  })
+  .strict();
+
+export const serviceRequestEscalationRunSchema = z.object({
+  admin: z.number().int().nonnegative(),
+  committee: z.number().int().nonnegative(),
+  emails: z.array(
+    z.object({
+      email: z.string(),
+      name: z.string().nullable(),
+      level: z.enum(['admin', 'committee']),
+      request_id: uuid,
+      request_label: z.string(),
+    }),
+  ),
 });
 
 export const serviceRequestUpvoteInputSchema = z
@@ -140,6 +176,7 @@ export const serviceRequestEventSchema = z.object({
     'rated',
     'commented',
     'auto_closed',
+    'escalated',
   ]),
   from_status: serviceRequestStatusSchema.nullable(),
   to_status: serviceRequestStatusSchema.nullable(),
@@ -282,4 +319,12 @@ export type ServiceRequestPriority = z.infer<
 >;
 export type ServiceRequestDashboard = z.infer<
   typeof serviceRequestDashboardSchema
+>;
+export type ServiceRequestEscalationLevel =
+  ServiceRequestSummary['escalation_level'];
+export type ServiceRequestEscalationDelivery = z.infer<
+  typeof serviceRequestEscalationDeliverySchema
+>;
+export type ServiceRequestEscalationSettings = z.infer<
+  typeof serviceRequestEscalationSettingsSchema
 >;

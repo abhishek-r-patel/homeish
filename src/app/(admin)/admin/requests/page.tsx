@@ -2,8 +2,14 @@
 import Link from 'next/link';
 import { z } from 'zod';
 import { Card, StatTile, StatusChip } from '@/components/ui/data-display';
-import { ServiceRequestCategoryManager } from '@/components/service-requests/category-manager';
-import { getServiceRequestWorkspace } from '@/core/service-requests/operations';
+import {
+  ServiceRequestCategoryManager,
+  ServiceRequestEscalationSettingsForm,
+} from '@/components/service-requests/category-manager';
+import {
+  getServiceRequestEscalationSettings,
+  getServiceRequestWorkspace,
+} from '@/core/service-requests/operations';
 import { serviceRequestStatusSchema } from '@/core/service-requests/validation';
 
 export const metadata = {
@@ -84,7 +90,12 @@ export default async function AdminRequestsPage({
         </ul>
       </nav>
       {tab === 'categories' && workspace.canManage ? (
-        <ServiceRequestCategoryManager categories={workspace.categories} />
+        <div className="grid min-w-0 gap-space-4">
+          <ServiceRequestEscalationSettingsForm
+            settings={await getServiceRequestEscalationSettings()}
+          />
+          <ServiceRequestCategoryManager categories={workspace.categories} />
+        </div>
       ) : (
         <>
           {workspace.dashboard ? (
@@ -216,6 +227,11 @@ export default async function AdminRequestsPage({
                         <StatusChip status={`request.${request.status}`} />
                         {request.is_overdue ? (
                           <StatusChip status="request.overdue" />
+                        ) : null}
+                        {request.escalation_level !== 'none' ? (
+                          <StatusChip
+                            status={`request.escalated_${request.escalation_level}`}
+                          />
                         ) : null}
                       </span>
                     </span>

@@ -117,32 +117,32 @@ flowchart TD
 
 Arrows are recommended build order; "after Pxx" inside a box marks a phase that builds on another phase. At runtime every module works on its own; links to other optional modules activate only when those are enabled (PRD A-36). Blocks are 6-hour work blocks (Section 2.5).
 
-| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                                                           |
-| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | -------------------------------------------------------------------------------- |
-| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ⬜ Not started                                                                   |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ⬜ Not started                                                                   |
-| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
-| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
-| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
-| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ⬜ Not started                                                                   |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ⬜ Not started                                                                   |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                                                                   |
-| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                                                                   |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ⬜ Not started                                                                   |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ⬜ Not started                                                                   |
-| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                                                                   |
-| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                                                                   |
+| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                            |
+| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | --------------------------------- |
+| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅                                |
+| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅                                |
+| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅                                |
+| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅                                |
+| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅                                |
+| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅                                |
+| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅                                |
+| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅                                |
+| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅                                |
+| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅                                |
+| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅                                |
+| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | 🟡 Locally verified and committed |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | 🟡 Locally verified and committed |
+| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅                                |
+| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅                                |
+| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅                                |
+| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | 🟡 Locally verified and committed |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | 🟡 Locally verified and committed |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                    |
+| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                    |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | 🟡 Locally verified and committed |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | 🟡 Locally verified and committed |
+| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                    |
+| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                    |
 
 Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave 13 blocks; P5 wave about 14 blocks.
 
@@ -1059,17 +1059,17 @@ DATABASE 15.2.
 - **No data migration** from Civic Pulse societies is planned. A society moving from Civic Pulse to Homeish starts new votes in Homeish; past results stay in Civic Pulse or are archived as PDFs in `document`.
 - **Divergence:** after the port, the two codebases evolve separately. Security fixes to voting rules found in either product are reviewed for the other.
 
-**Kickoff decisions (open):** how a unit's voting representative is designated (primary occupant by default, changeable by the owner?); tenant voting setting (off by default, D-42); whether committee observers see live turnout; retention of PUBLIC responses and participation records; the target scale for the load test (Civic Pulse targets 500 households and about 100 concurrent voters).
+**Kickoff decisions (resolved 2026-11-16, PRD D-60):** representative = primary occupant, else earliest owner, changeable by admin or owner; tenant voting follows the society setting (off by default, D-42), can be overridden per vote while a draft and is fixed when the vote is scheduled or immediately activated; committee sees live turnout counts only; per-person records deleted 2 years after completion or cancellation, totals kept; load test at 500 units and 100 concurrent voters. See PRD §5.10.7.
 
 | ID    | Task                                                                                                                                       | Size | Status |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---- | ------ |
-| P22.1 | Map Civic Pulse tables, functions and privacy rules to the Homeish schema; record the mapping in DATABASE.md; owner approves               | M    | ⬜     |
-| P22.2 | Migration: votes, options, offices/candidates, electorate, participation, public responses, closed tallies; RLS and same-society keys      | L    | ⬜     |
-| P22.3 | Lifecycle and submission functions (activate, schedule, submit, change PUBLIC response, complete, cancel) with atomic, deadline-safe rules | L    | ⬜     |
-| P22.4 | Port Civic Pulse's database tests for duplicate, partial and late ballots and PRIVATE privacy; add cross-society and role-matrix tests     | L    | ⬜     |
-| P22.5 | Admin screens (create, preview, schedule, monitor, results) and resident voting screens                                                    | L    | ⬜     |
-| P22.6 | PDF/CSV exports with `pdf-lib`, following the Civic Pulse privacy rules                                                                    | M    | ⬜     |
-| P22.7 | Load test at the agreed scale; module gate; ships disabled                                                                                 | M    | ⬜     |
+| P22.1 | Map Civic Pulse tables, functions and privacy rules to the Homeish schema; record the mapping in DATABASE.md; owner approves               | M    | ✅     |
+| P22.2 | Migration: votes, options, offices/candidates, electorate, participation, public responses, closed tallies; RLS and same-society keys      | L    | ✅     |
+| P22.3 | Lifecycle and submission functions (activate, schedule, submit, change PUBLIC response, complete, cancel) with atomic, deadline-safe rules | L    | ✅     |
+| P22.4 | Port Civic Pulse's database tests for duplicate, partial and late ballots and PRIVATE privacy; add cross-society and role-matrix tests     | L    | ✅     |
+| P22.5 | Admin screens (create, preview, schedule, monitor, results) and resident voting screens                                                    | L    | ✅     |
+| P22.6 | PDF/CSV exports with `pdf-lib`, following the Civic Pulse privacy rules                                                                    | M    | ✅     |
+| P22.7 | Load test at the agreed scale; module gate; ships disabled                                                                                 | M    | ✅     |
 
 **Database changes:** P22.2. **API changes:** `poll.*` operations.
 
@@ -1077,7 +1077,9 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD POL-1 to POL-6 verified, including zero duplicate, partial or post-deadline ballots under load; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`; the owner approved the database mapping. The module ships disabled. Owner UAT, manual screen-reader/zoom checks and release remain pending. No hosted database migration or module enablement was performed.
+
+**Verification:** `npm run check` passed (638 unit tests); `npm run test:integration:local` passed (61 files, 245 tests; 2 files and 10 tests skipped as configured); `$env:PERF_POLL='1'; npm run test:integration:local -- tests/integration/performance-poll.test.ts` passed with the opt-in 500-unit/100-voter capacity check (62 files, 246 tests; 1 file and 9 tests skipped); `npx playwright test --workers=4` passed (140 tests); and `npm run build` passed. A first full browser run exposed a 320px overflow in the Polls list, which was fixed and verified by the passing full suite. The focused Polls journey covers resident private-ballot review/submission without choice leakage, administrator draft editing and committee read-only access. The database mapping is in DATABASE.md.
 
 ---
 
@@ -1085,24 +1087,26 @@ DATABASE 15.2.
 
 **Goal:** admins schedule meetings with agenda and notice-period checks, record unit attendance and quorum, link resolutions to votes and publish minutes (PRD 5.10.8, P4-2, MTG-1 to MTG-4).
 
-**Prerequisites:** `poll` resolutions and `document` minutes when enabled. Size M, about 2 blocks. **Kickoff decisions (open):** meeting types; quorum rule (percentage of units); notice period; proxy attendance allowed or not.
+**Prerequisites:** `poll` resolutions and `document` minutes when enabled. Size M, about 2 blocks. **Kickoff decisions:** approved 2026-11-16 (PRD D-61, §5.10.8).
 
-**Draft tasks — revisit at kickoff:**
+**Tasks:**
 
 | ID    | Task                                                                                                    | Status |
 | ----- | ------------------------------------------------------------------------------------------------------- | ------ |
-| P23.1 | Migration: meetings, agenda items, unit attendance, resolutions, minutes and action items; RLS          | ⬜     |
-| P23.2 | Schedule a meeting (AGM, SGM, committee) with agenda, venue/online link and notice-period check (MTG-1) | ⬜     |
-| P23.3 | Attendance by unit with a quorum indicator (MTG-2)                                                      | ⬜     |
-| P23.4 | Link resolutions to a `poll` vote when enabled (MTG-3)                                                  | ⬜     |
-| P23.5 | Minutes and action items with owners and due dates; publish minutes to `document` when enabled (MTG-4)  | ⬜     |
-| P23.6 | Admin, committee and resident screens                                                                   | ⬜     |
+| P23.1 | Migration: meetings, agenda items, unit attendance, resolutions, minutes and action items; RLS          | ✅     |
+| P23.2 | Schedule a meeting (AGM, SGM, committee) with agenda, venue/online link and notice-period check (MTG-1) | ✅     |
+| P23.3 | Attendance by unit with a quorum indicator (MTG-2)                                                      | ✅     |
+| P23.4 | Link resolutions to a `poll` vote when enabled (MTG-3)                                                  | ✅     |
+| P23.5 | Minutes and action items with owners and due dates; publish minutes to `document` when enabled (MTG-4)  | ✅     |
+| P23.6 | Admin, committee and resident screens                                                                   | ✅     |
 
 **Tests:** quorum calculation, notice-period check, module on/off combinations for `poll` and `document`, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; PRD MTG-1 to MTG-4 verified; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`. The module ships disabled. A database-safety review found no critical or high issues; its one medium and three low findings (resident visibility through action items, self check-in existence leak, draft polls in resident reads, unaudited attendance removal) were fixed with tests, and the resolution limit was aligned to 50. Owner UAT, manual screen-reader/zoom checks and release remain pending. No hosted database migration or module enablement was performed. Deferred: a poll picker for linking resolutions (the admin pastes a poll ID) and a test of the 2000-recipient notification cap.
+
+**Verification:** `npm run check` passed (661 unit tests); `npm run test:integration:local` passed (66 files, 290 tests; 2 files and 10 tests skipped as configured); `npx playwright test --workers=4` passed (146 tests), and after the final fixes the meeting and accessibility specs passed again (90 tests); `npm run build` passed.
 
 ---
 
@@ -1126,7 +1130,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD VEN-1 to VEN-4 verified; ships disabled.
 
-**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P24–P26 change: `npm run check` (**606 unit tests**), the complete database suite on a disposable local PostgreSQL (**186 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**126 tests**). Database safety reviews were done and their findings fixed. Still required: owner review of the assumptions below, owner UAT and real-device checks. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1160,7 +1164,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD PAT-1 to PAT-4 verified; ships disabled.
 
-**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P24–P26 change: `npm run check` (**606 unit tests**), the complete database suite on a disposable local PostgreSQL (**186 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**126 tests**). Database safety reviews were done and their findings fixed. Still required: owner review of the assumptions below, owner UAT and real-device checks. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1193,7 +1197,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD MTR-1 to MTR-4 verified; ships disabled.
 
-**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P24–P26 change: `npm run check` (**606 unit tests**), the complete database suite on a disposable local PostgreSQL (**186 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**126 tests**). Database safety reviews were done and their findings fixed. Still required: owner review of the assumptions below, owner UAT and real-device checks. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1210,21 +1214,21 @@ DATABASE 15.2.
 
 **Goal:** one aggregate dashboard for admin and committee covering only enabled modules (PRD 5.10.12, P4-6, ANL-1 to ANL-2).
 
-**Prerequisites:** read models of enabled modules. Size M, about 2 blocks. **Kickoff decisions (open):** dashboard metrics and periods; whether committee sees financial figures.
+**Prerequisites:** read models of enabled modules. Size M, about 2 blocks (the D-62 metric catalogue makes it closer to L). **Kickoff decisions:** approved 2026-11-16 (PRD D-62, §5.10.12).
 
-**Draft tasks — revisit at kickoff:**
+**Tasks:**
 
 | ID    | Task                                                                                                                                    | Status |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| P27.1 | Aggregate queries for dues ageing, collection trend, expense vs income, request SLA performance, amenity use and visitor trends (ANL-1) | ⬜     |
-| P27.2 | Dashboard screen for admin and committee showing only sections for enabled modules                                                      | ⬜     |
-| P27.3 | Privacy boundary: aggregate figures only; no personal data beyond what the viewer can already see (ANL-2)                               | ⬜     |
+| P27.1 | Aggregate queries for dues ageing, collection trend, expense vs income, request SLA performance, amenity use and visitor trends (ANL-1) | ✅     |
+| P27.2 | Dashboard screen for admin and committee showing only sections for enabled modules                                                      | ✅     |
+| P27.3 | Privacy boundary: aggregate figures only; no personal data beyond what the viewer can already see (ANL-2)                               | ✅     |
 
 **Tests:** module on/off combinations, aggregate-only output, role visibility of financial figures, performance at target scale, accessibility.
 
 **Completion criteria:** applicable parts of the module gate (2.2) pass; PRD ANL-1 to ANL-2 verified.
 
-**Status:** not started.
+**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`. Analytics is part of Core: the admin picks from the 49-metric catalogue in PRD §5.10.12 (six on by default), the committee can view, and only the admin can change settings or export CSV/PDF. Figures are calculated live; no summary tables. Evidence: `npm run check` (**683 unit tests**), the complete database suite on a disposable local PostgreSQL (**316 tests passed, 11 skipped**), the opt-in performance test (full dashboard about 1.2 s at 500 units; target under 2 s), `npm run build` and the complete Playwright suite (**155 tests**, including axe, reflow and keyboard checks on `/fixtures/analytics`). A database-safety review found no critical or high issues; the blocking audit-log index was removed and the export audit now lists only metrics of enabled modules. Still required: owner review of the metric catalogue and its assumptions (DATABASE §9.19), owner UAT and release. Not fixed: dashboard reads are not rate limited (like other reads), and retrying an already-saved settings change shows the version-conflict message. No hosted database migration was performed.
 
 ---
 
@@ -1232,21 +1236,26 @@ DATABASE 15.2.
 
 **Goal:** a register of common assets with warranty details, AMC links and maintenance history (PRD 5.10.13, P5-1).
 
-**Prerequisites:** `amc` contracts. Size S, about 1 block. **Kickoff decisions (open):** asset categories and depreciation (none recommended).
+**Prerequisites:** `amc` contracts. Size S, about 1 block. **Kickoff decisions:** closed by PRD D-57 (society-defined categories; admin edits, committee views, residents and guards cannot see; history is manual entries plus AMC visits; no depreciation).
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                                           | Status |
-| ----- | ---------------------------------------------------------------------------------------------- | ------ |
-| P28.1 | Migration: assets (lifts, pumps, generators, CCTV) with location and purchase/warranty details | ⬜     |
-| P28.2 | AMC link and maintenance history when `amc` is enabled                                         | ⬜     |
-| P28.3 | Admin and committee screens                                                                    | ⬜     |
+| ID    | Task                                                                                                                                                                       | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P28.1 | Migration `20261117110000_asset_foundation.sql`: society-defined categories, assets with location, purchase and warranty details, maintenance entries; RLS (DATABASE 9.15) | 🟡     |
+| P28.2 | Same-society AMC contract link; maintenance history merges manual entries with AMC visits when `amc` is enabled; stale-form guard keeps the link (API 5.23)                | 🟡     |
+| P28.3 | Admin screens under `/admin/assets` (register, detail, form, categories); committee read-only; fixture `/fixtures/asset` (DESIGN 12.13)                                    | 🟡     |
 
 **Tests:** `amc` on/off combinations, role matrix, end-to-end journey with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb; the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (stale-form AMC link guard, linked contract always in the picker, 200-category cap, `truncated` flag, full update audit, race-safe creates). Still required: owner review of the assumptions below, release approval, owner UAT.
+
+**Assumptions for owner review:**
+
+- Statuses are Active, Under repair and Retired; assets are retired, never deleted. Category names are unique per society (up to 200 categories).
+- "Warranty ending soon" means within 30 days. Purchase and maintenance dates cannot be in the future.
+- Removing a maintenance entry hides it from history but keeps it in the audit log. AMC visits cannot be edited from the asset screen.
+- When AMC is turned off, the link is kept but hidden, and returns when AMC is turned on again.
 
 ---
 
@@ -1301,43 +1310,53 @@ DATABASE 15.2.
 
 **Goal:** a society-curated list of local service providers with resident ratings; no provider logins or bookings (PRD 5.10.13, P5-4).
 
-**Prerequisites:** Core. Size S, about 1 block. **Kickoff decisions (open):** who adds providers (admin only or residents with approval); rating rules.
+**Prerequisites:** Core. Size S, about 1 block. **Kickoff decisions:** closed by PRD D-58 (admins add; committee suggests, admin approves; residents rate 1–5 once per provider, editable, optional comment an admin can hide; raters named to admins and committee; hidden text visible to admins and the author only).
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                  | Status |
-| ----- | --------------------------------------------------------------------- | ------ |
-| P31.1 | Migration: providers (plumber, electrician) and resident ratings; RLS | ⬜     |
-| P31.2 | Curated provider list; no provider logins or bookings                 | ⬜     |
-| P31.3 | Resident ratings and admin screens                                    | ⬜     |
+| ID    | Task                                                                                                                                                              | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P31.1 | Migration `20261117120000_home_services_foundation.sql`: providers with suggestion review and archive, one rating per resident per provider; RLS (DATABASE 9.16)  | 🟡     |
+| P31.2 | Curated provider list; no provider logins or bookings (API 5.24)                                                                                                  | 🟡     |
+| P31.3 | Resident directory and ratings under `/home-services`; admin and committee screens under `/admin/home-services`; fixture `/fixtures/home-services` (DESIGN 12.14) | 🟡     |
 
 **Tests:** rating rules, role matrix, end-to-end journey with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb; the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (committee sees rater names, hidden comment text limited to admins and the author, race-safe rating audit and creates, `truncated` flag on lists). Still required: owner review of the assumptions below, release approval, owner UAT.
+
+**Assumptions for owner review:**
+
+- Service types are Plumber, Electrician, Carpenter, Painter, Pest control, Appliance repair, Cleaning and Other.
+- Archived providers disappear from the residents' list; their ratings are kept. A rejected suggestion keeps the admin's reason.
+- Suggestions notify up to 20 admins in the app; rating changes notify nobody.
+- Guards have no access; the phone number is shown as a tap-to-call link.
 
 ---
 
 # Phase P32 — Service-Request SLA Escalation (`service_request`)
 
-**Goal:** service requests past their SLA escalate to the next level (assignee → admin → committee) at configurable intervals (PRD 5.10.13, P5-5).
+**Goal:** service requests past their SLA escalate to the next level (admin → committee, PRD D-59) at configurable intervals (PRD 5.10.13, P5-5).
 
-**Prerequisites:** `service_request` and the daily runner. Size S, about 1 block. **Kickoff decisions (open):** escalation levels and intervals per category; notification channels.
+**Prerequisites:** `service_request` and the daily runner. Size S, about 1 block. **Kickoff decisions:** closed by PRD D-59 (admins first, then committee after N days per category, default 2; daily job; always in-app, admin may add email; requester sees the timeline entry).
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                                 | Status |
-| ----- | ------------------------------------------------------------------------------------ | ------ |
-| P32.1 | Escalation settings per category and level                                           | ⬜     |
-| P32.2 | Daily-runner escalation task (assignee → admin → committee) with run-key idempotency | ⬜     |
-| P32.3 | Escalation timeline events and notifications                                         | ⬜     |
+| ID    | Task                                                                                                                                           | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P32.1 | Migration `20261117130000_service_request_sla_escalation.sql`: committee interval per category and the society delivery setting (DATABASE 7.7) | 🟡     |
+| P32.2 | Daily task `service_request.escalate` (admin → committee) with run-key and per-request-level idempotency                                       | 🟡     |
+| P32.3 | Escalation timeline events, chips and notifications (in-app, plus email when chosen) (API 5.8, DESIGN 12.15)                                   | 🟡     |
 
 **Tests:** interval boundaries with the controllable clock, repeat runs, notification routing, request timeline.
 
 **Completion criteria:** escalation verified for every level; existing service-request tests stay green.
 
-**Status:** not started.
+**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (escalation rows cascade with retention, `request_list` keeps the P10.3 paged query, in-app always sent, bounded run date, suspended societies skipped, constraint changes added without a long lock). Still required: owner review of the assumptions below, release approval, owner UAT.
+
+**Assumptions for owner review:**
+
+- Up to 10 active admins and 10 active committee members are notified per escalation; up to 200 requests per level per society per day.
+- A society with no committee members still records the committee step, silently.
+- Each request escalates at most once per level for its whole life; a reopened request is not escalated to admins again, and the committee wait counts from the admin escalation date.
+- Requests without an SLA never escalate; escalation stops once a request is resolved, closed or rejected.
 
 ---
 
@@ -1457,7 +1476,7 @@ DATABASE 15.2.
 
 # Current Next Steps
 
-- **P24–P26:** built (2026-11-16) with the decisions in PRD D-54 to D-56; local checks passed. Uncommitted until the owner reviews the assumptions in each phase and approves a commit, testdb migration and release.
+- **P24–P26:** released to beta and main (2026-11-16) with the decisions in PRD D-54 to D-56, and migrated to `homeish-testdb`. Next: owner review of the assumptions listed in each phase, then owner UAT.
 - **Owner-only:** UAT for P11–P21; P10.2 TalkBack/VoiceOver and outdoor checks; P10.5, P10.8 and P10.9 go-live steps. These gate live-society enablement, not local builds.
 - **P16–P21:** released to beta and main and migrated to testdb (2026-11-15); owner UAT pending.
 - **Subscription:** decide the subscription price and offer terms after the first ten free societies before inviting society eleven.

@@ -15,6 +15,7 @@ import {
   readServiceRequestAssignees,
   readServiceRequestCategories,
   readServiceRequestDashboard,
+  readServiceRequestEscalationSettings,
   readServiceRequests,
   readServiceRequestSettings,
   serviceRequestRpc,
@@ -27,6 +28,8 @@ import {
   serviceRequestCommentInputSchema,
   serviceRequestCreateInputSchema,
   serviceRequestDetailSchema,
+  serviceRequestEscalationSettingsInputSchema,
+  serviceRequestEscalationSettingsSchema,
   serviceRequestIdInputSchema,
   serviceRequestReasonInputSchema,
   serviceRequestRateInputSchema,
@@ -248,6 +251,37 @@ export async function getServiceRequestSettings() {
   return readServiceRequestSettings(context, societyId);
 }
 
+export async function getServiceRequestEscalationSettings() {
+  const { context, societyId } = await getContext('request:categories:manage');
+  return readServiceRequestEscalationSettings(context, societyId);
+}
+
+export async function saveServiceRequestEscalationSettings(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:categories:manage',
+    true,
+    requestId,
+  );
+  const settings = parseInput(
+    serviceRequestEscalationSettingsInputSchema,
+    input,
+  );
+  return serviceRequestRpc(
+    context,
+    'request_escalation_settings_save',
+    {
+      p_society_id: societyId,
+      p_delivery: settings.delivery,
+      p_expected_updated_at: settings.expectedUpdatedAt,
+      p_request_id: context.requestId,
+    },
+    serviceRequestEscalationSettingsSchema,
+  );
+}
+
 export async function saveServiceRequestCategory(
   input: unknown,
   requestId: string,
@@ -270,6 +304,7 @@ export async function saveServiceRequestCategory(
       p_active: category.active,
       p_expected_updated_at: category.expectedUpdatedAt,
       p_request_id: context.requestId,
+      p_committee_escalation_days: category.committeeEscalationDays ?? null,
     },
     serviceRequestCategorySchema,
   );
