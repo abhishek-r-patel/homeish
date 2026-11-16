@@ -132,6 +132,16 @@ Preliminary checks use `/fixtures/metering` with synthetic data; its role (resid
 - [ ] Guard: meter search and the per-meter quick entry work one-handed at 200% zoom and 320px with 56px targets; "Reading saved." is announced once.
 - [ ] Admin: **Approve** and **Reject** sit inside their reading, so meter, unit, values and photo link are read first; reject asks for a reason and returns focus; the monthly usage table has headers; committee hears the **View only** banner and finds no edit controls.
 
+## Asset register, home services and SLA escalation (P28, P31, P32)
+
+Preliminary checks use `/fixtures/asset` and `/fixtures/home-services` with synthetic data; both are in the automated accessibility spec.
+
+- [ ] Assets: status (Active, Under repair, Retired) and warranty state are read as words; the filter chips can be removed by keyboard; the asset form reads every label, hint and error, including the reload message when the AMC setting changed; **Remove entry** asks for confirmation and returns focus.
+- [ ] Assets: committee hears the read-only view and finds no forms or buttons; the register and detail screens work at 200% zoom and 320px.
+- [ ] Home services: each provider's average reads as "4.5 out of 5 from 12 ratings"; the star choice reads "1 star" to "5 stars"; the phone link names the provider; a hidden comment reads "Comment hidden by an admin." to committee members.
+- [ ] Home services: approve, reject (reason required, focus moves to the error), archive and **Hide comment**/**Show comment** are reachable by keyboard and return focus to the trigger.
+- [ ] Service requests: **Escalated to admins** and **Escalated to committee** are read as words in lists, details and the timeline; the "Send escalations by" radio group reads its legend.
+
 ## Guard device outdoors
 
 - [ ] Gate code, visitor name and Approve/Deny buttons are readable in direct

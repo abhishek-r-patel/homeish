@@ -731,6 +731,18 @@ One row per resident vote on a common-area request. Migration `20261114083000_se
 - `request_list` has a new `p_sort` argument: `default` keeps the old order, and `votes` puts the most upvoted first.
 - `request_list` and `request_get` now also return `upvote_count` and `has_upvoted`.
 
+### 7.7 SLA escalation (P32; D-59)
+
+Migration `20261117130000_service_request_sla_escalation.sql` (part of the core `service_request` module; no new module key).
+
+- `service_request_categories.committee_escalation_days` (1–30, default 2) sets how many whole days after the admin escalation a still-open request escalates to the committee. `request_category_save` gained it as a ninth argument (NULL keeps the current value).
+- `service_request_escalation_settings`: one row per society, `delivery` `in_app` (default) or `in_app_email`. Every recipient always gets the in-app notification; email is only added on top, so a failed email never loses an escalation.
+- `service_request_escalations`: one row per request and level (`admin | committee`; unique), with `escalated_on` (India date), the delivery used and `recipient_count` (0–10). It is the daily job's idempotency record. The FK to `service_requests` cascades, so retention can delete old closed requests. Recipients are never exposed.
+- `service_request_events.event_type` gained `escalated`; the requester sees the escalation on the timeline with no recipient names and no separate notification.
+- `request_escalation_run(society, today, trace)` is service-role-only and runs from the daily job after auto-close. `today` must be the India date of today or yesterday (`22023` otherwise); suspended or archived societies are skipped. It escalates up to 200 open, assigned, in-progress or reopened requests per level whose SLA has passed to up to 10 active admins, then those escalated to admins at least `committee_escalation_days` earlier to up to 10 active committee members. A society without committee members still records the step with 0 recipients. Each request escalates at most once per level for its whole life, so a reopened request is not escalated to admins again. Email addresses for `in_app_email` are returned to the application, which sends them through the transactional email service.
+- `request_escalation_settings_get` and `request_escalation_settings_save` (admin) read and change the delivery setting; changes are audited.
+- `request_list` (rebuilt from the P10.3 paged version, `20261114100000`) and `request_get` also return `escalation_level` (`none | admin | committee`).
+
 ---
 
 ## 8. Constraint and Validation Summary
@@ -816,6 +828,8 @@ Migration `20261115150000_amc_management.sql` adds `amc_contracts`, `amc_visits`
 Renewals create a single successor through a same-society predecessor FK; old contracts, documents and visits remain intact. File paths are uploader-owned, metadata is reverified at both application and database boundaries, and residents cannot read documents. `amc_request_label` reuses the existing request authorization and returns only a label when both modules are enabled.
 
 `amc_reminders_run` is service-role-only. It selects the most urgent due threshold from developer-managed `reminder_days` (default `[60,30,7]`), deduplicates reminders and skips superseded contracts. Status uses `expiring_soon_days` (default 30). Delivery is in-app and push, with no email or vendor accounting.
+
+Since P28, `assets.amc_contract_id` may reference a contract (same society, `ON DELETE RESTRICT`); the asset module only reads AMC data (Section 9.15).
 
 ### 9.5 Amenity booking tables (P15)
 
@@ -1002,6 +1016,33 @@ Migrations `20261116230000_metering_foundation.sql`, `20261116231000_metering_re
 - Retention: reading photos are kept with the reading (no automatic deletion). Service-only `metering_retention_files_list(date)` returns uploads never attached within 24 hours (Asia/Kolkata cutoff). Meters, rates, readings and charges are kept.
 
 The authoritative completion and verification status for P26 is in IMPLEMENTATION_PLAN.md; these migrations have been verified against disposable local PostgreSQL only.
+
+### Shared registration for P28 and P31
+
+Migration `20261117100000_core_register_asset_home_services_modules.sql` registers `asset` (Asset Register) and `home_services` (Home Services), both disabled by default and with no settings. As in P19–P21, every new table enables RLS with a deny-all `*_no_direct_access` policy, has all grants revoked and rejects delete/truncate; access is only through security-definer RPCs that check the signed-in member, the enabled module, the role and (for writes) a writable society before any argument is read.
+
+### 9.15 Asset register (P28; D-57)
+
+Migration `20261117110000_asset_foundation.sql`. Admins manage; committee members read; residents and guards have no access.
+
+- `asset_categories`: society-defined, name 1–60 characters (case-insensitively unique per society), `active`, optimistic `version` and `client_request_id`. At most 200 categories per society, counted under a per-society lock (`22023` beyond). Categories are deactivated, never deleted.
+- `assets`: category (same-society FK), name 1–120, location 1–120, optional make, model and serial (up to 80), supplier (up to 120), purchase date, `purchase_cost_paise`, warranty end date (on or after the purchase date), `status` (`active | under_repair | retired`), notes up to 1000, an optional `amc_contract_id` and optimistic `version`. Assets are retired, never deleted.
+- `asset_maintenance_entries`: `performed_on`, description 1–1000, optional `cost_paise`, `done_by` 1–120; removal sets `removed_at`/`removed_by` instead of deleting.
+- **AMC link:** `assets (society_id, amc_contract_id)` references `amc_contracts (society_id, id)` with `ON DELETE RESTRICT`, so an asset can only link to its own society's contract and a linked contract cannot be deleted. The asset module only reads AMC data. When `amc` is disabled, the contract, its details, its visits and the contract picker are hidden, and saving leaves an existing link untouched. `asset_save` takes `p_expected_amc_enabled`; if the AMC setting changed since the form was loaded it fails with `40001` so a stale form cannot remove the link. The contract picker lists up to 200 contracts and always includes the currently linked one.
+- Maintenance history combines the manual entries (up to 200) with the linked contract's AMC visits when `amc` is enabled. There is no depreciation.
+- RPCs: `asset_category_save`, `asset_category_set_active`, `asset_save`, `asset_maintenance_add` and `asset_maintenance_remove` (admin); the read models `asset_workspace_get` (admin and committee; categories with counts and up to 1000 assets, with `truncated` when more exist), `asset_get` and `asset_form_options_get`. Creates are idempotent on `(society, actor, client_request_id)` with `ON CONFLICT … DO NOTHING` and a re-read.
+- Audit actions are `asset.*`; an update records the full before and after business fields.
+
+### 9.16 Home-services directory (P31; D-58)
+
+Migration `20261117120000_home_services_foundation.sql`. Admins, committee and residents can read approved providers; guards have no access.
+
+- `home_services_providers`: name 1–120, `service_type` (`plumber | electrician | carpenter | painter | pest_control | appliance_repair | cleaning | other`), phone, optional area (up to 120) and notes (up to 500), `origin` (`admin | suggestion`), `status` (`pending | approved | rejected`) with review fields and a rejection reason (up to 300), `archived_at`/`archived_by`, optimistic `version` and `client_request_id`. Admin-added providers are approved at once; committee suggestions stay pending until an admin approves or rejects them. Providers are archived, never deleted.
+- `home_services_ratings`: one per resident per provider (`stars` 1–5, optional comment up to 500); the resident can change it. An admin can hide or show a comment (`comment_hidden_at`/`_by`); a hidden comment stays hidden through later edits and its stars still count in the average.
+- **Who sees what:** other residents see comments without names. Admins and committee members see who wrote each rating. The text of a hidden comment is returned only to admins and its author; committee members see that it is hidden with no text.
+- RPCs: `home_services_provider_save`, `home_services_suggestion_review`, `home_services_provider_archive` and `home_services_comment_visibility_set` (admin); `home_services_provider_suggest` (committee; notifies up to 20 admins in-app); `home_services_rating_save` (resident); and the read models `home_services_directory`, `home_services_provider_detail` and `home_services_admin_workspace` (lists up to 500 with `truncated` when more exist). Creates and suggestions are idempotent with `ON CONFLICT … DO NOTHING` and a re-read; a rating's audit action (`rating.create` or `rating.update`) comes from the upsert result.
+
+The authoritative completion and verification status for P28, P31 and P32 is in IMPLEMENTATION_PLAN.md; these migrations have been verified against disposable local PostgreSQL only.
 
 ## 10. Reference: Module Settings Keys (`module_configs.settings`)
 

@@ -353,8 +353,11 @@ For private QR uploads, `/api/files/upload-url` accepts `bucket: "society-assets
 | `request.rate`                            | R (requester)                                      | 1–5 stars and comment after closing                      | Once                                                                                               |
 | `request.addComment`                      | R (requester), A, assignee                         | Comment thread                                           | `clientRequestId`; notifies the other side; residents reading a common-area request cannot comment |
 | `request.upvote`                          | R                                                  | Add or remove one's vote on an open common-area request  | MVP+ (D-17); one vote per user; returns the new count; `request.list` accepts `sort: votes`        |
+| `request.escalationSettings.get/save`     | A                                                  | SLA escalation delivery (P32, D-59)                      | `in_app` or `in_app_email`; in-app is always sent; audited                                         |
 
 Residents use `/requests`, `/requests/new` and `/requests/{requestId}`. Admins and committee members use `/admin/requests` for filtering and dashboard reports; admins can also manage categories, assign requests, update statuses and reject with a reason. Request detail displays the timeline and signed photo links only to users authorized for the parent request.
+
+SLA escalation (P32): category create/update also accepts `committeeEscalationDays` (1–30, default 2). `request.list/get` return `escalationLevel` (`none`, `admin`, `committee`); the requester sees an "Escalated" timeline entry without recipient names. Admins change the delivery on the Categories tab with `saveServiceRequestEscalationSettingsAction`. The daily job's `service_request.escalate` task does the escalation (6.1).
 
 ### 5.9 Notice board (`notice`, P11)
 
@@ -626,6 +629,41 @@ Operations live in `src/core/metering/`; all Server Actions are in `(resident)/m
 
 Permissions: `metering:list` (admin, committee, resident), `metering:manage` (admin), `metering:record` (admin, guard) and `metering:submit` (resident). The module has no settings. Pages are `/metering` (residents), `/admin/metering` (admin and committee) and `/guard/metering`. When Billing is enabled, monthly bill generation (`billing_bills_generate`) also bills the generated units' pending utility charges as a separate "Utility charges – Mon YYYY" bill per unit, using Billing's rounding setting; the manual run covers anything left. A reading is never billed twice. When Billing is disabled, readings and reports still work and nothing is billed (DATABASE 9.14). Common-area meters are never billed.
 
+### 5.23 Asset register (`asset`, P28; D-57)
+
+Operations live in `src/core/asset/`; Server Actions are in `(admin)/admin/assets/actions.ts`. Writes use the `otherWritesUserMinute` limit; a stale version returns `CONFLICT`.
+
+| Operation / RPC                                              | Caller           | Contract                                                                                                                                                                                                        |
+| ------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getAssetWorkspace` / `asset_workspace_get`                  | Admin, committee | Categories with asset counts and up to 1000 assets (`truncated` when more exist); `can_manage` is false for committee.                                                                                          |
+| `getAssetDetail` / `asset_get`                               | Admin, committee | Asset details, maintenance entries (up to 200) and, when `amc` is enabled, the linked contract and its visits.                                                                                                  |
+| `getAssetFormOptions` / `asset_form_options_get`             | Admin            | Active categories and, when `amc` is enabled, up to 200 contracts plus the currently linked one.                                                                                                                |
+| `saveAssetCategoryAction` / `asset_category_save`            | Admin            | Name 1–60, unique per society; at most 200 categories; expected version on update; client UUID on create.                                                                                                       |
+| `setAssetCategoryActiveAction` / `asset_category_set_active` | Admin            | Turns a category on or off; never deleted.                                                                                                                                                                      |
+| `saveAssetAction` / `asset_save`                             | Admin            | Category, name, location, make, model, serial, supplier, purchase date and cost, warranty end, status (`active`, `under_repair`, `retired`), notes, AMC contract, `expectedAmcEnabled` (`CONFLICT` if changed). |
+| `addAssetMaintenanceAction` / `asset_maintenance_add`        | Admin            | Date (not in the future), description up to 1000, done by, optional cost; client UUID.                                                                                                                          |
+| `removeAssetMaintenanceAction` / `asset_maintenance_remove`  | Admin            | Marks an entry removed; repeating it does nothing.                                                                                                                                                              |
+
+Permissions: `asset:list` (admin, committee) and `asset:manage` (admin). Pages are `/admin/assets`, `/admin/assets/new`, `/admin/assets/categories`, `/admin/assets/{assetId}` and `/admin/assets/{assetId}/edit`. Residents and guards have no access.
+
+### 5.24 Home-services directory (`home_services`, P31; D-58)
+
+Operations live in `src/core/home-services/`; Server Actions are in `(resident)/home-services/actions.ts`. Writes use the `otherWritesUserMinute` limit; a stale version returns `CONFLICT`.
+
+| Operation / RPC                                                                   | Caller                     | Contract                                                                                                            |
+| --------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `getHomeServicesDirectory` / `home_services_directory`                            | Admin, committee, resident | Approved, unarchived providers with average stars and count (up to 500, `truncated`).                               |
+| `getHomeServicesProvider` / `home_services_provider_detail`                       | Admin, committee, resident | Provider and ratings; rater names only for admin and committee; hidden comment text only for admins and the author. |
+| `getHomeServicesAdminWorkspace` / `home_services_admin_workspace`                 | Admin, committee           | Providers by status, pending suggestions and recent comments (up to 500, `truncated`).                              |
+| `saveHomeServicesProviderAction` / `home_services_provider_save`                  | Admin                      | Name, service type, phone, optional area and notes; approved at once; expected version on update.                   |
+| `suggestHomeServicesProviderAction` / `home_services_provider_suggest`            | Committee                  | Same fields; pending until an admin reviews it; notifies up to 20 admins in-app.                                    |
+| `reviewHomeServicesSuggestionAction` / `home_services_suggestion_review`          | Admin                      | Approve, or reject with a reason up to 300.                                                                         |
+| `archiveHomeServicesProviderAction` / `home_services_provider_archive`            | Admin                      | Removes a provider from the directory; ratings are kept.                                                            |
+| `saveHomeServicesRatingAction` / `home_services_rating_save`                      | Resident                   | 1–5 stars and an optional comment up to 500; one per resident per provider, editable.                               |
+| `setHomeServicesCommentVisibilityAction` / `home_services_comment_visibility_set` | Admin                      | Hide or show a comment; the stars always count.                                                                     |
+
+Permissions: `home_services:list` (admin, committee, resident), `home_services:manage` (admin), `home_services:suggest` (committee) and `home_services:rate` (resident). Pages are `/home-services`, `/home-services/{providerId}`, `/admin/home-services` and `/admin/home-services/{providerId}`. Guards have no access; providers have no logins and there are no bookings.
+
 ## 6. HTTP Routes
 
 | Route                               | Method       | Caller                         | Authentication                                                                                                                   | Purpose                                                                                                                                                                                                                           |
@@ -653,17 +691,18 @@ Vercel Cron sends `GET`; `POST` remains supported for authenticated manual invoc
 
 Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each society-scoped task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. A global task claims one run key using the first eligible society; if there are no eligible societies, the retention task still runs because its database operations are idempotent. Each task failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
 
-| Task                        | Behavior                                                                                                                                                             |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Late fees                   | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                           |
-| Reminders                   | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                               |
-| Stale payments              | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                          |
-| Visitor expiry              | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                               |
-| Delivery overdue view       | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                |
-| Request auto-close          | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                          |
-| Module reminders (post-MVP) | AMC expiry, low stock                                                                                                                                                |
-| Retention                   | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                        |
-| Backup export               | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2) |
+| Task                        | Behavior                                                                                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Late fees                   | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                             |
+| Reminders                   | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                 |
+| Stale payments              | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                            |
+| Visitor expiry              | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                 |
+| Delivery overdue view       | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                  |
+| Request auto-close          | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                            |
+| Request SLA escalation      | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set |
+| Module reminders (post-MVP) | AMC expiry, low stock                                                                                                                                                  |
+| Retention                   | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                          |
+| Backup export               | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)   |
 
 A task failure is logged (error log + Sentry) and does not stop the other tasks; the next day's run retries unfinished work because tasks are idempotent.
 

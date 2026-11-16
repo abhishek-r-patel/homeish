@@ -136,11 +136,11 @@ Arrows are recommended build order; "after Pxx" inside a box marks a phase that 
 | P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
 | P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
 | P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ⬜ Not started                                                                   |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ⬜ Not started                                                                   |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | 🟡 Locally verified and committed (2026-11-16); release pending                  |
 | P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                                                                   |
 | P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                                                                   |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ⬜ Not started                                                                   |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ⬜ Not started                                                                   |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | 🟡 Locally verified and committed (2026-11-16); release pending                  |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | 🟡 Locally verified and committed (2026-11-16); release pending                  |
 | P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                                                                   |
 | P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                                                                   |
 
@@ -1232,21 +1232,26 @@ DATABASE 15.2.
 
 **Goal:** a register of common assets with warranty details, AMC links and maintenance history (PRD 5.10.13, P5-1).
 
-**Prerequisites:** `amc` contracts. Size S, about 1 block. **Kickoff decisions (open):** asset categories and depreciation (none recommended).
+**Prerequisites:** `amc` contracts. Size S, about 1 block. **Kickoff decisions:** closed by PRD D-57 (society-defined categories; admin edits, committee views, residents and guards cannot see; history is manual entries plus AMC visits; no depreciation).
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                                           | Status |
-| ----- | ---------------------------------------------------------------------------------------------- | ------ |
-| P28.1 | Migration: assets (lifts, pumps, generators, CCTV) with location and purchase/warranty details | ⬜     |
-| P28.2 | AMC link and maintenance history when `amc` is enabled                                         | ⬜     |
-| P28.3 | Admin and committee screens                                                                    | ⬜     |
+| ID    | Task                                                                                                                                                                       | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P28.1 | Migration `20261117110000_asset_foundation.sql`: society-defined categories, assets with location, purchase and warranty details, maintenance entries; RLS (DATABASE 9.15) | 🟡     |
+| P28.2 | Same-society AMC contract link; maintenance history merges manual entries with AMC visits when `amc` is enabled; stale-form guard keeps the link (API 5.23)                | 🟡     |
+| P28.3 | Admin screens under `/admin/assets` (register, detail, form, categories); committee read-only; fixture `/fixtures/asset` (DESIGN 12.13)                                    | 🟡     |
 
 **Tests:** `amc` on/off combinations, role matrix, end-to-end journey with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb; the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (stale-form AMC link guard, linked contract always in the picker, 200-category cap, `truncated` flag, full update audit, race-safe creates). Still required: owner review of the assumptions below, release approval, owner UAT.
+
+**Assumptions for owner review:**
+
+- Statuses are Active, Under repair and Retired; assets are retired, never deleted. Category names are unique per society (up to 200 categories).
+- "Warranty ending soon" means within 30 days. Purchase and maintenance dates cannot be in the future.
+- Removing a maintenance entry hides it from history but keeps it in the audit log. AMC visits cannot be edited from the asset screen.
+- When AMC is turned off, the link is kept but hidden, and returns when AMC is turned on again.
 
 ---
 
@@ -1301,43 +1306,53 @@ DATABASE 15.2.
 
 **Goal:** a society-curated list of local service providers with resident ratings; no provider logins or bookings (PRD 5.10.13, P5-4).
 
-**Prerequisites:** Core. Size S, about 1 block. **Kickoff decisions (open):** who adds providers (admin only or residents with approval); rating rules.
+**Prerequisites:** Core. Size S, about 1 block. **Kickoff decisions:** closed by PRD D-58 (admins add; committee suggests, admin approves; residents rate 1–5 once per provider, editable, optional comment an admin can hide; raters named to admins and committee; hidden text visible to admins and the author only).
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                  | Status |
-| ----- | --------------------------------------------------------------------- | ------ |
-| P31.1 | Migration: providers (plumber, electrician) and resident ratings; RLS | ⬜     |
-| P31.2 | Curated provider list; no provider logins or bookings                 | ⬜     |
-| P31.3 | Resident ratings and admin screens                                    | ⬜     |
+| ID    | Task                                                                                                                                                              | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P31.1 | Migration `20261117120000_home_services_foundation.sql`: providers with suggestion review and archive, one rating per resident per provider; RLS (DATABASE 9.16)  | 🟡     |
+| P31.2 | Curated provider list; no provider logins or bookings (API 5.24)                                                                                                  | 🟡     |
+| P31.3 | Resident directory and ratings under `/home-services`; admin and committee screens under `/admin/home-services`; fixture `/fixtures/home-services` (DESIGN 12.14) | 🟡     |
 
 **Tests:** rating rules, role matrix, end-to-end journey with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb; the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (committee sees rater names, hidden comment text limited to admins and the author, race-safe rating audit and creates, `truncated` flag on lists). Still required: owner review of the assumptions below, release approval, owner UAT.
+
+**Assumptions for owner review:**
+
+- Service types are Plumber, Electrician, Carpenter, Painter, Pest control, Appliance repair, Cleaning and Other.
+- Archived providers disappear from the residents' list; their ratings are kept. A rejected suggestion keeps the admin's reason.
+- Suggestions notify up to 20 admins in the app; rating changes notify nobody.
+- Guards have no access; the phone number is shown as a tap-to-call link.
 
 ---
 
 # Phase P32 — Service-Request SLA Escalation (`service_request`)
 
-**Goal:** service requests past their SLA escalate to the next level (assignee → admin → committee) at configurable intervals (PRD 5.10.13, P5-5).
+**Goal:** service requests past their SLA escalate to the next level (admin → committee, PRD D-59) at configurable intervals (PRD 5.10.13, P5-5).
 
-**Prerequisites:** `service_request` and the daily runner. Size S, about 1 block. **Kickoff decisions (open):** escalation levels and intervals per category; notification channels.
+**Prerequisites:** `service_request` and the daily runner. Size S, about 1 block. **Kickoff decisions:** closed by PRD D-59 (admins first, then committee after N days per category, default 2; daily job; always in-app, admin may add email; requester sees the timeline entry).
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                                 | Status |
-| ----- | ------------------------------------------------------------------------------------ | ------ |
-| P32.1 | Escalation settings per category and level                                           | ⬜     |
-| P32.2 | Daily-runner escalation task (assignee → admin → committee) with run-key idempotency | ⬜     |
-| P32.3 | Escalation timeline events and notifications                                         | ⬜     |
+| ID    | Task                                                                                                                                           | Status |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P32.1 | Migration `20261117130000_service_request_sla_escalation.sql`: committee interval per category and the society delivery setting (DATABASE 7.7) | 🟡     |
+| P32.2 | Daily task `service_request.escalate` (admin → committee) with run-key and per-request-level idempotency                                       | 🟡     |
+| P32.3 | Escalation timeline events, chips and notifications (in-app, plus email when chosen) (API 5.8, DESIGN 12.15)                                   | 🟡     |
 
 **Tests:** interval boundaries with the controllable clock, repeat runs, notification routing, request timeline.
 
 **Completion criteria:** escalation verified for every level; existing service-request tests stay green.
 
-**Status:** not started.
+**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (escalation rows cascade with retention, `request_list` keeps the P10.3 paged query, in-app always sent, bounded run date, suspended societies skipped, constraint changes added without a long lock). Still required: owner review of the assumptions below, release approval, owner UAT.
+
+**Assumptions for owner review:**
+
+- Up to 10 active admins and 10 active committee members are notified per escalation; up to 200 requests per level per society per day.
+- A society with no committee members still records the committee step, silently.
+- Each request escalates at most once per level for its whole life; a reopened request is not escalated to admins again, and the committee wait counts from the admin escalation date.
+- Requests without an SLA never escalate; escalation stops once a request is resolved, closed or rejected.
 
 ---
 
