@@ -25,6 +25,7 @@ const screens = [
   '/fixtures/home-services',
   '/fixtures/poll',
   '/fixtures/meeting',
+  '/fixtures/analytics',
 ];
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];

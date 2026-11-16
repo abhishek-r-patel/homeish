@@ -120,6 +120,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Overview',
         },
         {
+          href: '/admin/analytics',
+          label: 'Analytics',
+          permission: 'analytics:read',
+          section: 'Overview',
+        },
+        {
           href: '/admin/structure',
           label: 'Structure',
           permission: 'structure:manage',
@@ -155,6 +161,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           href: '/admin',
           label: 'Dashboard',
           permission: 'dashboard:read',
+          section: 'Overview',
+        },
+        {
+          href: '/admin/analytics',
+          label: 'Analytics',
+          permission: 'analytics:read',
           section: 'Overview',
         },
         {
@@ -212,6 +224,9 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'audit:read': ['admin', 'committee'],
       'home:read': ['guard', 'resident'],
       'dashboard:read': ['admin', 'committee', 'hk_supervisor'],
+      'analytics:read': ['admin', 'committee'],
+      'analytics:manage': ['admin'],
+      'analytics:export': ['admin'],
     },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
