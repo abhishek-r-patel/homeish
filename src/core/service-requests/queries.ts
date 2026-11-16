@@ -11,6 +11,7 @@ import {
   serviceRequestCategorySchema,
   serviceRequestDashboardSchema,
   serviceRequestDetailSchema,
+  serviceRequestEscalationSettingsSchema,
   serviceRequestSummarySchema,
   serviceRequestSettingsSchema,
 } from './validation';
@@ -202,4 +203,21 @@ export async function readServiceRequestSettings(
     });
   }
   return serviceRequestSettingsSchema.parse(data.settings);
+}
+
+export async function readServiceRequestEscalationSettings(
+  context: RequestContext,
+  societyId: string,
+) {
+  requireSociety(context, societyId);
+  authorizeRequest(context, {
+    moduleKey: 'service_request',
+    permission: 'request:categories:manage',
+  });
+  return serviceRequestRpc(
+    context,
+    'request_escalation_settings_get',
+    { p_society_id: societyId },
+    serviceRequestEscalationSettingsSchema,
+  );
 }

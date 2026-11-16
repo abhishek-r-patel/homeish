@@ -32,6 +32,7 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   sos_guard: '/guard/sos',
   document: '/documents',
   document_admin: '/admin/documents',
+  home_services_admin: '/admin/home-services',
 };
 
 export function notificationPath(

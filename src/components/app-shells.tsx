@@ -96,6 +96,9 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
   vendor: 'M4 8h16v12H4zM9 8V5h6v3M4 13h16',
   patrol: 'M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Zm-3 9 2 2 4-4',
   metering: 'M12 21a9 9 0 1 0-9-9M12 12l4-4M7 17h10',
+  asset: 'M4 7l8-4 8 4v10l-8 4-8-4V7Zm0 0 8 4 8-4M12 11v10',
+  home_services:
+    'M3 10.5 12 3l9 7.5M5 9v11h14V9M14.7 12.3a2.5 2.5 0 0 0-3.2 3.2L9 18l1 1 2.5-2.5a2.5 2.5 0 0 0 3.2-3.2L14.5 14.5l-1-1 1.2-1.2Z',
 };
 
 function isActivePath(pathname: string, href: string) {

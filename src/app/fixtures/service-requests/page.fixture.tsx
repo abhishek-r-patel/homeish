@@ -23,6 +23,7 @@ const category = {
   sla_hours: 24,
   sort_order: 0,
   active: true,
+  committee_escalation_days: 2,
 };
 
 type FixtureRequest = {

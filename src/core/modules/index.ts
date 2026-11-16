@@ -48,6 +48,14 @@ import {
   DEFAULT_METERING_SETTINGS,
   meteringSettingsSchema,
 } from '../metering/validation';
+import {
+  assetSettingsSchema,
+  DEFAULT_ASSET_SETTINGS,
+} from '../asset/validation';
+import {
+  DEFAULT_HOME_SERVICES_SETTINGS,
+  homeServicesSettingsSchema,
+} from '../home-services/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -869,6 +877,63 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: meteringSettingsSchema,
   },
+  asset: {
+    core: false,
+    defaultSettings: DEFAULT_ASSET_SETTINGS,
+    key: 'asset',
+    name: 'Asset Register',
+    navigation: {
+      admin: [
+        { href: '/admin/assets', label: 'Assets', permission: 'asset:list' },
+      ],
+      committee: [
+        { href: '/admin/assets', label: 'Assets', permission: 'asset:list' },
+      ],
+    },
+    permissions: {
+      'asset:list': ['admin', 'committee'],
+      'asset:manage': ['admin'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: assetSettingsSchema,
+  },
+  home_services: {
+    core: false,
+    defaultSettings: DEFAULT_HOME_SERVICES_SETTINGS,
+    key: 'home_services',
+    name: 'Home Services',
+    navigation: {
+      resident: [
+        {
+          href: '/home-services',
+          label: 'Home services',
+          permission: 'home_services:list',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/home-services',
+          label: 'Home services',
+          permission: 'home_services:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/home-services',
+          label: 'Home services',
+          permission: 'home_services:list',
+        },
+      ],
+    },
+    permissions: {
+      'home_services:list': ['admin', 'committee', 'resident'],
+      'home_services:manage': ['admin'],
+      'home_services:suggest': ['committee'],
+      'home_services:rate': ['resident'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: homeServicesSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -904,6 +969,8 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'vendor',
     'patrol',
     'metering',
+    'asset',
+    'home_services',
   ],
   committee: [
     'core',
@@ -923,6 +990,8 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'vendor',
     'patrol',
     'metering',
+    'asset',
+    'home_services',
   ],
   guard: [
     'core',
@@ -952,6 +1021,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'document',
     'parking',
     'metering',
+    'home_services',
   ],
 };
 

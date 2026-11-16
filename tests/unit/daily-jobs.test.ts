@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   runRetentionPrivileged: vi.fn(),
   runVisitorExpirationPrivileged: vi.fn(),
   runServiceRequestAutoClosePrivileged: vi.fn(),
+  runServiceRequestEscalationPrivileged: vi.fn(),
   runInventoryRemindersPrivileged: vi.fn(),
   runAmcRemindersPrivileged: vi.fn(),
   runTenancyRemindersPrivileged: vi.fn(),
@@ -27,6 +28,8 @@ vi.mock('../../src/core/privileged', () => ({
   runVisitorExpirationPrivileged: mocks.runVisitorExpirationPrivileged,
   runServiceRequestAutoClosePrivileged:
     mocks.runServiceRequestAutoClosePrivileged,
+  runServiceRequestEscalationPrivileged:
+    mocks.runServiceRequestEscalationPrivileged,
   runInventoryRemindersPrivileged: mocks.runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged: mocks.runAmcRemindersPrivileged,
   runTenancyRemindersPrivileged: mocks.runTenancyRemindersPrivileged,
@@ -193,6 +196,7 @@ describe('daily jobs', () => {
       'billing.stale_payments',
       'visitor.expire',
       'service_request.auto_close',
+      'service_request.escalate',
       'housekeeping.low_stock',
       'amc.reminders',
       'tenancy.reminders',
@@ -210,6 +214,10 @@ describe('daily jobs', () => {
       ['billing.stale_payments', 'society-2', '2026-11-10'],
     ]);
     expect(mocks.runServiceRequestAutoClosePrivileged.mock.calls).toEqual([
+      ['society-1', '2026-11-10'],
+      ['society-2', '2026-11-10'],
+    ]);
+    expect(mocks.runServiceRequestEscalationPrivileged.mock.calls).toEqual([
       ['society-1', '2026-11-10'],
       ['society-2', '2026-11-10'],
     ]);

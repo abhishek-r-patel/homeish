@@ -7,6 +7,7 @@ import {
   runBillingDailyTaskPrivileged,
   runRetentionPrivileged,
   runServiceRequestAutoClosePrivileged,
+  runServiceRequestEscalationPrivileged,
   runVisitorExpirationPrivileged,
   runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged,
@@ -60,6 +61,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'service_request.auto_close',
     run: async (societyId: string, periodKey: string) => {
       await runServiceRequestAutoClosePrivileged(societyId, periodKey);
+    },
+  },
+  {
+    name: 'service_request.escalate',
+    run: async (societyId: string, periodKey: string) => {
+      await runServiceRequestEscalationPrivileged(societyId, periodKey);
     },
   },
   {

@@ -19,6 +19,8 @@ export const MODULE_KEYS = [
   'vendor',
   'patrol',
   'metering',
+  'asset',
+  'home_services',
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];
