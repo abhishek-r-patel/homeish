@@ -719,6 +719,23 @@ Pages are `/meetings`, `/meetings/{meetingId}`, `/meetings/actions`, `/admin/mee
 assigned and action overdue; they are in-app plus push through `sendNotificationPushesForRequest`. The
 `/fixtures/meeting` page uses synthetic scenarios and does not call production services.
 
+### 5.27 Committee analytics (Core, P27; D-62)
+
+Operations live in `src/core/analytics/`; the Server Action for settings is in the admin Analytics route.
+Permissions: `analytics:read` (admin, committee), `analytics:manage` and `analytics:export` (admin). Guards,
+housekeeping supervisors and residents have no access.
+
+| Operation / RPC                                         | Caller           | Contract                                                                                                                                                                                      |
+| ------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getAnalyticsDashboard` / `analytics_dashboard`         | Admin, committee | `months` 3, 6 or 12 (default 12) and `money` `months` or `fy`. Returns the selected metrics whose module is enabled, in catalogue order, calculated live; totals and buckets only.            |
+| `getAnalyticsSettings` / `analytics_settings_get`       | Admin            | Selected metrics, whether they are the defaults, the version and the catalogue with each module's on/off state.                                                                               |
+| `updateAnalyticsSettings` / `analytics_settings_update` | Admin            | `otherWritesUserMinute` limit; idempotency request ID; optimistic version (0 while on defaults; 40001 → "Settings changed. Reload and try again."); unknown or duplicate keys 22023; audited. |
+| `getAnalyticsExport` / `analytics_export_record`        | Admin            | `exportsUserHourly` limit; audits the export (format, range and the metrics actually exported) before reading the dashboard.                                                                  |
+
+Pages are `/admin/analytics` (admin and committee) and `/admin/analytics/settings` (admin; committee sees the
+no-permission state). A metric whose data does not match the expected shape is shown as "not available right now"
+and logged as a warning instead of breaking the page. The `/fixtures/analytics` page uses synthetic data.
+
 ## 6. HTTP Routes
 
 | Route                               | Method       | Caller                         | Authentication                                                                                                                   | Purpose                                                                                                                                                                                                                           |
@@ -733,6 +750,7 @@ assigned and action overdue; they are in-app plus push through `sendNotification
 | `/api/billing/bills/{billId}`       | GET          | Signed-in browser              | Session + permission                                                                                                             | Streams the bill PDF                                                                                                                                                                                                              |
 | `/api/exports/{jobId}`              | GET          | Signed-in browser              | Session + the job's creator or A/C of that society                                                                               | Downloads a finished CSV export; file expires with the job                                                                                                                                                                        |
 | `/api/polls/{voteId}/export`        | GET          | Signed-in browser              | Session + admin or committee access to the completed vote                                                                        | Downloads a completed Polls PDF or CSV (`format` query); private results and voter roster are separate and no email is included                                                                                                   |
+| `/api/analytics/export`             | GET          | Signed-in browser              | Session + admin of the active society (`analytics:export`); rate limited                                                         | Downloads the committee analytics as CSV (Metric, Module, Period or Label, Series, Value, Unit; money in rupees; formula-safe) or PDF (`format`, `months` 3/6/12, `money` months/fy); audited first; `analytics-YYYY-MM-DD` name  |
 
 Rules for all routes:
 

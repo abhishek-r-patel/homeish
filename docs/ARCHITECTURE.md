@@ -176,6 +176,14 @@ the existing `pdf-lib` dependency and copies it into a Documents folder through 
 copy uses one stable request ID per meeting, so a retry cannot create a duplicate, and a failed copy never undoes the
 publish. A synthetic `/fixtures/meeting` page supports accessibility and journey checks.
 
+P27 committee analytics is part of Core (`src/core/analytics/`), not a module: the admin picks metrics from a closed
+catalogue, and each metric shows only while its module is enabled. Each metric is a private SQL function reached only
+through `analytics_dashboard`, which checks the caller once and runs the selected functions in catalogue order. The
+figures are calculated live from the module tables on every page load (no summary or snapshot tables), and the
+full 49-metric dashboard stays under 2 s at target scale in the opt-in performance test. Charts are accessible
+tables with plain CSS bars (no chart library); the admin-only export reuses `pdf-lib` and the formula-safe CSV
+pattern.
+
 The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client component rendered by the shared app shell for guards and for any user whose society has `sos` enabled. It loads `sos_my_alerts` on mount, rechecks every 30 seconds, and treats Realtime inserts on the user's own `notifications` rows as a hint to reload, so it adds no Realtime table. It stays on every screen while the alert is open until the recipient dismisses their own copy ("Seen — stop alert" for responders, who also get a Respond link; "Dismiss" for residents); acknowledging, updating and closing happen on the SOS screens. On guard devices it plays a short Web Audio alarm every 30 seconds, with visible mute/unmute and "turn on alert sound" controls when the browser blocks autoplay; a device that cannot play sound shows a "keep this screen in view" message. Delivery is in-app and Realtime only, with no push, SMS or calls (PRD D-41).
 
 ### 5.3 PWA scope (PRD D-23)
@@ -388,6 +396,9 @@ under `src/app/api/polls/`, and the synthetic fixture at `src/app/fixtures/poll/
 
 P23 adds `src/core/meeting/`, `src/core/privileged/meeting.ts`, `src/components/meeting/`, resident and admin
 Meetings routes, and the synthetic fixture at `src/app/fixtures/meeting/`.
+
+P27 adds `src/core/analytics/`, `src/components/analytics/`, the admin Analytics routes, the export route under
+`src/app/api/analytics/`, and the synthetic fixture at `src/app/fixtures/analytics/`.
 
 ```
 homeish/

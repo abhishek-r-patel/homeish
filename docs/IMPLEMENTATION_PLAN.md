@@ -117,32 +117,32 @@ flowchart TD
 
 Arrows are recommended build order; "after Pxx" inside a box marks a phase that builds on another phase. At runtime every module works on its own; links to other optional modules activate only when those are enabled (PRD A-36). Blocks are 6-hour work blocks (Section 2.5).
 
-| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                                                           |
-| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | -------------------------------------------------------------------------------- |
-| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
-| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
-| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | 🟡 Locally verified and committed (2026-11-16); owner UAT and release pending    |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | 🟡 Locally verified and committed (2026-11-16); owner UAT and release pending    |
-| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
-| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
-| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
-| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ⬜ Not started                                                                   |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | 🟡 Locally verified and committed (2026-11-16); release pending                  |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                                                                   |
-| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                                                                   |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | 🟡 Locally verified and committed (2026-11-16); release pending                  |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | 🟡 Locally verified and committed (2026-11-16); release pending                  |
-| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                                                                   |
-| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                                                                   |
+| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                                                                          |
+| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                             |
+| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                             |
+| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                             |
+| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                             |
+| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅ Released to beta and main; migrated to testdb; owner UAT pending                             |
+| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending                |
+| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending                |
+| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending                |
+| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending                |
+| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending                |
+| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending                |
+| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | 🟡 Locally verified and committed (2026-11-16); owner UAT and release pending                   |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | 🟡 Locally verified and committed (2026-11-16); owner UAT and release pending                   |
+| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending                |
+| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending                |
+| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending                |
+| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | 🟡 Locally verified and committed (2026-11-16); owner catalogue review, UAT and release pending |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | 🟡 Locally verified and committed (2026-11-16); release pending                                 |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                                                                                  |
+| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                                                                                  |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | 🟡 Locally verified and committed (2026-11-16); release pending                                 |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | 🟡 Locally verified and committed (2026-11-16); release pending                                 |
+| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                                                                                  |
+| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                                                                                  |
 
 Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave 13 blocks; P5 wave about 14 blocks.
 
@@ -1216,19 +1216,19 @@ DATABASE 15.2.
 
 **Prerequisites:** read models of enabled modules. Size M, about 2 blocks (the D-62 metric catalogue makes it closer to L). **Kickoff decisions:** approved 2026-11-16 (PRD D-62, §5.10.12).
 
-**Draft tasks — revisit at kickoff:**
+**Tasks:**
 
 | ID    | Task                                                                                                                                    | Status |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| P27.1 | Aggregate queries for dues ageing, collection trend, expense vs income, request SLA performance, amenity use and visitor trends (ANL-1) | ⬜     |
-| P27.2 | Dashboard screen for admin and committee showing only sections for enabled modules                                                      | ⬜     |
-| P27.3 | Privacy boundary: aggregate figures only; no personal data beyond what the viewer can already see (ANL-2)                               | ⬜     |
+| P27.1 | Aggregate queries for dues ageing, collection trend, expense vs income, request SLA performance, amenity use and visitor trends (ANL-1) | ✅     |
+| P27.2 | Dashboard screen for admin and committee showing only sections for enabled modules                                                      | ✅     |
+| P27.3 | Privacy boundary: aggregate figures only; no personal data beyond what the viewer can already see (ANL-2)                               | ✅     |
 
 **Tests:** module on/off combinations, aggregate-only output, role visibility of financial figures, performance at target scale, accessibility.
 
 **Completion criteria:** applicable parts of the module gate (2.2) pass; PRD ANL-1 to ANL-2 verified.
 
-**Status:** not started.
+**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`. Analytics is part of Core: the admin picks from the 49-metric catalogue in PRD §5.10.12 (six on by default), the committee can view, and only the admin can change settings or export CSV/PDF. Figures are calculated live; no summary tables. Evidence: `npm run check` (**683 unit tests**), the complete database suite on a disposable local PostgreSQL (**316 tests passed, 11 skipped**), the opt-in performance test (full dashboard about 1.2 s at 500 units; target under 2 s), `npm run build` and the complete Playwright suite (**155 tests**, including axe, reflow and keyboard checks on `/fixtures/analytics`). A database-safety review found no critical or high issues; the blocking audit-log index was removed and the export audit now lists only metrics of enabled modules. Still required: owner review of the metric catalogue and its assumptions (DATABASE §9.19), owner UAT and release. Not fixed: dashboard reads are not rate limited (like other reads), and retrying an already-saved settings change shows the version-conflict message. No hosted database migration was performed.
 
 ---
 

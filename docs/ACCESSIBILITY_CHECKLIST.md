@@ -133,6 +133,16 @@ automated accessibility spec.
 - [ ] Minutes editor, resolutions and action items keep labels, version-conflict errors and focus on the error at 200% zoom and 320px.
 - [ ] Committee views have no publish control; residents never see drafts or committee meetings.
 
+## Committee analytics (P27)
+
+Preliminary checks use `/fixtures/analytics` with synthetic data; the fixture is included in the automated
+accessibility spec.
+
+- [ ] Each trend table has a caption, scrolls inside its own focusable area at 320px, and its bars are hidden from screen readers so values are read once as text.
+- [ ] The range and financial-year links announce which choice is current; missing values read as "no data", not a symbol alone.
+- [ ] Settings: checkboxes are grouped by module; metrics of a switched-off module are disabled and read "Module is off"; the selected count is announced as it changes; save success and the version-conflict message are announced.
+- [ ] Committee members find no Settings or Export controls and get the no-permission state on the settings page.
+
 ## Guard patrol and incident log (P25)
 
 Preliminary checks use `/fixtures/patrol` with synthetic data; its role (guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the guard screen, the admin screen and the committee view-only screen.

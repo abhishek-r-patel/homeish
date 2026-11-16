@@ -589,6 +589,60 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 **P27 owner decisions (D-62, approved 2026-11-16):** the product offers a catalogue of summary metrics, two or three per module, each labelled with its module and a short plain description. A metric is shown only while its module is enabled. The admin chooses in society settings which metrics the dashboard shows; the six ANL-1 metrics are on by default (when their module is enabled) and every other metric is off until the admin turns it on. Admins and committee members see the same dashboard, including financial figures, as aggregates only. Trends are monthly for the last 3, 6 or 12 months (default 12); money sections can also show the current financial year (April–March). Figures are totals and buckets only, never lists of units or people, and each section links to its module's screen for detail. Figures are calculated live from the module data each time the page loads (no copied summary tables) and must meet the target scale. Only the admin can export the dashboard as CSV or PDF. The metric catalogue is drafted with the build and reviewed by the owner before release.
 
+**P27 metric catalogue (draft — owner review before release).** ★ marks the six metrics on by default. "Money" metrics can use the current financial year instead of the month range. "Today" metrics are a snapshot and ignore the range.
+
+| Module          | Metric                     | What it shows                                                         | Default | Money |
+| --------------- | -------------------------- | --------------------------------------------------------------------- | ------- | ----- |
+| core            | Unit occupancy             | Occupied vs vacant units today, and owners vs tenants living in them. |         |       |
+| core            | Member sign-ups            | New active members per month.                                         |         |       |
+| billing         | Dues ageing                | Unpaid dues grouped by age: 0–30, 31–60, 61–90 and 90+ days.          | ★       |       |
+| billing         | Collection trend           | Amount billed vs collected each month.                                | ★       | Yes   |
+| billing         | Collection rate            | Share of each month's bills paid in full.                             |         | Yes   |
+| expense         | Expense vs income          | Money in vs money out each month.                                     | ★       | Yes   |
+| expense         | Spend by category          | Where the money went, by expense category.                            |         | Yes   |
+| service_request | Request SLA performance    | Requests resolved within vs after their SLA each month.               | ★       |       |
+| service_request | Open requests              | Requests still open, by category.                                     |         |       |
+| service_request | Time to resolve            | Average days from raised to resolved, per month.                      |         |       |
+| amenity         | Amenity use                | Confirmed bookings per amenity over the selected months.              | ★       |       |
+| amenity         | Booking cancellations      | Cancelled vs confirmed bookings per month.                            |         |       |
+| visitor         | Visitor trends             | Visitor entries per month.                                            | ★       |       |
+| visitor         | Busy gate hours            | Visitor entries by hour of day over the selected period.              |         |       |
+| delivery        | Deliveries                 | Deliveries received per month.                                        |         |       |
+| delivery        | Uncollected deliveries     | Deliveries still waiting at the gate today.                           |         |       |
+| staff           | Staff attendance           | Share of expected staff days marked present, per month.               |         |       |
+| staff           | Active staff               | Active staff by type.                                                 |         |       |
+| housekeeping    | Supplies used              | Housekeeping supplies issued per month.                               |         |       |
+| housekeeping    | Low stock                  | Items at or below their reorder level today.                          |         |       |
+| amc             | Contracts expiring         | AMC contracts ending in the next 60 days.                             |         |       |
+| amc             | Service visits             | AMC visits completed per month.                                       |         |       |
+| notice          | Notices published          | Notices published per month.                                          |         |       |
+| notice          | Notice read rate           | Average share of recipients who opened a notice, per month.           |         |       |
+| directory       | Registered vehicles        | Active vehicles by type.                                              |         |       |
+| directory       | Vehicles awaiting check    | Vehicles waiting for verification today.                              |         |       |
+| tenancy         | Move-ins and move-outs     | Completed move-ins vs move-outs per month.                            |         |       |
+| tenancy         | Pending tenancy requests   | Move requests waiting for a decision today.                           |         |       |
+| document        | Documents added            | Documents published per month.                                        |         |       |
+| document        | Document downloads         | Document downloads per month.                                         |         |       |
+| parking         | Parking occupancy          | Allocated vs free parking slots today.                                |         |       |
+| parking         | Parking reports            | Parking complaints raised vs resolved per month.                      |         |       |
+| sos             | Emergency alerts           | SOS alerts raised per month.                                          |         |       |
+| sos             | Alert response time        | Average minutes until an alert was acknowledged, per month.           |         |       |
+| vendor          | Purchase requests          | Purchase requests by status.                                          |         |       |
+| vendor          | Approved purchases         | Value of approved purchases per month.                                |         | Yes   |
+| patrol          | Patrol completion          | Checkpoints scanned vs missed per month.                              |         |       |
+| patrol          | Incidents                  | Incidents per month by severity.                                      |         |       |
+| metering        | Utility consumption        | Consumption per meter type per month.                                 |         |       |
+| metering        | Readings awaiting approval | Resident readings waiting for an admin today.                         |         |       |
+| asset           | Assets                     | Active assets by category.                                            |         |       |
+| asset           | Warranties expiring        | Assets whose warranty ends in the next 90 days.                       |         |       |
+| home_services   | Service providers          | Visible providers by category.                                        |         |       |
+| home_services   | Provider ratings           | Average rating and number of ratings per category.                    |         |       |
+| poll            | Votes held                 | Votes completed per month.                                            |         |       |
+| poll            | Voting turnout             | Average turnout of completed votes, per month.                        |         |       |
+| meeting         | Meetings held              | Meetings held per month by type.                                      |         |       |
+| meeting         | Meeting attendance         | Average share of invitees present, per month.                         |         |       |
+| meeting         | Action items               | Open, overdue and done action items today.                            |         |       |
+
 #### 5.10.13 Later-wave modules and enhancements (P5)
 
 - **Asset Register (`asset`, P5-1):** common assets (lifts, pumps, generators, CCTV) with location, purchase/warranty details, AMC link and maintenance history.

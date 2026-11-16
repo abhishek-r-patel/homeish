@@ -66,10 +66,11 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | **Expense (P16)**              | `expense_accounts`, `expense_categories`, `expenses`, `expense_book_entries`, `expense_month_locks`                                                                                                                                                                      |
 | **Polls (P22)**                | `poll_votes`, `poll_vote_blocks`, `poll_options`, `poll_offices`, `poll_candidates`, `poll_unit_representatives`, `poll_electorate`, `poll_participation`, `poll_public_responses`, `poll_private_tallies`                                                               |
 | **Meetings (P23)**             | `meetings`, `meeting_agenda_items`, `meeting_invitee_selections`, `meeting_invited_units`, `meeting_invited_members`, `meeting_attendance`, `meeting_resolutions`, `meeting_minutes`, `meeting_action_items`                                                             |
+| **Analytics (P27, Core)**      | `analytics_preferences`                                                                                                                                                                                                                                                  |
 
-Inventory above: **36 MVP tables + 3 P17 directory tables + 5 P16 expense tables + 10 P22 poll tables + 9 P23 meeting tables**; other post-MVP module tables are described in Section 9.
+Inventory above: **36 MVP tables + 3 P17 directory tables + 5 P16 expense tables + 10 P22 poll tables + 9 P23 meeting tables + 1 P27 analytics table**; other post-MVP module tables are described in Section 9.
 
-Post-MVP modules (staff, housekeeping, AMC, notice, amenity, directory, expense, poll and meeting) are outlined in Section 9. P17, P16, P22 and P23 have been tested locally only; module status follows the implementation plan.
+Post-MVP modules (staff, housekeeping, AMC, notice, amenity, directory, expense, poll and meeting) and committee analytics are outlined in Section 9. P17, P16, P22, P23 and P27 have been tested locally only; module status follows the implementation plan.
 
 ### 2.2 Entity relationship diagram (MVP)
 
@@ -1130,6 +1131,40 @@ access is through authorized security-definer RPCs. Records are kept permanently
 Notice days are calendar days in the society time zone. Short notice is a warning only. The integration tests cover
 society isolation, role and module gates, lifecycle and protection triggers, attendance and quorum, resolutions,
 minutes, actions and reminders; they have run against disposable local PostgreSQL only.
+
+### 9.19 Committee analytics (Core, P27; D-62)
+
+Migrations `20261120100000_core_analytics_foundation.sql`, `20261120110000_core_analytics_operations_metrics.sql`
+and `20261120120000_core_analytics_community_metrics.sql`. Analytics is part of Core (always on); each metric shows
+only while its own module is enabled. Figures are calculated live on every request from the module tables; there
+are no summary, snapshot or materialised tables and no new indexes.
+
+- `analytics_preferences`: one row per society with the admin's chosen `metric_keys` (stored in catalogue order,
+  at most 100, no nulls), an optimistic `version`, `updated_by` and `updated_at`. No row means the six ANL-1 defaults.
+  RLS with a deny-all direct-access policy, no table privileges for any client role (including `service_role`) and
+  `TRUNCATE` rejected (55000).
+- `private.analytics_catalogue()` is the closed list of 49 metrics (key, module, order, default on, money). It must
+  match `src/core/analytics/catalogue.ts`; an integration test compares them.
+- `private.analytics_metric_<module>_<name>(society, from, to)` (one per metric) and the shaping helpers
+  (`analytics_ops_*`, `analytics_community_*`) are security-definer or immutable functions with `search_path = ''`
+  and no grants to any client role. Each reads only the given society's rows and returns totals and buckets only —
+  never person names, unit labels, emails or phone numbers. Output kinds: `trend` (one point per society-local month,
+  zero-filled), `breakdown` (top 20 plus "Other" for additive units) and `stat` (a snapshot for today). Units:
+  count, paise, percent, days, minutes, rating and quantity.
+- Rules worth knowing: request SLA counts only requests with a deadline; staff attendance is present ÷ (present +
+  absent), leave excluded; notice read rate estimates recipients from today's audience because past audiences are not
+  stored; document downloads come from `document.download` audit rows; patrol completion rebuilds round windows from
+  schedules and scans, and one scan inside two overlapping grace periods counts for both rounds; hidden ratings still
+  count their stars (hiding only hides the comment).
+- Public RPCs (authenticated only, authorise first): `analytics_settings_get` (admin, committee),
+  `analytics_settings_update` (admin; writable society; 22023 unknown, duplicate or null key; 40001 stale version;
+  audited `analytics.settings_update`), `analytics_dashboard` (admin, committee; `p_months` 3, 6 or 12;
+  `p_money_range` `months` or `fy`, where money metrics use 1 April of the current financial year) and
+  `analytics_export_record` (admin; audits `analytics.export` with the metrics actually exported).
+
+The opt-in performance test (`PERF_ANALYTICS=1`) seeds 500 units and 12 months of data and requires the full
+49-metric dashboard in under 2 s; it measured about 1.2 s locally. The integration tests have run against disposable
+local PostgreSQL only.
 
 ## 10. Reference: Module Settings Keys (`module_configs.settings`)
 
