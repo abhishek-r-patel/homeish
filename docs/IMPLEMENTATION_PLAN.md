@@ -131,7 +131,7 @@ Arrows are recommended build order; "after Pxx" inside a box marks a phase that 
 | P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
 | P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
 | P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | 🟡 Locally verified and committed (2026-11-16); owner UAT and release pending    |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ⬜ Not started                                                                   |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | 🟡 Locally verified and committed (2026-11-16); owner UAT and release pending    |
 | P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
 | P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
 | P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅ Released to beta and main (2026-11-16); migrated to testdb; owner UAT pending |
@@ -1087,24 +1087,26 @@ DATABASE 15.2.
 
 **Goal:** admins schedule meetings with agenda and notice-period checks, record unit attendance and quorum, link resolutions to votes and publish minutes (PRD 5.10.8, P4-2, MTG-1 to MTG-4).
 
-**Prerequisites:** `poll` resolutions and `document` minutes when enabled. Size M, about 2 blocks. **Kickoff decisions (open):** meeting types; quorum rule (percentage of units); notice period; proxy attendance allowed or not.
+**Prerequisites:** `poll` resolutions and `document` minutes when enabled. Size M, about 2 blocks. **Kickoff decisions:** approved 2026-11-16 (PRD D-61, §5.10.8).
 
-**Draft tasks — revisit at kickoff:**
+**Tasks:**
 
 | ID    | Task                                                                                                    | Status |
 | ----- | ------------------------------------------------------------------------------------------------------- | ------ |
-| P23.1 | Migration: meetings, agenda items, unit attendance, resolutions, minutes and action items; RLS          | ⬜     |
-| P23.2 | Schedule a meeting (AGM, SGM, committee) with agenda, venue/online link and notice-period check (MTG-1) | ⬜     |
-| P23.3 | Attendance by unit with a quorum indicator (MTG-2)                                                      | ⬜     |
-| P23.4 | Link resolutions to a `poll` vote when enabled (MTG-3)                                                  | ⬜     |
-| P23.5 | Minutes and action items with owners and due dates; publish minutes to `document` when enabled (MTG-4)  | ⬜     |
-| P23.6 | Admin, committee and resident screens                                                                   | ⬜     |
+| P23.1 | Migration: meetings, agenda items, unit attendance, resolutions, minutes and action items; RLS          | ✅     |
+| P23.2 | Schedule a meeting (AGM, SGM, committee) with agenda, venue/online link and notice-period check (MTG-1) | ✅     |
+| P23.3 | Attendance by unit with a quorum indicator (MTG-2)                                                      | ✅     |
+| P23.4 | Link resolutions to a `poll` vote when enabled (MTG-3)                                                  | ✅     |
+| P23.5 | Minutes and action items with owners and due dates; publish minutes to `document` when enabled (MTG-4)  | ✅     |
+| P23.6 | Admin, committee and resident screens                                                                   | ✅     |
 
 **Tests:** quorum calculation, notice-period check, module on/off combinations for `poll` and `document`, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; PRD MTG-1 to MTG-4 verified; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`. The module ships disabled. A database-safety review found no critical or high issues; its one medium and three low findings (resident visibility through action items, self check-in existence leak, draft polls in resident reads, unaudited attendance removal) were fixed with tests, and the resolution limit was aligned to 50. Owner UAT, manual screen-reader/zoom checks and release remain pending. No hosted database migration or module enablement was performed. Deferred: a poll picker for linking resolutions (the admin pastes a poll ID) and a test of the 2000-recipient notification cap.
+
+**Verification:** `npm run check` passed (661 unit tests); `npm run test:integration:local` passed (66 files, 290 tests; 2 files and 10 tests skipped as configured); `npx playwright test --workers=4` passed (146 tests), and after the final fixes the meeting and accessibility specs passed again (90 tests); `npm run build` passed.
 
 ---
 
@@ -1212,7 +1214,7 @@ DATABASE 15.2.
 
 **Goal:** one aggregate dashboard for admin and committee covering only enabled modules (PRD 5.10.12, P4-6, ANL-1 to ANL-2).
 
-**Prerequisites:** read models of enabled modules. Size M, about 2 blocks. **Kickoff decisions (open):** dashboard metrics and periods; whether committee sees financial figures.
+**Prerequisites:** read models of enabled modules. Size M, about 2 blocks (the D-62 metric catalogue makes it closer to L). **Kickoff decisions:** approved 2026-11-16 (PRD D-62, §5.10.12).
 
 **Draft tasks — revisit at kickoff:**
 

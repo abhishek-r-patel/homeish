@@ -122,6 +122,17 @@ accessibility spec.
 - [ ] Admin and committee: committee views have no write controls; committee sees no names while a vote is open; required reasons and readiness errors are announced and focus moves to the error.
 - [ ] At actual 200% zoom and 320px, test the draft editor, representative picker, ballot review, results and export controls by keyboard and screen reader.
 
+## Meetings & AGM (P23)
+
+Preliminary checks use `/fixtures/meeting` with synthetic roles and scenarios; the fixture is included in the
+automated accessibility spec.
+
+- [ ] Resident: meeting time, venue or online link and the unit being checked in are announced; **Check in** appears only while check-in is open, and the result is announced once.
+- [ ] Admin: the short-notice warning, quorum status and minutes-copy failure are read as text, not colour alone; Retry is reachable by keyboard.
+- [ ] Attendance board: mode (in person, online, proxy) is a labelled radio group; the proxy name field is required only for proxy and its error is announced.
+- [ ] Minutes editor, resolutions and action items keep labels, version-conflict errors and focus on the error at 200% zoom and 320px.
+- [ ] Committee views have no publish control; residents never see drafts or committee meetings.
+
 ## Guard patrol and incident log (P25)
 
 Preliminary checks use `/fixtures/patrol` with synthetic data; its role (guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the guard screen, the admin screen and the committee view-only screen.

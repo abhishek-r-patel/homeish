@@ -169,6 +169,13 @@ Route Handler authorizes completed votes before returning a no-store download. P
 application results, logs, audit records or exports. A synthetic `/fixtures/poll` page supports accessibility and
 journey checks without a live society.
 
+P23 Meetings & AGM (`meeting`) is also disabled by default and follows the same pattern in `src/core/meeting/`. It
+reuses other modules only through their public operations: when `poll` is enabled, a resolution can create a
+pre-filled draft poll through the Polls operations; when `document` is enabled, publishing minutes renders a PDF with
+the existing `pdf-lib` dependency and copies it into a Documents folder through the Documents upload operations. The
+copy uses one stable request ID per meeting, so a retry cannot create a duplicate, and a failed copy never undoes the
+publish. A synthetic `/fixtures/meeting` page supports accessibility and journey checks.
+
 The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client component rendered by the shared app shell for guards and for any user whose society has `sos` enabled. It loads `sos_my_alerts` on mount, rechecks every 30 seconds, and treats Realtime inserts on the user's own `notifications` rows as a hint to reload, so it adds no Realtime table. It stays on every screen while the alert is open until the recipient dismisses their own copy ("Seen — stop alert" for responders, who also get a Respond link; "Dismiss" for residents); acknowledging, updating and closing happen on the SOS screens. On guard devices it plays a short Web Audio alarm every 30 seconds, with visible mute/unmute and "turn on alert sound" controls when the browser blocks autoplay; a device that cannot play sound shows a "keep this screen in view" message. Delivery is in-app and Realtime only, with no push, SMS or calls (PRD D-41).
 
 ### 5.3 PWA scope (PRD D-23)
@@ -250,6 +257,11 @@ database routines to reconcile scheduled openings and deadline completions, send
 purge expired voter identity/participation rows while retaining totals. Ordinary reads and submissions also
 reconcile a due vote under its database lock, so opening and deadline enforcement do not depend on the daily job
 arriving on time.
+
+P23 adds `meeting.action_reminders` after `poll.reconcile`. Its privileged wrapper
+(`src/core/privileged/meeting.ts`) calls the service-role-only `meeting_action_reminders_run`, which sends at most one
+overdue in-app reminder per open action item per society-local day; the wrapper then sends the matching push
+notifications for that request ID.
 
 ---
 
@@ -373,6 +385,9 @@ P19–P21 add, in the same way:
 
 P22 adds `src/core/poll/`, `src/components/poll/`, resident and admin Polls routes, a completed-vote export route
 under `src/app/api/polls/`, and the synthetic fixture at `src/app/fixtures/poll/`.
+
+P23 adds `src/core/meeting/`, `src/core/privileged/meeting.ts`, `src/components/meeting/`, resident and admin
+Meetings routes, and the synthetic fixture at `src/app/fixtures/meeting/`.
 
 ```
 homeish/

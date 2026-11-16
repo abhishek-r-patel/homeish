@@ -693,6 +693,32 @@ admin or committee access. CSV is formula-safe and PDF is rendered with the exis
 exports separate aggregate results from the list of units that voted; neither format contains email addresses.
 The `/fixtures/poll` page uses synthetic scenarios and does not call production services.
 
+### 5.26 Meetings & AGM (`meeting`, P23; D-61)
+
+Operations live in `src/core/meeting/`; Server Actions are in the resident and admin Meetings routes. The module
+ships disabled. Writes use the `otherWritesUserMinute` limit and an idempotency request ID. Permissions:
+`meeting:attend` (resident), `meeting:list` and `meeting:minutes` (admin, committee) and `meeting:manage` (admin).
+Guards and housekeeping supervisors have no access.
+
+| Operation / RPC                                                                                   | Caller                         | Contract                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getMeetingMemberList`, `getMeetingMemberDetail`, `getMyMeetingActions`                           | Resident                       | Non-draft AGM/SGM meetings for units the caller occupies, published minutes, resolutions and the caller's own action items. Invisible meetings return not found.                                                 |
+| `selfCheckInToMeeting` / `meeting_self_checkin`                                                   | Owner or tenant occupant       | Checks the caller's invited unit in once while the admin has check-in open; family members are refused.                                                                                                          |
+| `getMeetingAdminList`, `getMeetingAdminDetail`, `getMeetingInviteeOptions`, `searchMeetingOwners` | Admin, committee               | Management list and detail with invitees, attendance, quorum indicator, resolutions, minutes and actions.                                                                                                        |
+| `createMeeting`, `updateMeeting`, `deleteMeetingDraft`, `scheduleMeeting`, `cancelMeeting`        | Admin                          | Idempotent create; optimistic-version edits while draft/scheduled; schedule snapshots notice and quorum and notifies invitees; short notice is a warning only; cancel needs a reason.                            |
+| `setMeetingCheckin`, `markMeetingHeld`, `setMeetingAttendance`, `removeMeetingAttendance`         | Admin                          | Open or close self check-in, mark held, record in-person, online or proxy (with the proxy's name) attendance, or undo a mark.                                                                                    |
+| `saveMeetingResolution`, `deleteMeetingResolution`, `setMeetingResolutionOutcome`                 | Admin                          | Up to 50 resolutions; outcome passed, failed or deferred with optional counts.                                                                                                                                   |
+| `linkMeetingResolutionPoll`, `createMeetingResolutionPoll`                                        | Admin, with `poll` enabled     | Link an existing poll by ID, or create a pre-filled public single-choice draft poll (For/Against/Abstain) through `createPollDraft` and `savePollDraft`.                                                         |
+| `saveMeetingMinutes` / `publishMeetingMinutes` / `retryMeetingMinutesCopy`                        | Admin, committee / admin       | Draft minutes with an optimistic version; only the admin publishes. With `document` enabled, a minutes PDF is copied into the chosen Documents folder; a failed copy never fails the publish and can be retried. |
+| `saveMeetingAction`, `setMeetingActionStatus`                                                     | Admin; action owner for status | Up to 200 actions on scheduled or held meetings; owners follow `action_owner_scope` and are notified on assignment. The owner or the admin marks done or reopens.                                                |
+| `getMeetingSettings`, `updateMeetingSettings`                                                     | Admin                          | Notice days, quorum percentages and action owner scope; audited.                                                                                                                                                 |
+
+Pages are `/meetings`, `/meetings/{meetingId}`, `/meetings/actions`, `/admin/meetings`, `/admin/meetings/new`,
+`/admin/meetings/{meetingId}`, `/admin/meetings/{meetingId}/edit`, `/admin/meetings/actions` and
+`/admin/meetings/settings`. Notification types cover scheduled, rescheduled, cancelled, minutes published, action
+assigned and action overdue; they are in-app plus push through `sendNotificationPushesForRequest`. The
+`/fixtures/meeting` page uses synthetic scenarios and does not call production services.
+
 ## 6. HTTP Routes
 
 | Route                               | Method       | Caller                         | Authentication                                                                                                                   | Purpose                                                                                                                                                                                                                           |
@@ -731,6 +757,7 @@ Runs once a day (the free scheduler tier allows only one run per day and may sta
 | Request auto-close                     | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                            |
 | Request SLA escalation                 | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set |
 | Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60) |
+| Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)      |
 | Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                  |
 | Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                          |
 | Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)   |
