@@ -1,0 +1,3 @@
+# Owner-confirmed false positives only (2026-11-16). Each line ignores one exact finding.
+# "older_than_3_days" is a parcel-age label key in the P27 delivery metric, not a credential.
+supabase/migrations/20261120110000_core_analytics_operations_metrics.sql:generic-api-key:504

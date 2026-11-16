@@ -454,6 +454,46 @@ export type Database = {
           },
         ];
       };
+      analytics_preferences: {
+        Row: {
+          metric_keys: string[];
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          metric_keys: string[];
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          metric_keys?: string[];
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'analytics_preferences_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'analytics_preferences_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       asset_categories: {
         Row: {
           active: boolean;
@@ -8932,6 +8972,30 @@ export type Database = {
       };
       amenity_workspace: {
         Args: { p_date: string; p_society_id: string };
+        Returns: Json;
+      };
+      analytics_dashboard: {
+        Args: { p_money_range: string; p_months: number; p_society_id: string };
+        Returns: Json;
+      };
+      analytics_export_record: {
+        Args: {
+          p_format: string;
+          p_money_range: string;
+          p_months: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      analytics_settings_get: { Args: { p_society_id: string }; Returns: Json };
+      analytics_settings_update: {
+        Args: {
+          p_expected_version: number;
+          p_metric_keys: string[];
+          p_request_id: string;
+          p_society_id: string;
+        };
         Returns: Json;
       };
       approve_society_registration: {
