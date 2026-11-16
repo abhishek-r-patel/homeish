@@ -664,6 +664,35 @@ Operations live in `src/core/home-services/`; Server Actions are in `(resident)/
 
 Permissions: `home_services:list` (admin, committee, resident), `home_services:manage` (admin), `home_services:suggest` (committee) and `home_services:rate` (resident). Pages are `/home-services`, `/home-services/{providerId}`, `/admin/home-services` and `/admin/home-services/{providerId}`. Guards have no access; providers have no logins and there are no bookings.
 
+### 5.25 Polls & Voting (`poll`, P22; D-60)
+
+Operations live in `src/core/poll/`; Server Actions are in the resident and admin Polls routes. The module ships
+disabled. Writes use the `otherWritesUserMinute` limit. Each unit has one ballot cast by its frozen representative;
+residents with an active occupancy in an electorate unit can view that vote and its permitted results, but only the
+representative can submit. Admins manage polls; committee members have read-only management views. Guards and
+housekeeping supervisors have no access.
+
+| Operation / RPC                                                | Caller                                          | Contract                                                                                                                                                           |
+| -------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getPollMemberList` / `poll_member_list`                       | Resident                                        | Active and scheduled votes for the resident's occupied electorate units; no drafts.                                                                                |
+| `getPollMemberVote` / `poll_member_get`                        | Resident                                        | Ballot details and only the caller's own unit submission state; scheduled votes disclose no ballot choices/options.                                                |
+| `submitPollPublicBallot` / `poll_ballot_submit`                | Frozen representative                           | Submit or replace the full PUBLIC selection set before close.                                                                                                      |
+| `submitPollPrivateBallot` / `poll_ballot_submit`               | Frozen representative                           | Submit one choice per office once; explicit NOTA is supported. Choices are not returned or stored per voter.                                                       |
+| `getPollAdminList`, `getPollAdminVote`, `getPollParticipation` | Admin, committee                                | Management list/detail; committee gets counts only while open, with no open-vote names or choices.                                                                 |
+| `createPollDraft`, `savePollDraft`, `deletePollDraft`          | Admin                                           | Create idempotent drafts, replace a draft with optimistic revision, or delete a draft.                                                                             |
+| `activatePoll`, `schedulePoll`, `withdrawPollSchedule`         | Admin                                           | Validate readiness, freeze the effective tenant setting and electorate, and make permitted lifecycle changes.                                                      |
+| `extendPollDeadline`, `completePollEarly`, `cancelPoll`        | Admin                                           | Change an active deadline, complete early or cancel with a required reason. If already overdue, completion commits and the application returns `CONFLICT/expired`. |
+| `updatePollSettings`, `setPollRepresentative`                  | Admin; unit owner for their unit                | Change the society default or designate an eligible representative; changes are audited.                                                                           |
+| `getPollResults`, `getPollExport`, `getPollRepresentatives`    | Eligible resident; admin/committee as specified | Enforce public/private visibility, completed-only exports and separate private voter rosters; no email addresses.                                                  |
+
+Pages are `/polls`, `/polls/{voteId}`, `/polls/representatives`, `/admin/polls`,
+`/admin/polls/new`, `/admin/polls/{voteId}`, `/admin/polls/{voteId}/edit`,
+`/admin/polls/representatives` and `/admin/polls/settings`. Committee uses the administrative read-only views.
+The completed-vote download route is `GET /api/polls/{voteId}/export?format=pdf|csv`; it requires a session and
+admin or committee access. CSV is formula-safe and PDF is rendered with the existing `pdf-lib` dependency. Private
+exports separate aggregate results from the list of units that voted; neither format contains email addresses.
+The `/fixtures/poll` page uses synthetic scenarios and does not call production services.
+
 ## 6. HTTP Routes
 
 | Route                               | Method       | Caller                         | Authentication                                                                                                                   | Purpose                                                                                                                                                                                                                           |
@@ -677,6 +706,7 @@ Permissions: `home_services:list` (admin, committee, resident), `home_services:m
 | `/api/billing/receipts/{paymentId}` | GET          | Signed-in browser              | Session + permission (payer, unit occupants, A, C)                                                                               | Streams the receipt PDF for a confirmed payment                                                                                                                                                                                   |
 | `/api/billing/bills/{billId}`       | GET          | Signed-in browser              | Session + permission                                                                                                             | Streams the bill PDF                                                                                                                                                                                                              |
 | `/api/exports/{jobId}`              | GET          | Signed-in browser              | Session + the job's creator or A/C of that society                                                                               | Downloads a finished CSV export; file expires with the job                                                                                                                                                                        |
+| `/api/polls/{voteId}/export`        | GET          | Signed-in browser              | Session + admin or committee access to the completed vote                                                                        | Downloads a completed Polls PDF or CSV (`format` query); private results and voter roster are separate and no email is included                                                                                                   |
 
 Rules for all routes:
 
@@ -691,18 +721,19 @@ Vercel Cron sends `GET`; `POST` remains supported for authenticated manual invoc
 
 Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each society-scoped task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. A global task claims one run key using the first eligible society; if there are no eligible societies, the retention task still runs because its database operations are idempotent. Each task failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
 
-| Task                        | Behavior                                                                                                                                                               |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Late fees                   | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                             |
-| Reminders                   | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                 |
-| Stale payments              | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                            |
-| Visitor expiry              | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                 |
-| Delivery overdue view       | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                  |
-| Request auto-close          | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                            |
-| Request SLA escalation      | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set |
-| Module reminders (post-MVP) | AMC expiry, low stock                                                                                                                                                  |
-| Retention                   | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                          |
-| Backup export               | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)   |
+| Task                                   | Behavior                                                                                                                                                               |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Late fees                              | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                             |
+| Reminders                              | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                 |
+| Stale payments                         | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                            |
+| Visitor expiry                         | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                 |
+| Delivery overdue view                  | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                  |
+| Request auto-close                     | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                            |
+| Request SLA escalation                 | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set |
+| Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60) |
+| Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                  |
+| Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                          |
+| Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)   |
 
 A task failure is logged (error log + Sentry) and does not stop the other tasks; the next day's run retries unfinished work because tasks are idempotent.
 

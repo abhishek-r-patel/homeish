@@ -426,21 +426,23 @@ Defined in Section 9.
 
 ### 6.20 Module-specific composites
 
-| Composite             | Used in               | Anatomy                                                                                                                |
-| --------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Visitor approval card | R-02 (push deep link) | Visitor photo or placeholder, name, purpose, vehicle, time, large Allow / Deny pair                                    |
-| Guard waiting panel   | G-02                  | Visitor summary, live status chip, elapsed timer, fallback actions after timeout (Call Resident, Allow By Guard)       |
-| Gate action tile      | G-01                  | 64px+ tile, 28px icon, `guard-action` label, pending-count badge                                                       |
-| Amount due hero       | R-04                  | Label, `display` amount, due date chip, primary Pay Now                                                                |
-| UPI pay panel         | R-04                  | Payee name, UPI ID with Copy, QR, Pay with UPI App button, "last changed" line                                         |
-| Payment review row    | A-07                  | Unit, amount, reference with Copy, screenshot thumbnail, submitted time, Confirm / Reject                              |
-| Ledger row            | R-04, A-07            | Date, description, debit, credit, running balance (table)                                                              |
-| Staff profile editor  | R-06, A-13            | Name, phone, role, photo upload, optional ID type + last four, verification flag, linked units and society status      |
-| Staff gate card       | G-01                  | Name, photo, role, destination-unit block warning and one explicit Check in or Check out action; no phone or ID        |
-| Society shift row     | A-13                  | Staff name, date and Present / Absent / Leave; existing dates remain editable                                          |
-| Module toggle row     | D-03                  | Module name, description, On/Off switch with text, last changed by/at, settings link                                   |
-| Log detail panel      | D-05                  | Header (severity, reference ID, status), context list, stack trace (monospace, wrap + copy), actions (Resolve, Ignore) |
-| Rating input          | R-05                  | Five 48px star buttons as radio group with text value, labelled "1 of 5" etc.                                          |
+| Composite             | Used in               | Anatomy                                                                                                                                                         |
+| --------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visitor approval card | R-02 (push deep link) | Visitor photo or placeholder, name, purpose, vehicle, time, large Allow / Deny pair                                                                             |
+| Guard waiting panel   | G-02                  | Visitor summary, live status chip, elapsed timer, fallback actions after timeout (Call Resident, Allow By Guard)                                                |
+| Gate action tile      | G-01                  | 64px+ tile, 28px icon, `guard-action` label, pending-count badge                                                                                                |
+| Amount due hero       | R-04                  | Label, `display` amount, due date chip, primary Pay Now                                                                                                         |
+| UPI pay panel         | R-04                  | Payee name, UPI ID with Copy, QR, Pay with UPI App button, "last changed" line                                                                                  |
+| Payment review row    | A-07                  | Unit, amount, reference with Copy, screenshot thumbnail, submitted time, Confirm / Reject                                                                       |
+| Ledger row            | R-04, A-07            | Date, description, debit, credit, running balance (table)                                                                                                       |
+| Staff profile editor  | R-06, A-13            | Name, phone, role, photo upload, optional ID type + last four, verification flag, linked units and society status                                               |
+| Staff gate card       | G-01                  | Name, photo, role, destination-unit block warning and one explicit Check in or Check out action; no phone or ID                                                 |
+| Society shift row     | A-13                  | Staff name, date and Present / Absent / Leave; existing dates remain editable                                                                                   |
+| Module toggle row     | D-03                  | Module name, description, On/Off switch with text, last changed by/at, settings link                                                                            |
+| Log detail panel      | D-05                  | Header (severity, reference ID, status), context list, stack trace (monospace, wrap + copy), actions (Resolve, Ignore)                                          |
+| Rating input          | R-05                  | Five 48px star buttons as radio group with text value, labelled "1 of 5" etc.                                                                                   |
+| Poll ballot           | P22                   | Names the unit being represented; PRIVATE ballots require a review step and never echo choices in the submission confirmation                                   |
+| Poll results          | P22                   | Reads turnout and permitted totals as text, distinguishes ties/no-votes/no-winner, and keeps private aggregate results separate from the completed voter roster |
 
 ---
 

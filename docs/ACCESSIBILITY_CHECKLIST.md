@@ -111,6 +111,17 @@ Preliminary checks use `/fixtures/vendor` with synthetic data; its role (admin, 
 - [ ] Document and quote file uploads announce progress, success and failure; download buttons name the file.
 - [ ] Amount, GSTIN, phone and email fields read their labels, hints and errors; the lists and detail screens remain usable at 200% zoom and 320px.
 
+## Polls & Voting (P22)
+
+Preliminary checks use `/fixtures/poll` with synthetic roles and scenarios; the fixture is included in the automated
+accessibility spec.
+
+- [ ] Resident: the vote names the unit being represented; only the designated representative finds ballot controls, and an ineligible resident sees no submit action.
+- [ ] PUBLIC polls: option labels, selection limits, deadline in IST and the submitted acknowledgement are announced clearly; changing a selection replaces the prior set.
+- [ ] PRIVATE elections: review the complete ballot before the one-time submit; confirmation never repeats choices; active results expose turnout only, and completed aggregate results are separate from the voter roster.
+- [ ] Admin and committee: committee views have no write controls; committee sees no names while a vote is open; required reasons and readiness errors are announced and focus moves to the error.
+- [ ] At actual 200% zoom and 320px, test the draft editor, representative picker, ballot review, results and export controls by keyboard and screen reader.
+
 ## Guard patrol and incident log (P25)
 
 Preliminary checks use `/fixtures/patrol` with synthetic data; its role (guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the guard screen, the admin screen and the committee view-only screen.
