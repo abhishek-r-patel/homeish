@@ -14,12 +14,28 @@ import { authoriseTenancyDocumentView } from '../../../../core/tenancy/moves/fil
 import { tenancyDocumentPathSchema } from '../../../../core/tenancy/moves/validation';
 import { authoriseParkingPhotoView } from '../../../../core/parking/files';
 import { parkingPhotoPathSchema } from '../../../../core/parking/validation';
+import { authorisePatrolPhotoView } from '../../../../core/patrol/files';
+import { patrolPhotoPathSchema } from '../../../../core/patrol/validation';
+import { authoriseMeteringPhotoView } from '../../../../core/metering/files';
+import { meteringPhotoPathSchema } from '../../../../core/metering/validation';
 
 const viewSchema = z.discriminatedUnion('bucket', [
   z
     .object({
+      bucket: z.literal('metering-photos'),
+      path: meteringPhotoPathSchema,
+    })
+    .strict(),
+  z
+    .object({
       bucket: z.literal('parking-photos'),
       path: parkingPhotoPathSchema,
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('patrol-photos'),
+      path: patrolPhotoPathSchema,
     })
     .strict(),
   z
@@ -55,7 +71,9 @@ function parseBody(body: unknown) {
   }
   if (
     parsed.data.bucket === 'tenancy-files' ||
-    parsed.data.bucket === 'parking-photos'
+    parsed.data.bucket === 'parking-photos' ||
+    parsed.data.bucket === 'patrol-photos' ||
+    parsed.data.bucket === 'metering-photos'
   ) {
     return {
       ...parsed.data,
@@ -117,6 +135,10 @@ export async function POST(request: Request) {
     const input = parseBody(body);
     if (input.bucket === 'parking-photos') {
       await authoriseParkingPhotoView(context, input.path);
+    } else if (input.bucket === 'patrol-photos') {
+      await authorisePatrolPhotoView(context, input.path);
+    } else if (input.bucket === 'metering-photos') {
+      await authoriseMeteringPhotoView(context, input.path);
     } else if (input.bucket === 'tenancy-files') {
       await authoriseTenancyDocumentView(context, input.path);
     } else if (input.bucket === 'delivery-photos') {

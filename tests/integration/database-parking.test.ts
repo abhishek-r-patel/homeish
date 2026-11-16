@@ -893,7 +893,9 @@ describe.skipIf(!hasDatabase)('parking database contracts', () => {
         [orphan],
       );
     });
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+    }).format(new Date());
     const listed = await database.asRole('service_role', {}, async (client) =>
       (
         await client.query<{ path: string }>(

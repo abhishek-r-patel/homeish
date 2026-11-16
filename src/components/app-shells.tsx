@@ -93,6 +93,9 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
     'M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z',
   parking: 'M5 3h14v18H5zM9 17V7h4a3 3 0 0 1 0 6H9',
   sos: 'M12 3 2 20h20L12 3Zm0 6v5m0 3h.01',
+  vendor: 'M4 8h16v12H4zM9 8V5h6v3M4 13h16',
+  patrol: 'M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Zm-3 9 2 2 4-4',
+  metering: 'M12 21a9 9 0 1 0-9-9M12 12l4-4M7 17h10',
 };
 
 function isActivePath(pathname: string, href: string) {

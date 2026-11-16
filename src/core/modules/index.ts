@@ -36,6 +36,18 @@ import {
   parkingSettingsSchema,
 } from '../parking/validation';
 import { DEFAULT_SOS_SETTINGS, sosSettingsSchema } from '../sos/validation';
+import {
+  DEFAULT_VENDOR_SETTINGS,
+  vendorSettingsSchema,
+} from '../vendor/validation';
+import {
+  DEFAULT_PATROL_SETTINGS,
+  patrolSettingsSchema,
+} from '../patrol/validation';
+import {
+  DEFAULT_METERING_SETTINGS,
+  meteringSettingsSchema,
+} from '../metering/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -766,6 +778,97 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     },
     settingsSchema: sosSettingsSchema,
   },
+  vendor: {
+    core: false,
+    defaultSettings: DEFAULT_VENDOR_SETTINGS,
+    key: 'vendor',
+    name: 'Vendors & Purchases',
+    navigation: {
+      admin: [
+        { href: '/admin/vendors', label: 'Vendors', permission: 'vendor:list' },
+      ],
+      committee: [
+        { href: '/admin/vendors', label: 'Vendors', permission: 'vendor:list' },
+      ],
+    },
+    permissions: {
+      'vendor:list': ['admin', 'committee'],
+      'vendor:manage': ['admin'],
+      'vendor:request': ['admin', 'committee'],
+      'vendor:approve': ['admin', 'committee'],
+      'vendor:rate': ['admin', 'committee'],
+    },
+    settingsAccess: {
+      quote_threshold_paise: 'admin',
+      quotes_above_threshold: 'admin',
+      approvals_required: 'admin',
+    },
+    settingsSchema: vendorSettingsSchema,
+  },
+  patrol: {
+    core: false,
+    defaultSettings: DEFAULT_PATROL_SETTINGS,
+    key: 'patrol',
+    name: 'Guard Patrol',
+    navigation: {
+      admin: [
+        { href: '/admin/patrol', label: 'Patrol', permission: 'patrol:list' },
+      ],
+      committee: [
+        { href: '/admin/patrol', label: 'Patrol', permission: 'patrol:list' },
+      ],
+      guard: [
+        { href: '/guard/patrol', label: 'Patrol', permission: 'patrol:guard' },
+      ],
+    },
+    permissions: {
+      'patrol:list': ['admin', 'committee'],
+      'patrol:manage': ['admin'],
+      'patrol:guard': ['guard'],
+    },
+    settingsAccess: { photo_retention_days: 'admin' },
+    settingsSchema: patrolSettingsSchema,
+  },
+  metering: {
+    core: false,
+    defaultSettings: DEFAULT_METERING_SETTINGS,
+    key: 'metering',
+    name: 'Utility Metering',
+    navigation: {
+      resident: [
+        { href: '/metering', label: 'Meters', permission: 'metering:list' },
+      ],
+      admin: [
+        {
+          href: '/admin/metering',
+          label: 'Meters',
+          permission: 'metering:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/metering',
+          label: 'Meters',
+          permission: 'metering:list',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/metering',
+          label: 'Meters',
+          permission: 'metering:record',
+        },
+      ],
+    },
+    permissions: {
+      'metering:list': ['admin', 'committee', 'resident'],
+      'metering:manage': ['admin'],
+      'metering:record': ['admin', 'guard'],
+      'metering:submit': ['resident'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: meteringSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -798,6 +901,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'sos',
     'document',
     'parking',
+    'vendor',
+    'patrol',
+    'metering',
   ],
   committee: [
     'core',
@@ -814,6 +920,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'sos',
     'document',
     'parking',
+    'vendor',
+    'patrol',
+    'metering',
   ],
   guard: [
     'core',
@@ -824,6 +933,8 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'tenancy',
     'sos',
     'parking',
+    'patrol',
+    'metering',
   ],
   hk_supervisor: ['core', 'housekeeping', 'staff'],
   resident: [
@@ -840,6 +951,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'sos',
     'document',
     'parking',
+    'metering',
   ],
 };
 

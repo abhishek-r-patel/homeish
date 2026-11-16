@@ -100,6 +100,38 @@ Preliminary checks use `/fixtures/document`, `/fixtures/parking` and `/fixtures/
 - [ ] Alert banner: the heading is announced once when an alert arrives without moving focus; **Respond**, **Seen — stop alert**/**Dismiss** and **Mute/Unmute alert sound** (pressed state announced) are reachable by keyboard and screen reader on every screen.
 - [ ] Guard device: the alarm repeats about every 30 seconds; when sound is blocked, **Turn on alert sound** appears; muting stops sound but the banner stays visible; a new alert unmutes; the banner remains usable at 200% zoom and 320px without hiding page content permanently.
 
+## Vendors and purchase approvals (P24)
+
+Preliminary checks use `/fixtures/vendor` with synthetic data; its role (admin, committee, requester), view (workspace, vendor, request) and scenario selectors cover drafts, an unmet quote rule, submitted, approved, rejected, empty lists, Expenses off and every route state.
+
+- [ ] Request status, the quote rule ("2 of 3 quotes", overridden) and approvals ("1 of 2 approvals") are read as words, not colour alone.
+- [ ] The rating select reads its label and choices "5 stars" to "1 star"; each rating reads as "4 of 5" with its comment, and the average and count are read as text.
+- [ ] Submit, approve, reject, cancel, override, quote removal and document archive ask for confirmation; required reasons announce their errors and move focus to the field; focus returns to the trigger.
+- [ ] When the viewer cannot decide a request, the reason is read in place of the actions.
+- [ ] Document and quote file uploads announce progress, success and failure; download buttons name the file.
+- [ ] Amount, GSTIN, phone and email fields read their labels, hints and errors; the lists and detail screens remain usable at 200% zoom and 320px.
+
+## Guard patrol and incident log (P25)
+
+Preliminary checks use `/fixtures/patrol` with synthetic data; its role (guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the guard screen, the admin screen and the committee view-only screen.
+
+- [ ] Guard: **Scan** names what it does; the camera view has an accessible name; when QR scanning is unsupported or the camera is refused, the message is announced and **Or type the checkpoint code** stays reachable; a recorded checkpoint or an unknown-code error is announced once.
+- [ ] Round status, missed checkpoints, severity (Low to Critical) and incident status are read as words with times, not colour alone.
+- [ ] The incident form reads category, severity, description, location and photo labels, hints and errors; photo uploads announce progress, success and failure; the follow-up note and resolution fields announce their errors and move focus.
+- [ ] **Acknowledge** sits inside its handover note, so the writer, time and text are read before it; acknowledged notes read who acknowledged them and when.
+- [ ] Admin: turning a checkpoint or schedule off asks for confirmation and returns focus to the trigger; the schedule form's interval unit and checkpoint choices read their labels; committee hears the **View only** banner and finds no edit controls.
+- [ ] QR sheet: each tile reads the checkpoint name and typed code; printing on A4 gives readable codes and names.
+- [ ] On a guard phone outdoors and one-handed, scanning, typed-code entry and incident reporting work at 200% zoom and 320px.
+
+## Utility metering (P26)
+
+Preliminary checks use `/fixtures/metering` with synthetic data; its role (resident, guard, admin, committee) and scenario (ready, empty and every route state) selectors cover the resident, guard and admin screens and the committee view-only screen. The automated accessibility spec includes this route.
+
+- [ ] Resident: the reading form reads meter, reading, date, photo and reason labels and hints; the reason is announced as required when the value is lower than the last reading; a missing photo, future date or same-day reading error is announced and focus moves to it; photo upload announces progress, success and failure.
+- [ ] Reading status (Waiting for review, Approved, Rejected), charge status (To be billed, Billed, No charge), meter resets and usage flags (Unusually high, No usage) are read as words, never colour alone; a rejection reads the administrator's reason.
+- [ ] Guard: meter search and the per-meter quick entry work one-handed at 200% zoom and 320px with 56px targets; "Reading saved." is announced once.
+- [ ] Admin: **Approve** and **Reject** sit inside their reading, so meter, unit, values and photo link are read first; reject asks for a reason and returns focus; the monthly usage table has headers; committee hears the **View only** banner and finds no edit controls.
+
 ## Guard device outdoors
 
 - [ ] Gate code, visitor name and Approve/Deny buttons are readable in direct

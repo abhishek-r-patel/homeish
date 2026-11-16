@@ -11,6 +11,9 @@ type RetentionBucket =
   | 'request-files'
   | 'tenancy-files'
   | 'parking-photos'
+  | 'patrol-photos'
+  | 'metering-photos'
+  | 'vendor-files'
   | 'document-files';
 
 type RetentionFile = {
@@ -27,6 +30,9 @@ function isRetentionFile(value: unknown): value is RetentionFile {
       file.bucket === 'request-files' ||
       file.bucket === 'tenancy-files' ||
       file.bucket === 'parking-photos' ||
+      file.bucket === 'patrol-photos' ||
+      file.bucket === 'metering-photos' ||
+      file.bucket === 'vendor-files' ||
       file.bucket === 'document-files') &&
     typeof file.path === 'string' &&
     file.path.length > 0
@@ -87,6 +93,19 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
       'Document retention file list returned an invalid response.',
     );
   }
+  const patrolFiles = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'patrol_retention_files_list',
+    { p_today: today },
+  );
+  if (
+    !Array.isArray(patrolFiles) ||
+    !patrolFiles.every(
+      (file) => isRetentionFile(file) && file.bucket === 'patrol-photos',
+    )
+  ) {
+    throw new Error('Patrol retention file list returned an invalid response.');
+  }
 
   const pathsByBucket = new Map<RetentionBucket, Set<string>>();
   for (const { bucket, path } of [
@@ -94,6 +113,7 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
     ...tenancyFiles,
     ...parkingFiles,
     ...documentFiles,
+    ...patrolFiles,
   ]) {
     const paths = pathsByBucket.get(bucket) ?? new Set<string>();
     paths.add(path);
@@ -183,5 +203,76 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
       .safeParse(parkingResult).success
   ) {
     throw new Error('Parking retention returned an invalid response.');
+  }
+  const patrolResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'patrol_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (
+    !z
+      .object({ photos_deleted: z.number().int().nonnegative() })
+      .strict()
+      .safeParse(patrolResult).success
+  ) {
+    throw new Error('Patrol retention returned an invalid response.');
+  }
+
+  // Attached reading photos stay with their reading; only never-attached uploads are removed.
+  const meteringFiles = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'metering_retention_files_list',
+    { p_today: today },
+  );
+  if (
+    !Array.isArray(meteringFiles) ||
+    !meteringFiles.every(
+      (file) => isRetentionFile(file) && file.bucket === 'metering-photos',
+    )
+  ) {
+    throw new Error(
+      'Metering retention file list returned an invalid response.',
+    );
+  }
+  const meteringPaths = [
+    ...new Set(meteringFiles.map((file: RetentionFile) => file.path)),
+  ];
+  for (let offset = 0; offset < meteringPaths.length; offset += 100) {
+    const { error } = await privilegedClient.storage
+      .from('metering-photos')
+      .remove(meteringPaths.slice(offset, offset + 100));
+    if (error) {
+      throw new Error('Could not remove unattached metering-photos files.', {
+        cause: error,
+      });
+    }
+  }
+
+  // Attached vendor documents and quote files are kept; only never-attached uploads are removed.
+  const vendorFiles = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'vendor_retention_files_list',
+    { p_today: today },
+  );
+  if (
+    !Array.isArray(vendorFiles) ||
+    !vendorFiles.every(
+      (file) => isRetentionFile(file) && file.bucket === 'vendor-files',
+    )
+  ) {
+    throw new Error('Vendor retention file list returned an invalid response.');
+  }
+  const vendorPaths = [
+    ...new Set(vendorFiles.map((file: RetentionFile) => file.path)),
+  ];
+  for (let offset = 0; offset < vendorPaths.length; offset += 100) {
+    const { error } = await privilegedClient.storage
+      .from('vendor-files')
+      .remove(vendorPaths.slice(offset, offset + 100));
+    if (error) {
+      throw new Error('Could not remove unattached vendor-files files.', {
+        cause: error,
+      });
+    }
   }
 }

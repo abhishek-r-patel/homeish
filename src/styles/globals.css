@@ -130,7 +130,14 @@ h6 {
   font-family: var(--font-heading);
 }
 
-*:focus-visible {
+*:focus-visible,
+input:is(
+    [type='date'],
+    [type='time'],
+    [type='datetime-local'],
+    [type='month'],
+    [type='week']
+  ):is(:focus, :focus-within) {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
