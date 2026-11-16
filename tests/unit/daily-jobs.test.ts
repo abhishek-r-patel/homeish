@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   runInventoryRemindersPrivileged: vi.fn(),
   runAmcRemindersPrivileged: vi.fn(),
   runTenancyRemindersPrivileged: vi.fn(),
+  runPollReconcilePrivileged: vi.fn(),
+  runPollRetentionPrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -33,6 +35,8 @@ vi.mock('../../src/core/privileged', () => ({
   runInventoryRemindersPrivileged: mocks.runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged: mocks.runAmcRemindersPrivileged,
   runTenancyRemindersPrivileged: mocks.runTenancyRemindersPrivileged,
+  runPollReconcilePrivileged: mocks.runPollReconcilePrivileged,
+  runPollRetentionPrivileged: mocks.runPollRetentionPrivileged,
 }));
 
 import {
@@ -200,6 +204,8 @@ describe('daily jobs', () => {
       'housekeeping.low_stock',
       'amc.reminders',
       'tenancy.reminders',
+      'poll.reconcile',
+      'poll.retention',
       'housekeeping.retention',
     ]);
 
@@ -238,5 +244,10 @@ describe('daily jobs', () => {
       ['society-1'],
       ['society-2'],
     ]);
+    expect(mocks.runPollReconcilePrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
+    expect(mocks.runPollRetentionPrivileged).toHaveBeenCalledOnce();
   });
 });

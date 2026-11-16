@@ -59,3 +59,4 @@ export {
   attestTenancyNocPrivileged,
   runTenancyRemindersPrivileged,
 } from './tenancy';
+export { runPollReconcilePrivileged, runPollRetentionPrivileged } from './poll';

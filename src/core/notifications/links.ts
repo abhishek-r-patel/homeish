@@ -8,6 +8,7 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
   tenancy_move: '/tenancy',
   tenancy_admin: '/admin/tenancy',
   vendor_purchase_request: '/admin/vendors/requests',
+  poll: '/polls',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {

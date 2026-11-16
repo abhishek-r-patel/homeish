@@ -56,6 +56,7 @@ import {
   DEFAULT_HOME_SERVICES_SETTINGS,
   homeServicesSettingsSchema,
 } from '../home-services/validation';
+import { DEFAULT_POLL_SETTINGS, pollSettingsSchema } from '../poll/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -934,6 +935,28 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: homeServicesSettingsSchema,
   },
+  poll: {
+    core: false,
+    defaultSettings: DEFAULT_POLL_SETTINGS,
+    key: 'poll',
+    name: 'Polls & Voting',
+    navigation: {
+      resident: [{ href: '/polls', label: 'Polls', permission: 'poll:vote' }],
+      admin: [
+        { href: '/admin/polls', label: 'Polls', permission: 'poll:list' },
+      ],
+      committee: [
+        { href: '/admin/polls', label: 'Polls', permission: 'poll:list' },
+      ],
+    },
+    permissions: {
+      'poll:vote': ['resident'],
+      'poll:list': ['admin', 'committee'],
+      'poll:manage': ['admin'],
+    },
+    settingsAccess: { tenant_voting_default: 'admin' },
+    settingsSchema: pollSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -971,6 +994,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'metering',
     'asset',
     'home_services',
+    'poll',
   ],
   committee: [
     'core',
@@ -992,6 +1016,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'metering',
     'asset',
     'home_services',
+    'poll',
   ],
   guard: [
     'core',
@@ -1022,6 +1047,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'parking',
     'metering',
     'home_services',
+    'poll',
   ],
 };
 

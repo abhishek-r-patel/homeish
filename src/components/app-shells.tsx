@@ -99,6 +99,7 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
   asset: 'M4 7l8-4 8 4v10l-8 4-8-4V7Zm0 0 8 4 8-4M12 11v10',
   home_services:
     'M3 10.5 12 3l9 7.5M5 9v11h14V9M14.7 12.3a2.5 2.5 0 0 0-3.2 3.2L9 18l1 1 2.5-2.5a2.5 2.5 0 0 0 3.2-3.2L14.5 14.5l-1-1 1.2-1.2Z',
+  poll: 'M4 4h16v16H4zM8 12l3 3 5-6',
 };
 
 function isActivePath(pathname: string, href: string) {
