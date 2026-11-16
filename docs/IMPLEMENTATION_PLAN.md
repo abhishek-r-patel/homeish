@@ -117,34 +117,34 @@ flowchart TD
 
 Arrows are recommended build order; "after Pxx" inside a box marks a phase that builds on another phase. At runtime every module works on its own; links to other optional modules activate only when those are enabled (PRD A-36). Blocks are 6-hour work blocks (Section 2.5).
 
-| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                                                                               |
-| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                                  |
-| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                                  |
-| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                                  |
-| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending                                  |
-| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅ Released to beta and main; migrated to testdb; owner UAT pending                                  |
-| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | 🟡 Implemented and verified locally (2026-11-15); owner UAT, hosted migration and enablement pending |
-| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | 🟡 Local engineering gate passed; owner UAT/live enablement pending                                  |
-| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | 🟡 Local engineering checks passed (2026-11-15); provider checks, owner UAT and release pending      |
-| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | 🟡 Local engineering checks passed (2026-11-15, uncommitted); owner UAT and release pending          |
-| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | 🟡 Local engineering checks passed (2026-11-15, uncommitted); owner UAT and release pending          |
-| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | 🟡 Local engineering checks passed (2026-11-15, uncommitted); owner UAT and release pending          |
-| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ⬜ Not started                                                                                       |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ⬜ Not started                                                                                       |
-| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ⬜ Not started                                                                                       |
-| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ⬜ Not started                                                                                       |
-| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ⬜ Not started                                                                                       |
-| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ⬜ Not started                                                                                       |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ⬜ Not started                                                                                       |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                                                                                       |
-| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                                                                                       |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ⬜ Not started                                                                                       |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ⬜ Not started                                                                                       |
-| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                                                                                       |
-| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                                                                                       |
+| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                                                           |
+| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | -------------------------------------------------------------------------------- |
+| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
+| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
+| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
+| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
+| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅ Released to beta and main; migrated to testdb; owner UAT pending              |
+| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
+| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
+| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
+| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
+| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
+| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅ Released to beta and main (2026-11-15); migrated to testdb; owner UAT pending |
+| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ⬜ Not started                                                                   |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ⬜ Not started                                                                   |
+| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
+| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
+| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | 🟡 Built; local checks passed (2026-11-16); uncommitted, owner review pending    |
+| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ⬜ Not started                                                                   |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ⬜ Not started                                                                   |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                                                                   |
+| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                                                                   |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ⬜ Not started                                                                   |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ⬜ Not started                                                                   |
+| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                                                                   |
+| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                                                                   |
 
-Block totals: P3 wave (P18–P21) 9 planned, all four phases locally verified; P4 wave 13 blocks; P5 wave about 14 blocks.
+Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave 13 blocks; P5 wave about 14 blocks.
 
 ---
 
@@ -992,7 +992,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD DOC-1 to DOC-4 verified; ships disabled.
 
-**Status (2026-11-15): local engineering checks passed, uncommitted; the module ships disabled.** Code implements every task above. The full local gate passed on the combined P19–P21 change (see P21 status for the evidence). Still required: dedicated Playwright journeys beyond the fixture axe/reflow/focus checks, owner UAT, real-device assistive-technology checks and an approved release. No hosted migration or live enablement was performed.
+**Status (2026-11-15): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** Code implements every task above. The full local gate passed on the combined P19–P21 change (see P21 status for the evidence). Still required: dedicated Playwright journeys beyond the fixture axe/reflow/focus checks, owner UAT, real-device assistive-technology checks No live (production) migration or enablement was performed.
 
 ---
 
@@ -1017,7 +1017,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD PRK-1 to PRK-4 verified; ships disabled.
 
-**Status (2026-11-15): local engineering checks passed, uncommitted; the module ships disabled.** Code implements every task above. The full local gate passed on the combined P19–P21 change (see P21 status for the evidence). Still required: dedicated Playwright journeys (including module on/off combinations) beyond the fixture axe/reflow checks, owner UAT, real-device checks and an approved release. No hosted migration or live enablement was performed.
+**Status (2026-11-15): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** Code implements every task above. The full local gate passed on the combined P19–P21 change (see P21 status for the evidence). Still required: dedicated Playwright journeys (including module on/off combinations) beyond the fixture axe/reflow checks, owner UAT, real-device checks No live (production) migration or enablement was performed.
 
 ---
 
@@ -1041,7 +1041,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD SOS-1 to SOS-5 verified; ships disabled.
 
-**Status (2026-11-15): local engineering checks passed, uncommitted; the module ships disabled.** Code implements every task above; "on-duty guards" means all signed-in guards, as there is no shift concept. Evidence on the combined P19–P21 change: `npm run check` passed (67 files, **571 unit tests**); the complete database suite on a disposable local PostgreSQL passed (**49 files passed, 1 skipped; 160 tests passed, 9 skipped**, the skips being the opt-in performance suite); generated types were regenerated locally; `npm run build` passed; the complete Playwright suite passed (**114 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/document`, `/fixtures/parking` and `/fixtures/sos`). A database safety review was done and its findings fixed. Still required: dedicated Playwright journeys for alert persistence and acknowledgement beyond the fixture axe/reflow checks, owner UAT, real-device checks of the banner and alarm sound, and an approved release. No hosted migration or live enablement was performed.
+**Status (2026-11-15): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** Code implements every task above; "on-duty guards" means all signed-in guards, as there is no shift concept. Evidence on the combined P19–P21 change: `npm run check` passed (67 files, **571 unit tests**); the complete database suite on a disposable local PostgreSQL passed (**49 files passed, 1 skipped; 160 tests passed, 9 skipped**, the skips being the opt-in performance suite); generated types were regenerated locally; `npm run build` passed; the complete Playwright suite passed (**114 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/document`, `/fixtures/parking` and `/fixtures/sos`). A database safety review was done and its findings fixed. Still required: dedicated Playwright journeys for alert persistence and acknowledgement beyond the fixture axe/reflow checks, owner UAT, real-device checks of the banner and alarm sound, No live (production) migration or enablement was performed.
 
 ---
 
@@ -1110,23 +1110,33 @@ DATABASE 15.2.
 
 **Goal:** a society vendor directory and quote-based purchase approvals that feed expenses (PRD 5.10.9, P4-3, VEN-1 to VEN-4).
 
-**Prerequisites:** `expense` drafts. Size M, about 2 blocks. **Kickoff decisions (open):** number of quotes required above which amount; number of approvers; vendor rating scale.
+**Prerequisites:** `expense` drafts. Size M, about 2 blocks. **Kickoff decisions:** approved 2026-11-16 (PRD D-54, §5.10.9).
 
 **Draft tasks — revisit at kickoff:**
 
 | ID    | Task                                                                                                          | Status |
 | ----- | ------------------------------------------------------------------------------------------------------------- | ------ |
-| P24.1 | Migration: vendors, private vendor documents, ratings, purchase requests, quotes and approvals; RLS           | ⬜     |
-| P24.2 | Vendor directory with category, contact, optional GST number, documents and an admin/committee rating (VEN-1) | ⬜     |
-| P24.3 | Purchase request with quotes; approval by a society-configured number of committee approvers (VEN-2)          | ⬜     |
-| P24.4 | Approved purchases create an expense draft when `expense` is enabled (VEN-3)                                  | ⬜     |
-| P24.5 | Admin and committee screens; no vendor logins (VEN-4)                                                         | ⬜     |
+| P24.1 | Migration: vendors, private vendor documents, ratings, purchase requests, quotes and approvals; RLS           | ✅     |
+| P24.2 | Vendor directory with category, contact, optional GST number, documents and an admin/committee rating (VEN-1) | ✅     |
+| P24.3 | Purchase request with quotes; approval by a society-configured number of committee approvers (VEN-2)          | ✅     |
+| P24.4 | Approved purchases create an expense draft when `expense` is enabled (VEN-3)                                  | ✅     |
+| P24.5 | Admin and committee screens; no vendor logins (VEN-4)                                                         | ✅     |
 
 **Tests:** approval count and separation of duties, quote thresholds, `expense` on/off combinations, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; PRD VEN-1 to VEN-4 verified; ships disabled.
 
-**Status:** not started.
+**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+
+**Assumptions for owner review:**
+
+- Quotes lock when a request is submitted; to change them, cancel it and raise a new request.
+- Whoever raised, submitted or overrode a request can never approve or reject it; the requester cancels instead. Admin approvals count toward "approvals required".
+- With 0 approvals required, a different administrator approves alone. If not enough eligible approvers remain, an admin rejects or cancels the request.
+- The threshold, quote count and approvals required are snapshotted at submission; later setting changes do not affect submitted requests.
+- A vendor's quote counts once per request towards the quote rule.
+- A quote-rule override is cleared (and audited) when the estimate, quotes or selected quote change.
+- The expense draft is a `pending_approval` expense on a bank account (else any active account) under the matching category (else "Other", else the first alphabetically). Another committee member posts it through the existing expense approval; a pending expense blocks month close. When no account or category exists or the month is closed, the skip reason is shown and an admin can retry.
 
 ---
 
@@ -1134,23 +1144,32 @@ DATABASE 15.2.
 
 **Goal:** guards complete checkpoint rounds, report incidents and hand over shifts; admins see missed checkpoints and serious incidents (PRD 5.10.10, P4-4, PAT-1 to PAT-4).
 
-**Prerequisites:** Core guards and gate settings. Size M, about 2 blocks. **Kickoff decisions (open):** QR checkpoint printing; patrol frequency; guard device requirements (camera access); incident severity levels.
+**Prerequisites:** Core guards and gate settings. Size M, about 2 blocks. **Kickoff decisions:** approved 2026-11-16 (PRD D-55, §5.10.10).
 
 **Draft tasks — revisit at kickoff:**
 
 | ID    | Task                                                                                                                  | Status |
 | ----- | --------------------------------------------------------------------------------------------------------------------- | ------ |
-| P25.1 | Migration: checkpoints, patrol schedules, rounds and scans, incidents with private photos, handover notes; RLS        | ⬜     |
-| P25.2 | Admin checkpoints with printable QR codes and patrol schedules (PAT-1)                                                | ⬜     |
-| P25.3 | Guard round scanning; missed checkpoints flagged (PAT-2)                                                              | ⬜     |
-| P25.4 | Incident reports with category, description, photos and follow-up; serious incidents notify admin immediately (PAT-3) | ⬜     |
-| P25.5 | Shift handover notes between guards (PAT-4); guard and admin screens                                                  | ⬜     |
+| P25.1 | Migration: checkpoints, patrol schedules, rounds and scans, incidents with private photos, handover notes; RLS        | ✅     |
+| P25.2 | Admin checkpoints with printable QR codes and patrol schedules (PAT-1)                                                | ✅     |
+| P25.3 | Guard round scanning; missed checkpoints flagged (PAT-2)                                                              | ✅     |
+| P25.4 | Incident reports with category, description, photos and follow-up; serious incidents notify admin immediately (PAT-3) | ✅     |
+| P25.5 | Shift handover notes between guards (PAT-4); guard and admin screens                                                  | ✅     |
 
 **Tests:** missed-checkpoint detection, incident notification routing, guard-only and admin access, end-to-end guard journeys on phone sizes with axe.
 
 **Completion criteria:** module gate (2.2) passes; PRD PAT-1 to PAT-4 verified; ships disabled.
 
-**Status:** not started.
+**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+
+**Assumptions for owner review:**
+
+- Missed checkpoints are computed on read from schedules and scans (no cron), only for round windows after the schedule's timing last changed; admins see the last 48 hours.
+- Schedules repeat every 15–720 minutes with 0–120 minutes grace (never longer than the interval); caps are 200 checkpoints and 50 schedules per society, 1–50 checkpoints per schedule.
+- Checkpoint codes are 6 characters without 0/O/1/I; the QR encodes only `homeish-patrol:<code>`. Guards never see the codes list.
+- Every guard counts as on duty (no shift roster); handover notes show the last 7 days (up to 50) and only a different guard can acknowledge one.
+- High and critical incidents alert admins in-app only, capped at 50 recipients with overflow audited; committee is read-only but can view photos.
+- Per-user hourly limits: 240 scans, 20 incidents, 20 handover notes. Photos are kept 90 days by default (30–365); unattached uploads are removed after 24 hours.
 
 ---
 
@@ -1158,23 +1177,32 @@ DATABASE 15.2.
 
 **Goal:** societies record meter readings and bill consumption through the existing bills (PRD 5.10.11, P4-5, MTR-1 to MTR-4).
 
-**Prerequisites:** `billing` charges. Size M, about 2 blocks. **Kickoff decisions (open):** meter types; rate slabs vs flat rate; who records readings; reading cycle relative to bill generation.
+**Prerequisites:** `billing` charges. Size M, about 2 blocks. **Kickoff decisions:** approved 2026-11-16 (PRD D-56, §5.10.11).
 
 **Draft tasks — revisit at kickoff:**
 
 | ID    | Task                                                                                                          | Status |
 | ----- | ------------------------------------------------------------------------------------------------------------- | ------ |
-| P26.1 | Migration: meters, rates, readings with optional photo and consumption; RLS                                   | ⬜     |
-| P26.2 | Meters (water, electricity, DG/gas) per unit or common area with a rate per unit of consumption (MTR-1)       | ⬜     |
-| P26.3 | Readings by staff, admin or resident (with photo); readings lower than the previous one need a reason (MTR-2) | ⬜     |
-| P26.4 | Consumption charges added to the next bill when `billing` is enabled (MTR-3)                                  | ⬜     |
-| P26.5 | Consumption reports and unusual-usage flags (MTR-4); screens                                                  | ⬜     |
+| P26.1 | Migration: meters, rates, readings with optional photo and consumption; RLS                                   | ✅     |
+| P26.2 | Meters (water, electricity, DG/gas) per unit or common area with a rate per unit of consumption (MTR-1)       | ✅     |
+| P26.3 | Readings by staff, admin or resident (with photo); readings lower than the previous one need a reason (MTR-2) | ✅     |
+| P26.4 | Consumption charges added to the next bill when `billing` is enabled (MTR-3)                                  | ✅     |
+| P26.5 | Consumption reports and unusual-usage flags (MTR-4); screens                                                  | ✅     |
 
 **Tests:** exact paise calculation, lower-reading reason rule, billing on/off combinations and repeat-run safety, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; PRD MTR-1 to MTR-4 verified; ships disabled.
 
-**Status:** not started.
+**Status:** Built and local checks passed (2026-11-16); uncommitted, owner review pending.
+
+**Assumptions for owner review:**
+
+- Consumption = approved reading − previous approved reading (or the initial reading). A lower reading needs a reason, consumes 0 and becomes the new baseline (meter replaced or rolled over); readings must be on a later day than the latest approved one and never in the future.
+- Rates are whole paise per unit (kWh, kL, SCM). The exact charge is consumption × rate rounded half up to whole paise; Billing's `rounding` setting is then applied per line (rupee by default), and a charge that rounds to ₹0 is closed as "No charge". The rate in force when a charge is billed applies.
+- Monthly bill generation bills the generated units' utility charges automatically, as a separate "Utility charges – Mon YYYY" bill per unit; the admin's manual run is a catch-up. A reading is billed once even when both run. Readings approved while Billing is off are never billed later.
+- Unusual usage: "Unusually high" is more than 2× the average of the previous 3 months that each had readings; "No usage" is zero consumption on an occupied unit's meter in a month with a non-reset reading. Computed on read; no notification.
+- Reading photos (JPG/PNG, 5 MB) are kept with the reading with no automatic deletion; unattached uploads are removed after 24 hours. Admins, committee and the reading's creator can view an attached photo.
+- One pending resident reading per meter; staff readings are approved immediately. The module has no settings.
 
 ---
 
@@ -1429,7 +1457,7 @@ DATABASE 15.2.
 
 # Current Next Steps
 
-- **Release:** committing and releasing P16–P18 through the commit/release workflow takes about half a block, mostly CI waits. Owner approval is required.
+- **P24–P26:** built (2026-11-16) with the decisions in PRD D-54 to D-56; local checks passed. Uncommitted until the owner reviews the assumptions in each phase and approves a commit, testdb migration and release.
 - **Owner-only:** UAT for P11–P21; P10.2 TalkBack/VoiceOver and outdoor checks; P10.5, P10.8 and P10.9 go-live steps. These gate live-society enablement, not local builds.
-- **P19–P21:** full local gate passed (2026-11-15), uncommitted; commit only with owner approval, after the owner confirms the open build assumptions.
+- **P16–P21:** released to beta and main and migrated to testdb (2026-11-15); owner UAT pending.
 - **Subscription:** decide the subscription price and offer terms after the first ten free societies before inviting society eleven.
