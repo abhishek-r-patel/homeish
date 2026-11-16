@@ -14,6 +14,7 @@ import {
   runTenancyRemindersPrivileged,
   runPollReconcilePrivileged,
   runPollRetentionPrivileged,
+  runMeetingActionRemindersPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -93,6 +94,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'poll.reconcile',
     run: async (societyId: string) => {
       await runPollReconcilePrivileged(societyId);
+    },
+  },
+  {
+    name: 'meeting.action_reminders',
+    run: async (societyId: string) => {
+      await runMeetingActionRemindersPrivileged(societyId);
     },
   },
   {

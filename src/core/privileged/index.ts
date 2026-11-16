@@ -60,3 +60,4 @@ export {
   runTenancyRemindersPrivileged,
 } from './tenancy';
 export { runPollReconcilePrivileged, runPollRetentionPrivileged } from './poll';
+export { runMeetingActionRemindersPrivileged } from './meeting';

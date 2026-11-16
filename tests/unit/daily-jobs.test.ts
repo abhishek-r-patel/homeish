@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   runTenancyRemindersPrivileged: vi.fn(),
   runPollReconcilePrivileged: vi.fn(),
   runPollRetentionPrivileged: vi.fn(),
+  runMeetingActionRemindersPrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -37,6 +38,8 @@ vi.mock('../../src/core/privileged', () => ({
   runTenancyRemindersPrivileged: mocks.runTenancyRemindersPrivileged,
   runPollReconcilePrivileged: mocks.runPollReconcilePrivileged,
   runPollRetentionPrivileged: mocks.runPollRetentionPrivileged,
+  runMeetingActionRemindersPrivileged:
+    mocks.runMeetingActionRemindersPrivileged,
 }));
 
 import {
@@ -205,6 +208,7 @@ describe('daily jobs', () => {
       'amc.reminders',
       'tenancy.reminders',
       'poll.reconcile',
+      'meeting.action_reminders',
       'poll.retention',
       'housekeeping.retention',
     ]);
@@ -249,5 +253,9 @@ describe('daily jobs', () => {
       ['society-2'],
     ]);
     expect(mocks.runPollRetentionPrivileged).toHaveBeenCalledOnce();
+    expect(mocks.runMeetingActionRemindersPrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
   });
 });

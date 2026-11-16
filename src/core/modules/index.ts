@@ -57,6 +57,10 @@ import {
   homeServicesSettingsSchema,
 } from '../home-services/validation';
 import { DEFAULT_POLL_SETTINGS, pollSettingsSchema } from '../poll/validation';
+import {
+  DEFAULT_MEETING_SETTINGS,
+  meetingSettingsSchema,
+} from '../meeting/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -957,6 +961,46 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: { tenant_voting_default: 'admin' },
     settingsSchema: pollSettingsSchema,
   },
+  meeting: {
+    core: false,
+    defaultSettings: DEFAULT_MEETING_SETTINGS,
+    key: 'meeting',
+    name: 'Meetings & AGM',
+    navigation: {
+      resident: [
+        { href: '/meetings', label: 'Meetings', permission: 'meeting:attend' },
+      ],
+      admin: [
+        {
+          href: '/admin/meetings',
+          label: 'Meetings',
+          permission: 'meeting:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/meetings',
+          label: 'Meetings',
+          permission: 'meeting:list',
+        },
+      ],
+    },
+    permissions: {
+      'meeting:attend': ['resident'],
+      'meeting:list': ['admin', 'committee'],
+      'meeting:minutes': ['admin', 'committee'],
+      'meeting:manage': ['admin'],
+    },
+    settingsAccess: {
+      notice_days_agm: 'admin',
+      notice_days_sgm: 'admin',
+      notice_days_committee: 'admin',
+      quorum_percent_units: 'admin',
+      quorum_percent_committee: 'admin',
+      action_owner_scope: 'admin',
+    },
+    settingsSchema: meetingSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -995,6 +1039,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'asset',
     'home_services',
     'poll',
+    'meeting',
   ],
   committee: [
     'core',
@@ -1017,6 +1062,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'asset',
     'home_services',
     'poll',
+    'meeting',
   ],
   guard: [
     'core',
@@ -1048,6 +1094,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'metering',
     'home_services',
     'poll',
+    'meeting',
   ],
 };
 

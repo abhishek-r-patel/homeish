@@ -100,6 +100,8 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
   home_services:
     'M3 10.5 12 3l9 7.5M5 9v11h14V9M14.7 12.3a2.5 2.5 0 0 0-3.2 3.2L9 18l1 1 2.5-2.5a2.5 2.5 0 0 0 3.2-3.2L14.5 14.5l-1-1 1.2-1.2Z',
   poll: 'M4 4h16v16H4zM8 12l3 3 5-6',
+  meeting:
+    'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm4 9h6m-6 3h4',
 };
 
 function isActivePath(pathname: string, href: string) {
