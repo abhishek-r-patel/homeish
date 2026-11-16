@@ -19,6 +19,8 @@ export const MODULE_KEYS = [
   'vendor',
   'patrol',
   'metering',
+  'asset',
+  'home_services',
 ];
 
 const modulePattern = MODULE_KEYS.join('|');
