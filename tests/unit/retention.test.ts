@@ -39,6 +39,9 @@ describe('retention privileged task', () => {
       .mockResolvedValueOnce([
         { bucket: 'document-files', path: 'society/documents/unattached.pdf' },
       ])
+      .mockResolvedValueOnce([
+        { bucket: 'patrol-photos', path: 'society/incidents/old.jpg' },
+      ])
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
       .mockResolvedValueOnce({
@@ -47,7 +50,16 @@ describe('retention privileged task', () => {
         preferences_deleted: 0,
       })
       .mockResolvedValueOnce({ documents_deleted: 1, preparations_cleared: 0 })
-      .mockResolvedValueOnce({ photos_deleted: 1 });
+      .mockResolvedValueOnce({ photos_deleted: 1 })
+      .mockResolvedValueOnce({ photos_deleted: 2 })
+      .mockResolvedValueOnce([
+        { bucket: 'metering-photos', path: 'society/readings/u/a.jpg' },
+        { bucket: 'metering-photos', path: 'society/readings/u/a.jpg' },
+      ])
+      .mockResolvedValueOnce([
+        { bucket: 'vendor-files', path: 'society/vendors/u/a.pdf' },
+        { bucket: 'vendor-files', path: 'society/vendors/u/a.pdf' },
+      ]);
   });
 
   it('deduplicates and removes listed files before the database purge', async () => {
@@ -71,22 +83,92 @@ describe('retention privileged task', () => {
     expect(mocks.remove).toHaveBeenNthCalledWith(5, [
       'society/documents/unattached.pdf',
     ]);
+    expect(mocks.from).toHaveBeenNthCalledWith(6, 'patrol-photos');
+    expect(mocks.remove).toHaveBeenNthCalledWith(6, [
+      'society/incidents/old.jpg',
+    ]);
+    expect(mocks.from).toHaveBeenNthCalledWith(7, 'metering-photos');
+    expect(mocks.remove).toHaveBeenNthCalledWith(7, [
+      'society/readings/u/a.jpg',
+    ]);
+    expect(mocks.from).toHaveBeenLastCalledWith('vendor-files');
+    expect(mocks.remove).toHaveBeenLastCalledWith(['society/vendors/u/a.pdf']);
     expect(mocks.invokeUntypedRpc.mock.calls.map((call) => call[1])).toEqual([
       'housekeeping_retention_files_list',
       'tenancy_retention_files_list',
       'parking_retention_files_list',
       'document_retention_files_list',
+      'patrol_retention_files_list',
       'housekeeping_retention_run',
       'staff_retention_run',
       'directory_retention_run',
       'tenancy_retention_run',
       'parking_retention_run',
+      'patrol_retention_run',
+      'metering_retention_files_list',
+      'vendor_retention_files_list',
     ]);
+  });
+
+  it('rejects vendor file lists that name another bucket', async () => {
+    mocks.invokeUntypedRpc.mockReset();
+    mocks.invokeUntypedRpc
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
+      .mockResolvedValueOnce({
+        vehicles_deleted: 0,
+        emergency_contacts_deleted: 0,
+        preferences_deleted: 0,
+      })
+      .mockResolvedValueOnce({ documents_deleted: 0, preparations_cleared: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { bucket: 'document-files', path: 'society/documents/a.pdf' },
+      ]);
+    await expect(runRetentionPrivileged('2026-11-16')).rejects.toThrow(
+      'Vendor retention file list returned an invalid response.',
+    );
+    expect(mocks.from).not.toHaveBeenCalled();
+  });
+
+  it('rejects metering file lists that name another bucket', async () => {
+    mocks.invokeUntypedRpc.mockReset();
+    mocks.invokeUntypedRpc
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
+      .mockResolvedValueOnce({
+        vehicles_deleted: 0,
+        emergency_contacts_deleted: 0,
+        preferences_deleted: 0,
+      })
+      .mockResolvedValueOnce({ documents_deleted: 0, preparations_cleared: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce([
+        { bucket: 'parking-photos', path: 'society/reports/a.jpg' },
+      ]);
+    await expect(runRetentionPrivileged('2026-11-16')).rejects.toThrow(
+      'Metering retention file list returned an invalid response.',
+    );
+    expect(mocks.from).not.toHaveBeenCalled();
   });
 
   it('fails when the staff retention result is malformed', async () => {
     mocks.invokeUntypedRpc.mockReset();
     mocks.invokeUntypedRpc
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
@@ -102,6 +184,7 @@ describe('retention privileged task', () => {
   it('fails when directory retention returns malformed purge counts', async () => {
     mocks.invokeUntypedRpc.mockReset();
     mocks.invokeUntypedRpc
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
@@ -131,6 +214,7 @@ describe('retention privileged task', () => {
       'tenancy_retention_files_list',
       'parking_retention_files_list',
       'document_retention_files_list',
+      'patrol_retention_files_list',
     ]);
   });
 
@@ -147,12 +231,14 @@ describe('retention privileged task', () => {
       'tenancy_retention_files_list',
       'parking_retention_files_list',
       'document_retention_files_list',
+      'patrol_retention_files_list',
     ]);
   });
 
   it('rejects malformed tenancy purge counts instead of reporting retention success', async () => {
     mocks.invokeUntypedRpc
       .mockReset()
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
@@ -180,6 +266,7 @@ describe('retention privileged task', () => {
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce({})
       .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
       .mockResolvedValueOnce({
@@ -191,6 +278,29 @@ describe('retention privileged task', () => {
       .mockResolvedValueOnce({ photos_deleted: 'many' });
     await expect(runRetentionPrivileged('2026-11-16')).rejects.toThrow(
       'Parking retention returned an invalid response.',
+    );
+  });
+
+  it('rejects malformed patrol photo purge counts', async () => {
+    mocks.invokeUntypedRpc
+      .mockReset()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
+      .mockResolvedValueOnce({
+        vehicles_deleted: 0,
+        emergency_contacts_deleted: 0,
+        preferences_deleted: 0,
+      })
+      .mockResolvedValueOnce({ documents_deleted: 0, preparations_cleared: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce({ photos_deleted: -1 });
+    await expect(runRetentionPrivileged('2026-11-16')).rejects.toThrow(
+      'Patrol retention returned an invalid response.',
     );
   });
 

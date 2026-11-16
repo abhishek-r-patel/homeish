@@ -7,6 +7,7 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
   visitor_entry: '/visitors',
   tenancy_move: '/tenancy',
   tenancy_admin: '/admin/tenancy',
+  vendor_purchase_request: '/admin/vendors/requests',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
@@ -21,6 +22,11 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   parking: '/parking',
   parking_admin: '/admin/parking',
   parking_guard: '/guard/parking',
+  patrol_admin: '/admin/patrol',
+  patrol_guard: '/guard/patrol',
+  metering: '/metering',
+  metering_admin: '/admin/metering',
+  metering_guard: '/guard/metering',
   sos_alert: '/sos',
   sos_admin: '/admin/sos',
   sos_guard: '/guard/sos',
