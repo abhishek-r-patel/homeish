@@ -4854,6 +4854,569 @@ export type Database = {
           },
         ];
       };
+      poll_candidates: {
+        Row: {
+          id: string;
+          name: string;
+          office_id: string;
+          position: number;
+          society_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: string;
+          name: string;
+          office_id: string;
+          position: number;
+          society_id: string;
+          vote_id: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          office_id?: string;
+          position?: number;
+          society_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_candidates_office_same_society_fkey';
+            columns: ['society_id', 'vote_id', 'office_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_offices';
+            referencedColumns: ['society_id', 'vote_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_candidates_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      poll_electorate: {
+        Row: {
+          block_id: string | null;
+          membership_id: string;
+          representative_name: string;
+          society_id: string;
+          unit_id: string;
+          unit_label: string;
+          user_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id?: string | null;
+          membership_id: string;
+          representative_name: string;
+          society_id: string;
+          unit_id: string;
+          unit_label: string;
+          user_id: string;
+          vote_id: string;
+        };
+        Update: {
+          block_id?: string | null;
+          membership_id?: string;
+          representative_name?: string;
+          society_id?: string;
+          unit_id?: string;
+          unit_label?: string;
+          user_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_electorate_block_same_society_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_electorate_membership_same_society_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_electorate_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_electorate_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_electorate_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_electorate_vote_same_society_fkey';
+            columns: ['society_id', 'vote_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_votes';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      poll_offices: {
+        Row: {
+          id: string;
+          name: string;
+          position: number;
+          society_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: string;
+          name: string;
+          position: number;
+          society_id: string;
+          vote_id: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          position?: number;
+          society_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_offices_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_offices_vote_same_society_fkey';
+            columns: ['society_id', 'vote_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_votes';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      poll_options: {
+        Row: {
+          final_count: number | null;
+          id: string;
+          label: string;
+          position: number;
+          society_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          final_count?: number | null;
+          id?: string;
+          label: string;
+          position: number;
+          society_id: string;
+          vote_id: string;
+        };
+        Update: {
+          final_count?: number | null;
+          id?: string;
+          label?: string;
+          position?: number;
+          society_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_options_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_options_vote_same_society_fkey';
+            columns: ['society_id', 'vote_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_votes';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      poll_participation: {
+        Row: {
+          accepted_at: string;
+          society_id: string;
+          unit_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepted_at?: string;
+          society_id: string;
+          unit_id: string;
+          vote_id: string;
+        };
+        Update: {
+          accepted_at?: string;
+          society_id?: string;
+          unit_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_participation_electorate_same_society_fkey';
+            columns: ['society_id', 'vote_id', 'unit_id'];
+            isOneToOne: true;
+            referencedRelation: 'poll_electorate';
+            referencedColumns: ['society_id', 'vote_id', 'unit_id'];
+          },
+          {
+            foreignKeyName: 'poll_participation_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      poll_private_tallies: {
+        Row: {
+          accepted_count: number;
+          candidate_id: string | null;
+          id: string;
+          office_id: string;
+          society_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepted_count?: number;
+          candidate_id?: string | null;
+          id?: string;
+          office_id: string;
+          society_id: string;
+          vote_id: string;
+        };
+        Update: {
+          accepted_count?: number;
+          candidate_id?: string | null;
+          id?: string;
+          office_id?: string;
+          society_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_private_tallies_candidate_same_society_fkey';
+            columns: ['society_id', 'vote_id', 'office_id', 'candidate_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_candidates';
+            referencedColumns: ['society_id', 'vote_id', 'office_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_private_tallies_office_same_society_fkey';
+            columns: ['society_id', 'vote_id', 'office_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_offices';
+            referencedColumns: ['society_id', 'vote_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_private_tallies_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      poll_public_responses: {
+        Row: {
+          option_id: string;
+          society_id: string;
+          unit_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          option_id: string;
+          society_id: string;
+          unit_id: string;
+          vote_id: string;
+        };
+        Update: {
+          option_id?: string;
+          society_id?: string;
+          unit_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_public_responses_option_same_society_fkey';
+            columns: ['society_id', 'vote_id', 'option_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_options';
+            referencedColumns: ['society_id', 'vote_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_public_responses_participation_same_society_fkey';
+            columns: ['society_id', 'vote_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_participation';
+            referencedColumns: ['society_id', 'vote_id', 'unit_id'];
+          },
+          {
+            foreignKeyName: 'poll_public_responses_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      poll_unit_representatives: {
+        Row: {
+          membership_id: string | null;
+          society_id: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          membership_id?: string | null;
+          society_id: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          membership_id?: string | null;
+          society_id?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_unit_representatives_membership_same_society_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_unit_representatives_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_unit_representatives_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: true;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_unit_representatives_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      poll_vote_blocks: {
+        Row: {
+          block_id: string;
+          society_id: string;
+          vote_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id: string;
+          society_id: string;
+          vote_id: string;
+        };
+        Update: {
+          block_id?: string;
+          society_id?: string;
+          vote_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_vote_blocks_block_same_society_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'poll_vote_blocks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_vote_blocks_vote_same_society_fkey';
+            columns: ['society_id', 'vote_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_votes';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      poll_votes: {
+        Row: {
+          activated_at: string | null;
+          cancel_notified_at: string | null;
+          cancellation_reason: string | null;
+          cancelled_at: string | null;
+          client_request_id: string;
+          closes_at: string | null;
+          completed_at: string | null;
+          completion_mode: string | null;
+          completion_reason: string | null;
+          created_at: string;
+          created_by: string;
+          final_eligible_count: number | null;
+          final_submitted_count: number | null;
+          id: string;
+          instructions: string | null;
+          opened_notified_at: string | null;
+          opens_at: string | null;
+          personal_data_purged_at: string | null;
+          results_notified_at: string | null;
+          revision: number;
+          scheduled_at: string | null;
+          selection_limit: number | null;
+          selection_mode: string;
+          society_id: string;
+          status: string;
+          tenant_voting: boolean | null;
+          tenant_voting_override: boolean | null;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          voting_type: string;
+          withdrawal_reason: string | null;
+          withdrawn_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          activated_at?: string | null;
+          cancel_notified_at?: string | null;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          client_request_id: string;
+          closes_at?: string | null;
+          completed_at?: string | null;
+          completion_mode?: string | null;
+          completion_reason?: string | null;
+          created_at?: string;
+          created_by: string;
+          final_eligible_count?: number | null;
+          final_submitted_count?: number | null;
+          id?: string;
+          instructions?: string | null;
+          opened_notified_at?: string | null;
+          opens_at?: string | null;
+          personal_data_purged_at?: string | null;
+          results_notified_at?: string | null;
+          revision?: number;
+          scheduled_at?: string | null;
+          selection_limit?: number | null;
+          selection_mode?: string;
+          society_id: string;
+          status?: string;
+          tenant_voting?: boolean | null;
+          tenant_voting_override?: boolean | null;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          voting_type: string;
+          withdrawal_reason?: string | null;
+          withdrawn_at?: string | null;
+        };
+        Update: {
+          activated_at?: string | null;
+          cancel_notified_at?: string | null;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          client_request_id?: string;
+          closes_at?: string | null;
+          completed_at?: string | null;
+          completion_mode?: string | null;
+          completion_reason?: string | null;
+          created_at?: string;
+          created_by?: string;
+          final_eligible_count?: number | null;
+          final_submitted_count?: number | null;
+          id?: string;
+          instructions?: string | null;
+          opened_notified_at?: string | null;
+          opens_at?: string | null;
+          personal_data_purged_at?: string | null;
+          results_notified_at?: string | null;
+          revision?: number;
+          scheduled_at?: string | null;
+          selection_limit?: number | null;
+          selection_mode?: string;
+          society_id?: string;
+          status?: string;
+          tenant_voting?: boolean | null;
+          tenant_voting_override?: boolean | null;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          voting_type?: string;
+          withdrawal_reason?: string | null;
+          withdrawn_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'poll_votes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_votes_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'poll_votes_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -9654,6 +10217,119 @@ export type Database = {
           p_society_id: string;
         };
         Returns: undefined;
+      };
+      poll_activate: {
+        Args: {
+          p_expected_revision: number;
+          p_society_id: string;
+          p_vote_id: string;
+        };
+        Returns: Json;
+      };
+      poll_admin_get: {
+        Args: { p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_admin_list: { Args: { p_society_id: string }; Returns: Json };
+      poll_ballot_submit: {
+        Args: {
+          p_society_id: string;
+          p_submission: Json;
+          p_unit_id: string;
+          p_vote_id: string;
+        };
+        Returns: Json;
+      };
+      poll_cancel: {
+        Args: { p_reason: string; p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_complete_early: {
+        Args: { p_reason: string; p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_deadline_extend: {
+        Args: {
+          p_closes_at: string;
+          p_reason: string;
+          p_society_id: string;
+          p_vote_id: string;
+        };
+        Returns: Json;
+      };
+      poll_draft_create: {
+        Args: {
+          p_client_request_id: string;
+          p_society_id: string;
+          p_voting_type: string;
+        };
+        Returns: Json;
+      };
+      poll_draft_delete: {
+        Args: {
+          p_expected_revision: number;
+          p_society_id: string;
+          p_vote_id: string;
+        };
+        Returns: Json;
+      };
+      poll_draft_save: {
+        Args: {
+          p_draft: Json;
+          p_expected_revision: number;
+          p_society_id: string;
+          p_vote_id: string;
+        };
+        Returns: Json;
+      };
+      poll_export_get: {
+        Args: { p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_member_get: {
+        Args: { p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_member_list: { Args: { p_society_id: string }; Returns: Json };
+      poll_participation_get: {
+        Args: { p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_reconcile_due: { Args: { p_society_id: string }; Returns: Json };
+      poll_representative_set: {
+        Args: {
+          p_expected_version: number;
+          p_membership_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: Json;
+      };
+      poll_representatives_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      poll_results_get: {
+        Args: { p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_retention_run: { Args: Record<PropertyKey, never>; Returns: Json };
+      poll_schedule: {
+        Args: {
+          p_expected_revision: number;
+          p_opens_at: string;
+          p_society_id: string;
+          p_vote_id: string;
+        };
+        Returns: Json;
+      };
+      poll_schedule_withdraw: {
+        Args: { p_reason: string; p_society_id: string; p_vote_id: string };
+        Returns: Json;
+      };
+      poll_settings_update: {
+        Args: { p_settings: Json; p_society_id: string };
+        Returns: Json;
       };
       record_developer_mfa: {
         Args: Record<PropertyKey, never>;
