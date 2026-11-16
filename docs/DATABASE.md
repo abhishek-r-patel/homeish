@@ -64,10 +64,13 @@ D-34 environment boundary (approved 2026-11-09): society subdomains do not chang
 | **Service Request (5)**        | `service_request_categories`, `service_requests`, `service_request_comments`, `service_request_attachments`, `service_request_events`                                                                                                                                    |
 | **Directory (P17 foundation)** | `directory_preferences`, `directory_vehicles`, `directory_emergency_contacts`                                                                                                                                                                                            |
 | **Expense (P16)**              | `expense_accounts`, `expense_categories`, `expenses`, `expense_book_entries`, `expense_month_locks`                                                                                                                                                                      |
+| **Polls (P22)**                | `poll_votes`, `poll_vote_blocks`, `poll_options`, `poll_offices`, `poll_candidates`, `poll_unit_representatives`, `poll_electorate`, `poll_participation`, `poll_public_responses`, `poll_private_tallies`                                                               |
+| **Meetings (P23)**             | `meetings`, `meeting_agenda_items`, `meeting_invitee_selections`, `meeting_invited_units`, `meeting_invited_members`, `meeting_attendance`, `meeting_resolutions`, `meeting_minutes`, `meeting_action_items`                                                             |
+| **Analytics (P27, Core)**      | `analytics_preferences`                                                                                                                                                                                                                                                  |
 
-Inventory above: **36 MVP tables + 3 P17 directory tables + 5 P16 expense tables**; other post-MVP module tables are described in Section 9.
+Inventory above: **36 MVP tables + 3 P17 directory tables + 5 P16 expense tables + 10 P22 poll tables + 9 P23 meeting tables + 1 P27 analytics table**; other post-MVP module tables are described in Section 9.
 
-Post-MVP modules (staff, housekeeping, AMC, notice, amenity, directory, expense) are outlined in Section 9. P17 and P16 have been tested locally only; module status follows the implementation plan.
+Post-MVP modules (staff, housekeeping, AMC, notice, amenity, directory, expense, poll and meeting) and committee analytics are outlined in Section 9. P17, P16, P22, P23 and P27 have been tested locally only; module status follows the implementation plan.
 
 ### 2.2 Entity relationship diagram (MVP)
 
@@ -731,6 +734,18 @@ One row per resident vote on a common-area request. Migration `20261114083000_se
 - `request_list` has a new `p_sort` argument: `default` keeps the old order, and `votes` puts the most upvoted first.
 - `request_list` and `request_get` now also return `upvote_count` and `has_upvoted`.
 
+### 7.7 SLA escalation (P32; D-59)
+
+Migration `20261117130000_service_request_sla_escalation.sql` (part of the core `service_request` module; no new module key).
+
+- `service_request_categories.committee_escalation_days` (1–30, default 2) sets how many whole days after the admin escalation a still-open request escalates to the committee. `request_category_save` gained it as a ninth argument (NULL keeps the current value).
+- `service_request_escalation_settings`: one row per society, `delivery` `in_app` (default) or `in_app_email`. Every recipient always gets the in-app notification; email is only added on top, so a failed email never loses an escalation.
+- `service_request_escalations`: one row per request and level (`admin | committee`; unique), with `escalated_on` (India date), the delivery used and `recipient_count` (0–10). It is the daily job's idempotency record. The FK to `service_requests` cascades, so retention can delete old closed requests. Recipients are never exposed.
+- `service_request_events.event_type` gained `escalated`; the requester sees the escalation on the timeline with no recipient names and no separate notification.
+- `request_escalation_run(society, today, trace)` is service-role-only and runs from the daily job after auto-close. `today` must be the India date of today or yesterday (`22023` otherwise); suspended or archived societies are skipped. It escalates up to 200 open, assigned, in-progress or reopened requests per level whose SLA has passed to up to 10 active admins, then those escalated to admins at least `committee_escalation_days` earlier to up to 10 active committee members. A society without committee members still records the step with 0 recipients. Each request escalates at most once per level for its whole life, so a reopened request is not escalated to admins again. Email addresses for `in_app_email` are returned to the application, which sends them through the transactional email service.
+- `request_escalation_settings_get` and `request_escalation_settings_save` (admin) read and change the delivery setting; changes are audited.
+- `request_list` (rebuilt from the P10.3 paged version, `20261114100000`) and `request_get` also return `escalation_level` (`none | admin | committee`).
+
 ---
 
 ## 8. Constraint and Validation Summary
@@ -816,6 +831,8 @@ Migration `20261115150000_amc_management.sql` adds `amc_contracts`, `amc_visits`
 Renewals create a single successor through a same-society predecessor FK; old contracts, documents and visits remain intact. File paths are uploader-owned, metadata is reverified at both application and database boundaries, and residents cannot read documents. `amc_request_label` reuses the existing request authorization and returns only a label when both modules are enabled.
 
 `amc_reminders_run` is service-role-only. It selects the most urgent due threshold from developer-managed `reminder_days` (default `[60,30,7]`), deduplicates reminders and skips superseded contracts. Status uses `expiring_soon_days` (default 30). Delivery is in-app and push, with no email or vendor accounting.
+
+Since P28, `assets.amc_contract_id` may reference a contract (same society, `ON DELETE RESTRICT`); the asset module only reads AMC data (Section 9.15).
 
 ### 9.5 Amenity booking tables (P15)
 
@@ -1003,39 +1020,189 @@ Migrations `20261116230000_metering_foundation.sql`, `20261116231000_metering_re
 
 The authoritative completion and verification status for P26 is in IMPLEMENTATION_PLAN.md; these migrations have been verified against disposable local PostgreSQL only.
 
+### Shared registration for P28 and P31
+
+Migration `20261117100000_core_register_asset_home_services_modules.sql` registers `asset` (Asset Register) and `home_services` (Home Services), both disabled by default and with no settings. As in P19–P21, every new table enables RLS with a deny-all `*_no_direct_access` policy, has all grants revoked and rejects delete/truncate; access is only through security-definer RPCs that check the signed-in member, the enabled module, the role and (for writes) a writable society before any argument is read.
+
+### 9.15 Asset register (P28; D-57)
+
+Migration `20261117110000_asset_foundation.sql`. Admins manage; committee members read; residents and guards have no access.
+
+- `asset_categories`: society-defined, name 1–60 characters (case-insensitively unique per society), `active`, optimistic `version` and `client_request_id`. At most 200 categories per society, counted under a per-society lock (`22023` beyond). Categories are deactivated, never deleted.
+- `assets`: category (same-society FK), name 1–120, location 1–120, optional make, model and serial (up to 80), supplier (up to 120), purchase date, `purchase_cost_paise`, warranty end date (on or after the purchase date), `status` (`active | under_repair | retired`), notes up to 1000, an optional `amc_contract_id` and optimistic `version`. Assets are retired, never deleted.
+- `asset_maintenance_entries`: `performed_on`, description 1–1000, optional `cost_paise`, `done_by` 1–120; removal sets `removed_at`/`removed_by` instead of deleting.
+- **AMC link:** `assets (society_id, amc_contract_id)` references `amc_contracts (society_id, id)` with `ON DELETE RESTRICT`, so an asset can only link to its own society's contract and a linked contract cannot be deleted. The asset module only reads AMC data. When `amc` is disabled, the contract, its details, its visits and the contract picker are hidden, and saving leaves an existing link untouched. `asset_save` takes `p_expected_amc_enabled`; if the AMC setting changed since the form was loaded it fails with `40001` so a stale form cannot remove the link. The contract picker lists up to 200 contracts and always includes the currently linked one.
+- Maintenance history combines the manual entries (up to 200) with the linked contract's AMC visits when `amc` is enabled. There is no depreciation.
+- RPCs: `asset_category_save`, `asset_category_set_active`, `asset_save`, `asset_maintenance_add` and `asset_maintenance_remove` (admin); the read models `asset_workspace_get` (admin and committee; categories with counts and up to 1000 assets, with `truncated` when more exist), `asset_get` and `asset_form_options_get`. Creates are idempotent on `(society, actor, client_request_id)` with `ON CONFLICT … DO NOTHING` and a re-read.
+- Audit actions are `asset.*`; an update records the full before and after business fields.
+
+### 9.16 Home-services directory (P31; D-58)
+
+Migration `20261117120000_home_services_foundation.sql`. Admins, committee and residents can read approved providers; guards have no access.
+
+- `home_services_providers`: name 1–120, `service_type` (`plumber | electrician | carpenter | painter | pest_control | appliance_repair | cleaning | other`), phone, optional area (up to 120) and notes (up to 500), `origin` (`admin | suggestion`), `status` (`pending | approved | rejected`) with review fields and a rejection reason (up to 300), `archived_at`/`archived_by`, optimistic `version` and `client_request_id`. Admin-added providers are approved at once; committee suggestions stay pending until an admin approves or rejects them. Providers are archived, never deleted.
+- `home_services_ratings`: one per resident per provider (`stars` 1–5, optional comment up to 500); the resident can change it. An admin can hide or show a comment (`comment_hidden_at`/`_by`); a hidden comment stays hidden through later edits and its stars still count in the average.
+- **Who sees what:** other residents see comments without names. Admins and committee members see who wrote each rating. The text of a hidden comment is returned only to admins and its author; committee members see that it is hidden with no text.
+- RPCs: `home_services_provider_save`, `home_services_suggestion_review`, `home_services_provider_archive` and `home_services_comment_visibility_set` (admin); `home_services_provider_suggest` (committee; notifies up to 20 admins in-app); `home_services_rating_save` (resident); and the read models `home_services_directory`, `home_services_provider_detail` and `home_services_admin_workspace` (lists up to 500 with `truncated` when more exist). Creates and suggestions are idempotent with `ON CONFLICT … DO NOTHING` and a re-read; a rating's audit action (`rating.create` or `rating.update`) comes from the upsert result.
+
+The authoritative completion and verification status for P28, P31 and P32 is in IMPLEMENTATION_PLAN.md; these migrations have been verified against disposable local PostgreSQL only.
+
+### 9.17 Polls & Voting (P22; D-60)
+
+Migrations `20261118100000_core_register_poll_module.sql`, `20261118110000_poll_foundation.sql`,
+`20261118120000_poll_lifecycle_ballots.sql` and `20261118130000_poll_reads_retention.sql`. The module is disabled
+by default. Every poll table is society-scoped, has RLS with a deny-all direct-access policy, and revokes direct
+API-role table privileges; access is through authorized security-definer RPCs.
+
+- `poll_votes`: PUBLIC or PRIVATE voting, draft/scheduled/active/completed/cancelled lifecycle, selection rules,
+  optional block scope, revision and client idempotency key, required cancellation/completion reasons, and frozen
+  final counts. Drafts carry a nullable `tenant_voting_override`; the effective value follows the society setting
+  otherwise, and is frozen with the electorate on schedule or immediate activation. Withdrawing a schedule clears
+  that frozen value but keeps the override.
+- `poll_vote_blocks` scopes a vote to selected active blocks; no rows means the whole society. `poll_options` holds
+  PUBLIC choices and final counts. `poll_offices` and `poll_candidates` hold PRIVATE election configuration.
+- `poll_unit_representatives` stores an optional, versioned per-unit designation. The default is the active primary
+  occupant if eligible, otherwise the earliest active owner; tenants are eligible only when the frozen vote setting
+  permits it. Family members never vote.
+- `poll_electorate` freezes one eligible representative per unit plus the representative name and unit-label
+  snapshots. `poll_participation` records whether that unit voted and contains no choice.
+- `poll_public_responses` stores only the current PUBLIC selection set. `poll_private_tallies` stores aggregate
+  candidate/NOTA counters only; it has no unit, voter or ballot identity.
+- Private helpers enforce module/role/writable-society authorization, representative resolution, parent-aware
+  configuration freezes, guarded deletes, deferred ballot invariants, audit and capped in-app notifications.
+  Direct reads of ballot storage and private counters are denied.
+- RPCs: draft create/save/delete, settings update, representative set, activate, schedule/withdraw, deadline extend,
+  early complete, cancel and ballot submit; member list/detail/results; admin list/detail, participation, export and
+  representative read models. Public writes are audited and lock the vote/representative rows before validating the
+  deadline. PUBLIC ballots may replace their complete selection set before close; PRIVATE ballots are one-time and
+  atomically update aggregate counters without storing the selections.
+- `poll_reconcile_due` is service-role-only and opens due schedules, completes due votes at their frozen deadline,
+  and sends idempotent in-app notifications. When the module is disabled, it returns zero counts without changing
+  due votes or sending notifications. Authorized reads/submissions also reconcile due state under the vote lock.
+  `poll_retention_run` is service-role-only and, after two years, removes named responses, participation and
+  electorate snapshots while preserving aggregate totals and configuration.
+- If a deadline-extension request arrives after its deadline, `poll_deadline_extend` commits completion and returns
+  `outcome: completed`; the application maps that committed result to an expired conflict. It returns
+  `outcome: extended` when the deadline changes.
+
+The database and application tests cover society isolation, role/module gates, ballot integrity, private-choice
+separation, lifecycle races, results and exports. The load test targets 500 units, 100 concurrent voters and a
+20-connection pool. Local test results and outstanding manual accessibility acceptance are recorded in
+IMPLEMENTATION_PLAN.md.
+
+### 9.18 Meetings & AGM (P23; D-61)
+
+Migrations `20261119100000_core_register_meeting_module.sql`, `20261119110000_meeting_foundation.sql`,
+`20261119120000_meeting_lifecycle_attendance.sql` and `20261119130000_meeting_minutes_actions_reads.sql`. The module
+is disabled by default. Every meeting table is society-scoped, carries the society id on every link, has RLS with a
+deny-all direct-access policy, revokes direct table privileges (including `service_role`) and rejects `TRUNCATE`;
+access is through authorized security-definer RPCs. Records are kept permanently.
+
+- `meetings`: AGM, SGM or committee type; draft/scheduled/held/cancelled lifecycle; time, venue or HTTPS online link;
+  `invitee_scope` default or custom; notice required/given days and quorum percent snapshotted at schedule; admin
+  check-in window; optimistic `version`; idempotent create through `client_request_id`. Held and cancelled meetings
+  are frozen by trigger (error 55000).
+- `meeting_agenda_items` (at most 50) are editable while draft or scheduled. `meeting_invitee_selections` stores a
+  custom list (units or committee members); `meeting_invited_units` and `meeting_invited_members` hold the
+  materialised invite list. Default AGM/SGM invites all active units; committee meetings invite active admin and
+  committee members. Re-materialising an edited scheduled meeting audits any attendance it removes
+  (`attendance.remove`).
+- `meeting_attendance`: one row per invited unit or member; in person, online or proxy (proxy needs a name and
+  counts toward quorum). Admin marks or removes any row; while check-in is open an owner or tenant occupant (never
+  family) can check their own unit in once. Quorum is an indicator only: present × 100 ≥ percent × invited.
+- `meeting_resolutions` (at most 50): pending/passed/failed/deferred with optional counts and an optional link to a
+  P22 poll in the same society (`ON DELETE SET NULL`). Resident reads never show a linked draft poll.
+- `meeting_minutes`: one draft per meeting written by admin or committee with an optimistic version; the admin
+  publishes. Published minutes are immutable except a one-time `document_id` link to the Documents copy (committee
+  minutes may link only to a `committee_admins` folder).
+- `meeting_action_items` (at most 200): only on scheduled or held meetings; owner eligibility follows
+  `action_owner_scope`, and committee-meeting actions may only be owned by admin or committee members. Owners are
+  notified on assignment; `meeting_action_reminders_run` (service-role only, capped at 2000, `SKIP LOCKED`) sends one
+  overdue reminder per item per society-local day and skips disabled modules and non-writable societies.
+- Resident reads (`meeting_member_list`, `meeting_member_get`, `meeting_my_actions`) return only non-draft AGM/SGM
+  meetings for units the caller actively occupies, plus the caller's own action items (meeting titles of draft or
+  committee meetings are hidden). Invisible meetings return `P0002`, including on self check-in. Notification
+  fan-out is capped at 2000 recipients per event; no email addresses are read or returned.
+- RPCs: create/update/draft delete, schedule, cancel, check-in open/close, mark held, attendance set/remove, self
+  check-in, resolution save/delete/outcome/poll link, minutes save/publish/document link, action save/status,
+  settings get/update; read models `meeting_admin_list`, `meeting_admin_get`, `meeting_invitee_options`,
+  `meeting_owner_options`, `meeting_member_list`, `meeting_member_get` and `meeting_my_actions`.
+
+Notice days are calendar days in the society time zone. Short notice is a warning only. The integration tests cover
+society isolation, role and module gates, lifecycle and protection triggers, attendance and quorum, resolutions,
+minutes, actions and reminders; they have run against disposable local PostgreSQL only.
+
+### 9.19 Committee analytics (Core, P27; D-62)
+
+Migrations `20261120100000_core_analytics_foundation.sql`, `20261120110000_core_analytics_operations_metrics.sql`
+and `20261120120000_core_analytics_community_metrics.sql`. Analytics is part of Core (always on); each metric shows
+only while its own module is enabled. Figures are calculated live on every request from the module tables; there
+are no summary, snapshot or materialised tables and no new indexes.
+
+- `analytics_preferences`: one row per society with the admin's chosen `metric_keys` (stored in catalogue order,
+  at most 100, no nulls), an optimistic `version`, `updated_by` and `updated_at`. No row means the six ANL-1 defaults.
+  RLS with a deny-all direct-access policy, no table privileges for any client role (including `service_role`) and
+  `TRUNCATE` rejected (55000).
+- `private.analytics_catalogue()` is the closed list of 49 metrics (key, module, order, default on, money). It must
+  match `src/core/analytics/catalogue.ts`; an integration test compares them.
+- `private.analytics_metric_<module>_<name>(society, from, to)` (one per metric) and the shaping helpers
+  (`analytics_ops_*`, `analytics_community_*`) are security-definer or immutable functions with `search_path = ''`
+  and no grants to any client role. Each reads only the given society's rows and returns totals and buckets only —
+  never person names, unit labels, emails or phone numbers. Output kinds: `trend` (one point per society-local month,
+  zero-filled), `breakdown` (top 20 plus "Other" for additive units) and `stat` (a snapshot for today). Units:
+  count, paise, percent, days, minutes, rating and quantity.
+- Rules worth knowing: request SLA counts only requests with a deadline; staff attendance is present ÷ (present +
+  absent), leave excluded; notice read rate estimates recipients from today's audience because past audiences are not
+  stored; document downloads come from `document.download` audit rows; patrol completion rebuilds round windows from
+  schedules and scans, and one scan inside two overlapping grace periods counts for both rounds; hidden ratings still
+  count their stars (hiding only hides the comment).
+- Public RPCs (authenticated only, authorise first): `analytics_settings_get` (admin, committee),
+  `analytics_settings_update` (admin; writable society; 22023 unknown, duplicate or null key; 40001 stale version;
+  audited `analytics.settings_update`), `analytics_dashboard` (admin, committee; `p_months` 3, 6 or 12;
+  `p_money_range` `months` or `fy`, where money metrics use 1 April of the current financial year) and
+  `analytics_export_record` (admin; audits `analytics.export` with the metrics actually exported).
+
+The opt-in performance test (`PERF_ANALYTICS=1`) seeds 500 units and 12 months of data and requires the full
+49-metric dashboard in under 2 s; it measured about 1.2 s locally. The integration tests have run against disposable
+local PostgreSQL only.
+
 ## 10. Reference: Module Settings Keys (`module_configs.settings`)
 
 Defaults apply when a key is absent. Editable by developer unless marked **A** (admin-editable, audited).
 
-| Module          | Key                               | Default                                                     | Notes                                                                                                                                         |
-| --------------- | --------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| visitor         | `approval_timeout_minutes`        | 3                                                           | VIS-4                                                                                                                                         |
-| visitor         | `overstay_hours`                  | 12                                                          | VIS-9                                                                                                                                         |
-| visitor         | `photo_required`                  | false                                                       |                                                                                                                                               |
-| visitor         | `guard_override_allowed`          | true                                                        |                                                                                                                                               |
-| visitor         | `visitor_phone_required`          | false                                                       |                                                                                                                                               |
-| delivery        | `response_timeout_minutes`        | 3                                                           |                                                                                                                                               |
-| delivery        | `uncollected_days`                | 3                                                           | DEL-5                                                                                                                                         |
-| delivery        | `leave_at_gate_enabled`           | true                                                        |                                                                                                                                               |
-| billing         | `due_day_of_month`                | 10                                                          |                                                                                                                                               |
-| billing         | `grace_days`                      | 5                                                           |                                                                                                                                               |
-| billing         | `late_fee`                        | `null` (off)                                                | `{type: "flat", value: integer_paise}` or `{type: "percent", value: percentage}`; percentage > 0, at most 100, up to 2 decimals (BIL-3, D-35) |
-| billing         | `reminders`                       | `{before_due_days: 3, on_due: true, overdue_every_days: 7}` | BIL-10; before may be 0; overdue interval must be positive                                                                                    |
-| billing         | `pending_confirmation_alert_days` | 3                                                           | BIL-17                                                                                                                                        |
-| service_request | `auto_close_days`                 | 3                                                           | SRQ-3                                                                                                                                         |
-| staff           | `resident_approval_required`      | `true`                                                      | **A**; audited. Matching profiles always require administrator review (PRD D-37)                                                              |
-| expense         | `approval_threshold_paise`        | 5000000 (₹50,000)                                           | **A** via `expense_settings_update`; audited. Expenses above it need committee approval (EXP-6, D-44)                                         |
-| expense         | `billing_income_account_id`       | `null` (off)                                                | **A**; audited. Active account that receives confirmed billing payments as income (EXP-4)                                                     |
-| tenancy         | `police_verification_required`    | `false`                                                     | **A**; audited. Rental agreement and owner consent remain mandatory; no general ID collection (D-50)                                          |
-| parking         | `photo_retention_days`            | 3                                                           | **A**; audited. Integer 1–90; days a wrong-parking report photo is kept                                                                       |
-| sos             | `notify_guards`                   | `true`                                                      | **A**; audited. At least one of guards, admins or committee must stay on                                                                      |
-| sos             | `notify_admins`                   | `true`                                                      | **A**; audited                                                                                                                                |
-| sos             | `notify_committee`                | `false`                                                     | **A**; audited                                                                                                                                |
-| sos             | `resident_scope`                  | `off`                                                       | **A**; audited. `off`, `floor`, `block` or `society`; residents beyond 5000 are dropped and audited                                           |
-| vendor          | `quote_threshold_paise`           | 2500000 (₹25,000)                                           | **A** via `vendor_settings_update`; audited. 0 to ₹100 crore; below it one quote is enough (D-54)                                             |
-| vendor          | `quotes_above_threshold`          | 3                                                           | **A**; audited. 1–5 quotes needed at or above the threshold                                                                                   |
-| vendor          | `approvals_required`              | 1                                                           | **A**; audited. 0–5 distinct admin/committee approvals; 0 means an admin approves alone                                                       |
-| patrol          | `photo_retention_days`            | 90                                                          | **A** via `patrol_settings_update`; audited. Integer 30–365; days an incident photo is kept (D-55)                                            |
+| Module          | Key                                                             | Default                                                     | Notes                                                                                                                                                                    |
+| --------------- | --------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| visitor         | `approval_timeout_minutes`                                      | 3                                                           | VIS-4                                                                                                                                                                    |
+| visitor         | `overstay_hours`                                                | 12                                                          | VIS-9                                                                                                                                                                    |
+| visitor         | `photo_required`                                                | false                                                       |                                                                                                                                                                          |
+| visitor         | `guard_override_allowed`                                        | true                                                        |                                                                                                                                                                          |
+| visitor         | `visitor_phone_required`                                        | false                                                       |                                                                                                                                                                          |
+| delivery        | `response_timeout_minutes`                                      | 3                                                           |                                                                                                                                                                          |
+| delivery        | `uncollected_days`                                              | 3                                                           | DEL-5                                                                                                                                                                    |
+| delivery        | `leave_at_gate_enabled`                                         | true                                                        |                                                                                                                                                                          |
+| billing         | `due_day_of_month`                                              | 10                                                          |                                                                                                                                                                          |
+| billing         | `grace_days`                                                    | 5                                                           |                                                                                                                                                                          |
+| billing         | `late_fee`                                                      | `null` (off)                                                | `{type: "flat", value: integer_paise}` or `{type: "percent", value: percentage}`; percentage > 0, at most 100, up to 2 decimals (BIL-3, D-35)                            |
+| billing         | `reminders`                                                     | `{before_due_days: 3, on_due: true, overdue_every_days: 7}` | BIL-10; before may be 0; overdue interval must be positive                                                                                                               |
+| billing         | `pending_confirmation_alert_days`                               | 3                                                           | BIL-17                                                                                                                                                                   |
+| service_request | `auto_close_days`                                               | 3                                                           | SRQ-3                                                                                                                                                                    |
+| staff           | `resident_approval_required`                                    | `true`                                                      | **A**; audited. Matching profiles always require administrator review (PRD D-37)                                                                                         |
+| expense         | `approval_threshold_paise`                                      | 5000000 (₹50,000)                                           | **A** via `expense_settings_update`; audited. Expenses above it need committee approval (EXP-6, D-44)                                                                    |
+| expense         | `billing_income_account_id`                                     | `null` (off)                                                | **A**; audited. Active account that receives confirmed billing payments as income (EXP-4)                                                                                |
+| tenancy         | `police_verification_required`                                  | `false`                                                     | **A**; audited. Rental agreement and owner consent remain mandatory; no general ID collection (D-50)                                                                     |
+| parking         | `photo_retention_days`                                          | 3                                                           | **A**; audited. Integer 1–90; days a wrong-parking report photo is kept                                                                                                  |
+| sos             | `notify_guards`                                                 | `true`                                                      | **A**; audited. At least one of guards, admins or committee must stay on                                                                                                 |
+| sos             | `notify_admins`                                                 | `true`                                                      | **A**; audited                                                                                                                                                           |
+| sos             | `notify_committee`                                              | `false`                                                     | **A**; audited                                                                                                                                                           |
+| sos             | `resident_scope`                                                | `off`                                                       | **A**; audited. `off`, `floor`, `block` or `society`; residents beyond 5000 are dropped and audited                                                                      |
+| vendor          | `quote_threshold_paise`                                         | 2500000 (₹25,000)                                           | **A** via `vendor_settings_update`; audited. 0 to ₹100 crore; below it one quote is enough (D-54)                                                                        |
+| vendor          | `quotes_above_threshold`                                        | 3                                                           | **A**; audited. 1–5 quotes needed at or above the threshold                                                                                                              |
+| vendor          | `approvals_required`                                            | 1                                                           | **A**; audited. 0–5 distinct admin/committee approvals; 0 means an admin approves alone                                                                                  |
+| patrol          | `photo_retention_days`                                          | 90                                                          | **A** via `patrol_settings_update`; audited. Integer 30–365; days an incident photo is kept (D-55)                                                                       |
+| poll            | `tenant_voting_default`                                         | `false`                                                     | **A** via `poll_settings_update`; audited. Draft votes can override it; the effective value freezes with the electorate at schedule or immediate activation (D-42, D-60) |
+| meeting         | `notice_days_agm` / `notice_days_sgm` / `notice_days_committee` | 14 / 7 / 3                                                  | **A** via `meeting_settings_update`; audited. Integer 0–90; short notice warns only (D-61)                                                                               |
+| meeting         | `quorum_percent_units` / `quorum_percent_committee`             | 33 / 50                                                     | **A**; audited. Integer 1–100; snapshotted at schedule; indicator only                                                                                                   |
+| meeting         | `action_owner_scope`                                            | `any_member`                                                | **A**; audited. `any_member` (resident, committee, admin) or `management` (admin, committee)                                                                             |
 
 UPI details are **not** settings: they have their own table with a format check (Section 6.8).
 
@@ -1076,7 +1243,7 @@ P7A registers billing settings as developer-managed, validates the same closed s
 | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Visitor entries, delivery entries                             | 1 year (A-28)                                                                                                     | Anonymise: clear visitor name, phone, vehicle, photo (file deleted); keep counts/timestamps                     |
 | Pre-approvals                                                 | 1 year after validity                                                                                             | Delete                                                                                                          |
-| Service requests, comments, attachments                       | 2 years after closing **[DBA-03]**                                                                                | Delete files and rows                                                                                           |
+| Service requests, comments, attachments                       | 2 years after closing **[DBA-03]**; retain while linked to an AMC contract                                        | Delete eligible files and rows after the link is removed                                                        |
 | Notifications                                                 | 180 days **[DBA-04]**                                                                                             | Delete                                                                                                          |
 | Error logs                                                    | 90 days                                                                                                           | Delete                                                                                                          |
 | Audit logs                                                    | 2 years                                                                                                           | Delete                                                                                                          |
@@ -1405,7 +1572,7 @@ membership and ends the occupancy before commit.
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | DBA-01 | `profiles.email` is a synchronised copy of the Auth email (the only deliberate identity duplication)                                                                                                             |
 | DBA-02 | Receipt numbers restart each calendar year                                                                                                                                                                       |
-| DBA-03 | Service requests and comments are kept 2 years after closing, then deleted                                                                                                                                       |
+| DBA-03 | Service requests and comments are kept 2 years after closing, then deleted unless an AMC contract link requires the request history to remain                                                                    |
 | DBA-04 | Notifications are kept 180 days                                                                                                                                                                                  |
 | DBA-05 | Intentional denormalizations are limited to `profiles.email`, and `total_paise`/`paid_paise`/`waived_paise` on bills (plus the unit/period copy on bill lines used to enforce BIL-2); each has an invariant test |
 | DBA-06 | One society uses one currency (INR in MVP), stored on `societies`                                                                                                                                                |

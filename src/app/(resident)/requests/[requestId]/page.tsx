@@ -51,6 +51,12 @@ export default async function ServiceRequestDetailPage({
           <h1 className="text-title font-semibold">{request.category_name}</h1>
           <StatusChip status={`request.${request.status}`} />
           {request.is_overdue ? <StatusChip status="request.overdue" /> : null}
+          {detail.capabilities.canSeeAdminWorkspace &&
+          request.escalation_level !== 'none' ? (
+            <StatusChip
+              status={`request.escalated_${request.escalation_level}`}
+            />
+          ) : null}
         </div>
         <p className="text-body text-ink-muted">
           {request.location_type === 'unit'

@@ -2,13 +2,18 @@
 'use client';
 
 import { useState } from 'react';
-import { ServiceRequestCategoryManager } from '@/components/service-requests/category-manager';
+import {
+  ServiceRequestCategoryManager,
+  ServiceRequestEscalationSettingsForm,
+} from '@/components/service-requests/category-manager';
 import type { RequestFormAction } from '@/components/service-requests/action-form';
 import { Card } from '@/components/ui/data-display';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import {
   serviceRequestCategoryInputSchema,
+  serviceRequestEscalationSettingsInputSchema,
   type ServiceRequestCategory,
+  type ServiceRequestEscalationSettings,
 } from '@/core/service-requests/validation';
 
 const societyId = '4a696d6f-774c-41d1-ae47-6254d4a8f4cf';
@@ -24,6 +29,7 @@ const initialCategory: ServiceRequestCategory = {
   sla_hours: 24,
   sort_order: 0,
   active: true,
+  committee_escalation_days: 2,
 };
 
 function failure(message: string): ServerActionResult<unknown> {
@@ -32,6 +38,27 @@ function failure(message: string): ServerActionResult<unknown> {
 
 export default function ServiceRequestsAdminFixturePage() {
   const [categories, setCategories] = useState([initialCategory]);
+  const [escalationSettings, setEscalationSettings] =
+    useState<ServiceRequestEscalationSettings>({
+      delivery: 'in_app',
+      updated_at: null,
+    });
+
+  const saveEscalationAction: RequestFormAction = async (formData) => {
+    let input: unknown;
+    try {
+      input = JSON.parse(String(formData.get('input') ?? ''));
+    } catch {
+      return failure('The fixture settings were invalid.');
+    }
+    const parsed = serviceRequestEscalationSettingsInputSchema.safeParse(input);
+    if (!parsed.success) return failure('Choose how escalations are sent.');
+    setEscalationSettings({
+      delivery: parsed.data.delivery,
+      updated_at: '2026-11-10T10:00:00.000Z',
+    });
+    return { ok: true, message: 'The escalation settings were saved.' };
+  };
 
   const saveAction: RequestFormAction = async (formData) => {
     let input: unknown;
@@ -85,6 +112,10 @@ export default function ServiceRequestsAdminFixturePage() {
           No category is written to a database.
         </p>
       </Card>
+      <ServiceRequestEscalationSettingsForm
+        saveAction={saveEscalationAction}
+        settings={escalationSettings}
+      />
       <ServiceRequestCategoryManager
         categories={categories}
         saveAction={saveAction}

@@ -115,6 +115,12 @@ Beta email, 2026-11-11:
    Rotate it in the secret store and scheduler together if it may be exposed.
 4. Do not delete `job_run_keys` to force a retry. Investigate the failed task;
    the run-key is the idempotency guard, while `completed_at` records success.
+5. SLA escalation (`service_request.escalate`, P32) records one row per request
+   and level, so a late or repeated run never notifies twice. Escalation email
+   failures are logged as `service_request.escalation_email_incomplete`
+   warnings; the in-app notification has already been created, so the
+   escalation is not lost. Escalation email uses the same transactional email
+   setup as the other alerts.
 
 ## Database backups and restore
 

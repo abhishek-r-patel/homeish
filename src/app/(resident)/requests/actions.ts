@@ -12,6 +12,7 @@ import {
   rejectServiceRequest,
   reopenServiceRequest,
   saveServiceRequestCategory,
+  saveServiceRequestEscalationSettings,
   setServiceRequestUpvote,
   updateServiceRequestStatus,
 } from '@/core/service-requests/operations';
@@ -52,6 +53,22 @@ export async function saveServiceRequestCategoryAction(formData: FormData) {
     refreshRequestViews();
     return { data: result, message: 'The request category was saved.' };
   });
+}
+
+export async function saveServiceRequestEscalationSettingsAction(
+  formData: FormData,
+) {
+  return runServerAction(
+    'request.escalation_settings.save',
+    async (requestId) => {
+      const result = await saveServiceRequestEscalationSettings(
+        parseInput(formData),
+        requestId,
+      );
+      refreshRequestViews();
+      return { data: result, message: 'The escalation settings were saved.' };
+    },
+  );
 }
 
 export async function assignServiceRequestAction(formData: FormData) {

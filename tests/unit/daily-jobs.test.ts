@@ -10,9 +10,13 @@ const mocks = vi.hoisted(() => ({
   runRetentionPrivileged: vi.fn(),
   runVisitorExpirationPrivileged: vi.fn(),
   runServiceRequestAutoClosePrivileged: vi.fn(),
+  runServiceRequestEscalationPrivileged: vi.fn(),
   runInventoryRemindersPrivileged: vi.fn(),
   runAmcRemindersPrivileged: vi.fn(),
   runTenancyRemindersPrivileged: vi.fn(),
+  runPollReconcilePrivileged: vi.fn(),
+  runPollRetentionPrivileged: vi.fn(),
+  runMeetingActionRemindersPrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -27,9 +31,15 @@ vi.mock('../../src/core/privileged', () => ({
   runVisitorExpirationPrivileged: mocks.runVisitorExpirationPrivileged,
   runServiceRequestAutoClosePrivileged:
     mocks.runServiceRequestAutoClosePrivileged,
+  runServiceRequestEscalationPrivileged:
+    mocks.runServiceRequestEscalationPrivileged,
   runInventoryRemindersPrivileged: mocks.runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged: mocks.runAmcRemindersPrivileged,
   runTenancyRemindersPrivileged: mocks.runTenancyRemindersPrivileged,
+  runPollReconcilePrivileged: mocks.runPollReconcilePrivileged,
+  runPollRetentionPrivileged: mocks.runPollRetentionPrivileged,
+  runMeetingActionRemindersPrivileged:
+    mocks.runMeetingActionRemindersPrivileged,
 }));
 
 import {
@@ -193,9 +203,13 @@ describe('daily jobs', () => {
       'billing.stale_payments',
       'visitor.expire',
       'service_request.auto_close',
+      'service_request.escalate',
       'housekeeping.low_stock',
       'amc.reminders',
       'tenancy.reminders',
+      'poll.reconcile',
+      'meeting.action_reminders',
+      'poll.retention',
       'housekeeping.retention',
     ]);
 
@@ -213,6 +227,10 @@ describe('daily jobs', () => {
       ['society-1', '2026-11-10'],
       ['society-2', '2026-11-10'],
     ]);
+    expect(mocks.runServiceRequestEscalationPrivileged.mock.calls).toEqual([
+      ['society-1', '2026-11-10'],
+      ['society-2', '2026-11-10'],
+    ]);
     expect(mocks.runVisitorExpirationPrivileged.mock.calls).toEqual([
       ['society-1'],
       ['society-2'],
@@ -227,6 +245,15 @@ describe('daily jobs', () => {
       ['society-2'],
     ]);
     expect(mocks.runTenancyRemindersPrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
+    expect(mocks.runPollReconcilePrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
+    expect(mocks.runPollRetentionPrivileged).toHaveBeenCalledOnce();
+    expect(mocks.runMeetingActionRemindersPrivileged.mock.calls).toEqual([
       ['society-1'],
       ['society-2'],
     ]);

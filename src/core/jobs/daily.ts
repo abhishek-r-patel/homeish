@@ -7,10 +7,14 @@ import {
   runBillingDailyTaskPrivileged,
   runRetentionPrivileged,
   runServiceRequestAutoClosePrivileged,
+  runServiceRequestEscalationPrivileged,
   runVisitorExpirationPrivileged,
   runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged,
   runTenancyRemindersPrivileged,
+  runPollReconcilePrivileged,
+  runPollRetentionPrivileged,
+  runMeetingActionRemindersPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -63,6 +67,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     },
   },
   {
+    name: 'service_request.escalate',
+    run: async (societyId: string, periodKey: string) => {
+      await runServiceRequestEscalationPrivileged(societyId, periodKey);
+    },
+  },
+  {
     name: 'housekeeping.low_stock',
     run: async (societyId: string) => {
       await runInventoryRemindersPrivileged(societyId);
@@ -78,6 +88,25 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'tenancy.reminders',
     run: async (societyId: string) => {
       await runTenancyRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'poll.reconcile',
+    run: async (societyId: string) => {
+      await runPollReconcilePrivileged(societyId);
+    },
+  },
+  {
+    name: 'meeting.action_reminders',
+    run: async (societyId: string) => {
+      await runMeetingActionRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'poll.retention',
+    scope: 'global',
+    run: async () => {
+      await runPollRetentionPrivileged();
     },
   },
   {

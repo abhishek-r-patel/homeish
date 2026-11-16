@@ -101,6 +101,7 @@ describe('module registry', () => {
     ]);
     expect(getRoleNavigation(['admin'], []).map(({ href }) => href)).toEqual([
       '/admin',
+      '/admin/analytics',
       '/admin/structure',
       '/admin/members',
       '/admin/settings',

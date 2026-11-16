@@ -353,8 +353,11 @@ For private QR uploads, `/api/files/upload-url` accepts `bucket: "society-assets
 | `request.rate`                            | R (requester)                                      | 1–5 stars and comment after closing                      | Once                                                                                               |
 | `request.addComment`                      | R (requester), A, assignee                         | Comment thread                                           | `clientRequestId`; notifies the other side; residents reading a common-area request cannot comment |
 | `request.upvote`                          | R                                                  | Add or remove one's vote on an open common-area request  | MVP+ (D-17); one vote per user; returns the new count; `request.list` accepts `sort: votes`        |
+| `request.escalationSettings.get/save`     | A                                                  | SLA escalation delivery (P32, D-59)                      | `in_app` or `in_app_email`; in-app is always sent; audited                                         |
 
 Residents use `/requests`, `/requests/new` and `/requests/{requestId}`. Admins and committee members use `/admin/requests` for filtering and dashboard reports; admins can also manage categories, assign requests, update statuses and reject with a reason. Request detail displays the timeline and signed photo links only to users authorized for the parent request.
+
+SLA escalation (P32): category create/update also accepts `committeeEscalationDays` (1–30, default 2). `request.list/get` return `escalationLevel` (`none`, `admin`, `committee`); the requester sees an "Escalated" timeline entry without recipient names. Admins change the delivery on the Categories tab with `saveServiceRequestEscalationSettingsAction`. The daily job's `service_request.escalate` task does the escalation (6.1).
 
 ### 5.9 Notice board (`notice`, P11)
 
@@ -626,6 +629,113 @@ Operations live in `src/core/metering/`; all Server Actions are in `(resident)/m
 
 Permissions: `metering:list` (admin, committee, resident), `metering:manage` (admin), `metering:record` (admin, guard) and `metering:submit` (resident). The module has no settings. Pages are `/metering` (residents), `/admin/metering` (admin and committee) and `/guard/metering`. When Billing is enabled, monthly bill generation (`billing_bills_generate`) also bills the generated units' pending utility charges as a separate "Utility charges – Mon YYYY" bill per unit, using Billing's rounding setting; the manual run covers anything left. A reading is never billed twice. When Billing is disabled, readings and reports still work and nothing is billed (DATABASE 9.14). Common-area meters are never billed.
 
+### 5.23 Asset register (`asset`, P28; D-57)
+
+Operations live in `src/core/asset/`; Server Actions are in `(admin)/admin/assets/actions.ts`. Writes use the `otherWritesUserMinute` limit; a stale version returns `CONFLICT`.
+
+| Operation / RPC                                              | Caller           | Contract                                                                                                                                                                                                        |
+| ------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getAssetWorkspace` / `asset_workspace_get`                  | Admin, committee | Categories with asset counts and up to 1000 assets (`truncated` when more exist); `can_manage` is false for committee.                                                                                          |
+| `getAssetDetail` / `asset_get`                               | Admin, committee | Asset details, maintenance entries (up to 200) and, when `amc` is enabled, the linked contract and its visits.                                                                                                  |
+| `getAssetFormOptions` / `asset_form_options_get`             | Admin            | Active categories and, when `amc` is enabled, up to 200 contracts plus the currently linked one.                                                                                                                |
+| `saveAssetCategoryAction` / `asset_category_save`            | Admin            | Name 1–60, unique per society; at most 200 categories; expected version on update; client UUID on create.                                                                                                       |
+| `setAssetCategoryActiveAction` / `asset_category_set_active` | Admin            | Turns a category on or off; never deleted.                                                                                                                                                                      |
+| `saveAssetAction` / `asset_save`                             | Admin            | Category, name, location, make, model, serial, supplier, purchase date and cost, warranty end, status (`active`, `under_repair`, `retired`), notes, AMC contract, `expectedAmcEnabled` (`CONFLICT` if changed). |
+| `addAssetMaintenanceAction` / `asset_maintenance_add`        | Admin            | Date (not in the future), description up to 1000, done by, optional cost; client UUID.                                                                                                                          |
+| `removeAssetMaintenanceAction` / `asset_maintenance_remove`  | Admin            | Marks an entry removed; repeating it does nothing.                                                                                                                                                              |
+
+Permissions: `asset:list` (admin, committee) and `asset:manage` (admin). Pages are `/admin/assets`, `/admin/assets/new`, `/admin/assets/categories`, `/admin/assets/{assetId}` and `/admin/assets/{assetId}/edit`. Residents and guards have no access.
+
+### 5.24 Home-services directory (`home_services`, P31; D-58)
+
+Operations live in `src/core/home-services/`; Server Actions are in `(resident)/home-services/actions.ts`. Writes use the `otherWritesUserMinute` limit; a stale version returns `CONFLICT`.
+
+| Operation / RPC                                                                   | Caller                     | Contract                                                                                                            |
+| --------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `getHomeServicesDirectory` / `home_services_directory`                            | Admin, committee, resident | Approved, unarchived providers with average stars and count (up to 500, `truncated`).                               |
+| `getHomeServicesProvider` / `home_services_provider_detail`                       | Admin, committee, resident | Provider and ratings; rater names only for admin and committee; hidden comment text only for admins and the author. |
+| `getHomeServicesAdminWorkspace` / `home_services_admin_workspace`                 | Admin, committee           | Providers by status, pending suggestions and recent comments (up to 500, `truncated`).                              |
+| `saveHomeServicesProviderAction` / `home_services_provider_save`                  | Admin                      | Name, service type, phone, optional area and notes; approved at once; expected version on update.                   |
+| `suggestHomeServicesProviderAction` / `home_services_provider_suggest`            | Committee                  | Same fields; pending until an admin reviews it; notifies up to 20 admins in-app.                                    |
+| `reviewHomeServicesSuggestionAction` / `home_services_suggestion_review`          | Admin                      | Approve, or reject with a reason up to 300.                                                                         |
+| `archiveHomeServicesProviderAction` / `home_services_provider_archive`            | Admin                      | Removes a provider from the directory; ratings are kept.                                                            |
+| `saveHomeServicesRatingAction` / `home_services_rating_save`                      | Resident                   | 1–5 stars and an optional comment up to 500; one per resident per provider, editable.                               |
+| `setHomeServicesCommentVisibilityAction` / `home_services_comment_visibility_set` | Admin                      | Hide or show a comment; the stars always count.                                                                     |
+
+Permissions: `home_services:list` (admin, committee, resident), `home_services:manage` (admin), `home_services:suggest` (committee) and `home_services:rate` (resident). Pages are `/home-services`, `/home-services/{providerId}`, `/admin/home-services` and `/admin/home-services/{providerId}`. Guards have no access; providers have no logins and there are no bookings.
+
+### 5.25 Polls & Voting (`poll`, P22; D-60)
+
+Operations live in `src/core/poll/`; Server Actions are in the resident and admin Polls routes. The module ships
+disabled. Writes use the `otherWritesUserMinute` limit. Each unit has one ballot cast by its frozen representative;
+residents with an active occupancy in an electorate unit can view that vote and its permitted results, but only the
+representative can submit. Admins manage polls; committee members have read-only management views. Guards and
+housekeeping supervisors have no access.
+
+| Operation / RPC                                                | Caller                                          | Contract                                                                                                                                                           |
+| -------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getPollMemberList` / `poll_member_list`                       | Resident                                        | Active and scheduled votes for the resident's occupied electorate units; no drafts.                                                                                |
+| `getPollMemberVote` / `poll_member_get`                        | Resident                                        | Ballot details and only the caller's own unit submission state; scheduled votes disclose no ballot choices/options.                                                |
+| `submitPollPublicBallot` / `poll_ballot_submit`                | Frozen representative                           | Submit or replace the full PUBLIC selection set before close.                                                                                                      |
+| `submitPollPrivateBallot` / `poll_ballot_submit`               | Frozen representative                           | Submit one choice per office once; explicit NOTA is supported. Choices are not returned or stored per voter.                                                       |
+| `getPollAdminList`, `getPollAdminVote`, `getPollParticipation` | Admin, committee                                | Management list/detail; committee gets counts only while open, with no open-vote names or choices.                                                                 |
+| `createPollDraft`, `savePollDraft`, `deletePollDraft`          | Admin                                           | Create idempotent drafts, replace a draft with optimistic revision, or delete a draft.                                                                             |
+| `activatePoll`, `schedulePoll`, `withdrawPollSchedule`         | Admin                                           | Validate readiness, freeze the effective tenant setting and electorate, and make permitted lifecycle changes.                                                      |
+| `extendPollDeadline`, `completePollEarly`, `cancelPoll`        | Admin                                           | Change an active deadline, complete early or cancel with a required reason. If already overdue, completion commits and the application returns `CONFLICT/expired`. |
+| `updatePollSettings`, `setPollRepresentative`                  | Admin; unit owner for their unit                | Change the society default or designate an eligible representative; changes are audited.                                                                           |
+| `getPollResults`, `getPollExport`, `getPollRepresentatives`    | Eligible resident; admin/committee as specified | Enforce public/private visibility, completed-only exports and separate private voter rosters; no email addresses.                                                  |
+
+Pages are `/polls`, `/polls/{voteId}`, `/polls/representatives`, `/admin/polls`,
+`/admin/polls/new`, `/admin/polls/{voteId}`, `/admin/polls/{voteId}/edit`,
+`/admin/polls/representatives` and `/admin/polls/settings`. Committee uses the administrative read-only views.
+The completed-vote download route is `GET /api/polls/{voteId}/export?format=pdf|csv`; it requires a session and
+admin or committee access. CSV is formula-safe and PDF is rendered with the existing `pdf-lib` dependency. Private
+exports separate aggregate results from the list of units that voted; neither format contains email addresses.
+The `/fixtures/poll` page uses synthetic scenarios and does not call production services.
+
+### 5.26 Meetings & AGM (`meeting`, P23; D-61)
+
+Operations live in `src/core/meeting/`; Server Actions are in the resident and admin Meetings routes. The module
+ships disabled. Writes use the `otherWritesUserMinute` limit and an idempotency request ID. Permissions:
+`meeting:attend` (resident), `meeting:list` and `meeting:minutes` (admin, committee) and `meeting:manage` (admin).
+Guards and housekeeping supervisors have no access.
+
+| Operation / RPC                                                                                   | Caller                         | Contract                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getMeetingMemberList`, `getMeetingMemberDetail`, `getMyMeetingActions`                           | Resident                       | Non-draft AGM/SGM meetings for units the caller occupies, published minutes, resolutions and the caller's own action items. Invisible meetings return not found.                                                 |
+| `selfCheckInToMeeting` / `meeting_self_checkin`                                                   | Owner or tenant occupant       | Checks the caller's invited unit in once while the admin has check-in open; family members are refused.                                                                                                          |
+| `getMeetingAdminList`, `getMeetingAdminDetail`, `getMeetingInviteeOptions`, `searchMeetingOwners` | Admin, committee               | Management list and detail with invitees, attendance, quorum indicator, resolutions, minutes and actions.                                                                                                        |
+| `createMeeting`, `updateMeeting`, `deleteMeetingDraft`, `scheduleMeeting`, `cancelMeeting`        | Admin                          | Idempotent create; optimistic-version edits while draft/scheduled; schedule snapshots notice and quorum and notifies invitees; short notice is a warning only; cancel needs a reason.                            |
+| `setMeetingCheckin`, `markMeetingHeld`, `setMeetingAttendance`, `removeMeetingAttendance`         | Admin                          | Open or close self check-in, mark held, record in-person, online or proxy (with the proxy's name) attendance, or undo a mark.                                                                                    |
+| `saveMeetingResolution`, `deleteMeetingResolution`, `setMeetingResolutionOutcome`                 | Admin                          | Up to 50 resolutions; outcome passed, failed or deferred with optional counts.                                                                                                                                   |
+| `linkMeetingResolutionPoll`, `createMeetingResolutionPoll`                                        | Admin, with `poll` enabled     | Link an existing poll by ID, or create a pre-filled public single-choice draft poll (For/Against/Abstain) through `createPollDraft` and `savePollDraft`.                                                         |
+| `saveMeetingMinutes` / `publishMeetingMinutes` / `retryMeetingMinutesCopy`                        | Admin, committee / admin       | Draft minutes with an optimistic version; only the admin publishes. With `document` enabled, a minutes PDF is copied into the chosen Documents folder; a failed copy never fails the publish and can be retried. |
+| `saveMeetingAction`, `setMeetingActionStatus`                                                     | Admin; action owner for status | Up to 200 actions on scheduled or held meetings; owners follow `action_owner_scope` and are notified on assignment. The owner or the admin marks done or reopens.                                                |
+| `getMeetingSettings`, `updateMeetingSettings`                                                     | Admin                          | Notice days, quorum percentages and action owner scope; audited.                                                                                                                                                 |
+
+Pages are `/meetings`, `/meetings/{meetingId}`, `/meetings/actions`, `/admin/meetings`, `/admin/meetings/new`,
+`/admin/meetings/{meetingId}`, `/admin/meetings/{meetingId}/edit`, `/admin/meetings/actions` and
+`/admin/meetings/settings`. Notification types cover scheduled, rescheduled, cancelled, minutes published, action
+assigned and action overdue; they are in-app plus push through `sendNotificationPushesForRequest`. The
+`/fixtures/meeting` page uses synthetic scenarios and does not call production services.
+
+### 5.27 Committee analytics (Core, P27; D-62)
+
+Operations live in `src/core/analytics/`; the Server Action for settings is in the admin Analytics route.
+Permissions: `analytics:read` (admin, committee), `analytics:manage` and `analytics:export` (admin). Guards,
+housekeeping supervisors and residents have no access.
+
+| Operation / RPC                                         | Caller           | Contract                                                                                                                                                                                      |
+| ------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getAnalyticsDashboard` / `analytics_dashboard`         | Admin, committee | `months` 3, 6 or 12 (default 12) and `money` `months` or `fy`. Returns the selected metrics whose module is enabled, in catalogue order, calculated live; totals and buckets only.            |
+| `getAnalyticsSettings` / `analytics_settings_get`       | Admin            | Selected metrics, whether they are the defaults, the version and the catalogue with each module's on/off state.                                                                               |
+| `updateAnalyticsSettings` / `analytics_settings_update` | Admin            | `otherWritesUserMinute` limit; idempotency request ID; optimistic version (0 while on defaults; 40001 → "Settings changed. Reload and try again."); unknown or duplicate keys 22023; audited. |
+| `getAnalyticsExport` / `analytics_export_record`        | Admin            | `exportsUserHourly` limit; audits the export (format, range and the metrics actually exported) before reading the dashboard.                                                                  |
+
+Pages are `/admin/analytics` (admin and committee) and `/admin/analytics/settings` (admin; committee sees the
+no-permission state). A metric whose data does not match the expected shape is shown as "not available right now"
+and logged as a warning instead of breaking the page. The `/fixtures/analytics` page uses synthetic data.
+
 ## 6. HTTP Routes
 
 | Route                               | Method       | Caller                         | Authentication                                                                                                                   | Purpose                                                                                                                                                                                                                           |
@@ -639,6 +749,8 @@ Permissions: `metering:list` (admin, committee, resident), `metering:manage` (ad
 | `/api/billing/receipts/{paymentId}` | GET          | Signed-in browser              | Session + permission (payer, unit occupants, A, C)                                                                               | Streams the receipt PDF for a confirmed payment                                                                                                                                                                                   |
 | `/api/billing/bills/{billId}`       | GET          | Signed-in browser              | Session + permission                                                                                                             | Streams the bill PDF                                                                                                                                                                                                              |
 | `/api/exports/{jobId}`              | GET          | Signed-in browser              | Session + the job's creator or A/C of that society                                                                               | Downloads a finished CSV export; file expires with the job                                                                                                                                                                        |
+| `/api/polls/{voteId}/export`        | GET          | Signed-in browser              | Session + admin or committee access to the completed vote                                                                        | Downloads a completed Polls PDF or CSV (`format` query); private results and voter roster are separate and no email is included                                                                                                   |
+| `/api/analytics/export`             | GET          | Signed-in browser              | Session + admin of the active society (`analytics:export`); rate limited                                                         | Downloads the committee analytics as CSV (Metric, Module, Period or Label, Series, Value, Unit; money in rupees; formula-safe) or PDF (`format`, `months` 3/6/12, `money` months/fy); audited first; `analytics-YYYY-MM-DD` name  |
 
 Rules for all routes:
 
@@ -653,17 +765,20 @@ Vercel Cron sends `GET`; `POST` remains supported for authenticated manual invoc
 
 Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each society-scoped task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. A global task claims one run key using the first eligible society; if there are no eligible societies, the retention task still runs because its database operations are idempotent. Each task failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
 
-| Task                        | Behavior                                                                                                                                                             |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Late fees                   | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                           |
-| Reminders                   | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                               |
-| Stale payments              | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                          |
-| Visitor expiry              | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                               |
-| Delivery overdue view       | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                |
-| Request auto-close          | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                          |
-| Module reminders (post-MVP) | AMC expiry, low stock                                                                                                                                                |
-| Retention                   | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                        |
-| Backup export               | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2) |
+| Task                                   | Behavior                                                                                                                                                               |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Late fees                              | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                             |
+| Reminders                              | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                 |
+| Stale payments                         | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                            |
+| Visitor expiry                         | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                 |
+| Delivery overdue view                  | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                  |
+| Request auto-close                     | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                            |
+| Request SLA escalation                 | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set |
+| Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60) |
+| Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)      |
+| Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                  |
+| Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                          |
+| Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)   |
 
 A task failure is logged (error log + Sentry) and does not stop the other tasks; the next day's run retries unfinished work because tasks are idempotent.
 

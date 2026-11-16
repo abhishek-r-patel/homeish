@@ -8,6 +8,9 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
   tenancy_move: '/tenancy',
   tenancy_admin: '/admin/tenancy',
   vendor_purchase_request: '/admin/vendors/requests',
+  poll: '/polls',
+  meeting: '/meetings',
+  meeting_admin: '/admin/meetings',
 };
 
 const FIXED_PATHS: Readonly<Record<string, string>> = {
@@ -32,6 +35,9 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   sos_guard: '/guard/sos',
   document: '/documents',
   document_admin: '/admin/documents',
+  home_services_admin: '/admin/home-services',
+  meeting_action: '/meetings/actions',
+  meeting_action_admin: '/admin/meetings/actions',
 };
 
 export function notificationPath(

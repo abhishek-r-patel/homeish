@@ -6,7 +6,9 @@ export default defineConfig({
     include: ['tests/integration/**/*.test.ts'],
     // Database creation is serialized (support/database.ts), so more workers only queue longer.
     maxWorkers: 4,
-    testTimeout: 60_000,
+    // Limits only catch hangs. The heaviest tests take ~17 s on an idle machine
+    // and several times longer when a build or browser tests share the CPU.
+    testTimeout: 180_000,
     hookTimeout: 120_000,
   },
 });

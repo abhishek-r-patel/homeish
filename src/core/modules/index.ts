@@ -48,6 +48,19 @@ import {
   DEFAULT_METERING_SETTINGS,
   meteringSettingsSchema,
 } from '../metering/validation';
+import {
+  assetSettingsSchema,
+  DEFAULT_ASSET_SETTINGS,
+} from '../asset/validation';
+import {
+  DEFAULT_HOME_SERVICES_SETTINGS,
+  homeServicesSettingsSchema,
+} from '../home-services/validation';
+import { DEFAULT_POLL_SETTINGS, pollSettingsSchema } from '../poll/validation';
+import {
+  DEFAULT_MEETING_SETTINGS,
+  meetingSettingsSchema,
+} from '../meeting/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -107,6 +120,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Overview',
         },
         {
+          href: '/admin/analytics',
+          label: 'Analytics',
+          permission: 'analytics:read',
+          section: 'Overview',
+        },
+        {
           href: '/admin/structure',
           label: 'Structure',
           permission: 'structure:manage',
@@ -142,6 +161,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           href: '/admin',
           label: 'Dashboard',
           permission: 'dashboard:read',
+          section: 'Overview',
+        },
+        {
+          href: '/admin/analytics',
+          label: 'Analytics',
+          permission: 'analytics:read',
           section: 'Overview',
         },
         {
@@ -199,6 +224,9 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'audit:read': ['admin', 'committee'],
       'home:read': ['guard', 'resident'],
       'dashboard:read': ['admin', 'committee', 'hk_supervisor'],
+      'analytics:read': ['admin', 'committee'],
+      'analytics:manage': ['admin'],
+      'analytics:export': ['admin'],
     },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
@@ -869,6 +897,125 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: meteringSettingsSchema,
   },
+  asset: {
+    core: false,
+    defaultSettings: DEFAULT_ASSET_SETTINGS,
+    key: 'asset',
+    name: 'Asset Register',
+    navigation: {
+      admin: [
+        { href: '/admin/assets', label: 'Assets', permission: 'asset:list' },
+      ],
+      committee: [
+        { href: '/admin/assets', label: 'Assets', permission: 'asset:list' },
+      ],
+    },
+    permissions: {
+      'asset:list': ['admin', 'committee'],
+      'asset:manage': ['admin'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: assetSettingsSchema,
+  },
+  home_services: {
+    core: false,
+    defaultSettings: DEFAULT_HOME_SERVICES_SETTINGS,
+    key: 'home_services',
+    name: 'Home Services',
+    navigation: {
+      resident: [
+        {
+          href: '/home-services',
+          label: 'Home services',
+          permission: 'home_services:list',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/home-services',
+          label: 'Home services',
+          permission: 'home_services:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/home-services',
+          label: 'Home services',
+          permission: 'home_services:list',
+        },
+      ],
+    },
+    permissions: {
+      'home_services:list': ['admin', 'committee', 'resident'],
+      'home_services:manage': ['admin'],
+      'home_services:suggest': ['committee'],
+      'home_services:rate': ['resident'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: homeServicesSettingsSchema,
+  },
+  poll: {
+    core: false,
+    defaultSettings: DEFAULT_POLL_SETTINGS,
+    key: 'poll',
+    name: 'Polls & Voting',
+    navigation: {
+      resident: [{ href: '/polls', label: 'Polls', permission: 'poll:vote' }],
+      admin: [
+        { href: '/admin/polls', label: 'Polls', permission: 'poll:list' },
+      ],
+      committee: [
+        { href: '/admin/polls', label: 'Polls', permission: 'poll:list' },
+      ],
+    },
+    permissions: {
+      'poll:vote': ['resident'],
+      'poll:list': ['admin', 'committee'],
+      'poll:manage': ['admin'],
+    },
+    settingsAccess: { tenant_voting_default: 'admin' },
+    settingsSchema: pollSettingsSchema,
+  },
+  meeting: {
+    core: false,
+    defaultSettings: DEFAULT_MEETING_SETTINGS,
+    key: 'meeting',
+    name: 'Meetings & AGM',
+    navigation: {
+      resident: [
+        { href: '/meetings', label: 'Meetings', permission: 'meeting:attend' },
+      ],
+      admin: [
+        {
+          href: '/admin/meetings',
+          label: 'Meetings',
+          permission: 'meeting:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/meetings',
+          label: 'Meetings',
+          permission: 'meeting:list',
+        },
+      ],
+    },
+    permissions: {
+      'meeting:attend': ['resident'],
+      'meeting:list': ['admin', 'committee'],
+      'meeting:minutes': ['admin', 'committee'],
+      'meeting:manage': ['admin'],
+    },
+    settingsAccess: {
+      notice_days_agm: 'admin',
+      notice_days_sgm: 'admin',
+      notice_days_committee: 'admin',
+      quorum_percent_units: 'admin',
+      quorum_percent_committee: 'admin',
+      action_owner_scope: 'admin',
+    },
+    settingsSchema: meetingSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -904,6 +1051,10 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'vendor',
     'patrol',
     'metering',
+    'asset',
+    'home_services',
+    'poll',
+    'meeting',
   ],
   committee: [
     'core',
@@ -923,6 +1074,10 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'vendor',
     'patrol',
     'metering',
+    'asset',
+    'home_services',
+    'poll',
+    'meeting',
   ],
   guard: [
     'core',
@@ -952,6 +1107,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'document',
     'parking',
     'metering',
+    'home_services',
+    'poll',
+    'meeting',
   ],
 };
 

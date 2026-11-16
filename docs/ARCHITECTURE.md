@@ -163,6 +163,27 @@ The resident, administrative and guard tenancy routes reuse role shells, loading
 
 P19 Document Repository (`document`), P20 Parking (`parking`) and P21 Emergency & SOS (`sos`) follow the same pattern, all disabled by default. Their services live in `src/core/document/`, `src/core/parking/` and `src/core/sos/` (validation, operations, presentation, and `files.ts` for document and parking). The registry imports only their settings schemas; screens call authorised operations around security-definer RPCs, and no screen queries module tables. Document uploads and downloads are issued by the module's own Server Actions, so every download is audited before a signed link exists; parking photos use the shared file routes. Each module has resident, administrative and (for parking and SOS) guard routes with loading boundaries, and a synthetic development-only fixture at `/fixtures/document`, `/fixtures/parking` and `/fixtures/sos`.
 
+P22 Polls & Voting (`poll`) is also disabled by default. Its `src/core/poll/` services validate and call transactional
+database functions; resident and admin pages live under their existing role route groups, and the PDF/CSV export
+Route Handler authorizes completed votes before returning a no-store download. Private ballot choices never enter
+application results, logs, audit records or exports. A synthetic `/fixtures/poll` page supports accessibility and
+journey checks without a live society.
+
+P23 Meetings & AGM (`meeting`) is also disabled by default and follows the same pattern in `src/core/meeting/`. It
+reuses other modules only through their public operations: when `poll` is enabled, a resolution can create a
+pre-filled draft poll through the Polls operations; when `document` is enabled, publishing minutes renders a PDF with
+the existing `pdf-lib` dependency and copies it into a Documents folder through the Documents upload operations. The
+copy uses one stable request ID per meeting, so a retry cannot create a duplicate, and a failed copy never undoes the
+publish. A synthetic `/fixtures/meeting` page supports accessibility and journey checks.
+
+P27 committee analytics is part of Core (`src/core/analytics/`), not a module: the admin picks metrics from a closed
+catalogue, and each metric shows only while its module is enabled. Each metric is a private SQL function reached only
+through `analytics_dashboard`, which checks the caller once and runs the selected functions in catalogue order. The
+figures are calculated live from the module tables on every page load (no summary or snapshot tables), and the
+full 49-metric dashboard stays under 2 s at target scale in the opt-in performance test. Charts are accessible
+tables with plain CSS bars (no chart library); the admin-only export reuses `pdf-lib` and the formula-safe CSV
+pattern.
+
 The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client component rendered by the shared app shell for guards and for any user whose society has `sos` enabled. It loads `sos_my_alerts` on mount, rechecks every 30 seconds, and treats Realtime inserts on the user's own `notifications` rows as a hint to reload, so it adds no Realtime table. It stays on every screen while the alert is open until the recipient dismisses their own copy ("Seen — stop alert" for responders, who also get a Respond link; "Dismiss" for residents); acknowledging, updating and closing happen on the SOS screens. On guard devices it plays a short Web Audio alarm every 30 seconds, with visible mute/unmute and "turn on alert sound" controls when the browser blocks autoplay; a device that cannot play sound shows a "keep this screen in view" message. Delivery is in-app and Realtime only, with no push, SMS or calls (PRD D-41).
 
 ### 5.3 PWA scope (PRD D-23)
@@ -236,6 +257,19 @@ P24 adds the `vendor-files` bucket to the same task: `vendor_retention_files_lis
 P25 adds the `patrol-photos` bucket to the same task: `patrol_retention_files_list` lists incident photos past the society's `photo_retention_days` (default 90, 30–365) and uploads never attached within 24 hours, the task removes them from Storage (rejecting any row that names another bucket), then calls `patrol_retention_run` to set `deleted_at` on expired photos whose object is gone and validates its `{ photos_deleted }` count. Incidents, scans and handover notes are kept. Patrol needs no new scheduled job: round windows and missed checkpoints are computed on read in `src/core/patrol/rounds.ts` from the schedules (society timezone, overnight shifts allowed) and the recorded scans. High and critical incidents notify admins inside the incident transaction (in-app and Realtime, capped at 50; overflow is logged and audited). QR stickers encode only `homeish-patrol:<code>`, and guards scan with the browser's built-in `BarcodeDetector` when available, always with typed-code entry as the fallback; no scanning library is added.
 
 P26 adds the `metering-photos` bucket to the same task: `metering_retention_files_list` lists meter reading photos never attached within 24 hours, and the task removes them from Storage (rejecting any row that names another bucket). Attached reading photos are kept with the reading; no metering rows are purged. Utility Metering also writes Billing's tables: `private.metering_billing_post` inserts `billing_bills`, `billing_bill_lines` and `billing_ledger_entries` rows (one separate "Utility charges" bill per unit, lines without a charge type, Billing's `rounding` rule per line) and sends Billing's `billing_bill_generated` notification, only while `billing` is enabled. It runs automatically inside `billing_bills_generate` (replaced by `20261116232000_metering_billing_hook.sql` with an exact copy plus one call that runs only when `metering` is enabled, leaves a `metering.billing.generate` audit row and adds `utility` counts to the job summary and the `billing.bills.generate` audit row) and from the admin's manual "Run utility billing" catch-up. Both paths lock unit rows in id order before locking pending charges, so a reading is billed exactly once even when they overlap. With Billing disabled, readings and reports work and nothing is billed. The unusual-usage flag is computed on read in `src/core/metering/presentation.ts`; no scheduled job is added.
+
+P28 (assets) and P31 (home services) add no buckets, scheduled work or cross-module writes; assets only read AMC contracts and visits, and both keep every row (deactivate, retire or archive instead of delete). P32 adds the daily task `service_request.escalate`, registered right after `service_request.auto_close` so requests closed that day are not escalated. It calls the service-role-only `request_escalation_run`, which writes in-app notifications and timeline events in the database and returns the email list for `in_app_email` societies; the application then sends those through the existing transactional email adapter. One `service_request_escalations` row per request and level is the idempotency record, on top of the run key, so catch-up runs never notify twice.
+
+P22 adds `poll.reconcile` and `poll.retention` to the daily runner. The privileged wrappers invoke service-role-only
+database routines to reconcile scheduled openings and deadline completions, send idempotent in-app notices, and
+purge expired voter identity/participation rows while retaining totals. Ordinary reads and submissions also
+reconcile a due vote under its database lock, so opening and deadline enforcement do not depend on the daily job
+arriving on time.
+
+P23 adds `meeting.action_reminders` after `poll.reconcile`. Its privileged wrapper
+(`src/core/privileged/meeting.ts`) calls the service-role-only `meeting_action_reminders_run`, which sends at most one
+overdue in-app reminder per open action item per society-local day; the wrapper then sends the matching push
+notifications for that request ID.
 
 ---
 
@@ -356,6 +390,15 @@ P19–P21 add, in the same way:
 - `src/components/document/`, `src/components/parking/` and `src/components/sos/` (including the app-shell `alert-banner.tsx`).
 - `src/app/(resident)/{documents,parking,sos}/`, `src/app/(admin)/admin/{documents,parking,sos}/` and `src/app/(guard)/guard/{parking,sos}/`: thin routes, Server Actions and loading boundaries.
 - `src/app/fixtures/{document,parking,sos}/`: synthetic development-only UI.
+
+P22 adds `src/core/poll/`, `src/components/poll/`, resident and admin Polls routes, a completed-vote export route
+under `src/app/api/polls/`, and the synthetic fixture at `src/app/fixtures/poll/`.
+
+P23 adds `src/core/meeting/`, `src/core/privileged/meeting.ts`, `src/components/meeting/`, resident and admin
+Meetings routes, and the synthetic fixture at `src/app/fixtures/meeting/`.
+
+P27 adds `src/core/analytics/`, `src/components/analytics/`, the admin Analytics routes, the export route under
+`src/app/api/analytics/`, and the synthetic fixture at `src/app/fixtures/analytics/`.
 
 ```
 homeish/
