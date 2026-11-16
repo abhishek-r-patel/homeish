@@ -2274,6 +2274,312 @@ export type Database = {
           },
         ];
       };
+      event_audience_blocks: {
+        Row: {
+          block_id: string;
+          event_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id: string;
+          event_id: string;
+          society_id: string;
+        };
+        Update: {
+          block_id?: string;
+          event_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'event_audience_blocks_block_same_society_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'event_audience_blocks_event_same_society_fkey';
+            columns: ['society_id', 'event_id'];
+            isOneToOne: false;
+            referencedRelation: 'events';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'event_audience_blocks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      event_rsvp_charges: {
+        Row: {
+          amount_paise: number;
+          created_at: string;
+          created_by: string | null;
+          direction: string;
+          event_id: string;
+          id: number;
+          ledger_entry_id: number;
+          reason: string;
+          rsvp_id: string;
+          society_id: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_paise: number;
+          created_at?: string;
+          created_by?: string | null;
+          direction: string;
+          event_id: string;
+          id?: never;
+          ledger_entry_id: number;
+          reason: string;
+          rsvp_id: string;
+          society_id: string;
+          unit_id: string;
+        };
+        Update: {
+          amount_paise?: number;
+          created_at?: string;
+          created_by?: string | null;
+          direction?: string;
+          event_id?: string;
+          id?: never;
+          ledger_entry_id?: number;
+          reason?: string;
+          rsvp_id?: string;
+          society_id?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'event_rsvp_charges_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'event_rsvp_charges_ledger_fkey';
+            columns: ['society_id', 'unit_id', 'ledger_entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_ledger_entries';
+            referencedColumns: ['society_id', 'unit_id', 'id'];
+          },
+          {
+            foreignKeyName: 'event_rsvp_charges_rsvp_fkey';
+            columns: ['society_id', 'event_id', 'unit_id', 'rsvp_id'];
+            isOneToOne: false;
+            referencedRelation: 'event_rsvps';
+            referencedColumns: ['society_id', 'event_id', 'unit_id', 'id'];
+          },
+          {
+            foreignKeyName: 'event_rsvp_charges_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      event_rsvps: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          headcount: number;
+          id: string;
+          responded_at: string;
+          responded_by: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          headcount: number;
+          id?: string;
+          responded_at?: string;
+          responded_by: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          headcount?: number;
+          id?: string;
+          responded_at?: string;
+          responded_by?: string;
+          society_id?: string;
+          status?: string;
+          unit_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'event_rsvps_event_same_society_fkey';
+            columns: ['society_id', 'event_id'];
+            isOneToOne: false;
+            referencedRelation: 'events';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'event_rsvps_responded_by_fkey';
+            columns: ['responded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'event_rsvps_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'event_rsvps_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      events: {
+        Row: {
+          audience_scope: string;
+          cancellation_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          capacity: number | null;
+          client_request_id: string;
+          contribution_paise: number;
+          contribution_type: string;
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          ends_at: string;
+          id: string;
+          max_per_unit: number | null;
+          published_at: string | null;
+          published_by: string | null;
+          reminder_sent_at: string | null;
+          rsvp_deadline: string | null;
+          society_id: string;
+          starts_at: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string;
+          venue: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          audience_scope?: string;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          capacity?: number | null;
+          client_request_id: string;
+          contribution_paise?: number;
+          contribution_type?: string;
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          ends_at: string;
+          id?: string;
+          max_per_unit?: number | null;
+          published_at?: string | null;
+          published_by?: string | null;
+          reminder_sent_at?: string | null;
+          rsvp_deadline?: string | null;
+          society_id: string;
+          starts_at: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by: string;
+          venue?: string | null;
+          version?: number;
+        };
+        Update: {
+          audience_scope?: string;
+          cancellation_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          capacity?: number | null;
+          client_request_id?: string;
+          contribution_paise?: number;
+          contribution_type?: string;
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          ends_at?: string;
+          id?: string;
+          max_per_unit?: number | null;
+          published_at?: string | null;
+          published_by?: string | null;
+          reminder_sent_at?: string | null;
+          rsvp_deadline?: string | null;
+          society_id?: string;
+          starts_at?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string;
+          venue?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'events_cancelled_by_fkey';
+            columns: ['cancelled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'events_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'events_published_by_fkey';
+            columns: ['published_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'events_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'events_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       expense_accounts: {
         Row: {
           account_type: string;
@@ -10191,6 +10497,91 @@ export type Database = {
           p_society_id: string;
         };
         Returns: undefined;
+      };
+      event_admin_get: {
+        Args: { p_event_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      event_admin_list: {
+        Args: {
+          p_filter: string;
+          p_limit: number;
+          p_offset: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      event_block_options: { Args: { p_society_id: string }; Returns: Json };
+      event_cancel: {
+        Args: {
+          p_event_id: string;
+          p_expected_version: number;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      event_create: {
+        Args: {
+          p_client_request_id: string;
+          p_event: Json;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      event_draft_delete: {
+        Args: {
+          p_event_id: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      event_member_get: {
+        Args: { p_event_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      event_member_list: {
+        Args: { p_filter: string; p_society_id: string };
+        Returns: Json;
+      };
+      event_publish: {
+        Args: {
+          p_event_id: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      event_reminders_run: {
+        Args: { p_request_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      event_rsvp_set: {
+        Args: {
+          p_event_id: string;
+          p_expected_version: number;
+          p_headcount: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_status: string;
+          p_unit_id: string;
+        };
+        Returns: Json;
+      };
+      event_update: {
+        Args: {
+          p_event: Json;
+          p_event_id: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
       };
       expense_account_save: {
         Args: {
