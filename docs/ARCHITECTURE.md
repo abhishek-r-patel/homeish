@@ -189,11 +189,19 @@ reuse the amenity booking approach: the RSVP function itself appends adjustment 
 billing ledger in the same transaction, so a charge and its RSVP can never disagree. A synthetic `/fixtures/event`
 page supports accessibility and journey checks.
 
+When an organiser narrows a published event's audience, the event transaction withdraws excluded flats' answers,
+refunds their remaining contribution in full and notifies their active residents; those flats no longer see the event.
+The resident list presents each invited flat's answer separately.
+
 P29 Community & Marketplace (`community`) is disabled by default and follows the same module pattern in
 `src/core/community/`. Posts and listings are pre-moderated by the admin; photos live in the private
 `community-photos` bucket, uploaded through a community Server Action and viewed through five-minute links signed on
 the server after `community_photo_access`. A synthetic `/fixtures/community` page supports accessibility and journey
 checks.
+
+Mute rules are enforced in the database: creating content remains blocked, while pending edits, reports and listing
+renewals are individually admin-configurable and off by default; authors may always withdraw their own items or
+close listings. Restoring hidden content notifies its author.
 
 The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client component rendered by the shared app shell for guards and for any user whose society has `sos` enabled. It loads `sos_my_alerts` on mount, rechecks every 30 seconds, and treats Realtime inserts on the user's own `notifications` rows as a hint to reload, so it adds no Realtime table. It stays on every screen while the alert is open until the recipient dismisses their own copy ("Seen — stop alert" for responders, who also get a Respond link; "Dismiss" for residents); acknowledging, updating and closing happen on the SOS screens. On guard devices it plays a short Web Audio alarm every 30 seconds, with visible mute/unmute and "turn on alert sound" controls when the browser blocks autoplay; a device that cannot play sound shows a "keep this screen in view" message. Delivery is in-app and Realtime only, with no push, SMS or calls (PRD D-41).
 

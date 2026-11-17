@@ -106,7 +106,7 @@ flowchart TD
     end
     subgraph W5b[" "]
       direction LR
-      P32[P32 SLA escalation] ~~~ P33[P33 Multi-language] ~~~ P34[P34 Multi-society]
+      P32[P32 SLA escalation] ~~~ P33[P33 Multi-language] ~~~ P34[P34 Multi-society - deferred]
     end
     W5a ~~~ W5b
   end
@@ -142,9 +142,9 @@ Arrows are recommended build order; "after Pxx" inside a box marks a phase that 
 | P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅             |
 | P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅             |
 | P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started |
-| P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started |
+| P34   | Multi-society overview            | Core              | 5.10.13, P5-7 | —    | —      | Existing admin/committee memberships        | ⏸ Deferred     |
 
-Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 14 blocks, with P28, P31 and P32 released.
+Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 11 blocks, with P28–P32 released and P34 deferred to the future (PRD D-65).
 
 ---
 
@@ -284,7 +284,7 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 
 **H1/H2 evidence (2026-11-15):** local engineering complete. The owner explicitly approved the final copy and three synthetic screenshots. `npm run check` passed (60 files, 447 unit tests); 14 focused browser/accessibility tests passed; the production build and 3 additional production-server smoke tests passed; `git diff --check` passed. Tests cover disabled demo actions, availability wording, actual screenshot decoding, utility/policy navigation, keyboard/skip link, native FAQs, reduced motion, axe and 320/390/768/1280px reflow, existing host boundaries and manual/15-minute browser-demo resets. No database changes were made, so database integration tests were not run for this refresh. Real-device TalkBack/VoiceOver, actual 200% zoom/enlarged text, low-end Android/iPhone Safari, release and live enablement remain pending.
 
-**Availability evidence:** P5-P8 and P11-P15 code is on the recorded main release; P11-P15 release/testdb status is recorded in their phases. Expenses, directory and the subsequent P18 implementation are local-only work, not beta releases. P18-P34 remain public roadmap entries, not usable or enabled features. Neither code on main nor a passed local test is live enablement. Retrieval attempts for the old `https://demo.homeish.vercel.app/` destination failed at the transport/TLS level; the owner explicitly deferred setup instead of authorising an inline substitute. Demo hosting and CTA connection require separate approval and verification.
+**Availability evidence:** P5-P8 and P11-P15 code is on the recorded main release; P11-P15 release/testdb status is recorded in their phases. Expenses, directory and the subsequent P18 implementation are local-only work, not beta releases. P18-P33 remain public roadmap entries, not usable or enabled features. Neither code on main nor a passed local test is live enablement. Retrieval attempts for the old `https://demo.homeish.vercel.app/` destination failed at the transport/TLS level; the owner explicitly deferred setup instead of authorising an inline substitute. Demo hosting and CTA connection require separate approval and verification.
 
 ---
 
@@ -1265,24 +1265,24 @@ DATABASE 15.2.
 
 **Prerequisites:** Core files and notifications. Size L, about 3 blocks. **Kickoff decisions (settled, D-64):** pre-moderation by the admin only (replies are not pre-moderated); admin-created groups residents join; sale, give-away, wanted, lost and found listings with up to 3 private photos and no payments; reports from 3 different flats hide an item until review; mutes for 7 days, 30 days or until lifted; listings expire after 30 days and can be renewed; rejected, removed and withdrawn content deleted after 30 days; new-listing alerts residents can turn off.
 
-| ID    | Task                                                                                                                                                        | Status |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| P29.1 | Migrations `20261122100000`–`20261122130000`: groups, posts, listings, replies, photos, reports, mutes and preferences; RLS, private bucket (DATABASE 9.21) | 🟡     |
-| P29.2 | Discussion groups with join/leave, pre-moderated posts and replies                                                                                          | 🟡     |
-| P29.3 | Sale, give-away, wanted, lost and found listings with close, renew and 30-day expiry; no payments                                                           | 🟡     |
-| P29.4 | Admin moderation queues, reports with auto-hide, removal, restore, mutes and retention (API 5.29)                                                           | 🟡     |
-| P29.5 | Resident `/community` and admin `/admin/community` screens; fixture `/fixtures/community`                                                                   | 🟡     |
+| ID    | Task                                                                                                                                               | Status |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P29.1 | Migrations `20261122100000`–`20261122130000` and follow-up `20261123110000`: community data, mute settings, RLS and private bucket (DATABASE 9.21) | 🟡     |
+| P29.2 | Discussion groups with join/leave, pre-moderated posts and replies                                                                                 | ✅     |
+| P29.3 | Sale, give-away, wanted, lost and found listings with close, renew and 30-day expiry; no payments                                                  | ✅     |
+| P29.4 | Admin moderation, reports, mutes, configurable muted actions, restore notices and retention (API 5.29)                                             | 🟡     |
+| P29.5 | Resident `/community` and admin `/admin/community` screens; fixture `/fixtures/community`                                                          | 🟡     |
 
 **Tests:** moderation states, reporting and removal, retention, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status (2026-11-17): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed: `npm run check` (**740 unit tests**), the complete database suite on a disposable local PostgreSQL (**403 tests passed, 11 skipped**), `npm run build` and the complete Playwright suite (**168 tests**, including axe on `/fixtures/community`). A database safety review found no blocking issues; its four findings were fixed (fresh-upload check when attaching photos, serialised mutes, muted residents cannot edit pending items, retention index for removed replies). Still required: owner review of the assumptions below and owner UAT. No live (production) migration or enablement was performed.
+**Status (2026-11-17): base phase released to beta and main and migrated to testdb (CI and CodeQL green); this follow-up is locally verified but not yet migrated or released.** The follow-up full local gate passed: `npm run check` (**744 unit tests**), the complete database suite on disposable local PostgreSQL (**407 passed, 11 skipped**), `npm run build` and Playwright (**169 passed**). A database safety review found one low-severity documentation mismatch, which was corrected; no blocking findings. The module remains disabled by default. No live (production) migration or enablement was performed.
 
-**Assumptions for owner review:**
+**Owner-approved follow-up behavior:**
 
-- Restoring a hidden item does not notify its author.
-- Muted residents can still report items, withdraw their own items and close or renew listings, but cannot create or edit content.
+- Muted residents cannot edit pending items, report items or renew listings unless an admin enables each action; withdrawal and close always remain available.
+- Restoring a hidden item notifies its author.
 - Retention runs for every society even when the module is turned off, because it only deletes content that is already due.
 
 ---
@@ -1293,22 +1293,22 @@ DATABASE 15.2.
 
 **Prerequisites:** `billing` contributions. Size M, about 2 blocks. **Kickoff decisions (settled, D-63):** admin and committee manage events for the whole society or chosen blocks; one answer per flat (Going with a headcount, or Not going); optional capacity, per-flat limit and deadline, no waitlist; optional per-flat or per-person contribution charged to the flat's bill when `billing` is on, refunded on withdrawal before the deadline or cancellation; in-app and push notices plus a day-before reminder; records kept permanently.
 
-| ID    | Task                                                                                                                                      | Status |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| P30.1 | Migrations `20261121100000`–`20261121130000`: events, audience blocks, RSVPs and append-only charge links; RLS and guards (DATABASE 9.20) | 🟡     |
-| P30.2 | Publish, edit, cancel and RSVP with headcount, capacity, per-flat limit and deadline; notifications and the `event.reminders` daily job   | 🟡     |
-| P30.3 | Contribution charged and refunded through billing ledger adjustments when `billing` is enabled (API 5.28)                                 | 🟡     |
-| P30.4 | Resident `/events` and admin `/admin/events` screens; fixture `/fixtures/event`                                                           | 🟡     |
+| ID    | Task                                                                                                                                        | Status |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P30.1 | Migrations `20261121100000`–`20261121130000` and follow-up `20261123100000`: events, RSVPs, audience withdrawal and refunds (DATABASE 9.20) | 🟡     |
+| P30.2 | Publish, edit, cancel and RSVP with headcount, capacity, per-flat limit and deadline; notifications and the `event.reminders` daily job     | ✅     |
+| P30.3 | Contribution charged and refunded through billing ledger adjustments when `billing` is enabled (API 5.28)                                   | ✅     |
+| P30.4 | Resident `/events` and admin `/admin/events` screens; fixture `/fixtures/event`                                                             | 🟡     |
 
 **Tests:** RSVP limits, billing on/off combinations, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status (2026-11-17): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed: `npm run check` (**715 unit tests**), the complete database suite on a disposable local PostgreSQL (**353 tests passed, 11 skipped**), `npm run build` and the complete Playwright suite (**161 tests**, including axe on `/fixtures/event`). A database safety review found no blocking issues; its one finding (lock order when cancelling) was fixed. Still required: owner review of the assumptions below and owner UAT. No live (production) migration or enablement was performed.
+**Status (2026-11-17): base phase released to beta and main and migrated to testdb (CI and CodeQL green); this follow-up is locally verified but not yet migrated or released.** The follow-up full local gate passed: `npm run check` (**744 unit tests**), the complete database suite on disposable local PostgreSQL (**407 passed, 11 skipped**), `npm run build` and Playwright (**169 passed**). A database safety review found one low-severity documentation mismatch, which was corrected; no blocking findings. The module remains disabled by default. No live (production) migration or enablement was performed.
 
-**Assumptions for owner review:**
+**Owner-approved follow-up behavior:**
 
-- A flat that already answered keeps seeing the event after the audience is narrowed, so it can still withdraw.
+- Narrowing the audience automatically withdraws excluded flats, refunds each full outstanding contribution, and ends their access to the event.
 - Cancelling refunds every paid answer even if `billing` was switched off after people answered.
 - Changing the start time sends a fresh day-before reminder.
 
@@ -1391,26 +1391,11 @@ DATABASE 15.2.
 
 ---
 
-# Phase P34 — Multi-society / Federation View (Core)
+# Phase P34 — Multi-society Overview (Deferred)
 
-**Goal:** a group account lets builders or management companies view and administer several authorised societies without weakening per-society isolation (PRD 5.10.13, P5-7).
+**Status:** ⏸ deferred to the future on 2026-11-17 (PRD D-65). The owner is not sure it is needed. Not planned, not estimated, no tasks. The number stays reserved so earlier references still make sense.
 
-**Prerequisites:** Core memberships and the tenancy model (D-24). Size L, 3+ blocks; plan only after kickoff answers because it touches the tenancy model. **Kickoff decisions (open):** who is a group operator; whether group users can act in societies or only view; how society admins consent; billing implications.
-
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                   | Status |
-| ----- | ---------------------------------------------------------------------- | ------ |
-| P34.1 | Group account and operator membership model with society-admin consent | ⬜     |
-| P34.2 | Multi-society view across authorised societies                         | ⬜     |
-| P34.3 | Group actions within societies, as decided at kickoff                  | ⬜     |
-| P34.4 | Isolation tests proving per-society isolation is not weakened          | ⬜     |
-
-**Tests:** cross-society isolation for every operation, consent and revocation, role matrix.
-
-**Completion criteria:** security review of the tenancy change passes; no cross-tenant leakage in tests.
-
-**Status:** not started.
+The scope options (existing-admin overview, outside operator accounts, read-only admin screens), their rough effort, the figures the owner had selected and the open questions are kept in [deferred-features.md](roadmap/deferred-features.md#multi-society-overview-and-operators-was-p34). Users with several society memberships keep using the existing society switcher. Bring it back only on an explicit owner decision, then re-plan it at kickoff.
 
 ---
 

@@ -149,6 +149,7 @@ Preliminary checks use `/fixtures/event` with synthetic scenarios; the fixture i
 accessibility spec.
 
 - [ ] Resident: the flat being answered for is named on the Save button; Going / Not going is a labelled radio group; the headcount field appears only for Going and its limit error is announced.
+- [ ] Residents with multiple invited flats can distinguish each flat's answer in the event list; audience changes that withdraw an answer and refund a contribution are announced to the affected resident.
 - [ ] The contribution preview and refund line are read as text and update as the headcount changes; full, closed and cancelled states are announced as text, not colour alone.
 - [ ] Admin and committee: publish and cancel confirmations are reachable by keyboard; the cancel reason is required and its error is announced; the RSVP table has headers and scrolls inside its own area at 320px.
 
@@ -158,6 +159,8 @@ Preliminary checks use `/fixtures/community` with synthetic scenarios; the fixtu
 accessibility spec.
 
 - [ ] Resident: join and leave buttons name the group; the new-listing alert switch is a labelled checkbox; the mute banner states when posting returns, in text.
+- [ ] Admin: the three muted-resident settings have persistent labels, describe the effect of each choice, and announce save success and stale-save errors.
+- [ ] Muted residents hear why Edit, Report or Renew is unavailable; Withdraw and Close remain available.
 - [ ] Post and listing forms label every field, announce errors and the photo limit; photos have alt text; status chips ("Awaiting review", "Hidden", "Closed", "Expired") are text, not colour alone.
 - [ ] Report, withdraw, close and admin approve, reject, remove, restore and mute controls are reachable by keyboard; required reasons announce their errors; the queue tabs keep focus visible at 320px.
 
