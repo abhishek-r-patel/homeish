@@ -21,9 +21,12 @@ describe.skipIf(!hasDatabase)('database user erasure', () => {
       developerId = await newAuthUser(client, 'erasure-developer@example.test');
       targetId = await newAuthUser(client, 'erasure-target@example.test');
       await client.query(
-        `insert into public.profiles (id, email, full_name, phone)
-         values ($1, 'erasure-developer@example.test', 'Erasure Developer', '+919876543210'),
-                ($2, 'erasure-target@example.test', 'Target User', '+919876543211')`,
+        `insert into public.profiles
+           (id, email, full_name, phone, language_preference)
+         values ($1, 'erasure-developer@example.test', 'Erasure Developer',
+                 '+919876543210', 'hi'),
+                ($2, 'erasure-target@example.test', 'Target User',
+                 '+919876543211', 'hi')`,
         [developerId, targetId],
       );
       await client.query(
@@ -130,6 +133,21 @@ describe.skipIf(!hasDatabase)('database user erasure', () => {
       profileStatus: 'anonymized',
     });
 
+    const attemptedLanguageChange = await database.asRole(
+      'authenticated',
+      { sub: targetId },
+      (client) =>
+        client.query<{ language_preference: string }>(
+          `update public.profiles set language_preference = 'hi'
+           where id = $1 returning language_preference`,
+          [targetId],
+        ),
+      { commit: true },
+    );
+    expect(attemptedLanguageChange.rows).toEqual([
+      { language_preference: 'en' },
+    ]);
+
     await database.asSuperuser(async (client) => {
       const profile = await client.query<{
         email: string;
@@ -137,8 +155,9 @@ describe.skipIf(!hasDatabase)('database user erasure', () => {
         phone: string | null;
         photo_path: string | null;
         status: string;
+        language_preference: string;
       }>(
-        `select email, full_name, phone, photo_path, status
+        `select email, full_name, phone, photo_path, status, language_preference
          from public.profiles where id = $1`,
         [targetId],
       );
@@ -149,6 +168,7 @@ describe.skipIf(!hasDatabase)('database user erasure', () => {
           phone: null,
           photo_path: null,
           status: 'anonymized',
+          language_preference: 'en',
         },
       ]);
 
