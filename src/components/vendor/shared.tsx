@@ -39,6 +39,7 @@ import {
   ModuleActionForm,
   type ModuleFormAction,
 } from '@/components/ui/module-action-form';
+import { useUiTranslator } from '@/components/ui/language';
 
 type PrepareUpload = (
   form: FormData,
@@ -117,6 +118,7 @@ export function VendorRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage embedded moduleKey="vendor" returnHref={returnHref} />
@@ -143,13 +145,13 @@ export function VendorRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">{title}</h1>
+      <h1 className="text-title font-semibold">{t(title)}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={message ? translateFeedback(message) : t(copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
@@ -158,14 +160,14 @@ export function VendorRouteState({
                   href={retryHref}
                   className="inline-flex min-h-12 items-center text-brand underline"
                 >
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a
                 href={returnHref}
                 className="inline-flex min-h-12 items-center text-brand underline"
               >
-                Back
+                {t('Back')}
               </a>
             </div>
           }
@@ -211,12 +213,20 @@ const linkResult = z.object({
 
 /** Accept only Supabase storage links for a valid private vendor file path. */
 export function vendorStorageUrl(value: string, path?: string): string {
-  const url = new URL(value);
+  let url: URL;
+  let objectPath: string;
+  try {
+    url = new URL(value);
+    objectPath = decodeURIComponent(url.pathname);
+  } catch {
+    throw new Error(
+      'The private file link is invalid. Nothing was sent; refresh and retry.',
+    );
+  }
   const configured = new URL(publicEnvironment.NEXT_PUBLIC_SUPABASE_URL);
   const prefix = `${configured.pathname.replace(/\/$/, '')}/storage/v1/object/${
     path !== undefined ? 'upload/sign' : 'sign'
   }/vendor-files/`;
-  const objectPath = decodeURIComponent(url.pathname);
   const remainder = objectPath.startsWith(prefix)
     ? objectPath.slice(prefix.length)
     : null;
@@ -254,6 +264,7 @@ export function VendorFilePicker({
   request?: typeof fetch;
   onChange: (path: string | null) => void;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const id = useId();
   const current = useRef<AbortController | null>(null);
   const [files, setFiles] = useState<readonly UploadFile[]>([]);
@@ -321,10 +332,10 @@ export function VendorFilePicker({
         {
           ...selected,
           error: controller.signal.aborted
-            ? 'The upload timed out. Retry.'
+            ? t('The upload timed out. Retry.')
             : error instanceof Error
-              ? error.message
-              : 'The upload failed. Retry.',
+              ? translateFeedback(error.message)
+              : t('The upload failed. Retry.'),
         },
       ]);
       setMessage(null);
@@ -347,7 +358,7 @@ export function VendorFilePicker({
         maxFileBytes={MAX_FILE_BYTES}
         maxFiles={1}
         files={files}
-        helpText="PDF, JPG or PNG, up to 5 MB. Stored privately."
+        helpText={t('PDF, JPG or PNG, up to 5 MB. Stored privately.')}
         onRetry={(file) => void upload(file)}
         onFilesChange={(next) => {
           if (next.length > 0) void upload(next[0]!);
@@ -363,7 +374,7 @@ export function VendorFilePicker({
       />
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {t(message)}
         </p>
       ) : null}
     </div>
@@ -379,6 +390,7 @@ export function VendorFileLink({
   label: string;
   fileLink: FileLink;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [pending, setPending] = useState(false);
   const [link, setLink] = useState<{ url: string; expiresIn: number } | null>(
     null,
@@ -402,7 +414,9 @@ export function VendorFileLink({
     try {
       const result = await fileLink(vendorActionInput({ path }));
       if (!result.ok) throw new Error(failureText(result));
-      const data = linkResult.parse(result.data);
+      const parsed = linkResult.safeParse(result.data);
+      if (!parsed.success) throw new Error('Could not open this file. Retry.');
+      const data = parsed.data;
       setLink({
         url: vendorStorageUrl(data.signedUrl),
         expiresIn: data.expiresIn,
@@ -425,7 +439,7 @@ export function VendorFileLink({
         loading={pending}
         onClick={() => void prepare()}
       >
-        {link ? `Refresh link: ${label}` : `Get ${label}`}
+        {t(link ? 'Refresh link: {label}' : 'Get {label}', { label })}
       </Button>
       {link ? (
         <a
@@ -434,17 +448,19 @@ export function VendorFileLink({
           rel="noopener noreferrer"
           className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         >
-          Download {label} (private link, valid for five minutes)
+          {t('Download {label} (private link, valid for five minutes)', {
+            label,
+          })}
         </a>
       ) : null}
       {error ? (
         <p role="alert" className="text-caption text-danger">
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {t(message)}
         </p>
       ) : null}
     </div>

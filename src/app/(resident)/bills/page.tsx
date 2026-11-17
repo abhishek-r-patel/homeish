@@ -8,12 +8,15 @@ import {
 } from '@/components/billing/tables';
 import { Card } from '@/components/ui/data-display';
 import { Banner, EmptyState } from '@/components/ui/feedback';
+import { todayInTimeZone } from '@/core/billing/format';
 import {
-  formatBillingDate,
-  formatRupees,
-  todayInTimeZone,
-} from '@/core/billing/format';
+  formatLocalizedCurrency,
+  formatLocalizedDate,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
 import { getResidentBilling } from '@/core/billing/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Bills | Homeish',
@@ -28,11 +31,24 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
+function formatBillDate(value: string, locale: Locale) {
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+  return formatLocalizedDate(new Date(Date.UTC(year, month - 1, day)), locale, {
+    day: '2-digit',
+    month: 'short',
+    timeZone: 'UTC',
+    year: 'numeric',
+  });
+}
+
 export default async function ResidentBillsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const params = await searchParams;
   const tab: TabId = TABS.find((item) => item.id === params.tab)?.id ?? 'bills';
   const billing = await getResidentBilling();
@@ -41,10 +57,13 @@ export default async function ResidentBillsPage({
   if (billing.units.length === 0) {
     return (
       <section className="grid gap-space-5">
-        <h1 className="text-title font-semibold">Bills</h1>
+        <h1 className="text-title font-semibold">{t('Bills')}</h1>
         <EmptyState
-          description={`You are not linked to an active ${billing.unitLabel.toLowerCase()}. Contact the society office if this is wrong.`}
-          title="No bills to show"
+          description={t(
+            'You are not linked to an active {unit}. Contact the society office if this is wrong.',
+            { unit: billing.unitLabel.toLowerCase() },
+          )}
+          title={t('No bills to show')}
         />
       </section>
     );
@@ -77,15 +96,16 @@ export default async function ResidentBillsPage({
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Bills</h1>
+        <h1 className="text-title font-semibold">{t('Bills')}</h1>
         <p className="text-body text-ink-muted">
-          Maintenance bills, fines and receipts for{' '}
-          {billing.units.map((unit) => unit.number).join(', ')}.
+          {t('Maintenance bills, fines and receipts for {units}.', {
+            units: billing.units.map((unit) => unit.number).join(', '),
+          })}
         </p>
       </header>
       {billing.suspended ? (
         <Banner tone="info">
-          This society is suspended. Billing information is read-only.
+          {t('This society is suspended. Billing information is read-only.')}
         </Banner>
       ) : null}
       {rejected ? (
@@ -96,54 +116,66 @@ export default async function ResidentBillsPage({
                 className={textLinkClass}
                 href={`/bills/pay?resubmit=${rejected.id}`}
               >
-                Resubmit
+                {t('Resubmit')}
               </Link>
             ) : undefined
           }
-          title="Payment rejected"
+          title={t('Payment rejected')}
           tone="danger"
         >
-          {formatRupees(rejected.amount_paise)} submitted on{' '}
-          {formatBillingDate(rejected.paid_on)} was rejected
+          {t('{amount} submitted on {date} was rejected', {
+            amount: formatLocalizedCurrency(rejected.amount_paise, locale),
+            date: formatBillDate(rejected.paid_on, locale),
+          })}
           {rejected.reject_reason ? `: ${rejected.reject_reason}` : '.'}
         </Banner>
       ) : null}
-      <Card title="Amount due">
+      <Card title={t('Amount due')}>
         <div className="grid gap-space-3">
           <p
             className={`text-display font-semibold tabular-nums ${overdue ? 'text-danger' : ''}`}
           >
-            {formatRupees(outstanding)}
+            {formatLocalizedCurrency(outstanding, locale)}
           </p>
           {nextDue ? (
             <p className="text-body text-ink-muted">
-              {overdue ? 'Overdue since' : 'Next due'}{' '}
-              {formatBillingDate(nextDue)}
+              {overdue
+                ? t('Overdue since {date}', {
+                    date: formatBillDate(nextDue, locale),
+                  })
+                : t('Next due {date}', {
+                    date: formatBillDate(nextDue, locale),
+                  })}
             </p>
           ) : (
-            <p className="text-body text-ink-muted">You are all paid up.</p>
+            <p className="text-body text-ink-muted">
+              {t('You are all paid up.')}
+            </p>
           )}
           {awaiting.length ? (
             <p className="text-body">
-              {formatRupees(awaitingPaise)} awaiting society confirmation.
+              {t('{amount} awaiting society confirmation.', {
+                amount: formatLocalizedCurrency(awaitingPaise, locale),
+              })}
             </p>
           ) : null}
           {outstanding > 0 && canPay ? (
             <div>
               <Link className={primaryLinkClass} href="/bills/pay">
-                Pay Now
+                {t('Pay Now')}
               </Link>
             </div>
           ) : null}
           {outstanding > 0 && !billing.paymentDetails ? (
             <p className="text-body text-ink-muted">
-              The society has not added UPI payment details yet. Pay at the
-              society office.
+              {t(
+                'The society has not added UPI payment details yet. Pay at the society office.',
+              )}
             </p>
           ) : null}
         </div>
       </Card>
-      <nav aria-label="Billing sections" className="overflow-x-auto">
+      <nav aria-label={t('Billing sections')} className="overflow-x-auto">
         <ul className="flex min-w-max gap-space-1 border-b border-rule">
           {TABS.map((item) => {
             const active = item.id === tab;
@@ -155,7 +187,7 @@ export default async function ResidentBillsPage({
                   href={`/bills?tab=${item.id}`}
                   scroll={false}
                 >
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               </li>
             );
@@ -165,7 +197,7 @@ export default async function ResidentBillsPage({
       {tab === 'bills' ? (
         <BillsTable
           bills={billing.bills}
-          caption="Your bills"
+          caption={t('Your bills')}
           hrefBase="/bills"
           showUnit={billing.units.length > 1}
           today={today}
@@ -175,10 +207,10 @@ export default async function ResidentBillsPage({
         ? billing.ledgers.map((ledger) => (
             <Card
               key={ledger.unitId}
-              title={`${unitName(ledger.unitId)} ledger`}
+              title={t('{unit} ledger', { unit: unitName(ledger.unitId) })}
             >
               <LedgerTable
-                caption={`${unitName(ledger.unitId)} ledger`}
+                caption={t('{unit} ledger', { unit: unitName(ledger.unitId) })}
                 entries={ledger.entries}
                 timeZone={billing.timezone}
               />
@@ -187,7 +219,7 @@ export default async function ResidentBillsPage({
         : null}
       {tab === 'payments' ? (
         <PaymentsTable
-          caption="Your payments"
+          caption={t('Your payments')}
           payments={billing.payments}
           showUnit={billing.units.length > 1}
         />

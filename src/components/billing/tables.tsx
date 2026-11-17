@@ -3,12 +3,12 @@
 
 import { DataTable } from '@/components/ui/table-controls';
 import { StatusChip } from '@/components/ui/data-display';
+import { billDisplayStatus, formatRupees } from '@/core/billing/format';
 import {
-  billDisplayStatus,
-  formatBillingDate,
-  formatBillingPeriod,
-  formatRupees,
-} from '@/core/billing/format';
+  formatLocalizedCurrency,
+  formatLocalizedDate,
+} from '@/core/i18n/format';
+import { useUiTranslator } from '@/components/ui/language';
 import type {
   BillingBill,
   BillingLedgerEntry,
@@ -21,6 +21,33 @@ const KIND_LABELS = {
   fine: 'Fine',
   late_fee: 'Late fee',
 } as const;
+
+function billingDate(value: string, locale: 'en' | 'hi') {
+  return formatLocalizedDate(
+    new Date(`${value.slice(0, 10)}T00:00:00.000Z`),
+    locale,
+    {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    },
+  );
+}
+
+function billingPeriod(value: string, locale: 'en' | 'hi') {
+  return formatLocalizedDate(
+    new Date(`${value.slice(0, 7)}-01T00:00:00.000Z`),
+    locale,
+    { month: 'short', year: 'numeric', timeZone: 'UTC' },
+  );
+}
+
+function rupees(paise: number | string, locale: 'en' | 'hi') {
+  return locale === 'hi'
+    ? formatLocalizedCurrency(Number(paise), locale)
+    : formatRupees(paise);
+}
 
 export function BillsTable({
   bills,
@@ -35,6 +62,8 @@ export function BillsTable({
   showUnit: boolean;
   today: string;
 }) {
+  const { locale: selectedLocale, translate: t } = useUiTranslator();
+  const locale = selectedLocale ?? 'en';
   return (
     <DataTable
       caption={caption}
@@ -43,44 +72,44 @@ export function BillsTable({
           ? [
               {
                 id: 'unit',
-                header: 'Unit',
+                header: t('Unit'),
                 render: (bill: BillingBill) => bill.unit_number ?? '—',
               },
             ]
           : []),
         {
           id: 'title',
-          header: 'Bill',
+          header: t('Bill'),
           render: (bill: BillingBill) => (
             <span>
               {bill.title}
               <span className="block text-caption text-ink-muted">
-                {KIND_LABELS[bill.kind]} ·{' '}
-                {formatBillingPeriod(bill.period_start)}
+                {t(KIND_LABELS[bill.kind])} ·{' '}
+                {billingPeriod(bill.period_start, locale)}
               </span>
             </span>
           ),
         },
         {
           id: 'due',
-          header: 'Due date',
-          render: (bill: BillingBill) => formatBillingDate(bill.due_date),
+          header: t('Due date'),
+          render: (bill: BillingBill) => billingDate(bill.due_date, locale),
         },
         {
           id: 'total',
-          header: 'Total',
+          header: t('Total'),
           align: 'right' as const,
-          render: (bill: BillingBill) => formatRupees(bill.total_paise),
+          render: (bill: BillingBill) => rupees(bill.total_paise, locale),
         },
         {
           id: 'outstanding',
-          header: 'Outstanding',
+          header: t('Outstanding'),
           align: 'right' as const,
-          render: (bill: BillingBill) => formatRupees(bill.outstanding_paise),
+          render: (bill: BillingBill) => rupees(bill.outstanding_paise, locale),
         },
         {
           id: 'status',
-          header: 'Status',
+          header: t('Status'),
           render: (bill: BillingBill) => (
             <StatusChip status={billDisplayStatus(bill, today)} />
           ),
@@ -93,7 +122,10 @@ export function BillsTable({
         `${showUnit && bill.unit_number ? `${bill.unit_number} · ` : ''}${bill.title}`
       }
       mobileSecondary={(bill) =>
-        `${formatRupees(bill.outstanding_paise)} outstanding · due ${formatBillingDate(bill.due_date)}`
+        t('{amount} outstanding · due {date}', {
+          amount: rupees(bill.outstanding_paise, locale),
+          date: billingDate(bill.due_date, locale),
+        })
       }
       mobileStatus={(bill) => billDisplayStatus(bill, today)}
       rows={bills}
@@ -117,6 +149,8 @@ export function PaymentsTable({
   payments: readonly BillingPayment[];
   showUnit: boolean;
 }) {
+  const { locale: selectedLocale, translate: t } = useUiTranslator();
+  const locale = selectedLocale ?? 'en';
   return (
     <DataTable
       caption={caption}
@@ -125,26 +159,26 @@ export function PaymentsTable({
           ? [
               {
                 id: 'unit',
-                header: 'Unit',
+                header: t('Unit'),
                 render: (payment: BillingPayment) => payment.unit_number ?? '—',
               },
             ]
           : []),
         {
           id: 'paid',
-          header: 'Paid on',
+          header: t('Paid on'),
           render: (payment: BillingPayment) =>
-            formatBillingDate(payment.paid_on),
+            billingDate(payment.paid_on, locale),
         },
         {
           id: 'mode',
-          header: 'Mode',
+          header: t('Mode'),
           render: (payment: BillingPayment) => (
             <span>
-              {MODE_LABELS[payment.mode]}
+              {t(MODE_LABELS[payment.mode])}
               {payment.reference ? (
                 <span className="block text-caption text-ink-muted">
-                  Ref. {payment.reference}
+                  {t('Ref. {reference}', { reference: payment.reference })}
                 </span>
               ) : null}
             </span>
@@ -152,20 +186,20 @@ export function PaymentsTable({
         },
         {
           id: 'amount',
-          header: 'Amount',
+          header: t('Amount'),
           align: 'right' as const,
           render: (payment: BillingPayment) =>
-            formatRupees(payment.amount_paise),
+            rupees(payment.amount_paise, locale),
         },
         {
           id: 'status',
-          header: 'Status',
+          header: t('Status'),
           render: (payment: BillingPayment) => (
             <span className="grid gap-space-1">
               <StatusChip status={`payment.${payment.status}`} />
               {payment.status === 'rejected' && payment.reject_reason ? (
                 <span className="text-caption text-ink-muted">
-                  Reason: {payment.reject_reason}
+                  {t('Reason: {reason}', { reason: payment.reject_reason })}
                 </span>
               ) : null}
             </span>
@@ -173,7 +207,7 @@ export function PaymentsTable({
         },
         {
           id: 'receipt',
-          header: 'Receipt',
+          header: t('Receipt'),
           render: (payment: BillingPayment) =>
             payment.status === 'confirmed' && payment.receipt_no ? (
               <a
@@ -182,7 +216,7 @@ export function PaymentsTable({
                 href={`/api/billing/receipts/${payment.id}`}
               >
                 {payment.receipt_no}
-                <span className="sr-only"> PDF</span>
+                <span className="sr-only"> {t('PDF')}</span>
               </a>
             ) : (
               '—'
@@ -196,15 +230,18 @@ export function PaymentsTable({
       }
       getRowId={(payment) => payment.id}
       getRowLabel={(payment) =>
-        `${formatRupees(payment.amount_paise)} on ${formatBillingDate(payment.paid_on)}`
+        t('{amount} on {date}', {
+          amount: rupees(payment.amount_paise, locale),
+          date: billingDate(payment.paid_on, locale),
+        })
       }
       mobilePrimary={(payment) =>
-        `${showUnit && payment.unit_number ? `${payment.unit_number} · ` : ''}${formatRupees(payment.amount_paise)}`
+        `${showUnit && payment.unit_number ? `${payment.unit_number} · ` : ''}${rupees(payment.amount_paise, locale)}`
       }
       mobileSecondary={(payment) =>
         payment.status === 'rejected' && payment.reject_reason
-          ? `Rejected: ${payment.reject_reason}`
-          : `${MODE_LABELS[payment.mode]} · ${formatBillingDate(payment.paid_on)}${payment.receipt_no ? ` · ${payment.receipt_no}` : ''}`
+          ? t('Rejected: {reason}', { reason: payment.reject_reason })
+          : `${t(MODE_LABELS[payment.mode])} · ${billingDate(payment.paid_on, locale)}${payment.receipt_no ? ` · ${payment.receipt_no}` : ''}`
       }
       mobileStatus={(payment) => `payment.${payment.status}`}
       rows={payments}
@@ -219,10 +256,16 @@ const LEDGER_LABELS = {
   adjustment: 'Adjustment',
 } as const;
 
-function balanceText(balance: string) {
+function balanceText(
+  balance: string,
+  locale: 'en' | 'hi',
+  t: ReturnType<typeof useUiTranslator>['translate'],
+) {
   if (balance.startsWith('-'))
-    return `${formatRupees(balance.slice(1))} advance`;
-  return formatRupees(balance);
+    return t('{amount} advance', {
+      amount: rupees(balance.slice(1), locale),
+    });
+  return rupees(balance, locale);
 }
 
 export function LedgerTable({
@@ -234,25 +277,28 @@ export function LedgerTable({
   entries: readonly BillingLedgerEntry[];
   timeZone: string;
 }) {
+  const { locale: selectedLocale, translate: t } = useUiTranslator();
+  const locale = selectedLocale ?? 'en';
   const date = (value: string) =>
-    new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone }).format(
-      new Date(value),
-    );
+    formatLocalizedDate(new Date(value), locale, {
+      dateStyle: 'medium',
+      timeZone,
+    });
   return (
     <DataTable
       caption={caption}
       columns={[
         {
           id: 'date',
-          header: 'Date',
+          header: t('Date'),
           render: (entry: BillingLedgerEntry) => date(entry.created_at),
         },
         {
           id: 'description',
-          header: 'Description',
+          header: t('Description'),
           render: (entry: BillingLedgerEntry) => (
             <span>
-              {LEDGER_LABELS[entry.kind]}
+              {t(LEDGER_LABELS[entry.kind])}
               {entry.reason ? (
                 <span className="block text-caption text-ink-muted">
                   {entry.reason}
@@ -263,35 +309,49 @@ export function LedgerTable({
         },
         {
           id: 'debit',
-          header: 'Debit',
+          header: t('Debit'),
           align: 'right' as const,
           render: (entry: BillingLedgerEntry) =>
-            entry.direction === 'debit' ? formatRupees(entry.amount_paise) : '',
+            entry.direction === 'debit'
+              ? rupees(entry.amount_paise, locale)
+              : '',
         },
         {
           id: 'credit',
-          header: 'Credit',
+          header: t('Credit'),
           align: 'right' as const,
           render: (entry: BillingLedgerEntry) =>
             entry.direction === 'credit'
-              ? formatRupees(entry.amount_paise)
+              ? rupees(entry.amount_paise, locale)
               : '',
         },
         {
           id: 'balance',
-          header: 'Balance',
+          header: t('Balance'),
           align: 'right' as const,
           render: (entry: BillingLedgerEntry) =>
-            balanceText(entry.balance_paise),
+            balanceText(entry.balance_paise, locale, t),
         },
       ]}
       getRowId={(entry) => entry.id}
-      getRowLabel={(entry) => `${LEDGER_LABELS[entry.kind]} ${entry.id}`}
+      getRowLabel={(entry) =>
+        t('{kind} {id}', {
+          kind: t(LEDGER_LABELS[entry.kind]),
+          id: entry.id,
+        })
+      }
       mobilePrimary={(entry) =>
-        `${LEDGER_LABELS[entry.kind]} · ${entry.direction === 'debit' ? '+' : '−'}${formatRupees(entry.amount_paise)}`
+        t('{kind} · {sign}{amount}', {
+          kind: t(LEDGER_LABELS[entry.kind]),
+          sign: entry.direction === 'debit' ? '+' : '−',
+          amount: rupees(entry.amount_paise, locale),
+        })
       }
       mobileSecondary={(entry) =>
-        `${date(entry.created_at)} · balance ${balanceText(entry.balance_paise)}`
+        t('{date} · balance {balance}', {
+          date: date(entry.created_at),
+          balance: balanceText(entry.balance_paise, locale, t),
+        })
       }
       rows={entries}
     />

@@ -17,6 +17,8 @@ import type { listSocietyMembers } from '@/core/members/operations';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { TextInput } from '@/components/ui/text-input';
+import { useUiTranslator } from '@/components/ui/language';
+import { MEMBER_LABELS } from './presentation';
 
 type Directory = Awaited<ReturnType<typeof listSocietyMembers>>;
 type Member = Directory['members'][number];
@@ -31,6 +33,7 @@ const ROLES = [
 ] as const;
 
 function ActionMessage({ result }: { result: ServerActionResult | null }) {
+  const { translateFeedback } = useUiTranslator();
   if (!result) return null;
   return (
     <p
@@ -38,9 +41,9 @@ function ActionMessage({ result }: { result: ServerActionResult | null }) {
       className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
       role="status"
     >
-      {result.message}
+      {result.message ? translateFeedback(result.message) : null}
       {!result.ok && result.fieldErrors
-        ? ` ${Object.values(result.fieldErrors).join(' ')}`
+        ? ` ${Object.values(result.fieldErrors).map(translateFeedback).join(' ')}`
         : ''}
     </p>
   );
@@ -70,9 +73,10 @@ function useAction(
 }
 
 function RoleOptions({ selected = ['resident'] }: { selected?: string[] }) {
+  const { translate: t } = useUiTranslator();
   return (
     <fieldset className="grid gap-space-2">
-      <legend className="text-body-strong">Society roles</legend>
+      <legend className="text-body-strong">{t('Society roles')}</legend>
       <div className="flex flex-wrap gap-space-3">
         {ROLES.map(([value, label]) => (
           <label
@@ -85,7 +89,7 @@ function RoleOptions({ selected = ['resident'] }: { selected?: string[] }) {
               type="checkbox"
               value={value}
             />
-            {label}
+            {t(label)}
           </label>
         ))}
       </div>
@@ -94,6 +98,7 @@ function RoleOptions({ selected = ['resident'] }: { selected?: string[] }) {
 }
 
 export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useAction(inviteResidentAction, true);
   const [relationship, setRelationship] = useState<
     'owner' | 'tenant' | 'family'
@@ -102,7 +107,9 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
   if (!units.length) {
     return (
       <p className="text-body text-ink-muted">
-        Add an active unit in Society Structure before inviting residents.
+        {t(
+          'Add an active unit in Society Structure before inviting residents.',
+        )}
       </p>
     );
   }
@@ -110,7 +117,7 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
     <form className="grid gap-space-4" onSubmit={submit}>
       <TextInput
         id="invite-email"
-        label="Email address"
+        label={t('Email address')}
         name="email"
         required
         type="email"
@@ -119,14 +126,14 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
         className="grid gap-space-1 text-body-strong"
         htmlFor="invite-unit"
       >
-        Unit
+        {t('Unit')}
         <select
           className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
           id="invite-unit"
           name="unitId"
           required
         >
-          <option value="">Choose a unit</option>
+          <option value="">{t('Choose a unit')}</option>
           {units.map((unit) => (
             <option key={unit.id} value={unit.id}>
               {unit.number}
@@ -138,7 +145,7 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
         className="grid gap-space-1 text-body-strong"
         htmlFor="invite-relationship"
       >
-        Relationship
+        {t('Relationship')}
         <select
           className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
           id="invite-relationship"
@@ -152,9 +159,9 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
           }}
           value={relationship}
         >
-          <option value="owner">Owner</option>
-          <option value="tenant">Tenant</option>
-          <option value="family">Family</option>
+          <option value="owner">{t('Owner')}</option>
+          <option value="tenant">{t('Tenant')}</option>
+          <option value="family">{t('Family')}</option>
         </select>
       </label>
       <RoleOptions />
@@ -165,7 +172,7 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
             name="isPrimary"
             type="checkbox"
           />
-          Primary resident
+          {t('Primary resident')}
         </label>
         <label className="inline-flex min-h-10 items-center gap-space-2">
           <input
@@ -174,11 +181,11 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
             onChange={(event) => setIsApprover(event.currentTarget.checked)}
             type="checkbox"
           />
-          Can approve visitors
+          {t('Can approve visitors')}
         </label>
       </div>
       <Button disabled={pending} loading={pending} type="submit">
-        Send invitation
+        {t('Send invitation')}
       </Button>
       <ActionMessage result={result} />
     </form>
@@ -186,6 +193,7 @@ export function InviteResidentForm({ units }: { units: readonly Unit[] }) {
 }
 
 function MemberRolesForm({ member }: { member: Member }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useAction(changeMemberRolesAction);
   return (
     <form className="grid gap-space-2" onSubmit={submit}>
@@ -197,7 +205,7 @@ function MemberRolesForm({ member }: { member: Member }) {
         type="submit"
         variant="secondary"
       >
-        Save roles
+        {t('Save roles')}
       </Button>
       <ActionMessage result={result} />
     </form>
@@ -211,6 +219,7 @@ function AssignOccupancyForm({
   member: Member;
   units: readonly Unit[];
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useAction(assignOccupantAction);
   const [relationship, setRelationship] = useState<
     'owner' | 'tenant' | 'family'
@@ -223,7 +232,7 @@ function AssignOccupancyForm({
         className="grid gap-space-1 text-caption"
         htmlFor={`assign-${member.membership_id}`}
       >
-        Assign unit
+        {t('Assign unit')}
         <select
           className="min-h-10 rounded-md border border-rule-strong bg-surface px-space-2"
           id={`assign-${member.membership_id}`}
@@ -238,7 +247,7 @@ function AssignOccupancyForm({
         </select>
       </label>
       <label className="grid gap-space-1 text-caption">
-        Relationship
+        {t('Relationship')}
         <select
           className="min-h-10 rounded-md border border-rule-strong bg-surface px-space-2"
           name="relationship"
@@ -251,14 +260,14 @@ function AssignOccupancyForm({
           }}
           value={relationship}
         >
-          <option value="owner">Owner</option>
-          <option value="tenant">Tenant</option>
-          <option value="family">Family</option>
+          <option value="owner">{t('Owner')}</option>
+          <option value="tenant">{t('Tenant')}</option>
+          <option value="family">{t('Family')}</option>
         </select>
       </label>
       <label className="inline-flex min-h-10 items-center gap-space-2 text-caption">
         <input name="isPrimary" type="checkbox" />
-        Primary
+        {t('Primary')}
       </label>
       <label className="inline-flex min-h-10 items-center gap-space-2 text-caption">
         <input
@@ -267,7 +276,7 @@ function AssignOccupancyForm({
           onChange={(event) => setIsApprover(event.currentTarget.checked)}
           type="checkbox"
         />
-        Approver
+        {t('Approver')}
       </label>
       <Button
         disabled={pending}
@@ -275,7 +284,7 @@ function AssignOccupancyForm({
         type="submit"
         variant="secondary"
       >
-        Assign
+        {t('Assign')}
       </Button>
       <ActionMessage result={result} />
     </form>
@@ -289,6 +298,7 @@ function OccupancyControls({
   member: Member;
   units: readonly Unit[];
 }) {
+  const { translate: t } = useUiTranslator();
   const move = useAction(moveOccupantAction);
   const end = useAction(endOccupancyAction);
   if (!member.occupant_id || member.occupant_status !== 'active') return null;
@@ -297,7 +307,7 @@ function OccupancyControls({
       <form className="grid gap-space-2" onSubmit={move.submit}>
         <input name="occupantId" type="hidden" value={member.occupant_id} />
         <label className="grid gap-space-1 text-caption">
-          Move to
+          {t('Move to')}
           <select
             className="min-h-10 rounded-md border border-rule-strong bg-surface px-space-2"
             name="unitId"
@@ -317,7 +327,7 @@ function OccupancyControls({
           type="submit"
           variant="secondary"
         >
-          Move
+          {t('Move')}
         </Button>
         <ActionMessage result={move.result} />
       </form>
@@ -329,7 +339,7 @@ function OccupancyControls({
           type="submit"
           variant="secondary"
         >
-          End occupancy
+          {t('End occupancy')}
         </Button>
         <ActionMessage result={end.result} />
       </form>
@@ -338,11 +348,13 @@ function OccupancyControls({
 }
 
 function DeactivateMemberForm({ member }: { member: Member }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [result, setResult] = useState<ServerActionResult | null>(null);
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
-  if (member.status === 'deactivated') return <span>Access deactivated</span>;
+  if (member.status === 'deactivated')
+    return <span>{t('Access deactivated')}</span>;
   return (
     <>
       <Button
@@ -351,11 +363,13 @@ function DeactivateMemberForm({ member }: { member: Member }) {
         type="button"
         variant="secondary"
       >
-        Deactivate
+        {t('Deactivate')}
       </Button>
       <ConfirmDialog
-        actionLabel="Deactivate member"
-        description="This immediately revokes the member's access to this society and ends any active unit occupancy. History is kept."
+        actionLabel={t('Deactivate member')}
+        description={t(
+          "This immediately revokes the member's access to this society and ends any active unit occupancy. History is kept.",
+        )}
         id={`deactivate-member-${member.membership_id}`}
         loading={pending}
         onConfirm={() => {
@@ -370,7 +384,7 @@ function DeactivateMemberForm({ member }: { member: Member }) {
         }}
         onOpenChange={setConfirming}
         open={confirming}
-        title="Deactivate member?"
+        title={t('Deactivate member?')}
         variant="destructive"
       />
       <ActionMessage result={result} />
@@ -379,10 +393,11 @@ function DeactivateMemberForm({ member }: { member: Member }) {
 }
 
 export function MemberDirectory({ directory }: { directory: Directory }) {
+  const { translate: t } = useUiTranslator();
   return (
     <section className="grid gap-space-5">
       <div className="grid gap-space-3">
-        <h2 className="text-heading font-semibold">People</h2>
+        <h2 className="text-heading font-semibold">{t('People')}</h2>
         {directory.members.map((member, index) => (
           <article
             className="grid gap-space-4 rounded-md border border-rule p-space-4 expanded:grid-cols-2"
@@ -395,18 +410,29 @@ export function MemberDirectory({ directory }: { directory: Directory }) {
               <p className="text-caption text-ink-muted">{member.email}</p>
               {member.phone_masked ? (
                 <p className="text-caption text-ink-muted">
-                  Phone ending {member.phone_masked.slice(-4)}
+                  {t('Phone ending {digits}', {
+                    digits: member.phone_masked.slice(-4),
+                  })}
                 </p>
               ) : null}
               <p className="text-caption">
-                {member.status} · {member.roles.join(', ')}
+                {t(MEMBER_LABELS[member.status] ?? member.status)} ·{' '}
+                {member.roles
+                  .map((role) => t(MEMBER_LABELS[role] ?? role))
+                  .join(', ')}
               </p>
               {member.unit_number ? (
                 <p className="text-caption">
                   {member.block_name ? `${member.block_name} · ` : ''}
-                  {member.unit_number} · {member.relationship}
-                  {member.is_primary ? ' · primary' : ''}
-                  {member.is_approver ? ' · approver' : ''}
+                  {member.unit_number} ·{' '}
+                  {member.relationship
+                    ? t(
+                        MEMBER_LABELS[member.relationship] ??
+                          member.relationship,
+                      )
+                    : ''}
+                  {member.is_primary ? t(' · primary') : ''}
+                  {member.is_approver ? t(' · approver') : ''}
                 </p>
               ) : null}
             </div>
@@ -430,7 +456,7 @@ export function MemberDirectory({ directory }: { directory: Directory }) {
         ))}
         {!directory.members.length ? (
           <p className="text-body text-ink-muted">
-            No members or invitations yet.
+            {t('No members or invitations yet.')}
           </p>
         ) : null}
       </div>

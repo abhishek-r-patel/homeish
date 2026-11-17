@@ -4,6 +4,8 @@ import { ErrorPanel } from '@/components/ui/feedback';
 import { assertDirectoryLookupAccess } from '@/core/directory/operations';
 import { AppError } from '@/core/errors';
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Vehicle lookup | Homeish',
@@ -11,6 +13,8 @@ export const metadata = {
 };
 
 export default async function GuardDirectoryPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   try {
     await assertDirectoryLookupAccess();
   } catch (error) {
@@ -20,8 +24,10 @@ export default async function GuardDirectoryPage() {
     if (error instanceof AppError && error.code === 'FORBIDDEN') {
       return (
         <ErrorPanel
-          message="Sign in with an authorized guard account for this society."
-          title="Vehicle lookup is restricted"
+          message={t(
+            'Sign in with an authorized guard account for this society.',
+          )}
+          title={t('Vehicle lookup is restricted')}
         />
       );
     }

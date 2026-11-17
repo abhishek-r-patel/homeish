@@ -11,6 +11,8 @@ import { Button } from '../ui/button';
 import { EmptyState, ErrorPanel } from '../ui/feedback';
 import { SearchInput } from '../ui/specialized-inputs';
 import { Pagination, type PageSize } from '../ui/table-controls';
+import { useUiTranslator } from '../ui/language';
+import { formatLocalizedNumber } from '../../core/i18n/format';
 
 export type DirectoryPageRequest = {
   search: string;
@@ -33,6 +35,7 @@ export function ResidentDirectory({
   loadResidents?: DirectoryPageLoader;
   residents: DirectoryPage<DirectoryResident>;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -98,18 +101,19 @@ export function ResidentDirectory({
   return (
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Resident directory</h1>
+        <h1 className="text-title font-semibold">{t('Resident directory')}</h1>
         <p className="text-body text-ink-muted">
-          Find your neighbours by name or unit. Only details you are permitted
-          to view appear here.
+          {t(
+            'Find your neighbours by name or unit. Only details you are permitted to view appear here.',
+          )}
         </p>
       </header>
 
       {failure ? (
         <ErrorPanel
-          message={failure.message}
+          message={translateFeedback(failure.message)}
           referenceId={failure.referenceId}
-          title="Could not load directory results"
+          title={t('Could not load directory results')}
         />
       ) : null}
       <fieldset className="grid min-w-0 gap-space-5">
@@ -123,20 +127,20 @@ export function ResidentDirectory({
         >
           <div className="w-full flex-1">
             <SearchInput
-              helpText="Searches only the names and units visible to you."
+              helpText={t('Searches only the names and units visible to you.')}
               id="directory-search"
-              label="Search by name or unit"
+              label={t('Search by name or unit')}
               onChange={(event) => setQuery(event.currentTarget.value)}
               onClear={() => {
                 setQuery('');
                 loadPage(1, pageSize, '');
               }}
-              placeholder="Name or unit number"
+              placeholder={t('Name or unit number')}
               value={query}
             />
           </div>
           <Button disabled={isPending} loading={isPending} type="submit">
-            Search
+            {t('Search')}
           </Button>
         </form>
         {!failure ? (
@@ -147,25 +151,34 @@ export function ResidentDirectory({
               className="text-caption text-ink-muted"
               role="status"
             >
-              {pageData.total}{' '}
-              {pageData.total === 1 ? 'directory entry' : 'directory entries'}
-              {search ? ' matching your search' : ' available'}
+              {t(
+                search
+                  ? pageData.total === 1
+                    ? '{count} directory entry matching your search'
+                    : '{count} directory entries matching your search'
+                  : pageData.total === 1
+                    ? '{count} directory entry available'
+                    : '{count} directory entries available',
+                {
+                  count: formatLocalizedNumber(pageData.total, locale ?? 'en'),
+                },
+              )}
             </p>
             {pageData.total === 0 ? (
               <EmptyState
-                description={
+                description={t(
                   search
                     ? 'Try a different name or unit number, or clear your search.'
-                    : 'No resident entries are available to your account yet.'
-                }
-                title={
-                  search ? 'No matching residents' : 'No residents to show'
-                }
+                    : 'No resident entries are available to your account yet.',
+                )}
+                title={t(
+                  search ? 'No matching residents' : 'No residents to show',
+                )}
               />
             ) : (
               <>
                 <ul
-                  aria-label="Residents"
+                  aria-label={t('Residents')}
                   className="grid min-w-0 gap-space-3 medium:grid-cols-2"
                 >
                   {pageResidents.map((resident) => (
@@ -174,28 +187,37 @@ export function ResidentDirectory({
                       key={resident.entryKey}
                     >
                       <h2 className="break-words text-heading font-semibold">
-                        {resident.full_name || 'Resident'}
+                        {resident.full_name || t('Resident')}
                       </h2>
                       <dl className="grid min-w-0 gap-space-3">
                         <div className="grid min-w-0 gap-space-1">
-                          <dt className="text-caption text-ink-muted">Unit</dt>
+                          <dt className="text-caption text-ink-muted">
+                            {t('Unit')}
+                          </dt>
                           <dd className="break-words text-body">
-                            {resident.unit_number ?? 'Not shared'}
+                            {resident.unit_number ?? t('Not shared')}
                           </dd>
                         </div>
                         <div className="grid min-w-0 gap-space-1">
-                          <dt className="text-caption text-ink-muted">Phone</dt>
+                          <dt className="text-caption text-ink-muted">
+                            {t('Phone')}
+                          </dt>
                           <dd className="min-w-0 break-words text-body">
                             {resident.phone ? (
                               <a
-                                aria-label={`Call ${resident.full_name || 'resident'} on ${resident.phone}`}
+                                aria-label={t('Call {name} on {phone}', {
+                                  name: resident.full_name || t('Resident'),
+                                  phone: resident.phone,
+                                })}
                                 className="inline-flex min-h-12 max-w-full items-center rounded-sm text-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                                 href={`tel:${resident.phone}`}
                               >
                                 {resident.phone}
                               </a>
                             ) : (
-                              <span className="text-ink-muted">Not shared</span>
+                              <span className="text-ink-muted">
+                                {t('Not shared')}
+                              </span>
                             )}
                           </dd>
                         </div>

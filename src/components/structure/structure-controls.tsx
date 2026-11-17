@@ -25,6 +25,8 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { Banner, EmptyState } from '@/components/ui/feedback';
 import { TextInput } from '@/components/ui/text-input';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 
 type Structure = Awaited<ReturnType<typeof getStructure>>;
 type Block = Structure['blocks'][number];
@@ -35,21 +37,20 @@ function ActionMessage({
 }: {
   state: ServerActionResult<unknown> | null;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (!state) return null;
   return (
     <Banner tone={state.ok ? 'success' : 'danger'}>
-      <p>{state.message}</p>
+      <p>{state.message ? translateFeedback(state.message) : null}</p>
       {!state.ok && state.referenceId ? (
         <p className="mt-space-2 text-caption">
-          Reference ID: <code>{state.referenceId}</code>
+          {t('Reference ID')}: <code>{state.referenceId}</code>
         </p>
       ) : null}
       {!state.ok && state.fieldErrors ? (
         <ul className="mt-space-2 list-inside list-disc text-caption">
           {Object.entries(state.fieldErrors).map(([field, message]) => (
-            <li key={field}>
-              {field === 'form' ? message : `${field}: ${message}`}
-            </li>
+            <li key={field}>{translateFeedback(message)}</li>
           ))}
         </ul>
       ) : null}
@@ -58,6 +59,7 @@ function ActionMessage({
 }
 
 export function CreateBlockForm() {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [state, setState] = useState<ServerActionResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -83,14 +85,14 @@ export function CreateBlockForm() {
     >
       <TextInput
         id="block-name"
-        label="Block name"
+        label={t('Block name')}
         maxLength={60}
         minLength={1}
         name="name"
         required
       />
       <Button disabled={pending} loading={pending} type="submit">
-        Add Block
+        {t('Add Block')}
       </Button>
       <div className="medium:col-span-2">
         <ActionMessage state={state} />
@@ -100,6 +102,7 @@ export function CreateBlockForm() {
 }
 
 export function CreateUnitForm({ blocks }: { blocks: readonly Block[] }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [state, setState] = useState<ServerActionResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -124,13 +127,13 @@ export function CreateUnitForm({ blocks }: { blocks: readonly Block[] }) {
       onSubmit={submit}
     >
       <label className="grid gap-space-1 text-body-strong" htmlFor="unit-block">
-        Block
+        {t('Block')}
         <select
           className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
           id="unit-block"
           name="blockId"
         >
-          <option value="">No block</option>
+          <option value="">{t('No block')}</option>
           {blocks
             .filter(({ active }) => active)
             .map((block) => (
@@ -142,22 +145,27 @@ export function CreateUnitForm({ blocks }: { blocks: readonly Block[] }) {
       </label>
       <TextInput
         id="unit-number"
-        label="Unit number"
+        label={t('Unit number')}
         maxLength={20}
         minLength={1}
         name="number"
         required
       />
-      <TextInput id="unit-floor" label="Floor" name="floor" type="number" />
+      <TextInput
+        id="unit-floor"
+        label={t('Floor')}
+        name="floor"
+        type="number"
+      />
       <TextInput
         id="unit-type"
-        label="Unit type"
+        label={t('Unit type')}
         maxLength={30}
         name="unitType"
       />
       <TextInput
         id="unit-area"
-        label="Area (sq ft)"
+        label={t('Area (sq ft)')}
         min="0.01"
         name="areaSqft"
         step="0.01"
@@ -165,7 +173,7 @@ export function CreateUnitForm({ blocks }: { blocks: readonly Block[] }) {
       />
       <div className="flex items-end">
         <Button disabled={pending} loading={pending} type="submit">
-          Add Unit
+          {t('Add Unit')}
         </Button>
       </div>
       <div className="medium:col-span-2 expanded:col-span-3">
@@ -176,6 +184,7 @@ export function CreateUnitForm({ blocks }: { blocks: readonly Block[] }) {
 }
 
 function BlockEditForm({ block }: { block: Block }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [state, setState] = useState<ServerActionResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -196,7 +205,7 @@ function BlockEditForm({ block }: { block: Block }) {
       <TextInput
         defaultValue={block.name}
         id={`block-name-${block.id}`}
-        label="Block name"
+        label={t('Block name')}
         maxLength={60}
         minLength={1}
         name="name"
@@ -204,7 +213,7 @@ function BlockEditForm({ block }: { block: Block }) {
       />
       <ActionMessage state={state} />
       <Button disabled={pending} loading={pending} type="submit">
-        Save Block
+        {t('Save Block')}
       </Button>
     </form>
   );
@@ -217,6 +226,7 @@ function UnitEditForm({
   unit: Unit;
   blocks: readonly Block[];
 }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [state, setState] = useState<ServerActionResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -241,18 +251,18 @@ function UnitEditForm({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`unit-block-${unit.id}`}
       >
-        Block
+        {t('Block')}
         <select
           className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
           defaultValue={unit.block_id ?? ''}
           id={`unit-block-${unit.id}`}
           name="blockId"
         >
-          <option value="">No block</option>
+          <option value="">{t('No block')}</option>
           {blocks.map((block) => (
             <option key={block.id} value={block.id}>
               {block.name}
-              {block.active ? '' : ' (Inactive)'}
+              {block.active ? '' : t(' (Inactive)')}
             </option>
           ))}
         </select>
@@ -260,7 +270,7 @@ function UnitEditForm({
       <TextInput
         defaultValue={unit.number}
         id={`unit-number-${unit.id}`}
-        label="Unit number"
+        label={t('Unit number')}
         maxLength={20}
         minLength={1}
         name="number"
@@ -269,21 +279,21 @@ function UnitEditForm({
       <TextInput
         defaultValue={unit.floor?.toString() ?? ''}
         id={`unit-floor-${unit.id}`}
-        label="Floor"
+        label={t('Floor')}
         name="floor"
         type="number"
       />
       <TextInput
         defaultValue={unit.unit_type ?? ''}
         id={`unit-type-${unit.id}`}
-        label="Unit type"
+        label={t('Unit type')}
         maxLength={30}
         name="unitType"
       />
       <TextInput
         defaultValue={unit.area_sqft?.toString() ?? ''}
         id={`unit-area-${unit.id}`}
-        label="Area (sq ft)"
+        label={t('Area (sq ft)')}
         min="0.01"
         name="areaSqft"
         step="0.01"
@@ -291,7 +301,7 @@ function UnitEditForm({
       />
       <div className="flex items-end">
         <Button disabled={pending} loading={pending} type="submit">
-          Save Unit
+          {t('Save Unit')}
         </Button>
       </div>
       <div className="medium:col-span-2 expanded:col-span-3">
@@ -323,6 +333,7 @@ function downloadIssues(issues: readonly UnitImportIssue[]) {
 }
 
 export function UnitImportControl() {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const [csv, setCsv] = useState('');
   const [fileName, setFileName] = useState('');
@@ -395,10 +406,10 @@ export function UnitImportControl() {
         download="homeish-units-template.csv"
         href="/admin/structure/template.csv"
       >
-        Download CSV template
+        {t('Download CSV template')}
       </a>
       <label className="grid gap-space-1 text-body-strong" htmlFor="units-csv">
-        Units CSV file
+        {t('Units CSV file')}
         <input
           accept=".csv,text/csv"
           className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 py-space-2 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
@@ -410,7 +421,9 @@ export function UnitImportControl() {
         />
       </label>
       {fileName ? (
-        <p className="text-caption text-ink-muted">Selected: {fileName}</p>
+        <p className="text-caption text-ink-muted">
+          {t('Selected: {file}', { file: fileName })}
+        </p>
       ) : null}
       <ActionMessage state={state} />
       <div className="flex flex-wrap gap-space-2">
@@ -420,7 +433,7 @@ export function UnitImportControl() {
           onClick={runPreview}
           variant="secondary"
         >
-          Preview Import
+          {t('Preview Import')}
         </Button>
         <Button
           disabled={
@@ -431,15 +444,16 @@ export function UnitImportControl() {
           }
           onClick={() => setConfirmOpen(true)}
         >
-          Import Units
+          {t('Import Units')}
         </Button>
       </div>
       {previewResult ? (
         <section aria-live="polite" className="grid gap-space-2" role="status">
           <h3 className="text-body-strong">
-            {previewResult.rows.length} rows checked ·{' '}
-            {previewResult.issues.length} issue
-            {previewResult.issues.length === 1 ? '' : 's'}
+            {t('{rows} rows checked · {issues} issues', {
+              rows: previewResult.rows.length,
+              issues: previewResult.issues.length,
+            })}
           </h3>
           {previewResult.issues.length > 0 ? (
             <>
@@ -449,39 +463,53 @@ export function UnitImportControl() {
                     className="text-caption text-danger"
                     key={`${issue.rowNumber}-${issue.field}-${index}`}
                   >
-                    Row {issue.rowNumber}, {issue.field}: {issue.message}
+                    {t('Row {row}, {field}: {message}', {
+                      row: issue.rowNumber,
+                      field: issue.field,
+                      message: translateFeedback(issue.message),
+                    })}
                   </li>
                 ))}
               </ul>
               {previewResult.issues.length > 20 ? (
                 <p className="text-caption text-ink-muted">
-                  Showing the first 20 of {previewResult.issues.length} issues.
+                  {t('Showing the first 20 of {count} issues.', {
+                    count: previewResult.issues.length,
+                  })}
                 </p>
               ) : null}
               <Button
                 onClick={() => downloadIssues(previewResult.issues)}
                 variant="tertiary"
               >
-                Download Error Report
+                {t('Download Error Report')}
               </Button>
             </>
           ) : (
             <p className="text-caption text-success">
-              Preview is clean. Confirm to import these units.
+              {t('Preview is clean. Confirm to import these units.')}
             </p>
           )}
         </section>
       ) : null}
       <ConfirmDialog
-        actionLabel="Import Units"
-        description={`Create ${preview?.rows.length ?? 0} units from ${fileName}? Existing records are preserved; duplicate units will be reported in the job results.`}
+        actionLabel={t('Import Units')}
+        description={t(
+          'Create {count} units from {file}? Existing records are preserved; duplicate units will be reported in the job results.',
+          { count: preview?.rows.length ?? 0, file: fileName },
+        )}
         id="units-import-confirmation"
         loading={confirmPending}
         onConfirm={confirmImport}
         onOpenChange={setConfirmOpen}
         open={confirmOpen}
-        title="Confirm unit import?"
+        title={t('Confirm unit import?')}
       />
+      <p className="text-caption text-ink-muted">
+        {t(
+          'CSV templates and error reports remain in English. Keep the column names unchanged.',
+        )}
+      </p>
     </div>
   );
 }
@@ -493,6 +521,9 @@ export function StructureRows({
   blocks: readonly Block[];
   units: readonly Unit[];
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [state, setState] = useState<ServerActionResult | null>(null);
@@ -534,11 +565,13 @@ export function StructureRows({
     <div className="grid gap-space-4">
       <ActionMessage state={state} />
       <div>
-        <h3 className="mb-space-2 text-subheading">Blocks</h3>
+        <h3 className="mb-space-2 text-subheading">{t('Blocks')}</h3>
         {blocks.length === 0 ? (
           <EmptyState
-            description="Add blocks if this society groups homes by building."
-            title="No blocks"
+            description={t(
+              'Add blocks if this society groups homes by building.',
+            )}
+            title={t('No blocks')}
           />
         ) : (
           <ul className="divide-y divide-rule">
@@ -550,7 +583,7 @@ export function StructureRows({
                 <span className="text-body-strong">
                   {block.name}{' '}
                   <span className="text-caption text-ink-muted">
-                    · {block.active ? 'Active' : 'Inactive'}
+                    · {t(block.active ? 'Active' : 'Inactive')}
                   </span>
                 </span>
                 <Button
@@ -558,11 +591,11 @@ export function StructureRows({
                   onClick={() => setBlockToChange(block)}
                   variant="secondary"
                 >
-                  {block.active ? 'Deactivate' : 'Reactivate'}
+                  {t(block.active ? 'Deactivate' : 'Reactivate')}
                 </Button>
                 <details className="w-full">
                   <summary className="min-h-10 cursor-pointer text-body text-brand underline">
-                    Edit block
+                    {t('Edit block')}
                   </summary>
                   <div className="mt-space-2 max-w-content-narrow">
                     <BlockEditForm block={block} />
@@ -574,11 +607,11 @@ export function StructureRows({
         )}
       </div>
       <div>
-        <h3 className="mb-space-2 text-subheading">Units</h3>
+        <h3 className="mb-space-2 text-subheading">{t('Units')}</h3>
         {units.length === 0 ? (
           <EmptyState
-            description="Add units here or import them from a CSV file."
-            title="No units"
+            description={t('Add units here or import them from a CSV file.')}
+            title={t('No units')}
           />
         ) : (
           <ul className="divide-y divide-rule">
@@ -589,20 +622,22 @@ export function StructureRows({
               >
                 <span className="grid">
                   <span className="text-body-strong">
-                    {blockNames.get(unit.block_id ?? '') ?? 'No block'} ·{' '}
+                    {blockNames.get(unit.block_id ?? '') ?? t('No block')} ·{' '}
                     {unit.number}
                   </span>
                   <span className="text-caption text-ink-muted">
                     {[
-                      unit.floor === null ? null : `Floor ${unit.floor}`,
+                      unit.floor === null
+                        ? null
+                        : t('Floor {floor}', { floor: number(unit.floor) }),
                       unit.unit_type,
                     ]
                       .filter(Boolean)
-                      .join(' · ') || 'No details'}
+                      .join(' · ') || t('No details')}
                     {unit.area_sqft === null
                       ? ''
-                      : ` · ${unit.area_sqft} sq ft`}
-                    {` · ${unit.active ? 'Active' : 'Inactive'}`}
+                      : ` · ${t('{area} sq ft', { area: number(Number(unit.area_sqft)) })}`}
+                    {` · ${t(unit.active ? 'Active' : 'Inactive')}`}
                   </span>
                 </span>
                 <Button
@@ -610,11 +645,11 @@ export function StructureRows({
                   onClick={() => setUnitToChange(unit)}
                   variant="secondary"
                 >
-                  {unit.active ? 'Deactivate' : 'Reactivate'}
+                  {t(unit.active ? 'Deactivate' : 'Reactivate')}
                 </Button>
                 <details className="w-full">
                   <summary className="min-h-10 cursor-pointer text-body text-brand underline">
-                    Edit unit
+                    {t('Edit unit')}
                   </summary>
                   <div className="mt-space-2">
                     <UnitEditForm blocks={blocks} unit={unit} />
@@ -626,12 +661,12 @@ export function StructureRows({
         )}
       </div>
       <ConfirmDialog
-        actionLabel={blockToChange?.active ? 'Deactivate' : 'Reactivate'}
-        description={
+        actionLabel={t(blockToChange?.active ? 'Deactivate' : 'Reactivate')}
+        description={t(
           blockToChange?.active
             ? 'The block will stay in the records but will no longer be offered for new units.'
-            : 'The block will be available for new units again.'
-        }
+            : 'The block will be available for new units again.',
+        )}
         id="block-status-confirmation"
         loading={pending}
         onConfirm={changeBlock}
@@ -639,16 +674,16 @@ export function StructureRows({
           if (!open) setBlockToChange(null);
         }}
         open={blockToChange !== null}
-        title="Change block status?"
+        title={t('Change block status?')}
         variant={blockToChange?.active ? 'destructive' : 'primary'}
       />
       <ConfirmDialog
-        actionLabel={unitToChange?.active ? 'Deactivate' : 'Reactivate'}
-        description={
+        actionLabel={t(unitToChange?.active ? 'Deactivate' : 'Reactivate')}
+        description={t(
           unitToChange?.active
             ? 'The unit will stay in the records and cannot be selected for new assignments.'
-            : 'The unit will be available for new assignments again.'
-        }
+            : 'The unit will be available for new assignments again.',
+        )}
         id="unit-status-confirmation"
         loading={pending}
         onConfirm={changeUnit}
@@ -656,7 +691,7 @@ export function StructureRows({
           if (!open) setUnitToChange(null);
         }}
         open={unitToChange !== null}
-        title="Change unit status?"
+        title={t('Change unit status?')}
         variant={unitToChange?.active ? 'destructive' : 'primary'}
       />
     </div>

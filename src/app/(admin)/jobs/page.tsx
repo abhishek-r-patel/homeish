@@ -5,6 +5,9 @@ import { Card } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
 import { pageSchema } from '@/core/developer/console';
 import { listSocietyJobs } from '@/core/jobs/operations';
+import { formatLocalizedNumber } from '@/core/i18n/format';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Jobs | Homeish',
@@ -16,6 +19,9 @@ type JobListPageProps = {
 };
 
 export default async function JobsPage({ searchParams }: JobListPageProps) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   const query = await searchParams;
   const parsedPage = pageSchema.safeParse({
     page: query.page ?? '1',
@@ -24,8 +30,8 @@ export default async function JobsPage({ searchParams }: JobListPageProps) {
   if (!parsedPage.success) {
     return (
       <ErrorPanel
-        message="Choose a valid page and row count."
-        title="Jobs could not be opened"
+        message={t('Choose a valid page and row count.')}
+        title={t('Jobs could not be opened')}
       />
     );
   }
@@ -36,14 +42,16 @@ export default async function JobsPage({ searchParams }: JobListPageProps) {
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Jobs</h1>
+        <h1 className="text-title font-semibold">{t('Jobs')}</h1>
         <p className="text-body text-ink-muted">
-          Review imports and background work for this society.
+          {t('Review imports and background work for this society.')}
         </p>
       </header>
       <Card
-        title="Recent jobs"
-        description={`${result.total} job${result.total === 1 ? '' : 's'}`}
+        title={t('Recent jobs')}
+        description={t(result.total === 1 ? '{count} job' : '{count} jobs', {
+          count: formatLocalizedNumber(result.total, locale),
+        })}
       >
         <JobList rows={result.rows} />
         <div className="mt-space-4">

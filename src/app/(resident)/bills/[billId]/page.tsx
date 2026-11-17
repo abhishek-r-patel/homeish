@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import { BillDetail } from '@/components/billing/bill-detail';
 import { isUuid, todayInTimeZone } from '@/core/billing/format';
 import { getBillingBill, getResidentBilling } from '@/core/billing/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Bill | Homeish',
@@ -14,6 +16,7 @@ export default async function ResidentBillPage({
 }: {
   params: Promise<{ billId: string }>;
 }) {
+  const locale = await getRequestLocale();
   const { billId } = await params;
   if (!isUuid(billId)) notFound();
   const [billing, bill] = await Promise.all([
@@ -24,7 +27,7 @@ export default async function ResidentBillPage({
   return (
     <BillDetail
       backHref="/bills"
-      backLabel="Bills"
+      backLabel={translateMessage(locale, 'Bills')}
       bill={bill}
       ledgerHref="/bills?tab=ledger"
       today={todayInTimeZone(billing.timezone)}

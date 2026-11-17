@@ -14,13 +14,14 @@ import { SelectInput } from '@/components/ui/select-input';
 import { AmountInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
 import { Banner } from '@/components/ui/feedback';
-import { formatBillingTimestamp, formatRupees } from '@/core/billing/format';
+import { useUiTranslator } from '@/components/ui/language';
+import { billingMoney, billingTimestamp } from './presentation';
 import { rupeesFromPaise } from '@/core/billing/validation';
 import { publicEnvironment } from '@/core/config/public-env';
 import {
   ActionResult,
   type BillingFormAction,
-  fieldError,
+  useBillingFieldError,
   useBillingAction,
 } from './action-state';
 import { primaryLinkClass } from './styles';
@@ -102,6 +103,8 @@ export function BillingPayForm({
   onSubmitted,
   submitAction,
 }: PayFormProps) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
+  const fieldError = useBillingFieldError();
   const router = useRouter();
   const submit = useBillingAction<unknown>(
     submitAction ?? submitBillingPaymentAction,
@@ -191,7 +194,7 @@ export function BillingPayForm({
           ? error.message
           : 'The screenshot could not be uploaded.';
       setUploadMessage(message);
-      update({ error: message });
+      update({ error: translateFeedback(message) });
     } finally {
       xhrRef.current = null;
       setUploading(false);
@@ -225,35 +228,37 @@ export function BillingPayForm({
   return (
     <div className="grid gap-space-5">
       {resubmitReason ? (
-        <Banner title="Previous submission rejected" tone="warning">
+        <Banner title={t('Previous submission rejected')} tone="warning">
           <p>{resubmitReason}</p>
           <p className="mt-space-1">
-            Check the reason, then submit the corrected payment details.
+            {t('Check the reason, then submit the corrected payment details.')}
           </p>
         </Banner>
       ) : null}
       <Card
-        description="Pay the society directly with any UPI app. Homeish never receives or holds the money."
-        title="Pay to"
+        description={t(
+          'Pay the society directly with any UPI app. Homeish never receives or holds the money.',
+        )}
+        title={t('Pay to')}
       >
         <div className="grid gap-space-3">
           <p className="text-body-strong">{details.payee_name}</p>
           <div className="flex flex-wrap items-center gap-space-3">
             <span className="break-all text-body">{details.upi_id}</span>
             <Button onClick={() => void copyUpiId()} variant="secondary">
-              Copy UPI ID
+              {t('Copy UPI ID')}
             </Button>
             <span aria-live="polite" className="text-caption text-ink-muted">
               {copied === 'copied'
-                ? 'UPI ID copied.'
+                ? t('UPI ID copied.')
                 : copied === 'failed'
-                  ? 'Copy failed. Select the UPI ID and copy it manually.'
+                  ? t('Copy failed. Select the UPI ID and copy it manually.')
                   : ''}
             </span>
           </div>
           {qrUrl ? (
             <Image
-              alt={`UPI QR code for ${details.payee_name}`}
+              alt={t('UPI QR code for {name}', { name: details.payee_name })}
               className="size-56 rounded-md border border-rule object-contain p-space-2"
               height={224}
               src={qrUrl}
@@ -266,22 +271,25 @@ export function BillingPayForm({
               className={primaryLinkClass}
               href={upiLink(details.upi_id, details.payee_name, amount)}
             >
-              Pay with UPI App
+              {t('Pay with UPI App')}
             </a>
           </div>
           <p className="text-caption text-ink-muted">
-            UPI details last changed on{' '}
+            {t('UPI details last changed on')}{' '}
             <time dateTime={details.updated_at}>
-              {formatBillingTimestamp(details.updated_at, timezone)}
+              {billingTimestamp(details.updated_at, timezone, locale)}
             </time>
-            . If they look unfamiliar, confirm with the society office before
-            paying.
+            {t(
+              '. If they look unfamiliar, confirm with the society office before paying.',
+            )}
           </p>
         </div>
       </Card>
       <Card
-        description="After paying, enter the UPI reference so the society can match it with its account."
-        title="Submit payment details"
+        description={t(
+          'After paying, enter the UPI reference so the society can match it with its account.',
+        )}
+        title={t('Submit payment details')}
       >
         <form
           className="grid max-w-content-narrow gap-space-4"
@@ -316,7 +324,10 @@ export function BillingPayForm({
               label={unitLabel}
               onChange={(event) => changeUnit(event.currentTarget.value)}
               options={units.map((item) => ({
-                label: `${item.number} · ${formatRupees(item.outstandingPaise)} due`,
+                label: t('{unit} · {amount} due', {
+                  unit: item.number,
+                  amount: billingMoney(item.outstandingPaise, locale),
+                }),
                 value: item.id,
               }))}
               required
@@ -327,11 +338,15 @@ export function BillingPayForm({
             error={fieldError(submit.result, 'amountRupees', 'amount_paise')}
             helpText={
               unit && unit.outstandingPaise > 0
-                ? `Outstanding for ${unitLabel.toLowerCase()} ${unit.number}: ${formatRupees(unit.outstandingPaise)}`
+                ? t('Outstanding for {unitLabel} {unit}: {amount}', {
+                    unitLabel: unitLabel.toLowerCase(),
+                    unit: unit.number,
+                    amount: billingMoney(unit.outstandingPaise, locale),
+                  })
                 : undefined
             }
             id="billing-pay-amount"
-            label="Amount paid"
+            label={t('Amount paid')}
             onChange={(event) => setAmount(event.currentTarget.value)}
             required
             value={amount}
@@ -340,9 +355,11 @@ export function BillingPayForm({
             autoCapitalize="characters"
             autoComplete="off"
             error={fieldError(submit.result, 'reference')}
-            helpText="The UPI transaction or UTR number from your UPI app (6 to 30 letters or numbers)."
+            helpText={t(
+              'The UPI transaction or UTR number from your UPI app (6 to 30 letters or numbers).',
+            )}
             id="billing-pay-reference"
-            label="UPI reference number"
+            label={t('UPI reference number')}
             maxLength={30}
             onChange={(event) =>
               setReference(
@@ -357,7 +374,7 @@ export function BillingPayForm({
           <DatePicker
             error={fieldError(submit.result, 'paidOn', 'paid_on')}
             id="billing-pay-date"
-            label="Paid on"
+            label={t('Paid on')}
             max={today}
             onChange={setPaidOn}
             required
@@ -366,9 +383,11 @@ export function BillingPayForm({
           <FileUpload
             acceptedTypes={['image/jpeg', 'image/png']}
             files={files}
-            helpText="Optional payment screenshot, JPG or PNG up to 5 MB. Only society administrators can view it."
+            helpText={t(
+              'Optional payment screenshot, JPG or PNG up to 5 MB. Only society administrators can view it.',
+            )}
             id="billing-pay-proof"
-            label="Payment screenshot"
+            label={t('Payment screenshot')}
             maxFileBytes={5 * 1024 * 1024}
             maxFiles={1}
             onFilesChange={changeFiles}
@@ -376,13 +395,13 @@ export function BillingPayForm({
           />
           {uploadMessage ? (
             <p className="text-caption text-danger" role="alert">
-              {uploadMessage}
+              {translateFeedback(uploadMessage)}
             </p>
           ) : null}
           <ActionResult result={submit.result} />
           <div>
             <Button disabled={uploading} loading={submit.pending} type="submit">
-              Submit Payment Details
+              {t('Submit Payment Details')}
             </Button>
           </div>
         </form>
