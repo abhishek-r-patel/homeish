@@ -117,34 +117,34 @@ flowchart TD
 
 Arrows are recommended build order; "after Pxx" inside a box marks a phase that builds on another phase. At runtime every module works on its own; links to other optional modules activate only when those are enabled (PRD A-36). Blocks are 6-hour work blocks (Section 2.5).
 
-| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                            |
-| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | ------------------------------------------------- |
-| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅                                                |
-| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅                                                |
-| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅                                                |
-| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅                                                |
-| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅                                                |
-| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅                                                |
-| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅                                                |
-| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅                                                |
-| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅                                                |
-| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅                                                |
-| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅                                                |
-| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ✅                                                |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ✅                                                |
-| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅                                                |
-| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅                                                |
-| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅                                                |
-| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅                                                |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅                                                |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ✅                                                |
-| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ✅                                                |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅                                                |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅                                                |
-| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | 🟡 Locally verified; owner review/release pending |
-| P34   | Multi-society overview            | Core              | 5.10.13, P5-7 | —    | —      | Existing admin/committee memberships        | ⏸ Deferred                                        |
+| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                |
+| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | ------------------------------------- |
+| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅                                    |
+| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅                                    |
+| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅                                    |
+| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅                                    |
+| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅                                    |
+| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅                                    |
+| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅                                    |
+| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅                                    |
+| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅                                    |
+| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅                                    |
+| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅                                    |
+| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ✅                                    |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ✅                                    |
+| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅                                    |
+| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅                                    |
+| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅                                    |
+| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅                                    |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅                                    |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ✅                                    |
+| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ✅                                    |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅                                    |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅                                    |
+| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ✅ Released; owner acceptance pending |
+| P34   | Multi-society overview            | Core              | 5.10.13, P5-7 | —    | —      | Existing admin/committee memberships        | ⏸ Deferred                            |
 
-Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 11 blocks, with P28–P32 released and P34 deferred to the future (PRD D-65).
+Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 11 blocks, with P28–P33 released and P34 deferred to the future (PRD D-65).
 
 ---
 
@@ -1267,17 +1267,17 @@ DATABASE 15.2.
 
 | ID    | Task                                                                                                                                               | Status |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| P29.1 | Migrations `20261122100000`–`20261122130000` and follow-up `20261123110000`: community data, mute settings, RLS and private bucket (DATABASE 9.21) | 🟡     |
+| P29.1 | Migrations `20261122100000`–`20261122130000` and follow-up `20261123110000`: community data, mute settings, RLS and private bucket (DATABASE 9.21) | ✅     |
 | P29.2 | Discussion groups with join/leave, pre-moderated posts and replies                                                                                 | ✅     |
 | P29.3 | Sale, give-away, wanted, lost and found listings with close, renew and 30-day expiry; no payments                                                  | ✅     |
-| P29.4 | Admin moderation, reports, mutes, configurable muted actions, restore notices and retention (API 5.29)                                             | 🟡     |
-| P29.5 | Resident `/community` and admin `/admin/community` screens; fixture `/fixtures/community`                                                          | 🟡     |
+| P29.4 | Admin moderation, reports, mutes, configurable muted actions, restore notices and retention (API 5.29)                                             | ✅     |
+| P29.5 | Resident `/community` and admin `/admin/community` screens; fixture `/fixtures/community`                                                          | ✅     |
 
 **Tests:** moderation states, reporting and removal, retention, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status (2026-11-17): base phase released to beta and main and migrated to testdb (CI and CodeQL green); this follow-up is locally verified but not yet migrated or released.** The follow-up full local gate passed: `npm run check` (**744 unit tests**), the complete database suite on disposable local PostgreSQL (**407 passed, 11 skipped**), `npm run build` and Playwright (**169 passed**). A database safety review found one low-severity documentation mismatch, which was corrected; no blocking findings. The module remains disabled by default. No live (production) migration or enablement was performed.
+**Status (2026-11-18): base phase and approved follow-up released to beta and main and migrated to testdb (CI and CodeQL green).** The combined P33/follow-up release gate passed: `npm run check` (**799 unit tests**), the complete database suite on disposable local PostgreSQL (**410 passed, 11 skipped**), `npm run build` and Playwright (**182 passed**). A database safety review found one low-severity documentation mismatch, which was corrected; no blocking findings. The exact code-release revisions and workflow runs are recorded under P33 below. The module remains disabled by default. No live (production) migration or enablement was performed.
 
 **Owner-approved follow-up behavior:**
 
@@ -1295,16 +1295,16 @@ DATABASE 15.2.
 
 | ID    | Task                                                                                                                                        | Status |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| P30.1 | Migrations `20261121100000`–`20261121130000` and follow-up `20261123100000`: events, RSVPs, audience withdrawal and refunds (DATABASE 9.20) | 🟡     |
+| P30.1 | Migrations `20261121100000`–`20261121130000` and follow-up `20261123100000`: events, RSVPs, audience withdrawal and refunds (DATABASE 9.20) | ✅     |
 | P30.2 | Publish, edit, cancel and RSVP with headcount, capacity, per-flat limit and deadline; notifications and the `event.reminders` daily job     | ✅     |
 | P30.3 | Contribution charged and refunded through billing ledger adjustments when `billing` is enabled (API 5.28)                                   | ✅     |
-| P30.4 | Resident `/events` and admin `/admin/events` screens; fixture `/fixtures/event`                                                             | 🟡     |
+| P30.4 | Resident `/events` and admin `/admin/events` screens; fixture `/fixtures/event`                                                             | ✅     |
 
 **Tests:** RSVP limits, billing on/off combinations, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status (2026-11-17): base phase released to beta and main and migrated to testdb (CI and CodeQL green); this follow-up is locally verified but not yet migrated or released.** The follow-up full local gate passed: `npm run check` (**744 unit tests**), the complete database suite on disposable local PostgreSQL (**407 passed, 11 skipped**), `npm run build` and Playwright (**169 passed**). A database safety review found one low-severity documentation mismatch, which was corrected; no blocking findings. The module remains disabled by default. No live (production) migration or enablement was performed.
+**Status (2026-11-18): base phase and approved follow-up released to beta and main and migrated to testdb (CI and CodeQL green).** The combined P33/follow-up release gate passed: `npm run check` (**799 unit tests**), the complete database suite on disposable local PostgreSQL (**410 passed, 11 skipped**), `npm run build` and Playwright (**182 passed**). A database safety review found one low-severity documentation mismatch, which was corrected; no blocking findings. The exact code-release revisions and workflow runs are recorded under P33 below. The module remains disabled by default. No live (production) migration or enablement was performed.
 
 **Owner-approved follow-up behavior:**
 
@@ -1376,26 +1376,34 @@ DATABASE 15.2.
 
 **Kickoff decisions:** answered on 2026-11-17 (D-66). Include residents, guards, admins, committee, housekeeping supervisors, login/registration, account settings and all user-facing screen states. Keep developer/logs, marketing/privacy and the synthetic demo English. Keep notification bodies, push, emails, PDFs, CSV and print outputs English, with translated controls and an explanation where needed. No historical content rewrite. Default English; no browser auto-detection. Saved account preference spans devices/roles/societies; signed-out/shared-gate device choice stays separate. Confirm before changing language with unsaved edits; failed saves retain the old language and display an error. Use 0-9 digits, Indian grouping, rupee amounts, translated month names and a 12-hour clock without changing time zones, calculations or storage.
 
-**Implementation progress (built and verified locally; unreleased):**
+**Implementation (released; owner acceptance tracked separately):**
 
-| ID    | Task                                                                                                                         | Status                                                     |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| P33.1 | Inventory in-scope strings; establish typed English/Hindi dictionaries, server/client access and missing-key checks          | 🟡 Built/tested locally                                    |
-| P33.2 | Add profile language preference and separate device choice; reuse existing selectors/settings routes; preserve unsaved edits | 🟡 Built/tested locally                                    |
-| P33.3 | Translate all in-scope screens/states and accessible labels; bundle approved Noto font/licence; preserve English outputs     | 🟡 Built/tested locally; Hindi draft awaiting owner review |
-| P33.4 | Apply approved display formats; verify both languages, tenant/role boundaries, layouts and failure handling                  | 🟡 Automated checks passed; manual acceptance pending      |
+| ID    | Task                                                                                                                         | Status                                         |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| P33.1 | Inventory in-scope strings; establish typed English/Hindi dictionaries, server/client access and missing-key checks          | ✅ Released                                    |
+| P33.2 | Add profile language preference and separate device choice; reuse existing selectors/settings routes; preserve unsaved edits | ✅ Released                                    |
+| P33.3 | Translate all in-scope screens/states and accessible labels; bundle approved Noto font/licence; preserve English outputs     | ✅ Released; Hindi draft awaiting owner review |
+| P33.4 | Apply approved display formats; verify both languages, tenant/role boundaries, layouts and failure handling                  | ✅ Released; manual acceptance pending         |
 
 The profile and availability migrations, locally regenerated types, account/device save paths, selectors, shared controls, reusable domain components, society-facing routes, display formats and local Noto font assets/licence are integrated. Feedback follows language changes without translating user data or rewriting English-only outputs. Role-group error boundaries retain the active language. The shared upload control no longer uses timestamp-based IDs; same-time selections remain independently removable. Unsaved-form checks cover early login edits, SOS drafts and newly rendered prefilled selects without warning for untouched choices.
 
-**Local verification:**
+**Verified local release gate:**
 
 - `npm run check`: passed, including **799 unit tests**, formatting, lint, types and repository checks. Literal catalog coverage is split by source area without excluding files or increasing test timeouts.
-- `npm run test:integration:local`: **408 passed, 11 skipped** on a fresh disposable local PostgreSQL. Hindi tests cover authenticated reads even with the module off, cross-society denial, restricted-column denial, role permissions, audit and concurrent edits. The narrow `hindi_available` read grant was corrected before this clean run.
+- `npm run test:integration:local`: **410 passed, 11 pre-existing skips** on a fresh disposable local PostgreSQL with UTC connections. Hindi tests cover authenticated reads even with the module off, cross-society denial, restricted-column denial, role permissions, audit and concurrent edits. The narrow `hindi_available` read grant was corrected before this clean run. Two additional billing date-boundary regressions cover the approved timezone repair below.
 - `npm run build`: passed using loopback services and synthetic local configuration; development-only fixtures remain excluded.
 - `npx playwright test --workers=3`: **182 passed**, including Hindi event/directory journeys and ten language regressions for save failure, draft preservation, upload feedback/IDs, local font delivery, critical SOS text, keyboard/axe and 320px/200% zoom checks.
-- Redacted local Gitleaks scanning of changed/new source text found no secrets. No hosted database, real email/push service or production resource was used.
+- Redacted local Gitleaks scanning and the managed pre-commit scans found no secrets. Local gates used synthetic app configuration and disposable databases; the separately approved testdb rollout is recorded below.
 
-**Still required:** owner Hindi wording review, physical-device and screen-reader acceptance, and separately approved commit/release/hosted migration steps. Hindi remains an unreviewed local/beta draft, not approved for live societies. These local results are not deployment verification or release approval.
+**Still required:** owner Hindi wording review, physical-device and screen-reader acceptance. Hindi remains an unreviewed local/beta draft, not approved for live societies. Live database changes and Hindi activation need separate explicit approval. Local and CI results are not deployment verification or owner acceptance.
+
+**Code-release and testdb evidence (2026-11-18):**
+
+- Verified code-release revisions: feature `350ba86`, beta `168e934` and main `5ee2f5a`, all with the same tested tree.
+- Beta [CI](https://github.com/abhishek-r-patel/homeish/actions/runs/44176960039) (checks, database and e2e) and [CodeQL](https://github.com/abhishek-r-patel/homeish/actions/runs/44176960140) passed on `168e934`.
+- Main [CI](https://github.com/abhishek-r-patel/homeish/actions/runs/44178320359) (checks, database and e2e) and [CodeQL](https://github.com/abhishek-r-patel/homeish/actions/runs/44178321216) passed on `5ee2f5a`.
+- Testdb applied the five explicitly approved versions: `20261123100000` (event audience/refunds), `20261123110000` (community mute/restore), `20261123120000` (profile language), `20261123130000` (language availability) and `20261123140000` (billing payment dates). `npm run db:list` confirmed migration parity and `npm run db:types:check` passed. No seeds, resets, roles or Vault updates were performed.
+- The first beta CI exposed a database-day/society-day mismatch. The approved repair uses the society day for payment-date limits, UTC integration connections and the India job date in request/tenancy fixtures. Both new payment boundary tests failed before the repair and passed afterwards; no permissions changed in that repair.
 
 **Data flow and permissions:** a developer enables the optional module, then an admin may allow Hindi for the society; both default off. A signed-in choice -> validate and save only the caller's profile -> use Hindi dictionaries only when both gates are on, otherwise render English without changing the saved preference. Signed-out/shared-gate choice stays in its separate device cookie. Committee members can read the setting but cannot change it. Authentication and authorisation stay unchanged; language is a display preference, not access to a society. Reuse the current profile/font-preference pattern. Never share user-specific rendered language through another user's cache or include another person's preference in a shared gate session.
 
@@ -1411,11 +1419,11 @@ The profile and availability migrations, locally regenerated types, account/devi
 
 **Tests:** dictionary coverage, interpolation/plurals and missing-key checks; locale resolution and account/device isolation; authenticated-only preference writes and another-user denial; role/society switches; failed saves and unsaved-form confirmation; amounts/dates unchanged except display; English-only output boundaries; module-off and permission denials in both languages; correct document and untranslated-content language attributes; no server/client rendering mismatch; 320px reflow, 200% zoom, keyboard/focus and axe checks with longer Hindi text. Run `npm run check`, `npm run test:integration:local`, `npm run build` and the complete Playwright suite before calling the implementation locally verified.
 
-**Rollout:** apply both additive migrations, `20261123120000_core_profile_language_preference.sql` then `20261123130000_core_language_module.sql`, before code on any separately approved hosted release; existing accounts default to English and both availability gates default off. Verify font delivery without third-party browser requests. Keep Hindi selectable for local/beta review but unavailable on live until the owner's explicit language approval. Roll back application code if necessary while retaining the additive fields; do not reverse/drop data. No production or testdb migration is authorised by this plan.
+**Rollout:** the owner-approved testdb rollout applied the event/community follow-ups and both additive language migrations, `20261123120000_core_profile_language_preference.sql` then `20261123130000_core_language_module.sql`, before their code promotion. The later approved billing date repair was also migrated before promotion. Existing accounts default to English and both availability gates default off; neither gate was activated. Local browser tests verified bundled font delivery without third-party font requests. Keep Hindi available for local/beta review but unavailable on live until the owner's explicit language approval. Roll back application code if necessary while retaining the additive fields; do not reverse/drop data. No live migration or activation was performed or authorised; a future live rollout needs separate approval.
 
 **Completion criteria:** every in-scope screen translated and locally verified with the DESIGN checklist in both languages. AI-drafted translations are labelled unreviewed until owner review. Manual Hindi/device acceptance and live enablement are separate from implementation verification. Regional languages remain future work.
 
-**Status:** scope approved; implementation and the complete local automated gate are finished. Owner Hindi/device acceptance and release remain open, so P33 stays yellow under this plan's status legend. No commit, push, hosted migration or live enablement is authorised.
+**Status (2026-11-18): code released to beta and main with green CI and CodeQL; approved testdb migrations and type parity verified.** P33 is green for code release under this plan's status legend. Owner Hindi wording, physical-device and screen-reader acceptance remain pending, separately from implementation verification. Both signed-in Hindi availability gates default off and were not activated by this release. Live database changes and Hindi activation are not authorised.
 
 ---
 
@@ -1497,6 +1505,7 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 # Current Next Steps
 
+- **P33 and P29/P30 follow-ups:** released to beta and main and migrated to testdb (2026-11-18), with CI and CodeQL green. Next: owner Hindi wording, physical-device and screen-reader review. Hindi availability was not activated; live rollout still needs separate approval.
 - **P24–P26:** released to beta and main (2026-11-16) with the decisions in PRD D-54 to D-56, and migrated to `homeish-testdb`. Next: owner review of the assumptions listed in each phase, then owner UAT.
 - **Owner-only:** UAT for P11–P21; P10.2 TalkBack/VoiceOver and outdoor checks; P10.5, P10.8 and P10.9 go-live steps. These gate live-society enablement, not local builds.
 - **P16–P21:** released to beta and main and migrated to testdb (2026-11-15); owner UAT pending.
