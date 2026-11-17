@@ -1,4 +1,4 @@
-// Verify registration decisions dispatch only their committed request's push notifications.
+// Verify membership decisions and own-profile preference updates.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -31,12 +31,25 @@ import {
   approveSocietyRegistration,
   moveOccupant,
   rejectSocietyRegistration,
+  updateLanguagePreference,
 } from '../../src/core/members/operations';
 
 const membershipId = 'c0d55fc3-0751-4b79-86c1-5b3e25942392';
 const requestId = 'a0d55fc3-0751-4b79-86c1-5b3e25942392';
 const societyId = 'b0d55fc3-0751-4b79-86c1-5b3e25942392';
 const unitId = 'd0d55fc3-0751-4b79-86c1-5b3e25942392';
+const userId = 'e0d55fc3-0751-4b79-86c1-5b3e25942392';
+
+function makeLanguagePreferenceDb(
+  data: { id: string } | null = { id: userId },
+) {
+  const maybeSingle = vi.fn().mockResolvedValue({ data, error: null });
+  const select = vi.fn().mockReturnValue({ maybeSingle });
+  const eq = vi.fn().mockReturnValue({ select });
+  const update = vi.fn().mockReturnValue({ eq });
+  const from = vi.fn().mockReturnValue({ update });
+  return { db: { from }, eq, from, maybeSingle, select, update };
+}
 
 describe('membership operations', () => {
   beforeEach(() => {
@@ -172,4 +185,46 @@ describe('membership operations', () => {
       });
     },
   );
+
+  it.each(['en', 'hi'] as const)(
+    'updates only the authenticated profile language to %s',
+    async (language) => {
+      const profileDb = makeLanguagePreferenceDb();
+      mocks.buildRequestContext.mockResolvedValueOnce({
+        db: profileDb.db,
+        userId,
+      });
+
+      await updateLanguagePreference(language, requestId);
+
+      expect(profileDb.from).toHaveBeenCalledWith('profiles');
+      expect(profileDb.update).toHaveBeenCalledWith({
+        language_preference: language,
+      });
+      expect(profileDb.eq).toHaveBeenCalledWith('id', userId);
+      expect(profileDb.select).toHaveBeenCalledWith('id');
+    },
+  );
+
+  it('rejects unsupported language values before loading the profile', async () => {
+    await expect(
+      updateLanguagePreference('fr', requestId),
+    ).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      fieldErrors: { language: 'Choose English or Hindi.' },
+    });
+    expect(mocks.buildRequestContext).not.toHaveBeenCalled();
+  });
+
+  it('rejects when the authenticated profile cannot be updated', async () => {
+    const profileDb = makeLanguagePreferenceDb(null);
+    mocks.buildRequestContext.mockResolvedValueOnce({
+      db: profileDb.db,
+      userId,
+    });
+
+    await expect(
+      updateLanguagePreference('hi', requestId),
+    ).rejects.toMatchObject({ code: 'UNAUTHENTICATED' });
+  });
 });

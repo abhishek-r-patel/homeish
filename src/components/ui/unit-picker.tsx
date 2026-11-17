@@ -3,6 +3,7 @@
 
 import type { SelectOption } from './select-input';
 import { Combobox } from './combobox';
+import { useUiTranslator } from './language';
 
 export type UnitBlock = {
   id: string;
@@ -32,6 +33,7 @@ export function UnitPicker({
   required = false,
   value,
 }: UnitPickerProps) {
+  const { translate } = useUiTranslator();
   const blockOptions = blocks.map(({ id: blockId, label }) => ({
     label,
     value: blockId,
@@ -42,12 +44,12 @@ export function UnitPicker({
     <div className="grid gap-space-4">
       <Combobox
         id={`${id}-block`}
-        label="Block"
+        label={translate('Block')}
         onChange={(blockId) =>
           onChange(blockId ? { blockId, unitId: null } : null)
         }
         options={blockOptions}
-        placeholder="Search blocks"
+        placeholder={translate('Search blocks')}
         required={required}
         value={value?.blockId ?? null}
       />
@@ -55,21 +57,25 @@ export function UnitPicker({
         disabled={!selectedBlock}
         emptyMessage={
           <>
-            <p>No matching unit</p>
+            <p>{translate('No matching unit')}</p>
             {isAdmin ? (
               <p className="mt-space-1">
-                Import the unit list from a CSV in society settings.
+                {translate(
+                  'Import the unit list from a CSV in society settings.',
+                )}
               </p>
             ) : null}
           </>
         }
         id={`${id}-unit`}
-        label="Unit"
+        label={translate('Unit')}
         onChange={(unitId) =>
           selectedBlock && value ? onChange({ ...value, unitId }) : undefined
         }
         options={selectedBlock?.units ?? []}
-        placeholder={selectedBlock ? 'Search units' : 'Select a block first'}
+        placeholder={translate(
+          selectedBlock ? 'Search units' : 'Select a block first',
+        )}
         required={required}
         value={value?.unitId ?? null}
       />

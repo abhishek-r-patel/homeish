@@ -115,7 +115,7 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 ### 3.1 Typeface
 
 - **Default families:** Manrope for body text and Sora for headings, bundled with the app so browsers do not request fonts from another site. Users may choose these or their device-default font; the preference is saved to their account. **[DD-02 — Approved 2026-11-09]**
-- **Indic scripts (future, NFR-13):** Noto Sans Devanagari as fallback family; line-height tokens below already accommodate taller glyphs.
+- **Indic scripts (P33, D-66):** locally bundled Noto Sans Devanagari supports Hindi; the variable font and SIL Open Font License 1.1 are in [public/fonts/](../public/fonts/) and [OFL.txt](../public/fonts/OFL.txt). Line-height tokens below accommodate taller glyphs.
 - **Numerals:** Enable tabular numerals on all amounts, counts, dates in tables, codes and OTP.
 - **Monospace (log viewer, reference IDs, stack traces only):** system monospace stack.
 
@@ -703,6 +703,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
   - P7A exposes only Charge Types and Payment Settings, with a read-only summary of developer-managed billing rules. Unimplemented bill/payment/report tabs and resident payment actions stay hidden. QR upload failures must be retried or removed before saving; abandoned uploads can be removed explicitly. Payment-detail saves require a focused confirmation showing the proposed UPI ID and payee, retain entered values on failure, and show one persistent outcome after success.
 - **A-08 Requests:** table with status, category, unit, assignee, SLA due (overdue highlighted with danger chip), detail with assign control (select + "Assign" Primary), status change segmented control, internal comment thread. MVP+ (D-17): a **Sort** select (Overdue first, then newest / Most upvoted) and an upvote count caption on common-area rows.
 - **Settings pages:** two-column on `expanded` (section nav left, form right); single column on compact.
+- **Language availability (P33, D-67):** show the Hindi control in Society settings only after the developer enables Language Support. Admins can change it; committee members see a read-only status. English is always available. If either the module or society setting is off, signed-in society screens use English and saved preferences remain unchanged. When the module is off, tell admins to ask the platform developer to enable it.
 - Committee: same layouts, with action controls absent (read-only) and a persistent "Read-only access" banner where the role has partial write.
 
 ### 12.5 Developer Console (D-01 – D-07)
@@ -717,7 +718,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 ### 12.6 Cross-module pages
 
 - **Notification inbox (S-11):** list items grouped Today / Earlier; unread indicator dot plus visible text for assistive tech; tapping opens the deep link and marks read; "Mark all read" in header.
-- **Profile (S-12):** read-only facts (name, mobile, society, role, unit) and editable name/photo and font preference (Homeish fonts or device default); sign out at the bottom; "Help and support" with copyable session ID (11.5).
+- **Profile (S-12):** read-only facts (name, mobile, society, role, unit) and editable name/photo, font preference (Homeish fonts or device default) and account language (English or Hindi); sign out at the bottom; "Help and support" with copyable session ID (11.5).
 - **Error / no-access / module-disabled (S-13):** full-region states per 9.3.
 
 ### 12.7 Staff management (P12)
@@ -824,6 +825,8 @@ Target: **WCAG 2.2 AA** for all resident, guard, admin and developer journeys.
 | Guard context  | Test outdoors-brightness contrast, gloved/one-handed use, and low-end device performance                                                                                                          |
 
 Process: automated checks (axe or equivalent) on every page in CI do **not** replace manual keyboard, screen-reader (TalkBack and VoiceOver) and zoom passes, which are part of module UAT (PRD NFR-16).
+
+For P33, use the active interface language for shared controls, accessible labels, validation and action feedback, including feedback already visible when the language changes. Keep user-written content and identifiers untouched. The language switch preserves the current screen and drafts; confirm before switching an edited form, including an SOS draft. Prefilled controls are not edits merely because they appear after the page loads. Keep English-only stored messages and output documents explicitly identified. Automated Hindi fixture checks cover 320px reflow and a 200% zoom simulation at an effective 320px layout; physical-device, screen-reader and owner Hindi review remain separate acceptance work.
 
 ---
 

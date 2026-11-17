@@ -5,8 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from './button';
 import { SelectInput } from './select-input';
 import { TextInput } from './text-input';
-
-const dateLocale = 'en-IN';
+import { useUiTranslator } from './language';
 
 type DatePickerProps = {
   error?: string;
@@ -40,9 +39,18 @@ function toDateValue(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function formatDate(value: string, options: Intl.DateTimeFormatOptions) {
+function formatDate(
+  value: string,
+  options: Intl.DateTimeFormatOptions,
+  dateLocale: string,
+) {
   const date = parseDate(value);
-  return date ? new Intl.DateTimeFormat(dateLocale, options).format(date) : '';
+  return date
+    ? new Intl.DateTimeFormat(dateLocale, {
+        ...options,
+        ...(dateLocale === 'hi-IN' ? { numberingSystem: 'latn' } : {}),
+      }).format(date)
+    : '';
 }
 
 export function DatePicker({
@@ -56,6 +64,8 @@ export function DatePicker({
   required = false,
   value,
 }: DatePickerProps) {
+  const { locale, translate } = useUiTranslator();
+  const dateLocale = locale === 'hi' ? 'hi-IN' : 'en-IN';
   const [open, setOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState<{
     month: number;
@@ -68,7 +78,7 @@ export function DatePicker({
   const expandedHelpId = helpText ? `${id}-expanded-help` : undefined;
   const describedBy =
     [expandedHelpId, expandedErrorId].filter(Boolean).join(' ') || undefined;
-  const selectedDateText = formatDate(value, { dateStyle: 'long' });
+  const selectedDateText = formatDate(value, { dateStyle: 'long' }, dateLocale);
 
   useEffect(() => {
     if (!open) {
@@ -128,9 +138,9 @@ export function DatePicker({
       )
     : [];
   const weekdays = Array.from({ length: 7 }, (_, index) =>
-    new Intl.DateTimeFormat(dateLocale, { weekday: 'short' }).format(
-      new Date(2026, 0, 4 + index),
-    ),
+    new Intl.DateTimeFormat(dateLocale, {
+      weekday: 'short',
+    }).format(new Date(2026, 0, 4 + index)),
   );
 
   return (
@@ -152,7 +162,7 @@ export function DatePicker({
       <div className="relative hidden expanded:block">
         <p className="text-body-strong text-ink" id={`${id}-label`}>
           {label}
-          {required ? ' (required)' : ''}
+          {required ? ` ${translate('(required)')}` : ''}
         </p>
         <button
           aria-describedby={describedBy}
@@ -165,19 +175,21 @@ export function DatePicker({
           ref={triggerRef}
           type="button"
         >
-          <span id={`${id}-value`}>{selectedDateText || 'Choose a date'}</span>
+          <span id={`${id}-value`}>
+            {selectedDateText || translate('Choose a date')}
+          </span>
           <span aria-hidden="true">▦</span>
         </button>
         {open && monthDate && visibleMonth ? (
           <div
-            aria-label="Choose a date"
+            aria-label={translate('Choose a date')}
             className="absolute left-0 top-full z-40 mt-space-2 w-content-narrow max-w-full rounded-md border border-rule bg-surface p-space-4 shadow-overlay"
             ref={rootRef}
             role="dialog"
           >
             <div className="mb-space-3 flex items-center justify-between gap-space-2">
               <Button
-                aria-label="Previous month"
+                aria-label={translate('Previous month')}
                 iconOnly
                 leadingIcon={<span aria-hidden="true">‹</span>}
                 onClick={() => changeMonth(-1)}
@@ -187,10 +199,13 @@ export function DatePicker({
                 {new Intl.DateTimeFormat(dateLocale, {
                   month: 'long',
                   year: 'numeric',
+                  ...(dateLocale === 'hi-IN'
+                    ? { numberingSystem: 'latn' }
+                    : {}),
                 }).format(monthDate)}
               </p>
               <Button
-                aria-label="Next month"
+                aria-label={translate('Next month')}
                 iconOnly
                 leadingIcon={<span aria-hidden="true">›</span>}
                 onClick={() => changeMonth(1)}
@@ -227,7 +242,11 @@ export function DatePicker({
                 const selected = dateValue === value;
                 return (
                   <button
-                    aria-label={formatDate(dateValue, { dateStyle: 'full' })}
+                    aria-label={formatDate(
+                      dateValue,
+                      { dateStyle: 'full' },
+                      dateLocale,
+                    )}
                     aria-pressed={selected}
                     className={`min-h-12 rounded-sm text-body hover:bg-brand-tint focus-visible:outline-2 focus-visible:outline-focus ${selected ? 'bg-brand text-on-brand' : ''}`}
                     disabled={unavailable}
@@ -270,7 +289,7 @@ export function DatePicker({
       </div>
       {value ? (
         <p className="text-caption text-ink-muted" aria-live="polite">
-          Selected date: {selectedDateText}
+          {translate('Selected date: {date}', { date: selectedDateText })}
         </p>
       ) : null}
     </div>
@@ -314,6 +333,7 @@ export function TimePicker({
   timeZone,
   value,
 }: TimePickerProps) {
+  const { translate } = useUiTranslator();
   const describedBy =
     [helpText ? `${id}-help` : undefined, error ? `${id}-error` : undefined]
       .filter(Boolean)
@@ -323,13 +343,13 @@ export function TimePicker({
     <fieldset className="grid gap-space-2 border-0 p-0">
       <legend className="text-body-strong text-ink">
         {label}
-        {required ? ' (required)' : ''}
+        {required ? ` ${translate('(required)')}` : ''}
       </legend>
       <div className="flex flex-wrap items-end gap-space-2">
         <div className="min-w-28 flex-1">
           <SelectInput
             id={`${id}-hour`}
-            label="Hour"
+            label={translate('Hour')}
             onChange={(event) =>
               onChange({ ...value, hour: event.currentTarget.value })
             }
@@ -343,7 +363,7 @@ export function TimePicker({
         <div className="min-w-28 flex-1">
           <SelectInput
             id={`${id}-minute`}
-            label="Minute"
+            label={translate('Minute')}
             onChange={(event) =>
               onChange({ ...value, minute: event.currentTarget.value })
             }
@@ -357,7 +377,7 @@ export function TimePicker({
         <div className="min-w-28 flex-1">
           <SelectInput
             id={`${id}-period`}
-            label="AM/PM"
+            label={translate('AM/PM')}
             onChange={(event) => {
               const period = event.currentTarget.value;
               if (period === 'AM' || period === 'PM') {
@@ -365,8 +385,8 @@ export function TimePicker({
               }
             }}
             options={[
-              { label: 'AM', value: 'AM' },
-              { label: 'PM', value: 'PM' },
+              { label: translate('AM'), value: 'AM' },
+              { label: translate('PM'), value: 'PM' },
             ]}
             aria-describedby={describedBy}
             aria-invalid={Boolean(error) || undefined}
@@ -376,7 +396,9 @@ export function TimePicker({
         </div>
       </div>
       {timeZone ? (
-        <p className="text-caption text-ink-muted">Time zone: {timeZone}</p>
+        <p className="text-caption text-ink-muted">
+          {translate('Time zone: {timeZone}', { timeZone })}
+        </p>
       ) : null}
       {helpText ? (
         <p className="text-caption text-ink-muted" id={`${id}-help`}>

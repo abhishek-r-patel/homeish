@@ -239,6 +239,36 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
   },
+  language: {
+    core: false,
+    defaultSettings: emptySettings,
+    key: 'language',
+    name: 'Language Support',
+    navigation: {
+      admin: [
+        {
+          href: '/admin/settings#language',
+          label: 'Language',
+          permission: 'language:read',
+          section: 'Society',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/settings#language',
+          label: 'Language',
+          permission: 'language:read',
+          section: 'Society',
+        },
+      ],
+    },
+    permissions: {
+      'language:read': ['admin', 'committee'],
+      'language:manage': ['admin'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: emptySettingsSchema,
+  },
   visitor: {
     core: false,
     defaultSettings: {
@@ -1097,6 +1127,7 @@ export function parseModuleSettings(moduleKey: ModuleKey, settings: unknown) {
 const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
   admin: [
     'core',
+    'language',
     'visitor',
     'billing',
     'service_request',
@@ -1124,6 +1155,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
   ],
   committee: [
     'core',
+    'language',
     'billing',
     'expense',
     'service_request',

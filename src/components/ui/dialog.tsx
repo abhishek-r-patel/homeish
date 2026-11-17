@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode, RefObject } from 'react';
 import { Button } from './button';
 import { TextAreaInput } from './specialized-inputs';
+import { useUiTranslator } from './language';
 
 type DialogProps = {
   children: ReactNode;
@@ -29,6 +30,7 @@ export function Dialog({
   open,
   title,
 }: DialogProps) {
+  const { translate } = useUiTranslator();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export function Dialog({
           {title}
         </h2>
         <Button
-          aria-label="Close dialog"
+          aria-label={translate('Close dialog')}
           disabled={closeDisabled}
           iconOnly
           leadingIcon={
@@ -136,6 +138,7 @@ function ConfirmDialogForm({
   requiresReason,
   variant,
 }: ConfirmDialogFormProps) {
+  const { translate } = useUiTranslator();
   const [reason, setReason] = useState('');
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -151,7 +154,7 @@ function ConfirmDialogForm({
       {requiresReason ? (
         <TextAreaInput
           id={`${id}-reason`}
-          label="Reason"
+          label={translate('Reason')}
           maxLength={500}
           onChange={(event) => setReason(event.currentTarget.value)}
           required
@@ -170,7 +173,7 @@ function ConfirmDialogForm({
           onClick={onCancel}
           variant="secondary"
         >
-          Cancel
+          {translate('Cancel')}
         </Button>
         <Button
           disabled={requiresReason && !reason.trim()}

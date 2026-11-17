@@ -3,6 +3,7 @@
 
 import { useId, useRef } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
+import { useUiTranslator } from './language';
 
 export type TabItem = {
   id: string;
@@ -187,9 +188,10 @@ const dateRangeOptions: readonly (SegmentOption & { id: DateRangePreset })[] = [
 ];
 
 export function DateRangePresets({ onChange, value }: DateRangePresetsProps) {
+  const { translate } = useUiTranslator();
   return (
     <SegmentedControl
-      label="Date range"
+      label={translate('Date range')}
       onChange={(id) => {
         if (
           id === 'today' ||
@@ -200,7 +202,10 @@ export function DateRangePresets({ onChange, value }: DateRangePresetsProps) {
           onChange(id);
         }
       }}
-      options={dateRangeOptions}
+      options={dateRangeOptions.map((option) => ({
+        ...option,
+        label: translate(option.label),
+      }))}
       value={value}
     />
   );

@@ -2,6 +2,7 @@
 'use client';
 
 import type { SelectHTMLAttributes } from 'react';
+import { useUiTranslator } from './language';
 
 export type SelectOption = {
   disabled?: boolean;
@@ -32,6 +33,7 @@ export function SelectInput({
   required,
   ...selectProps
 }: SelectInputProps) {
+  const { translate } = useUiTranslator();
   const descriptionId = helpText ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy =
@@ -46,7 +48,7 @@ export function SelectInput({
         htmlFor={id}
       >
         {label}
-        {required ? ' (required)' : ''}
+        {required ? ` ${translate('(required)')}` : ''}
       </label>
       <div className="relative">
         <select

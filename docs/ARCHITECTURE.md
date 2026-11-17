@@ -112,7 +112,7 @@ flowchart LR
 | Files                | Supabase Storage                                                                               | CDN/image transformation                                                                                                      | Storage/bandwidth cost                                                              |
 | Observability        | Sentry + `error_logs` + `audit_logs`                                                           | Metrics/tracing stack                                                                                                         | Multiple on-call needs                                                              |
 | Subscription billing | Manual (PRD D-08)                                                                              | In-app plan billing                                                                                                           | PRD change                                                                          |
-| Languages            | English, strings externalised                                                                  | i18n catalogs                                                                                                                 | PRD NFR-13                                                                          |
+| Languages            | English in MVP; P33 adds gated English/Hindi (Section 5.4)                                     | Additional regional languages                                                                                                 | Later owner decision beyond PRD D-66/D-67                                           |
 
 Scale target for MVP design (PRD NFR-4): 100 societies, 100k users, ≤ 1,500 units per society. This is comfortably within a single managed Postgres instance with proper indexes.
 
@@ -217,6 +217,9 @@ The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client compone
 
 - Tokens (colour, type, spacing, radius, motion) defined once in the Tailwind theme per DESIGN.md Section 2–4. No raw hex or arbitrary values in components.
 - Manrope body text and Sora headings are bundled with the app by default; the signed-in user's `font_preference` may select the device-default font and follows the account across devices.
+- P33 resolves the signed-in account language from `profiles.language_preference` and uses a separate device cookie before sign-in. For signed-in society screens, Hindi is available only when both the developer-enabled `language` module and the society's `hindi_available` setting are on; both default off. Turning either off selects English without changing the saved preference. Typed English/Hindi catalogs are shared by server and client UI; missing Hindi keys fail explicitly. Developer, public marketing, historical content and stored notifications/documents/exports remain English. Bundle the approved Noto Sans Devanagari assets locally, with no runtime font request to another site.
+- `src/core/i18n/` owns the request-locale resolver, strict message catalogs, feedback translation and locale-aware display formatters. Client feedback is translated when rendered, including known validation and composed action messages; the server envelope and technical codes stay unchanged. Counts and rupee amounts retain their values, and already-formatted IST feedback dates are localized without a second time-zone conversion.
+- Society-facing route-group error boundaries reuse the root error reporter inside their existing language providers. The analytics dashboard renders authorized aggregate view models as a client component to follow language changes; analytics calculations and English PDF/CSV formatting remain server-side or pure shared logic.
 - Shared component library in `src/components/ui/` implements DESIGN.md Section 6; module-specific composites live inside their module (Section 9).
 - Accessibility behaviours (focus return, trapping, live regions) are implemented once in the shared components, not per screen.
 
@@ -426,6 +429,8 @@ routes, and the synthetic fixture at `src/app/fixtures/event/`.
 
 P29 adds `src/core/community/`, `src/components/community/`, resident and admin Community routes, and the synthetic
 fixture at `src/app/fixtures/community/`.
+
+P33 adds `src/core/i18n/` (catalogs, request locale and display formatters), language context/provider/selector components in the existing `src/components/`, and approved local Noto font assets/licence in `public/fonts/`. It reuses profile and society settings routes; no language-prefixed URL tree is introduced.
 
 ```
 homeish/

@@ -3,7 +3,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
-import { disableJoinCode, rotateJoinCode } from '@/core/society/operations';
+import {
+  disableJoinCode,
+  rotateJoinCode,
+  updateHindiAvailability,
+} from '@/core/society/operations';
 
 export async function rotateJoinCodeAction() {
   return runServerAction<string>(
@@ -22,4 +26,21 @@ export async function disableJoinCodeAction() {
     revalidatePath('/admin/settings');
     return 'Society self-registration is disabled.';
   });
+}
+
+export async function updateHindiAvailabilityAction(formData: FormData) {
+  return runServerAction(
+    'society.updateHindiAvailability',
+    async (requestId) => {
+      const settings = await updateHindiAvailability(
+        {
+          hindiAvailable: formData.get('hindiAvailable'),
+          expectedVersion: formData.get('expectedVersion'),
+        },
+        requestId,
+      );
+      revalidatePath('/admin/settings');
+      return { message: 'Language settings saved.', data: settings };
+    },
+  );
 }

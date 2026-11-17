@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 import { GuardShell } from '@/components/app-shells';
 import { HandledByControl } from '@/components/guards/handled-by-control';
+import { LanguageProvider } from '@/components/language-provider';
 import { getGuardDutyState } from '@/core/guards/operations';
 
 export default async function GuardLayout({
@@ -9,9 +10,15 @@ export default async function GuardLayout({
 }: Readonly<{ children: ReactNode }>) {
   const guardState = await getGuardDutyState();
   return (
-    <GuardShell>
-      <HandledByControl state={guardState} />
-      {children}
-    </GuardShell>
+    <LanguageProvider
+      hindiEnabled={guardState.isHindiEnabled}
+      initialLocale={guardState.languagePreference}
+      mode="account"
+    >
+      <GuardShell>
+        <HandledByControl state={guardState} />
+        {children}
+      </GuardShell>
+    </LanguageProvider>
   );
 }

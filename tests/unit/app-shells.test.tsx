@@ -4,6 +4,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/home',
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+vi.mock('../../src/components/language-provider', () => ({
+  useLanguage: () => ({
+    changeLocale: vi.fn(),
+    locale: 'en',
+    pending: false,
+    translate: (source: string) => source,
+  }),
 }));
 
 import {

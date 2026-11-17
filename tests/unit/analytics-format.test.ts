@@ -80,6 +80,28 @@ describe('analytics formatting', () => {
     expect(text).toContain('9:30');
     expect(text).not.toMatch(/[\u00a0\u202f]/);
   });
+
+  it('localizes screen units and dates while exports keep their English defaults', () => {
+    expect(formatAnalyticsValue(3.24, 'days', { locale: 'hi' })).toBe(
+      '3.2 दिन',
+    );
+    expect(formatAnalyticsValue(14, 'minutes', { locale: 'hi' })).toBe(
+      '14 मिनट',
+    );
+    expect(formatPeriod('2026-03', 'hi')).toContain('मार्च');
+    expect(formatFinancialYear('2026-04-01', 'hi')).toBe('वित्त वर्ष 2026–27');
+    const range = {
+      kind: 'stat',
+      from: '2026-03-05',
+      to: '2026-03-05',
+      range: 'months',
+    } as const;
+    expect(formatRangeCaption(range, 'hi')).toMatch(/आज, .*मार्च.*2026/);
+    expect(formatRangeCaption(range)).toBe('Today, 5 Mar 2026');
+    expect(formatGeneratedAt('2026-03-05T18:30:00Z', 'UTC', 'hi')).toMatch(
+      /मार्च.*6:30\s*pm/i,
+    );
+  });
 });
 
 const envelope = {

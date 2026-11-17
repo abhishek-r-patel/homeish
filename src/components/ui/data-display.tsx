@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { Button } from './button';
 import { Toast } from './feedback';
+import { useUiTranslator } from './language';
 
 type StatusTone = 'success' | 'warning' | 'danger' | 'neutral' | 'info';
 
@@ -181,14 +182,23 @@ type StatusChipProps = {
 };
 
 export function StatusChip({ status }: StatusChipProps) {
+  const { translate } = useUiTranslator();
   const { icon, label, tone } = statusMap[status];
+  const statusArea = status.slice(0, status.indexOf('.'));
+  const translatedLabel =
+    statusArea === 'society' ||
+    statusArea === 'error_log' ||
+    statusArea === 'job' ||
+    statusArea === 'severity'
+      ? label
+      : translate(label);
 
   return (
     <span
       className={`inline-flex min-h-6 items-center gap-space-1 rounded-sm px-space-2 text-micro ${toneClasses[tone]}`}
     >
       <span aria-hidden="true">{icon}</span>
-      {label}
+      {translatedLabel}
     </span>
   );
 }
@@ -426,11 +436,18 @@ type TimelineProps = {
   now: string;
 };
 
-function formatRelativeTime(date: Date, now: number) {
+function formatRelativeTime(
+  date: Date,
+  now: number,
+  locale: 'en' | 'hi' | null,
+  translate: (source: string) => string,
+) {
   const differenceSeconds = Math.round((date.getTime() - now) / 1000);
   const absoluteSeconds = Math.abs(differenceSeconds);
   if (absoluteSeconds < 60) {
-    return differenceSeconds > 0 ? 'in less than a minute' : 'just now';
+    return translate(
+      differenceSeconds > 0 ? 'in less than a minute' : 'just now',
+    );
   }
   const unit =
     absoluteSeconds < 60 * 60
@@ -441,22 +458,27 @@ function formatRelativeTime(date: Date, now: number) {
   const divisor =
     unit === 'minute' ? 60 : unit === 'hour' ? 60 * 60 : 24 * 60 * 60;
   const value = Math.round(differenceSeconds / divisor);
-  return new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' }).format(
-    value,
-    unit,
-  );
+  return new Intl.RelativeTimeFormat(locale === 'hi' ? 'hi-IN' : undefined, {
+    numeric: 'auto',
+    ...(locale === 'hi' ? { numberingSystem: 'latn' } : {}),
+  }).format(value, unit);
 }
 
 export function Timeline({ events, now }: TimelineProps) {
+  const { locale, translate } = useUiTranslator();
   const nowTimestamp = new Date(now).getTime();
 
   return (
     <ol className="grid">
       {events.map((event, index) => {
         const date = new Date(event.at);
-        const absolute = new Intl.DateTimeFormat(undefined, {
+        const formatLocale = locale === 'hi' ? 'hi-IN' : undefined;
+        const absolute = new Intl.DateTimeFormat(formatLocale, {
           dateStyle: 'medium',
           timeStyle: 'short',
+          ...(locale === 'hi'
+            ? { hourCycle: 'h12' as const, numberingSystem: 'latn' as const }
+            : {}),
         }).format(date);
         const withinDay =
           Math.abs(nowTimestamp - date.getTime()) < 24 * 60 * 60 * 1000;
@@ -483,14 +505,16 @@ export function Timeline({ events, now }: TimelineProps) {
                 </p>
               ) : null}
               <time
-                aria-label={`${withinDay ? formatRelativeTime(date, nowTimestamp) : absolute}; ${absolute}`}
+                aria-label={`${withinDay ? formatRelativeTime(date, nowTimestamp, locale, translate) : absolute}; ${absolute}`}
                 className="mt-space-1 inline-block text-caption text-ink-muted"
                 dateTime={event.at}
                 suppressHydrationWarning
                 tabIndex={0}
                 title={absolute}
               >
-                {withinDay ? formatRelativeTime(date, nowTimestamp) : absolute}
+                {withinDay
+                  ? formatRelativeTime(date, nowTimestamp, locale, translate)
+                  : absolute}
               </time>
             </div>
           </li>
@@ -517,6 +541,7 @@ export function CodeDisplay({
   validity,
   value,
 }: CodeDisplayProps) {
+  const { translate } = useUiTranslator();
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState<string | null>(null);
 
@@ -527,7 +552,9 @@ export function CodeDisplay({
       setCopyError(null);
     } catch {
       setCopied(false);
-      setCopyError('Could not copy. Select and copy the code manually.');
+      setCopyError(
+        translate('Could not copy. Select and copy the code manually.'),
+      );
     }
   }
 
@@ -544,11 +571,11 @@ export function CodeDisplay({
           </code>
           <div className="flex flex-wrap gap-space-2">
             <Button onClick={copyCode} variant="secondary">
-              Copy
+              {translate('Copy')}
             </Button>
             {onShare ? (
               <Button onClick={onShare} variant="secondary">
-                Share
+                {translate('Share')}
               </Button>
             ) : null}
           </div>
@@ -556,7 +583,9 @@ export function CodeDisplay({
             <p className="text-caption text-ink-muted">{validity}</p>
           ) : null}
           {singleUse ? (
-            <p className="text-caption text-ink-muted">Single use</p>
+            <p className="text-caption text-ink-muted">
+              {translate('Single use')}
+            </p>
           ) : null}
           {copyError ? (
             <p className="text-caption text-danger" role="alert">
@@ -566,7 +595,10 @@ export function CodeDisplay({
         </div>
       </div>
       {copied ? (
-        <Toast message="Copied" onDismiss={() => setCopied(false)} />
+        <Toast
+          message={translate('Copied')}
+          onDismiss={() => setCopied(false)}
+        />
       ) : null}
     </section>
   );

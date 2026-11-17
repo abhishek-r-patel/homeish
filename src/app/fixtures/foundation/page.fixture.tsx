@@ -12,8 +12,18 @@ import { FilterBar } from '@/components/ui/table-controls';
 import { SelectInput } from '@/components/ui/select-input';
 import { Tabs } from '@/components/ui/tabs';
 import { TextInput } from '@/components/ui/text-input';
+import { LanguageProvider } from '@/components/language-provider';
+import { LanguageSelector } from '@/components/language-selector';
 
 export default function FoundationFixturePage() {
+  return (
+    <LanguageProvider initialLocale="en" mode="device">
+      <FoundationFixtureContent />
+    </LanguageProvider>
+  );
+}
+
+function FoundationFixtureContent() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [date, setDate] = useState('2026-01-15');
   const [files, setFiles] = useState<readonly UploadFile[]>([]);
@@ -24,6 +34,7 @@ export default function FoundationFixturePage() {
 
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-content-default grid-cols-1 gap-space-6 px-space-4 py-space-6 text-ink">
+      <LanguageSelector />
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">
           Foundation Components Fixture

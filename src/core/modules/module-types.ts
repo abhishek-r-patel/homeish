@@ -25,6 +25,7 @@ export const MODULE_KEYS = [
   'meeting',
   'event',
   'community',
+  'language',
 ] as const;
 
 export type ModuleKey = (typeof MODULE_KEYS)[number];

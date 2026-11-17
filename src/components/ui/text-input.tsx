@@ -2,6 +2,7 @@
 'use client';
 
 import type { InputHTMLAttributes, ReactNode, Ref } from 'react';
+import { useUiTranslator } from './language';
 
 type TextInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> & {
   endAdornment?: ReactNode;
@@ -25,6 +26,7 @@ export function TextInput({
   startAdornment,
   ...inputProps
 }: TextInputProps) {
+  const { translate } = useUiTranslator();
   const descriptionId = helpText ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy =
@@ -44,7 +46,7 @@ export function TextInput({
         htmlFor={id}
       >
         {label}
-        {required ? ' (required)' : ''}
+        {required ? ` ${translate('(required)')}` : ''}
       </label>
       <div
         className={`flex min-h-12 w-full items-center gap-space-2 rounded-md border px-space-4 outline-none transition-colors duration-motion-fast focus-within:outline-2 focus-within:outline-offset-2 ${controlStyle} ${inputProps.disabled ? 'bg-surface-sunken text-ink-disabled' : ''}`}
