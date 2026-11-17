@@ -582,7 +582,9 @@ describe.skipIf(!hasDatabase)('database tenancy moves', () => {
         () =>
           f.service((client) =>
             client.query(
-              `select * from public.tenancy_retention_files_list(current_date)`,
+              `select * from public.tenancy_retention_files_list(
+                (now() at time zone 'Asia/Kolkata')::date
+              )`,
             ),
           ),
       );

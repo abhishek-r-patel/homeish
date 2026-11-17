@@ -65,6 +65,7 @@ async function withClient<T>(
 ): Promise<T> {
   const client = new Client({
     connectionString: connectionString(user, database),
+    options: '-c timezone=UTC',
   });
   await client.connect();
   try {

@@ -537,7 +537,7 @@ describe.skipIf(!hasDatabase)('database service requests', () => {
         (
           await client.query<{ count: number }>(
             `select public.request_auto_close_run(
-              $1, current_date, 'request-integration'
+              $1, (now() at time zone 'Asia/Kolkata')::date, 'request-integration'
             )::integer as count`,
             [societyId],
           )
