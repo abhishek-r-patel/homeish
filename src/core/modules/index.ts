@@ -1073,7 +1073,11 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'community:participate': ['resident'],
       'community:moderate': ['admin'],
     },
-    settingsAccess: emptySettingsAccess,
+    settingsAccess: {
+      muted_can_edit_pending: 'admin',
+      muted_can_report: 'admin',
+      muted_can_renew: 'admin',
+    },
     settingsSchema: communitySettingsSchema,
   },
 };

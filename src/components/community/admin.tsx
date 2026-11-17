@@ -2,7 +2,7 @@
 'use client';
 import Link from 'next/link';
 import { useId, useState } from 'react';
-import { RadioGroup } from '@/components/ui/choice-controls';
+import { CheckboxInput, RadioGroup } from '@/components/ui/choice-controls';
 import { Card, ListItem, StatusChip } from '@/components/ui/data-display';
 import { Banner, EmptyState } from '@/components/ui/feedback';
 import {
@@ -35,6 +35,7 @@ import {
   communityGroupSaveInputSchema,
   communityModerateInputSchema,
   communityMuteInputSchema,
+  communitySettingsInputSchema,
   communityUnmuteInputSchema,
   type CommunityAdminGroup,
   type CommunityAdminGroups,
@@ -45,6 +46,7 @@ import {
   type CommunityMemberOption,
   type CommunityModerationAction,
   type CommunityMuteDuration,
+  type CommunitySettingsResult,
   type CommunityTargetType,
 } from '@/core/community/validation';
 import { CommunityPhotoGallery, type CommunityPhotoUrls } from './photos';
@@ -61,6 +63,7 @@ export type CommunityAdminActions = {
   unmute: ModuleFormAction;
   saveGroup: ModuleFormAction;
   archiveGroup: ModuleFormAction;
+  saveSettings: ModuleFormAction;
 };
 
 const QUEUE_LABELS: Readonly<Record<CommunityAdminQueue, string>> = {
@@ -620,16 +623,73 @@ export function CommunityAdminGroupsView({
 
 // Mutes
 
+const MUTED_SETTING_LABELS = [
+  {
+    key: 'muted_can_edit_pending',
+    label: 'Edit their posts and listings still waiting for review',
+  },
+  { key: 'muted_can_report', label: 'Report posts, listings and replies' },
+  { key: 'muted_can_renew', label: 'Renew their marketplace listings' },
+] as const;
+
+function CommunityMuteSettingsCard({
+  settings,
+  action,
+}: {
+  settings: CommunitySettingsResult;
+  action: ModuleFormAction;
+}) {
+  const id = useId();
+  return (
+    <Card
+      title="What muted residents can still do"
+      description="Muted residents can always read, delete their own posts and listings, and close listings. They can never post, list or reply. Choose what else they may do."
+    >
+      <ModuleActionForm
+        key={settings.updatedAt}
+        action={action}
+        submitLabel="Save settings"
+        input={(form) =>
+          communitySettingsInputSchema.parse({
+            settings: Object.fromEntries(
+              MUTED_SETTING_LABELS.map(({ key }) => [
+                key,
+                form.get(key) === 'on',
+              ]),
+            ),
+            expectedUpdatedAt: settings.updatedAt,
+          })
+        }
+      >
+        <fieldset className="grid gap-space-1">
+          <legend className="sr-only">Allowed while muted</legend>
+          {MUTED_SETTING_LABELS.map(({ key, label }) => (
+            <CheckboxInput
+              key={key}
+              id={`${id}-${key}`}
+              name={key}
+              label={label}
+              defaultChecked={settings.settings[key]}
+            />
+          ))}
+        </fieldset>
+      </ModuleActionForm>
+    </Card>
+  );
+}
+
 export function CommunityAdminMutesView({
   mutes,
   members,
   search,
+  settings,
   actions,
   basePath = '/admin/community/mutes',
 }: {
   mutes: CommunityAdminMutes;
   members: readonly CommunityMemberOption[] | null;
   search: string | null;
+  settings: CommunitySettingsResult;
   actions: CommunityAdminActions;
   basePath?: string;
 }) {
@@ -641,6 +701,10 @@ export function CommunityAdminMutesView({
         description="Muted residents can read but cannot post, list or reply until the mute ends or you lift it."
       />
       <AdminNav basePath="/admin/community" />
+      <CommunityMuteSettingsCard
+        settings={settings}
+        action={actions.saveSettings}
+      />
       {mutes.items.length === 0 ? (
         <EmptyState
           title="No one is muted"

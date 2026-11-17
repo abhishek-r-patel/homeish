@@ -10558,6 +10558,16 @@ export type Database = {
         Args: { p_request_trace: string; p_today: string };
         Returns: Json;
       };
+      community_settings_get: { Args: { p_society_id: string }; Returns: Json };
+      community_settings_update: {
+        Args: {
+          p_expected_updated_at: string;
+          p_request_id: string;
+          p_settings: Json;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       community_unmute: {
         Args: {
           p_membership_id: string;

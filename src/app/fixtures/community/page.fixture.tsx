@@ -45,6 +45,7 @@ const scenarioSchema = z.enum([
   'listing',
   'listing-pending',
   'listing-expired',
+  'listing-muted',
   'mine',
   'admin-queue',
   'admin-queue-empty',
@@ -136,6 +137,7 @@ const adminActions: CommunityAdminActions = {
   moderate: successAction,
   mute: successAction,
   unmute: successAction,
+  saveSettings: successAction,
   saveGroup: successAction,
   archiveGroup: successAction,
 };
@@ -213,14 +215,26 @@ function postDetail(pending: boolean): CommunityPostDetail {
     replies: pending ? [] : replies,
     canReply: !pending,
     reportedByMe: false,
+    myMute: null,
   };
 }
 
-type ListingScenario = 'live' | 'pending' | 'expired';
+type ListingScenario = 'live' | 'pending' | 'expired' | 'muted';
 
 function listingDetail(scenario: ListingScenario): CommunityListingDetail {
   const mine = scenario !== 'live';
   return {
+    myMute:
+      scenario === 'muted'
+        ? {
+            mutedUntil: EXPIRES,
+            untilLifted: false,
+            reason: 'Repeated advertising in groups.',
+            canEditPending: false,
+            canReport: false,
+            canRenew: false,
+          }
+        : null,
     listing: {
       id: LISTING,
       listingType: 'sale',
@@ -234,10 +248,14 @@ function listingDetail(scenario: ListingScenario): CommunityListingDetail {
       createdAt: EARLIER,
       approvedAt: scenario === 'pending' ? null : EARLIER,
       expiresAt:
-        scenario === 'pending' ? null : scenario === 'expired' ? PAST : EXPIRES,
+        scenario === 'pending'
+          ? null
+          : scenario === 'expired' || scenario === 'muted'
+            ? PAST
+            : EXPIRES,
       closedAt: null,
       status: scenario === 'pending' ? 'pending' : 'approved',
-      expired: scenario === 'expired',
+      expired: scenario === 'expired' || scenario === 'muted',
       closed: false,
       mine,
       moderationReason: null,
@@ -443,6 +461,7 @@ export default function CommunityFixturePage() {
       case 'listing':
       case 'listing-pending':
       case 'listing-expired':
+      case 'listing-muted':
         return (
           <CommunityListingView
             key={scenario}
@@ -604,6 +623,14 @@ export default function CommunityFixturePage() {
               },
             ]}
             search="Resident B"
+            settings={{
+              settings: {
+                muted_can_edit_pending: false,
+                muted_can_report: false,
+                muted_can_renew: true,
+              },
+              updatedAt: NOW,
+            }}
             actions={adminActions}
             basePath="/fixtures/community"
           />

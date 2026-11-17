@@ -110,6 +110,41 @@ test('administrator approves a listing, removes a hidden post and mutes its auth
   await expectFormSuccess(page, 'Mute Synthetic Resident C');
 });
 
+test('administrator sets what muted residents may do and a muted resident sees why renew is missing', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/community');
+  await page.getByLabel('Fixture role').selectOption('admin');
+  await page.getByLabel('Fixture screen').selectOption('admin-mutes');
+  const report = page.getByRole('checkbox', {
+    name: 'Report posts, listings and replies',
+  });
+  await expect(report).not.toBeChecked();
+  await expect(
+    page.getByRole('checkbox', { name: 'Renew their marketplace listings' }),
+  ).toBeChecked();
+  await expectNoViolations(page);
+  await page
+    .getByText('Report posts, listings and replies', { exact: true })
+    .click();
+  await expect(report).toBeChecked();
+  await page.getByRole('button', { name: 'Save settings' }).click();
+  await expectFormSuccess(page, 'Save settings');
+
+  await page.getByLabel('Fixture role').selectOption('resident');
+  await page.getByLabel('Fixture screen').selectOption('listing-muted');
+  await expect(
+    page.getByText(/You cannot renew this listing while muted\./),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Renew for 30 days' }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Delete listing' }),
+  ).toBeVisible();
+  await expectNoViolations(page);
+});
+
 test('a resident cannot open administrator screens', async ({ page }) => {
   await page.goto('/fixtures/community');
   await page.getByLabel('Fixture screen').selectOption('admin-queue');

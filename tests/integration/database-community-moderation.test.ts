@@ -27,6 +27,7 @@ import {
   report,
   requestId,
   rowStatus,
+  rowVersion,
   unmute,
   uploadPathFor,
   withReplicaRole,
@@ -590,6 +591,228 @@ describe.skipIf(!hasDatabase)('community moderation database contracts', () => {
         ]),
         '42501',
       );
+    });
+
+    const getSettings = () =>
+      call(fixture, 'admin', 'community_settings_get', [fixture.societyId]);
+    const saveSettings = async (settings: Record<string, unknown>) =>
+      call(fixture, 'admin', 'community_settings_update', [
+        fixture.societyId,
+        settings,
+        (await getSettings()).updatedAt,
+        requestId('settings'),
+      ]);
+    const NO_EXCEPTIONS = {
+      muted_can_edit_pending: false,
+      muted_can_report: false,
+      muted_can_renew: false,
+    };
+
+    it('lets the admin settings decide what a muted resident may still do', async () => {
+      const groupId = await groupWithMembers(fixture, ['owner', 'owner4']);
+      const othersPost = await approvedPost(fixture, 'owner', groupId);
+      const othersListing = await approvedListing(fixture, 'owner');
+      const pendingPost = await createPost(fixture, 'owner4', groupId);
+      const pendingListing = await createListing(fixture, 'owner4');
+      const liveListing = await approvedListing(fixture, 'owner4');
+      const closable = await approvedListing(fixture, 'owner4');
+      const withdrawablePost = await createPost(fixture, 'owner4', groupId);
+      const withdrawableListing = await createListing(fixture, 'owner4');
+      const editPost = async () =>
+        call(fixture, 'owner4', 'community_post_update', [
+          fixture.societyId,
+          pendingPost,
+          await rowVersion(fixture, 'community_posts', pendingPost),
+          'Synthetic edited body',
+          null,
+          requestId('post-update'),
+        ]);
+      const editListing = async () =>
+        call(fixture, 'owner4', 'community_listing_update', [
+          fixture.societyId,
+          pendingListing,
+          await rowVersion(fixture, 'community_listings', pendingListing),
+          { listingType: 'wanted', title: 'Synthetic edited listing' },
+          null,
+          requestId('listing-update'),
+        ]);
+      const renew = () =>
+        call(fixture, 'owner4', 'community_listing_renew', [
+          fixture.societyId,
+          liveListing,
+          requestId('renew'),
+        ]);
+
+      expect(await getSettings()).toMatchObject({ settings: NO_EXCEPTIONS });
+      await mute(fixture, 'owner4', '7d');
+      try {
+        await expectDomainError(editPost(), 'community_muted');
+        await expectDomainError(editListing(), 'community_muted');
+        await expectDomainError(
+          report(fixture, 'owner4', 'post', othersPost),
+          'community_muted',
+        );
+        await expectDomainError(renew(), 'community_muted');
+        expect(
+          (await getPost(fixture, 'owner4', pendingPost)).myMute,
+        ).toMatchObject({
+          untilLifted: false,
+          canEditPending: false,
+          canReport: false,
+          canRenew: false,
+        });
+
+        // Deleting and closing stay available whatever the settings say.
+        await call(fixture, 'owner4', 'community_post_withdraw', [
+          fixture.societyId,
+          withdrawablePost,
+          requestId('post-withdraw'),
+        ]);
+        await call(fixture, 'owner4', 'community_listing_withdraw', [
+          fixture.societyId,
+          withdrawableListing,
+          requestId('listing-withdraw'),
+        ]);
+        await call(fixture, 'owner4', 'community_listing_close', [
+          fixture.societyId,
+          closable,
+          requestId('listing-close'),
+        ]);
+
+        expect(
+          await saveSettings({ muted_can_edit_pending: true }),
+        ).toMatchObject({
+          settings: { ...NO_EXCEPTIONS, muted_can_edit_pending: true },
+        });
+        await editPost();
+        await editListing();
+        await expectDomainError(
+          report(fixture, 'owner4', 'listing', othersListing),
+          'community_muted',
+        );
+        await expectDomainError(renew(), 'community_muted');
+
+        await saveSettings({ muted_can_report: true, muted_can_renew: true });
+        await report(fixture, 'owner4', 'listing', othersListing);
+        await renew();
+        expect(
+          (await getListing(fixture, 'owner4', liveListing)).myMute,
+        ).toMatchObject({
+          canEditPending: true,
+          canReport: true,
+          canRenew: true,
+        });
+        // Settings never let a muted resident create anything.
+        await expectDomainError(
+          createPost(fixture, 'owner4', groupId),
+          'community_muted',
+        );
+      } finally {
+        await saveSettings(NO_EXCEPTIONS);
+        await unmute(fixture, 'owner4');
+      }
+      expect((await getPost(fixture, 'owner4', pendingPost)).myMute).toBeNull();
+    });
+
+    it('validates the settings, refuses stale saves and is admin only', async () => {
+      const before = await getSettings();
+      await expectCode(saveSettings({ muted_can_mute: true }), '22023');
+      await expectCode(saveSettings({ muted_can_report: 'yes' }), '22023');
+      await expectCode(
+        call(fixture, 'admin', 'community_settings_update', [
+          fixture.societyId,
+          '[]',
+          before.updatedAt,
+          requestId('settings'),
+        ]),
+        '22023',
+      );
+      const saveRequest = requestId('settings');
+      const saved = await call(fixture, 'admin', 'community_settings_update', [
+        fixture.societyId,
+        { muted_can_report: true },
+        before.updatedAt,
+        saveRequest,
+      ]);
+      expect(saved.updatedAt).not.toEqual(before.updatedAt);
+      expect(
+        (await auditRows(database, saveRequest)).map((row) => row.action),
+      ).toContain('community.settings.update');
+      await expectCode(
+        call(fixture, 'admin', 'community_settings_update', [
+          fixture.societyId,
+          { muted_can_report: false },
+          before.updatedAt,
+          requestId('settings'),
+        ]),
+        '40001',
+      );
+      for (const actor of ['committee', 'owner'] as const) {
+        await expectCode(
+          call(fixture, actor, 'community_settings_get', [fixture.societyId]),
+          '42501',
+        );
+        await expectCode(
+          call(fixture, actor, 'community_settings_update', [
+            fixture.societyId,
+            NO_EXCEPTIONS,
+            saved.updatedAt,
+            requestId('settings'),
+          ]),
+          '42501',
+        );
+      }
+      await expectCode(
+        query(
+          database,
+          `update public.module_configs set settings='{"muted_can_renew":1}'
+           where society_id=$1 and module_key='community'`,
+          [fixture.societyId],
+        ),
+        '23514',
+      );
+      await saveSettings(NO_EXCEPTIONS);
+    });
+  });
+
+  describe('restore notifications', () => {
+    it('tells only the author when a hidden post or reply is visible again', async () => {
+      const groupId = await groupWithMembers(fixture, MEMBERS);
+      const postId = await approvedPost(fixture, 'owner3', groupId);
+      const replyId = await createReply(fixture, 'owner3', 'post', postId);
+      // Reply first: a reply cannot be reported once its post is hidden.
+      for (const target of [
+        ['reply', replyId],
+        ['post', postId],
+      ] as const) {
+        for (const actor of ['owner', 'owner2', 'owner4'] as const) {
+          await report(fixture, actor, target[0], target[1]);
+        }
+      }
+      const postRequest = requestId('restore-post');
+      await moderate(fixture, 'post', postId, 'restore', null, postRequest);
+      const replyRequest = requestId('restore-reply');
+      await moderate(fixture, 'reply', replyId, 'restore', null, replyRequest);
+      for (const request of [postRequest, replyRequest]) {
+        expect(await notificationsFor(database, request)).toEqual([
+          {
+            user_id: fixture.actors.owner3,
+            entity_type: 'community_post',
+            entity_id: postId,
+          },
+        ]);
+      }
+      expect(
+        await query(
+          database,
+          `select type,title from public.notifications
+           where request_id=any($1::text[]) order by title`,
+          [[postRequest, replyRequest]],
+        ),
+      ).toEqual([
+        { type: 'community_restored', title: 'Your post is visible again' },
+        { type: 'community_restored', title: 'Your reply is visible again' },
+      ]);
     });
   });
 

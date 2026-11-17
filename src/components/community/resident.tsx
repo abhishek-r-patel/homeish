@@ -58,6 +58,7 @@ import {
   type CommunityMarketplace,
   type CommunityMute,
   type CommunityMyItems,
+  type CommunityMyMute,
   type CommunityPostDetail,
   type CommunityReply,
   type CommunityReplyTargetType,
@@ -111,6 +112,15 @@ function MuteBanner({ mute }: { mute: CommunityMute | null }) {
       {muteEndsText(mute)}.{mute.reason ? ` Reason: ${mute.reason}` : ''} You
       can still read everything.
     </Banner>
+  );
+}
+
+// Stands in for a control the society's mute settings do not allow.
+function MutedNote({ mute, action }: { mute: CommunityMute; action: string }) {
+  return (
+    <p className="text-caption text-ink-muted">
+      You are muted {muteEndsText(mute)}. You cannot {action} while muted.
+    </p>
   );
 }
 
@@ -553,9 +563,11 @@ function ReplyForm({
 function ReplyItem({
   reply,
   actions,
+  reportBlocked,
 }: {
   reply: CommunityReply;
   actions: CommunityResidentActions;
+  reportBlocked: boolean;
 }) {
   return (
     <li className="grid min-w-0 gap-space-2 border-t border-rule pt-space-3">
@@ -580,7 +592,7 @@ function ReplyItem({
           {null}
         </ModuleActionForm>
       ) : null}
-      {!reply.mine && reply.status === 'visible' && !reply.reportedByMe ? (
+      {replyReportable(reply) && !reportBlocked ? (
         <ReportForm
           targetType="reply"
           targetId={reply.id}
@@ -592,6 +604,10 @@ function ReplyItem({
   );
 }
 
+function replyReportable(reply: CommunityReply) {
+  return !reply.mine && reply.status === 'visible' && !reply.reportedByMe;
+}
+
 function RepliesSection({
   targetType,
   targetId,
@@ -599,6 +615,7 @@ function RepliesSection({
   canReply,
   closedText,
   actions,
+  myMute,
 }: {
   targetType: CommunityReplyTargetType;
   targetId: string;
@@ -606,8 +623,10 @@ function RepliesSection({
   canReply: boolean;
   closedText: string;
   actions: CommunityResidentActions;
+  myMute: CommunityMyMute | null;
 }) {
   const headingId = useId();
+  const reportBlocked = Boolean(myMute && !myMute.canReport);
   return (
     <section aria-labelledby={headingId} className="grid min-w-0 gap-space-3">
       <h2 id={headingId} className="text-heading">
@@ -618,10 +637,18 @@ function RepliesSection({
       ) : (
         <ul className="grid gap-space-3">
           {replies.map((reply) => (
-            <ReplyItem key={reply.id} reply={reply} actions={actions} />
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              actions={actions}
+              reportBlocked={reportBlocked}
+            />
           ))}
         </ul>
       )}
+      {myMute && reportBlocked && replies.some(replyReportable) ? (
+        <MutedNote mute={myMute} action="report replies" />
+      ) : null}
       {canReply ? (
         <ReplyForm
           targetType={targetType}
@@ -713,6 +740,10 @@ export function CommunityPostView({
     .map((photo) => photo.path);
   const canWithdraw =
     post.mine && ['pending', 'approved', 'hidden'].includes(post.status);
+  const mute = detail.myMute ?? null;
+  const editable = post.mine && post.status === 'pending' && post.version;
+  const reportable =
+    !post.mine && post.status === 'approved' && !detail.reportedByMe;
   return (
     <section className="grid min-w-0 gap-space-5">
       <Link
@@ -745,7 +776,7 @@ export function CommunityPostView({
           label="Post photos"
         />
       </article>
-      {post.mine && post.status === 'pending' && post.version ? (
+      {editable && post.version && (!mute || mute.canEditPending) ? (
         <PostEditForm
           post={post}
           version={post.version}
@@ -754,6 +785,9 @@ export function CommunityPostView({
           actions={actions}
           request={request}
         />
+      ) : null}
+      {editable && mute && !mute.canEditPending ? (
+        <MutedNote mute={mute} action="edit this post" />
       ) : null}
       {canWithdraw ? (
         <ModuleActionForm
@@ -765,13 +799,16 @@ export function CommunityPostView({
           {null}
         </ModuleActionForm>
       ) : null}
-      {!post.mine && post.status === 'approved' && !detail.reportedByMe ? (
+      {reportable && (!mute || mute.canReport) ? (
         <ReportForm
           targetType="post"
           targetId={post.id}
           action={actions.report}
           noun="post"
         />
+      ) : null}
+      {reportable && mute && !mute.canReport ? (
+        <MutedNote mute={mute} action="report this post" />
       ) : null}
       {detail.reportedByMe ? (
         <p className="text-caption text-ink-muted">
@@ -786,6 +823,7 @@ export function CommunityPostView({
           canReply={detail.canReply}
           closedText="Replies are not open for this post."
           actions={actions}
+          myMute={mute}
         />
       ) : null}
     </section>
@@ -1112,43 +1150,52 @@ export function CommunityNewListingView({
 function ListingAuthorActions({
   listing,
   actions,
+  mute,
 }: {
   listing: CommunityListingDetail['listing'];
   actions: CommunityResidentActions;
+  mute: CommunityMyMute | null;
 }) {
   const state = listingStateFromFlags(listing);
   const input = () =>
     communityListingIdInputSchema.parse({ listingId: listing.id });
+  const renewBlocked =
+    canRenewListing(state) && mute !== null && !mute.canRenew;
   return (
-    <div className="grid min-w-0 gap-space-3 medium:grid-cols-3">
-      {state === 'live' ? (
-        <ModuleActionForm
-          action={actions.closeListing}
-          submitLabel="Mark as closed"
-          confirmMessage="Close this listing? It leaves the marketplace and no new replies can be sent."
-          input={input}
-        >
-          {null}
-        </ModuleActionForm>
-      ) : null}
-      {canRenewListing(state) ? (
-        <ModuleActionForm
-          action={actions.renewListing}
-          submitLabel="Renew for 30 days"
-          input={input}
-        >
-          {null}
-        </ModuleActionForm>
-      ) : null}
-      {['pending', 'approved', 'hidden'].includes(listing.status) ? (
-        <ModuleActionForm
-          action={actions.withdrawListing}
-          submitLabel="Delete listing"
-          confirmMessage="Delete this listing? Its replies and photos are deleted too."
-          input={input}
-        >
-          {null}
-        </ModuleActionForm>
+    <div className="grid min-w-0 gap-space-3">
+      <div className="grid min-w-0 gap-space-3 medium:grid-cols-3">
+        {state === 'live' ? (
+          <ModuleActionForm
+            action={actions.closeListing}
+            submitLabel="Mark as closed"
+            confirmMessage="Close this listing? It leaves the marketplace and no new replies can be sent."
+            input={input}
+          >
+            {null}
+          </ModuleActionForm>
+        ) : null}
+        {canRenewListing(state) && !renewBlocked ? (
+          <ModuleActionForm
+            action={actions.renewListing}
+            submitLabel="Renew for 30 days"
+            input={input}
+          >
+            {null}
+          </ModuleActionForm>
+        ) : null}
+        {['pending', 'approved', 'hidden'].includes(listing.status) ? (
+          <ModuleActionForm
+            action={actions.withdrawListing}
+            submitLabel="Delete listing"
+            confirmMessage="Delete this listing? Its replies and photos are deleted too."
+            input={input}
+          >
+            {null}
+          </ModuleActionForm>
+        ) : null}
+      </div>
+      {renewBlocked && mute ? (
+        <MutedNote mute={mute} action="renew this listing" />
       ) : null}
     </div>
   );
@@ -1167,6 +1214,11 @@ export function CommunityListingView({
   const { listing } = detail;
   const state = listingStateFromFlags(listing);
   const price = formatCommunityPrice(listing.pricePaise);
+  const mute = detail.myMute ?? null;
+  const editable =
+    listing.mine && listing.status === 'pending' && listing.version;
+  const reportable =
+    !listing.mine && listing.status === 'approved' && !detail.reportedByMe;
   const paths = [...detail.photos]
     .sort((a, b) => a.position - b.position)
     .map((photo) => photo.path);
@@ -1235,7 +1287,7 @@ export function CommunityListingView({
           label="Listing photos"
         />
       </article>
-      {listing.mine && listing.status === 'pending' && listing.version ? (
+      {editable && listing.version && (!mute || mute.canEditPending) ? (
         <details className="min-w-0 rounded-md border border-rule p-space-3">
           <summary className="min-h-12 cursor-pointer content-center text-body-strong focus-visible:outline-2 focus-visible:outline-focus">
             Edit listing
@@ -1251,18 +1303,22 @@ export function CommunityListingView({
           </div>
         </details>
       ) : null}
-      {listing.mine ? (
-        <ListingAuthorActions listing={listing} actions={actions} />
+      {editable && mute && !mute.canEditPending ? (
+        <MutedNote mute={mute} action="edit this listing" />
       ) : null}
-      {!listing.mine &&
-      listing.status === 'approved' &&
-      !detail.reportedByMe ? (
+      {listing.mine ? (
+        <ListingAuthorActions listing={listing} actions={actions} mute={mute} />
+      ) : null}
+      {reportable && (!mute || mute.canReport) ? (
         <ReportForm
           targetType="listing"
           targetId={listing.id}
           action={actions.report}
           noun="listing"
         />
+      ) : null}
+      {reportable && mute && !mute.canReport ? (
+        <MutedNote mute={mute} action="report this listing" />
       ) : null}
       {detail.reportedByMe ? (
         <p className="text-caption text-ink-muted">
@@ -1281,6 +1337,7 @@ export function CommunityListingView({
               : 'Replies are not open for this listing.'
           }
           actions={actions}
+          myMute={mute}
         />
       ) : null}
     </section>
