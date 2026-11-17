@@ -1,6 +1,7 @@
 // Register domestic staff and manage unit access for today.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useId } from 'react';
 import { StaffActionForm, type StaffFormAction } from './action-form';
 import { StaffPhotoUpload } from './photo-upload';
@@ -19,6 +20,7 @@ export function DomesticStaffRegistrationForm({
   societyId: string;
   action?: StaffFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const prefix = useId();
   return (
     <StaffActionForm
@@ -36,13 +38,13 @@ export function DomesticStaffRegistrationForm({
       requestIdStorageKey={(formData) =>
         `homeish:staff-registration:${societyId}:${String(formData.get('unitId'))}`
       }
-      submitLabel="Submit staff registration"
+      submitLabel={t('Submit staff registration')}
     >
       <label
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-unit`}
       >
-        Register for unit
+        {t('Register for unit')}
         <select
           className="min-h-12 rounded-md border border-rule bg-surface px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           id={`${prefix}-unit`}
@@ -60,7 +62,7 @@ export function DomesticStaffRegistrationForm({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-name`}
       >
-        Full name
+        {t('Full name')}
         <input
           className="min-h-12 rounded-md border border-rule px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           id={`${prefix}-name`}
@@ -73,7 +75,7 @@ export function DomesticStaffRegistrationForm({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-phone`}
       >
-        Phone number
+        {t('Phone number')}
         <input
           className="min-h-12 rounded-md border border-rule px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           id={`${prefix}-phone`}
@@ -87,7 +89,7 @@ export function DomesticStaffRegistrationForm({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-role`}
       >
-        Role (for example, cook or electrician)
+        {t('Role (for example, cook or electrician)')}
         <input
           className="min-h-12 rounded-md border border-rule px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           id={`${prefix}-role`}
@@ -100,26 +102,26 @@ export function DomesticStaffRegistrationForm({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-id-type`}
       >
-        ID proof type (optional; do not enter a document number)
+        {t('ID proof type (optional; do not enter a document number)')}
         <select
           className="min-h-12 rounded-md border border-rule bg-surface px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           defaultValue=""
           id={`${prefix}-id-type`}
           name="idType"
         >
-          <option value="">Not provided</option>
-          <option value="aadhaar">Aadhaar</option>
-          <option value="pan">PAN</option>
-          <option value="voter_id">Voter ID</option>
-          <option value="passport">Passport</option>
-          <option value="other">Other</option>
+          <option value="">{t('Not provided')}</option>
+          <option value="aadhaar">{t('Aadhaar')}</option>
+          <option value="pan">{t('PAN')}</option>
+          <option value="voter_id">{t('Voter ID')}</option>
+          <option value="passport">{t('Passport')}</option>
+          <option value="other">{t('Other')}</option>
         </select>
       </label>
       <label
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-id-last-four`}
       >
-        Last four characters only
+        {t('Last four characters only')}
         <input
           autoComplete="off"
           className="min-h-12 rounded-md border border-rule px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
@@ -130,7 +132,7 @@ export function DomesticStaffRegistrationForm({
       </label>
       <label className="flex min-h-11 items-center gap-space-2 text-body">
         <input name="policeVerified" type="checkbox" />
-        Police verification checked
+        {t('Police verification checked')}
       </label>
       <StaffPhotoUpload />
     </StaffActionForm>
@@ -150,17 +152,21 @@ export function UnitStaffDayBlockForm({
   unitLabel: string;
   action?: StaffFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <StaffActionForm
       action={action}
       className="inline-grid"
-      confirmMessage={`Block ${staffName} from entry to ${unitLabel} for the rest of today? Their access to other linked units is unchanged.`}
+      confirmMessage={t(
+        'Block {name} from entry to {unit} for the rest of today? Their access to other linked units is unchanged.',
+        { name: staffName, unit: unitLabel },
+      )}
       input={() => ({ staffId, unitId })}
-      submitLabel="Block for today"
+      submitLabel={t('Block for today')}
       submitVariant="destructive"
     >
       <span className="sr-only">
-        Block {staffName} from this unit for today
+        {t('Block {name} from this unit for today', { name: staffName })}
       </span>
     </StaffActionForm>
   );

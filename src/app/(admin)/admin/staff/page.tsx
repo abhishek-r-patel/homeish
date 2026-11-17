@@ -11,6 +11,8 @@ import {
   getStaffSettings,
   getStaffWorkspace,
 } from '@/core/staff/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Staff management | Homeish',
@@ -36,6 +38,8 @@ function localDate(timeZone: string) {
 }
 
 export default async function AdminStaffPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   const [workspace, settings] = await Promise.all([
     getStaffWorkspace(),
     getStaffSettings(),
@@ -52,21 +56,24 @@ export default async function AdminStaffPage() {
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Staff management</h1>
+        <h1 className="text-title font-semibold">{t('Staff management')}</h1>
         <p className="text-body text-ink-muted">
-          Maintain staff profiles, review resident registrations and record
-          society staff shifts.
+          {t(
+            'Maintain staff profiles, review resident registrations and record society staff shifts.',
+          )}
         </p>
       </header>
 
       <Card
-        description="Domestic staff can be linked to one or more units. Society staff are managed at the community level."
-        title="Add staff"
+        description={t(
+          'Domestic staff can be linked to one or more units. Society staff are managed at the community level.',
+        )}
+        title={t('Add staff')}
       >
         <StaffAdminProfileForm units={workspace.units} />
       </Card>
 
-      <Card title="Resident registration approvals">
+      <Card title={t('Resident registration approvals')}>
         {pendingLinks.length ? (
           <ul className="grid gap-space-3">
             {pendingLinks.map(({ staff, link }) => (
@@ -84,7 +91,7 @@ export default async function AdminStaffPage() {
                 <p className="text-caption text-ink-muted">
                   {staff.id_type
                     ? `${staff.id_type}, ending ${staff.id_last_four}`
-                    : 'No ID proof details submitted'}
+                    : t('No ID proof details submitted')}
                   {staff.police_verified
                     ? ' · Police verification checked'
                     : ''}
@@ -92,12 +99,12 @@ export default async function AdminStaffPage() {
                 <div className="flex flex-wrap gap-space-3">
                   <StaffApprovalForm
                     decision="active"
-                    label="Approve unit link"
+                    label={t('Approve unit link')}
                     linkId={link.id}
                   />
                   <StaffApprovalForm
                     decision="rejected"
-                    label="Reject unit link"
+                    label={t('Reject unit link')}
                     linkId={link.id}
                   />
                 </div>
@@ -106,12 +113,12 @@ export default async function AdminStaffPage() {
           </ul>
         ) : (
           <p className="text-body text-ink-muted">
-            There are no registrations waiting for review.
+            {t('There are no registrations waiting for review.')}
           </p>
         )}
       </Card>
 
-      <Card title="Staff directory">
+      <Card title={t('Staff directory')}>
         {workspace.staff.length ? (
           <div className="grid gap-space-4">
             {workspace.staff.map((staff) => (
@@ -127,8 +134,8 @@ export default async function AdminStaffPage() {
                     />
                     <span className="text-caption text-ink-muted">
                       {staff.staff_type === 'society'
-                        ? 'Society staff'
-                        : 'Domestic staff'}{' '}
+                        ? t('Society staff')
+                        : t('Domestic staff')}{' '}
                       · {staff.status}
                     </span>
                   </span>
@@ -153,12 +160,12 @@ export default async function AdminStaffPage() {
           </div>
         ) : (
           <p className="text-body text-ink-muted">
-            No staff have been registered yet.
+            {t('No staff have been registered yet.')}
           </p>
         )}
       </Card>
 
-      <Card title="Registration settings">
+      <Card title={t('Registration settings')}>
         <StaffApprovalSetting
           residentApprovalRequired={settings.residentApprovalRequired}
         />

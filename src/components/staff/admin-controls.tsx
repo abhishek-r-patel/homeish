@@ -1,6 +1,7 @@
 // Render the staff directory, resident approvals and society shift records.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useId } from 'react';
 import { Card } from '@/components/ui/data-display';
 import { TextInput } from '@/components/ui/text-input';
@@ -22,6 +23,7 @@ function StaffProfileFields({
   staff?: StaffWorkspaceMember;
   units: readonly StaffUnit[];
 }) {
+  const { translate: t } = useUiTranslator();
   const prefix = useId();
   const staffType = staff?.staff_type ?? 'domestic';
   const selectedUnits =
@@ -38,22 +40,22 @@ function StaffProfileFields({
           className="grid gap-space-1 text-body-strong"
           htmlFor={`${prefix}-type`}
         >
-          Staff type
+          {t('Staff type')}
           <select
             className="min-h-12 rounded-md border border-rule bg-surface px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
             defaultValue={staffType}
             id={`${prefix}-type`}
             name="staffType"
           >
-            <option value="domestic">Domestic staff</option>
-            <option value="society">Society staff</option>
+            <option value="domestic">{t('Domestic staff')}</option>
+            <option value="society">{t('Society staff')}</option>
           </select>
         </label>
       )}
       <TextInput
         defaultValue={staff?.full_name ?? ''}
         id={`${prefix}-name`}
-        label="Full name"
+        label={t('Full name')}
         maxLength={120}
         name="fullName"
         required
@@ -62,7 +64,7 @@ function StaffProfileFields({
         defaultValue={staff?.phone ?? ''}
         id={`${prefix}-phone`}
         inputMode="tel"
-        label="Phone number"
+        label={t('Phone number')}
         name="phone"
         required
         type="tel"
@@ -70,7 +72,7 @@ function StaffProfileFields({
       <TextInput
         defaultValue={staff?.job_role ?? ''}
         id={`${prefix}-role`}
-        label="Role (for example, cook or electrician)"
+        label={t('Role (for example, cook or electrician)')}
         maxLength={80}
         name="jobRole"
         required
@@ -79,25 +81,25 @@ function StaffProfileFields({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-id-type`}
       >
-        ID proof type (optional; do not enter a document number)
+        {t('ID proof type (optional; do not enter a document number)')}
         <select
           className="min-h-12 rounded-md border border-rule bg-surface px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           defaultValue={staff?.id_type ?? ''}
           id={`${prefix}-id-type`}
           name="idType"
         >
-          <option value="">Not provided</option>
-          <option value="aadhaar">Aadhaar</option>
-          <option value="pan">PAN</option>
-          <option value="voter_id">Voter ID</option>
-          <option value="passport">Passport</option>
-          <option value="other">Other</option>
+          <option value="">{t('Not provided')}</option>
+          <option value="aadhaar">{t('Aadhaar')}</option>
+          <option value="pan">{t('PAN')}</option>
+          <option value="voter_id">{t('Voter ID')}</option>
+          <option value="passport">{t('Passport')}</option>
+          <option value="other">{t('Other')}</option>
         </select>
       </label>
       <TextInput
         defaultValue={staff?.id_last_four ?? ''}
         id={`${prefix}-id-last-four`}
-        label="Last four characters only"
+        label={t('Last four characters only')}
         maxLength={4}
         name="idLastFour"
       />
@@ -107,21 +109,21 @@ function StaffProfileFields({
           name="policeVerified"
           type="checkbox"
         />
-        Police verification checked
+        {t('Police verification checked')}
       </label>
       <label
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-status`}
       >
-        Society status
+        {t('Society status')}
         <select
           className="min-h-12 rounded-md border border-rule bg-surface px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           defaultValue={staff?.status ?? 'active'}
           id={`${prefix}-status`}
           name="status"
         >
-          <option value="active">Active</option>
-          <option value="blocked">Blocked society-wide</option>
+          <option value="active">{t('Active')}</option>
+          <option value="blocked">{t('Blocked society-wide')}</option>
         </select>
       </label>
       <StaffPhotoUpload
@@ -130,7 +132,7 @@ function StaffProfileFields({
       />
       <fieldset className="grid gap-space-2">
         <legend className="text-body-strong">
-          Linked units (domestic staff)
+          {t('Linked units (domestic staff)')}
         </legend>
         {units.length ? (
           <div className="grid gap-space-2 sm:grid-cols-2">
@@ -151,7 +153,7 @@ function StaffProfileFields({
           </div>
         ) : (
           <p className="text-caption text-ink-muted">
-            Add an active unit before linking domestic staff.
+            {t('Add an active unit before linking domestic staff.')}
           </p>
         )}
       </fieldset>
@@ -168,6 +170,7 @@ export function StaffAdminProfileForm({
   units: readonly StaffUnit[];
   action?: StaffFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <StaffActionForm
       action={action}
@@ -188,7 +191,7 @@ export function StaffAdminProfileForm({
             type === 'society' ? [] : formData.getAll('unitIds').map(String),
         };
       }}
-      submitLabel={staff ? 'Save staff details' : 'Add staff'}
+      submitLabel={staff ? t('Save staff details') : t('Add staff')}
       submitVariant={staff?.status === 'blocked' ? 'destructive' : 'primary'}
     >
       <StaffProfileFields staff={staff} units={units} />
@@ -207,6 +210,7 @@ export function StaffApprovalForm({
   label: string;
   action?: StaffFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <StaffActionForm
       action={action}
@@ -215,7 +219,7 @@ export function StaffApprovalForm({
       submitLabel={label}
       submitVariant={decision === 'rejected' ? 'destructive' : 'secondary'}
     >
-      <span className="sr-only">Registration review</span>
+      <span className="sr-only">{t('Registration review')}</span>
     </StaffActionForm>
   );
 }
@@ -227,13 +231,14 @@ export function StaffApprovalSetting({
   residentApprovalRequired: boolean;
   action?: StaffFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <StaffActionForm
       action={action}
       input={(formData) => ({
         residentApprovalRequired: formData.get('approvalRequired') === 'on',
       })}
-      submitLabel="Save approval setting"
+      submitLabel={t('Save approval setting')}
       submitVariant="secondary"
     >
       <label className="flex min-h-11 items-center gap-space-2 text-body">
@@ -242,7 +247,7 @@ export function StaffApprovalSetting({
           name="approvalRequired"
           type="checkbox"
         />
-        Require administrator approval for resident registrations
+        {t('Require administrator approval for resident registrations')}
       </label>
     </StaffActionForm>
   );
@@ -263,6 +268,7 @@ export function SocietyStaffShiftForm({
   fixedDate?: boolean;
   action?: StaffFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const prefix = useId();
   return (
     <StaffActionForm
@@ -273,14 +279,14 @@ export function SocietyStaffShiftForm({
         attendanceDate: formData.get('attendanceDate'),
         status: formData.get('status'),
       })}
-      submitLabel={`Save ${staffName} attendance`}
+      submitLabel={t('Save {name} attendance', { name: staffName })}
       submitVariant="secondary"
     >
       <label
         className="grid gap-space-1 text-caption"
         htmlFor={`${prefix}-date`}
       >
-        Shift date
+        {t('Shift date')}
         {fixedDate ? (
           <input name="attendanceDate" type="hidden" value={attendanceDate} />
         ) : null}
@@ -299,16 +305,16 @@ export function SocietyStaffShiftForm({
         className="grid gap-space-1 text-caption"
         htmlFor={`${prefix}-status`}
       >
-        Attendance
+        {t('Attendance')}
         <select
           className="min-h-11 rounded-md border border-rule bg-surface px-space-3 focus-visible:outline-2 focus-visible:outline-focus"
           defaultValue={initialStatus}
           id={`${prefix}-status`}
           name="status"
         >
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-          <option value="leave">Leave</option>
+          <option value="present">{t('Present')}</option>
+          <option value="absent">{t('Absent')}</option>
+          <option value="leave">{t('Leave')}</option>
         </select>
       </label>
     </StaffActionForm>
@@ -324,10 +330,11 @@ export function SocietyStaffShiftCard({
   attendance: readonly StaffShiftAttendance[];
   today: string;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <Card
       description={staff.job_role}
-      title={`${staff.full_name} · ${staff.status}`}
+      title={`${staff.full_name} · ${t(staff.status === 'blocked' ? 'Blocked' : 'Active')}`}
     >
       <div className="grid gap-space-3">
         {attendance.length ? (
@@ -343,7 +350,7 @@ export function SocietyStaffShiftCard({
           ))
         ) : (
           <p className="text-caption text-ink-muted">
-            No shift attendance is recorded for this month.
+            {t('No shift attendance is recorded for this month.')}
           </p>
         )}
         {!attendance.some(

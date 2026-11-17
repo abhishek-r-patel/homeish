@@ -4,7 +4,6 @@ import { useId, useState, type FormEvent } from 'react';
 import {
   PARKING_PASS_STATE_LABELS,
   PARKING_SLOT_TYPE_LABELS,
-  formatParkingWindow,
   parkingPassState,
 } from '@/core/parking/presentation';
 import type { ParkingGuardBoard } from '@/core/parking/validation';
@@ -15,6 +14,8 @@ import { TextInput } from '@/components/ui/text-input';
 import {
   PARKING_ACTIONS,
   ParkingReportForm,
+  parkingDisplayTime,
+  useParkingCopy,
   type ParkingActions,
 } from './shared';
 
@@ -33,6 +34,7 @@ export function ParkingGuardView({
   onSearch?: (query: string) => void;
   now?: number;
 }) {
+  const { locale, t } = useParkingCopy();
   const id = useId();
   const [query, setQuery] = useState(board.query ?? '');
   const [now] = useState(() => fixedNow ?? Date.now());
@@ -45,11 +47,11 @@ export function ParkingGuardView({
 
   return (
     <section className="grid min-w-0 gap-space-5">
-      <h1 className="text-title font-semibold">Parking</h1>
+      <h1 className="text-title font-semibold">{t('Parking')}</h1>
 
       <Card
-        title="Find a slot holder"
-        description="Search by slot label or vehicle number."
+        title={t('Find a slot holder')}
+        description={t('Search by slot label or vehicle number.')}
       >
         <form
           action={baseHref}
@@ -61,20 +63,22 @@ export function ParkingGuardView({
           <TextInput
             id={`${id}-query`}
             name="q"
-            label="Slot or vehicle number"
+            label={t('Slot or vehicle number')}
             maxLength={40}
             autoComplete="off"
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
           />
           <Button type="submit" size="guard">
-            Search
+            {t('Search')}
           </Button>
         </form>
         {board.query ? (
           board.matches.length === 0 ? (
             <p role="status" className="mt-space-3 text-body text-ink-muted">
-              No slot or vehicle matches “{board.query}”.
+              {t('No slot or vehicle matches “{query}”.', {
+                query: board.query,
+              })}
             </p>
           ) : (
             <ul className="mt-space-3 grid gap-space-2">
@@ -85,16 +89,18 @@ export function ParkingGuardView({
                 >
                   <p className="text-body-strong">
                     {match.unit_number
-                      ? `Unit ${match.unit_number}`
-                      : 'Free slot'}
-                    {match.slot_label ? ` · Slot ${match.slot_label}` : ''}
+                      ? t('Unit {unit}', { unit: match.unit_number })
+                      : t('Free slot')}
+                    {match.slot_label
+                      ? ` · ${t('Slot {label}', { label: match.slot_label })}`
+                      : ''}
                     {match.slot_type
-                      ? ` (${PARKING_SLOT_TYPE_LABELS[match.slot_type]})`
+                      ? ` (${t(PARKING_SLOT_TYPE_LABELS[match.slot_type])})`
                       : ''}
                   </p>
                   {match.vehicle_numbers.length > 0 ? (
                     <p className="text-caption text-ink-muted">
-                      Vehicles: {match.vehicle_numbers.join(', ')}
+                      {t('Vehicles:')} {match.vehicle_numbers.join(', ')}
                     </p>
                   ) : null}
                 </li>
@@ -105,16 +111,18 @@ export function ParkingGuardView({
       </Card>
 
       <Card
-        title="Visitor passes"
-        description="Current passes and those starting in the next 12 hours."
+        title={t('Visitor passes')}
+        description={t(
+          'Current passes and those starting in the next 12 hours.',
+        )}
       >
         {!board.visitor_enabled ? (
-          <Banner tone="neutral" title="Visitor passes are not available">
-            The Visitors module is turned off for this society.
+          <Banner tone="neutral" title={t('Visitor passes are not available')}>
+            {t('The Visitors module is turned off for this society.')}
           </Banner>
         ) : board.passes.length === 0 ? (
           <p className="text-body text-ink-muted">
-            No visitor passes right now.
+            {t('No visitor passes right now.')}
           </p>
         ) : (
           <ul className="grid gap-space-2">
@@ -124,13 +132,17 @@ export function ParkingGuardView({
                 className="grid gap-space-1 rounded-md border border-rule p-space-3"
               >
                 <p className="text-body-strong">
-                  Slot {pass.slot_label} · {pass.visitor_name}
+                  {t('Slot {label} · {name}', {
+                    label: pass.slot_label,
+                    name: pass.visitor_name,
+                  })}
                   {pass.vehicle_number ? ` · ${pass.vehicle_number}` : ''}
                 </p>
                 <p className="text-caption text-ink-muted">
-                  For unit {pass.unit_number} ·{' '}
-                  {PARKING_PASS_STATE_LABELS[parkingPassState(pass, now)]} ·{' '}
-                  {formatParkingWindow(pass.starts_at, pass.ends_at)}
+                  {t('For unit {unit}', { unit: pass.unit_number })} ·{' '}
+                  {t(PARKING_PASS_STATE_LABELS[parkingPassState(pass, now)])} ·{' '}
+                  {parkingDisplayTime(pass.starts_at, locale)} –{' '}
+                  {parkingDisplayTime(pass.ends_at, locale)}
                 </p>
               </li>
             ))}
@@ -139,8 +151,10 @@ export function ParkingGuardView({
       </Card>
 
       <Card
-        title="Report wrong parking"
-        description="The unit that holds the slot or owns the vehicle, and the administrators, are told."
+        title={t('Report wrong parking')}
+        description={t(
+          'The unit that holds the slot or owns the vehicle, and the administrators, are told.',
+        )}
       >
         <ParkingReportForm
           slots={board.slots}

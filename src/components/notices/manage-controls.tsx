@@ -1,6 +1,7 @@
 // Pin, unpin, edit or withdraw a notice the current manager may change.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import Link from 'next/link';
 import {
   setNoticePinnedAction,
@@ -17,10 +18,11 @@ export function NoticeManageControls({
   pinned: boolean;
   withdrawn: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   if (withdrawn) {
     return (
       <p className="text-body text-ink-muted">
-        This notice was withdrawn and can no longer be changed.
+        {t('This notice was withdrawn and can no longer be changed.')}
       </p>
     );
   }
@@ -30,21 +32,23 @@ export function NoticeManageControls({
         className="inline-flex min-h-12 items-center rounded-md border border-rule-strong px-space-4 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
         href={`/admin/notices/${noticeId}/edit`}
       >
-        Edit notice
+        {t('Edit notice')}
       </Link>
       <NoticeActionForm
         action={setNoticePinnedAction}
         className="grid gap-space-2"
         input={() => ({ noticeId, pinned: !pinned })}
-        submitLabel={pinned ? 'Unpin notice' : 'Pin notice'}
+        submitLabel={pinned ? t('Unpin notice') : t('Pin notice')}
         submitVariant="secondary"
       />
       <NoticeActionForm
         action={withdrawNoticeAction}
         className="grid gap-space-2"
-        confirmMessage="Withdraw this notice? Residents will no longer see it."
+        confirmMessage={t(
+          'Withdraw this notice? Residents will no longer see it.',
+        )}
         input={() => ({ noticeId })}
-        submitLabel="Withdraw notice"
+        submitLabel={t('Withdraw notice')}
         submitVariant="destructive"
       />
     </div>

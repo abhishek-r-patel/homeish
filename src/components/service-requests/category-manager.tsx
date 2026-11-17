@@ -1,6 +1,7 @@
 // Let society administrators maintain request categories and service targets.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import {
   saveServiceRequestCategoryAction,
   saveServiceRequestEscalationSettingsAction,
@@ -27,6 +28,7 @@ function CategoryForm({
   action: RequestFormAction;
   category?: ServiceRequestCategory;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <ServiceRequestActionForm
       action={action}
@@ -45,10 +47,10 @@ function CategoryForm({
           expectedUpdatedAt: category?.updated_at ?? null,
         };
       }}
-      submitLabel={category ? 'Save category' : 'Add category'}
+      submitLabel={category ? t('Save category') : t('Add category')}
     >
       <label className="grid min-w-0 gap-space-1 text-body-strong">
-        Name
+        {t('Name')}
         <input
           className={fieldClass}
           defaultValue={category?.name ?? ''}
@@ -59,7 +61,7 @@ function CategoryForm({
         />
       </label>
       <label className="grid min-w-0 gap-space-1 text-body-strong">
-        SLA target (hours, optional)
+        {t('SLA target (hours, optional)')}
         <input
           className={fieldClass}
           defaultValue={category?.sla_hours ?? ''}
@@ -70,7 +72,7 @@ function CategoryForm({
         />
       </label>
       <label className="grid min-w-0 gap-space-1 text-body-strong">
-        Escalate to committee after (days)
+        {t('Escalate to committee after (days)')}
         <input
           className={fieldClass}
           defaultValue={
@@ -85,7 +87,7 @@ function CategoryForm({
         />
       </label>
       <label className="grid min-w-0 gap-space-1 text-body-strong">
-        Display order
+        {t('Display order')}
         <input
           className={fieldClass}
           defaultValue={category?.sort_order ?? 0}
@@ -102,7 +104,7 @@ function CategoryForm({
           name="active"
           type="checkbox"
         />
-        Active
+        {t('Active')}
       </label>
     </ServiceRequestActionForm>
   );
@@ -115,12 +117,15 @@ export function ServiceRequestCategoryManager({
   categories: ServiceRequestCategory[];
   saveAction?: RequestFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <div className="grid gap-space-4">
       <Card
         className="min-w-0"
-        description="Set an optional response target. Categories with no SLA are not marked overdue."
-        title="Add category"
+        description={t(
+          'Set an optional response target. Categories with no SLA are not marked overdue.',
+        )}
+        title={t('Add category')}
       >
         <CategoryForm action={saveAction} />
       </Card>
@@ -148,11 +153,14 @@ export function ServiceRequestEscalationSettingsForm({
   settings: ServiceRequestEscalationSettings;
   saveAction?: RequestFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <Card
       className="min-w-0"
-      description="Requests that miss their SLA go to admins. If still open after the category's committee interval, they go to the committee. Recipients always get an in-app notification. Residents see only that the request was escalated."
-      title="SLA escalation"
+      description={t(
+        "Requests that miss their SLA go to admins. If still open after the category's committee interval, they go to the committee. Recipients always get an in-app notification. Residents see only that the request was escalated.",
+      )}
+      title={t('SLA escalation')}
     >
       <ServiceRequestActionForm
         action={saveAction}
@@ -160,10 +168,12 @@ export function ServiceRequestEscalationSettingsForm({
           delivery: String(formData.get('delivery') ?? 'in_app'),
           expectedUpdatedAt: settings.updated_at,
         })}
-        submitLabel="Save escalation settings"
+        submitLabel={t('Save escalation settings')}
       >
         <fieldset className="grid min-w-0 gap-space-2">
-          <legend className="text-body-strong">Send escalations by</legend>
+          <legend className="text-body-strong">
+            {t('Send escalations by')}
+          </legend>
           {deliveryOptions.map((option) => (
             <label
               className="flex min-h-10 items-center gap-space-2"
@@ -175,7 +185,7 @@ export function ServiceRequestEscalationSettingsForm({
                 type="radio"
                 value={option.value}
               />
-              {option.label}
+              {t(option.label)}
             </label>
           ))}
         </fieldset>

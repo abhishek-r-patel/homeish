@@ -5,21 +5,40 @@ import {
   UnitStaffDayBlockForm,
 } from '@/components/staff/resident-controls';
 import { getStaffWorkspace } from '@/core/staff/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
+import {
+  formatLocalizedDate,
+  formatLocalizedDateTime,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
 
 export const metadata = {
   title: 'Domestic staff | Homeish',
   robots: { index: false, follow: false },
 };
 
-function formatTime(value: string, timeZone: string) {
-  return new Intl.DateTimeFormat(undefined, {
+function formatTime(value: string, timeZone: string, locale: Locale) {
+  return formatLocalizedDateTime(new Date(value), locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone,
-  }).format(new Date(value));
+  });
+}
+
+function attendanceMonth(value: string, locale: Locale) {
+  const [year, month] = value.slice(0, 7).split('-').map(Number);
+  return formatLocalizedDate(new Date(Date.UTC(year, month - 1, 1)), locale, {
+    month: 'long',
+    timeZone: 'UTC',
+    year: 'numeric',
+  });
 }
 
 export default async function ResidentStaffPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const workspace = await getStaffWorkspace();
   const visibleStaff = workspace.staff.filter(
     ({ staff_type }) => staff_type === 'domestic',
@@ -38,16 +57,19 @@ export default async function ResidentStaffPage() {
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Domestic staff</h1>
+        <h1 className="text-title font-semibold">{t('Domestic staff')}</h1>
         <p className="text-body text-ink-muted">
-          Register staff for your unit, review gate attendance and block unit
-          access for today when needed.
+          {t(
+            'Register staff for your unit, review gate attendance and block unit access for today when needed.',
+          )}
         </p>
       </header>
 
       <Card
-        description="A registration may be routed to an administrator if approval is required or the person matches an existing profile."
-        title="Register staff"
+        description={t(
+          'A registration may be routed to an administrator if approval is required or the person matches an existing profile.',
+        )}
+        title={t('Register staff')}
       >
         {workspace.units.length ? (
           <DomesticStaffRegistrationForm
@@ -56,12 +78,12 @@ export default async function ResidentStaffPage() {
           />
         ) : (
           <p className="text-body text-ink-muted">
-            No active units are available for your account.
+            {t('No active units are available for your account.')}
           </p>
         )}
       </Card>
 
-      <Card title="Waiting for administrator review">
+      <Card title={t('Waiting for administrator review')}>
         {pendingLinks.length ? (
           <ul className="grid gap-space-3">
             {pendingLinks.map(({ staff, link }) => (
@@ -77,19 +99,21 @@ export default async function ResidentStaffPage() {
                   {staff.job_role} · {link.unit_label}
                 </p>
                 <p className="text-caption text-warning">
-                  Pending approval. Gate access is not available until approved.
+                  {t(
+                    'Pending approval. Gate access is not available until approved.',
+                  )}
                 </p>
               </li>
             ))}
           </ul>
         ) : (
           <p className="text-body text-ink-muted">
-            No registrations are waiting for review.
+            {t('No registrations are waiting for review.')}
           </p>
         )}
       </Card>
 
-      <Card title="Staff linked to your units">
+      <Card title={t('Staff linked to your units')}>
         {activeLinks.length ? (
           <ul className="grid gap-space-3">
             {activeLinks.map(({ staff, link }) => {
@@ -108,13 +132,15 @@ export default async function ResidentStaffPage() {
                   </p>
                   {staff.status === 'blocked' ? (
                     <p className="text-caption text-danger">
-                      This profile is blocked society-wide.
+                      {t('This profile is blocked society-wide.')}
                     </p>
                   ) : null}
                   {attendance.length ? (
                     <div className="grid gap-space-1">
                       <h2 className="text-body-strong">
-                        Gate attendance · {workspace.month.slice(0, 7)}
+                        {t('Gate attendance · {month}', {
+                          month: attendanceMonth(workspace.month, locale),
+                        })}
                       </h2>
                       <ul className="grid gap-space-1">
                         {attendance.map((record) => (
@@ -122,26 +148,37 @@ export default async function ResidentStaffPage() {
                             className="text-caption text-ink-muted"
                             key={record.id}
                           >
-                            {record.unit_label} · Entered{' '}
-                            {formatTime(
-                              record.checked_in_at,
-                              workspace.timezone,
-                            )}
+                            {record.unit_label} ·{' '}
+                            {t('Entered {time}', {
+                              time: formatTime(
+                                record.checked_in_at,
+                                workspace.timezone,
+                                locale,
+                              ),
+                            })}
                             {record.checked_out_at
-                              ? ` · Exited ${formatTime(record.checked_out_at, workspace.timezone)}`
-                              : ' · Currently inside'}
+                              ? ` · ${t('Exited {time}', {
+                                  time: formatTime(
+                                    record.checked_out_at,
+                                    workspace.timezone,
+                                    locale,
+                                  ),
+                                })}`
+                              : ` · ${t('Currently inside')}`}
                           </li>
                         ))}
                       </ul>
                     </div>
                   ) : (
                     <p className="text-caption text-ink-muted">
-                      No gate attendance is recorded for this month.
+                      {t('No gate attendance is recorded for this month.')}
                     </p>
                   )}
                   {link.blocked_today ? (
                     <p className="text-caption text-danger" role="status">
-                      This staff member is blocked from this unit for today.
+                      {t(
+                        'This staff member is blocked from this unit for today.',
+                      )}
                     </p>
                   ) : staff.status === 'active' ? (
                     <UnitStaffDayBlockForm
@@ -157,7 +194,7 @@ export default async function ResidentStaffPage() {
           </ul>
         ) : (
           <p className="text-body text-ink-muted">
-            No staff are linked to your units yet.
+            {t('No staff are linked to your units yet.')}
           </p>
         )}
       </Card>

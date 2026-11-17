@@ -6,6 +6,8 @@ import {
   GateUnitSelector,
 } from '@/components/staff/gate-controls';
 import { getGateStaffWorkspace } from '@/core/staff/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Staff at the gate | Homeish',
@@ -17,6 +19,9 @@ export default async function GuardStaffPage({
 }: {
   searchParams: Promise<{ unitId?: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const { unitId } = await searchParams;
   const workspace = await getGateStaffWorkspace(unitId);
   const selectedUnitId = workspace.unitId;
@@ -25,16 +30,17 @@ export default async function GuardStaffPage({
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
         <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-          Gate · Handled by {workspace.guard.name}
+          {t('Gate · Handled by {name}', { name: workspace.guard.name })}
         </p>
-        <h1 className="text-title font-semibold">Domestic staff</h1>
+        <h1 className="text-title font-semibold">{t('Domestic staff')}</h1>
         <p className="text-body text-ink-muted">
-          Check staff in and out at the destination unit. A staff member can
-          have only one open gate attendance at a time.
+          {t(
+            'Check staff in and out at the destination unit. A staff member can have only one open gate attendance at a time.',
+          )}
         </p>
       </header>
 
-      <Card title="Select destination">
+      <Card title={t('Select destination')}>
         {workspace.units.length ? (
           <GateUnitSelector
             selectedUnitId={workspace.unitId}
@@ -42,7 +48,7 @@ export default async function GuardStaffPage({
           />
         ) : (
           <p className="text-body text-ink-muted">
-            No active units are available.
+            {t('No active units are available.')}
           </p>
         )}
       </Card>
@@ -50,12 +56,14 @@ export default async function GuardStaffPage({
       {selectedUnitId ? (
         <>
           <Card
-            description="Enter the code from the staff member’s registration when they are not listed below."
-            title="Check in by code"
+            description={t(
+              'Enter the code from the staff member’s registration when they are not listed below.',
+            )}
+            title={t('Check in by code')}
           >
             <GateStaffCodeForm unitId={selectedUnitId} />
           </Card>
-          <Card title="Staff linked to this unit">
+          <Card title={t('Staff linked to this unit')}>
             <GateStaffList
               staff={workspace.staff.map((member) => ({
                 ...member,

@@ -6,6 +6,9 @@ import { ServiceRequestUpvote } from '@/components/service-requests/upvote';
 import { getServiceRequestWorkspace } from '@/core/service-requests/operations';
 import { serviceRequestStatusSchema } from '@/core/service-requests/validation';
 import { setServiceRequestUpvoteAction } from './actions';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
+import { formatLocalizedDate } from '@/core/i18n/format';
 
 export const metadata = {
   title: 'Requests | Homeish',
@@ -17,6 +20,9 @@ export default async function ResidentRequestsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const params = await searchParams;
   const rawStatus = typeof params.status === 'string' ? params.status : '';
   const status = serviceRequestStatusSchema.safeParse(rawStatus).success
@@ -28,16 +34,16 @@ export default async function ResidentRequestsPage({
     <section className="grid min-w-0 gap-space-5">
       <header className="flex flex-wrap items-end justify-between gap-space-3">
         <div className="grid gap-space-2">
-          <h1 className="text-title font-semibold">Service requests</h1>
+          <h1 className="text-title font-semibold">{t('Service requests')}</h1>
           <p className="text-body text-ink-muted">
-            Report an issue and follow updates from your society.
+            {t('Report an issue and follow updates from your society.')}
           </p>
         </div>
         <Link
           className="inline-flex min-h-12 items-center rounded-md bg-brand px-space-4 font-semibold text-on-brand focus-visible:outline-2 focus-visible:outline-focus"
           href="/requests/new"
         >
-          New request
+          {t('New request')}
         </Link>
       </header>
       <form className="flex flex-wrap items-end gap-space-3">
@@ -45,14 +51,14 @@ export default async function ResidentRequestsPage({
           className="grid gap-space-1 text-body-strong"
           htmlFor="request-filter-status"
         >
-          Status
+          {t('Status')}
           <select
             className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
             defaultValue={status ?? ''}
             id="request-filter-status"
             name="status"
           >
-            <option value="">All statuses</option>
+            <option value="">{t('All statuses')}</option>
             {serviceRequestStatusSchema.options.map((value) => (
               <option key={value} value={value}>
                 {value.replaceAll('_', ' ')}
@@ -64,13 +70,15 @@ export default async function ResidentRequestsPage({
           className="min-h-12 rounded-md border border-rule-strong px-space-4 font-semibold"
           type="submit"
         >
-          Filter
+          {t('Filter')}
         </button>
       </form>
       {workspace.requests.length === 0 ? (
         <EmptyState
-          description="Requests you submit will appear here with their latest status."
-          title="No service requests"
+          description={t(
+            'Requests you submit will appear here with their latest status.',
+          )}
+          title={t('No service requests')}
         />
       ) : (
         <ul className="grid gap-space-3">
@@ -88,7 +96,7 @@ export default async function ResidentRequestsPage({
                     {request.category_name}
                     {request.unit_number
                       ? ` · ${request.unit_number}`
-                      : ' · Common area'}
+                      : ` · ${t('Common area')}`}
                   </span>
                   <StatusChip status={`request.${request.status}`} />
                 </span>
@@ -96,9 +104,13 @@ export default async function ResidentRequestsPage({
                   {request.description}
                 </span>
                 <span className="text-caption text-ink-muted">
-                  Submitted{' '}
-                  {new Date(request.created_at).toLocaleDateString('en-IN')}
-                  {request.is_overdue ? ' · Overdue' : ''}
+                  {t('Submitted {date}', {
+                    date: formatLocalizedDate(
+                      new Date(request.created_at),
+                      locale,
+                    ),
+                  })}
+                  {request.is_overdue ? ` · ${t('Overdue')}` : ''}
                 </span>
               </Link>
               {request.location_type === 'common_area' ? (

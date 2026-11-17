@@ -1,5 +1,6 @@
 // Let an admin choose which committee analytics appear, grouped by module, with an optimistic version check.
 'use client';
+import { useUiTranslator } from '@/components/ui/language';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ export function AnalyticsSettingsView({
   action: ModuleFormAction;
   dashboardHref: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const [selected, setSelected] = useState<ReadonlySet<string>>(
     () => new Set(settings.metrics),
   );
@@ -74,14 +76,15 @@ export function AnalyticsSettingsView({
   return (
     <div className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Analytics settings</h1>
+        <h1 className="text-title font-semibold">{t('Analytics settings')}</h1>
         <p className="text-body text-ink-muted">
-          Choose the figures the committee sees on the analytics page. Every
-          figure is a society total; no names or flat numbers are shown.
+          {t(
+            'Choose the figures the committee sees on the analytics page. Every figure is a society total; no names or flat numbers are shown.',
+          )}
         </p>
         <p>
           <Link className={linkClass} href={dashboardHref}>
-            Back to analytics
+            {t('Back to analytics')}
           </Link>
         </p>
       </header>
@@ -93,18 +96,23 @@ export function AnalyticsSettingsView({
             .map((entry) => entry.key),
           expectedVersion: settings.version,
         })}
-        submitLabel="Save settings"
+        submitLabel={t('Save settings')}
       >
         <div className="flex flex-wrap items-center justify-between gap-space-3">
           <p aria-live="polite" className="text-caption text-ink-muted">
-            {enabledCount} {enabledCount === 1 ? 'figure' : 'figures'} selected
+            {t(
+              enabledCount === 1
+                ? '{count} figure selected'
+                : '{count} figures selected',
+              { count: enabledCount },
+            )}
           </p>
           <Button onClick={restoreDefaults} type="button" variant="secondary">
-            Restore defaults
+            {t('Restore defaults')}
           </Button>
         </div>
         {groups.map((group) => {
-          const moduleLabel = analyticsModuleLabel(group.module);
+          const moduleLabel = t(analyticsModuleLabel(group.module));
           const moduleOff = group.entries.every(
             (entry) => !entry.moduleEnabled,
           );
@@ -117,18 +125,18 @@ export function AnalyticsSettingsView({
                 {moduleLabel}
                 {moduleOff ? (
                   <span className="ml-space-2 text-caption font-normal text-ink-muted">
-                    (Module is off)
+                    {t('(Module is off)')}
                   </span>
                 ) : null}
               </legend>
               {group.entries.map((entry) => {
                 const definition = getAnalyticsMetric(entry.key);
                 const hints = [
-                  definition?.description,
-                  entry.defaultOn ? 'On by default.' : null,
+                  definition?.description ? t(definition.description) : null,
+                  entry.defaultOn ? t('On by default.') : null,
                   entry.moduleEnabled
                     ? null
-                    : 'Module is off. Turn the module on to change this.',
+                    : t('Module is off. Turn the module on to change this.'),
                 ].filter(Boolean);
                 return (
                   <div
@@ -140,7 +148,7 @@ export function AnalyticsSettingsView({
                       description={hints.join(' ')}
                       disabled={!entry.moduleEnabled}
                       id={checkboxId(entry.key)}
-                      label={definition?.label ?? entry.key}
+                      label={definition ? t(definition.label) : entry.key}
                       name="metrics"
                       onChange={(event) =>
                         toggle(entry.key, event.currentTarget.checked)

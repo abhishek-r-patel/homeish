@@ -1,6 +1,7 @@
 // Upload one private visitor photo and expose its verified storage path.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useEffect, useRef, useState } from 'react';
 import { publicEnvironment } from '@/core/config/public-env';
 
@@ -24,6 +25,7 @@ export function VisitorPhotoUpload({
   required: boolean;
   unitSelectId: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [path, setPath] = useState('');
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export function VisitorPhotoUpload({
         className="grid gap-space-1 text-body-strong"
         htmlFor="visitor-photo"
       >
-        Visitor photo {required ? '(required)' : '(optional)'}
+        {t(required ? 'Visitor photo (required)' : 'Visitor photo (optional)')}
         <input
           accept="image/jpeg,image/png"
           className="min-h-12 rounded-md border border-rule px-space-3 py-space-2"
@@ -125,7 +127,7 @@ export function VisitorPhotoUpload({
       </label>
       {path ? (
         <p className="text-caption text-ink-muted">
-          Photo attached to this entry.
+          {t('Photo attached to this entry.')}
         </p>
       ) : null}
       <p
@@ -133,7 +135,11 @@ export function VisitorPhotoUpload({
         className="text-caption text-ink-muted"
         role="status"
       >
-        {uploading ? 'Uploading photo…' : message}
+        {uploading
+          ? t('Uploading photo…')
+          : message
+            ? translateFeedback(message)
+            : null}
       </p>
     </div>
   );

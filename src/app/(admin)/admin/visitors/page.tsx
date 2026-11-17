@@ -11,22 +11,28 @@ import {
   listVisitorEntries,
 } from '@/core/visitor/operations';
 import {
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import {
   addVisitorBlacklistAction,
   removeVisitorBlacklistAction,
   updateVisitorSettingsAction,
 } from './actions';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Visitor management | Homeish',
   robots: { index: false, follow: false },
 };
 
-function dateTime(value: string, timeZone: string) {
-  return new Intl.DateTimeFormat(undefined, {
+function dateTime(value: string, locale: 'en' | 'hi', timeZone: string) {
+  return formatLocalizedDateTime(new Date(value), locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone,
-  }).format(new Date(value));
+  });
 }
 
 export default async function AdminVisitorsPage({
@@ -34,6 +40,8 @@ export default async function AdminVisitorsPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   const access = await getVisitorAdminAccess();
   const [{ q, status }, entries, blacklist, settings, societyId, timezone] =
     await Promise.all([
@@ -54,25 +62,34 @@ export default async function AdminVisitorsPage({
       entry.purpose.toLocaleLowerCase().includes(query);
     return matchesStatus && matchesQuery;
   });
+  const visitorStatusLabels: Readonly<Record<string, string>> = {
+    pending: 'Waiting',
+    approved: 'Approved',
+    denied: 'Denied',
+    expired: 'Expired',
+    checked_in: 'Inside',
+    checked_out: 'Checked out',
+  };
 
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Visitor management</h1>
+        <h1 className="text-title font-semibold">{t('Visitor management')}</h1>
         <p className="text-body text-ink-muted">
-          Review visitor activity, configure gate rules and manage the
-          blacklist.
+          {t(
+            'Review visitor activity, configure gate rules and manage the blacklist.',
+          )}
         </p>
       </header>
       <VisitorRealtimeRefresh societyId={societyId} />
 
-      <Card title="Visitor log">
+      <Card title={t('Visitor log')}>
         <form className="mb-space-4 flex flex-wrap gap-space-2" method="get">
           <label
             className="grid gap-space-1 text-caption"
             htmlFor="visitor-search"
           >
-            Search name or purpose
+            {t('Search name or purpose')}
             <input
               className="min-h-11 rounded-md border border-rule px-space-3"
               defaultValue={q ?? ''}
@@ -84,27 +101,27 @@ export default async function AdminVisitorsPage({
             className="grid gap-space-1 text-caption"
             htmlFor="visitor-status"
           >
-            Status
+            {t('Status')}
             <select
               className="min-h-11 rounded-md border border-rule bg-surface px-space-3"
               defaultValue={status ?? 'all'}
               id="visitor-status"
               name="status"
             >
-              <option value="all">All</option>
-              <option value="pending">Waiting</option>
-              <option value="approved">Approved</option>
-              <option value="denied">Denied</option>
-              <option value="checked_in">Inside</option>
-              <option value="checked_out">Checked out</option>
-              <option value="expired">Expired</option>
+              <option value="all">{t('All')}</option>
+              <option value="pending">{t('Waiting')}</option>
+              <option value="approved">{t('Approved')}</option>
+              <option value="denied">{t('Denied')}</option>
+              <option value="checked_in">{t('Inside')}</option>
+              <option value="checked_out">{t('Checked out')}</option>
+              <option value="expired">{t('Expired')}</option>
             </select>
           </label>
           <button
             className="min-h-11 self-end rounded-md bg-brand px-space-4 font-semibold text-white"
             type="submit"
           >
-            Filter
+            {t('Filter')}
           </button>
         </form>
         {visibleEntries.length ? (
@@ -117,29 +134,34 @@ export default async function AdminVisitorsPage({
                 <p className="text-body-strong">
                   {entry.visitor_name}
                   {entry.is_overstay ? (
-                    <span className="ml-space-2 text-danger">Overstay</span>
+                    <span className="ml-space-2 text-danger">
+                      {t('Overstay')}
+                    </span>
                   ) : null}
                 </p>
                 <p className="text-caption text-ink-muted">
-                  {entry.purpose} · {entry.people_count} people · {entry.status}
+                  {entry.purpose} ·{' '}
+                  {formatLocalizedNumber(entry.people_count, locale)}{' '}
+                  {t('people')} ·{' '}
+                  {t(visitorStatusLabels[entry.status] ?? entry.status)}
                 </p>
                 <time
                   className="text-caption text-ink-muted"
                   dateTime={entry.created_at}
                 >
-                  {dateTime(entry.created_at, timezone)}
+                  {dateTime(entry.created_at, locale, timezone)}
                 </time>
               </li>
             ))}
           </ol>
         ) : (
           <p className="text-body text-ink-muted">
-            No visitors match these filters.
+            {t('No visitors match these filters.')}
           </p>
         )}
       </Card>
 
-      <Card title="Visitor blacklist">
+      <Card title={t('Visitor blacklist')}>
         {access.canManage ? (
           <VisitorActionForm
             action={addVisitorBlacklistAction}
@@ -149,7 +171,7 @@ export default async function AdminVisitorsPage({
               className="grid gap-space-1 text-body-strong"
               htmlFor="blacklist-phone"
             >
-              Phone number
+              {t('Phone number')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="blacklist-phone"
@@ -163,7 +185,7 @@ export default async function AdminVisitorsPage({
               className="grid gap-space-1 text-body-strong"
               htmlFor="blacklist-name"
             >
-              Name (optional)
+              {t('Name (optional)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="blacklist-name"
@@ -175,7 +197,7 @@ export default async function AdminVisitorsPage({
               className="grid gap-space-1 text-body-strong"
               htmlFor="blacklist-reason"
             >
-              Reason (optional)
+              {t('Reason (optional)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="blacklist-reason"
@@ -187,7 +209,7 @@ export default async function AdminVisitorsPage({
               className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white"
               type="submit"
             >
-              Add number
+              {t('Add number')}
             </button>
           </VisitorActionForm>
         ) : null}
@@ -214,22 +236,26 @@ export default async function AdminVisitorsPage({
                       className="min-h-11 rounded-md border border-rule-strong px-space-3 font-semibold"
                       type="submit"
                     >
-                      Remove
+                      {t('Remove')}
                     </button>
                   </VisitorActionForm>
                 ) : (
-                  <span className="text-caption text-ink-muted">Inactive</span>
+                  <span className="text-caption text-ink-muted">
+                    {t('Inactive')}
+                  </span>
                 )}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-body text-ink-muted">The blacklist is empty.</p>
+          <p className="text-body text-ink-muted">
+            {t('The blacklist is empty.')}
+          </p>
         )}
       </Card>
 
       {access.canManage ? (
-        <Card title="Visitor settings">
+        <Card title={t('Visitor settings')}>
           <VisitorActionForm
             action={updateVisitorSettingsAction}
             className="grid gap-space-3"
@@ -238,7 +264,7 @@ export default async function AdminVisitorsPage({
               className="grid gap-space-1 text-body-strong"
               htmlFor="approval-timeout"
             >
-              Resident response timeout (minutes)
+              {t('Resident response timeout (minutes)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 defaultValue={settings.approval_timeout_minutes}
@@ -254,7 +280,7 @@ export default async function AdminVisitorsPage({
               className="grid gap-space-1 text-body-strong"
               htmlFor="overstay-hours"
             >
-              Overstay threshold (hours)
+              {t('Overstay threshold (hours)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 defaultValue={settings.overstay_hours}
@@ -283,7 +309,7 @@ export default async function AdminVisitorsPage({
                   key={name}
                 >
                   <input defaultChecked={value} name={name} type="checkbox" />
-                  {label}
+                  {t(label)}
                 </label>
               );
             })}
@@ -291,7 +317,7 @@ export default async function AdminVisitorsPage({
               className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white"
               type="submit"
             >
-              Save settings
+              {t('Save settings')}
             </button>
           </VisitorActionForm>
         </Card>

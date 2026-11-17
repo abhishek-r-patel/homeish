@@ -10,11 +10,13 @@ import { Card } from '@/components/ui/data-display';
 import { EmptyState } from '@/components/ui/feedback';
 import { ModuleActionForm } from '@/components/ui/module-action-form';
 import { TextInput } from '@/components/ui/text-input';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import {
   ASSET_ACTIONS,
   ASSET_BASE_HREF,
   ASSET_LINK_CLASS,
   AssetQuickAction,
+  useAssetCopy,
   type AssetActions,
 } from './shared';
 
@@ -27,12 +29,13 @@ function CategoryForm({
   category: Category | null;
   actions: AssetActions;
 }) {
+  const { t } = useAssetCopy();
   const id = useId();
   return (
     <ModuleActionForm
       action={actions.saveCategory}
       idempotent
-      submitLabel={category ? 'Rename category' : 'Add category'}
+      submitLabel={t(category ? 'Rename category' : 'Add category')}
       input={(form, clientRequestId) =>
         assetCategoryInputSchema.parse({
           categoryId: category?.id ?? null,
@@ -45,8 +48,12 @@ function CategoryForm({
       <TextInput
         id={`${id}-name`}
         name="name"
-        label={category ? `New name for ${category.name}` : 'Category name'}
-        helpText={category ? undefined : 'For example Lifts, Pumps or CCTV.'}
+        label={
+          category
+            ? t('New name for {name}', { name: category.name })
+            : t('Category name')
+        }
+        helpText={category ? undefined : t('For example Lifts, Pumps or CCTV.')}
         required
         maxLength={60}
         defaultValue={category?.name}
@@ -63,31 +70,33 @@ export function AssetCategoriesView({
   workspace: AssetWorkspace;
   actions?: AssetActions;
 }) {
+  const { locale, t } = useAssetCopy();
   return (
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
         <a href={ASSET_BASE_HREF} className={ASSET_LINK_CLASS}>
-          Back to the register
+          {t('Back to the register')}
         </a>
-        <h1 className="text-title font-semibold">Asset categories</h1>
+        <h1 className="text-title font-semibold">{t('Asset categories')}</h1>
         <p className="text-body text-ink-muted">
-          Categories group the register. Inactive categories stay on existing
-          assets but cannot be chosen for new ones.
+          {t(
+            'Categories group the register. Inactive categories stay on existing assets but cannot be chosen for new ones.',
+          )}
         </p>
       </header>
       {workspace.can_manage ? (
-        <Card title="Add a category">
+        <Card title={t('Add a category')}>
           <CategoryForm category={null} actions={actions} />
         </Card>
       ) : null}
-      <Card title="Categories">
+      <Card title={t('Categories')}>
         {workspace.categories.length === 0 ? (
           <EmptyState
-            title="No categories yet"
+            title={t('No categories yet')}
             description={
               workspace.can_manage
-                ? 'Add the first category above.'
-                : 'An admin adds categories.'
+                ? t('Add the first category above.')
+                : t('An admin adds categories.')
             }
           />
         ) : (
@@ -102,9 +111,13 @@ export function AssetCategoriesView({
                     {category.name}
                   </p>
                   <p className="text-caption text-ink-muted">
-                    {category.active ? 'Active' : 'Inactive'} ·{' '}
-                    {category.asset_count}{' '}
-                    {category.asset_count === 1 ? 'asset' : 'assets'}
+                    {t(category.active ? 'Active' : 'Inactive')} ·{' '}
+                    {t('Assets: {count}', {
+                      count: formatLocalizedNumber(
+                        category.asset_count,
+                        locale,
+                      ),
+                    })}
                   </p>
                 </div>
                 {workspace.can_manage ? (
@@ -119,8 +132,8 @@ export function AssetCategoriesView({
                       })}
                       label={
                         category.active
-                          ? 'Deactivate category'
-                          : 'Activate category'
+                          ? t('Deactivate category')
+                          : t('Activate category')
                       }
                     />
                   </>

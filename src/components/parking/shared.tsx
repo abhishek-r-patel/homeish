@@ -2,6 +2,7 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
 import { z } from 'zod';
+import { useUiTranslator } from '@/components/ui/language';
 import { publicEnvironment } from '@/core/config/public-env';
 import { MAX_FILE_BYTES } from '@/core/files/constraints';
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
@@ -36,6 +37,34 @@ import {
 import { SelectInput } from '@/components/ui/select-input';
 import { TextAreaInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
+import { createComponentTranslator } from '@/core/i18n/catalogs/hi-components';
+import {
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import { PARKING_TIME_ZONE } from '@/core/parking/presentation';
+
+export function useParkingCopy() {
+  const {
+    locale: activeLocale,
+    translate,
+    translateFeedback,
+  } = useUiTranslator();
+  const locale = activeLocale ?? 'en';
+  return {
+    locale,
+    t: createComponentTranslator(locale, translate),
+    translateFeedback,
+  };
+}
+
+export function parkingDisplayTime(value: string, locale: 'en' | 'hi') {
+  return formatLocalizedDateTime(new Date(value), locale, {
+    timeZone: PARKING_TIME_ZONE,
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
 
 export type ParkingActions = {
   saveSettings: ModuleFormAction;
@@ -84,6 +113,7 @@ export function ParkingRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { t, translateFeedback } = useParkingCopy();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage
@@ -106,13 +136,13 @@ export function ParkingRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">{title}</h1>
+      <h1 className="text-title font-semibold">{t(title)}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={translateFeedback(message ?? copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
@@ -121,14 +151,14 @@ export function ParkingRouteState({
                   href={retryHref}
                   className="inline-flex min-h-12 items-center text-brand underline"
                 >
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a
                 href={returnHref}
                 className="inline-flex min-h-12 items-center text-brand underline"
               >
-                Back to your workspace
+                {t('Back to your workspace')}
               </a>
             </div>
           }
@@ -228,6 +258,7 @@ export function ParkingReportForm({
   request?: typeof fetch;
   retentionDays?: number;
 }) {
+  const { locale, t, translateFeedback } = useParkingCopy();
   const id = useId();
   const currentUpload = useRef<AbortController | null>(null);
   const [files, setFiles] = useState<readonly UploadFile[]>([]);
@@ -318,7 +349,7 @@ export function ParkingReportForm({
     <ModuleActionForm
       action={action}
       idempotent
-      submitLabel="Send report"
+      submitLabel={t('Send report')}
       submitDisabled={uploading}
       onSaved={() => {
         setFiles([]);
@@ -338,39 +369,55 @@ export function ParkingReportForm({
       <SelectInput
         id={`${id}-slot`}
         name="slotId"
-        label="Slot"
+        label={t('Slot')}
         defaultValue=""
         options={[
-          { value: '', label: 'No slot, I will enter the vehicle number' },
+          {
+            value: '',
+            label: t('No slot, I will enter the vehicle number'),
+          },
           ...slots.map((slot) => ({
             value: slot.id,
-            label: `${slot.label} (${PARKING_SLOT_TYPE_LABELS[slot.slot_type]})`,
+            label: `${slot.label} (${t(PARKING_SLOT_TYPE_LABELS[slot.slot_type])})`,
           })),
         ]}
       />
       <TextInput
         id={`${id}-vehicle`}
         name="vehicleNumber"
-        label="Vehicle number"
-        helpText="Choose a slot, enter the vehicle number, or both. For example MH01AB1234."
+        label={t('Vehicle number')}
+        helpText={t(
+          'Choose a slot, enter the vehicle number, or both. For example MH01AB1234.',
+        )}
         autoComplete="off"
         maxLength={40}
       />
       <TextAreaInput
         id={`${id}-note`}
         name="note"
-        label="What is wrong? (optional)"
+        label={t('What is wrong? (optional)')}
         maxLength={500}
       />
       <FileUpload
         id={`${id}-photo`}
-        label="Photo (optional)"
+        label={t('Photo (optional)')}
         acceptedTypes={PARKING_PHOTO_CONTENT_TYPES}
         maxFileBytes={MAX_FILE_BYTES}
         maxFiles={1}
         capturePhoto
-        files={files}
-        helpText={`JPG or PNG up to 5 MiB. Only the unit, administrators and you can see it, and it is deleted after ${retentionDays ? `${retentionDays} day${retentionDays === 1 ? '' : 's'}` : 'a few days'}.`}
+        files={files.map((file) =>
+          file.error ? { ...file, error: translateFeedback(file.error) } : file,
+        )}
+        helpText={t(
+          'JPG or PNG up to 5 MiB. Only the unit, administrators and you can see it, and it is deleted after {days}.',
+          {
+            days: retentionDays
+              ? t('{count} days', {
+                  count: formatLocalizedNumber(retentionDays, locale),
+                })
+              : t('a few days'),
+          },
+        )}
         onRetry={(file) => void upload(file)}
         onFilesChange={(next) => {
           if (next.length > 0) void upload(next[0]!);
@@ -391,7 +438,7 @@ export function ParkingReportForm({
       />
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {translateFeedback(message)}
         </p>
       ) : null}
     </ModuleActionForm>
@@ -405,6 +452,7 @@ export function ParkingPhotoLink({
   path: string;
   request?: typeof fetch;
 }) {
+  const { t, translateFeedback } = useParkingCopy();
   const [pending, setPending] = useState(false);
   const [link, setLink] = useState<{ url: string; expiresIn: number } | null>(
     null,
@@ -455,7 +503,7 @@ export function ParkingPhotoLink({
         variant="secondary"
         onClick={() => void prepare()}
       >
-        {link ? 'Refresh photo link' : 'View photo'}
+        {link ? t('Refresh photo link') : t('View photo')}
       </Button>
       {link ? (
         <a
@@ -464,12 +512,12 @@ export function ParkingPhotoLink({
           rel="noopener noreferrer"
           className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         >
-          Open photo (private link, up to five minutes)
+          {t('Open photo (private link, up to five minutes)')}
         </a>
       ) : null}
       {error ? (
         <p role="alert" className="text-caption text-danger">
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
     </div>

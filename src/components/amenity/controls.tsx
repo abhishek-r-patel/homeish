@@ -1,8 +1,15 @@
 // Render recurring weekday schedules, explicit rules acknowledgements and cancellation controls.
 'use client';
 import { useId, useState } from 'react';
+import { useOptionalLanguage } from '@/components/language-context';
 import { TextInput } from '@/components/ui/text-input';
 import { Button } from '@/components/ui/button';
+import { createComponentTranslator } from '@/core/i18n/catalogs/hi-components';
+import {
+  formatLocalizedCurrency,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import { formatRupees } from '@/core/billing/format';
 import {
   ModuleActionForm,
   type ModuleFormAction,
@@ -30,6 +37,25 @@ const weekdays = [
   'Friday',
   'Saturday',
 ];
+
+function useAmenityCopy() {
+  const language = useOptionalLanguage();
+  const locale = language?.locale ?? 'en';
+  return {
+    locale,
+    t: createComponentTranslator(
+      locale,
+      language?.translate ?? ((source) => source),
+    ),
+  };
+}
+
+function amenityFee(paise: number, locale: 'en' | 'hi') {
+  return locale === 'hi'
+    ? formatLocalizedCurrency(paise, locale)
+    : formatRupees(paise);
+}
+
 export function AmenityForm({
   amenity,
   slots = [],
@@ -40,6 +66,7 @@ export function AmenityForm({
   action?: ModuleFormAction;
 }) {
   const prefix = useId();
+  const { locale, t } = useAmenityCopy();
   const [rows, setRows] = useState(() =>
     slots.length
       ? slots.map((s, i) => ({
@@ -55,7 +82,7 @@ export function AmenityForm({
     <ModuleActionForm
       action={action}
       idempotent
-      submitLabel={amenity ? 'Save amenity' : 'Add amenity'}
+      submitLabel={t(amenity ? 'Save amenity' : 'Add amenity')}
       input={(data) => ({
         amenityId: amenity?.id ?? null,
         expectedUpdatedAt: amenity?.updated_at ?? null,
@@ -73,7 +100,7 @@ export function AmenityForm({
     >
       <TextInput
         id={`${prefix}-name`}
-        label="Amenity name"
+        label={t('Amenity name')}
         name="name"
         required
         maxLength={120}
@@ -81,7 +108,7 @@ export function AmenityForm({
       />
       <TextInput
         id={`${prefix}-capacity`}
-        label="Maximum guests per booking"
+        label={t('Maximum guests per booking')}
         name="capacity"
         type="number"
         min={1}
@@ -91,14 +118,14 @@ export function AmenityForm({
       />
       <TextInput
         id={`${prefix}-fee`}
-        label="Fee per booking in rupees (0 for free)"
+        label={t('Fee per booking in rupees (0 for free)')}
         name="feeRupees"
         required
         inputMode="decimal"
         defaultValue={rupeesFromPaise(amenity?.fee_paise ?? 0)}
       />
       <div className="grid min-w-0 gap-space-2">
-        <label htmlFor={`${prefix}-rules`}>Amenity rules</label>
+        <label htmlFor={`${prefix}-rules`}>{t('Amenity rules')}</label>
         <textarea
           id={`${prefix}-rules`}
           name="rules"
@@ -113,20 +140,24 @@ export function AmenityForm({
           name="active"
           defaultChecked={amenity?.active ?? true}
         />
-        Active amenity
+        {t('Active amenity')}
       </label>
-      <h3 className="text-body-strong">Recurring weekday slots</h3>
+      <h3 className="text-body-strong">{t('Recurring weekday slots')}</h3>
       {rows.map((r, i) => (
         <fieldset
           key={r.key}
           className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-3"
         >
-          <legend>Slot {i + 1}</legend>
+          <legend>
+            {t('Slot {number}', {
+              number: formatLocalizedNumber(i + 1, locale),
+            })}
+          </legend>
           <label
             htmlFor={`${prefix}-day-${r.key}`}
             className="grid min-w-0 gap-space-1"
           >
-            Weekday
+            {t('Weekday')}
             <select
               id={`${prefix}-day-${r.key}`}
               name={`day-${r.key}`}
@@ -135,14 +166,14 @@ export function AmenityForm({
             >
               {weekdays.map((day, n) => (
                 <option key={day} value={n}>
-                  {day}
+                  {t(day)}
                 </option>
               ))}
             </select>
           </label>
           <TextInput
             id={`${prefix}-start-${r.key}`}
-            label="Slot start (society local time)"
+            label={t('Slot start (society local time)')}
             name={`start-${r.key}`}
             type="time"
             required
@@ -150,7 +181,7 @@ export function AmenityForm({
           />
           <TextInput
             id={`${prefix}-end-${r.key}`}
-            label="Slot end (society local time)"
+            label={t('Slot end (society local time)')}
             name={`end-${r.key}`}
             type="time"
             required
@@ -161,7 +192,9 @@ export function AmenityForm({
               type="button"
               onClick={() => setRows(rows.filter((row) => row.key !== r.key))}
             >
-              Remove slot {i + 1}
+              {t('Remove slot {number}', {
+                number: formatLocalizedNumber(i + 1, locale),
+              })}
             </Button>
           ) : null}
         </fieldset>
@@ -177,11 +210,12 @@ export function AmenityForm({
           setNext(next + 1);
         }}
       >
-        Add recurring slot
+        {t('Add recurring slot')}
       </Button>
       <p className="text-caption text-ink-muted">
-        Bookings are exclusive. Slots cannot overlap on the same weekday.
-        Schedule edits never change existing booking times, fees or rules.
+        {t(
+          'Bookings are exclusive. Slots cannot overlap on the same weekday. Schedule edits never change existing booking times, fees or rules.',
+        )}
       </p>
     </ModuleActionForm>
   );
@@ -200,11 +234,12 @@ export function AmenityBookingForm({
   action?: ModuleFormAction;
 }) {
   const prefix = useId();
+  const { locale, t } = useAmenityCopy();
   return (
     <ModuleActionForm
       action={action}
       idempotent
-      submitLabel="Confirm exclusive booking"
+      submitLabel={t('Confirm exclusive booking')}
       input={(data) => ({
         amenityId: amenity.id,
         slotId: occurrence.slot_id,
@@ -216,7 +251,7 @@ export function AmenityBookingForm({
       })}
     >
       <label htmlFor={`${prefix}-unit`} className="grid min-w-0 gap-space-1">
-        Occupied unit
+        {t('Occupied unit')}
         <select
           id={`${prefix}-unit`}
           name="unitId"
@@ -232,7 +267,7 @@ export function AmenityBookingForm({
       </label>
       <TextInput
         id={`${prefix}-guests`}
-        label="Guest count"
+        label={t('Guest count')}
         name="guestCount"
         type="number"
         min={1}
@@ -246,15 +281,16 @@ export function AmenityBookingForm({
             {amenity.rules}
           </p>
           <label className="flex min-h-12 items-center gap-space-2">
-            <input type="checkbox" name="rulesAccepted" required />I acknowledge
-            the current amenity rules
+            <input type="checkbox" name="rulesAccepted" required />
+            {t('I acknowledge the current amenity rules')}
           </label>
         </>
       ) : null}
       <p className="text-caption text-ink-muted">
-        Fee: Rs. {rupeesFromPaise(amenity.fee_paise)}. Confirmed immediately;
-        any fee is charged to your unit ledger. Cancel before the slot starts
-        for a full ledger credit.
+        {t(
+          'Fee: {amount}. Confirmed immediately; any fee is charged to your unit ledger. Cancel before the slot starts for a full ledger credit.',
+          { amount: amenityFee(amenity.fee_paise, locale) },
+        )}
       </p>
     </ModuleActionForm>
   );
@@ -269,11 +305,14 @@ export function AmenityCancellationForm({
   action?: ModuleFormAction;
 }) {
   const id = useId();
+  const { t } = useAmenityCopy();
   return (
     <ModuleActionForm
       action={action}
-      submitLabel="Cancel booking"
-      confirmMessage="Cancel this booking and credit any fee to the unit ledger?"
+      submitLabel={t('Cancel booking')}
+      confirmMessage={t(
+        'Cancel this booking and credit any fee to the unit ledger?',
+      )}
       input={(data) => ({
         bookingId: booking.id,
         reason: admin ? data.get('reason') : null,
@@ -282,7 +321,7 @@ export function AmenityCancellationForm({
       {admin ? (
         <TextInput
           id={id}
-          label="Administrator cancellation reason"
+          label={t('Administrator cancellation reason')}
           name="reason"
           required
           maxLength={500}

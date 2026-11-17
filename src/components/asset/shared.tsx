@@ -1,6 +1,14 @@
 // Shared Asset Register route states, action wiring and small helpers.
 'use client';
+import { useUiTranslator } from '@/components/ui/language';
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
+import { createComponentTranslator } from '@/core/i18n/catalogs/hi-components';
+import {
+  formatLocalizedCurrency,
+  formatLocalizedDate,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
+import { formatPaise, warrantyState } from '@/core/asset/presentation';
 import {
   addAssetMaintenanceAction,
   removeAssetMaintenanceAction,
@@ -35,6 +43,49 @@ export const ASSET_BASE_HREF = '/admin/assets';
 export const ASSET_LINK_CLASS =
   'inline-flex min-h-12 items-center text-brand underline outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
 
+export function useAssetCopy() {
+  const {
+    locale: activeLocale,
+    translate,
+    translateFeedback,
+  } = useUiTranslator();
+  const locale = activeLocale ?? 'en';
+  return {
+    locale,
+    t: createComponentTranslator(locale, translate),
+    translateFeedback,
+  };
+}
+
+export function assetDisplayDate(value: string, locale: Locale) {
+  return formatLocalizedDate(
+    new Date(`${value.slice(0, 10)}T00:00:00.000Z`),
+    locale,
+    { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' },
+  );
+}
+
+export function assetDisplayMoney(paise: number, locale: Locale) {
+  return locale === 'hi'
+    ? formatLocalizedCurrency(paise, locale)
+    : formatPaise(paise);
+}
+
+export function assetWarrantyText(
+  warrantyEndDate: string | null,
+  today: string,
+  locale: Locale,
+  t: ReturnType<typeof createComponentTranslator>,
+) {
+  const state = warrantyState(warrantyEndDate, today);
+  if (state === 'none' || !warrantyEndDate) return t('No warranty recorded');
+  const date = assetDisplayDate(warrantyEndDate, locale);
+  if (state === 'expired') return t('Warranty ended {date}', { date });
+  if (state === 'ending_soon')
+    return t('Warranty ends soon, on {date}', { date });
+  return t('Under warranty until {date}', { date });
+}
+
 export type AssetRouteStateKind =
   'loading' | 'error' | 'disabled' | 'denied' | 'not_found';
 
@@ -53,6 +104,7 @@ export function AssetRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { t, translateFeedback } = useAssetCopy();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage embedded moduleKey="asset" returnHref={returnHref} />
@@ -78,23 +130,23 @@ export function AssetRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">{title}</h1>
+      <h1 className="text-title font-semibold">{t(title)}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={translateFeedback(message ?? copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
               {retryHref ? (
                 <a href={retryHref} className={ASSET_LINK_CLASS}>
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a href={returnHref} className={ASSET_LINK_CLASS}>
-                Back
+                {t('Back')}
               </a>
             </div>
           }

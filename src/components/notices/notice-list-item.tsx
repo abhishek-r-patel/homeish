@@ -2,21 +2,27 @@
 import Link from 'next/link';
 import { StatusChip } from '@/components/ui/data-display';
 import type { Notice } from '@/core/notices/validation';
+import { formatLocalizedDateTime } from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
+import { translateMessage } from '@/core/i18n/messages';
 
-export function noticeDateTime(value: string) {
-  return new Intl.DateTimeFormat('en-IN', {
+export function noticeDateTime(value: string, locale: Locale = 'en') {
+  return formatLocalizedDateTime(new Date(value), locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'Asia/Kolkata',
-  }).format(new Date(value));
+  });
 }
 
-export function noticeAudienceLabel(notice: Notice) {
-  if (notice.audience === 'owners') return 'Owners';
+export function noticeAudienceLabel(notice: Notice, locale: Locale = 'en') {
+  const t = (source: string) => translateMessage(locale, source);
+  if (notice.audience === 'owners') return t('Owners');
   if (notice.audience === 'blocks') {
-    return notice.blocks.map(({ name }) => name).join(', ') || 'Chosen blocks';
+    return (
+      notice.blocks.map(({ name }) => name).join(', ') || t('Chosen blocks')
+    );
   }
-  return 'All residents';
+  return t('All residents');
 }
 
 export function NoticeStatusChips({
@@ -47,11 +53,15 @@ export function NoticeListItem({
   href,
   manager = false,
   notice,
+  locale = 'en',
 }: {
   href: string;
   manager?: boolean;
   notice: Notice;
+  locale?: Locale;
 }) {
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   return (
     <li
       className={`min-w-0 rounded-md border bg-surface p-space-4 ${notice.pinned ? 'border-brand' : 'border-rule'}`}
@@ -70,13 +80,13 @@ export function NoticeListItem({
           {notice.body}
         </span>
         <span className="text-caption text-ink-muted">
-          {notice.author_name ?? 'Society office'} ·{' '}
-          {noticeDateTime(notice.created_at)}
-          {manager ? ` · ${noticeAudienceLabel(notice)}` : ''}
+          {notice.author_name ?? t('Society office')} ·{' '}
+          {noticeDateTime(notice.created_at, locale)}
+          {manager ? ` · ${noticeAudienceLabel(notice, locale)}` : ''}
           {manager && notice.read_count !== null
-            ? ` · Read by ${notice.read_count}`
+            ? ` · ${t('Read by {count}', { count: notice.read_count })}`
             : ''}
-          {notice.attachment_path ? ' · Attachment' : ''}
+          {notice.attachment_path ? ` · ${t('Attachment')}` : ''}
         </span>
       </Link>
     </li>

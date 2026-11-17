@@ -9,8 +9,6 @@ import {
   PARKING_REQUEST_STATUS_LABELS,
   PARKING_SLOT_TYPE_LABELS,
   PARKING_TIME_ZONE,
-  formatParkingTime,
-  formatParkingWindow,
   parkingPassEnd,
   parkingPassState,
   parkingQueueText,
@@ -36,11 +34,14 @@ import { ModuleActionForm } from '@/components/ui/module-action-form';
 import { SelectInput } from '@/components/ui/select-input';
 import { TextAreaInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import {
   PARKING_ACTIONS,
   ParkingPhotoLink,
   ParkingQuickAction,
   ParkingReportForm,
+  parkingDisplayTime,
+  useParkingCopy,
   type ParkingActions,
 } from './shared';
 
@@ -85,15 +86,18 @@ function SlotCard({
   directoryEnabled: boolean;
   actions: ParkingActions;
 }) {
+  const { t } = useParkingCopy();
   return (
     <li className="grid gap-space-3 rounded-md border border-rule p-space-4">
       <div className="grid gap-space-1">
         <p className="text-body-strong">
-          Slot {allocation.slot_label} ·{' '}
-          {PARKING_SLOT_TYPE_LABELS[allocation.slot_type]}
+          {t('Slot {label} · {type}', {
+            label: allocation.slot_label,
+            type: t(PARKING_SLOT_TYPE_LABELS[allocation.slot_type]),
+          })}
         </p>
         <p className="text-caption text-ink-muted">
-          Unit {allocation.unit_number}
+          {t('Unit {unit}', { unit: allocation.unit_number })}
           {allocation.location_note ? ` · ${allocation.location_note}` : ''}
         </p>
       </div>
@@ -101,10 +105,10 @@ function SlotCard({
         allocation.vehicles.length > 0 ? (
           <div className="grid gap-space-2">
             <p className="text-caption text-ink-muted">
-              Vehicles from your directory that use this slot.{' '}
+              {t('Vehicles from your directory that use this slot.')}
               {allocation.slot_type === 'two_wheeler'
-                ? 'This slot takes two-wheelers only.'
-                : 'This slot takes one car plus any number of two-wheelers.'}
+                ? ` ${t('This slot takes two-wheelers only.')}`
+                : ` ${t('This slot takes one car plus any number of two-wheelers.')}`}
             </p>
             <ul className="grid gap-space-2">
               {allocation.vehicles.map((vehicle) => (
@@ -116,9 +120,9 @@ function SlotCard({
                     {vehicle.registration_number} ·{' '}
                     {parkingVehicleTypeLabel(vehicle.vehicle_type)}
                     {vehicle.linked
-                      ? ' · uses this slot'
+                      ? ` · ${t('uses this slot')}`
                       : vehicle.linked_elsewhere
-                        ? ' · uses another slot'
+                        ? ` · ${t('uses another slot')}`
                         : ''}
                   </p>
                   {vehicle.linked_elsewhere && !vehicle.linked ? null : (
@@ -126,8 +130,12 @@ function SlotCard({
                       action={actions.setVehicleLink}
                       label={
                         vehicle.linked
-                          ? `Stop using slot for ${vehicle.registration_number}`
-                          : `Use slot for ${vehicle.registration_number}`
+                          ? t('Stop using slot for {number}', {
+                              number: vehicle.registration_number,
+                            })
+                          : t('Use slot for {number}', {
+                              number: vehicle.registration_number,
+                            })
                       }
                       input={{
                         allocationId: allocation.id,
@@ -142,7 +150,9 @@ function SlotCard({
           </div>
         ) : (
           <p className="text-caption text-ink-muted">
-            Add your vehicles in the directory to show which ones use this slot.
+            {t(
+              'Add your vehicles in the directory to show which ones use this slot.',
+            )}
           </p>
         )
       ) : null}
@@ -159,23 +169,25 @@ function PassItem({
   actions: ParkingActions;
   now: number;
 }) {
+  const { locale, t } = useParkingCopy();
   const state = parkingPassState(pass, now);
   return (
     <li className="grid gap-space-2 rounded-md border border-rule p-space-4">
       <p className="text-body-strong">
-        {pass.visitor_name} · Slot {pass.slot_label}
+        {pass.visitor_name} · {t('Slot {label}', { label: pass.slot_label })}
       </p>
       <p className="text-caption text-ink-muted">
-        {PARKING_PASS_STATE_LABELS[state]} ·{' '}
-        {formatParkingWindow(pass.starts_at, pass.ends_at)}
-        {pass.vehicle_number ? ` · ${pass.vehicle_number}` : ''} · Unit{' '}
-        {pass.unit_number}
+        {t(PARKING_PASS_STATE_LABELS[state])} ·{' '}
+        {parkingDisplayTime(pass.starts_at, locale)} –{' '}
+        {parkingDisplayTime(pass.ends_at, locale)}
+        {pass.vehicle_number ? ` · ${pass.vehicle_number}` : ''} ·{' '}
+        {t('Unit {unit}', { unit: pass.unit_number })}
       </p>
       {state === 'upcoming' || state === 'current' ? (
         <ParkingQuickAction
           action={actions.cancelPass}
-          label={`Cancel pass for ${pass.visitor_name}`}
-          confirmMessage="Cancel this visitor pass?"
+          label={t('Cancel pass for {name}', { name: pass.visitor_name })}
+          confirmMessage={t('Cancel this visitor pass?')}
           input={{ passId: pass.id }}
         />
       ) : null}
@@ -192,27 +204,32 @@ export function ParkingReportItem({
   request?: typeof fetch;
   children?: ReactNode;
 }) {
+  const { locale, t } = useParkingCopy();
   return (
     <li className="grid gap-space-2 rounded-md border border-rule p-space-4">
       <p className="text-body-strong">
-        {report.slot_label ? `Slot ${report.slot_label}` : 'No slot'}
+        {report.slot_label
+          ? t('Slot {label}', { label: report.slot_label })
+          : t('No slot')}
         {report.vehicle_number ? ` · ${report.vehicle_number}` : ''}
       </p>
       <p className="text-caption text-ink-muted">
-        {PARKING_REPORT_STATUS_LABELS[report.status]} · Reported by{' '}
+        {t(PARKING_REPORT_STATUS_LABELS[report.status])} · {t('Reported by')}{' '}
         {report.is_mine
-          ? 'you'
+          ? t('you')
           : report.reporter_role === 'guard'
-            ? 'a guard'
-            : 'a resident'}{' '}
-        on {formatParkingTime(report.created_at)}
+            ? t('a guard')
+            : t('a resident')}{' '}
+        {t('on')} {parkingDisplayTime(report.created_at, locale)}
         {report.matched_unit_number
-          ? ` · Unit ${report.matched_unit_number}`
-          : ' · No unit matched'}
+          ? ` · ${t('Unit {unit}', { unit: report.matched_unit_number })}`
+          : ` · ${t('No unit matched')}`}
       </p>
       {report.note ? <p>{report.note}</p> : null}
       {report.resolution_note ? (
-        <p className="text-caption">Resolution: {report.resolution_note}</p>
+        <p className="text-caption">
+          {t('Resolution:')} {report.resolution_note}
+        </p>
       ) : null}
       {report.photo_path ? (
         <ParkingPhotoLink path={report.photo_path} request={request} />
@@ -233,6 +250,7 @@ export function ParkingResidentView({
   fileRequest?: typeof fetch;
   now?: number;
 }) {
+  const { locale, t } = useParkingCopy();
   const id = useId();
   const [passUnit, setPassUnit] = useState(workspace.units[0]?.id ?? '');
   const [now] = useState(() => fixedNow ?? Date.now());
@@ -246,7 +264,7 @@ export function ParkingResidentView({
   const lastPassDate = parkingLocalDate(now + 30 * 24 * 60 * 60 * 1000);
   const unitOptions = workspace.units.map((unit) => ({
     value: unit.id,
-    label: `Unit ${unit.number}`,
+    label: t('Unit {unit}', { unit: unit.number }),
   }));
   const entryOptions = workspace.visitor_entries.filter(
     (entry) => entry.unit_id === passUnit,
@@ -261,10 +279,12 @@ export function ParkingResidentView({
   if (workspace.units.length === 0) {
     return (
       <section className="grid min-w-0 gap-space-5">
-        <h1 className="text-title font-semibold">Parking</h1>
+        <h1 className="text-title font-semibold">{t('Parking')}</h1>
         <EmptyState
-          title="No unit linked to you yet"
-          description="Parking is managed per unit. Ask your society administrator to add you to your unit."
+          title={t('No unit linked to you yet')}
+          description={t(
+            'Parking is managed per unit. Ask your society administrator to add you to your unit.',
+          )}
         />
       </section>
     );
@@ -272,15 +292,17 @@ export function ParkingResidentView({
 
   return (
     <section className="grid min-w-0 gap-space-5">
-      <h1 className="text-title font-semibold">Parking</h1>
+      <h1 className="text-title font-semibold">{t('Parking')}</h1>
 
       <Card
-        title="My slots"
-        description="Slots your society has allocated to your units."
+        title={t('My slots')}
+        description={t('Slots your society has allocated to your units.')}
       >
         {workspace.allocations.length === 0 ? (
           <p className="text-body text-ink-muted">
-            No slot allocated yet. Join the waitlist below to ask for one.
+            {t(
+              'No slot allocated yet. Join the waitlist below to ask for one.',
+            )}
           </p>
         ) : (
           <ul className="grid gap-space-3">
@@ -297,8 +319,10 @@ export function ParkingResidentView({
       </Card>
 
       <Card
-        title="Waitlist"
-        description="Requests are served in the order they were made, one queue per slot type."
+        title={t('Waitlist')}
+        description={t(
+          'Requests are served in the order they were made, one queue per slot type.',
+        )}
       >
         <div className="grid gap-space-4">
           {waiting.length > 0 ? (
@@ -309,18 +333,25 @@ export function ParkingResidentView({
                   className="grid gap-space-2 rounded-md border border-rule p-space-4"
                 >
                   <p className="text-body-strong">
-                    {PARKING_SLOT_TYPE_LABELS[request.slot_type]} slot · Unit{' '}
-                    {request.unit_number}
+                    {t('{type} slot · Unit {unit}', {
+                      type: t(PARKING_SLOT_TYPE_LABELS[request.slot_type]),
+                      unit: request.unit_number,
+                    })}
                   </p>
                   <p className="text-caption text-ink-muted">
-                    {parkingQueueText(request.queue_position)} · Requested{' '}
-                    {formatParkingTime(request.created_at)}
+                    {t(parkingQueueText(request.queue_position) ?? '')} ·{' '}
+                    {t('Requested')}{' '}
+                    {request.created_at
+                      ? parkingDisplayTime(request.created_at, locale)
+                      : t('Not available')}
                   </p>
                   {request.note ? <p>{request.note}</p> : null}
                   <ParkingQuickAction
                     action={actions.cancelRequest}
-                    label="Cancel request"
-                    confirmMessage="Leave the waitlist? You would need to join again at the back of the queue."
+                    label={t('Cancel request')}
+                    confirmMessage={t(
+                      'Leave the waitlist? You would need to join again at the back of the queue.',
+                    )}
                     input={{ waitlistRequestId: request.id }}
                   />
                 </li>
@@ -330,7 +361,7 @@ export function ParkingResidentView({
           <ModuleActionForm
             action={actions.createRequest}
             idempotent
-            submitLabel="Join waitlist"
+            submitLabel={t('Join waitlist')}
             input={(form, clientRequestId) =>
               parkingRequestInputSchema.parse({
                 unitId: form.get('unitId'),
@@ -343,40 +374,42 @@ export function ParkingResidentView({
             <SelectInput
               id={`${id}-request-unit`}
               name="unitId"
-              label="Unit"
+              label={t('Unit')}
               required
               options={unitOptions}
             />
             <SelectInput
               id={`${id}-request-type`}
               name="slotType"
-              label="Slot type"
+              label={t('Slot type')}
               required
               options={PARKING_REQUEST_SLOT_TYPES.map((value) => ({
                 value,
-                label: PARKING_SLOT_TYPE_LABELS[value],
+                label: t(PARKING_SLOT_TYPE_LABELS[value]),
               }))}
             />
             <TextAreaInput
               id={`${id}-request-note`}
               name="note"
-              label="Note for the administrator (optional)"
+              label={t('Note for the administrator (optional)')}
               maxLength={300}
             />
           </ModuleActionForm>
           {pastRequests.length > 0 ? (
             <details className="grid gap-space-2">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-                Past requests ({pastRequests.length})
+                {t('Past requests ({count})', {
+                  count: formatLocalizedNumber(pastRequests.length, locale),
+                })}
               </summary>
               <ul className="grid gap-space-2">
                 {pastRequests.map((request) => (
                   <li key={request.id} className="text-caption">
-                    {PARKING_SLOT_TYPE_LABELS[request.slot_type]} · Unit{' '}
-                    {request.unit_number} ·{' '}
-                    {PARKING_REQUEST_STATUS_LABELS[request.status]}
+                    {t(PARKING_SLOT_TYPE_LABELS[request.slot_type])} ·{' '}
+                    {t('Unit {unit}', { unit: request.unit_number })} ·{' '}
+                    {t(PARKING_REQUEST_STATUS_LABELS[request.status])}
                     {request.closed_at
-                      ? ` on ${formatParkingTime(request.closed_at)}`
+                      ? ` ${t('on')} ${parkingDisplayTime(request.closed_at ?? '', locale)}`
                       : ''}
                   </li>
                 ))}
@@ -387,16 +420,18 @@ export function ParkingResidentView({
       </Card>
 
       <Card
-        title="Visitor parking passes"
-        description="Reserve a visitor slot for up to 24 hours. Guards see the pass at the gate."
+        title={t('Visitor parking passes')}
+        description={t(
+          'Reserve a visitor slot for up to 24 hours. Guards see the pass at the gate.',
+        )}
       >
         {!workspace.visitor_enabled ? (
-          <Banner tone="neutral" title="Visitor passes are not available">
-            Your society has not turned on the Visitors module.
+          <Banner tone="neutral" title={t('Visitor passes are not available')}>
+            {t('Your society has not turned on the Visitors module.')}
           </Banner>
         ) : workspace.visitor_slots.length === 0 ? (
           <p className="text-body text-ink-muted">
-            Your society has no visitor slots yet.
+            {t('Your society has no visitor slots yet.')}
           </p>
         ) : (
           <div className="grid gap-space-4">
@@ -412,12 +447,14 @@ export function ParkingResidentView({
                 ))}
               </ul>
             ) : (
-              <p className="text-body text-ink-muted">No visitor passes.</p>
+              <p className="text-body text-ink-muted">
+                {t('No visitor passes.')}
+              </p>
             )}
             <ModuleActionForm
               action={actions.createPass}
               idempotent
-              submitLabel="Create visitor pass"
+              submitLabel={t('Create visitor pass')}
               submitDisabled={!passDate}
               input={(form, clientRequestId) => {
                 const startsAt = parkingLocalInstant(passDate, passTime);
@@ -440,7 +477,7 @@ export function ParkingResidentView({
               <SelectInput
                 id={`${id}-pass-unit`}
                 name="unitId"
-                label="Unit"
+                label={t('Unit')}
                 required
                 value={passUnit}
                 onChange={(event) => setPassUnit(event.currentTarget.value)}
@@ -449,7 +486,7 @@ export function ParkingResidentView({
               <TextInput
                 id={`${id}-pass-name`}
                 name="visitorName"
-                label="Visitor name"
+                label={t('Visitor name')}
                 required
                 maxLength={120}
                 autoComplete="off"
@@ -457,17 +494,17 @@ export function ParkingResidentView({
               <TextInput
                 id={`${id}-pass-vehicle`}
                 name="vehicleNumber"
-                label="Vehicle number (optional)"
+                label={t('Vehicle number (optional)')}
                 maxLength={40}
                 autoComplete="off"
               />
               <SelectInput
                 id={`${id}-pass-slot`}
                 name="slotId"
-                label="Visitor slot"
+                label={t('Visitor slot')}
                 defaultValue=""
                 options={[
-                  { value: '', label: 'Any free visitor slot' },
+                  { value: '', label: t('Any free visitor slot') },
                   ...workspace.visitor_slots.map((slot) => ({
                     value: slot.id,
                     label: slot.location_note
@@ -478,8 +515,10 @@ export function ParkingResidentView({
               />
               <DatePicker
                 id={`${id}-pass-start-date`}
-                label="Start date"
-                helpText="India time. A pass can start up to 30 days ahead."
+                label={t('Start date')}
+                helpText={t(
+                  'India time. A pass can start up to 30 days ahead.',
+                )}
                 required
                 min={today}
                 max={lastPassDate}
@@ -488,7 +527,7 @@ export function ParkingResidentView({
               />
               <TimePicker
                 id={`${id}-pass-start-time`}
-                label="Start time"
+                label={t('Start time')}
                 required
                 timeZone={PARKING_TIME_ZONE}
                 value={passTime}
@@ -497,24 +536,26 @@ export function ParkingResidentView({
               <SelectInput
                 id={`${id}-pass-hours`}
                 name="hours"
-                label="Duration"
+                label={t('Duration')}
                 defaultValue="4"
                 options={PARKING_PASS_DURATIONS.map((hours) => ({
                   value: String(hours),
-                  label: `${hours} hour${hours === 1 ? '' : 's'}`,
+                  label: t('{count} hours', {
+                    count: formatLocalizedNumber(hours, locale),
+                  }),
                 }))}
               />
               {entryOptions.length > 0 ? (
                 <SelectInput
                   id={`${id}-pass-entry`}
                   name="visitorEntryId"
-                  label="Link to a visitor entry (optional)"
+                  label={t('Link to a visitor entry (optional)')}
                   defaultValue=""
                   options={[
-                    { value: '', label: 'No visitor entry' },
+                    { value: '', label: t('No visitor entry') },
                     ...entryOptions.map((entry) => ({
                       value: entry.id,
-                      label: `${entry.visitor_name} · ${formatParkingTime(entry.created_at)}`,
+                      label: `${entry.visitor_name} · ${parkingDisplayTime(entry.created_at, locale)}`,
                     })),
                   ]}
                 />
@@ -525,8 +566,10 @@ export function ParkingResidentView({
       </Card>
 
       <Card
-        title="Report wrong parking"
-        description="Choose the slot or enter the vehicle number. The unit and administrators are told."
+        title={t('Report wrong parking')}
+        description={t(
+          'Choose the slot or enter the vehicle number. The unit and administrators are told.',
+        )}
       >
         <ParkingReportForm
           slots={workspace.report_slots}
@@ -535,10 +578,10 @@ export function ParkingResidentView({
         />
       </Card>
 
-      <Card title="Wrong-parking reports">
+      <Card title={t('Wrong-parking reports')}>
         {workspace.reports.length === 0 ? (
           <p className="text-body text-ink-muted">
-            No reports about your units or made by you.
+            {t('No reports about your units or made by you.')}
           </p>
         ) : (
           <ul className="grid gap-space-3">

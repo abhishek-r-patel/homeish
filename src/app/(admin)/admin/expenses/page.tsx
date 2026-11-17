@@ -18,12 +18,14 @@ import {
   EXPENSE_STATUSES,
   expenseRangeOrDefault,
 } from '@/core/expense/validation';
+import { entrySourceLabel, incomeSourceLabel } from '@/core/expense/documents';
 import {
-  entrySourceLabel,
-  formatSignedRupees,
-  incomeSourceLabel,
-} from '@/core/expense/documents';
-import { formatBillingDate, formatRupees } from '@/core/billing/format';
+  formatLocalizedCurrency,
+  formatLocalizedDate,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Accounts | Homeish',
@@ -55,6 +57,17 @@ export default async function ExpensesPage({
     expensesPage?: string;
   }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
+  const formatDate = (value: string) =>
+    formatLocalizedDate(
+      new Date(`${value.slice(0, 10)}T00:00:00.000Z`),
+      locale,
+      { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' },
+    );
+  const formatSignedCurrency = (paise: number) =>
+    `${paise < 0 ? '-' : ''}${formatLocalizedCurrency(Math.abs(paise), locale)}`;
   const search = await searchParams;
   const w = await getExpenseWorkspace();
   const range = expenseRangeOrDefault(search, w.today);
@@ -81,27 +94,28 @@ export default async function ExpensesPage({
 
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
-      <h1 className="text-title font-semibold">Society accounts</h1>
-      <ExpenseNav current="book" canManage={w.can_manage} />
+      <h1 className="text-title font-semibold">{t('Society accounts')}</h1>
+      <ExpenseNav current="book" canManage={w.can_manage} locale={locale} />
       {!w.can_manage ? (
         <p>
-          Committee access: review the books and approve large expenses recorded
-          by others.
+          {t(
+            'Committee access: review the books and approve large expenses recorded by others.',
+          )}
         </p>
       ) : null}
       {w.accounts.length === 0 ? (
-        <Card title="Set up accounts">
+        <Card title={t('Set up accounts')}>
           <p>
-            No cash or bank accounts yet.{' '}
+            {t('No cash or bank accounts yet.')}{' '}
             {w.can_manage ? (
               <Link
                 className="text-brand underline"
                 href="/admin/expenses/setup"
               >
-                Add the society&apos;s accounts and opening balances
+                {t("Add the society's accounts and opening balances")}
               </Link>
             ) : (
-              'An administrator needs to add them first.'
+              t('An administrator needs to add them first.')
             )}
           </p>
         </Card>
@@ -110,17 +124,27 @@ export default async function ExpensesPage({
           {w.accounts.map((a) => (
             <StatTile
               key={a.id}
-              label={`${a.name}${a.active ? '' : ' (inactive)'}`}
-              value={formatSignedRupees(a.balance_paise)}
-              context={a.account_type === 'cash' ? 'Cash' : 'Bank account'}
+              label={`${a.name}${a.active ? '' : ` (${t('inactive')})`}`}
+              value={formatSignedCurrency(a.balance_paise)}
+              context={
+                a.account_type === 'cash' ? t('Cash') : t('Bank account')
+              }
             />
           ))}
         </div>
       )}
 
       <Card
-        title="Awaiting committee approval"
-        description={`Expenses above ${formatRupees(w.settings.approval_threshold_paise)} post only after a committee member who did not record them approves.`}
+        title={t('Awaiting committee approval')}
+        description={t(
+          'Expenses above {amount} post only after a committee member who did not record them approves.',
+          {
+            amount: formatLocalizedCurrency(
+              w.settings.approval_threshold_paise,
+              locale,
+            ),
+          },
+        )}
       >
         {w.pending.length ? (
           <ul className="grid min-w-0 gap-space-3">
@@ -130,16 +154,16 @@ export default async function ExpensesPage({
                 className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-3"
               >
                 <p className="text-body-strong">
-                  {e.payee} · {formatRupees(e.amount_paise)}
+                  {e.payee} · {formatLocalizedCurrency(e.amount_paise, locale)}
                 </p>
                 <p>
-                  {formatBillingDate(e.spent_on)} · {e.category_name} ·{' '}
+                  {formatDate(e.spent_on)} · {e.category_name} ·{' '}
                   {e.account_name} · {e.payment_mode.toUpperCase()}
                   {e.reference ? ` · ${e.reference}` : ''}
                 </p>
                 {e.description ? <p>{e.description}</p> : null}
                 <p className="text-caption text-ink-muted">
-                  Recorded by {e.recorded_by_name}
+                  {t('Recorded by')} {e.recorded_by_name}
                 </p>
                 {e.receiptUrl ? (
                   <a
@@ -148,7 +172,7 @@ export default async function ExpensesPage({
                     rel="noreferrer"
                     className="text-brand underline"
                   >
-                    View private receipt
+                    {t('View private receipt')}
                   </a>
                 ) : null}
                 {w.can_approve && e.recorded_by !== w.actor_id ? (
@@ -159,26 +183,31 @@ export default async function ExpensesPage({
                 ) : (
                   <p className="text-caption text-ink-muted">
                     {e.recorded_by === w.actor_id
-                      ? 'Another committee member must approve an expense you recorded.'
-                      : 'Waiting for a committee member to decide.'}
+                      ? t(
+                          'Another committee member must approve an expense you recorded.',
+                        )
+                      : t('Waiting for a committee member to decide.')}
                   </p>
                 )}
               </li>
             ))}
           </ul>
         ) : (
-          <p>No expenses are waiting for approval.</p>
+          <p>{t('No expenses are waiting for approval.')}</p>
         )}
         {w.pendingTotal > w.pending.length ? (
           <p className="mt-space-3 text-caption text-ink-muted">
-            Showing the first {w.pending.length} of {w.pendingTotal}.
+            {t('Showing the first {shown} of {total}.', {
+              shown: formatLocalizedNumber(w.pending.length, locale),
+              total: formatLocalizedNumber(w.pendingTotal, locale),
+            })}
           </p>
         ) : null}
       </Card>
 
       {w.can_manage && w.accounts.some((a) => a.active) ? (
         <div className="grid min-w-0 gap-space-5 medium:grid-cols-2">
-          <Card title="Record expense">
+          <Card title={t('Record expense')}>
             <ExpenseRecordForm
               accounts={w.accounts}
               categories={w.categories}
@@ -186,22 +215,24 @@ export default async function ExpensesPage({
               thresholdPaise={w.settings.approval_threshold_paise}
             />
           </Card>
-          <Card title="Record other income">
+          <Card title={t('Record other income')}>
             <ExpenseIncomeForm accounts={w.accounts} today={w.today} />
           </Card>
         </div>
       ) : null}
 
       <Card
-        title="Cash and bank book"
-        description="Entries are permanent. Correct mistakes by recording a reversal."
+        title={t('Cash and bank book')}
+        description={t(
+          'Entries are permanent. Correct mistakes by recording a reversal.',
+        )}
       >
         <form
           method="get"
           className="grid min-w-0 gap-space-3 medium:grid-cols-4"
         >
           <label className="grid min-w-0 gap-space-1">
-            From
+            {t('From')}
             <input
               type="date"
               name="from"
@@ -211,7 +242,7 @@ export default async function ExpensesPage({
             />
           </label>
           <label className="grid min-w-0 gap-space-1">
-            To
+            {t('To')}
             <input
               type="date"
               name="to"
@@ -220,13 +251,13 @@ export default async function ExpensesPage({
             />
           </label>
           <label className="grid min-w-0 gap-space-1">
-            Account
+            {t('Account')}
             <select
               name="account"
               defaultValue={account ?? ''}
               className={fieldClass}
             >
-              <option value="">All accounts</option>
+              <option value="">{t('All accounts')}</option>
               {w.accounts.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name}
@@ -238,12 +269,15 @@ export default async function ExpensesPage({
             type="submit"
             className="min-h-12 self-end rounded-md border border-rule"
           >
-            Show entries
+            {t('Show entries')}
           </button>
         </form>
         <p className="mt-space-3 text-caption text-ink-muted">
-          {entries.total} entries from {formatBillingDate(range.from)} to{' '}
-          {formatBillingDate(range.to)}.
+          {t('{count} entries from {from} to {to}.', {
+            count: formatLocalizedNumber(entries.total, locale),
+            from: formatDate(range.from),
+            to: formatDate(range.to),
+          })}
         </p>
         <ul className="mt-space-3 grid min-w-0 gap-space-3">
           {entries.rows.map((e) => (
@@ -253,11 +287,11 @@ export default async function ExpensesPage({
             >
               <p className="flex flex-wrap justify-between gap-space-2 text-body-strong">
                 <span>
-                  {formatBillingDate(e.entry_date)} · {e.counterparty}
+                  {formatDate(e.entry_date)} · {e.counterparty}
                 </span>
                 <span className={e.direction === 'in' ? 'text-success' : ''}>
                   {e.direction === 'in' ? '+' : '−'}
-                  {formatRupees(e.amount_paise)}
+                  {formatLocalizedCurrency(e.amount_paise, locale)}
                 </span>
               </p>
               <p>
@@ -271,7 +305,7 @@ export default async function ExpensesPage({
                 <p className="text-caption text-ink-muted">{e.description}</p>
               ) : null}
               {e.reversed_by_entry_id ? (
-                <p className="text-caption text-ink-muted">Reversed.</p>
+                <p className="text-caption text-ink-muted">{t('Reversed.')}</p>
               ) : null}
               {e.receiptUrl ? (
                 <a
@@ -280,14 +314,16 @@ export default async function ExpensesPage({
                   rel="noreferrer"
                   className="text-brand underline"
                 >
-                  View private receipt
+                  {t('View private receipt')}
                 </a>
               ) : null}
               {w.can_manage &&
               (e.source === 'expense' || e.source === 'income') &&
               !e.reversed_by_entry_id ? (
                 <details>
-                  <summary className="cursor-pointer">Reverse entry</summary>
+                  <summary className="cursor-pointer">
+                    {t('Reverse entry')}
+                  </summary>
                   <ExpenseReverseForm entryId={e.id} today={w.today} />
                 </details>
               ) : null}
@@ -295,21 +331,25 @@ export default async function ExpensesPage({
           ))}
         </ul>
         <ExpensePager
+          locale={locale}
           page={entriesPage}
           total={entries.total}
           pageSize={EXPENSE_PAGE_SIZE}
           href={(page) => query({ page })}
-          label="Cash and bank book pages"
+          label={t('Cash and bank book pages')}
         />
       </Card>
 
-      <Card title="Expenses">
-        <nav aria-label="Expense status" className="flex flex-wrap gap-space-3">
+      <Card title={t('Expenses')}>
+        <nav
+          aria-label={t('Expense status')}
+          className="flex flex-wrap gap-space-3"
+        >
           <Link
             className={status ? 'text-brand underline' : 'font-semibold'}
             href={query({ status: null, expensesPage: null })}
           >
-            All
+            {t('All')}
           </Link>
           {EXPENSE_STATUSES.map((s) => (
             <Link
@@ -319,7 +359,7 @@ export default async function ExpensesPage({
               }
               href={query({ status: s, expensesPage: null })}
             >
-              {STATUS_LABELS[s]}
+              {t(STATUS_LABELS[s])}
             </Link>
           ))}
         </nav>
@@ -330,17 +370,16 @@ export default async function ExpensesPage({
               className="grid min-w-0 gap-space-1 rounded-md border border-rule p-space-3"
             >
               <p className="text-body-strong">
-                {e.payee} · {formatRupees(e.amount_paise)} ·{' '}
-                {STATUS_LABELS[e.status]}
+                {e.payee} · {formatLocalizedCurrency(e.amount_paise, locale)} ·{' '}
+                {t(STATUS_LABELS[e.status])}
               </p>
               <p>
-                {formatBillingDate(e.spent_on)} · {e.category_name} ·{' '}
-                {e.account_name}
+                {formatDate(e.spent_on)} · {e.category_name} · {e.account_name}
               </p>
               <p className="text-caption text-ink-muted">
-                Recorded by {e.recorded_by_name}
+                {t('Recorded by')} {e.recorded_by_name}
                 {e.decided_by_name
-                  ? ` · ${e.status === 'rejected' ? 'Rejected' : 'Approved'} by ${e.decided_by_name}`
+                  ? ` · ${t(e.status === 'rejected' ? 'Rejected by {name}' : 'Approved by {name}', { name: e.decided_by_name })}`
                   : ''}
                 {e.decision_note ? ` · ${e.decision_note}` : ''}
               </p>
@@ -351,19 +390,20 @@ export default async function ExpensesPage({
                   rel="noreferrer"
                   className="text-brand underline"
                 >
-                  View private receipt
+                  {t('View private receipt')}
                 </a>
               ) : null}
             </li>
           ))}
         </ul>
-        {expenses.rows.length === 0 ? <p>No expenses to show.</p> : null}
+        {expenses.rows.length === 0 ? <p>{t('No expenses to show.')}</p> : null}
         <ExpensePager
+          locale={locale}
           page={expensesPage}
           total={expenses.total}
           pageSize={EXPENSE_PAGE_SIZE}
           href={(page) => query({ expensesPage: page })}
-          label="Expense pages"
+          label={t('Expense pages')}
         />
       </Card>
     </section>
