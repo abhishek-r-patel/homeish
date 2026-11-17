@@ -59,7 +59,16 @@ describe('retention privileged task', () => {
       .mockResolvedValueOnce([
         { bucket: 'vendor-files', path: 'society/vendors/u/a.pdf' },
         { bucket: 'vendor-files', path: 'society/vendors/u/a.pdf' },
-      ]);
+      ])
+      .mockResolvedValueOnce([
+        { bucket: 'community-photos', path: 'society/user/a.jpg' },
+        { bucket: 'community-photos', path: 'society/user/a.jpg' },
+      ])
+      .mockResolvedValueOnce({
+        postsDeleted: 1,
+        listingsDeleted: 0,
+        repliesDeleted: 2,
+      });
   });
 
   it('deduplicates and removes listed files before the database purge', async () => {
@@ -91,8 +100,12 @@ describe('retention privileged task', () => {
     expect(mocks.remove).toHaveBeenNthCalledWith(7, [
       'society/readings/u/a.jpg',
     ]);
-    expect(mocks.from).toHaveBeenLastCalledWith('vendor-files');
-    expect(mocks.remove).toHaveBeenLastCalledWith(['society/vendors/u/a.pdf']);
+    expect(mocks.from).toHaveBeenNthCalledWith(8, 'vendor-files');
+    expect(mocks.remove).toHaveBeenNthCalledWith(8, [
+      'society/vendors/u/a.pdf',
+    ]);
+    expect(mocks.from).toHaveBeenLastCalledWith('community-photos');
+    expect(mocks.remove).toHaveBeenLastCalledWith(['society/user/a.jpg']);
     expect(mocks.invokeUntypedRpc.mock.calls.map((call) => call[1])).toEqual([
       'housekeeping_retention_files_list',
       'tenancy_retention_files_list',
@@ -107,7 +120,59 @@ describe('retention privileged task', () => {
       'patrol_retention_run',
       'metering_retention_files_list',
       'vendor_retention_files_list',
+      'community_retention_files_list',
+      'community_retention_run',
     ]);
+  });
+
+  it('keeps community rows when their photo removal fails', async () => {
+    mocks.remove
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: new Error('Synthetic Storage failure') });
+    await expect(runRetentionPrivileged('2026-11-17')).rejects.toThrow(
+      'Could not remove expired community-photos files.',
+    );
+    expect(mocks.invokeUntypedRpc).not.toHaveBeenCalledWith(
+      expect.anything(),
+      'community_retention_run',
+      expect.anything(),
+    );
+  });
+
+  it('rejects community file lists that name another bucket', async () => {
+    mocks.invokeUntypedRpc.mockReset();
+    mocks.invokeUntypedRpc
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
+      .mockResolvedValueOnce({
+        vehicles_deleted: 0,
+        emergency_contacts_deleted: 0,
+        preferences_deleted: 0,
+      })
+      .mockResolvedValueOnce({ documents_deleted: 0, preparations_cleared: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { bucket: 'patrol-photos', path: 'society/incidents/a.jpg' },
+      ]);
+    await expect(runRetentionPrivileged('2026-11-17')).rejects.toThrow(
+      'Community retention file list returned an invalid response.',
+    );
+    expect(mocks.from).not.toHaveBeenCalled();
   });
 
   it('rejects vendor file lists that name another bucket', async () => {

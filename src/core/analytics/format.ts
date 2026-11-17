@@ -45,6 +45,8 @@ const MODULE_LABELS: Readonly<Record<ModuleKey, string>> = {
   home_services: 'Home services',
   poll: 'Polls',
   meeting: 'Meetings',
+  event: 'Events',
+  community: 'Community',
 };
 
 export function analyticsModuleLabel(moduleKey: string): string {

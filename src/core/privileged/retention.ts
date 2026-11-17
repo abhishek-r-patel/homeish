@@ -14,7 +14,8 @@ type RetentionBucket =
   | 'patrol-photos'
   | 'metering-photos'
   | 'vendor-files'
-  | 'document-files';
+  | 'document-files'
+  | 'community-photos';
 
 type RetentionFile = {
   bucket: RetentionBucket;
@@ -33,7 +34,8 @@ function isRetentionFile(value: unknown): value is RetentionFile {
       file.bucket === 'patrol-photos' ||
       file.bucket === 'metering-photos' ||
       file.bucket === 'vendor-files' ||
-      file.bucket === 'document-files') &&
+      file.bucket === 'document-files' ||
+      file.bucket === 'community-photos') &&
     typeof file.path === 'string' &&
     file.path.length > 0
   );
@@ -274,5 +276,52 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
         cause: error,
       });
     }
+  }
+
+  // Community photos go first so a Storage failure never leaves rows pointing at deleted files.
+  const communityFiles = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'community_retention_files_list',
+    { p_today: today },
+  );
+  if (
+    !Array.isArray(communityFiles) ||
+    !communityFiles.every(
+      (file) => isRetentionFile(file) && file.bucket === 'community-photos',
+    )
+  ) {
+    throw new Error(
+      'Community retention file list returned an invalid response.',
+    );
+  }
+  const communityPaths = [
+    ...new Set(communityFiles.map((file: RetentionFile) => file.path)),
+  ];
+  for (let offset = 0; offset < communityPaths.length; offset += 100) {
+    const { error } = await privilegedClient.storage
+      .from('community-photos')
+      .remove(communityPaths.slice(offset, offset + 100));
+    if (error) {
+      throw new Error('Could not remove expired community-photos files.', {
+        cause: error,
+      });
+    }
+  }
+  const communityResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'community_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (
+    !z
+      .object({
+        postsDeleted: z.number().int().nonnegative(),
+        listingsDeleted: z.number().int().nonnegative(),
+        repliesDeleted: z.number().int().nonnegative(),
+      })
+      .strict()
+      .safeParse(communityResult).success
+  ) {
+    throw new Error('Community retention returned an invalid response.');
   }
 }
