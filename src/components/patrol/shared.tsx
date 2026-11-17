@@ -1,6 +1,14 @@
 // Shared Guard Patrol route states, actions, private incident photo upload and signed photo links.
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import {
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+  formatLocalizedTime,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
+import { translateMessage } from '@/core/i18n/messages';
 import { z } from 'zod';
 import { publicEnvironment } from '@/core/config/public-env';
 import { ValidationError } from '@/core/errors';
@@ -9,6 +17,10 @@ import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
 import {
   PATROL_CATEGORY_LABELS,
   PATROL_SEVERITY_LABELS,
+  formatPatrolTime as formatEnglishPatrolTime,
+  formatPatrolClock as formatEnglishPatrolClock,
+  formatClockTime as formatEnglishClockTime,
+  formatInterval as formatEnglishInterval,
 } from '@/core/patrol/presentation';
 import {
   PATROL_INCIDENT_CATEGORIES,
@@ -75,6 +87,65 @@ export const PATROL_ACTIONS: PatrolActions = {
 
 export type PatrolRouteStateKind = 'loading' | 'error' | 'disabled' | 'denied';
 
+export function formatPatrolTime(
+  value: Date | string,
+  timeZone: string,
+  locale: Locale | null = null,
+) {
+  return locale
+    ? formatLocalizedDateTime(
+        typeof value === 'string' ? new Date(value) : value,
+        locale,
+        {
+          timeZone,
+          day: 'numeric',
+          month: 'short',
+          hour: 'numeric',
+          minute: '2-digit',
+        },
+      )
+    : formatEnglishPatrolTime(value, timeZone);
+}
+
+export function formatPatrolClock(
+  value: Date | string,
+  timeZone: string,
+  locale: Locale | null = null,
+) {
+  return locale
+    ? formatLocalizedTime(
+        typeof value === 'string' ? new Date(value) : value,
+        locale,
+        { timeZone },
+      )
+    : formatEnglishPatrolClock(value, timeZone);
+}
+
+export function formatClockTime(value: string, locale: Locale | null = null) {
+  return locale
+    ? formatLocalizedTime(
+        new Date(`2000-01-01T${value.slice(0, 5)}:00Z`),
+        locale,
+        { timeZone: 'UTC' },
+      )
+    : formatEnglishClockTime(value);
+}
+
+export function formatInterval(minutes: number, locale: Locale | null = null) {
+  if (!locale) return formatEnglishInterval(minutes);
+  if (minutes === 60) return translateMessage(locale, 'every hour');
+  return translateMessage(
+    locale,
+    minutes % 60 === 0 ? 'every {count} hours' : 'every {count} minutes',
+    {
+      count: formatLocalizedNumber(
+        minutes % 60 === 0 ? minutes / 60 : minutes,
+        locale,
+      ),
+    },
+  );
+}
+
 export function PatrolRouteState({
   kind,
   title = 'Patrol',
@@ -90,6 +161,7 @@ export function PatrolRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage embedded moduleKey="patrol" returnHref={returnHref} />
@@ -108,13 +180,13 @@ export function PatrolRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">{title}</h1>
+      <h1 className="text-title font-semibold">{t(title)}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={message ? translateFeedback(message) : t(copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
@@ -123,14 +195,14 @@ export function PatrolRouteState({
                   href={retryHref}
                   className="inline-flex min-h-12 items-center text-brand underline"
                 >
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a
                 href={returnHref}
                 className="inline-flex min-h-12 items-center text-brand underline"
               >
-                Back to your workspace
+                {t('Back to your workspace')}
               </a>
             </div>
           }
@@ -172,11 +244,14 @@ const SEVERITY_CLASSES: Record<PatrolSeverity, string> = {
 };
 
 export function PatrolSeverityChip({ severity }: { severity: PatrolSeverity }) {
+  const { translate: t } = useUiTranslator();
   return (
     <span
       className={`inline-flex min-h-6 items-center rounded-sm px-space-2 text-micro ${SEVERITY_CLASSES[severity]}`}
     >
-      {PATROL_SEVERITY_LABELS[severity]} severity
+      {t('{severity} severity', {
+        severity: t(PATROL_SEVERITY_LABELS[severity]),
+      })}
     </span>
   );
 }
@@ -247,6 +322,7 @@ export function PatrolIncidentForm({
   request?: typeof fetch;
   retentionDays?: number;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   const id = useId();
   const controllers = useRef(new Map<string, AbortController>());
   const [photos, setPhotos] = useState<readonly PhotoEntry[]>([]);
@@ -357,7 +433,7 @@ export function PatrolIncidentForm({
     <ModuleActionForm
       action={action}
       idempotent
-      submitLabel="Report incident"
+      submitLabel={t('Report incident')}
       submitDisabled={uploading}
       onSaved={() => {
         setPhotos([]);
@@ -382,50 +458,65 @@ export function PatrolIncidentForm({
       <SelectInput
         id={`${id}-category`}
         name="category"
-        label="What happened?"
+        label={t('What happened?')}
         required
         defaultValue="suspicious_activity"
         options={PATROL_INCIDENT_CATEGORIES.map((value) => ({
           value,
-          label: PATROL_CATEGORY_LABELS[value],
+          label: t(PATROL_CATEGORY_LABELS[value]),
         }))}
       />
       <SelectInput
         id={`${id}-severity`}
         name="severity"
-        label="Severity"
+        label={t('Severity')}
         required
         defaultValue="medium"
-        helpText="High and critical alert the administrators straight away."
+        helpText={t(
+          'High and critical alert the administrators straight away.',
+        )}
         options={PATROL_SEVERITIES.map((value) => ({
           value,
-          label: PATROL_SEVERITY_LABELS[value],
+          label: t(PATROL_SEVERITY_LABELS[value]),
         }))}
       />
       <TextAreaInput
         id={`${id}-description`}
         name="description"
-        label="Description"
+        label={t('Description')}
         required
         maxLength={1000}
       />
       <TextInput
         id={`${id}-location`}
         name="location"
-        label="Location (optional)"
-        helpText="For example Tower B lobby or the back gate."
+        label={t('Location (optional)')}
+        helpText={t('For example Tower B lobby or the back gate.')}
         maxLength={200}
         autoComplete="off"
       />
       <FileUpload
         id={`${id}-photos`}
-        label="Photos (optional)"
+        label={t('Photos (optional)')}
         acceptedTypes={PATROL_PHOTO_CONTENT_TYPES}
         maxFileBytes={MAX_FILE_BYTES}
         maxFiles={PATROL_MAX_PHOTOS}
         capturePhoto
-        files={photos}
-        helpText={`Up to ${PATROL_MAX_PHOTOS} JPG or PNG photos, 5 MiB each. Only administrators, the committee and you can see them, and they are deleted after ${retentionDays ? `${retentionDays} days` : 'the society retention period'}.`}
+        files={photos.map((photo) => ({
+          ...photo,
+          error: photo.error ? translateFeedback(photo.error) : undefined,
+        }))}
+        helpText={t(
+          'Up to {count} JPG or PNG photos, 5 MiB each. Only administrators, the committee and you can see them, and they are deleted after {retention}.',
+          {
+            count: formatLocalizedNumber(PATROL_MAX_PHOTOS, locale ?? 'en'),
+            retention: retentionDays
+              ? t('{count} days', {
+                  count: formatLocalizedNumber(retentionDays, locale ?? 'en'),
+                })
+              : t('the society retention period'),
+          },
+        )}
         onRetry={(file) => void upload(file)}
         onFilesChange={changeFiles}
       />
@@ -436,7 +527,7 @@ export function PatrolIncidentForm({
       />
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {translateFeedback(message)}
         </p>
       ) : null}
     </ModuleActionForm>
@@ -452,6 +543,7 @@ export function PatrolPhotoLink({
   index: number;
   request?: typeof fetch;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   const [pending, setPending] = useState(false);
   const [link, setLink] = useState<{ url: string; expiresIn: number } | null>(
     null,
@@ -502,7 +594,9 @@ export function PatrolPhotoLink({
         variant="secondary"
         onClick={() => void prepare()}
       >
-        {link ? `Refresh photo ${index} link` : `View photo ${index}`}
+        {t(link ? 'Refresh photo {number} link' : 'View photo {number}', {
+          number: formatLocalizedNumber(index, locale ?? 'en'),
+        })}
       </Button>
       {link ? (
         <a
@@ -511,12 +605,14 @@ export function PatrolPhotoLink({
           rel="noopener noreferrer"
           className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         >
-          Open photo {index} (private link, up to five minutes)
+          {t('Open photo {number} (private link, up to five minutes)', {
+            number: formatLocalizedNumber(index, locale ?? 'en'),
+          })}
         </a>
       ) : null}
       {error ? (
         <p role="alert" className="text-caption text-danger">
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
     </div>
@@ -524,9 +620,10 @@ export function PatrolPhotoLink({
 }
 
 export function PatrolPrintButton() {
+  const { translate: t } = useUiTranslator();
   return (
     <Button className="print:hidden" onClick={() => window.print()}>
-      Print checkpoint sheet
+      {t('Print checkpoint sheet')}
     </Button>
   );
 }

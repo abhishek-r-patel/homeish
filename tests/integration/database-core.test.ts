@@ -42,6 +42,7 @@ describe.skipIf(!hasDatabase)('core database tables', () => {
         { key: 'meeting', is_core: false },
         { key: 'event', is_core: false },
         { key: 'community', is_core: false },
+        { key: 'language', is_core: false },
       ]);
 
       const userId = await database.asSuperuser((client) =>
@@ -94,6 +95,39 @@ describe.skipIf(!hasDatabase)('core database tables', () => {
       );
       expect(profiles.rows).toEqual([{ id: ids.first }]);
 
+      const savedLanguage = await database.asRole(
+        'authenticated',
+        { sub: ids.first },
+        (client) =>
+          client.query<{ language_preference: string }>(
+            `update public.profiles set language_preference = 'hi'
+             where id = $1 returning language_preference`,
+            [ids.first],
+          ),
+        { commit: true },
+      );
+      expect(savedLanguage.rows).toEqual([{ language_preference: 'hi' }]);
+
+      const otherProfileUpdate = await database.asRole(
+        'authenticated',
+        { sub: ids.first },
+        (client) =>
+          client.query(
+            `update public.profiles set language_preference = 'hi'
+             where id = $1 returning id`,
+            [ids.second],
+          ),
+      );
+      expect(otherProfileUpdate.rowCount).toBe(0);
+
+      const otherProfile = await database.asSuperuser((client) =>
+        client.query<{ language_preference: string }>(
+          'select language_preference from public.profiles where id = $1',
+          [ids.second],
+        ),
+      );
+      expect(otherProfile.rows).toEqual([{ language_preference: 'en' }]);
+
       const error = await dbError(
         database.asRole('authenticated', { sub: ids.first }, (client) =>
           client.query(
@@ -119,7 +153,7 @@ describe.skipIf(!hasDatabase)('core database tables', () => {
         { sub: userId },
         (client) => client.query('select key from public.modules order by key'),
       );
-      expect(modules.rowCount).toBe(25);
+      expect(modules.rowCount).toBe(26);
 
       const profileError = await dbError(
         database.asRole('anon', null, (client) =>
@@ -161,6 +195,20 @@ describe.skipIf(!hasDatabase)('core database tables', () => {
         ),
       );
       expect(badFont.code).toBe('23514');
+
+      const badLanguage = await dbError(
+        database.asSuperuser((client) =>
+          client.query(
+            `insert into public.profiles (id, email, full_name, language_preference)
+             values ($1, $2, 'Bad Language', 'fr')`,
+            [
+              '00000000-0000-0000-0000-000000000002',
+              'bad-language@example.test',
+            ],
+          ),
+        ),
+      );
+      expect(badLanguage.code).toBe('23514');
 
       const badUnitLabel = await dbError(
         database.asSuperuser((client) =>

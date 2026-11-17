@@ -19,6 +19,8 @@ import { EmptyState, ErrorPanel } from '../ui/feedback';
 import { SelectInput } from '../ui/select-input';
 import { TextInput } from '../ui/text-input';
 import { Pagination, type PageSize } from '../ui/table-controls';
+import { useUiTranslator } from '../ui/language';
+import { DIRECTORY_LABELS } from './labels';
 
 type Mutation = (formData: FormData) => Promise<ServerActionResult<unknown>>;
 export type HouseholdDirectoryActions = Pick<
@@ -77,6 +79,7 @@ function ActionMessage({
 }: {
   result: ServerActionResult<unknown> | null;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (!result) return null;
   return (
     <p
@@ -84,12 +87,12 @@ function ActionMessage({
       className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
       role="status"
     >
-      {result.message}
+      {result.message ? translateFeedback(result.message) : null}
       {!result.ok && result.fieldErrors
-        ? ` ${Object.values(result.fieldErrors).join(' ')}`
+        ? ` ${Object.values(result.fieldErrors).map(translateFeedback).join(' ')}`
         : ''}
       {!result.ok && result.referenceId
-        ? ` Reference: ${result.referenceId}`
+        ? ` ${t('Reference: {reference}', { reference: result.referenceId })}`
         : ''}
     </p>
   );
@@ -120,6 +123,7 @@ function VehicleForm({
   households: readonly DirectoryHousehold[];
   vehicle?: DirectoryVehicle;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action, !vehicle);
   const options = householdOptions(households);
   return (
@@ -147,22 +151,22 @@ function VehicleForm({
       ) : (
         <SelectInput
           id="vehicle-target"
-          label="Household unit"
+          label={t('Household unit')}
           name="target"
           options={options}
-          placeholder="Choose a unit"
+          placeholder={t('Choose a unit')}
           required
         />
       )}
       <SelectInput
         defaultValue={vehicle?.vehicle_type ?? 'car'}
         id={`vehicle-type-${vehicle?.id ?? 'new'}`}
-        label="Vehicle type"
+        label={t('Vehicle type')}
         name="vehicleType"
         options={[
-          { label: 'Car', value: 'car' },
-          { label: 'Two-wheeler', value: 'two_wheeler' },
-          { label: 'Other', value: 'other' },
+          { label: t('Car'), value: 'car' },
+          { label: t('Two-wheeler'), value: 'two_wheeler' },
+          { label: t('Other'), value: 'other' },
         ]}
         required
       />
@@ -170,7 +174,7 @@ function VehicleForm({
         autoComplete="off"
         defaultValue={vehicle?.registration_number}
         id={`vehicle-registration-${vehicle?.id ?? 'new'}`}
-        label="Registration number"
+        label={t('Registration number')}
         maxLength={32}
         name="registrationNumber"
         required
@@ -178,12 +182,12 @@ function VehicleForm({
       <TextInput
         defaultValue={vehicle?.tag_number ?? ''}
         id={`vehicle-tag-${vehicle?.id ?? 'new'}`}
-        label="Parking tag (optional)"
+        label={t('Parking tag (optional)')}
         maxLength={40}
         name="tagNumber"
       />
       <Button disabled={pending} loading={pending} type="submit">
-        {vehicle ? 'Save vehicle' : 'Add vehicle'}
+        {t(vehicle ? 'Save vehicle' : 'Add vehicle')}
       </Button>
       <ActionMessage result={result} />
     </form>
@@ -199,6 +203,7 @@ function ContactForm({
   household: DirectoryHousehold;
   contact?: DirectoryEmergencyContact;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action, !contact);
   return (
     <form
@@ -217,7 +222,7 @@ function ContactForm({
       <TextInput
         defaultValue={contact?.full_name}
         id={`contact-name-${contact?.id ?? household.unit_id}`}
-        label="Contact name"
+        label={t('Contact name')}
         maxLength={120}
         name="fullName"
         required
@@ -225,7 +230,7 @@ function ContactForm({
       <TextInput
         defaultValue={contact?.relationship}
         id={`contact-relationship-${contact?.id ?? household.unit_id}`}
-        label="Relationship"
+        label={t('Relationship')}
         maxLength={80}
         name="relationship"
         required
@@ -234,13 +239,13 @@ function ContactForm({
         autoComplete="tel"
         defaultValue={contact?.phone}
         id={`contact-phone-${contact?.id ?? household.unit_id}`}
-        label="Phone number"
+        label={t('Phone number')}
         name="phone"
         required
         type="tel"
       />
       <Button disabled={pending} loading={pending} type="submit">
-        {contact ? 'Save contact' : 'Add emergency contact'}
+        {t(contact ? 'Save contact' : 'Add emergency contact')}
       </Button>
       <ActionMessage result={result} />
     </form>
@@ -263,6 +268,7 @@ export function HouseholdDirectoryControls({
   preferences: DirectoryVisibility;
   vehicles: DirectoryPage<DirectoryVehicle>;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   const visibility = useMutation(actions.setDirectoryVisibilityAction);
   const [vehiclePage, setVehiclePage] = useState(vehicles);
   const [vehiclePageSize, setVehiclePageSize] = useState<PageSize>(10);
@@ -330,18 +336,21 @@ export function HouseholdDirectoryControls({
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h2 className="text-title font-semibold">Your directory details</h2>
+        <h2 className="text-title font-semibold">
+          {t('Your directory details')}
+        </h2>
         <p className="text-body text-ink-muted">
-          Control what neighbours can see and maintain the vehicles and
-          emergency contacts for your active household units.
+          {t(
+            'Control what neighbours can see and maintain the vehicles and emergency contacts for your active household units.',
+          )}
         </p>
       </header>
       <fieldset
-        aria-label="Household directory controls"
+        aria-label={t('Household directory controls')}
         className="grid min-w-0 gap-space-5"
         disabled={isPending}
       >
-        <Card title="Visibility preferences">
+        <Card title={t('Visibility preferences')}>
           <form
             className="grid gap-space-3"
             onSubmit={(event) => visibility.submit(event)}
@@ -352,7 +361,7 @@ export function HouseholdDirectoryControls({
                 name="nameVisible"
                 type="checkbox"
               />
-              Show my name to residents
+              {t('Show my name to residents')}
             </label>
             <label className="inline-flex min-h-12 items-center gap-space-2">
               <input
@@ -360,7 +369,7 @@ export function HouseholdDirectoryControls({
                 name="unitVisible"
                 type="checkbox"
               />
-              Show my unit to residents
+              {t('Show my unit to residents')}
             </label>
             <label className="inline-flex min-h-12 items-center gap-space-2">
               <input
@@ -368,32 +377,33 @@ export function HouseholdDirectoryControls({
                 name="phoneVisible"
                 type="checkbox"
               />
-              Share my phone number with residents
+              {t('Share my phone number with residents')}
             </label>
             <p className="text-caption text-ink-muted">
-              Society administrators and committee members can view verified
-              profile phone numbers regardless of this preference.
+              {t(
+                'Society administrators and committee members can view verified profile phone numbers regardless of this preference.',
+              )}
             </p>
             <Button
               disabled={visibility.pending}
               loading={visibility.pending}
               type="submit"
             >
-              Save visibility
+              {t('Save visibility')}
             </Button>
             <ActionMessage result={visibility.result} />
           </form>
         </Card>
 
-        <Card title="Vehicles">
+        <Card title={t('Vehicles')}>
           {vehicleFailure ? (
             <>
               <ErrorPanel
-                message={vehicleFailure}
-                title="Could not load vehicles"
+                message={translateFeedback(vehicleFailure)}
+                title={t('Could not load vehicles')}
               />
               <Button onClick={() => loadVehicles(1)} variant="secondary">
-                Retry loading vehicles
+                {t('Retry loading vehicles')}
               </Button>
             </>
           ) : null}
@@ -405,17 +415,26 @@ export function HouseholdDirectoryControls({
                   key={vehicle.id}
                 >
                   <p className="text-body-strong">
-                    {vehicle.registration_number} · {vehicle.vehicle_type}
+                    {vehicle.registration_number} ·{' '}
+                    {locale === 'hi'
+                      ? t(
+                          DIRECTORY_LABELS[vehicle.vehicle_type] ??
+                            vehicle.vehicle_type,
+                        )
+                      : vehicle.vehicle_type}
                   </p>
                   <p className="text-caption text-ink-muted">
                     {households.find(
                       ({ unit_id }) => unit_id === vehicle.unit_id,
-                    )?.unit_number ?? 'Unit'}{' '}
-                    · {vehicle.status}
+                    )?.unit_number ?? t('Unit')}{' '}
+                    ·{' '}
+                    {locale === 'hi'
+                      ? t(DIRECTORY_LABELS[vehicle.status] ?? vehicle.status)
+                      : vehicle.status}
                     {vehicle.status === 'active'
                       ? vehicle.is_verified
-                        ? ' · verified'
-                        : ' · awaiting verification'
+                        ? t(' · verified')
+                        : t(' · awaiting verification')
                       : ''}
                   </p>
                   {vehicle.status === 'active' &&
@@ -427,7 +446,7 @@ export function HouseholdDirectoryControls({
                     <div className="grid gap-space-3">
                       <details>
                         <summary className="min-h-12 cursor-pointer content-center text-brand underline underline-offset-4">
-                          Edit vehicle
+                          {t('Edit vehicle')}
                         </summary>
                         <div className="mt-space-3">
                           <VehicleForm
@@ -448,8 +467,10 @@ export function HouseholdDirectoryControls({
             </ul>
           ) : vehicleFailure ? null : (
             <EmptyState
-              description="Add a vehicle so your household records stay current."
-              title="No vehicles registered"
+              description={t(
+                'Add a vehicle so your household records stay current.',
+              )}
+              title={t('No vehicles registered')}
             />
           )}
           {vehiclePage.total > 10 ? (
@@ -472,11 +493,11 @@ export function HouseholdDirectoryControls({
           ) : null}
         </Card>
 
-        <Card title="Emergency contacts">
+        <Card title={t('Emergency contacts')}>
           {households.length ? (
             <SelectInput
               id="contact-unit"
-              label="Household unit"
+              label={t('Household unit')}
               onChange={(event) => {
                 const nextUnitId = event.currentTarget.value;
                 setContactUnitId(nextUnitId);
@@ -492,14 +513,14 @@ export function HouseholdDirectoryControls({
           {contactFailure ? (
             <>
               <ErrorPanel
-                message={contactFailure}
-                title="Could not load emergency contacts"
+                message={translateFeedback(contactFailure)}
+                title={t('Could not load emergency contacts')}
               />
               <Button
                 onClick={() => loadContacts(contactUnitId, 1, contactPageSize)}
                 variant="secondary"
               >
-                Retry loading contacts
+                {t('Retry loading contacts')}
               </Button>
             </>
           ) : contactPage.items.length ? (
@@ -516,7 +537,7 @@ export function HouseholdDirectoryControls({
                   {contactHousehold?.membership_id === contact.membership_id ? (
                     <details>
                       <summary className="min-h-12 cursor-pointer content-center text-brand underline underline-offset-4">
-                        Edit contact
+                        {t('Edit contact')}
                       </summary>
                       <div className="mt-space-3">
                         <ContactForm
@@ -538,8 +559,10 @@ export function HouseholdDirectoryControls({
             </ul>
           ) : contactFailure ? null : (
             <EmptyState
-              description="Emergency contacts are available only to members of your active household, administrators and committee."
-              title="No emergency contacts"
+              description={t(
+                'Emergency contacts are available only to members of your active household, administrators and committee.',
+              )}
+              title={t('No emergency contacts')}
             />
           )}
           {contactPage.total > 10 ? (
@@ -564,7 +587,7 @@ export function HouseholdDirectoryControls({
           ) : null}
           {isPending ? (
             <p aria-live="polite" className="text-caption text-ink-muted">
-              Loading directory records…
+              {t('Loading directory records…')}
             </p>
           ) : null}
         </Card>
@@ -580,6 +603,7 @@ function DeactivateVehicleForm({
   action: Mutation;
   vehicleId: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action);
   return (
     <form className="grid gap-space-2" onSubmit={(event) => submit(event)}>
@@ -590,7 +614,7 @@ function DeactivateVehicleForm({
         type="submit"
         variant="destructive"
       >
-        Deactivate vehicle
+        {t('Deactivate vehicle')}
       </Button>
       <ActionMessage result={result} />
     </form>
@@ -604,6 +628,7 @@ function DeactivateContactForm({
   action: Mutation;
   contactId: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action);
   return (
     <form className="grid gap-space-2" onSubmit={(event) => submit(event)}>
@@ -614,7 +639,7 @@ function DeactivateContactForm({
         type="submit"
         variant="destructive"
       >
-        Deactivate contact
+        {t('Deactivate contact')}
       </Button>
       <ActionMessage result={result} />
     </form>

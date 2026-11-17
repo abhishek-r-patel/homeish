@@ -8,13 +8,6 @@ import {
   METERING_TYPE_LABELS,
   METERING_UNIT_LABELS,
   METERING_USAGE_FLAG_LABELS,
-  formatConsumption,
-  formatMeterValue,
-  formatMeteringDate,
-  formatMeteringMonth,
-  formatMeteringPaise,
-  formatMeteringTime,
-  formatRatePaise,
   meteringConsumption,
   meteringRatePaiseFromRupees,
   meteringUsageFlag,
@@ -45,8 +38,16 @@ import {
   MeteringPhotoLink,
   MeteringReadingForm,
   meteringMeterName,
+  meteringDisplayDate,
+  meteringDisplayMonth,
+  meteringDisplayPaise,
+  meteringDisplayRate,
+  meteringDisplayTime,
+  meteringDisplayValue,
+  useMeteringCopy,
   type MeteringActions,
 } from './shared';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 
 const REPORT_MONTHS = 6;
 
@@ -59,13 +60,16 @@ function MeterForm({
   workspace: MeteringAdminWorkspace;
   actions: MeteringActions;
 }) {
+  const { locale, t } = useMeteringCopy();
   const id = useId();
   const [scope, setScope] = useState<MeteringScope>(meter?.scope ?? 'unit');
   return (
     <ModuleActionForm
       action={actions.saveMeter}
       idempotent
-      submitLabel={meter ? `Save meter ${meter.label}` : 'Add meter'}
+      submitLabel={
+        meter ? t('Save meter {label}', { label: meter.label }) : t('Add meter')
+      }
       input={(form, clientRequestId) =>
         meteringMeterInputSchema.parse({
           meterId: meter?.id ?? null,
@@ -89,28 +93,28 @@ function MeterForm({
     >
       {meter ? (
         <p className="text-caption text-ink-muted">
-          {METERING_TYPE_LABELS[meter.meter_type]} ·{' '}
+          {t(METERING_TYPE_LABELS[meter.meter_type])} ·{' '}
           {meter.unit_number
-            ? `Unit ${meter.unit_number}`
-            : METERING_SCOPE_LABELS.common}
-          . Type, scope and unit cannot change; add a new meter instead.
+            ? t('Unit {unit}', { unit: meter.unit_number })
+            : t(METERING_SCOPE_LABELS.common)}
+          . {t('Type, scope and unit cannot change; add a new meter instead.')}
         </p>
       ) : (
         <>
           <SelectInput
             id={`${id}-type`}
             name="meterType"
-            label="Meter type"
+            label={t('Meter type')}
             required
             options={METERING_TYPES.map((value) => ({
               value,
-              label: `${METERING_TYPE_LABELS[value]} (${METERING_UNIT_LABELS[value]})`,
+              label: `${t(METERING_TYPE_LABELS[value])} (${METERING_UNIT_LABELS[value]})`,
             }))}
           />
           <SelectInput
             id={`${id}-scope`}
             name="scope"
-            label="Belongs to"
+            label={t('Belongs to')}
             required
             value={scope}
             onChange={(event) =>
@@ -118,20 +122,20 @@ function MeterForm({
             }
             options={METERING_SCOPES.map((value) => ({
               value,
-              label: METERING_SCOPE_LABELS[value],
+              label: t(METERING_SCOPE_LABELS[value]),
             }))}
-            helpText="Common-area meters are never billed to a unit."
+            helpText={t('Common-area meters are never billed to a unit.')}
           />
           {scope === 'unit' ? (
             <SelectInput
               id={`${id}-unit`}
               name="unitId"
-              label="Unit"
+              label={t('Unit')}
               required
-              placeholder="Choose a unit"
+              placeholder={t('Choose a unit')}
               options={workspace.units.map((unit) => ({
                 value: unit.id,
-                label: `Unit ${unit.number}`,
+                label: t('Unit {unit}', { unit: unit.number }),
               }))}
             />
           ) : null}
@@ -140,8 +144,8 @@ function MeterForm({
       <TextInput
         id={`${id}-label`}
         name="label"
-        label="Meter label"
-        helpText="For example A-101 water or Clubhouse DG."
+        label={t('Meter label')}
+        helpText={t('For example A-101 water or Clubhouse DG.')}
         required
         maxLength={60}
         defaultValue={meter?.label}
@@ -150,22 +154,28 @@ function MeterForm({
       <TextInput
         id={`${id}-serial`}
         name="serialNumber"
-        label="Serial number (optional)"
+        label={t('Serial number (optional)')}
         maxLength={60}
         defaultValue={meter?.serial_number ?? ''}
         autoComplete="off"
       />
       {meter?.has_readings ? (
         <p className="text-caption text-ink-muted">
-          Starting reading {formatMeterValue(meter.initial_reading)}. It cannot
-          change after readings exist.
+          {t(
+            'Starting reading {value}. It cannot change after readings exist.',
+            {
+              value: meteringDisplayValue(meter.initial_reading, locale),
+            },
+          )}
         </p>
       ) : (
         <TextInput
           id={`${id}-initial`}
           name="initialReading"
-          label="Starting reading"
-          helpText="The meter value when Homeish starts tracking it. Up to 3 decimals."
+          label={t('Starting reading')}
+          helpText={t(
+            'The meter value when Homeish starts tracking it. Up to 3 decimals.',
+          )}
           inputMode="decimal"
           required
           maxLength={20}
@@ -176,8 +186,8 @@ function MeterForm({
       <CheckboxInput
         id={`${id}-active`}
         name="active"
-        label="In use"
-        description="Readings can only be added to meters in use."
+        label={t('In use')}
+        description={t('Readings can only be added to meters in use.')}
         defaultChecked={meter?.active ?? true}
       />
     </ModuleActionForm>
@@ -185,19 +195,20 @@ function MeterForm({
 }
 
 function RateForm({ actions }: { actions: MeteringActions }) {
+  const { t } = useMeteringCopy();
   const id = useId();
   return (
     <ModuleActionForm
       action={actions.setRate}
       idempotent
-      submitLabel="Save rate"
+      submitLabel={t('Save rate')}
       input={(form, clientRequestId) => {
         const ratePaise = meteringRatePaiseFromRupees(
           String(form.get('rate') ?? ''),
         );
         if (ratePaise === null) {
           throw new ValidationError({
-            rate: 'Enter rupees with up to 2 decimals, for example 8.50.',
+            rate: t('Enter rupees with up to 2 decimals, for example 8.50.'),
           });
         }
         return meteringRateInputSchema.parse({
@@ -210,18 +221,20 @@ function RateForm({ actions }: { actions: MeteringActions }) {
       <SelectInput
         id={`${id}-type`}
         name="meterType"
-        label="Meter type"
+        label={t('Meter type')}
         required
         options={METERING_TYPES.map((value) => ({
           value,
-          label: METERING_TYPE_LABELS[value],
+          label: t(METERING_TYPE_LABELS[value]),
         }))}
       />
       <TextInput
         id={`${id}-rate`}
         name="rate"
-        label="Rate in rupees per unit of usage"
-        helpText="Per kL of water, kWh of electricity or DG, or SCM of gas. Applies to readings not yet billed."
+        label={t('Rate in rupees per unit of usage')}
+        helpText={t(
+          'Per kL of water, kWh of electricity or DG, or SCM of gas. Applies to readings not yet billed.',
+        )}
         inputMode="decimal"
         required
         maxLength={12}
@@ -242,6 +255,7 @@ function QueueItem({
   actions: MeteringActions;
   fileRequest?: typeof fetch;
 }) {
+  const { locale, t } = useMeteringCopy();
   const id = useId();
   const unit = METERING_UNIT_LABELS[item.meter_type];
   const preview = meteringConsumption(item.base_value, item.reading_value);
@@ -249,25 +263,38 @@ function QueueItem({
     <li className="grid gap-space-3 rounded-md border border-rule p-space-4">
       <div className="grid gap-space-1">
         <p className="font-semibold">
-          {meteringMeterName({
-            label: item.meter_label,
-            meter_type: item.meter_type,
-            unit_number: item.unit_number,
-          })}
+          {meteringMeterName(
+            {
+              label: item.meter_label,
+              meter_type: item.meter_type,
+              unit_number: item.unit_number,
+            },
+            t,
+          )}
         </p>
         <p className="text-body">
-          {formatMeterValue(item.reading_value)} {unit} on{' '}
-          {formatMeteringDate(item.reading_date)} · previous{' '}
-          {formatMeterValue(item.base_value)} {unit}
+          {meteringDisplayValue(item.reading_value, locale)} {unit} {t('on')}{' '}
+          {meteringDisplayDate(item.reading_date, locale)} · {t('previous')}{' '}
+          {meteringDisplayValue(item.base_value, locale)} {unit}
         </p>
         <p className="text-body">
           {preview.isReset
-            ? `Lower than the previous reading: counts as 0 usage and resets the meter. Reason: ${item.lower_reason ?? 'none given, add one to approve'}.`
-            : `Usage ${formatConsumption(preview.consumption, item.meter_type)}`}
+            ? t(
+                'Lower than the previous reading: counts as {zero} usage and resets the meter. Reason: {reason}.',
+                {
+                  zero: formatLocalizedNumber(0, locale),
+                  reason:
+                    item.lower_reason ?? t('none given, add one to approve'),
+                },
+              )
+            : t('Usage {value} {unit}', {
+                value: meteringDisplayValue(preview.consumption, locale),
+                unit,
+              })}
         </p>
         <p className="text-caption text-ink-muted">
-          Sent by {item.submitted_by ?? 'a resident'} ·{' '}
-          {formatMeteringTime(item.created_at)}
+          {t('Sent by')} {item.submitted_by ?? t('a resident')} ·{' '}
+          {meteringDisplayTime(item.created_at, locale)}
         </p>
       </div>
       {item.photo_path ? (
@@ -277,7 +304,7 @@ function QueueItem({
         <div className="grid gap-space-3 md:grid-cols-2">
           <ModuleActionForm
             action={actions.review}
-            submitLabel="Approve"
+            submitLabel={t('Approve')}
             input={(form) =>
               meteringReviewInputSchema.parse({
                 readingId: item.id,
@@ -290,7 +317,7 @@ function QueueItem({
               <TextAreaInput
                 id={`${id}-approve`}
                 name="reason"
-                label="Why is the reading lower?"
+                label={t('Why is the reading lower?')}
                 required
                 maxLength={METERING_REASON_MAX}
               />
@@ -298,7 +325,7 @@ function QueueItem({
           </ModuleActionForm>
           <ModuleActionForm
             action={actions.review}
-            submitLabel="Reject"
+            submitLabel={t('Reject')}
             input={(form) =>
               meteringReviewInputSchema.parse({
                 readingId: item.id,
@@ -310,8 +337,10 @@ function QueueItem({
             <TextAreaInput
               id={`${id}-reject`}
               name="reason"
-              label="Reason for rejecting"
-              helpText="The resident sees this, for example the photo is unclear."
+              label={t('Reason for rejecting')}
+              helpText={t(
+                'The resident sees this, for example the photo is unclear.',
+              )}
               required
               maxLength={METERING_REASON_MAX}
             />
@@ -329,56 +358,74 @@ function BillingCard({
   workspace: MeteringAdminWorkspace;
   actions: MeteringActions;
 }) {
+  const { locale, t } = useMeteringCopy();
   const id = useId();
   const { charges } = workspace;
   return (
     <Card
-      title="Utility billing"
-      description="Monthly bill generation adds approved unit-meter readings to a separate utility bill for each unit, once. Use this to add readings for units not yet covered. Common-area meters are never billed."
+      title={t('Utility billing')}
+      description={t(
+        'Monthly bill generation adds approved unit-meter readings to a separate utility bill for each unit, once. Use this to add readings for units not yet covered. Common-area meters are never billed.',
+      )}
     >
       <div className="grid gap-space-4">
         {!workspace.billing_enabled ? (
-          <Banner tone="info" title="Billing is turned off">
-            Readings and reports still work. Nothing is billed, and readings
-            approved while billing is off are never billed later.
+          <Banner tone="info" title={t('Billing is turned off')}>
+            {t(
+              'Readings and reports still work. Nothing is billed, and readings approved while billing is off are never billed later.',
+            )}
           </Banner>
         ) : null}
         <dl className="grid gap-space-2 md:grid-cols-2">
           <div>
-            <dt className="text-caption text-ink-muted">Waiting to bill</dt>
+            <dt className="text-caption text-ink-muted">
+              {t('Waiting to bill')}
+            </dt>
             <dd className="text-body">
-              {charges.pending_count}
+              {formatLocalizedNumber(charges.pending_count, locale)}
               {charges.pending_without_rate > 0
-                ? ` (${charges.pending_without_rate} need a rate first)`
+                ? ` (${t('{count} need a rate first.', {
+                    count: formatLocalizedNumber(
+                      charges.pending_without_rate,
+                      locale,
+                    ),
+                  })})`
                 : ''}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Billed so far</dt>
+            <dt className="text-caption text-ink-muted">
+              {t('Billed so far')}
+            </dt>
             <dd className="text-body">
-              {charges.billed_count} charge
-              {charges.billed_count === 1 ? '' : 's'},{' '}
-              {formatMeteringPaise(charges.billed_paise)}
+              {t('{count} charges, {amount}', {
+                count: formatLocalizedNumber(charges.billed_count, locale),
+                amount: meteringDisplayPaise(charges.billed_paise, locale),
+              })}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">No charge</dt>
-            <dd className="text-body">{charges.no_charge_count}</dd>
+            <dt className="text-caption text-ink-muted">{t('No charge')}</dt>
+            <dd className="text-body">
+              {formatLocalizedNumber(charges.no_charge_count, locale)}
+            </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Last billed</dt>
+            <dt className="text-caption text-ink-muted">{t('Last billed')}</dt>
             <dd className="text-body">
               {charges.last_billed_at
-                ? formatMeteringTime(charges.last_billed_at)
-                : 'Not yet'}
+                ? meteringDisplayTime(charges.last_billed_at, locale)
+                : t('Not yet')}
             </dd>
           </div>
         </dl>
         {workspace.can_manage && workspace.billing_enabled ? (
           <ModuleActionForm
             action={actions.runBilling}
-            submitLabel="Add usage to bills"
-            confirmMessage="Add approved usage up to this date to each unit's bills? Usage already billed is never added again."
+            submitLabel={t('Add usage to bills')}
+            confirmMessage={t(
+              "Add approved usage up to this date to each unit's bills? Usage already billed is never added again.",
+            )}
             input={(form) =>
               meteringBillingRunInputSchema.parse({
                 billDate: String(form.get('billDate') ?? ''),
@@ -389,8 +436,10 @@ function BillingCard({
               id={`${id}-date`}
               name="billDate"
               type="date"
-              label="Bill date"
-              helpText="Readings dated on or before this day are billed. Run it once a month."
+              label={t('Bill date')}
+              helpText={t(
+                'Readings dated on or before this day are billed. Run it once a month.',
+              )}
               required
               max={workspace.today}
               defaultValue={workspace.today}
@@ -403,32 +452,42 @@ function BillingCard({
 }
 
 function ReportCard({ workspace }: { workspace: MeteringAdminWorkspace }) {
+  const { locale, t } = useMeteringCopy();
   const { months, meters } = workspace.report;
   const shownFrom = Math.max(0, months.length - REPORT_MONTHS);
   const shown = months.slice(shownFrom);
   return (
     <Card
-      title="Usage by month"
-      description="Flags: high is more than twice the average of the previous 3 months with usage; zero is no usage on an occupied unit's meter in a month with a reading."
+      title={t('Usage by month')}
+      description={t(
+        "Flags: high is more than twice the average of the previous {count} months with usage; zero is no usage on an occupied unit's meter in a month with a reading.",
+        {
+          count: formatLocalizedNumber(3, locale),
+        },
+      )}
     >
       {meters.length === 0 ? (
         <p className="text-body text-ink-muted">
-          No approved readings in the last {months.length} months.
+          {t('No approved readings in the last {count} months.', {
+            count: formatLocalizedNumber(months.length, locale),
+          })}
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[40rem] border-collapse text-left text-body">
             <caption className="sr-only">
-              Usage per meter for the last {shown.length} months
+              {t('Usage per meter for the last {count} months', {
+                count: formatLocalizedNumber(shown.length, locale),
+              })}
             </caption>
             <thead>
               <tr>
                 <th scope="col" className="p-space-2">
-                  Meter
+                  {t('Meter')}
                 </th>
                 {shown.map((month) => (
                   <th key={month} scope="col" className="p-space-2">
-                    {formatMeteringMonth(month)}
+                    {meteringDisplayMonth(month, locale)}
                   </th>
                 ))}
               </tr>
@@ -437,7 +496,7 @@ function ReportCard({ workspace }: { workspace: MeteringAdminWorkspace }) {
               {meters.map((meter) => (
                 <tr key={meter.meter_id} className="border-t border-rule">
                   <th scope="row" className="p-space-2 font-semibold">
-                    {meteringMeterName(meter)}
+                    {meteringMeterName(meter, t)}
                   </th>
                   {shown.map((month, offset) => {
                     const index = shownFrom + offset;
@@ -447,23 +506,23 @@ function ReportCard({ workspace }: { workspace: MeteringAdminWorkspace }) {
                       <td key={month} className="p-space-2 align-top">
                         {period && period.readings > 0 ? (
                           <>
-                            {formatConsumption(
-                              period.consumption,
-                              meter.meter_type,
-                            )}
+                            {meteringDisplayValue(period.consumption, locale)}{' '}
+                            {METERING_UNIT_LABELS[meter.meter_type]}
                             {period.resets > 0 ? (
                               <span className="block text-caption text-ink-muted">
-                                Meter reset
+                                {t('Meter reset')}
                               </span>
                             ) : null}
                             {flag ? (
                               <span className="block text-caption font-semibold text-danger">
-                                {METERING_USAGE_FLAG_LABELS[flag]}
+                                {t(METERING_USAGE_FLAG_LABELS[flag])}
                               </span>
                             ) : null}
                           </>
                         ) : (
-                          <span className="text-ink-muted">No reading</span>
+                          <span className="text-ink-muted">
+                            {t('No reading')}
+                          </span>
                         )}
                       </td>
                     );
@@ -487,25 +546,31 @@ export function MeteringAdminView({
   actions?: MeteringActions;
   fileRequest?: typeof fetch;
 }) {
+  const { locale, t } = useMeteringCopy();
   const activeMeters = workspace.meters.filter((meter) => meter.active);
   const inactive = workspace.meters.filter((meter) => !meter.active);
 
   return (
     <section className="grid min-w-0 gap-space-5">
-      <h1 className="text-title font-semibold">Utility meters</h1>
+      <h1 className="text-title font-semibold">{t('Utility meters')}</h1>
       {workspace.can_manage ? null : (
-        <Banner tone="neutral" title="View only">
-          Only administrators can change meters and rates, review readings and
-          bill usage.
+        <Banner tone="neutral" title={t('View only')}>
+          {t(
+            'Only administrators can change meters and rates, review readings and bill usage.',
+          )}
         </Banner>
       )}
 
       <Card
-        title={`Readings to review (${workspace.queue.length})`}
-        description="Residents send readings with a photo. Check the photo before approving; only approved readings count."
+        title={t('Readings to review ({count})', {
+          count: formatLocalizedNumber(workspace.queue.length, locale),
+        })}
+        description={t(
+          'Residents send readings with a photo. Check the photo before approving; only approved readings count.',
+        )}
       >
         {workspace.queue.length === 0 ? (
-          <p className="text-body text-ink-muted">Nothing to review.</p>
+          <p className="text-body text-ink-muted">{t('Nothing to review.')}</p>
         ) : (
           <ul className="grid gap-space-3">
             {workspace.queue.map((item) => (
@@ -523,8 +588,8 @@ export function MeteringAdminView({
 
       {workspace.can_manage && activeMeters.length > 0 ? (
         <Card
-          title="Record a reading"
-          description="Readings you record are approved straight away."
+          title={t('Record a reading')}
+          description={t('Readings you record are approved straight away.')}
         >
           <MeteringReadingForm
             meters={activeMeters}
@@ -537,12 +602,14 @@ export function MeteringAdminView({
       ) : null}
 
       <Card
-        title="Meters"
-        description={`${activeMeters.length} meter${activeMeters.length === 1 ? '' : 's'} in use.`}
+        title={t('Meters')}
+        description={t('{count} meters in use.', {
+          count: formatLocalizedNumber(activeMeters.length, locale),
+        })}
       >
         <div className="grid gap-space-4">
           {workspace.meters.length === 0 ? (
-            <p className="text-body text-ink-muted">No meters yet.</p>
+            <p className="text-body text-ink-muted">{t('No meters yet.')}</p>
           ) : (
             <ul className="grid gap-space-3">
               {[...activeMeters, ...inactive].map((meter) => (
@@ -550,20 +617,30 @@ export function MeteringAdminView({
                   key={meter.id}
                   className="grid gap-space-2 rounded-md border border-rule p-space-4"
                 >
-                  <p className="font-semibold">{meteringMeterName(meter)}</p>
+                  <p className="font-semibold">{meteringMeterName(meter, t)}</p>
                   <p className="text-caption text-ink-muted">
                     {meter.serial_number
-                      ? `Serial ${meter.serial_number} · `
+                      ? `${t('Serial')} ${meter.serial_number} · `
                       : ''}
-                    {meter.active ? 'In use' : 'Not in use'} ·{' '}
+                    {t(meter.active ? 'In use' : 'Not in use')} ·{' '}
                     {meter.last_reading_date
-                      ? `Last ${formatMeterValue(meter.base_value)} ${METERING_UNIT_LABELS[meter.meter_type]} on ${formatMeteringDate(meter.last_reading_date)}`
-                      : `Starting ${formatMeterValue(meter.base_value)} ${METERING_UNIT_LABELS[meter.meter_type]}`}
+                      ? t('Last {value} {unit} on {date}', {
+                          value: meteringDisplayValue(meter.base_value, locale),
+                          unit: METERING_UNIT_LABELS[meter.meter_type],
+                          date: meteringDisplayDate(
+                            meter.last_reading_date,
+                            locale,
+                          ),
+                        })
+                      : t('Starting {value} {unit}', {
+                          value: meteringDisplayValue(meter.base_value, locale),
+                          unit: METERING_UNIT_LABELS[meter.meter_type],
+                        })}
                   </p>
                   {workspace.can_manage ? (
                     <details className="grid gap-space-2">
                       <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-                        Edit {meter.label}
+                        {t('Edit {label}', { label: meter.label })}
                       </summary>
                       <MeterForm
                         meter={meter}
@@ -579,7 +656,7 @@ export function MeteringAdminView({
           {workspace.can_manage ? (
             <details className="grid gap-space-2">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-                Add a meter
+                {t('Add a meter')}
               </summary>
               <MeterForm meter={null} workspace={workspace} actions={actions} />
             </details>
@@ -588,21 +665,27 @@ export function MeteringAdminView({
       </Card>
 
       <Card
-        title="Rates"
-        description="One flat rate per meter type. The rate in force when usage is billed is stored on each charge."
+        title={t('Rates')}
+        description={t(
+          'One flat rate per meter type. The rate in force when usage is billed is stored on each charge.',
+        )}
       >
         <div className="grid gap-space-4">
           {workspace.rates.length === 0 ? (
             <p className="text-body text-ink-muted">
-              No rates yet. Usage stays unbilled until a rate is set.
+              {t('No rates yet. Usage stays unbilled until a rate is set.')}
             </p>
           ) : (
             <ul className="grid gap-space-2">
               {workspace.rates.map((rate) => (
                 <li key={rate.meter_type} className="text-body">
-                  {METERING_TYPE_LABELS[rate.meter_type]}:{' '}
-                  {formatRatePaise(rate.rate_paise, rate.meter_type)} (since{' '}
-                  {formatMeteringTime(rate.set_at)})
+                  {t(METERING_TYPE_LABELS[rate.meter_type])}:{' '}
+                  {meteringDisplayRate(
+                    rate.rate_paise,
+                    rate.meter_type,
+                    locale,
+                  )}{' '}
+                  ({t('since')} {meteringDisplayTime(rate.set_at, locale)})
                 </li>
               ))}
             </ul>
@@ -611,14 +694,18 @@ export function MeteringAdminView({
           {workspace.rate_history.length > workspace.rates.length ? (
             <details className="grid gap-space-2">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-                Rate history
+                {t('Rate history')}
               </summary>
               <ul className="grid gap-space-2">
                 {workspace.rate_history.map((rate) => (
                   <li key={rate.id} className="text-caption">
-                    {METERING_TYPE_LABELS[rate.meter_type]}:{' '}
-                    {formatRatePaise(rate.rate_paise, rate.meter_type)} from{' '}
-                    {formatMeteringTime(rate.set_at)}
+                    {t(METERING_TYPE_LABELS[rate.meter_type])}:{' '}
+                    {meteringDisplayRate(
+                      rate.rate_paise,
+                      rate.meter_type,
+                      locale,
+                    )}{' '}
+                    {t('from')} {meteringDisplayTime(rate.set_at, locale)}
                   </li>
                 ))}
               </ul>
@@ -631,9 +718,9 @@ export function MeteringAdminView({
 
       <ReportCard workspace={workspace} />
 
-      <Card title="Recent readings">
+      <Card title={t('Recent readings')}>
         {workspace.recent.length === 0 ? (
-          <p className="text-body text-ink-muted">No readings yet.</p>
+          <p className="text-body text-ink-muted">{t('No readings yet.')}</p>
         ) : (
           <ul className="grid gap-space-3">
             {workspace.recent.map((reading) => (
@@ -642,28 +729,35 @@ export function MeteringAdminView({
                 className="grid gap-space-1 rounded-md border border-rule p-space-4"
               >
                 <p className="font-semibold">
-                  {meteringMeterName({
-                    label: reading.meter_label,
-                    meter_type: reading.meter_type,
-                    unit_number: reading.unit_number,
-                  })}
+                  {meteringMeterName(
+                    {
+                      label: reading.meter_label,
+                      meter_type: reading.meter_type,
+                      unit_number: reading.unit_number,
+                    },
+                    t,
+                  )}
                 </p>
                 <p className="text-body">
-                  {formatMeterValue(reading.reading_value)}{' '}
-                  {METERING_UNIT_LABELS[reading.meter_type]} on{' '}
-                  {formatMeteringDate(reading.reading_date)}
+                  {meteringDisplayValue(reading.reading_value, locale)}{' '}
+                  {METERING_UNIT_LABELS[reading.meter_type]} {t('on')}{' '}
+                  {meteringDisplayDate(reading.reading_date, locale)}
                   {reading.consumption !== null
-                    ? ` · usage ${formatConsumption(reading.consumption, reading.meter_type)}`
+                    ? ` · ${t('usage {value}', {
+                        value: `${meteringDisplayValue(reading.consumption, locale)} ${METERING_UNIT_LABELS[reading.meter_type]}`,
+                      })}`
                     : ''}
-                  {reading.is_reset ? ` · reset: ${reading.lower_reason}` : ''}
+                  {reading.is_reset
+                    ? ` · ${t('reset:')} ${reading.lower_reason}`
+                    : ''}
                 </p>
                 <p className="text-caption text-ink-muted">
                   {reading.status === 'rejected'
-                    ? `Rejected: ${reading.rejection_reason ?? ''}`
-                    : 'Approved'}{' '}
-                  · {METERING_SOURCE_LABELS[reading.source]}
+                    ? `${t('Rejected:')} ${reading.rejection_reason ?? ''}`
+                    : t('Approved')}{' '}
+                  · {t(METERING_SOURCE_LABELS[reading.source])}
                   {reading.charge_status
-                    ? ` · ${METERING_CHARGE_LABELS[reading.charge_status]}${reading.charge_status === 'billed' && reading.charge_amount_paise !== null ? ` ${formatMeteringPaise(reading.charge_amount_paise)}` : ''}`
+                    ? ` · ${t(METERING_CHARGE_LABELS[reading.charge_status])}${reading.charge_status === 'billed' && reading.charge_amount_paise !== null ? ` ${meteringDisplayPaise(reading.charge_amount_paise, locale)}` : ''}`
                     : ''}
                 </p>
                 {reading.photo_path ? (

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import { Banner } from '@/components/ui/feedback';
+import { useUiTranslator } from '@/components/ui/language';
 
 export type BillingFormAction<T> = (
   data: FormData,
@@ -57,33 +58,42 @@ export function fieldError(
   return undefined;
 }
 
+export function useBillingFieldError() {
+  const { translateFeedback } = useUiTranslator();
+  return (result: ServerActionResult<unknown> | null, ...fields: string[]) => {
+    const message = fieldError(result, ...fields);
+    return message ? translateFeedback(message) : undefined;
+  };
+}
+
 export function ActionResult({
   result,
 }: {
   result: ServerActionResult<unknown> | null;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (!result) return null;
   if (result.ok) {
     return result.message ? (
       <Banner tone="success">
-        <p>{result.message}</p>
+        <p>{translateFeedback(result.message)}</p>
       </Banner>
     ) : null;
   }
   const fieldMessages = Object.values(result.fieldErrors ?? {});
   return (
     <Banner tone="danger">
-      <p>{result.message}</p>
+      <p>{translateFeedback(result.message)}</p>
       {fieldMessages.length > 0 ? (
         <ul className="mt-space-2 list-inside list-disc">
           {fieldMessages.map((message) => (
-            <li key={message}>{message}</li>
+            <li key={message}>{translateFeedback(message)}</li>
           ))}
         </ul>
       ) : null}
       {result.referenceId ? (
         <p className="mt-space-2 text-caption">
-          Reference: {result.referenceId}
+          {t('Reference: {reference}', { reference: result.referenceId })}
         </p>
       ) : null}
     </Banner>

@@ -2,6 +2,10 @@
 'use client';
 import Link from 'next/link';
 import { useId } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
+import { translateMessage } from '@/core/i18n/messages';
 import { Card, ListItem } from '@/components/ui/data-display';
 import { Banner, EmptyState } from '@/components/ui/feedback';
 import {
@@ -50,12 +54,29 @@ function formText(form: FormData, key: string) {
   return String(form.get(key) ?? '');
 }
 
-function goingSummary(item: EventAdminList['items'][number]) {
-  const people = `${item.goingHeadcount} going`;
-  const flats = `${item.goingUnits} ${item.goingUnits === 1 ? 'flat' : 'flats'}`;
-  return item.capacity === null
-    ? `${people} · ${flats}`
-    : `${item.goingHeadcount}/${item.capacity} going · ${flats}`;
+function goingSummary(
+  item: EventAdminList['items'][number],
+  locale: Locale | null,
+) {
+  const language = locale ?? 'en';
+  return translateMessage(
+    language,
+    item.capacity === null
+      ? '{people} going · {flats}'
+      : '{people}/{capacity} going · {flats}',
+    {
+      people: formatLocalizedNumber(item.goingHeadcount, language),
+      capacity:
+        item.capacity === null
+          ? ''
+          : formatLocalizedNumber(item.capacity, language),
+      flats: translateMessage(
+        language,
+        item.goingUnits === 1 ? '{count} flat' : '{count} flats',
+        { count: formatLocalizedNumber(item.goingUnits, language) },
+      ),
+    },
+  );
 }
 
 export function EventAdminListView({
@@ -67,6 +88,7 @@ export function EventAdminListView({
   filter: EventAdminFilter;
   basePath?: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const needsBilling =
     !workspace.billingEnabled &&
     workspace.items.some(
@@ -76,23 +98,28 @@ export function EventAdminListView({
     <section className="grid min-w-0 gap-space-4">
       <div className="flex flex-wrap items-start justify-between gap-space-3">
         <div className="grid gap-space-1">
-          <h1 className="text-title font-semibold">Events</h1>
+          <h1 className="text-title font-semibold">{t('Events')}</h1>
           <p className="text-body text-ink-muted">
-            Plan society events, collect RSVPs and optional contributions. All
-            times are India time (IST).
+            {t(
+              'Plan society events, collect RSVPs and optional contributions. All times are India time (IST).',
+            )}
           </p>
         </div>
         <Link className={EVENT_PRIMARY_LINK_CLASS} href="/admin/events/new">
-          New Event
+          {t('New Event')}
         </Link>
       </div>
       {needsBilling ? (
-        <Banner title="Billing is turned off" tone="warning">
-          Some events have a contribution. Residents cannot RSVP going to them
-          until Billing is turned on.
+        <Banner title={t('Billing is turned off')} tone="warning">
+          {t(
+            'Some events have a contribution. Residents cannot RSVP going to them until Billing is turned on.',
+          )}
         </Banner>
       ) : null}
-      <nav aria-label="Filter events" className="flex flex-wrap gap-space-3">
+      <nav
+        aria-label={t('Filter events')}
+        className="flex flex-wrap gap-space-3"
+      >
         {EVENT_ADMIN_FILTERS.map((value) => (
           <Link
             key={value}
@@ -102,21 +129,23 @@ export function EventAdminListView({
             }
             aria-current={filter === value ? 'page' : undefined}
           >
-            {FILTER_LABELS[value]}
+            {t(FILTER_LABELS[value])}
           </Link>
         ))}
       </nav>
       {workspace.items.length === 0 ? (
         <EmptyState
-          title={
+          title={t(
             filter === 'upcoming'
               ? 'No upcoming events'
-              : 'No events match this filter'
-          }
-          description="Create an event draft, then publish it to notify residents."
+              : 'No events match this filter',
+          )}
+          description={t(
+            'Create an event draft, then publish it to notify residents.',
+          )}
           action={
             <Link className={EVENT_LINK_CLASS} href="/admin/events/new">
-              Create an event
+              {t('Create an event')}
             </Link>
           }
         />
@@ -129,13 +158,16 @@ export function EventAdminListView({
                 title={<span className="break-words">{item.title}</span>}
                 secondary={
                   <span className="break-words">
-                    {formatEventDateTime(item.startsAt)} IST
+                    {formatEventDateTime(item.startsAt, locale)} IST
                     {item.venue ? ` · ${item.venue}` : ''} ·{' '}
                     {describeContribution(
                       item.contributionType,
                       item.contributionPaise,
+                      locale,
                     )}
-                    {item.status === 'draft' ? '' : ` · ${goingSummary(item)}`}
+                    {item.status === 'draft'
+                      ? ''
+                      : ` · ${goingSummary(item, locale)}`}
                   </span>
                 }
                 status={
@@ -150,7 +182,13 @@ export function EventAdminListView({
       )}
       {workspace.total > workspace.items.length ? (
         <p className="text-caption text-ink-muted">
-          Showing {workspace.items.length} of {workspace.total} events.
+          {t('Showing {count} of {total} events.', {
+            count: formatLocalizedNumber(
+              workspace.items.length,
+              locale ?? 'en',
+            ),
+            total: formatLocalizedNumber(workspace.total, locale ?? 'en'),
+          })}
         </p>
       ) : null}
     </section>
@@ -200,16 +238,17 @@ function CancelAction({
   version: number;
   hasContribution: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   return (
     <ModuleActionForm
       action={action}
-      submitLabel="Cancel Event"
-      confirmMessage={
+      submitLabel={t('Cancel Event')}
+      confirmMessage={t(
         hasContribution
           ? 'Cancel this event? Residents will be notified and every contribution will be credited back.'
-          : 'Cancel this event? Residents will be notified.'
-      }
+          : 'Cancel this event? Residents will be notified.',
+      )}
       input={(form) =>
         eventCancelInputSchema.parse({
           eventId,
@@ -221,8 +260,8 @@ function CancelAction({
       <TextAreaInput
         id={`${id}-reason`}
         name="reason"
-        label="Reason for cancelling"
-        helpText="Residents see this reason."
+        label={t('Reason for cancelling')}
+        helpText={t('Residents see this reason.')}
         maxLength={EVENT_REASON_MAX}
         rows={2}
         required
@@ -238,39 +277,42 @@ function EventLifecycle({
   detail: EventAdminDetail;
   actions: EventAdminActions;
 }) {
+  const { translate: t } = useUiTranslator();
   const { event } = detail;
   const billingBlocked =
     event.contributionType !== 'none' && !detail.billingEnabled;
   if (event.status === 'draft') {
     return (
-      <Card title="Draft actions">
+      <Card title={t('Draft actions')}>
         <div className="grid gap-space-4">
           <Link
             className={EVENT_LINK_CLASS}
             href={`/admin/events/${event.id}/edit`}
           >
-            Edit draft
+            {t('Edit draft')}
           </Link>
           <VersionAction
             action={actions.publish}
             eventId={event.id}
             version={event.version}
-            label="Publish and Notify"
-            confirmMessage="Publish this event? Residents in the audience will be notified."
-            note={
+            label={t('Publish and Notify')}
+            confirmMessage={t(
+              'Publish this event? Residents in the audience will be notified.',
+            )}
+            note={t(
               billingBlocked
                 ? 'Turn on Billing, or remove the contribution, before publishing.'
-                : 'Publishing notifies residents and opens RSVPs. The contribution cannot be changed afterwards.'
-            }
+                : 'Publishing notifies residents and opens RSVPs. The contribution cannot be changed afterwards.',
+            )}
             disabled={billingBlocked}
           />
           <VersionAction
             action={actions.deleteDraft}
             eventId={event.id}
             version={event.version}
-            label="Delete Draft"
-            confirmMessage="Delete this draft? This cannot be undone."
-            note="Only a draft can be deleted."
+            label={t('Delete Draft')}
+            confirmMessage={t('Delete this draft? This cannot be undone.')}
+            note={t('Only a draft can be deleted.')}
           />
         </div>
       </Card>
@@ -278,13 +320,13 @@ function EventLifecycle({
   }
   if (event.status === 'published' && !event.past) {
     return (
-      <Card title="Event actions">
+      <Card title={t('Event actions')}>
         <div className="grid gap-space-4">
           <Link
             className={EVENT_LINK_CLASS}
             href={`/admin/events/${event.id}/edit`}
           >
-            Edit event
+            {t('Edit event')}
           </Link>
           <CancelAction
             action={actions.cancel}
@@ -302,40 +344,49 @@ function EventLifecycle({
 function audienceText(
   audience: EventAdminDetail['event']['audience'],
   blocks: readonly EventBlockOption[],
+  locale: Locale | null,
 ) {
-  if (audience.scope === 'all') return 'Every active flat';
+  if (audience.scope === 'all')
+    return translateMessage(locale ?? 'en', 'Every active flat');
   const names = audience.blockIds.map(
     (blockId) =>
       blocks.find((block) => block.blockId === blockId)?.name ??
-      'An inactive block',
+      translateMessage(locale ?? 'en', 'An inactive block'),
   );
-  return names.length === 0 ? 'No blocks chosen yet' : names.join(', ');
+  return names.length === 0
+    ? translateMessage(locale ?? 'en', 'No blocks chosen yet')
+    : names.join(', ');
 }
 
 type RsvpRow = EventAdminDetail['rsvps'][number];
 
 function RsvpTable({ detail }: { detail: EventAdminDetail }) {
+  const { locale, translate: t } = useUiTranslator();
   if (detail.rsvps.length === 0) {
     return (
-      <Card title="RSVPs">
-        <p className="text-body text-ink-muted">No RSVPs yet.</p>
+      <Card title={t('RSVPs')}>
+        <p className="text-body text-ink-muted">{t('No RSVPs yet.')}</p>
       </Card>
     );
   }
   const showCharges = detail.event.contributionType !== 'none';
   return (
-    <Card title="RSVPs" description="One response per flat.">
+    <Card title={t('RSVPs')} description={t('One response per flat.')}>
       <DataTable<RsvpRow>
-        caption="RSVPs by flat"
+        caption={t('RSVPs by flat')}
         rows={detail.rsvps}
         getRowId={(row) => row.rsvpId}
         getRowLabel={(row) => row.unitLabel}
-        mobilePrimary={(row) => `Flat ${row.unitLabel}`}
+        mobilePrimary={(row) => t('Flat {label}', { label: row.unitLabel })}
         mobileSecondary={(row) =>
           [
-            row.status === 'going' ? `${row.headcount} going` : null,
-            showCharges ? formatEventMoney(row.netChargePaise) : null,
-            `${row.respondedByName ?? 'A resident'} · ${formatEventDateTime(row.respondedAt)} IST`,
+            row.status === 'going'
+              ? t('{count} going', {
+                  count: formatLocalizedNumber(row.headcount, locale ?? 'en'),
+                })
+              : null,
+            showCharges ? formatEventMoney(row.netChargePaise, locale) : null,
+            `${row.respondedByName ?? t('A resident')} · ${formatEventDateTime(row.respondedAt, locale)} IST`,
           ]
             .filter(Boolean)
             .join(' · ')
@@ -344,36 +395,37 @@ function RsvpTable({ detail }: { detail: EventAdminDetail }) {
         columns={[
           {
             id: 'unit',
-            header: 'Flat',
+            header: t('Flat'),
             render: (row) => row.unitLabel,
           },
           {
             id: 'status',
-            header: 'Response',
+            header: t('Response'),
             render: (row) => <EventRsvpChip status={row.status} />,
           },
           {
             id: 'headcount',
-            header: 'People',
+            header: t('People'),
             align: 'right',
-            render: (row) => row.headcount,
+            render: (row) =>
+              formatLocalizedNumber(row.headcount, locale ?? 'en'),
           },
           ...(showCharges
             ? [
                 {
                   id: 'charge',
-                  header: 'Charged',
+                  header: t('Charged'),
                   align: 'right' as const,
                   render: (row: RsvpRow) =>
-                    formatEventMoney(row.netChargePaise),
+                    formatEventMoney(row.netChargePaise, locale),
                 },
               ]
             : []),
           {
             id: 'responded',
-            header: 'Answered by',
+            header: t('Answered by'),
             render: (row) =>
-              `${row.respondedByName ?? 'A resident'} · ${formatEventDateTime(row.respondedAt)} IST`,
+              `${row.respondedByName ?? t('A resident')} · ${formatEventDateTime(row.respondedAt, locale)} IST`,
           },
         ]}
       />
@@ -392,55 +444,63 @@ export function EventAdminDetailView({
   actions: EventAdminActions;
   backHref?: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const { event, totals } = detail;
   return (
     <section className="grid min-w-0 gap-space-4">
       <Link className={EVENT_LINK_CLASS} href={backHref}>
-        Back to Events
+        {t('Back to Events')}
       </Link>
       <div className="flex flex-wrap items-center gap-space-2">
         <h1 className="text-title font-semibold break-words">{event.title}</h1>
         <EventStatusChip status={event.status} past={event.past} />
       </div>
       {event.status === 'cancelled' ? (
-        <Banner title="This event was cancelled" tone="warning">
-          {event.cancellationReason ?? 'No reason was recorded.'}
+        <Banner title={t('This event was cancelled')} tone="warning">
+          {event.cancellationReason ?? t('No reason was recorded.')}
         </Banner>
       ) : null}
       {event.contributionType !== 'none' &&
       !detail.billingEnabled &&
       event.status !== 'cancelled' ? (
-        <Banner title="Billing is turned off" tone="warning">
-          This event has a contribution. It cannot be published, and residents
-          cannot RSVP going, until Billing is turned on.
+        <Banner title={t('Billing is turned off')} tone="warning">
+          {t(
+            'This event has a contribution. It cannot be published, and residents cannot RSVP going, until Billing is turned on.',
+          )}
         </Banner>
       ) : null}
-      <Card title="When and where">
+      <Card title={t('When and where')}>
         <dl className="grid gap-space-2 text-body">
           <div>
-            <dt className="text-caption text-ink-muted">Starts (IST)</dt>
-            <dd>{formatEventDateTime(event.startsAt)}</dd>
+            <dt className="text-caption text-ink-muted">{t('Starts (IST)')}</dt>
+            <dd>{formatEventDateTime(event.startsAt, locale)}</dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Ends (IST)</dt>
-            <dd>{formatEventDateTime(event.endsAt)}</dd>
+            <dt className="text-caption text-ink-muted">{t('Ends (IST)')}</dt>
+            <dd>{formatEventDateTime(event.endsAt, locale)}</dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Venue</dt>
-            <dd className="break-words">{event.venue ?? 'Not set'}</dd>
+            <dt className="text-caption text-ink-muted">{t('Venue')}</dt>
+            <dd className="break-words">{event.venue ?? t('Not set')}</dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">RSVP deadline (IST)</dt>
+            <dt className="text-caption text-ink-muted">
+              {t('RSVP deadline (IST)')}
+            </dt>
             <dd>
               {event.rsvpDeadline
-                ? formatEventDateTime(event.rsvpDeadline)
-                : 'When the event starts'}
+                ? formatEventDateTime(event.rsvpDeadline, locale)
+                : t('When the event starts')}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Who is invited</dt>
+            <dt className="text-caption text-ink-muted">
+              {t('Who is invited')}
+            </dt>
             <dd className="break-words">
-              {audienceText(event.audience, blocks)}
+              {audienceText(event.audience, blocks, locale)}
             </dd>
           </div>
         </dl>
@@ -450,62 +510,85 @@ export function EventAdminDetailView({
           </p>
         ) : null}
       </Card>
-      <Card title="Limits and contribution">
+      <Card title={t('Limits and contribution')}>
         <dl className="grid gap-space-2 text-body">
           <div>
-            <dt className="text-caption text-ink-muted">Capacity</dt>
+            <dt className="text-caption text-ink-muted">{t('Capacity')}</dt>
             <dd>
               {event.capacity === null
-                ? 'No limit'
-                : `${event.capacity} people`}
+                ? t('No limit')
+                : t('{count} people', { count: number(event.capacity) })}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Limit per flat</dt>
+            <dt className="text-caption text-ink-muted">
+              {t('Limit per flat')}
+            </dt>
             <dd>
               {event.maxPerUnit === null
-                ? 'No limit'
-                : `${event.maxPerUnit} ${event.maxPerUnit === 1 ? 'person' : 'people'}`}
+                ? t('No limit')
+                : t(
+                    event.maxPerUnit === 1
+                      ? '{count} person'
+                      : '{count} people',
+                    { count: number(event.maxPerUnit) },
+                  )}
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Contribution</dt>
+            <dt className="text-caption text-ink-muted">{t('Contribution')}</dt>
             <dd>
               {describeContribution(
                 event.contributionType,
                 event.contributionPaise,
+                locale,
               )}
             </dd>
           </div>
         </dl>
       </Card>
       {event.status !== 'draft' ? (
-        <Card title="Totals">
+        <Card title={t('Totals')}>
           <dl className="grid gap-space-3 text-body medium:grid-cols-2">
             <div>
-              <dt className="text-caption text-ink-muted">People going</dt>
+              <dt className="text-caption text-ink-muted">
+                {t('People going')}
+              </dt>
               <dd className="text-body-strong">
-                {totals.goingHeadcount}
-                {event.capacity === null ? '' : ` of ${event.capacity}`}
+                {event.capacity === null
+                  ? number(totals.goingHeadcount)
+                  : t('{count} of {total}', {
+                      count: number(totals.goingHeadcount),
+                      total: number(event.capacity),
+                    })}
               </dd>
             </div>
             <div>
-              <dt className="text-caption text-ink-muted">Flats going</dt>
+              <dt className="text-caption text-ink-muted">
+                {t('Flats going')}
+              </dt>
               <dd className="text-body-strong">
-                {totals.goingUnits} of {totals.audienceUnits} invited
+                {t('{count} of {total} invited', {
+                  count: number(totals.goingUnits),
+                  total: number(totals.audienceUnits),
+                })}
               </dd>
             </div>
             <div>
-              <dt className="text-caption text-ink-muted">Flats not going</dt>
-              <dd className="text-body-strong">{totals.notGoingUnits}</dd>
+              <dt className="text-caption text-ink-muted">
+                {t('Flats not going')}
+              </dt>
+              <dd className="text-body-strong">
+                {number(totals.notGoingUnits)}
+              </dd>
             </div>
             {event.contributionType !== 'none' ? (
               <div>
                 <dt className="text-caption text-ink-muted">
-                  Contributions on bills
+                  {t('Contributions on bills')}
                 </dt>
                 <dd className="text-body-strong">
-                  {formatEventMoney(totals.collectedPaise)}
+                  {formatEventMoney(totals.collectedPaise, locale)}
                 </dd>
               </div>
             ) : null}

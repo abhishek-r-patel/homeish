@@ -6,6 +6,9 @@ import { useCallback, useRef, useState, useTransition } from 'react';
 import type { ReactNode, FormEvent } from 'react';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import { CodeDisplay } from '@/components/ui/data-display';
+import { useLanguage } from '@/components/language-provider';
+import { createComponentTranslator } from '@/core/i18n/catalogs/hi-components';
+import { formatLocalizedDateTime } from '@/core/i18n/format';
 import { QrScanner } from './qr-scanner';
 
 export type VisitorFormAction = (
@@ -34,6 +37,18 @@ function isVisitorApprovalView(value: unknown): value is VisitorApprovalView {
   );
 }
 
+function formatVisitorDateTime(
+  value: string,
+  locale: 'en' | 'hi',
+  timeZone?: string,
+) {
+  return formatLocalizedDateTime(new Date(value), locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    ...(timeZone ? { timeZone } : {}),
+  });
+}
+
 export function VisitorActionForm({
   action,
   children,
@@ -45,6 +60,8 @@ export function VisitorActionForm({
   className?: string;
   requestIdStorageKey?: string;
 }) {
+  const { locale, translate } = useLanguage();
+  const t = createComponentTranslator(locale, translate);
   const formRef = useRef<HTMLFormElement>(null);
   const [result, setResult] = useState<ServerActionResult<unknown> | null>(
     null,
@@ -125,7 +142,7 @@ export function VisitorActionForm({
           onClick={startAnotherEntry}
           type="button"
         >
-          Log another visitor
+          {t('Log another visitor')}
         </button>
       ) : null}
       {formMessage ? (
@@ -134,7 +151,7 @@ export function VisitorActionForm({
           className="text-caption text-danger"
           role="status"
         >
-          {formMessage}
+          {t(formMessage)}
         </p>
       ) : null}
       {result ? (
@@ -143,18 +160,20 @@ export function VisitorActionForm({
           className={`text-caption ${result.ok ? 'text-ink-muted' : 'text-danger'}`}
           role="status"
         >
-          {result.message}
+          {result.message ? t(result.message) : ''}
           {!result.ok && result.referenceId
-            ? ` Reference: ${result.referenceId}`
+            ? ` ${t('Reference:')} ${result.referenceId}`
             : ''}
         </p>
       ) : null}
       {approval ? (
         <CodeDisplay
-          label={`Entry code for ${approval.visitor_name ?? 'visitor'}`}
+          label={t('Entry code for {visitor}', {
+            visitor: approval.visitor_name ?? t('visitor'),
+          })}
           qrCode={
             <Image
-              alt="QR code for the visitor entry code"
+              alt={t('QR code for the visitor entry code')}
               height={192}
               src={approval.qrCode}
               unoptimized
@@ -164,19 +183,20 @@ export function VisitorActionForm({
           singleUse
           validity={
             approval.valid_to
-              ? `Valid until ${new Date(approval.valid_to).toLocaleString(
-                  undefined,
-                  approval.timezone
-                    ? { timeZone: approval.timezone }
-                    : undefined,
-                )}`
+              ? t('Valid until {date}', {
+                  date: formatVisitorDateTime(
+                    approval.valid_to,
+                    locale,
+                    approval.timezone,
+                  ),
+                })
               : undefined
           }
           value={approval.code}
         />
       ) : null}
       <span aria-live="polite" className="sr-only" role="status">
-        {pending ? 'Working…' : ''}
+        {pending ? t('Working…') : ''}
       </span>
     </form>
   );
@@ -189,10 +209,15 @@ export function VisitorCodeControl({
   checkInAction: VisitorFormAction;
   validateAction: VisitorFormAction;
 }) {
+  const { locale, translate } = useLanguage();
+  const t = createComponentTranslator(locale, translate);
   const [code, setCode] = useState('');
   const [validation, setValidation] =
     useState<ServerActionResult<unknown> | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{
+    source: string;
+    referenceId?: string;
+  } | null>(null);
   const [scanning, setScanning] = useState(false);
   const [pending, startTransition] = useTransition();
   const acceptScannedCode = useCallback((rawCode: string) => {
@@ -244,11 +269,14 @@ export function VisitorCodeControl({
     formData.set('code', code);
     startTransition(async () => {
       const result = await checkInAction(formData);
-      setMessage(
-        result.ok
+      setMessage({
+        source: result.ok
           ? (result.message ?? 'Visitor checked in.')
-          : `${result.message}${result.referenceId ? ` Reference: ${result.referenceId}` : ''}`,
-      );
+          : result.message,
+        ...(result.ok || !result.referenceId
+          ? {}
+          : { referenceId: result.referenceId }),
+      });
       if (result.ok) {
         setCode('');
         setValidation(null);
@@ -263,7 +291,7 @@ export function VisitorCodeControl({
           className="grid gap-space-1 text-body-strong"
           htmlFor="visitor-code"
         >
-          Visitor code
+          {t('Visitor code')}
           <input
             autoComplete="one-time-code"
             className="min-h-12 rounded-md border border-rule px-space-3 text-center text-title tracking-[0.3em]"
@@ -285,7 +313,7 @@ export function VisitorCodeControl({
           disabled={pending}
           type="submit"
         >
-          Check code
+          {t('Check code')}
         </button>
       </form>
       <button
@@ -293,7 +321,7 @@ export function VisitorCodeControl({
         onClick={() => setScanning((value) => !value)}
         type="button"
       >
-        {scanning ? 'Stop camera' : 'Scan QR code'}
+        {scanning ? t('Stop camera') : t('Scan QR code')}
       </button>
       <QrScanner active={scanning} onCode={acceptScannedCode} />
       {validation ? (
@@ -303,29 +331,27 @@ export function VisitorCodeControl({
           role="status"
         >
           {validation.ok && reason === 'valid'
-            ? `Valid pre-approval for ${visitorName ?? 'visitor'}.`
+            ? t('Valid pre-approval for {visitor}.', {
+                visitor: visitorName ?? t('visitor'),
+              })
             : reason === 'expired'
-              ? 'This visitor code has expired.'
+              ? t('This visitor code has expired.')
               : reason === 'already_used'
-                ? 'This visitor code has already been used.'
+                ? t('This visitor code has already been used.')
                 : validation.ok
-                  ? 'This visitor code is invalid.'
-                  : `${validation.message}${validation.referenceId ? ` Reference: ${validation.referenceId}` : ''}`}
+                  ? t('This visitor code is invalid.')
+                  : `${t(validation.message)}${validation.referenceId ? ` ${t('Reference:')} ${validation.referenceId}` : ''}`}
         </p>
       ) : null}
       {validation?.ok && reason === 'valid' ? (
         <>
           <div className="grid gap-space-1 text-caption text-ink-muted">
-            {unitLabel ? <p>Unit: {unitLabel}</p> : null}
+            {unitLabel ? <p>{t('Unit: {unit}', { unit: unitLabel })}</p> : null}
             {validFrom && validTo ? (
               <p>
-                Valid{' '}
-                {new Date(validFrom).toLocaleString(undefined, {
-                  timeZone: timezone,
-                })}
-                {' – '}
-                {new Date(validTo).toLocaleString(undefined, {
-                  timeZone: timezone,
+                {t('Valid {from} – {to}', {
+                  from: formatVisitorDateTime(validFrom, locale, timezone),
+                  to: formatVisitorDateTime(validTo, locale, timezone),
                 })}
               </p>
             ) : null}
@@ -336,7 +362,7 @@ export function VisitorCodeControl({
             onClick={checkIn}
             type="button"
           >
-            Check in visitor
+            {t('Check in visitor')}
           </button>
         </>
       ) : null}
@@ -346,7 +372,10 @@ export function VisitorCodeControl({
           className="text-body text-ink-muted"
           role="status"
         >
-          {message}
+          {t(message.source)}
+          {message.referenceId
+            ? ` ${t('Reference:')} ${message.referenceId}`
+            : ''}
         </p>
       ) : null}
     </div>

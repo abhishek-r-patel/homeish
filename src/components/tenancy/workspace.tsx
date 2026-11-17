@@ -7,9 +7,6 @@ import {
   TENANCY_DOCUMENT_LABELS,
   TENANCY_EVENT_LABELS,
   TENANCY_KIND_LABELS,
-  formatTenancyBalance,
-  formatTenancyDate,
-  formatTenancyTimestamp,
   isTenancyOpen,
   tenancyProofsReady,
 } from '@/core/tenancy/moves/presentation';
@@ -45,6 +42,7 @@ import {
   type TenancyActions,
 } from './controls';
 import { TenancyDocumentLink, TenancyProofUpload } from './documents';
+import { useTenancyPresentation } from './presentation';
 
 export type TenancyAudience = 'resident' | 'management' | 'guard';
 export type TenancyRouteStateKind =
@@ -65,6 +63,7 @@ export function TenancyRouteState({
   message?: string;
   onRetry?: () => void;
 }) {
+  const { t, translateFeedback } = useTenancyPresentation();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage
@@ -101,33 +100,35 @@ export function TenancyRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">Move-in / Move-out</h1>
+      <h1 className="text-title font-semibold">{t('Move-in / Move-out')}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={message ? translateFeedback(message) : t(copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
               {onRetry ? (
-                <Button onClick={onRetry}>Retry</Button>
+                <Button onClick={onRetry}>{t('Retry')}</Button>
               ) : retryHref ? (
                 <a
                   href={retryHref}
                   className="inline-flex min-h-12 items-center text-brand underline"
                 >
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a
                 href={returnHref}
                 className="inline-flex min-h-12 items-center text-brand underline"
               >
-                {kind === 'invalid_filters'
-                  ? 'Clear filters'
-                  : 'Back to workspace'}
+                {t(
+                  kind === 'invalid_filters'
+                    ? 'Clear filters'
+                    : 'Back to workspace',
+                )}
               </a>
             </div>
           }
@@ -160,6 +161,7 @@ export function TenancyWorkspaceView({
   onPageChange?: (offset: number, size: PageSize) => void;
   getMoveHref?: (id: string) => string;
 }) {
+  const { t, time } = useTenancyPresentation();
   const id = useId();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -196,24 +198,28 @@ export function TenancyWorkspaceView({
     >
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">
-          {audience === 'guard' ? 'Moving schedule' : 'Move-in / Move-out'}
+          {t(audience === 'guard' ? 'Moving schedule' : 'Move-in / Move-out')}
         </h1>
         <p className="text-body text-ink-muted">
-          Approval schedules a move. Only an administrator confirming the actual
-          move changes household access.
+          {t(
+            'Approval schedules a move. Only an administrator confirming the actual move changes household access.',
+          )}
         </p>
       </header>
       {audience === 'guard' ||
       (audience === 'management' && !workspace.can_manage) ? (
         <Banner tone="neutral">
-          Read-only schedule. {workspace.unit_label}, date, time and status
-          only; tenant identities and private documents are not included.
+          {t(
+            'Read-only schedule. {unitLabel}, date, time and status only; tenant identities and private documents are not included.',
+            { unitLabel: workspace.unit_label },
+          )}
         </Banner>
       ) : null}
       {!workspace.can_write ? (
         <Banner tone="warning">
-          This society is read-only. You can view permitted history, but no
-          moving details or access can be changed.
+          {t(
+            'This society is read-only. You can view permitted history, but no moving details or access can be changed.',
+          )}
         </Banner>
       ) : null}
       {canCreate && workspace.can_write ? (
@@ -225,8 +231,11 @@ export function TenancyWorkspaceView({
         />
       ) : null}
       <Card
-        title="Moving schedule"
-        description={`Times are shown in ${workspace.timezone}. Latest moving dates are listed first.`}
+        title={t('Moving schedule')}
+        description={t(
+          'Times are shown in {timezone}. Latest moving dates are listed first.',
+          { timezone: workspace.timezone },
+        )}
       >
         <div className="grid min-w-0 gap-space-4" aria-busy={pending}>
           <FilterBar
@@ -235,7 +244,7 @@ export function TenancyWorkspaceView({
                 ? [
                     {
                       id: 'status',
-                      label: statusMap[`tenancy.${status}`].label,
+                      label: t(statusMap[`tenancy.${status}`].label),
                     },
                   ]
                 : []
@@ -245,13 +254,13 @@ export function TenancyWorkspaceView({
           >
             <SelectInput
               id={`${id}-status`}
-              label="Move status"
+              label={t('Move status')}
               value={status ?? ''}
               options={[
-                { value: '', label: 'All statuses' },
+                { value: '', label: t('All statuses') },
                 ...TENANCY_STATUSES.map((value) => ({
                   value,
-                  label: statusMap[`tenancy.${value}`].label,
+                  label: t(statusMap[`tenancy.${value}`].label),
                 })),
               ]}
               onChange={(event) =>
@@ -265,16 +274,16 @@ export function TenancyWorkspaceView({
           </FilterBar>
           {pending ? (
             <p role="status" className="text-caption text-ink-muted">
-              Updating the moving schedule...
+              {t('Updating the moving schedule...')}
             </p>
           ) : null}
           {page.items.length ? (
             <DataTable
-              caption="Moving schedule"
+              caption={t('Moving schedule')}
               rows={page.items}
               getRowId={(row) => row.id}
               getRowLabel={(row) =>
-                `${workspace.unit_label} ${row.unit_number} ${TENANCY_KIND_LABELS[row.kind]}`
+                `${workspace.unit_label} ${row.unit_number} ${t(TENANCY_KIND_LABELS[row.kind])}`
               }
               getRowHref={(row) =>
                 privateDetails && row.can_view_details
@@ -282,10 +291,13 @@ export function TenancyWorkspaceView({
                   : undefined
               }
               mobilePrimary={(row) =>
-                `${workspace.unit_label} ${row.unit_number}: ${TENANCY_KIND_LABELS[row.kind]}`
+                `${workspace.unit_label} ${row.unit_number}: ${t(TENANCY_KIND_LABELS[row.kind])}`
               }
               mobileSecondary={(row) =>
-                `${formatTenancyTimestamp(row.starts_at, workspace.timezone)} to ${formatTenancyTimestamp(row.ends_at, workspace.timezone)}`
+                t('{start} to {end}', {
+                  start: time(row.starts_at, workspace.timezone),
+                  end: time(row.ends_at, workspace.timezone),
+                })
               }
               mobileStatus={(row) => `tenancy.${row.status}`}
               columns={[
@@ -296,24 +308,22 @@ export function TenancyWorkspaceView({
                 },
                 {
                   id: 'kind',
-                  header: 'Move',
-                  render: (row) => TENANCY_KIND_LABELS[row.kind],
+                  header: t('Move'),
+                  render: (row) => t(TENANCY_KIND_LABELS[row.kind]),
                 },
                 {
                   id: 'start',
-                  header: 'From',
-                  render: (row) =>
-                    formatTenancyTimestamp(row.starts_at, workspace.timezone),
+                  header: t('From'),
+                  render: (row) => time(row.starts_at, workspace.timezone),
                 },
                 {
                   id: 'end',
-                  header: 'To',
-                  render: (row) =>
-                    formatTenancyTimestamp(row.ends_at, workspace.timezone),
+                  header: t('To'),
+                  render: (row) => time(row.ends_at, workspace.timezone),
                 },
                 {
                   id: 'status',
-                  header: 'Status',
+                  header: t('Status'),
                   render: (row) => (
                     <StatusChip status={`tenancy.${row.status}`} />
                   ),
@@ -322,30 +332,30 @@ export function TenancyWorkspaceView({
             />
           ) : (
             <EmptyState
-              title={
+              title={t(
                 page.offset > 0
                   ? 'This page is empty'
                   : status
                     ? 'No matching move requests'
-                    : 'No move requests yet'
-              }
-              description={
+                    : 'No move requests yet',
+              )}
+              description={t(
                 page.offset > 0
                   ? 'The schedule may have changed. Return to the first page.'
                   : status
                     ? 'No requests match this status. Clear the filter to see other requests.'
                     : canCreate
                       ? 'Create a request above when a tenant is ready to move.'
-                      : 'An administrator will add approved moving requests here.'
-              }
+                      : 'An administrator will add approved moving requests here.',
+              )}
               action={
                 page.offset > 0 ? (
                   <Button variant="secondary" onClick={() => paginate(0, size)}>
-                    First Page
+                    {t('First Page')}
                   </Button>
                 ) : status ? (
                   <Button variant="secondary" onClick={() => filter(null)}>
-                    Clear Filters
+                    {t('Clear Filters')}
                   </Button>
                 ) : undefined
               }
@@ -382,35 +392,41 @@ function TenancyDues({
   detail: TenancyMoveDetail;
   timezone: string;
 }) {
+  const { t, time, balance } = useTenancyPresentation();
   const dues = detail.dues;
   if (!dues) return null;
   if (dues.status === 'not_checked')
     return (
-      <Banner tone="warning" title="Dues: Not checked">
-        Billing is disabled. This is not a zero balance or a clearance
-        certificate. The NOC will explicitly record that dues were not checked.
+      <Banner tone="warning" title={t('Dues: Not checked')}>
+        {t(
+          'Billing is disabled. This is not a zero balance or a clearance certificate. The NOC will explicitly record that dues were not checked.',
+        )}
       </Banner>
     );
   return (
     <Banner
       tone={dues.status === 'pending' ? 'danger' : 'success'}
-      title={
+      title={t(
         dues.status === 'pending'
           ? 'Dues outstanding'
-          : 'Dues cleared at last check'
-      }
+          : 'Dues cleared at last check',
+      )}
     >
       <p>
-        Authoritative household balance:{' '}
-        {formatTenancyBalance(dues.balance_paise)}.
+        {t('Authoritative household balance: {amount}.', {
+          amount: balance(dues.balance_paise),
+        })}
       </p>
       <p>
-        Checked: {formatTenancyTimestamp(dues.checked_at, timezone)}. Completion
-        and NOC issue recheck the balance.
+        {t('Checked: {date}. Completion and NOC issue recheck the balance.', {
+          date: time(dues.checked_at, timezone),
+        })}
       </p>
       {dues.status === 'pending' ? (
         <p>
-          Positive dues block completion and NOC issue. There is no override.
+          {t(
+            'Positive dues block completion and NOC issue. There is no override.',
+          )}
         </p>
       ) : null}
     </Banner>
@@ -434,6 +450,7 @@ export function TenancyMoveView({
   backHref?: string;
   fileRequest?: typeof fetch;
 }) {
+  const { t, date, time } = useTenancyPresentation();
   const move = detail.move;
   const open = isTenancyOpen(move.status);
   const proofsReady = tenancyProofsReady(detail);
@@ -448,11 +465,11 @@ export function TenancyMoveView({
         className="inline-flex min-h-12 w-fit items-center text-brand underline"
         href={backHref ?? baseHref}
       >
-        Back to moving schedule
+        {t('Back to moving schedule')}
       </a>
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">
-          {TENANCY_KIND_LABELS[move.kind]}: {workspace.unit_label}{' '}
+          {t(TENANCY_KIND_LABELS[move.kind])}: {workspace.unit_label}{' '}
           {move.unit_number}
         </h1>
         <div>
@@ -461,77 +478,86 @@ export function TenancyMoveView({
       </header>
       {!canWrite ? (
         <Banner tone="warning">
-          This society is read-only. Private history remains available to
-          permitted members; no changes can be saved.
+          {t(
+            'This society is read-only. Private history remains available to permitted members; no changes can be saved.',
+          )}
         </Banner>
       ) : null}
-      <Card title="Request details">
+      <Card title={t('Request details')}>
         <dl className="grid min-w-0 gap-space-3 text-body">
           <div>
-            <dt className="text-caption text-ink-muted">Tenant</dt>
+            <dt className="text-caption text-ink-muted">{t('Tenant')}</dt>
             <dd>{detail.tenant_name}</dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Moving window</dt>
+            <dt className="text-caption text-ink-muted">
+              {t('Moving window')}
+            </dt>
             <dd>
-              {formatTenancyTimestamp(move.starts_at, workspace.timezone)} to{' '}
-              {formatTenancyTimestamp(move.ends_at, workspace.timezone)}
+              {t('{start} to {end}', {
+                start: time(move.starts_at, workspace.timezone),
+                end: time(move.ends_at, workspace.timezone),
+              })}
             </dd>
           </div>
           {detail.agreement_expires_on ? (
             <div>
               <dt className="text-caption text-ink-muted">
-                Rental agreement expiry
+                {t('Rental agreement expiry')}
               </dt>
-              <dd>{formatTenancyDate(detail.agreement_expires_on)}</dd>
+              <dd>{date(detail.agreement_expires_on)}</dd>
             </div>
           ) : null}
           {detail.amenity_booking_id ? (
             <div>
-              <dt className="text-caption text-ink-muted">Amenity</dt>
+              <dt className="text-caption text-ink-muted">{t('Amenity')}</dt>
               <dd>
-                An existing confirmed booking is linked. This request does not
-                reserve an amenity.
+                {t(
+                  'An existing confirmed booking is linked. This request does not reserve an amenity.',
+                )}
               </dd>
             </div>
           ) : null}
           {detail.completed_at ? (
             <div>
-              <dt className="text-caption text-ink-muted">Actual completion</dt>
-              <dd>
-                {formatTenancyTimestamp(
-                  detail.completed_at,
-                  workspace.timezone,
-                )}
-              </dd>
+              <dt className="text-caption text-ink-muted">
+                {t('Actual completion')}
+              </dt>
+              <dd>{time(detail.completed_at, workspace.timezone)}</dd>
             </div>
           ) : null}
         </dl>
         <p className="mt-space-4 text-caption text-ink-muted">
-          No move fee or deposit. Core household and financial history is
-          preserved.
+          {t(
+            'No move fee or deposit. Core household and financial history is preserved.',
+          )}
         </p>
       </Card>
       {move.status === 'approved' ? (
-        <Banner tone="info" title="Scheduled, not completed">
-          Approval has not changed tenant access. An administrator must confirm
-          the actual move during the approved window.
+        <Banner tone="info" title={t('Scheduled, not completed')}>
+          {t(
+            'Approval has not changed tenant access. An administrator must confirm the actual move during the approved window.',
+          )}
         </Banner>
       ) : move.status === 'completed' ? (
-        <Banner tone="success" title="Actual move completed">
-          {move.kind === 'move_in'
-            ? 'Core tenant occupancy was activated when this move was completed.'
-            : 'Core tenant occupancy was ended when this move was completed.'}
+        <Banner tone="success" title={t('Actual move completed')}>
+          {t(
+            move.kind === 'move_in'
+              ? 'Core tenant occupancy was activated when this move was completed.'
+              : 'Core tenant occupancy was ended when this move was completed.',
+          )}
         </Banner>
       ) : null}
       {move.kind === 'move_in' ? (
-        <Card title="Owner consent">
+        <Card title={t('Owner consent')}>
           <p className="text-body">
-            {detail.owner_consent_valid
-              ? 'Consent from an active owner is recorded.'
-              : move.status === 'completed'
-                ? 'The move was completed with the required owner consent. Current ownership may have changed.'
-                : 'One active owner must consent after all required proofs are attached. An administrator cannot bypass this.'}
+            {t(
+              detail.owner_consent_valid
+                ? 'Consent from an active owner is recorded.'
+                : move.status === 'completed'
+                  ? 'The move was completed with the required owner consent. Current ownership may have changed.'
+                  : 'One active owner must consent after all required proofs are attached. An administrator cannot bypass this.',
+            )}
           </p>
           {open && canWrite && detail.can_consent && proofsReady ? (
             <div className="mt-space-3">
@@ -544,20 +570,23 @@ export function TenancyMoveView({
           ) : null}
           {open && !proofsReady ? (
             <p className="mt-space-2 text-caption text-ink-muted">
-              Attach all required proofs before requesting consent.
+              {t('Attach all required proofs before requesting consent.')}
             </p>
           ) : null}
         </Card>
       ) : null}
       <TenancyDues detail={detail} timezone={workspace.timezone} />
       <Card
-        title="Private documents"
-        description="Only the tenant, active household owners and administrators can access these files. Never upload Aadhaar or other government ID copies."
+        title={t('Private documents')}
+        description={t(
+          'Only the tenant, active household owners and administrators can access these files. Never upload Aadhaar or other government ID copies.',
+        )}
       >
         <div className="grid min-w-0 gap-space-4">
           <p className="text-caption text-ink-muted">
-            Files and NOCs are retained for one year after move-out, or 30 days
-            after rejection or cancellation. Expired files are not available.
+            {t(
+              'Files and NOCs are retained for one year after move-out, or 30 days after rejection or cancellation. Expired files are not available.',
+            )}
           </p>
           {detail.documents.length ? (
             detail.documents.map((document) => (
@@ -566,25 +595,23 @@ export function TenancyMoveView({
                 className="grid gap-space-2 rounded-md border border-rule p-space-3"
               >
                 <p className="text-body-strong">
-                  {TENANCY_DOCUMENT_LABELS[document.kind]}
+                  {t(TENANCY_DOCUMENT_LABELS[document.kind])}
                 </p>
                 <p className="text-caption text-ink-muted">
-                  Attached{' '}
-                  {formatTenancyTimestamp(
-                    document.created_at,
-                    workspace.timezone,
-                  )}
+                  {t('Attached {date}', {
+                    date: time(document.created_at, workspace.timezone),
+                  })}
                 </p>
                 <TenancyDocumentLink
                   request={fileRequest}
                   path={document.path}
-                  label={TENANCY_DOCUMENT_LABELS[document.kind]}
+                  label={t(TENANCY_DOCUMENT_LABELS[document.kind])}
                 />
               </div>
             ))
           ) : (
             <p className="text-body text-ink-muted">
-              No retained documents are attached.
+              {t('No retained documents are attached.')}
             </p>
           )}
           {move.kind === 'move_in' && open && canWrite ? (
@@ -612,7 +639,9 @@ export function TenancyMoveView({
               ) : null}
               {!detail.police_verification_required ? (
                 <p className="text-caption text-ink-muted">
-                  Police-verification proof is not required by this society.
+                  {t(
+                    'Police-verification proof is not required by this society.',
+                  )}
                 </p>
               ) : null}
             </>
@@ -624,8 +653,9 @@ export function TenancyMoveView({
           !noc ? (
             <>
               <p className="text-body">
-                An administrator can issue the approved move-out NOC. The file
-                records dues status at issue; current dues are checked again.
+                {t(
+                  'An administrator can issue the approved move-out NOC. The file records dues status at issue; current dues are checked again.',
+                )}
               </p>
               {!positiveDues ? (
                 <TenancyDecisionControl
@@ -635,7 +665,9 @@ export function TenancyMoveView({
                 />
               ) : (
                 <p className="text-caption text-danger">
-                  Clear the positive balance and refresh before issuing the NOC.
+                  {t(
+                    'Clear the positive balance and refresh before issuing the NOC.',
+                  )}
                 </p>
               )}
             </>
@@ -643,7 +675,7 @@ export function TenancyMoveView({
         </div>
       </Card>
       {canWrite && open ? (
-        <Card title="Next actions">
+        <Card title={t('Next actions')}>
           <div className="grid gap-space-3">
             {canManage &&
             ['awaiting_consent', 'pending_review'].includes(move.status) &&
@@ -668,21 +700,23 @@ export function TenancyMoveView({
             ) : null}
             {canManage && move.status === 'approved' && positiveDues ? (
               <p className="text-body text-danger">
-                Clear the positive balance and refresh before confirming actual
-                completion.
+                {t(
+                  'Clear the positive balance and refresh before confirming actual completion.',
+                )}
               </p>
             ) : null}
             {canManage && move.kind === 'move_in' && !consentReady ? (
               <p className="text-body">
-                Waiting for valid consent from an active owner. If recorded
-                consent is no longer valid, cancel this request and create a new
-                one; there is no bypass.
+                {t(
+                  'Waiting for valid consent from an active owner. If recorded consent is no longer valid, cancel this request and create a new one; there is no bypass.',
+                )}
               </p>
             ) : null}
             {canManage && !proofsReady ? (
               <p className="text-body">
-                Required proofs must be attached before scheduling or
-                completion.
+                {t(
+                  'Required proofs must be attached before scheduling or completion.',
+                )}
               </p>
             ) : null}
             {canManage ? (
@@ -701,16 +735,19 @@ export function TenancyMoveView({
             ) : null}
             {!canManage && !detail.can_cancel ? (
               <p className="text-body text-ink-muted">
-                An administrator reviews the schedule and confirms actual
-                completion.
+                {t(
+                  'An administrator reviews the schedule and confirms actual completion.',
+                )}
               </p>
             ) : null}
           </div>
         </Card>
       ) : null}
       <Card
-        title="Request timeline"
-        description="History is preserved. Approval and actual completion are separate events."
+        title={t('Request timeline')}
+        description={t(
+          'History is preserved. Approval and actual completion are separate events.',
+        )}
       >
         <ol className="grid min-w-0 gap-space-4">
           {detail.events.map((event) => (
@@ -719,11 +756,10 @@ export function TenancyMoveView({
               className="grid gap-space-1 border-b border-rule pb-space-3"
             >
               <p className="text-body-strong">
-                {TENANCY_EVENT_LABELS[event.action]}
+                {t(TENANCY_EVENT_LABELS[event.action])}
               </p>
               <p className="text-caption text-ink-muted">
-                {event.actor_name},{' '}
-                {formatTenancyTimestamp(event.created_at, workspace.timezone)}
+                {event.actor_name}, {time(event.created_at, workspace.timezone)}
               </p>
               {event.reason ? (
                 <p className="whitespace-pre-wrap text-body">{event.reason}</p>
@@ -732,6 +768,9 @@ export function TenancyMoveView({
           ))}
         </ol>
       </Card>
+      <p className="text-caption text-ink-muted">
+        {t('NOCs and other generated documents remain in English.')}
+      </p>
     </section>
   );
 }

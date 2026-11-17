@@ -20,6 +20,8 @@ function requestContext(
     enabledModules: new Set(['core', 'visitor']),
     isDeveloper: false,
     isDeveloperAccount: false,
+    isHindiEnabled: false,
+    languagePreference: 'en',
     mfaVerified: false,
     logger: {
       debug: vi.fn(),
@@ -46,6 +48,20 @@ describe('permission maps', () => {
         visitor: { 'visitor:manage': ['guard'] },
       }),
     ).toBe(false);
+  });
+
+  it('allows admins and committee to read language settings, but only admins to manage them', () => {
+    expect(hasPermission(['admin'], 'language', 'language:read')).toBe(true);
+    expect(hasPermission(['committee'], 'language', 'language:read')).toBe(
+      true,
+    );
+    expect(hasPermission(['resident'], 'language', 'language:read')).toBe(
+      false,
+    );
+    expect(hasPermission(['committee'], 'language', 'language:manage')).toBe(
+      false,
+    );
+    expect(hasPermission(['admin'], 'language', 'language:manage')).toBe(true);
   });
 });
 
@@ -105,6 +121,30 @@ describe('authorization pipeline', () => {
       authorizeRequest(
         requestContext({ isDeveloper: true, mfaVerified: true }),
         { developer: true, requireRecentMfa: true },
+      ),
+    ).not.toThrow();
+  });
+
+  it('requires Language Support to be enabled before changing Hindi availability', () => {
+    expect(() =>
+      authorizeRequest(requestContext({ roles: ['admin'] }), {
+        moduleKey: 'language',
+        permission: 'language:manage',
+        write: true,
+      }),
+    ).toThrowError(expect.objectContaining({ code: 'MODULE_DISABLED' }));
+
+    expect(() =>
+      authorizeRequest(
+        requestContext({
+          enabledModules: new Set(['core', 'language']),
+          roles: ['admin'],
+        }),
+        {
+          moduleKey: 'language',
+          permission: 'language:manage',
+          write: true,
+        },
       ),
     ).not.toThrow();
   });

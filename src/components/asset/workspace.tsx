@@ -6,8 +6,6 @@ import {
   EMPTY_ASSET_FILTERS,
   WARRANTY_FILTER_LABELS,
   filterAssets,
-  formatAssetDate,
-  warrantyText,
   type AssetFilters,
   type WarrantyState,
 } from '@/core/asset/presentation';
@@ -20,7 +18,14 @@ import { Card } from '@/components/ui/data-display';
 import { EmptyState } from '@/components/ui/feedback';
 import { SelectInput } from '@/components/ui/select-input';
 import { FilterBar } from '@/components/ui/table-controls';
-import { ASSET_BASE_HREF, ASSET_LINK_CLASS } from './shared';
+import {
+  ASSET_BASE_HREF,
+  ASSET_LINK_CLASS,
+  assetDisplayDate,
+  assetWarrantyText,
+  useAssetCopy,
+} from './shared';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 
 const WARRANTY_STATES: readonly WarrantyState[] = [
   'active',
@@ -36,21 +41,22 @@ export function AssetWorkspaceView({
   workspace: AssetWorkspace;
   initialFilters?: AssetFilters;
 }) {
+  const { locale, t } = useAssetCopy();
   const id = useId();
   const [filters, setFilters] = useState<AssetFilters>(initialFilters);
   const visible = filterAssets(workspace.assets, filters, workspace.today);
   const categoryName = (categoryId: string) =>
     workspace.categories.find((category) => category.id === categoryId)?.name ??
-    'Category';
+    t('Category');
   const applied = [
     filters.categoryId
       ? { id: 'categoryId', label: categoryName(filters.categoryId) }
       : null,
     filters.status
-      ? { id: 'status', label: ASSET_STATUS_LABELS[filters.status] }
+      ? { id: 'status', label: t(ASSET_STATUS_LABELS[filters.status]) }
       : null,
     filters.warranty
-      ? { id: 'warranty', label: WARRANTY_FILTER_LABELS[filters.warranty] }
+      ? { id: 'warranty', label: t(WARRANTY_FILTER_LABELS[filters.warranty]) }
       : null,
   ].filter((item): item is { id: string; label: string } => item !== null);
   const update = (patch: Partial<AssetFilters>) =>
@@ -59,41 +65,52 @@ export function AssetWorkspaceView({
   return (
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Asset Register</h1>
+        <h1 className="text-title font-semibold">{t('Asset Register')}</h1>
         <p className="text-body text-ink-muted">
-          Society equipment, where it is, its warranty and its maintenance
-          history.{' '}
+          {t(
+            'Society equipment, where it is, its warranty and its maintenance history.',
+          )}
           {workspace.can_manage
-            ? 'Only admins can change the register.'
-            : 'You can view the register; an admin keeps it up to date.'}
+            ? ` ${t('Only admins can change the register.')}`
+            : ` ${t('You can view the register; an admin keeps it up to date.')}`}
         </p>
-        <nav aria-label="Asset register" className="flex flex-wrap gap-space-4">
+        <nav
+          aria-label={t('Asset register')}
+          className="flex flex-wrap gap-space-4"
+        >
           {workspace.can_manage ? (
             <a href={`${ASSET_BASE_HREF}/new`} className={ASSET_LINK_CLASS}>
-              Add an asset
+              {t('Add an asset')}
             </a>
           ) : null}
           <a
             href={`${ASSET_BASE_HREF}/categories`}
             className={ASSET_LINK_CLASS}
           >
-            {workspace.can_manage ? 'Manage categories' : 'View categories'}
+            {t(workspace.can_manage ? 'Manage categories' : 'View categories')}
           </a>
         </nav>
       </header>
       <Card
-        title="Assets"
-        description={`${workspace.assets.length} ${workspace.assets.length === 1 ? 'asset' : 'assets'} recorded. Retired assets are listed last.`}
+        title={t('Assets')}
+        description={t(
+          '{count} assets recorded. Retired assets are listed last.',
+          {
+            count: formatLocalizedNumber(workspace.assets.length, locale),
+          },
+        )}
       >
         {workspace.assets.length === 0 ? (
           <EmptyState
-            title="No assets yet"
+            title={t('No assets yet')}
             description={
               workspace.can_manage
                 ? workspace.categories.some((category) => category.active)
-                  ? 'Add the first asset, such as a lift, pump or generator.'
-                  : 'Add a category first, such as Lifts or Pumps, then add assets.'
-                : 'An admin adds assets to the register.'
+                  ? t('Add the first asset, such as a lift, pump or generator.')
+                  : t(
+                      'Add a category first, such as Lifts or Pumps, then add assets.',
+                    )
+                : t('An admin adds assets to the register.')
             }
           />
         ) : (
@@ -106,21 +123,21 @@ export function AssetWorkspaceView({
               onRemoveFilter={(filterId) =>
                 update({ [filterId]: '' } as Partial<AssetFilters>)
               }
-              searchLabel="Search assets"
+              searchLabel={t('Search assets')}
               searchValue={filters.search}
               onSearchChange={(search) => update({ search })}
             >
               <SelectInput
                 id={`${id}-category`}
-                label="Category"
+                label={t('Category')}
                 value={filters.categoryId}
                 options={[
-                  { value: '', label: 'All categories' },
+                  { value: '', label: t('All categories') },
                   ...workspace.categories.map((category) => ({
                     value: category.id,
                     label: category.active
                       ? category.name
-                      : `${category.name} (inactive)`,
+                      : t('{name} (inactive)', { name: category.name }),
                   })),
                 ]}
                 onChange={(event) =>
@@ -129,13 +146,13 @@ export function AssetWorkspaceView({
               />
               <SelectInput
                 id={`${id}-status`}
-                label="Status"
+                label={t('Status')}
                 value={filters.status}
                 options={[
-                  { value: '', label: 'All statuses' },
+                  { value: '', label: t('All statuses') },
                   ...ASSET_STATUSES.map((status) => ({
                     value: status,
-                    label: ASSET_STATUS_LABELS[status],
+                    label: t(ASSET_STATUS_LABELS[status]),
                   })),
                 ]}
                 onChange={(event) =>
@@ -146,13 +163,13 @@ export function AssetWorkspaceView({
               />
               <SelectInput
                 id={`${id}-warranty`}
-                label="Warranty"
+                label={t('Warranty')}
                 value={filters.warranty}
                 options={[
-                  { value: '', label: 'Any warranty' },
+                  { value: '', label: t('Any warranty') },
                   ...WARRANTY_STATES.map((state) => ({
                     value: state,
-                    label: WARRANTY_FILTER_LABELS[state],
+                    label: t(WARRANTY_FILTER_LABELS[state]),
                   })),
                 ]}
                 onChange={(event) =>
@@ -163,15 +180,23 @@ export function AssetWorkspaceView({
               />
             </FilterBar>
             <p role="status" className="text-caption text-ink-muted">
-              Showing {visible.length} of {workspace.assets.length}.
+              {t('Showing {visible} of {total}.', {
+                visible: formatLocalizedNumber(visible.length, locale),
+                total: formatLocalizedNumber(workspace.assets.length, locale),
+              })}
               {workspace.truncated
-                ? ' Only the first 1,000 assets are loaded, so search and filters cover those assets only.'
+                ? ` ${t(
+                    'Only the first {count} assets are loaded, so search and filters cover those assets only.',
+                    {
+                      count: formatLocalizedNumber(1000, locale),
+                    },
+                  )}`
                 : null}
             </p>
             {visible.length === 0 ? (
               <EmptyState
-                title="No assets match"
-                description="Change the search or clear the filters."
+                title={t('No assets match')}
+                description={t('Change the search or clear the filters.')}
               />
             ) : (
               <ul className="grid gap-space-3">
@@ -188,15 +213,20 @@ export function AssetWorkspaceView({
                     </a>
                     <p className="text-caption break-words text-ink-muted">
                       {asset.category_name} · {asset.location} ·{' '}
-                      {ASSET_STATUS_LABELS[asset.status]}
+                      {t(ASSET_STATUS_LABELS[asset.status])}
                     </p>
                     <p className="text-caption break-words">
-                      {warrantyText(asset.warranty_end_date, workspace.today)}
+                      {assetWarrantyText(
+                        asset.warranty_end_date,
+                        workspace.today,
+                        locale,
+                        t,
+                      )}
                       {asset.last_maintenance_on
-                        ? ` · Last maintained ${formatAssetDate(asset.last_maintenance_on)}`
-                        : ' · No maintenance recorded'}
+                        ? ` · ${t('Last maintained {date}', { date: assetDisplayDate(asset.last_maintenance_on, locale) })}`
+                        : ` · ${t('No maintenance recorded')}`}
                       {workspace.amc_enabled && asset.amc_linked
-                        ? ' · Linked to an AMC'
+                        ? ` · ${t('Linked to an AMC')}`
                         : ''}
                     </p>
                   </li>

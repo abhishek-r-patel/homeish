@@ -11,18 +11,25 @@ import {
   getServiceRequestDetail,
 } from '@/core/service-requests/operations';
 import { setServiceRequestUpvoteAction } from '../actions';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
+import {
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
 
 export const metadata = {
   title: 'Request | Homeish',
   robots: { index: false, follow: false },
 };
 
-function dateTime(value: string) {
-  return new Intl.DateTimeFormat('en-IN', {
+function dateTime(value: string, locale: Locale) {
+  return formatLocalizedDateTime(new Date(value), locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'Asia/Kolkata',
-  }).format(new Date(value));
+  });
 }
 
 export default async function ServiceRequestDetailPage({
@@ -30,6 +37,9 @@ export default async function ServiceRequestDetailPage({
 }: {
   params: Promise<{ requestId: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const { requestId } = await params;
   if (!z.uuid().safeParse(requestId).success) notFound();
   const detail = await getServiceRequestDetail(requestId);
@@ -45,7 +55,7 @@ export default async function ServiceRequestDetailPage({
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
         <Link className="text-body text-brand underline" href={backHref}>
-          Back to requests
+          {t('Back to requests')}
         </Link>
         <div className="flex flex-wrap items-center gap-space-3">
           <h1 className="text-title font-semibold">{request.category_name}</h1>
@@ -60,9 +70,12 @@ export default async function ServiceRequestDetailPage({
         </div>
         <p className="text-body text-ink-muted">
           {request.location_type === 'unit'
-            ? `Unit ${request.unit_number ?? ''}`
-            : 'Common area'}
-          {' · '}Submitted {dateTime(request.created_at)}
+            ? t('Unit {unit}', { unit: request.unit_number ?? '' })
+            : t('Common area')}
+          {' · '}
+          {t('Submitted {date}', {
+            date: dateTime(request.created_at, locale),
+          })}
         </p>
         {request.location_type === 'common_area' ? (
           <ServiceRequestUpvote
@@ -74,26 +87,28 @@ export default async function ServiceRequestDetailPage({
           />
         ) : null}
       </header>
-      <Card className="min-w-0" title="Issue">
+      <Card className="min-w-0" title={t('Issue')}>
         <div className="grid gap-space-3">
           <p className="whitespace-pre-wrap text-body">{request.description}</p>
           <p className="text-caption text-ink-muted">
-            Priority: {request.priority}
+            {t('Priority: {priority}', { priority: request.priority })}
             {request.sla_due_at
-              ? ` · Response target ${dateTime(request.sla_due_at)}`
+              ? ` · ${t('Response target {date}', {
+                  date: dateTime(request.sla_due_at, locale),
+                })}`
               : ''}
           </p>
           <p className="text-caption text-ink-muted">
-            Assigned to:{' '}
+            {t('Assigned to:')}{' '}
             {request.assignee_name ??
               request.assigned_vendor_name ??
-              'Not assigned'}
+              t('Not assigned')}
           </p>
         </div>
       </Card>
       {detail.amc.assetLabel || detail.amc.contracts.length ? (
-        <Card className="min-w-0" title="AMC asset">
-          <p>{detail.amc.assetLabel ?? 'No AMC asset linked.'}</p>
+        <Card className="min-w-0" title={t('AMC asset')}>
+          <p>{detail.amc.assetLabel ?? t('No AMC asset linked.')}</p>
           {detail.capabilities.canManage && detail.amc.contracts.length ? (
             <AmcRequestLinkForm
               requestId={request.id}
@@ -104,7 +119,7 @@ export default async function ServiceRequestDetailPage({
         </Card>
       ) : null}
       {detail.attachments.length ? (
-        <Card className="min-w-0" title="Photos">
+        <Card className="min-w-0" title={t('Photos')}>
           <ul className="grid gap-space-2">
             {detail.attachments.map((attachment, index) => (
               <li key={attachment.id}>
@@ -114,14 +129,16 @@ export default async function ServiceRequestDetailPage({
                   rel="noreferrer"
                   target="_blank"
                 >
-                  View photo {index + 1}
+                  {t('View photo {number}', {
+                    number: formatLocalizedNumber(index + 1, locale),
+                  })}
                 </a>
               </li>
             ))}
           </ul>
         </Card>
       ) : null}
-      <Card className="min-w-0" title="Updates">
+      <Card className="min-w-0" title={t('Updates')}>
         {detail.events.length ? (
           <ol className="grid gap-space-3">
             {detail.events.map((event) => (
@@ -134,30 +151,31 @@ export default async function ServiceRequestDetailPage({
                 </p>
                 {event.note ? <p className="text-body">{event.note}</p> : null}
                 <p className="text-caption text-ink-muted">
-                  {event.actor_name ?? 'Homeish'} · {dateTime(event.created_at)}
+                  {event.actor_name ?? 'Homeish'} ·{' '}
+                  {dateTime(event.created_at, locale)}
                 </p>
               </li>
             ))}
           </ol>
         ) : (
-          <p className="text-body text-ink-muted">No updates yet.</p>
+          <p className="text-body text-ink-muted">{t('No updates yet.')}</p>
         )}
       </Card>
-      <Card className="min-w-0" title="Comments">
+      <Card className="min-w-0" title={t('Comments')}>
         {detail.comments.length ? (
           <ul className="grid gap-space-3">
             {detail.comments.map((comment) => (
               <li className="border-b border-rule pb-space-3" key={comment.id}>
                 <p className="whitespace-pre-wrap text-body">{comment.body}</p>
                 <p className="text-caption text-ink-muted">
-                  {comment.author_name ?? 'Member'} ·{' '}
-                  {dateTime(comment.created_at)}
+                  {comment.author_name ?? t('Member')} ·{' '}
+                  {dateTime(comment.created_at, locale)}
                 </p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-body text-ink-muted">No comments yet.</p>
+          <p className="text-body text-ink-muted">{t('No comments yet.')}</p>
         )}
       </Card>
       <ServiceRequestDetailControls

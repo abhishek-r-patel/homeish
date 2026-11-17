@@ -1,5 +1,7 @@
 // Lay out one QR code per patrol checkpoint on a printable A4 sheet with the name and typed code underneath.
+'use client';
 import Image from 'next/image';
+import { useUiTranslator } from '@/components/ui/language';
 import { formatPatrolCode } from '@/core/patrol/presentation';
 import type { PatrolPrintSheet } from '@/core/patrol/validation';
 import { PatrolPrintButton } from './shared';
@@ -21,14 +23,19 @@ export function PatrolPrintSheetView({
   sheet: PatrolPrintSheet;
   qrCodes: ReadonlyMap<string, string>;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <section className="grid min-w-0 gap-space-5">
       <style>{PRINT_CSS}</style>
       <div className="grid gap-space-3 print:hidden">
-        <h1 className="text-title font-semibold">Patrol QR sheet</h1>
+        <h1 className="text-title font-semibold">{t('Patrol QR sheet')}</h1>
         <p className="text-body">
-          Print on A4, cut along the borders and fix each sticker at its
-          checkpoint. Guards can also type the code under the QR.
+          {t(
+            'Print on A4, cut along the borders and fix each sticker at its checkpoint. Guards can also type the code under the QR.',
+          )}
+        </p>
+        <p className="text-caption text-ink-muted">
+          {t('The printed checkpoint sheet is in English.')}
         </p>
         <div className="flex flex-wrap items-center gap-space-3">
           {sheet.checkpoints.length > 0 ? <PatrolPrintButton /> : null}
@@ -36,16 +43,16 @@ export function PatrolPrintSheetView({
             href="/admin/patrol"
             className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
           >
-            Back to patrol
+            {t('Back to patrol')}
           </a>
         </div>
       </div>
       {sheet.checkpoints.length === 0 ? (
-        <p className="text-body text-ink-muted">
-          There are no active checkpoints to print.
+        <p className="text-body text-ink-muted print:hidden">
+          {t('There are no active checkpoints to print.')}
         </p>
       ) : (
-        <div id="patrol-print-sheet" className="grid gap-space-3">
+        <div id="patrol-print-sheet" className="grid gap-space-3" lang="en">
           <p className="text-caption text-ink-muted">
             {sheet.society_name} · guard patrol checkpoints
           </p>

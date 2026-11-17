@@ -2,7 +2,9 @@
 'use client';
 import Link from 'next/link';
 import { useId, useState } from 'react';
-import { RadioGroup } from '@/components/ui/choice-controls';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
+import { CheckboxInput, RadioGroup } from '@/components/ui/choice-controls';
 import { Card, ListItem, StatusChip } from '@/components/ui/data-display';
 import { Banner, EmptyState } from '@/components/ui/feedback';
 import {
@@ -17,11 +19,7 @@ import {
   COMMUNITY_MUTE_DURATION_LABELS,
   COMMUNITY_REPORT_REASON_LABELS,
   COMMUNITY_TARGET_LABELS,
-  authorLine,
   excerpt,
-  formatCommunityDateTime,
-  formatCommunityPrice,
-  muteEndsText,
 } from '@/core/community/presentation';
 import {
   COMMUNITY_ADMIN_QUEUES,
@@ -35,6 +33,7 @@ import {
   communityGroupSaveInputSchema,
   communityModerateInputSchema,
   communityMuteInputSchema,
+  communitySettingsInputSchema,
   communityUnmuteInputSchema,
   type CommunityAdminGroup,
   type CommunityAdminGroups,
@@ -45,6 +44,7 @@ import {
   type CommunityMemberOption,
   type CommunityModerationAction,
   type CommunityMuteDuration,
+  type CommunitySettingsResult,
   type CommunityTargetType,
 } from '@/core/community/validation';
 import { CommunityPhotoGallery, type CommunityPhotoUrls } from './photos';
@@ -53,6 +53,10 @@ import {
   CommunityPageHeader,
   CommunityPager,
   CommunityStatusChip,
+  authorLine,
+  formatCommunityDateTime,
+  formatCommunityPrice,
+  muteEndsText,
 } from './shared';
 
 export type CommunityAdminActions = {
@@ -61,6 +65,7 @@ export type CommunityAdminActions = {
   unmute: ModuleFormAction;
   saveGroup: ModuleFormAction;
   archiveGroup: ModuleFormAction;
+  saveSettings: ModuleFormAction;
 };
 
 const QUEUE_LABELS: Readonly<Record<CommunityAdminQueue, string>> = {
@@ -83,19 +88,20 @@ function text(form: FormData, name: string) {
 }
 
 function AdminNav({ basePath }: { basePath: string }) {
+  const { translate: t } = useUiTranslator();
   return (
     <nav
-      aria-label="Community administration"
+      aria-label={t('Community administration')}
       className="flex flex-wrap gap-space-4"
     >
       <Link className={COMMUNITY_LINK_CLASS} href={basePath}>
-        Review queue
+        {t('Review queue')}
       </Link>
       <Link className={COMMUNITY_LINK_CLASS} href={`${basePath}/groups`}>
-        Groups
+        {t('Groups')}
       </Link>
       <Link className={COMMUNITY_LINK_CLASS} href={`${basePath}/mutes`}>
-        Muted residents
+        {t('Muted residents')}
       </Link>
     </nav>
   );
@@ -114,6 +120,7 @@ export function CommunityAdminQueueView({
   page: number;
   basePath?: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const queueHref = (value: CommunityAdminQueue, next = 1) => {
     const params = new URLSearchParams();
     if (value !== 'pending') params.set('queue', value);
@@ -124,12 +131,14 @@ export function CommunityAdminQueueView({
   return (
     <section className="grid min-w-0 gap-space-5">
       <CommunityPageHeader
-        title="Community"
-        description="Approve new posts and listings, check reported items and manage groups. All times are India time (IST)."
+        title={t('Community')}
+        description={t(
+          'Approve new posts and listings, check reported items and manage groups. All times are India time (IST).',
+        )}
       />
       <AdminNav basePath="/admin/community" />
       <nav
-        aria-label="Review queues"
+        aria-label={t('Review queues')}
         className="flex flex-wrap gap-x-space-4 gap-y-space-2"
       >
         {COMMUNITY_ADMIN_QUEUES.map((value) => (
@@ -139,13 +148,16 @@ export function CommunityAdminQueueView({
             href={queueHref(value)}
             aria-current={queue === value ? 'page' : undefined}
           >
-            {QUEUE_LABELS[value]}
+            {t(QUEUE_LABELS[value])}
           </Link>
         ))}
       </nav>
-      <h2 className="text-heading">{QUEUE_LABELS[queue]}</h2>
+      <h2 className="text-heading">{t(QUEUE_LABELS[queue])}</h2>
       {result.items.length === 0 ? (
-        <EmptyState title="Nothing here" description={QUEUE_EMPTY[queue]} />
+        <EmptyState
+          title={t('Nothing here')}
+          description={t(QUEUE_EMPTY[queue])}
+        />
       ) : (
         <ul className="grid gap-space-2">
           {result.items.map((item) => (
@@ -154,16 +166,16 @@ export function CommunityAdminQueueView({
                 href={`/admin/community/items/${item.targetType}/${item.targetId}`}
                 title={
                   <span className="break-words">
-                    {COMMUNITY_TARGET_LABELS[item.targetType]}:{' '}
+                    {t(COMMUNITY_TARGET_LABELS[item.targetType])}:{' '}
                     {item.title ?? excerpt(item.excerpt ?? '', 120)}
                   </span>
                 }
                 secondary={
                   <span className="break-words">
-                    {authorLine(item.authorName, item.authorUnitLabel)} ·{' '}
-                    {formatCommunityDateTime(item.createdAt)} IST
+                    {authorLine(item.authorName, item.authorUnitLabel, locale)}{' '}
+                    · {formatCommunityDateTime(item.createdAt, locale)} IST
                     {item.openReports > 0
-                      ? ` · ${item.openReports} open ${item.openReports === 1 ? 'report' : 'reports'}`
+                      ? ` · ${t(item.openReports === 1 ? '{count} open report' : '{count} open reports', { count: formatLocalizedNumber(item.openReports, locale ?? 'en') })}`
                       : ''}
                   </span>
                 }
@@ -202,6 +214,7 @@ function ModerateForm({
   confirmMessage?: string;
   reasonLabel?: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   return (
     <ModuleActionForm
@@ -224,7 +237,7 @@ function ModerateForm({
           label={reasonLabel}
           required
           maxLength={COMMUNITY_REASON_MAX}
-          helpText="The author sees this reason."
+          helpText={t('The author sees this reason.')}
         />
       ) : null}
     </ModuleActionForm>
@@ -240,12 +253,13 @@ export function CommunityMuteForm({
   name: string;
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [duration, setDuration] = useState<CommunityMuteDuration>('7d');
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={`Mute ${name}`}
+      submitLabel={t('Mute {name}', { name })}
       input={(form) =>
         communityMuteInputSchema.parse({
           membershipId,
@@ -257,7 +271,7 @@ export function CommunityMuteForm({
       <RadioGroup
         id={`${id}-duration`}
         name={`${id}-duration`}
-        label="How long?"
+        label={t('How long?')}
         value={duration}
         onChange={(value) =>
           setDuration(
@@ -268,16 +282,18 @@ export function CommunityMuteForm({
         }
         options={COMMUNITY_MUTE_DURATIONS.map((value) => ({
           value,
-          label: COMMUNITY_MUTE_DURATION_LABELS[value],
+          label: t(COMMUNITY_MUTE_DURATION_LABELS[value]),
         }))}
       />
       <TextAreaInput
         id={`${id}-reason`}
         name="reason"
-        label="Reason"
+        label={t('Reason')}
         required
         maxLength={COMMUNITY_REASON_MAX}
-        helpText="The resident sees this reason. They can still read posts and listings."
+        helpText={t(
+          'The resident sees this reason. They can still read posts and listings.',
+        )}
       />
     </ModuleActionForm>
   );
@@ -292,10 +308,11 @@ function UnmuteForm({
   name: string;
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={`Lift mute for ${name}`}
+      submitLabel={t('Lift mute for {name}', { name })}
       input={() => communityUnmuteInputSchema.parse({ membershipId })}
     >
       {null}
@@ -314,10 +331,11 @@ export function CommunityAdminItemView({
   targetType: CommunityTargetType;
   actions: CommunityAdminActions;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const { item, reports } = detail;
-  const target = COMMUNITY_TARGET_LABELS[targetType];
-  const noun = target.toLowerCase();
-  const price = formatCommunityPrice(item.pricePaise);
+  const target = t(COMMUNITY_TARGET_LABELS[targetType]);
+  const noun = t(COMMUNITY_TARGET_LABELS[targetType].toLowerCase());
+  const price = formatCommunityPrice(item.pricePaise, locale);
   const paths = [...item.photos]
     .sort((a, b) => a.position - b.position)
     .map((photo) => photo.path);
@@ -326,7 +344,7 @@ export function CommunityAdminItemView({
   return (
     <section className="grid min-w-0 gap-space-5">
       <Link className={COMMUNITY_LINK_CLASS} href="/admin/community">
-        Back to the review queue
+        {t('Back to the review queue')}
       </Link>
       <article className="grid min-w-0 gap-space-3">
         <div className="flex flex-wrap items-center gap-space-2">
@@ -336,18 +354,20 @@ export function CommunityAdminItemView({
           <CommunityStatusChip status={item.status} />
         </div>
         <p className="text-caption text-ink-muted break-words">
-          {authorLine(item.authorName, item.authorUnitLabel)} ·{' '}
-          {formatCommunityDateTime(item.createdAt)} IST
-          {item.groupName ? ` · Group: ${item.groupName}` : ''}
+          {authorLine(item.authorName, item.authorUnitLabel, locale)} ·{' '}
+          {formatCommunityDateTime(item.createdAt, locale)} IST
+          {item.groupName
+            ? ` · ${t('Group: {name}', { name: item.groupName })}`
+            : ''}
         </p>
         {item.listingType ? (
           <p className="text-body-strong">
-            {COMMUNITY_LISTING_TYPE_LABELS[item.listingType]}
+            {t(COMMUNITY_LISTING_TYPE_LABELS[item.listingType])}
             {price ? ` · ${price}` : ''}
           </p>
         ) : null}
         {item.moderationReason ? (
-          <Banner title="Recorded reason" tone="info">
+          <Banner title={t('Recorded reason')} tone="info">
             {item.moderationReason}
           </Banner>
         ) : null}
@@ -362,24 +382,30 @@ export function CommunityAdminItemView({
           </p>
         ) : null}
         {item.contactPhone ? (
-          <p className="text-body">Shared phone: {item.contactPhone}</p>
+          <p className="text-body">
+            {t('Shared phone: {phone}', { phone: item.contactPhone })}
+          </p>
         ) : null}
         {item.expiresAt ? (
           <p className="text-caption text-ink-muted">
             {item.closedAt
-              ? `Closed by the poster on ${formatCommunityDateTime(item.closedAt)} IST.`
-              : `Shown until ${formatCommunityDateTime(item.expiresAt)} IST.`}
+              ? t('Closed by the poster on {date} IST.', {
+                  date: formatCommunityDateTime(item.closedAt, locale),
+                })
+              : t('Shown until {date} IST.', {
+                  date: formatCommunityDateTime(item.expiresAt, locale),
+                })}
           </p>
         ) : null}
         <CommunityPhotoGallery
           paths={paths}
           photoUrls={photoUrls}
-          label={`${target} photos`}
+          label={t('{item} photos', { item: target })}
         />
       </article>
       <Card
-        title="Decision"
-        description="The author is notified of every decision."
+        title={t('Decision')}
+        description={t('The author is notified of every decision.')}
       >
         <div className="grid min-w-0 gap-space-4">
           {item.status === 'pending' ? (
@@ -389,15 +415,15 @@ export function CommunityAdminItemView({
                 targetId={item.id}
                 action={actions.moderate}
                 decision="approve"
-                submitLabel={`Approve ${noun}`}
+                submitLabel={t('Approve {item}', { item: noun })}
               />
               <ModerateForm
                 targetType={targetType}
                 targetId={item.id}
                 action={actions.moderate}
                 decision="reject"
-                submitLabel={`Reject ${noun}`}
-                reasonLabel="Why is it not approved?"
+                submitLabel={t('Reject {item}', { item: noun })}
+                reasonLabel={t('Why is it not approved?')}
               />
             </>
           ) : null}
@@ -407,8 +433,11 @@ export function CommunityAdminItemView({
               targetId={item.id}
               action={actions.moderate}
               decision="restore"
-              submitLabel={`Restore ${noun}`}
-              confirmMessage={`Restore this ${noun}? Open reports are dismissed and residents can see it again.`}
+              submitLabel={t('Restore {item}', { item: noun })}
+              confirmMessage={t(
+                'Restore this {item}? Open reports are dismissed and residents can see it again.',
+                { item: noun },
+              )}
             />
           ) : null}
           {removable ? (
@@ -417,14 +446,17 @@ export function CommunityAdminItemView({
               targetId={item.id}
               action={actions.moderate}
               decision="remove"
-              submitLabel={`Remove ${noun}`}
-              confirmMessage={`Remove this ${noun}? Residents will no longer see it, and it is erased after 30 days.`}
-              reasonLabel="Why is it being removed?"
+              submitLabel={t('Remove {item}', { item: noun })}
+              confirmMessage={t(
+                'Remove this {item}? Residents will no longer see it, and it is erased after 30 days.',
+                { item: noun },
+              )}
+              reasonLabel={t('Why is it being removed?')}
             />
           ) : null}
           {!removable && item.status !== 'pending' ? (
             <p className="text-body text-ink-muted">
-              No decision is needed for this {noun} now.
+              {t('No decision is needed for this {item} now.', { item: noun })}
             </p>
           ) : null}
         </div>
@@ -434,10 +466,14 @@ export function CommunityAdminItemView({
         className="grid min-w-0 gap-space-3"
       >
         <h2 id="item-reports" className="text-heading">
-          Reports ({openReports.length} open)
+          {t('Reports ({count} open)', {
+            count: formatLocalizedNumber(openReports.length, locale ?? 'en'),
+          })}
         </h2>
         {reports.length === 0 ? (
-          <p className="text-body text-ink-muted">No one has reported it.</p>
+          <p className="text-body text-ink-muted">
+            {t('No one has reported it.')}
+          </p>
         ) : (
           <ul className="grid gap-space-2">
             {reports.map((report, index) => (
@@ -446,14 +482,14 @@ export function CommunityAdminItemView({
                 className="grid min-w-0 gap-space-1 border-t border-rule pt-space-2"
               >
                 <p className="text-body-strong">
-                  {COMMUNITY_REPORT_REASON_LABELS[report.reason]}
-                  {report.status !== 'open' ? ` (${report.status})` : ''}
+                  {t(COMMUNITY_REPORT_REASON_LABELS[report.reason])}
+                  {report.status !== 'open' ? ` (${t(report.status)})` : ''}
                 </p>
                 <p className="text-caption text-ink-muted">
                   {report.reporterUnitLabel
-                    ? `Flat ${report.reporterUnitLabel}`
-                    : 'Flat not recorded'}{' '}
-                  · {formatCommunityDateTime(report.createdAt)} IST
+                    ? t('Flat {label}', { label: report.reporterUnitLabel })
+                    : t('Flat not recorded')}{' '}
+                  · {formatCommunityDateTime(report.createdAt, locale)} IST
                 </p>
                 {report.note ? (
                   <p className="text-body break-words">{report.note}</p>
@@ -465,15 +501,19 @@ export function CommunityAdminItemView({
       </section>
       {item.authorMembershipId ? (
         <Card
-          title={`Mute ${item.authorName}`}
-          description="A muted resident can read but cannot post, list or reply."
+          title={t('Mute {name}', { name: item.authorName })}
+          description={t(
+            'A muted resident can read but cannot post, list or reply.',
+          )}
         >
           {detail.authorMute ? (
             <div className="grid min-w-0 gap-space-3">
               <p className="text-body">
-                Muted {muteEndsText(detail.authorMute)}.
+                {t('Muted {until}.', {
+                  until: muteEndsText(detail.authorMute, locale),
+                })}
                 {detail.authorMute.reason
-                  ? ` Reason: ${detail.authorMute.reason}`
+                  ? ` ${t('Reason: {reason}', { reason: detail.authorMute.reason })}`
                   : ''}
               </p>
               <UnmuteForm
@@ -504,11 +544,14 @@ function GroupForm({
   group: CommunityAdminGroup | null;
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={group ? `Save ${group.name}` : 'Create group'}
+      submitLabel={
+        group ? t('Save {name}', { name: group.name }) : t('Create group')
+      }
       input={(form) =>
         communityGroupSaveInputSchema.parse({
           groupId: group?.id ?? null,
@@ -521,7 +564,7 @@ function GroupForm({
       <TextInput
         id={`${id}-name`}
         name="name"
-        label="Group name"
+        label={t('Group name')}
         required
         maxLength={COMMUNITY_GROUP_NAME_MAX}
         defaultValue={group?.name ?? ''}
@@ -530,7 +573,7 @@ function GroupForm({
       <TextAreaInput
         id={`${id}-description`}
         name="description"
-        label="Description (optional)"
+        label={t('Description (optional)')}
         maxLength={COMMUNITY_GROUP_DESCRIPTION_MAX}
         defaultValue={group?.description ?? ''}
       />
@@ -545,20 +588,27 @@ export function CommunityAdminGroupsView({
   groups: CommunityAdminGroups;
   actions: CommunityAdminActions;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   return (
     <section className="grid min-w-0 gap-space-5">
       <CommunityPageHeader
-        title="Community groups"
-        description="Residents join the groups they like. Archived groups are hidden from residents and nothing new can be added."
+        title={t('Community groups')}
+        description={t(
+          'Residents join the groups they like. Archived groups are hidden from residents and nothing new can be added.',
+        )}
       />
       <AdminNav basePath="/admin/community" />
-      <Card title="New group">
+      <Card title={t('New group')}>
         <GroupForm group={null} action={actions.saveGroup} />
       </Card>
       {groups.items.length === 0 ? (
         <EmptyState
-          title="No groups yet"
-          description="Create the first group, for example Gardening or Parents."
+          title={t('No groups yet')}
+          description={t(
+            'Create the first group, for example Gardening or Parents.',
+          )}
         />
       ) : (
         <ul className="grid gap-space-3">
@@ -572,15 +622,24 @@ export function CommunityAdminGroupsView({
                   <div className="flex flex-wrap items-center gap-space-2">
                     <StatusChip status={`community_group.${group.status}`} />
                     <span className="text-caption text-ink-muted">
-                      {group.memberCount}{' '}
-                      {group.memberCount === 1 ? 'member' : 'members'} ·{' '}
-                      {group.postCount}{' '}
-                      {group.postCount === 1 ? 'post' : 'posts'}
+                      {t(
+                        group.memberCount === 1
+                          ? '{count} member'
+                          : '{count} members',
+                        { count: number(group.memberCount) },
+                      )}{' '}
+                      ·{' '}
+                      {t(
+                        group.postCount === 1
+                          ? '{count} post'
+                          : '{count} posts',
+                        { count: number(group.postCount) },
+                      )}
                     </span>
                   </div>
                   <details className="min-w-0 rounded-md border border-rule p-space-3">
                     <summary className="min-h-12 cursor-pointer content-center text-body-strong focus-visible:outline-2 focus-visible:outline-focus">
-                      Rename {group.name}
+                      {t('Rename {name}', { name: group.name })}
                     </summary>
                     <div className="mt-space-3">
                       <GroupForm group={group} action={actions.saveGroup} />
@@ -588,14 +647,18 @@ export function CommunityAdminGroupsView({
                   </details>
                   <ModuleActionForm
                     action={actions.archiveGroup}
-                    submitLabel={
+                    submitLabel={t(
                       group.status === 'active'
-                        ? `Archive ${group.name}`
-                        : `Bring back ${group.name}`
-                    }
+                        ? 'Archive {name}'
+                        : 'Bring back {name}',
+                      { name: group.name },
+                    )}
                     confirmMessage={
                       group.status === 'active'
-                        ? `Archive ${group.name}? Residents will no longer see it.`
+                        ? t(
+                            'Archive {name}? Residents will no longer see it.',
+                            { name: group.name },
+                          )
                         : undefined
                     }
                     input={() =>
@@ -620,49 +683,122 @@ export function CommunityAdminGroupsView({
 
 // Mutes
 
+const MUTED_SETTING_LABELS = [
+  {
+    key: 'muted_can_edit_pending',
+    label: 'Edit their posts and listings still waiting for review',
+  },
+  { key: 'muted_can_report', label: 'Report posts, listings and replies' },
+  { key: 'muted_can_renew', label: 'Renew their marketplace listings' },
+] as const;
+
+function CommunityMuteSettingsCard({
+  settings,
+  action,
+}: {
+  settings: CommunitySettingsResult;
+  action: ModuleFormAction;
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  return (
+    <Card
+      title={t('What muted residents can still do')}
+      description={t(
+        'Muted residents can always read, delete their own posts and listings, and close listings. They can never post, list or reply. Choose what else they may do.',
+      )}
+    >
+      <ModuleActionForm
+        key={settings.updatedAt}
+        action={action}
+        submitLabel={t('Save settings')}
+        input={(form) =>
+          communitySettingsInputSchema.parse({
+            settings: Object.fromEntries(
+              MUTED_SETTING_LABELS.map(({ key }) => [
+                key,
+                form.get(key) === 'on',
+              ]),
+            ),
+            expectedUpdatedAt: settings.updatedAt,
+          })
+        }
+      >
+        <fieldset className="grid gap-space-1">
+          <legend className="sr-only">{t('Allowed while muted')}</legend>
+          {MUTED_SETTING_LABELS.map(({ key, label }) => (
+            <CheckboxInput
+              key={key}
+              id={`${id}-${key}`}
+              name={key}
+              label={t(label)}
+              defaultChecked={settings.settings[key]}
+            />
+          ))}
+        </fieldset>
+      </ModuleActionForm>
+    </Card>
+  );
+}
+
 export function CommunityAdminMutesView({
   mutes,
   members,
   search,
+  settings,
   actions,
   basePath = '/admin/community/mutes',
 }: {
   mutes: CommunityAdminMutes;
   members: readonly CommunityMemberOption[] | null;
   search: string | null;
+  settings: CommunitySettingsResult;
   actions: CommunityAdminActions;
   basePath?: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const id = useId();
   return (
     <section className="grid min-w-0 gap-space-5">
       <CommunityPageHeader
-        title="Muted residents"
-        description="Muted residents can read but cannot post, list or reply until the mute ends or you lift it."
+        title={t('Muted residents')}
+        description={t(
+          'Muted residents can read but cannot post, list or reply until the mute ends or you lift it.',
+        )}
       />
       <AdminNav basePath="/admin/community" />
+      <CommunityMuteSettingsCard
+        settings={settings}
+        action={actions.saveSettings}
+      />
       {mutes.items.length === 0 ? (
         <EmptyState
-          title="No one is muted"
-          description="Residents you mute appear here."
+          title={t('No one is muted')}
+          description={t('Residents you mute appear here.')}
         />
       ) : (
         <ul className="grid gap-space-3">
           {mutes.items.map((mute) => (
             <li key={mute.membershipId}>
-              <Card title={authorLine(mute.name, mute.unitLabel)}>
+              <Card title={authorLine(mute.name, mute.unitLabel, locale)}>
                 <div className="grid min-w-0 gap-space-3">
                   <p className="text-body break-words">
-                    Muted{' '}
-                    {muteEndsText({
-                      mutedUntil: mute.mutedUntil,
-                      untilLifted: mute.duration === 'until_lifted',
+                    {t('Muted {until}. Reason: {reason}', {
+                      until: muteEndsText(
+                        {
+                          mutedUntil: mute.mutedUntil,
+                          untilLifted: mute.duration === 'until_lifted',
+                          reason: mute.reason,
+                        },
+                        locale,
+                      ),
                       reason: mute.reason,
                     })}
-                    . Reason: {mute.reason}
                   </p>
                   <p className="text-caption text-ink-muted">
-                    Since {formatCommunityDateTime(mute.createdAt)} IST
+                    {t('Since {date} IST', {
+                      date: formatCommunityDateTime(mute.createdAt, locale),
+                    })}
                   </p>
                   <UnmuteForm
                     membershipId={mute.membershipId}
@@ -676,8 +812,10 @@ export function CommunityAdminMutesView({
         </ul>
       )}
       <Card
-        title="Mute a resident"
-        description="Search by name or flat. Muting replaces any earlier mute."
+        title={t('Mute a resident')}
+        description={t(
+          'Search by name or flat. Muting replaces any earlier mute.',
+        )}
       >
         <div className="grid min-w-0 gap-space-4">
           <form
@@ -690,18 +828,18 @@ export function CommunityAdminMutesView({
               id={`${id}-search`}
               name="q"
               type="search"
-              label="Resident name or flat"
+              label={t('Resident name or flat')}
               defaultValue={search ?? ''}
               maxLength={COMMUNITY_SEARCH_MAX}
               autoComplete="off"
             />
             <Button type="submit" variant="secondary">
-              Search
+              {t('Search')}
             </Button>
           </form>
           {members === null ? null : members.length === 0 ? (
             <p className="text-body text-ink-muted">
-              No residents match that search.
+              {t('No residents match that search.')}
             </p>
           ) : (
             <ul className="grid gap-space-3">
@@ -709,7 +847,7 @@ export function CommunityAdminMutesView({
                 <li key={member.membershipId}>
                   <details className="min-w-0 rounded-md border border-rule p-space-3">
                     <summary className="min-h-12 cursor-pointer content-center text-body-strong break-words focus-visible:outline-2 focus-visible:outline-focus">
-                      {authorLine(member.name, member.unitLabel)}
+                      {authorLine(member.name, member.unitLabel, locale)}
                     </summary>
                     <div className="mt-space-3">
                       <CommunityMuteForm

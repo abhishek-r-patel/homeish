@@ -52,6 +52,8 @@ function contextWith(): RequestContext {
     enabledModules: new Set(['core', 'billing']),
     isDeveloper: false,
     isDeveloperAccount: false,
+    isHindiEnabled: false,
+    languagePreference: 'en',
     memberships: [{ societyId, roles: ['admin'] }],
     mfaVerified: true,
     requestId: 'billing-logs-test',

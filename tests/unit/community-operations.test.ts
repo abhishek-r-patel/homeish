@@ -40,6 +40,7 @@ import {
   moderateCommunityItem,
   reportCommunityItem,
   unmuteCommunityMember,
+  updateCommunitySettings,
 } from '../../src/core/community/operations';
 
 const id = (number: string) =>
@@ -234,6 +235,42 @@ describe('community operations', () => {
       ),
     ).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(mocks.sendPushes).not.toHaveBeenCalled();
+  });
+
+  it('saves all three mute settings with the version read and rejects partial input', async () => {
+    const settings = {
+      muted_can_edit_pending: true,
+      muted_can_report: false,
+      muted_can_renew: false,
+    };
+    const updatedAt = '2099-12-10T05:30:00.123456+00:00';
+    await expect(
+      updateCommunitySettings(
+        {
+          settings: { muted_can_report: true },
+          expectedUpdatedAt: updatedAt,
+        },
+        REQUEST,
+      ),
+    ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    expect(mocks.callModuleRpc).not.toHaveBeenCalled();
+
+    mocks.callModuleRpc.mockResolvedValueOnce({ settings, updatedAt });
+    await updateCommunitySettings(
+      { settings, expectedUpdatedAt: updatedAt },
+      REQUEST,
+    );
+    expect(mocks.callModuleRpc.mock.calls[0]).toEqual(
+      expect.arrayContaining([
+        'community_settings_update',
+        {
+          p_society_id: SOCIETY,
+          p_settings: settings,
+          p_expected_updated_at: updatedAt,
+          p_request_id: REQUEST,
+        },
+      ]),
+    );
   });
 
   it('shows a join view to non-members without reading the feed', async () => {

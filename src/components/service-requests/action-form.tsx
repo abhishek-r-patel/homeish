@@ -1,6 +1,7 @@
 // Keep request actions responsive and show expected server-action feedback.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FormEvent, ReactNode } from 'react';
@@ -28,6 +29,7 @@ export function ServiceRequestActionForm({
   refresh?: boolean;
   submitLabel: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ServerActionResult<unknown> | null>(
@@ -72,7 +74,7 @@ export function ServiceRequestActionForm({
       {children}
       {localError ? (
         <p aria-live="polite" className="text-caption text-danger" role="alert">
-          {localError}
+          {translateFeedback(localError)}
         </p>
       ) : null}
       {result ? (
@@ -82,15 +84,15 @@ export function ServiceRequestActionForm({
           role={result.ok ? 'status' : 'alert'}
         >
           <p>
-            {result.message}
+            {result.message ? translateFeedback(result.message) : null}
             {!result.ok && result.referenceId
-              ? ` Reference: ${result.referenceId}`
+              ? ` ${t('Reference: {id}', { id: result.referenceId })}`
               : ''}
           </p>
           {!result.ok && result.fieldErrors ? (
             <ul className="list-disc pl-space-5">
               {Object.entries(result.fieldErrors).map(([field, message]) => (
-                <li key={field}>{message}</li>
+                <li key={field}>{translateFeedback(message)}</li>
               ))}
             </ul>
           ) : null}
@@ -100,7 +102,7 @@ export function ServiceRequestActionForm({
         {submitLabel}
       </Button>
       <span aria-live="polite" className="sr-only" role="status">
-        {pending ? 'Working…' : ''}
+        {pending ? t('Working…') : ''}
       </span>
     </form>
   );

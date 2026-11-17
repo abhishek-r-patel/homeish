@@ -1,11 +1,12 @@
 // Let residents browse listed home-service providers by type or search, open one and rate it.
 'use client';
 import { useId, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import {
   HOME_SERVICES_STAR_LABELS,
   HOME_SERVICE_TYPE_LABELS,
   filterHomeServicesProviders,
-  formatHomeServicesDate,
   homeServicesStarLabel,
 } from '@/core/home-services/presentation';
 import {
@@ -31,16 +32,18 @@ import {
   HomeServicesQuickAction,
   HomeServicesRating,
   HomeServicesTruncatedNote,
+  formatHomeServicesUiDate,
   type HomeServicesActions,
 } from './shared';
 
 function ProviderCard({ provider }: { provider: HomeServicesProvider }) {
+  const { translate: t } = useUiTranslator();
   return (
     <li className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-4">
       <div className="grid gap-space-1">
         <h2 className="text-subheading break-words">{provider.name}</h2>
         <p className="text-caption text-ink-muted">
-          {HOME_SERVICE_TYPE_LABELS[provider.service_type]}
+          {t(HOME_SERVICE_TYPE_LABELS[provider.service_type])}
           {provider.area ? ` · ${provider.area}` : ''}
         </p>
       </div>
@@ -50,7 +53,9 @@ function ProviderCard({ provider }: { provider: HomeServicesProvider }) {
       />
       {provider.my_stars ? (
         <p className="text-caption text-ink-muted">
-          You rated {homeServicesStarLabel(provider.my_stars)}.
+          {t('You rated {rating}.', {
+            rating: t(homeServicesStarLabel(provider.my_stars)),
+          })}
         </p>
       ) : null}
       <div className="flex flex-wrap gap-x-space-4">
@@ -58,9 +63,11 @@ function ProviderCard({ provider }: { provider: HomeServicesProvider }) {
         <a
           href={`/home-services/${provider.id}`}
           className={HOME_SERVICES_LINK_CLASS}
-          aria-label={`Details and ratings for ${provider.name}`}
+          aria-label={t('Details and ratings for {name}', {
+            name: provider.name,
+          })}
         >
-          Details and ratings
+          {t('Details and ratings')}
         </a>
       </div>
     </li>
@@ -72,6 +79,7 @@ export function HomeServicesDirectoryView({
 }: {
   directory: HomeServicesDirectory;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const id = useId();
   const [serviceType, setServiceType] = useState<HomeServiceType | 'all'>(
     'all',
@@ -85,52 +93,65 @@ export function HomeServicesDirectoryView({
   return (
     <section className="grid min-w-0 gap-space-4">
       <div className="grid gap-space-1">
-        <h1 className="text-title font-semibold">Home services</h1>
+        <h1 className="text-title font-semibold">{t('Home services')}</h1>
         <p className="text-body text-ink-muted">
-          Plumbers, electricians and other local help recommended by your
-          society. Call providers directly; Homeish does not take bookings.
+          {t(
+            'Plumbers, electricians and other local help recommended by your society. Call providers directly; Homeish does not take bookings.',
+          )}
         </p>
       </div>
       {directory.providers.length === 0 ? (
         <EmptyState
-          title="No providers listed yet"
-          description="Your society administrators have not listed any home-service providers yet. Check back later."
+          title={t('No providers listed yet')}
+          description={t(
+            'Your society administrators have not listed any home-service providers yet. Check back later.',
+          )}
         />
       ) : (
         <>
           <div className="grid gap-space-3 medium:grid-cols-2">
             <SelectInput
               id={`${id}-type`}
-              label="Service type"
+              label={t('Service type')}
               value={serviceType}
               onChange={(event) =>
                 setServiceType(event.target.value as HomeServiceType | 'all')
               }
               options={[
-                { value: 'all', label: 'All service types' },
+                { value: 'all', label: t('All service types') },
                 ...HOME_SERVICE_TYPES.map((value) => ({
                   value,
-                  label: HOME_SERVICE_TYPE_LABELS[value],
+                  label: t(HOME_SERVICE_TYPE_LABELS[value]),
                 })),
               ]}
             />
             <SearchInput
               id={`${id}-search`}
-              label="Search by name, area or notes"
+              label={t('Search by name, area or notes')}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onClear={() => setQuery('')}
             />
           </div>
           <p role="status" className="text-caption text-ink-muted">
-            Showing {shown.length} of {directory.providers.length} provider
-            {directory.providers.length === 1 ? '' : 's'}.
+            {t(
+              directory.providers.length === 1
+                ? 'Showing {count} of {total} provider.'
+                : 'Showing {count} of {total} providers.',
+              {
+                count: formatLocalizedNumber(shown.length, locale ?? 'en'),
+                total: formatLocalizedNumber(
+                  directory.providers.length,
+                  locale ?? 'en',
+                ),
+              },
+            )}
           </p>
           <HomeServicesTruncatedNote truncated={directory.truncated} />
           {shown.length === 0 ? (
             <EmptyState
-              title="No providers match"
-              description="Try another service type or clear the search."
+              title={t('No providers match')}
+              description={t('Try another service type or clear the search.')}
             />
           ) : (
             <ul className="grid gap-space-3 medium:grid-cols-2">
@@ -152,23 +173,27 @@ function RatingForm({
   detail: HomeServicesProviderDetail;
   actions: HomeServicesActions;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const mine = detail.my_rating;
   const [stars, setStars] = useState(mine ? String(mine.stars) : '');
   return (
     <Card
-      title={mine ? 'Your rating' : 'Rate this provider'}
-      description="One rating per resident. You can change it at any time. Other residents see your comment without your name; administrators and committee members can see who wrote it."
+      title={t(mine ? 'Your rating' : 'Rate this provider')}
+      description={t(
+        'One rating per resident. You can change it at any time. Other residents see your comment without your name; administrators and committee members can see who wrote it.',
+      )}
     >
       {mine?.comment_hidden ? (
-        <Banner tone="warning" title="Your comment is hidden">
-          An administrator hid your comment. Your stars still count. Only you
-          and the administrators can see the comment.
+        <Banner tone="warning" title={t('Your comment is hidden')}>
+          {t(
+            'An administrator hid your comment. Your stars still count. Only you and the administrators can see the comment.',
+          )}
         </Banner>
       ) : null}
       <ModuleActionForm
         action={actions.saveRating}
-        submitLabel={mine ? 'Update rating' : 'Save rating'}
+        submitLabel={t(mine ? 'Update rating' : 'Save rating')}
         input={(form) =>
           homeServicesRatingInputSchema.parse({
             providerId: detail.provider.id,
@@ -180,20 +205,22 @@ function RatingForm({
         <RadioGroup
           id={`${id}-stars`}
           name="stars"
-          label="Stars"
+          label={t('Stars')}
           required
           value={stars}
           onChange={setStars}
           options={([5, 4, 3, 2, 1] as const).map((value) => ({
             value: String(value),
-            label: HOME_SERVICES_STAR_LABELS[value],
+            label: t(HOME_SERVICES_STAR_LABELS[value]),
           }))}
         />
         <TextAreaInput
           id={`${id}-comment`}
           name="comment"
-          label="Comment (optional)"
-          helpText="Keep it short and about the work. Do not include phone numbers or personal details."
+          label={t('Comment (optional)')}
+          helpText={t(
+            'Keep it short and about the work. Do not include phone numbers or personal details.',
+          )}
           maxLength={HOME_SERVICES_COMMENT_MAX}
           defaultValue={mine?.comment ?? ''}
         />
@@ -211,28 +238,30 @@ export function HomeServicesProviderView({
   actions?: HomeServicesActions;
   backHref?: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const { provider } = detail;
   return (
     <section className="grid min-w-0 gap-space-4">
       <a href={backHref} className={HOME_SERVICES_LINK_CLASS}>
-        Back to home services
+        {t('Back to home services')}
       </a>
       <div className="grid gap-space-1">
         <h1 className="text-title font-semibold break-words">
           {provider.name}
         </h1>
         <p className="text-body text-ink-muted">
-          {HOME_SERVICE_TYPE_LABELS[provider.service_type]}
+          {t(HOME_SERVICE_TYPE_LABELS[provider.service_type])}
           {provider.area ? ` · ${provider.area}` : ''}
         </p>
       </div>
       {!detail.is_listed ? (
-        <Banner tone="warning" title="Not listed for residents">
-          Residents cannot see or rate this provider. It is awaiting approval,
-          was not approved or has been archived.
+        <Banner tone="warning" title={t('Not listed for residents')}>
+          {t(
+            'Residents cannot see or rate this provider. It is awaiting approval, was not approved or has been archived.',
+          )}
         </Banner>
       ) : null}
-      <Card title="Contact">
+      <Card title={t('Contact')}>
         <div className="grid gap-space-2">
           <HomeServicesPhone name={provider.name} phone={provider.phone} />
           <HomeServicesRating
@@ -254,15 +283,15 @@ export function HomeServicesProviderView({
         />
       ) : null}
       <Card
-        title="Comments"
+        title={t('Comments')}
         description={
           detail.can_moderate
-            ? 'Hiding a comment keeps its stars in the average.'
+            ? t('Hiding a comment keeps its stars in the average.')
             : undefined
         }
       >
         {detail.comments.length === 0 ? (
-          <p className="text-body text-ink-muted">No comments yet.</p>
+          <p className="text-body text-ink-muted">{t('No comments yet.')}</p>
         ) : (
           <ul className="grid gap-space-3">
             {detail.comments.map((comment) => (
@@ -272,11 +301,11 @@ export function HomeServicesProviderView({
               >
                 <div className="flex flex-wrap items-center gap-space-2">
                   <span className="text-body-strong">
-                    {homeServicesStarLabel(comment.stars)}
+                    {t(homeServicesStarLabel(comment.stars))}
                   </span>
                   {comment.is_mine ? (
                     <span className="text-caption text-ink-muted">
-                      Your comment
+                      {t('Your comment')}
                     </span>
                   ) : null}
                   {comment.comment_hidden ? (
@@ -286,7 +315,7 @@ export function HomeServicesProviderView({
                 <HomeServicesCommentText comment={comment.comment} />
                 <p className="text-caption text-ink-muted">
                   {comment.rater_name ? `${comment.rater_name} · ` : ''}
-                  {formatHomeServicesDate(comment.updated_at)}
+                  {formatHomeServicesUiDate(comment.updated_at, locale)}
                 </p>
                 {detail.can_moderate ? (
                   <HomeServicesQuickAction
@@ -295,13 +324,15 @@ export function HomeServicesProviderView({
                       ratingId: comment.id,
                       hidden: !comment.comment_hidden,
                     }}
-                    label={
-                      comment.comment_hidden ? 'Show comment' : 'Hide comment'
-                    }
+                    label={t(
+                      comment.comment_hidden ? 'Show comment' : 'Hide comment',
+                    )}
                     confirmMessage={
                       comment.comment_hidden
                         ? undefined
-                        : 'Hide this comment from residents? The stars still count.'
+                        : t(
+                            'Hide this comment from residents? The stars still count.',
+                          )
                     }
                   />
                 ) : null}

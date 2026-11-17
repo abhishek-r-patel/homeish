@@ -89,7 +89,11 @@ const approverSchema = z
 
 const profileSchema = z
   .object({
-    fullName: z.string().trim().min(1).max(120),
+    fullName: z
+      .string()
+      .trim()
+      .min(1, 'Enter your full name.')
+      .max(120, 'Full name must be 120 characters or fewer.'),
     phone: z
       .string()
       .trim()
@@ -97,7 +101,9 @@ const profileSchema = z
       .refine((value) => value === null || /^\+?[0-9]{10,15}$/.test(value), {
         message: 'Enter a phone number with 10 to 15 digits.',
       }),
-    fontPreference: z.enum(['manrope_sora', 'device_default']),
+    fontPreference: z.enum(['manrope_sora', 'device_default'], {
+      error: 'Choose a supported font preference.',
+    }),
   })
   .strict();
 
@@ -577,11 +583,39 @@ export async function getProfile() {
   const context = await buildRequestContext(createRequestId());
   const { data, error } = await context.db
     .from('profiles')
-    .select('email, full_name, phone, font_preference')
+    .select('email, full_name, phone, font_preference, language_preference')
     .eq('id', context.userId)
     .single();
   if (error) throw new Error('Could not load your profile.', { cause: error });
-  return data;
+  return { ...data, isHindiEnabled: context.isHindiEnabled };
+}
+
+export async function updateLanguagePreference(
+  input: unknown,
+  requestId: string,
+): Promise<void> {
+  const parsed = z.enum(['en', 'hi']).safeParse(input);
+  if (!parsed.success) {
+    throw new ValidationError({ language: 'Choose English or Hindi.' });
+  }
+  const context = await buildRequestContext(requestId);
+  const { data, error } = await context.db
+    .from('profiles')
+    .update({ language_preference: parsed.data })
+    .eq('id', context.userId)
+    .select('id')
+    .maybeSingle();
+  if (error) {
+    if (error.code === '23514') {
+      throw new ValidationError({ language: 'Choose English or Hindi.' });
+    }
+    throw new Error('Could not save the language preference.', {
+      cause: error,
+    });
+  }
+  if (!data) {
+    throw new AppError('UNAUTHENTICATED');
+  }
 }
 
 export async function getSavedFontPreference(): Promise<

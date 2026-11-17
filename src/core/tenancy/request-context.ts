@@ -10,6 +10,7 @@ import {
   type SocietyRole,
 } from '../permissions';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isLocale, type Locale } from '../i18n/locale';
 
 export type SocietyStatus = 'trial' | 'active' | 'suspended' | 'archived';
 
@@ -32,6 +33,8 @@ export interface RequestContext {
   memberships: readonly ActiveMembership[];
   societyId: string | null;
   societyStatus: SocietyStatus | null;
+  languagePreference: Locale;
+  isHindiEnabled: boolean;
   roles: readonly SocietyRole[];
   enabledModules: ReadonlySet<ModuleKey>;
   isDeveloper: boolean;
@@ -93,7 +96,7 @@ export async function buildRequestContext(
 
   const { data: profile, error: profileError } = await client
     .from('profiles')
-    .select('status')
+    .select('status, language_preference')
     .eq('id', authData.user.id)
     .maybeSingle();
   if (profileError) {
@@ -103,6 +106,9 @@ export async function buildRequestContext(
   }
   if (!profile || profile.status !== 'active') {
     throw new AppError('UNAUTHENTICATED');
+  }
+  if (!isLocale(profile.language_preference)) {
+    throw new Error('The saved language preference is unsupported.');
   }
 
   const { data: developerAccessRows, error: developerAccessError } =
@@ -136,13 +142,14 @@ export async function buildRequestContext(
     memberships.find(({ societyId }) => societyId === activeSocietyId) ??
     (memberships.length === 1 ? memberships[0] : undefined);
   let societyStatus: SocietyStatus | null = null;
+  let isHindiEnabled = false;
   const enabledModules = new Set<ModuleKey>(['core']);
 
   if (activeMembership) {
     const [societyResult, moduleConfigsResult] = await Promise.all([
       client
         .from('societies')
-        .select('status')
+        .select('status, hindi_available')
         .eq('id', activeMembership.societyId)
         .maybeSingle(),
       client
@@ -172,6 +179,8 @@ export async function buildRequestContext(
         }
         enabledModules.add(moduleKey);
       }
+      isHindiEnabled =
+        societyResult.data.hindi_available && enabledModules.has('language');
     }
   }
 
@@ -182,6 +191,8 @@ export async function buildRequestContext(
     memberships,
     societyId: activeMembership?.societyId ?? null,
     societyStatus,
+    languagePreference: profile.language_preference,
+    isHindiEnabled,
     roles: activeMembership?.roles ?? [],
     enabledModules,
     isDeveloper: developerAccess.mfa_verified,

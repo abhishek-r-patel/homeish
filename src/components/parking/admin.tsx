@@ -4,8 +4,6 @@ import { useId, useState } from 'react';
 import {
   PARKING_PASS_STATE_LABELS,
   PARKING_SLOT_TYPE_LABELS,
-  formatParkingTime,
-  formatParkingWindow,
   parkingLinkedVehicles,
   parkingPassState,
   parkingQueueText,
@@ -31,8 +29,11 @@ import { ParkingReportItem } from './resident';
 import {
   PARKING_ACTIONS,
   ParkingQuickAction,
+  parkingDisplayTime,
+  useParkingCopy,
   type ParkingActions,
 } from './shared';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 
 type AdminSlot = ParkingAdminWorkspace['slots'][number];
 
@@ -43,12 +44,15 @@ function SlotForm({
   slot: AdminSlot | null;
   actions: ParkingActions;
 }) {
+  const { t } = useParkingCopy();
   const id = useId();
   return (
     <ModuleActionForm
       action={actions.saveSlot}
       idempotent
-      submitLabel={slot ? `Save slot ${slot.label}` : 'Add slot'}
+      submitLabel={
+        slot ? t('Save slot {label}', { label: slot.label }) : t('Add slot')
+      }
       input={(form, clientRequestId) =>
         parkingSlotInputSchema.parse({
           slotId: slot?.id ?? null,
@@ -63,7 +67,7 @@ function SlotForm({
       <TextInput
         id={`${id}-label`}
         name="label"
-        label="Slot label or number"
+        label={t('Slot label or number')}
         required
         maxLength={40}
         defaultValue={slot?.label}
@@ -71,26 +75,30 @@ function SlotForm({
       />
       {slot ? (
         <p className="text-caption text-ink-muted">
-          Type: {PARKING_SLOT_TYPE_LABELS[slot.slot_type]}. Archive the slot and
-          add a new one to change its type.
+          {t(
+            'Type: {type}. Archive the slot and add a new one to change its type.',
+            {
+              type: t(PARKING_SLOT_TYPE_LABELS[slot.slot_type]),
+            },
+          )}
         </p>
       ) : (
         <SelectInput
           id={`${id}-type`}
           name="slotType"
-          label="Slot type"
+          label={t('Slot type')}
           required
           options={PARKING_SLOT_TYPES.map((value) => ({
             value,
-            label: PARKING_SLOT_TYPE_LABELS[value],
+            label: t(PARKING_SLOT_TYPE_LABELS[value]),
           }))}
         />
       )}
       <TextInput
         id={`${id}-location`}
         name="locationNote"
-        label="Location note (optional)"
-        helpText="For example Basement 1, near lift B."
+        label={t('Location note (optional)')}
+        helpText={t('For example Basement 1, near lift B.')}
         maxLength={200}
         defaultValue={slot?.location_note ?? ''}
         autoComplete="off"
@@ -108,6 +116,7 @@ function AllocateForm({
   workspace: ParkingAdminWorkspace;
   actions: ParkingActions;
 }) {
+  const { t } = useParkingCopy();
   const id = useId();
   const next = workspace.queues.find(
     (request) =>
@@ -116,7 +125,7 @@ function AllocateForm({
   return (
     <ModuleActionForm
       action={actions.allocate}
-      submitLabel={`Allocate slot ${slot.label}`}
+      submitLabel={t('Allocate slot {label}', { label: slot.label })}
       input={(form) =>
         parkingAllocateInputSchema.parse({
           slotId: slot.id,
@@ -127,25 +136,33 @@ function AllocateForm({
     >
       <p className="text-caption text-ink-muted">
         {next
-          ? `Next in the ${PARKING_SLOT_TYPE_LABELS[slot.slot_type].toLowerCase()} waitlist: unit ${next.unit_number}. Allocating to any other unit needs a reason, which is recorded.`
-          : 'Nobody is waiting for this slot type.'}
+          ? t(
+              'Next in the {type} waitlist: unit {unit}. Allocating to any other unit needs a reason, which is recorded.',
+              {
+                type: t(PARKING_SLOT_TYPE_LABELS[slot.slot_type]),
+                unit: next.unit_number,
+              },
+            )
+          : t('Nobody is waiting for this slot type.')}
       </p>
       <SelectInput
         id={`${id}-unit`}
         name="unitId"
-        label="Unit"
+        label={t('Unit')}
         required
         defaultValue={next?.unit_id ?? workspace.units[0]?.id}
         options={workspace.units.map((unit) => ({
           value: unit.id,
-          label: `Unit ${unit.number}`,
+          label: t('Unit {unit}', { unit: unit.number }),
         }))}
       />
       {next ? (
         <TextAreaInput
           id={`${id}-reason`}
           name="skipReason"
-          label="Reason for skipping the waitlist (only if not the next unit)"
+          label={t(
+            'Reason for skipping the waitlist (only if not the next unit)',
+          )}
           maxLength={500}
         />
       ) : null}
@@ -163,35 +180,44 @@ function SlotItem({
   actions: ParkingActions;
 }) {
   const allocation = slot.allocation;
+  const { locale, t } = useParkingCopy();
   const linked = allocation ? parkingLinkedVehicles(allocation) : [];
   const manage = workspace.can_manage && !slot.archived_at;
   return (
     <li className="grid gap-space-3 rounded-md border border-rule p-space-4">
       <div className="grid gap-space-1">
         <p className="text-body-strong">
-          Slot {slot.label} · {PARKING_SLOT_TYPE_LABELS[slot.slot_type]}
+          {t('Slot {label} · {type}', {
+            label: slot.label,
+            type: t(PARKING_SLOT_TYPE_LABELS[slot.slot_type]),
+          })}
         </p>
         <p className="text-caption text-ink-muted">
           {slot.archived_at
-            ? `Archived ${formatParkingTime(slot.archived_at)}`
+            ? t('Archived {date}', {
+                date: parkingDisplayTime(slot.archived_at ?? '', locale),
+              })
             : allocation
-              ? `Allocated to unit ${allocation.unit_number} since ${formatParkingTime(allocation.started_at)}`
+              ? t('Allocated to unit {unit} since {date}', {
+                  unit: allocation.unit_number,
+                  date: parkingDisplayTime(allocation.started_at, locale),
+                })
               : slot.slot_type === 'visitor'
-                ? 'Visitor slot, used through visitor passes'
-                : 'Free'}
+                ? t('Visitor slot, used through visitor passes')
+                : t('Free')}
           {slot.location_note ? ` · ${slot.location_note}` : ''}
         </p>
         {allocation?.skip_reason ? (
           <p className="text-caption">
-            Waitlist skipped: {allocation.skip_reason}
+            {t('Waitlist skipped:')} {allocation.skip_reason}
           </p>
         ) : null}
         {workspace.directory_enabled && allocation ? (
           <p className="text-caption">
-            Vehicles:{' '}
+            {t('Vehicles:')}{' '}
             {linked.length > 0
               ? linked.map((vehicle) => vehicle.registration_number).join(', ')
-              : 'none marked'}
+              : t('none marked')}
           </p>
         ) : null}
       </div>
@@ -200,14 +226,20 @@ function SlotItem({
           {allocation ? (
             <ParkingQuickAction
               action={actions.endAllocation}
-              label={`End allocation of slot ${slot.label}`}
-              confirmMessage={`End unit ${allocation.unit_number}'s allocation of slot ${slot.label}?`}
+              label={t('End allocation of slot {label}', { label: slot.label })}
+              confirmMessage={t(
+                "End unit {unit}'s allocation of slot {label}?",
+                {
+                  unit: allocation.unit_number,
+                  label: slot.label,
+                },
+              )}
               input={{ allocationId: allocation.id }}
             />
           ) : slot.slot_type !== 'visitor' ? (
             <details className="grid gap-space-2">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-                Allocate slot {slot.label}
+                {t('Allocate slot {label}', { label: slot.label })}
               </summary>
               <AllocateForm
                 slot={slot}
@@ -218,15 +250,17 @@ function SlotItem({
           ) : null}
           <details className="grid gap-space-2">
             <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-              Edit slot {slot.label}
+              {t('Edit slot {label}', { label: slot.label })}
             </summary>
             <SlotForm slot={slot} actions={actions} />
           </details>
           {allocation ? null : (
             <ParkingQuickAction
               action={actions.archiveSlot}
-              label={`Archive slot ${slot.label}`}
-              confirmMessage={`Archive slot ${slot.label}? Its history is kept.`}
+              label={t('Archive slot {label}', { label: slot.label })}
+              confirmMessage={t('Archive slot {label}? Its history is kept.', {
+                label: slot.label,
+              })}
               input={{ slotId: slot.id, expectedVersion: slot.version }}
             />
           )}
@@ -247,6 +281,7 @@ export function ParkingAdminView({
   fileRequest?: typeof fetch;
   now?: number;
 }) {
+  const { locale, t } = useParkingCopy();
   const id = useId();
   const [now] = useState(() => fixedNow ?? Date.now());
   const active = workspace.slots.filter((slot) => !slot.archived_at);
@@ -260,20 +295,26 @@ export function ParkingAdminView({
 
   return (
     <section className="grid min-w-0 gap-space-5">
-      <h1 className="text-title font-semibold">Society parking</h1>
+      <h1 className="text-title font-semibold">{t('Society parking')}</h1>
       {workspace.can_manage ? null : (
-        <Banner tone="neutral" title="View only">
-          Only administrators can change slots, allocations and settings.
+        <Banner tone="neutral" title={t('View only')}>
+          {t('Only administrators can change slots, allocations and settings.')}
         </Banner>
       )}
 
       <Card
-        title="Slots"
-        description={`${active.length} active slot${active.length === 1 ? '' : 's'}, ${active.filter((slot) => slot.allocation).length} allocated.`}
+        title={t('Slots')}
+        description={t('{active} active slots, {allocated} allocated.', {
+          active: formatLocalizedNumber(active.length, locale),
+          allocated: formatLocalizedNumber(
+            active.filter((slot) => slot.allocation).length,
+            locale,
+          ),
+        })}
       >
         <div className="grid gap-space-4">
           {active.length === 0 ? (
-            <p className="text-body text-ink-muted">No slots yet.</p>
+            <p className="text-body text-ink-muted">{t('No slots yet.')}</p>
           ) : (
             <ul className="grid gap-space-3">
               {active.map((slot) => (
@@ -289,7 +330,7 @@ export function ParkingAdminView({
           {workspace.can_manage ? (
             <details className="grid gap-space-2">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-                Add a slot
+                {t('Add a slot')}
               </summary>
               <SlotForm slot={null} actions={actions} />
             </details>
@@ -297,7 +338,9 @@ export function ParkingAdminView({
           {archived.length > 0 ? (
             <details className="grid gap-space-2">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline">
-                Archived slots ({archived.length})
+                {t('Archived slots ({count})', {
+                  count: formatLocalizedNumber(archived.length, locale),
+                })}
               </summary>
               <ul className="grid gap-space-3">
                 {archived.map((slot) => (
@@ -315,8 +358,10 @@ export function ParkingAdminView({
       </Card>
 
       <Card
-        title="Waitlists"
-        description="One queue per slot type, served in order. Allocate from a slot above."
+        title={t('Waitlists')}
+        description={t(
+          'One queue per slot type, served in order. Allocate from a slot above.',
+        )}
       >
         <div className="grid gap-space-4 medium:grid-cols-3">
           {PARKING_REQUEST_SLOT_TYPES.map((type) => {
@@ -326,19 +371,25 @@ export function ParkingAdminView({
             return (
               <section key={type} className="grid content-start gap-space-2">
                 <h3 className="text-body-strong">
-                  {PARKING_SLOT_TYPE_LABELS[type]} ({queue.length})
+                  {t(PARKING_SLOT_TYPE_LABELS[type])} (
+                  {formatLocalizedNumber(queue.length, locale)})
                 </h3>
                 {queue.length === 0 ? (
-                  <p className="text-caption text-ink-muted">Nobody waiting.</p>
+                  <p className="text-caption text-ink-muted">
+                    {t('Nobody waiting.')}
+                  </p>
                 ) : (
                   <ol className="grid gap-space-2">
                     {queue.map((request) => (
                       <li key={request.id} className="text-caption">
                         <span className="text-body-strong">
-                          Unit {request.unit_number}
+                          {t('Unit {unit}', { unit: request.unit_number })}
                         </span>{' '}
-                        · {parkingQueueText(request.queue_position)} · since{' '}
-                        {formatParkingTime(request.created_at)}
+                        · {t(parkingQueueText(request.queue_position) ?? '')} ·{' '}
+                        {t('since')}{' '}
+                        {request.created_at
+                          ? parkingDisplayTime(request.created_at, locale)
+                          : t('Not available')}
                         {request.note ? ` · ${request.note}` : ''}
                       </li>
                     ))}
@@ -350,23 +401,29 @@ export function ParkingAdminView({
         </div>
       </Card>
 
-      <Card title="Visitor passes">
+      <Card title={t('Visitor passes')}>
         {!workspace.visitor_enabled ? (
           <p className="text-body text-ink-muted">
-            Visitor passes need the Visitors module, which is turned off.
+            {t('Visitor passes need the Visitors module, which is turned off.')}
           </p>
         ) : workspace.passes.length === 0 ? (
-          <p className="text-body text-ink-muted">No current visitor passes.</p>
+          <p className="text-body text-ink-muted">
+            {t('No current visitor passes.')}
+          </p>
         ) : (
           <ul className="grid gap-space-2">
             {workspace.passes.map((pass) => (
               <li key={pass.id} className="text-caption">
                 <span className="text-body-strong">
-                  Slot {pass.slot_label} · {pass.visitor_name}
+                  {t('Slot {label} · {name}', {
+                    label: pass.slot_label,
+                    name: pass.visitor_name,
+                  })}
                 </span>{' '}
-                · Unit {pass.unit_number} ·{' '}
-                {PARKING_PASS_STATE_LABELS[parkingPassState(pass, now)]} ·{' '}
-                {formatParkingWindow(pass.starts_at, pass.ends_at)}
+                · {t('Unit {unit}', { unit: pass.unit_number })} ·{' '}
+                {t(PARKING_PASS_STATE_LABELS[parkingPassState(pass, now)])} ·{' '}
+                {parkingDisplayTime(pass.starts_at, locale)} –{' '}
+                {parkingDisplayTime(pass.ends_at, locale)}
               </li>
             ))}
           </ul>
@@ -374,11 +431,13 @@ export function ParkingAdminView({
       </Card>
 
       <Card
-        title="Wrong-parking reports"
-        description={`${openReports.length} open.`}
+        title={t('Wrong-parking reports')}
+        description={t('{count} open.', {
+          count: formatLocalizedNumber(openReports.length, locale),
+        })}
       >
         {workspace.reports.length === 0 ? (
-          <p className="text-body text-ink-muted">No reports.</p>
+          <p className="text-body text-ink-muted">{t('No reports.')}</p>
         ) : (
           <ul className="grid gap-space-3">
             {[...openReports, ...closedReports].map((report) => (
@@ -390,7 +449,7 @@ export function ParkingAdminView({
                 {workspace.can_manage && report.status === 'open' ? (
                   <ModuleActionForm
                     action={actions.resolveReport}
-                    submitLabel="Mark resolved"
+                    submitLabel={t('Mark resolved')}
                     input={(form) =>
                       parkingReportResolveInputSchema.parse({
                         reportId: report.id,
@@ -403,7 +462,7 @@ export function ParkingAdminView({
                     <TextAreaInput
                       id={`${id}-resolve-${report.id}`}
                       name="resolutionNote"
-                      label="Resolution note (optional)"
+                      label={t('Resolution note (optional)')}
                       maxLength={500}
                     />
                   </ModuleActionForm>
@@ -415,13 +474,15 @@ export function ParkingAdminView({
       </Card>
 
       <Card
-        title="Photo retention"
-        description="Wrong-parking photos are deleted automatically after this many days."
+        title={t('Photo retention')}
+        description={t(
+          'Wrong-parking photos are deleted automatically after this many days.',
+        )}
       >
         {workspace.can_manage ? (
           <ModuleActionForm
             action={actions.saveSettings}
-            submitLabel="Save retention"
+            submitLabel={t('Save retention')}
             input={(form) =>
               parkingSettingsInputSchema.parse({
                 photoRetentionDays: Number(form.get('photoRetentionDays')),
@@ -433,8 +494,17 @@ export function ParkingAdminView({
               name="photoRetentionDays"
               type="number"
               inputMode="numeric"
-              label="Keep photos for (days)"
-              helpText={`${PARKING_PHOTO_RETENTION_MIN_DAYS} to ${PARKING_PHOTO_RETENTION_MAX_DAYS} days.`}
+              label={t('Keep photos for (days)')}
+              helpText={t('{min} to {max} days.', {
+                min: formatLocalizedNumber(
+                  PARKING_PHOTO_RETENTION_MIN_DAYS,
+                  locale,
+                ),
+                max: formatLocalizedNumber(
+                  PARKING_PHOTO_RETENTION_MAX_DAYS,
+                  locale,
+                ),
+              })}
               min={PARKING_PHOTO_RETENTION_MIN_DAYS}
               max={PARKING_PHOTO_RETENTION_MAX_DAYS}
               required
@@ -443,8 +513,12 @@ export function ParkingAdminView({
           </ModuleActionForm>
         ) : (
           <p className="text-body">
-            Photos are kept for {workspace.settings.photo_retention_days} day
-            {workspace.settings.photo_retention_days === 1 ? '' : 's'}.
+            {t('Photos are kept for {count} days.', {
+              count: formatLocalizedNumber(
+                workspace.settings.photo_retention_days,
+                locale,
+              ),
+            })}
           </p>
         )}
       </Card>

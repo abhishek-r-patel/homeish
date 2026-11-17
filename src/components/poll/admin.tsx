@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { z } from 'zod';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import { Card, ListItem } from '@/components/ui/data-display';
 import { EmptyState } from '@/components/ui/feedback';
 import {
@@ -111,6 +113,7 @@ export function PollDateTimePicker({
   fieldName: string;
   required?: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   const initial = timeParts(value);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -119,14 +122,14 @@ export function PollDateTimePicker({
     <div className="grid gap-space-2">
       <DatePicker
         id={`${id}-date`}
-        label={`${label} date`}
+        label={t('{label} date', { label })}
         value={date}
         onChange={setDate}
         required={required}
       />
       <TimePicker
         id={`${id}-time`}
-        label={`${label} time`}
+        label={t('{label} time', { label })}
         value={time}
         onChange={setTime}
         required={required}
@@ -138,14 +141,16 @@ export function PollDateTimePicker({
 }
 
 export function PollAdminListView({ workspace }: { workspace: PollAdminList }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <section className="grid min-w-0 gap-space-4">
       <div className="flex flex-wrap items-start justify-between gap-space-3">
         <div className="grid gap-space-1">
-          <h1 className="text-title font-semibold">Polls</h1>
+          <h1 className="text-title font-semibold">{t('Polls')}</h1>
           <p className="text-body text-ink-muted">
-            Manage society polls and elections. Committee members can review but
-            not edit.
+            {t(
+              'Manage society polls and elections. Committee members can review but not edit.',
+            )}
           </p>
         </div>
         {workspace.canManage ? (
@@ -153,25 +158,25 @@ export function PollAdminListView({ workspace }: { workspace: PollAdminList }) {
             className="inline-flex min-h-12 items-center justify-center rounded-md bg-brand px-space-4 text-body-strong text-on-brand outline-none hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             href="/admin/polls/new"
           >
-            New poll or election
+            {t('New poll or election')}
           </Link>
         ) : null}
       </div>
       {workspace.votes.length === 0 ? (
         <EmptyState
-          title="No polls yet"
-          description={
+          title={t('No polls yet')}
+          description={t(
             workspace.canManage
               ? 'Create a public poll or private election for your society.'
-              : 'Your society has not created a poll or election yet.'
-          }
+              : 'Your society has not created a poll or election yet.',
+          )}
           action={
             workspace.canManage ? (
               <Link
                 className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
                 href="/admin/polls/new"
               >
-                Create a poll
+                {t('Create a poll')}
               </Link>
             ) : undefined
           }
@@ -184,15 +189,31 @@ export function PollAdminListView({ workspace }: { workspace: PollAdminList }) {
                 href={`/admin/polls/${vote.id}`}
                 title={
                   <span className="break-words">
-                    {vote.title || 'Untitled draft'}
+                    {vote.title || t('Untitled draft')}
                   </span>
                 }
-                secondary={`${vote.votingType === 'public' ? 'Public poll' : 'Private election'} · closes ${formatPollDateTime(vote.closesAt)} (IST)`}
+                secondary={t('{type} · closes {date} (IST)', {
+                  type: t(
+                    vote.votingType === 'public'
+                      ? 'Public poll'
+                      : 'Private election',
+                  ),
+                  date: formatPollDateTime(vote.closesAt, locale),
+                })}
                 status={`poll.${vote.status}`}
                 trailing={
                   vote.eligible === null
                     ? undefined
-                    : `${vote.submitted ?? 0} of ${vote.eligible} voted`
+                    : t('{submitted} of {eligible} voted', {
+                        submitted: formatLocalizedNumber(
+                          vote.submitted ?? 0,
+                          locale ?? 'en',
+                        ),
+                        eligible: formatLocalizedNumber(
+                          vote.eligible,
+                          locale ?? 'en',
+                        ),
+                      })
                 }
               />
             </li>
@@ -214,6 +235,7 @@ function ReasonAction({
   label: string;
   confirmMessage: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   return (
     <ModuleActionForm
@@ -230,7 +252,7 @@ function ReasonAction({
       <TextAreaInput
         id={`${id}-reason`}
         name="reason"
-        label="Reason"
+        label={t('Reason')}
         maxLength={500}
         required
       />
@@ -245,23 +267,26 @@ function PollLifecycle({
   detail: PollAdminVote;
   actions: PollAdminActions;
 }) {
+  const { translate: t } = useUiTranslator();
   const { vote } = detail;
   if (!detail.canManage) return null;
   if (vote.status === 'draft') {
     return (
-      <Card title="Draft actions">
+      <Card title={t('Draft actions')}>
         <div className="grid gap-space-3">
           <Link
             className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
             href={`/admin/polls/${vote.id}/edit`}
           >
-            Edit draft
+            {t('Edit draft')}
           </Link>
           <ModuleActionForm
             action={actions.activate}
-            submitLabel="Open voting now"
+            submitLabel={t('Open voting now')}
             submitDisabled={!detail.readiness.ready}
-            confirmMessage="Open this poll now? Its voter list will be frozen."
+            confirmMessage={t(
+              'Open this poll now? Its voter list will be frozen.',
+            )}
             input={() =>
               pollVoteInputSchema
                 .extend({
@@ -274,12 +299,14 @@ function PollLifecycle({
             }
           >
             <p className="text-caption text-ink-muted">
-              Opening freezes eligible units, representatives and tenant voting.
+              {t(
+                'Opening freezes eligible units, representatives and tenant voting.',
+              )}
             </p>
           </ModuleActionForm>
           <ModuleActionForm
             action={actions.schedule}
-            submitLabel="Schedule opening"
+            submitLabel={t('Schedule opening')}
             submitDisabled={!detail.readiness.ready}
             input={(form) => ({
               ...pollScheduleInputSchema.parse({
@@ -291,7 +318,7 @@ function PollLifecycle({
           >
             <PollDateTimePicker
               id={`schedule-${vote.id}`}
-              label="Open voting"
+              label={t('Open voting')}
               value={vote.opensAt}
               fieldName="opensAt"
               required
@@ -299,8 +326,10 @@ function PollLifecycle({
           </ModuleActionForm>
           <ModuleActionForm
             action={actions.deleteDraft}
-            submitLabel="Delete draft"
-            confirmMessage="Delete this draft and its setup? This cannot be undone."
+            submitLabel={t('Delete draft')}
+            confirmMessage={t(
+              'Delete this draft and its setup? This cannot be undone.',
+            )}
             input={() =>
               pollVoteInputSchema
                 .extend({
@@ -313,7 +342,7 @@ function PollLifecycle({
             }
           >
             <p className="text-caption text-ink-muted">
-              Only a draft can be deleted.
+              {t('Only a draft can be deleted.')}
             </p>
           </ModuleActionForm>
         </div>
@@ -322,19 +351,23 @@ function PollLifecycle({
   }
   if (vote.status === 'scheduled') {
     return (
-      <Card title="Scheduled poll actions">
+      <Card title={t('Scheduled poll actions')}>
         <div className="grid gap-space-3">
           <ReasonAction
             action={actions.withdraw}
             voteId={vote.id}
-            label="Withdraw schedule"
-            confirmMessage="Return this poll to draft? The frozen voter list will be cleared."
+            label={t('Withdraw schedule')}
+            confirmMessage={t(
+              'Return this poll to draft? The frozen voter list will be cleared.',
+            )}
           />
           <ReasonAction
             action={actions.cancel}
             voteId={vote.id}
-            label="Cancel poll"
-            confirmMessage="Cancel this scheduled poll? Frozen representatives will be notified."
+            label={t('Cancel poll')}
+            confirmMessage={t(
+              'Cancel this scheduled poll? Frozen representatives will be notified.',
+            )}
           />
         </div>
       </Card>
@@ -342,11 +375,11 @@ function PollLifecycle({
   }
   if (vote.status === 'active') {
     return (
-      <Card title="Open poll actions">
+      <Card title={t('Open poll actions')}>
         <div className="grid gap-space-3">
           <ModuleActionForm
             action={actions.extendDeadline}
-            submitLabel="Extend deadline"
+            submitLabel={t('Extend deadline')}
             input={(form) =>
               pollDeadlineExtendInputSchema.parse({
                 voteId: vote.id,
@@ -357,7 +390,7 @@ function PollLifecycle({
           >
             <PollDateTimePicker
               id={`deadline-${vote.id}`}
-              label="New closing time"
+              label={t('New closing time')}
               value={vote.closesAt}
               fieldName="closesAt"
               required
@@ -365,7 +398,7 @@ function PollLifecycle({
             <TextAreaInput
               id={`deadline-reason-${vote.id}`}
               name="reason"
-              label="Reason for extension"
+              label={t('Reason for extension')}
               maxLength={500}
               required
             />
@@ -373,14 +406,18 @@ function PollLifecycle({
           <ReasonAction
             action={actions.completeEarly}
             voteId={vote.id}
-            label="Complete voting early"
-            confirmMessage="Complete voting now? No more ballots can be submitted."
+            label={t('Complete voting early')}
+            confirmMessage={t(
+              'Complete voting now? No more ballots can be submitted.',
+            )}
           />
           <ReasonAction
             action={actions.cancel}
             voteId={vote.id}
-            label="Cancel poll"
-            confirmMessage="Cancel this poll? Frozen representatives will be notified."
+            label={t('Cancel poll')}
+            confirmMessage={t(
+              'Cancel this poll? Frozen representatives will be notified.',
+            )}
           />
         </div>
       </Card>
@@ -410,6 +447,9 @@ export function PollAdminDetailView({
   results: PollResults | null;
   actions: PollAdminActions;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const { vote } = detail;
   const committeeView = !detail.canManage;
   return (
@@ -418,19 +458,23 @@ export function PollAdminDetailView({
         className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         href="/admin/polls"
       >
-        Back to Polls
+        {t('Back to Polls')}
       </Link>
       <div className="grid gap-space-2">
         <div className="flex flex-wrap items-center gap-space-2">
           <h1 className="text-title font-semibold break-words">
-            {vote.title || 'Untitled draft'}
+            {vote.title || t('Untitled draft')}
           </h1>
           <PollStatus status={vote.status} />
         </div>
         <p className="text-body text-ink-muted">
-          {vote.votingType === 'public' ? 'Public poll' : 'Private election'} ·
-          Opens {formatPollDateTime(vote.opensAt)} · Closes{' '}
-          {formatPollDateTime(vote.closesAt)} (IST)
+          {t('{type} · Opens {opens} · Closes {closes} (IST)', {
+            type: t(
+              vote.votingType === 'public' ? 'Public poll' : 'Private election',
+            ),
+            opens: formatPollDateTime(vote.opensAt, locale),
+            closes: formatPollDateTime(vote.closesAt, locale),
+          })}
         </p>
         {vote.instructions ? (
           <p className="break-words whitespace-pre-line text-body">
@@ -439,36 +483,41 @@ export function PollAdminDetailView({
         ) : null}
         {vote.cancellationReason ? (
           <p className="text-body text-ink-muted">
-            Cancellation reason: {vote.cancellationReason}
+            {t('Cancellation reason: {reason}', {
+              reason: vote.cancellationReason,
+            })}
           </p>
         ) : null}
         {vote.completionReason ? (
           <p className="text-body text-ink-muted">
-            Completion reason: {vote.completionReason}
+            {t('Completion reason: {reason}', {
+              reason: vote.completionReason,
+            })}
           </p>
         ) : null}
       </div>
 
       {committeeView ? (
-        <Card title="Committee view">
+        <Card title={t('Committee view')}>
           <p className="text-body text-ink-muted">
-            You can review this poll and its permitted results. Only
-            administrators can change it.
+            {t(
+              'You can review this poll and its permitted results. Only administrators can change it.',
+            )}
           </p>
         </Card>
       ) : null}
 
       {vote.status === 'draft' ? (
-        <Card title="Readiness">
+        <Card title={t('Readiness')}>
           {detail.readiness.ready ? (
             <p className="text-body text-success">
-              This poll is ready to open.
+              {t('This poll is ready to open.')}
             </p>
           ) : (
             <ul className="list-disc space-y-space-1 pl-space-5 text-body">
               {detail.readiness.issues.map((issue) => (
                 <li key={issue}>
-                  {READINESS_MESSAGES[issue] ?? 'Check the poll setup.'}
+                  {t(READINESS_MESSAGES[issue] ?? 'Check the poll setup.')}
                 </li>
               ))}
             </ul>
@@ -476,17 +525,22 @@ export function PollAdminDetailView({
           {detail.electoratePreview ? (
             <div className="mt-space-3 grid gap-space-2">
               <p className="text-body-strong">
-                {detail.electoratePreview.eligibleUnits} eligible units
+                {t('{count} eligible units', {
+                  count: number(detail.electoratePreview.eligibleUnits),
+                })}
               </p>
               {detail.electoratePreview.unitsWithoutVoter.length ? (
                 <p className="text-caption text-ink-muted">
-                  Units without an eligible representative:{' '}
-                  {detail.electoratePreview.unitsWithoutVoter
-                    .map((unit) => unit.unitLabel)
-                    .join(', ')}
-                  {detail.electoratePreview.unitsWithoutVoter.length >= 200
-                    ? ' (list capped)'
-                    : ''}
+                  {t(
+                    detail.electoratePreview.unitsWithoutVoter.length >= 200
+                      ? 'Units without an eligible representative: {units} (list capped)'
+                      : 'Units without an eligible representative: {units}',
+                    {
+                      units: detail.electoratePreview.unitsWithoutVoter
+                        .map((unit) => unit.unitLabel)
+                        .join(', '),
+                    },
+                  )}
                 </p>
               ) : null}
             </div>
@@ -495,20 +549,22 @@ export function PollAdminDetailView({
       ) : null}
 
       {vote.status !== 'draft' && vote.status !== 'cancelled' ? (
-        <Card title="Frozen voting details">
+        <Card title={t('Frozen voting details')}>
           <p className="text-body">
-            Tenant representatives:{' '}
-            {vote.tenantVoting ? 'Allowed' : 'Not allowed'}
+            {t('Tenant representatives: {status}', {
+              status: t(vote.tenantVoting ? 'Allowed' : 'Not allowed'),
+            })}
           </p>
           <p className="text-caption text-ink-muted">
-            These voter and tenant-voting rules were fixed when the poll was
-            scheduled or opened.
+            {t(
+              'These voter and tenant-voting rules were fixed when the poll was scheduled or opened.',
+            )}
           </p>
         </Card>
       ) : null}
 
       {participation ? (
-        <Card title="Participation">
+        <Card title={t('Participation')}>
           <PollParticipationView
             participation={participation}
             committeeView={committeeView}
@@ -517,28 +573,32 @@ export function PollAdminDetailView({
         </Card>
       ) : null}
       {results ? (
-        <Card title="Results">
+        <Card title={t('Results')}>
           <PollResultsView results={results} />
         </Card>
       ) : null}
       {vote.status === 'completed' ? (
-        <Card title="Export results">
+        <Card title={t('Export results')}>
           <p className="mb-space-3 text-body text-ink-muted">
-            Completed poll reports do not include email addresses. Private
-            election exports keep the voter roster separate from choices.
+            {t(
+              'Completed poll reports do not include email addresses. Private election exports keep the voter roster separate from choices.',
+            )}
+          </p>
+          <p className="mb-space-3 text-caption text-ink-muted">
+            {t('PDF and CSV downloads are in English.')}
           </p>
           <div className="flex flex-wrap gap-space-3">
             <a
               className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
               href={`/api/polls/${vote.id}/export?format=pdf`}
             >
-              Download PDF
+              {t('Download PDF')}
             </a>
             <a
               className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
               href={`/api/polls/${vote.id}/export?format=csv`}
             >
-              Download CSV
+              {t('Download CSV')}
             </a>
           </div>
         </Card>
@@ -549,15 +609,18 @@ export function PollAdminDetailView({
 }
 
 export function NewPollView({ action }: { action: ModuleFormAction }) {
+  const { translate: t } = useUiTranslator();
   return (
     <section className="grid gap-space-4">
       <Link
         className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         href="/admin/polls"
       >
-        Back to Polls
+        {t('Back to Polls')}
       </Link>
-      <h1 className="text-title font-semibold">Create a poll or election</h1>
+      <h1 className="text-title font-semibold">
+        {t('Create a poll or election')}
+      </h1>
       <CreatePollDraftForm action={action} votingType="public" />
       <CreatePollDraftForm action={action} votingType="private" />
     </section>
@@ -571,13 +634,16 @@ function CreatePollDraftForm({
   action: ModuleFormAction;
   votingType: 'public' | 'private';
 }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
-  const label =
-    votingType === 'public' ? 'New public poll' : 'New private election';
-  const description =
+  const label = t(
+    votingType === 'public' ? 'New public poll' : 'New private election',
+  );
+  const description = t(
     votingType === 'public'
       ? 'Ask residents to choose one or more options.'
-      : 'Create offices and candidates for a private election.';
+      : 'Create offices and candidates for a private election.',
+  );
   return (
     <Card title={label} description={description}>
       <ModuleActionForm
@@ -604,6 +670,7 @@ export function PollSettingsView({
   settings: { tenant_voting_default: boolean };
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   return (
     <section className="grid gap-space-4">
@@ -611,16 +678,18 @@ export function PollSettingsView({
         className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         href="/admin/polls"
       >
-        Back to Polls
+        {t('Back to Polls')}
       </Link>
-      <h1 className="text-title font-semibold">Poll settings</h1>
+      <h1 className="text-title font-semibold">{t('Poll settings')}</h1>
       <Card
-        title="Tenant voting"
-        description="This default applies when a vote is scheduled or opened. Each draft can override it until that point."
+        title={t('Tenant voting')}
+        description={t(
+          'This default applies when a vote is scheduled or opened. Each draft can override it until that point.',
+        )}
       >
         <ModuleActionForm
           action={action}
-          submitLabel="Save settings"
+          submitLabel={t('Save settings')}
           input={(form) =>
             pollSettingsInputSchema.parse({
               tenant_voting_default: form.get('tenantVotingDefault') === 'true',
@@ -630,11 +699,13 @@ export function PollSettingsView({
           <SelectInput
             id={`${id}-tenant-voting`}
             name="tenantVotingDefault"
-            label="Allow eligible tenants to represent their unit by default"
+            label={t(
+              'Allow eligible tenants to represent their unit by default',
+            )}
             value={String(settings.tenant_voting_default)}
             options={[
-              { value: 'false', label: 'No — owners only' },
-              { value: 'true', label: 'Yes — owners and tenants' },
+              { value: 'false', label: t('No — owners only') },
+              { value: 'true', label: t('Yes — owners and tenants') },
             ]}
           />
         </ModuleActionForm>

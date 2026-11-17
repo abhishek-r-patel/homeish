@@ -13,25 +13,42 @@ import type {
   SessionSociety,
   SessionSnapshot,
 } from '../../core/tenancy/session';
+import {
+  translateAuthMessage,
+  translateKnownAuthResponse,
+} from '../../core/i18n/catalogs/hi-auth';
+import type { MessageValues } from '../../core/i18n/messages';
+import { useLanguage } from '../language-provider';
 import { Banner } from '../ui/feedback';
 import { Button } from '../ui/button';
 
-function ActionNotice({ state }: { state: AuthActionState | null }) {
+function ActionNotice({
+  state,
+  translateResponse,
+}: {
+  state: AuthActionState | null;
+  translateResponse: (source: string) => string;
+}) {
   if (!state) return null;
   return (
     <Banner tone={state.ok ? 'success' : 'danger'}>
-      <p>{state.message ?? 'The request completed.'}</p>
+      <p>{translateResponse(state.message ?? 'The request completed.')}</p>
       {!state.ok && state.referenceId ? (
         <p className="mt-space-2 text-caption">
-          Reference ID: <code>{state.referenceId}</code>
+          {translateResponse('Reference ID:')} <code>{state.referenceId}</code>
         </p>
       ) : null}
     </Banner>
   );
 }
 
-function roleLabel(roles: readonly string[]): string {
-  return roles.map((role) => role.replaceAll('_', ' ')).join(', ');
+function roleLabel(
+  roles: readonly string[],
+  translateResponse: (source: string) => string,
+): string {
+  return roles
+    .map((role) => translateResponse(role.replaceAll('_', ' ')))
+    .join(', ');
 }
 
 function useSessionActions() {
@@ -71,11 +88,13 @@ function SocietyOptions({
   selectedSocietyId,
   onChoose,
   pending,
+  translateResponse,
 }: {
   societies: readonly SessionSociety[];
   selectedSocietyId: string | null;
   onChoose: (societyId: string) => void;
   pending: boolean;
+  translateResponse: (source: string) => string;
 }) {
   return (
     <ul className="grid gap-space-3">
@@ -91,8 +110,10 @@ function SocietyOptions({
             <span className="grid gap-space-1 text-left">
               <span>{society.name}</span>
               <span className="text-caption font-normal text-ink-muted">
-                {roleLabel(society.roles)}
-                {society.status === 'suspended' ? ' · Suspended' : ''}
+                {roleLabel(society.roles, translateResponse)}
+                {society.status === 'suspended'
+                  ? ` · ${translateResponse('Suspended')}`
+                  : ''}
               </span>
             </span>
             <span aria-hidden="true">›</span>
@@ -106,9 +127,11 @@ function SocietyOptions({
 function SignOutButton({
   onSignOut,
   pending,
+  label,
 }: {
   onSignOut: () => void;
   pending: boolean;
+  label: string;
 }) {
   return (
     <Button
@@ -117,7 +140,7 @@ function SignOutButton({
       onClick={onSignOut}
       variant="tertiary"
     >
-      Sign out
+      {label}
     </Button>
   );
 }
@@ -129,27 +152,40 @@ export function SocietyPicker({
   session: SessionSnapshot;
   activeSocieties: readonly SessionSociety[];
 }) {
+  const { locale, translate } = useLanguage();
+  const t = (source: string, values?: MessageValues) =>
+    translateAuthMessage(locale, source, values, translate);
+  const translateResponse = (source: string) =>
+    translateKnownAuthResponse(locale, source, translate);
   const { chooseSociety, notice, pending, signOut } = useSessionActions();
   return (
     <div className="grid gap-space-5">
       <div className="grid gap-space-2">
         <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-          Society selection
+          {t('Society selection')}
         </p>
-        <h1 className="text-heading font-semibold">Choose your society</h1>
+        <h1 className="text-heading font-semibold">
+          {t('Choose your society')}
+        </h1>
         <p className="text-body text-ink-muted">
-          You’re signed in as {session.user.fullName}. Choose where you want to
-          continue.
+          {t('You’re signed in as {name}. Choose where you want to continue.', {
+            name: session.user.fullName,
+          })}
         </p>
       </div>
-      <ActionNotice state={notice} />
+      <ActionNotice state={notice} translateResponse={translateResponse} />
       <SocietyOptions
         onChoose={chooseSociety}
         pending={pending}
         selectedSocietyId={session.activeSocietyId}
         societies={activeSocieties}
+        translateResponse={translateResponse}
       />
-      <SignOutButton onSignOut={signOut} pending={pending} />
+      <SignOutButton
+        label={t('Sign out')}
+        onSignOut={signOut}
+        pending={pending}
+      />
     </div>
   );
 }
@@ -165,6 +201,11 @@ export function CurrentSession({
   activeSocieties: readonly SessionSociety[];
   pendingSocieties: readonly SessionSociety[];
 }) {
+  const { locale, translate } = useLanguage();
+  const t = (source: string, values?: MessageValues) =>
+    translateAuthMessage(locale, source, values, translate);
+  const translateResponse = (source: string) =>
+    translateKnownAuthResponse(locale, source, translate);
   const { chooseSociety, notice, pending, signOut } = useSessionActions();
   const [showSocieties, setShowSocieties] = useState(false);
 
@@ -172,26 +213,28 @@ export function CurrentSession({
     <div className="grid gap-space-5">
       <div className="grid gap-space-2">
         <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-          Signed in
+          {t('Signed in')}
         </p>
         <h1 className="text-heading font-semibold">{activeSociety.name}</h1>
         <p className="text-body text-ink-muted">
-          {session.user.fullName} · {roleLabel(activeSociety.roles)}
+          {session.user.fullName} ·{' '}
+          {roleLabel(activeSociety.roles, translateResponse)}
         </p>
       </div>
       {activeSociety.status === 'suspended' ? (
         <Banner tone="warning">
           <p>
-            This society is suspended. You can view information, but actions may
-            be unavailable.
+            {t(
+              'This society is suspended. You can view information, but actions may be unavailable.',
+            )}
           </p>
         </Banner>
       ) : null}
-      <ActionNotice state={notice} />
+      <ActionNotice state={notice} translateResponse={translateResponse} />
       {pendingSocieties.length > 0 ? (
         <section className="grid gap-space-2" aria-labelledby="pending-heading">
           <h2 id="pending-heading" className="text-body-strong">
-            Waiting for approval
+            {t('Waiting for approval')}
           </h2>
           <p className="text-caption text-ink-muted">
             {pendingSocieties.map(({ name }) => name).join(', ')}
@@ -201,7 +244,7 @@ export function CurrentSession({
       {activeSocieties.length > 1 ? (
         <section className="grid gap-space-3" aria-labelledby="switch-heading">
           <h2 id="switch-heading" className="text-body-strong">
-            Switch society
+            {t('Switch society')}
           </h2>
           {showSocieties ? (
             <SocietyOptions
@@ -209,6 +252,7 @@ export function CurrentSession({
               pending={pending}
               selectedSocietyId={session.activeSocietyId}
               societies={activeSocieties}
+              translateResponse={translateResponse}
             />
           ) : (
             <Button
@@ -216,7 +260,7 @@ export function CurrentSession({
               onClick={() => setShowSocieties(true)}
               variant="secondary"
             >
-              Choose another society
+              {t('Choose another society')}
             </Button>
           )}
         </section>
@@ -229,7 +273,11 @@ export function CurrentSession({
           Open Developer Console
         </Link>
       ) : null}
-      <SignOutButton onSignOut={signOut} pending={pending} />
+      <SignOutButton
+        label={t('Sign out')}
+        onSignOut={signOut}
+        pending={pending}
+      />
     </div>
   );
 }
@@ -241,21 +289,34 @@ export function MembershipStatus({
   session: SessionSnapshot;
   pendingSocieties: readonly SessionSociety[];
 }) {
+  const { locale, translate } = useLanguage();
+  const t = (source: string, values?: MessageValues) =>
+    translateAuthMessage(locale, source, values, translate);
+  const translateResponse = (source: string) =>
+    translateKnownAuthResponse(locale, source, translate);
   const { notice, pending, signOut } = useSessionActions();
   const waiting = pendingSocieties.length > 0;
   return (
     <div className="grid gap-space-5">
       <div className="grid gap-space-2">
         <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-          {waiting ? 'Waiting for approval' : 'No society access'}
+          {waiting ? t('Waiting for approval') : t('No society access')}
         </p>
         <h1 className="text-heading font-semibold">
-          {waiting ? 'Your request is pending' : 'No society is linked yet'}
+          {waiting
+            ? t('Your request is pending')
+            : t('No society is linked yet')}
         </h1>
         <p className="text-body text-ink-muted">
           {waiting
-            ? `A society administrator will review your membership for ${session.user.fullName}. You can sign in again later to check its status.`
-            : `Ask your society administrator to invite ${session.user.fullName} at this email address. Homeish does not allow open sign-up.`}
+            ? t(
+                'A society administrator will review your membership for {name}. You can sign in again later to check its status.',
+                { name: session.user.fullName },
+              )
+            : t(
+                'Ask your society administrator to invite {name} at this email address. Homeish does not allow open sign-up.',
+                { name: session.user.fullName },
+              )}
         </p>
       </div>
       {pendingSocieties.length > 0 ? (
@@ -267,15 +328,19 @@ export function MembershipStatus({
           ))}
         </ul>
       ) : null}
-      <ActionNotice state={notice} />
-      <SignOutButton onSignOut={signOut} pending={pending} />
+      <ActionNotice state={notice} translateResponse={translateResponse} />
+      <SignOutButton
+        label={t('Sign out')}
+        onSignOut={signOut}
+        pending={pending}
+      />
       {!waiting ? (
         <Link className="text-caption text-brand underline" href="/register">
-          Request access with a society code
+          {t('Request access with a society code')}
         </Link>
       ) : null}
       <Link className="text-caption text-brand underline" href="/login">
-        Sign in with a different email
+        {t('Sign in with a different email')}
       </Link>
     </div>
   );

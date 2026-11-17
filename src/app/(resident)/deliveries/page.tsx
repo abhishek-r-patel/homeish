@@ -12,6 +12,10 @@ import {
   listDeliveryUnits,
   requireDeliveryResident,
 } from '@/core/delivery/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
+import { formatLocalizedDateTime } from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
 import {
   cancelDeliveryPreAnnouncementAction,
   collectDeliveryAction,
@@ -29,15 +33,18 @@ function unitLabel(unit: { block: string | null; number: string }) {
   return unit.block ? `${unit.block} · ${unit.number}` : unit.number;
 }
 
-function dateTime(value: string, timeZone: string) {
-  return new Intl.DateTimeFormat(undefined, {
+function dateTime(value: string, timeZone: string, locale: Locale) {
+  return formatLocalizedDateTime(new Date(value), locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone,
-  }).format(new Date(value));
+  });
 }
 
 export default async function ResidentDeliveriesPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   await requireDeliveryResident();
   const [units, entries, settings, societyId, timezone] = await Promise.all([
     listDeliveryUnits('own'),
@@ -64,27 +71,30 @@ export default async function ResidentDeliveriesPage() {
     (entry) => entry.status === 'pending_response',
   );
   const responseOptions = [
-    { decision: 'allowed', label: 'Send inside' },
+    { decision: 'allowed', label: t('Send inside') },
     ...(settings.leave_at_gate_enabled
-      ? [{ decision: 'left_at_gate', label: 'Leave at gate' }]
+      ? [{ decision: 'left_at_gate', label: t('Leave at gate') }]
       : []),
-    { decision: 'denied', label: 'Deny / return' },
+    { decision: 'denied', label: t('Deny / return') },
   ] as const;
 
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Deliveries</h1>
+        <h1 className="text-title font-semibold">{t('Deliveries')}</h1>
         <p className="text-body text-ink-muted">
-          Respond to deliveries at the gate and track parcels left for
-          collection.
+          {t(
+            'Respond to deliveries at the gate and track parcels left for collection.',
+          )}
         </p>
       </header>
       <DeliveryRealtimeRefresh societyId={societyId} />
 
       <Card
-        description="Only active unit approvers can change that unit's standing rule."
-        title="Delivery preferences"
+        description={t(
+          "Only active unit approvers can change that unit's standing rule.",
+        )}
+        title={t('Delivery preferences')}
       >
         {preferences.length ? (
           <ul className="grid gap-space-3">
@@ -106,7 +116,7 @@ export default async function ResidentDeliveriesPage() {
                       className="grid gap-space-1 text-body-strong"
                       htmlFor={`delivery-rule-${unit.id}`}
                     >
-                      When a delivery arrives
+                      {t('When a delivery arrives')}
                       <select
                         className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
                         defaultValue={
@@ -118,13 +128,13 @@ export default async function ResidentDeliveriesPage() {
                         id={`delivery-rule-${unit.id}`}
                         name="rule"
                       >
-                        <option value="ask">Ask me (default)</option>
+                        <option value="ask">{t('Ask me (default)')}</option>
                         <option value="always_allow">
-                          Always allow inside
+                          {t('Always allow inside')}
                         </option>
                         {settings.leave_at_gate_enabled ? (
                           <option value="always_leave_at_gate">
-                            Always leave at the gate
+                            {t('Always leave at the gate')}
                           </option>
                         ) : null}
                       </select>
@@ -133,13 +143,15 @@ export default async function ResidentDeliveriesPage() {
                       className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white focus-visible:outline-2 focus-visible:outline-focus"
                       type="submit"
                     >
-                      Save preference
+                      {t('Save preference')}
                     </button>
                   </DeliveryActionForm>
                 ) : (
                   <p className="text-caption text-ink-muted">
-                    Current rule: {preference.rule}. Ask a unit approver to
-                    change it.
+                    {t(
+                      'Current rule: {rule}. Ask a unit approver to change it.',
+                      { rule: preference.rule },
+                    )}
                   </p>
                 )}
               </li>
@@ -147,14 +159,16 @@ export default async function ResidentDeliveriesPage() {
           </ul>
         ) : (
           <p className="text-body text-ink-muted">
-            Your account has no active unit occupancy.
+            {t('Your account has no active unit occupancy.')}
           </p>
         )}
       </Card>
 
       <Card
-        description="Tell the gate about a delivery you expect. Guards see it until the window ends."
-        title="Expected deliveries"
+        description={t(
+          'Tell the gate about a delivery you expect. Guards see it until the window ends.',
+        )}
+        title={t('Expected deliveries')}
       >
         {units.length ? (
           <DeliveryActionForm
@@ -170,7 +184,7 @@ export default async function ResidentDeliveriesPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="announce-unit"
             >
-              Unit
+              {t('Unit')}
               <select
                 className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
                 id="announce-unit"
@@ -188,14 +202,14 @@ export default async function ResidentDeliveriesPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="announce-platform"
             >
-              Platform or sender
+              {t('Platform or sender')}
               <input
                 autoComplete="off"
                 className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
                 id="announce-platform"
                 maxLength={60}
                 name="platform"
-                placeholder="For example, Amazon"
+                placeholder={t('For example, Amazon')}
                 required
               />
             </label>
@@ -204,7 +218,7 @@ export default async function ResidentDeliveriesPage() {
                 className="grid min-w-0 gap-space-1 text-body-strong"
                 htmlFor="announce-from"
               >
-                Expected from
+                {t('Expected from')}
                 <input
                   className="min-h-12 min-w-0 rounded-md border border-rule bg-surface px-space-3"
                   id="announce-from"
@@ -217,7 +231,7 @@ export default async function ResidentDeliveriesPage() {
                 className="grid min-w-0 gap-space-1 text-body-strong"
                 htmlFor="announce-to"
               >
-                Expected until
+                {t('Expected until')}
                 <input
                   aria-describedby="announce-window-help"
                   className="min-h-12 min-w-0 rounded-md border border-rule bg-surface px-space-3"
@@ -232,18 +246,23 @@ export default async function ResidentDeliveriesPage() {
               className="text-caption text-ink-muted"
               id="announce-window-help"
             >
-              Society time ({timezone}). The window can be up to 24 hours.
+              {t(
+                'Society time ({timezone}). The window can be up to 24 hours.',
+                {
+                  timezone,
+                },
+              )}
             </p>
             <button
               className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white focus-visible:outline-2 focus-visible:outline-focus"
               type="submit"
             >
-              Tell the gate
+              {t('Tell the gate')}
             </button>
           </DeliveryActionForm>
         ) : (
           <p className="text-body text-ink-muted">
-            Your account has no active unit occupancy.
+            {t('Your account has no active unit occupancy.')}
           </p>
         )}
         {expected.length ? (
@@ -256,9 +275,9 @@ export default async function ResidentDeliveriesPage() {
                 <div>
                   <p className="text-body-strong">{announcement.platform}</p>
                   <p className="text-caption text-ink-muted">
-                    {unitLabels.get(announcement.unit_id) ?? 'Your unit'} ·{' '}
-                    {dateTime(announcement.expected_from, timezone)} to{' '}
-                    {dateTime(announcement.expected_to, timezone)}
+                    {unitLabels.get(announcement.unit_id) ?? t('Your unit')} ·{' '}
+                    {dateTime(announcement.expected_from, timezone, locale)} to{' '}
+                    {dateTime(announcement.expected_to, timezone, locale)}
                   </p>
                 </div>
                 <DeliveryActionForm
@@ -271,11 +290,13 @@ export default async function ResidentDeliveriesPage() {
                     value={announcement.id}
                   />
                   <button
-                    aria-label={`Cancel expected ${announcement.platform} delivery`}
+                    aria-label={t('Cancel expected {platform} delivery', {
+                      platform: announcement.platform,
+                    })}
                     className="min-h-12 rounded-md border border-rule-strong px-space-4 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
                     type="submit"
                   >
-                    Cancel
+                    {t('Cancel')}
                   </button>
                 </DeliveryActionForm>
               </li>
@@ -283,14 +304,16 @@ export default async function ResidentDeliveriesPage() {
           </ul>
         ) : (
           <p className="mt-space-4 text-body text-ink-muted">
-            No expected deliveries.
+            {t('No expected deliveries.')}
           </p>
         )}
       </Card>
 
       <Card
-        description="The first active unit approver to respond closes the request."
-        title="Waiting for your response"
+        description={t(
+          'The first active unit approver to respond closes the request.',
+        )}
+        title={t('Waiting for your response')}
       >
         {waiting.length ? (
           <ul className="grid gap-space-3">
@@ -302,13 +325,15 @@ export default async function ResidentDeliveriesPage() {
                 <div>
                   <h2 className="text-body-strong">{entry.company}</h2>
                   <p className="text-caption text-ink-muted">
-                    {unitLabels.get(entry.unit_id) ?? 'Your unit'} ·{' '}
+                    {unitLabels.get(entry.unit_id) ?? t('Your unit')} ·{' '}
                     {entry.delivery_type}
                     {entry.delivery_person ? ` · ${entry.delivery_person}` : ''}
                   </p>
                   {entry.respond_by ? (
                     <p className="text-caption text-ink-muted">
-                      Respond by {dateTime(entry.respond_by, timezone)}
+                      {t('Respond by {date}', {
+                        date: dateTime(entry.respond_by, timezone, locale),
+                      })}
                     </p>
                   ) : null}
                 </div>
@@ -333,7 +358,7 @@ export default async function ResidentDeliveriesPage() {
                   </div>
                 ) : (
                   <p className="text-caption text-ink-muted">
-                    A unit approver can respond to this delivery.
+                    {t('A unit approver can respond to this delivery.')}
                   </p>
                 )}
               </li>
@@ -341,12 +366,12 @@ export default async function ResidentDeliveriesPage() {
           </ul>
         ) : (
           <p className="text-body text-ink-muted">
-            No deliveries are waiting for a response.
+            {t('No deliveries are waiting for a response.')}
           </p>
         )}
       </Card>
 
-      <Card title="Delivery history">
+      <Card title={t('Delivery history')}>
         {entries.length ? (
           <ol className="grid gap-space-3">
             {entries.map((entry) => (
@@ -357,14 +382,14 @@ export default async function ResidentDeliveriesPage() {
                 <div>
                   <p className="text-body-strong">{entry.company}</p>
                   <p className="text-caption text-ink-muted">
-                    {unitLabels.get(entry.unit_id) ?? 'Your unit'} ·{' '}
+                    {unitLabels.get(entry.unit_id) ?? t('Your unit')} ·{' '}
                     {entry.delivery_type} · {entry.status.replaceAll('_', ' ')}
                   </p>
                   <time
                     className="text-caption text-ink-muted"
                     dateTime={entry.created_at}
                   >
-                    {dateTime(entry.created_at, timezone)}
+                    {dateTime(entry.created_at, timezone, locale)}
                   </time>
                 </div>
                 {entry.status === 'left_at_gate' ? (
@@ -377,7 +402,7 @@ export default async function ResidentDeliveriesPage() {
                       className="min-h-12 rounded-md border border-rule-strong px-space-4 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
                       type="submit"
                     >
-                      Mark collected
+                      {t('Mark collected')}
                     </button>
                   </DeliveryActionForm>
                 ) : null}
@@ -385,7 +410,9 @@ export default async function ResidentDeliveriesPage() {
             ))}
           </ol>
         ) : (
-          <p className="text-body text-ink-muted">No delivery history yet.</p>
+          <p className="text-body text-ink-muted">
+            {t('No delivery history yet.')}
+          </p>
         )}
       </Card>
     </section>

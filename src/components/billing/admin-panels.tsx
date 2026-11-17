@@ -9,6 +9,7 @@ import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { SelectInput } from '@/components/ui/select-input';
 import { AmountInput, TextAreaInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
+import { useUiTranslator } from '@/components/ui/language';
 import {
   addBillingFineAction,
   confirmBillingPaymentAction,
@@ -17,7 +18,7 @@ import {
   rejectBillingPaymentAction,
   waiveBillingBillAction,
 } from '@/app/(admin)/admin/billing/actions';
-import { formatBillingDate, formatRupees } from '@/core/billing/format';
+import { billingDate, billingMoney } from './presentation';
 import type {
   BillingBillDetails,
   BillingPayment,
@@ -26,7 +27,7 @@ import type {
 import {
   ActionResult,
   type BillingFormAction,
-  fieldError,
+  useBillingFieldError,
   useBillingAction,
 } from './action-state';
 import { textLinkClass } from './styles';
@@ -34,6 +35,8 @@ import { textLinkClass } from './styles';
 type UnitOption = { id: string; number: string };
 
 export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
+  const fieldError = useBillingFieldError();
   const waive = useBillingAction(waiveBillingBillAction);
   const cancel = useBillingAction(waiveBillingBillAction);
   const [waiveOpen, setWaiveOpen] = useState(false);
@@ -45,11 +48,12 @@ export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
   const canCancel = bill.status === 'due' && bill.paid_paise === 0;
 
   return (
-    <Card title="Adjust bill">
+    <Card title={t('Adjust bill')}>
       <div className="grid gap-space-4">
         <p className="text-body text-ink-muted">
-          Waive part or all of the outstanding balance, or cancel a bill that
-          has no payments. A reason is required and recorded in the audit log.
+          {t(
+            'Waive part or all of the outstanding balance, or cancel a bill that has no payments. A reason is required and recorded in the audit log.',
+          )}
         </p>
         <ActionResult result={waive.result ?? cancel.result} />
         <div className="flex flex-wrap gap-space-3">
@@ -60,7 +64,7 @@ export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
             }}
             variant="secondary"
           >
-            Waive Amount
+            {t('Waive Amount')}
           </Button>
           {canCancel ? (
             <Button
@@ -70,7 +74,7 @@ export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
               }}
               variant="destructive"
             >
-              Cancel Bill
+              {t('Cancel Bill')}
             </Button>
           ) : null}
         </div>
@@ -80,7 +84,7 @@ export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
         id="billing-waive"
         onOpenChange={setWaiveOpen}
         open={waiveOpen}
-        title="Waive bill amount"
+        title={t('Waive bill amount')}
       >
         <form
           className="grid gap-space-4"
@@ -102,20 +106,22 @@ export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
           }}
         >
           <p className="text-body">
-            Outstanding: {formatRupees(bill.outstanding_paise)}
+            {t('Outstanding: {amount}', {
+              amount: billingMoney(bill.outstanding_paise, locale),
+            })}
           </p>
           <AmountInput
             error={fieldError(waive.result, 'amountRupees', 'amount_paise')}
-            helpText="Leave blank to waive the full outstanding amount."
+            helpText={t('Leave blank to waive the full outstanding amount.')}
             id="billing-waive-amount"
-            label="Amount to waive"
+            label={t('Amount to waive')}
             onChange={(event) => setAmount(event.currentTarget.value)}
             value={amount}
           />
           <TextAreaInput
             error={fieldError(waive.result, 'reason')}
             id="billing-waive-reason"
-            label="Reason"
+            label={t('Reason')}
             maxLength={500}
             onChange={(event) => setReason(event.currentTarget.value)}
             required
@@ -130,19 +136,28 @@ export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
               onClick={() => setWaiveOpen(false)}
               variant="secondary"
             >
-              Close
+              {t('Close')}
             </Button>
             <Button loading={waive.pending} type="submit">
-              Apply Waiver
+              {t('Apply Waiver')}
             </Button>
           </div>
         </form>
       </Dialog>
       <ConfirmDialog
-        actionLabel="Cancel Bill"
-        description={`Cancel ${bill.title} for ${bill.unit_label} ${bill.unit_number}? The bill total is reversed in the ledger.`}
+        actionLabel={t('Cancel Bill')}
+        description={t(
+          'Cancel {title} for {unitLabel} {unit}? The bill total is reversed in the ledger.',
+          {
+            title: bill.title,
+            unitLabel: bill.unit_label,
+            unit: bill.unit_number,
+          },
+        )}
         error={
-          cancel.result && !cancel.result.ok ? cancel.result.message : undefined
+          cancel.result && !cancel.result.ok
+            ? translateFeedback(cancel.result.message)
+            : undefined
         }
         id="billing-cancel"
         loading={cancel.pending}
@@ -160,7 +175,7 @@ export function BillAdminActions({ bill }: { bill: BillingBillDetails }) {
         onOpenChange={setCancelOpen}
         open={cancelOpen}
         requiresReason
-        title="Cancel bill"
+        title={t('Cancel bill')}
       />
     </Card>
   );
@@ -173,6 +188,7 @@ function daysSince(timestamp: string, today: string) {
 }
 
 function ProofLink({ path }: { path: string }) {
+  const { translate: t } = useUiTranslator();
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   return (
     <span className="inline-flex items-center gap-space-2">
@@ -209,11 +225,11 @@ function ProofLink({ path }: { path: string }) {
         }}
         type="button"
       >
-        {state === 'loading' ? 'Opening…' : 'View Screenshot'}
+        {t(state === 'loading' ? 'Opening…' : 'View Screenshot')}
       </button>
       {state === 'error' ? (
         <span className="text-caption text-danger" role="alert">
-          Could not open the screenshot.
+          {t('Could not open the screenshot.')}
         </span>
       ) : null}
     </span>
@@ -238,6 +254,8 @@ function ReviewCard({
   staleDays: number;
   today: string;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
+  const fieldError = useBillingFieldError();
   const confirm = useBillingAction<unknown>(
     confirmAction ?? confirmBillingPaymentAction,
   );
@@ -255,21 +273,25 @@ function ReviewCard({
       <div className="flex flex-wrap items-start justify-between gap-space-3">
         <div className="grid gap-space-1">
           <p className="text-body-strong">
-            {payment.unit_number ?? 'Unit'} ·{' '}
-            {formatRupees(payment.amount_paise)}
+            {payment.unit_number ?? t('Unit')} ·{' '}
+            {billingMoney(payment.amount_paise, locale)}
           </p>
           <p className="text-caption text-ink-muted">
-            UPI ref. {payment.reference ?? '—'} · paid{' '}
-            {formatBillingDate(payment.paid_on)}
+            {t('UPI ref. {reference} · paid {date}', {
+              reference: payment.reference ?? '—',
+              date: billingDate(payment.paid_on, locale),
+            })}
             {payment.submitted_by_name
-              ? ` · by ${payment.submitted_by_name}`
+              ? t(' · by {name}', { name: payment.submitted_by_name })
               : ''}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-space-2">
           {stale ? (
             <span className="rounded-sm border border-warning bg-warning-tint px-space-2 text-caption text-warning">
-              Waiting {age} day{age === 1 ? '' : 's'}
+              {t(age === 1 ? 'Waiting {count} day' : 'Waiting {count} days', {
+                count: age,
+              })}
             </span>
           ) : null}
           <StatusChip status="payment.awaiting_confirmation" />
@@ -286,7 +308,7 @@ function ReviewCard({
             }}
             variant="success"
           >
-            Confirm
+            {t('Confirm')}
           </Button>
           <Button
             onClick={() => {
@@ -295,7 +317,7 @@ function ReviewCard({
             }}
             variant="secondary"
           >
-            Reject
+            {t('Reject')}
           </Button>
         </div>
       ) : null}
@@ -304,7 +326,7 @@ function ReviewCard({
         id={`billing-confirm-${payment.id}`}
         onOpenChange={setConfirmOpen}
         open={confirmOpen}
-        title="Confirm payment"
+        title={t('Confirm payment')}
       >
         <form
           className="grid gap-space-4"
@@ -322,16 +344,21 @@ function ReviewCard({
           }}
         >
           <p className="text-body">
-            Confirm {formatRupees(payment.amount_paise)} from{' '}
-            {payment.unit_number ?? 'this unit'} after checking the bank or UPI
-            statement. A receipt is issued and the oldest bills are settled
-            first.
+            {t(
+              'Confirm {amount} from {unit} after checking the bank or UPI statement. A receipt is issued and the oldest bills are settled first.',
+              {
+                amount: billingMoney(payment.amount_paise, locale),
+                unit: payment.unit_number ?? t('this unit'),
+              },
+            )}
           </p>
           <AmountInput
             error={fieldError(confirm.result, 'correctedAmountRupees')}
-            helpText="Only if the amount received differs from the submitted amount."
+            helpText={t(
+              'Only if the amount received differs from the submitted amount.',
+            )}
             id={`billing-confirm-amount-${payment.id}`}
-            label="Corrected amount (optional)"
+            label={t('Corrected amount (optional)')}
             onChange={(event) => setCorrected(event.currentTarget.value)}
             value={corrected}
           />
@@ -344,19 +371,23 @@ function ReviewCard({
               onClick={() => setConfirmOpen(false)}
               variant="secondary"
             >
-              Close
+              {t('Close')}
             </Button>
             <Button loading={confirm.pending} type="submit" variant="success">
-              Confirm Payment
+              {t('Confirm Payment')}
             </Button>
           </div>
         </form>
       </Dialog>
       <ConfirmDialog
-        actionLabel="Reject Payment"
-        description="The resident sees this reason and can resubmit with corrected details."
+        actionLabel={t('Reject Payment')}
+        description={t(
+          'The resident sees this reason and can resubmit with corrected details.',
+        )}
         error={
-          reject.result && !reject.result.ok ? reject.result.message : undefined
+          reject.result && !reject.result.ok
+            ? translateFeedback(reject.result.message)
+            : undefined
         }
         id={`billing-reject-${payment.id}`}
         loading={reject.pending}
@@ -374,7 +405,7 @@ function ReviewCard({
         onOpenChange={setRejectOpen}
         open={rejectOpen}
         requiresReason
-        title="Reject payment"
+        title={t('Reject payment')}
       />
     </li>
   );
@@ -393,16 +424,17 @@ export function PaymentReviewQueue({
   staleDays: number;
   today: string;
 }) {
+  const { translate: t } = useUiTranslator();
   if (payments.length === 0) {
     return (
       <p className="text-body text-ink-muted" role="status">
-        No payments are waiting for confirmation.
+        {t('No payments are waiting for confirmation.')}
       </p>
     );
   }
   return (
     <ul
-      aria-label="Payments awaiting confirmation"
+      aria-label={t('Payments awaiting confirmation')}
       className="grid gap-space-3"
     >
       {payments.map((payment) => (
@@ -438,6 +470,8 @@ export function RecordPaymentButton({
   today: string;
   units: readonly UnitOption[];
 }) {
+  const { translate: t } = useUiTranslator();
+  const fieldError = useBillingFieldError();
   const record = useBillingAction(recordBillingPaymentAction);
   const [open, setOpen] = useState(false);
   const [unitId, setUnitId] = useState('');
@@ -464,7 +498,7 @@ export function RecordPaymentButton({
           setOpen(true);
         }}
       >
-        Record Payment
+        {t('Record Payment')}
       </Button>
       {record.result?.ok ? <ActionResult result={record.result} /> : null}
       <Dialog
@@ -472,7 +506,7 @@ export function RecordPaymentButton({
         id="billing-record-payment"
         onOpenChange={setOpen}
         open={open}
-        title="Record offline payment"
+        title={t('Record offline payment')}
       >
         <form
           className="grid gap-space-4"
@@ -499,34 +533,39 @@ export function RecordPaymentButton({
           <SelectInput
             error={fieldError(record.result, 'unitId')}
             id="billing-record-unit"
-            label="Unit"
+            label={t('Unit')}
             onChange={(event) => setUnitId(event.currentTarget.value)}
             options={unitOptions(units)}
-            placeholder="Choose a unit"
+            placeholder={t('Choose a unit')}
             required
             value={unitId}
           />
           <AmountInput
             error={fieldError(record.result, 'amountRupees')}
             id="billing-record-amount"
-            label="Amount received"
+            label={t('Amount received')}
             onChange={(event) => setAmount(event.currentTarget.value)}
             required
             value={amount}
           />
           <SelectInput
             id="billing-record-mode"
-            label="Payment mode"
+            label={t('Payment mode')}
             onChange={(event) => setMode(event.currentTarget.value)}
-            options={MODE_OPTIONS}
+            options={MODE_OPTIONS.map((option) => ({
+              ...option,
+              label: t(option.label),
+            }))}
             value={mode}
           />
           {mode !== 'cash' ? (
             <TextInput
               error={fieldError(record.result, 'reference')}
-              helpText="Cheque number, bank or UPI reference (6 to 30 letters or numbers)."
+              helpText={t(
+                'Cheque number, bank or UPI reference (6 to 30 letters or numbers).',
+              )}
               id="billing-record-reference"
-              label="Reference"
+              label={t('Reference')}
               maxLength={30}
               onChange={(event) =>
                 setReference(event.currentTarget.value.toUpperCase())
@@ -538,7 +577,7 @@ export function RecordPaymentButton({
           <DatePicker
             error={fieldError(record.result, 'paidOn')}
             id="billing-record-date"
-            label="Paid on"
+            label={t('Paid on')}
             max={today}
             onChange={setPaidOn}
             required
@@ -553,10 +592,10 @@ export function RecordPaymentButton({
               onClick={() => setOpen(false)}
               variant="secondary"
             >
-              Close
+              {t('Close')}
             </Button>
             <Button loading={record.pending} type="submit">
-              Record Payment
+              {t('Record Payment')}
             </Button>
           </div>
         </form>
@@ -572,6 +611,8 @@ export function AddFineForm({
   today: string;
   units: readonly UnitOption[];
 }) {
+  const { translate: t } = useUiTranslator();
+  const fieldError = useBillingFieldError();
   const fine = useBillingAction(addBillingFineAction);
   const [unitId, setUnitId] = useState('');
   const [amount, setAmount] = useState('');
@@ -594,26 +635,26 @@ export function AddFineForm({
       <SelectInput
         error={fieldError(fine.result, 'unitId', 'unit_id')}
         id="billing-fine-unit"
-        label="Unit"
+        label={t('Unit')}
         onChange={(event) => setUnitId(event.currentTarget.value)}
         options={unitOptions(units)}
-        placeholder="Choose a unit"
+        placeholder={t('Choose a unit')}
         required
         value={unitId}
       />
       <AmountInput
         error={fieldError(fine.result, 'amountRupees', 'amount_paise')}
         id="billing-fine-amount"
-        label="Fine amount"
+        label={t('Fine amount')}
         onChange={(event) => setAmount(event.currentTarget.value)}
         required
         value={amount}
       />
       <TextInput
         error={fieldError(fine.result, 'reason')}
-        helpText="Shown to residents on the bill."
+        helpText={t('Shown to residents on the bill.')}
         id="billing-fine-reason"
-        label="Reason"
+        label={t('Reason')}
         maxLength={160}
         onChange={(event) => setReason(event.currentTarget.value)}
         required
@@ -622,7 +663,7 @@ export function AddFineForm({
       <DatePicker
         error={fieldError(fine.result, 'fineDate', 'fine_date')}
         id="billing-fine-date"
-        label="Fine date"
+        label={t('Fine date')}
         max={today}
         onChange={setFineDate}
         required
@@ -631,7 +672,7 @@ export function AddFineForm({
       <ActionResult result={fine.result} />
       <div>
         <Button loading={fine.pending} type="submit">
-          Add Fine
+          {t('Add Fine')}
         </Button>
       </div>
     </form>
@@ -651,6 +692,7 @@ export function ReportExportButtons({
   from: string;
   to: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const exporter = useBillingAction(exportBillingReportAction);
   const [running, setRunning] = useState<BillingReport | null>(null);
   const data = exporter.result?.ok ? exporter.result.data : undefined;
@@ -669,10 +711,13 @@ export function ReportExportButtons({
             }}
             variant="secondary"
           >
-            Export {REPORT_LABELS[report]} CSV
+            {t('Export {report} CSV', { report: t(REPORT_LABELS[report]) })}
           </Button>
         ))}
       </div>
+      <p className="text-caption text-ink-muted">
+        {t('CSV exports remain in English.')}
+      </p>
       <ActionResult result={exporter.result} />
       {data ? (
         <a
@@ -680,8 +725,12 @@ export function ReportExportButtons({
           download
           href={`/api/exports/${data.job_id}`}
         >
-          Download {REPORT_LABELS[data.report]} CSV ({data.row_count} row
-          {data.row_count === 1 ? '' : 's'})
+          {t(
+            data.row_count === 1
+              ? 'Download {report} CSV ({count} row)'
+              : 'Download {report} CSV ({count} rows)',
+            { report: t(REPORT_LABELS[data.report]), count: data.row_count },
+          )}
         </a>
       ) : null}
     </div>

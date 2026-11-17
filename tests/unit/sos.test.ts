@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatSosTimestamp,
   sosBannerTitle,
   sosRecipientSummary,
   sosTelHref,
@@ -120,6 +121,23 @@ describe('SOS presentation', () => {
     expect(sosBannerTitle(alert)).toBe('Fire SOS from the gate');
     expect(sosBannerTitle({ ...alert, unit_label: 'A-101' })).toBe(
       'Fire SOS from unit A-101',
+    );
+    expect(sosBannerTitle({ ...alert, unit_label: 'A-101' }, 'hi')).toBe(
+      'यूनिट A-101 से आग SOS',
+    );
+    expect(
+      sosRecipientSummary(
+        {
+          notify_guards: true,
+          notify_admins: true,
+          notify_committee: false,
+          resident_scope: 'off',
+        },
+        'hi',
+      ),
+    ).toBe('गार्ड और प्रशासक को अलर्ट मिलेगा।');
+    expect(formatSosTimestamp('2026-03-05T18:30:00Z', 'UTC', 'hi')).toMatch(
+      /मार्च.*06:30\s*pm/i,
     );
   });
 });

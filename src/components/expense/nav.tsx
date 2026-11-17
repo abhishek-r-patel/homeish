@@ -1,5 +1,7 @@
 // Link between accounts views and page through long lists.
 import Link from 'next/link';
+import type { Locale } from '@/core/i18n/locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 const VIEWS = [
   { key: 'book', href: '/admin/expenses', label: 'Books', manageOnly: false },
@@ -20,16 +22,19 @@ const VIEWS = [
 export function ExpenseNav({
   current,
   canManage,
+  locale = 'en',
 }: {
   current: (typeof VIEWS)[number]['key'];
   canManage: boolean;
+  locale?: Locale;
 }) {
+  const t = (source: string) => translateMessage(locale, source);
   return (
-    <nav aria-label="Accounts" className="flex flex-wrap gap-space-4">
+    <nav aria-label={t('Accounts')} className="flex flex-wrap gap-space-4">
       {VIEWS.filter((view) => canManage || !view.manageOnly).map((view) =>
         view.key === current ? (
           <span key={view.key} aria-current="page" className="font-semibold">
-            {view.label}
+            {t(view.label)}
           </span>
         ) : (
           <Link
@@ -37,7 +42,7 @@ export function ExpenseNav({
             href={view.href}
             className="text-brand underline"
           >
-            {view.label}
+            {t(view.label)}
           </Link>
         ),
       )}
@@ -51,13 +56,17 @@ export function ExpensePager({
   pageSize,
   href,
   label,
+  locale = 'en',
 }: {
   page: number;
   total: number;
   pageSize: number;
   href: (page: number) => string;
   label: string;
+  locale?: Locale;
 }) {
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   const pages = Math.max(1, Math.ceil(total / pageSize));
   if (pages <= 1) return null;
   return (
@@ -67,15 +76,18 @@ export function ExpensePager({
     >
       {page > 1 ? (
         <Link className="text-brand underline" href={href(page - 1)}>
-          Previous
+          {t('Previous')}
         </Link>
       ) : null}
       <span>
-        Page {Math.min(page, pages)} of {pages}
+        {t('Page {page} of {total}', {
+          page: Math.min(page, pages),
+          total: pages,
+        })}
       </span>
       {page < pages ? (
         <Link className="text-brand underline" href={href(page + 1)}>
-          Next
+          {t('Next')}
         </Link>
       ) : null}
     </nav>

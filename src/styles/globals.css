@@ -1,6 +1,14 @@
 /* Tailwind theme tokens and global document defaults from DESIGN.md. */
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Noto Sans Devanagari';
+  src: url('/fonts/noto-sans-devanagari-variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 @theme {
   --breakpoint-medium: 37.5rem;
   --breakpoint-expanded: 64rem;
@@ -97,6 +105,17 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-heading:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html[lang='hi']:not([data-font-preference='device_default']),
+html:not([data-font-preference='device_default']) [lang='hi'] {
+  --font-sans:
+    'Noto Sans Devanagari', 'Manrope Variable', ui-sans-serif, system-ui,
+    sans-serif;
+  --font-heading:
+    'Noto Sans Devanagari', 'Sora Variable', 'Manrope Variable', ui-sans-serif,
+    system-ui, sans-serif;
+  font-family: var(--font-sans);
 }
 
 @media (min-width: 64rem) {

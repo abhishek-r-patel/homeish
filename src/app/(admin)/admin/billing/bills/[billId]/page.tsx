@@ -7,6 +7,8 @@ import {
   getBillingAdminContext,
   getBillingBill,
 } from '@/core/billing/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Bill | Homeish',
@@ -18,6 +20,7 @@ export default async function AdminBillPage({
 }: {
   params: Promise<{ billId: string }>;
 }) {
+  const locale = await getRequestLocale();
   const { billId } = await params;
   if (!isUuid(billId)) notFound();
   const [admin, bill] = await Promise.all([
@@ -27,7 +30,7 @@ export default async function AdminBillPage({
   return (
     <BillDetail
       backHref="/admin/billing?tab=bills"
-      backLabel="Bills"
+      backLabel={translateMessage(locale, 'Bills')}
       bill={bill}
       ledgerHref={`/admin/billing/units/${bill.unit_id}`}
       today={todayInTimeZone(admin.timezone)}

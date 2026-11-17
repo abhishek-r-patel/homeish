@@ -46,6 +46,8 @@ export interface GuardDutyState {
   identification: 'pick_name' | 'pin';
   currentGuard: { id: string; name: string } | null;
   guards: readonly Pick<GuardRosterItem, 'id' | 'name'>[];
+  languagePreference: 'en' | 'hi';
+  isHindiEnabled: boolean;
 }
 
 async function guardContext(
@@ -291,6 +293,8 @@ export async function getGuardDutyState(): Promise<GuardDutyState> {
           ? { id: resolved.guard_id, name: resolved.guard_name }
           : null,
       guards: rosterResult.data,
+      languagePreference: context.languagePreference,
+      isHindiEnabled: context.isHindiEnabled,
     };
   }
 
@@ -303,6 +307,8 @@ export async function getGuardDutyState(): Promise<GuardDutyState> {
     identification: config.identification,
     currentGuard,
     guards: rosterResult.data,
+    languagePreference: context.languagePreference,
+    isHindiEnabled: context.isHindiEnabled,
   };
 }
 

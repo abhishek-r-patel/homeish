@@ -444,7 +444,7 @@ describe.skipIf(!hasDatabase)('event lifecycle database contracts', () => {
     );
   });
 
-  it('cancels published events with a reason, notifying the audience and RSVP units', async () => {
+  it('cancels published events with a reason, notifying the audience but not withdrawn flats', async () => {
     const published = await createPublishedEvent(fixture);
     await setRsvp(
       fixture,
@@ -475,7 +475,7 @@ describe.skipIf(!hasDatabase)('event lifecycle database contracts', () => {
       refundedUnits: 0,
     });
     expect(uniqueUsers(await notifiedUsers(fixture, request))).toEqual(
-      users('owner', 'tenant', 'family', 'owner2', 'multi', 'owner3'),
+      users('owner', 'tenant', 'family', 'owner2', 'multi'),
     );
     await expectDomainError(
       cancelEvent(fixture, published.eventId),
@@ -630,7 +630,7 @@ describe.skipIf(!hasDatabase)('event lifecycle database contracts', () => {
     });
   });
 
-  it('reminds going units of tomorrow\u2019s events exactly once', async () => {
+  it('reminds going units of tomorrow\u2019s events exactly once, never withdrawn flats', async () => {
     const startsAt = await societyTomorrowNoon(fixture);
     const tomorrow = await createPublishedEvent(fixture, { startsAt });
     const later = await createPublishedEvent(fixture);
@@ -672,6 +672,18 @@ describe.skipIf(!hasDatabase)('event lifecycle database contracts', () => {
       null,
     );
     await cancelEvent(fixture, cancelledTomorrow.eventId);
+    await setRsvp(
+      fixture,
+      'owner3',
+      tomorrow.eventId,
+      fixture.units.b101.id,
+      'going',
+      1,
+      null,
+    );
+    await updateEvent(tomorrow.eventId, {
+      audience: { scope: 'blocks', blockIds: [fixture.blocks.A] },
+    });
 
     await expectCode(
       callEvent(fixture, 'admin', 'event_reminders_run', [

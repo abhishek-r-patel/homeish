@@ -1,6 +1,7 @@
 // Render request actions permitted to the current requester or assignee.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useState } from 'react';
 import {
   addServiceRequestCommentAction,
@@ -41,6 +42,7 @@ export function ServiceRequestDetailControls({
   status: ServiceRequestStatus;
   rated: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   const [commentId, setCommentId] = useState('');
   function ensureCommentId() {
     if (commentId) return commentId;
@@ -54,7 +56,7 @@ export function ServiceRequestDetailControls({
     <div className="grid gap-space-4">
       {canManage &&
       ['open', 'assigned', 'in_progress', 'reopened'].includes(status) ? (
-        <Card className="min-w-0" title="Assign request">
+        <Card className="min-w-0" title={t('Assign request')}>
           <ServiceRequestActionForm
             action={assignServiceRequestAction}
             input={(formData) => {
@@ -74,37 +76,37 @@ export function ServiceRequestDetailControls({
                 note: String(formData.get('note') ?? '').trim() || null,
               };
             }}
-            submitLabel="Save assignment"
+            submitLabel={t('Save assignment')}
           >
             <label
               className="grid gap-space-1 text-body-strong"
               htmlFor="request-assignee"
             >
-              Assign to member
+              {t('Assign to member')}
               <select
                 className={fieldClass}
                 defaultValue=""
                 id="request-assignee"
                 name="membershipId"
               >
-                <option value="">Choose a member or use a vendor</option>
+                <option value="">{t('Choose a member or use a vendor')}</option>
                 {assignees.map((assignee) => (
                   <option
                     key={assignee.membership_id}
                     value={assignee.membership_id}
                   >
-                    {assignee.name ?? 'Unnamed member'} (
-                    {assignee.roles.join(', ')})
+                    {assignee.name ?? t('Unnamed member')} (
+                    {assignee.roles.map((role) => t(role)).join(', ')})
                   </option>
                 ))}
               </select>
             </label>
             <fieldset className="grid gap-space-3 border-0 p-0">
               <legend className="text-body-strong">
-                Or assign to a vendor
+                {t('Or assign to a vendor')}
               </legend>
               <label className="grid gap-space-1" htmlFor="request-vendor-name">
-                Vendor name
+                {t('Vendor name')}
                 <input
                   className={fieldClass}
                   id="request-vendor-name"
@@ -116,7 +118,7 @@ export function ServiceRequestDetailControls({
                 className="grid gap-space-1"
                 htmlFor="request-vendor-phone"
               >
-                Vendor phone
+                {t('Vendor phone')}
                 <input
                   className={fieldClass}
                   id="request-vendor-phone"
@@ -129,7 +131,7 @@ export function ServiceRequestDetailControls({
               className="grid gap-space-1"
               htmlFor="request-assignment-note"
             >
-              Note (optional)
+              {t('Note (optional)')}
               <textarea
                 className={fieldClass}
                 id="request-assignment-note"
@@ -141,14 +143,14 @@ export function ServiceRequestDetailControls({
         </Card>
       ) : null}
       {canUpdate && ['assigned', 'in_progress', 'reopened'].includes(status) ? (
-        <Card className="min-w-0" title="Update status">
+        <Card className="min-w-0" title={t('Update status')}>
           <div className="flex flex-wrap gap-space-3">
             {status !== 'in_progress' ? (
               <ServiceRequestActionForm
                 action={updateServiceRequestStatusAction}
                 className="inline-grid"
                 input={() => ({ requestId, status: 'in_progress' })}
-                submitLabel="Mark in progress"
+                submitLabel={t('Mark in progress')}
               >
                 {null}
               </ServiceRequestActionForm>
@@ -157,7 +159,7 @@ export function ServiceRequestDetailControls({
               action={updateServiceRequestStatusAction}
               className="inline-grid"
               input={() => ({ requestId, status: 'resolved' })}
-              submitLabel="Mark resolved"
+              submitLabel={t('Mark resolved')}
             >
               {null}
             </ServiceRequestActionForm>
@@ -166,17 +168,17 @@ export function ServiceRequestDetailControls({
       ) : null}
       {canManage &&
       ['open', 'assigned', 'in_progress', 'reopened'].includes(status) ? (
-        <Card className="min-w-0" title="Reject request">
+        <Card className="min-w-0" title={t('Reject request')}>
           <ServiceRequestActionForm
             action={rejectServiceRequestAction}
             input={(formData) => ({
               requestId,
               reason: String(formData.get('reason') ?? ''),
             })}
-            submitLabel="Reject request"
+            submitLabel={t('Reject request')}
           >
             <label className="grid gap-space-1" htmlFor="request-reject-reason">
-              Reason
+              {t('Reason')}
               <textarea
                 className={fieldClass}
                 id="request-reject-reason"
@@ -190,13 +192,13 @@ export function ServiceRequestDetailControls({
         </Card>
       ) : null}
       {isRequester && status === 'resolved' ? (
-        <Card className="min-w-0" title="Confirm resolution">
+        <Card className="min-w-0" title={t('Confirm resolution')}>
           <div className="flex flex-wrap gap-space-3">
             <ServiceRequestActionForm
               action={confirmServiceRequestCloseAction}
               className="inline-grid"
               input={() => ({ requestId })}
-              submitLabel="Close request"
+              submitLabel={t('Close request')}
             >
               {null}
             </ServiceRequestActionForm>
@@ -206,13 +208,13 @@ export function ServiceRequestDetailControls({
                 requestId,
                 reason: String(formData.get('reason') ?? ''),
               })}
-              submitLabel="Reopen request"
+              submitLabel={t('Reopen request')}
             >
               <label
                 className="grid gap-space-1"
                 htmlFor="request-reopen-resolved"
               >
-                Not resolved? Tell us why
+                {t('Not resolved? Tell us why')}
                 <textarea
                   className={fieldClass}
                   id="request-reopen-resolved"
@@ -229,7 +231,7 @@ export function ServiceRequestDetailControls({
       {isRequester && status === 'closed' ? (
         <>
           {!rated ? (
-            <Card className="min-w-0" title="Rate the resolution">
+            <Card className="min-w-0" title={t('Rate the resolution')}>
               <ServiceRequestActionForm
                 action={rateServiceRequestAction}
                 input={(formData) => ({
@@ -237,10 +239,10 @@ export function ServiceRequestDetailControls({
                   rating: Number(formData.get('rating')),
                   comment: String(formData.get('comment') ?? '').trim() || null,
                 })}
-                submitLabel="Submit rating"
+                submitLabel={t('Submit rating')}
               >
                 <label className="grid gap-space-1" htmlFor="request-rating">
-                  Rating
+                  {t('Rating')}
                   <select
                     className={fieldClass}
                     defaultValue="5"
@@ -249,7 +251,9 @@ export function ServiceRequestDetailControls({
                   >
                     {[5, 4, 3, 2, 1].map((value) => (
                       <option key={value} value={value}>
-                        {value} star{value === 1 ? '' : 's'}
+                        {t(value === 1 ? '{count} star' : '{count} stars', {
+                          count: value,
+                        })}
                       </option>
                     ))}
                   </select>
@@ -258,7 +262,7 @@ export function ServiceRequestDetailControls({
                   className="grid gap-space-1"
                   htmlFor="request-rating-comment"
                 >
-                  Comment (optional)
+                  {t('Comment (optional)')}
                   <textarea
                     className={fieldClass}
                     id="request-rating-comment"
@@ -269,20 +273,20 @@ export function ServiceRequestDetailControls({
               </ServiceRequestActionForm>
             </Card>
           ) : null}
-          <Card className="min-w-0" title="Reopen request">
+          <Card className="min-w-0" title={t('Reopen request')}>
             <ServiceRequestActionForm
               action={reopenServiceRequestAction}
               input={(formData) => ({
                 requestId,
                 reason: String(formData.get('reason') ?? ''),
               })}
-              submitLabel="Reopen request"
+              submitLabel={t('Reopen request')}
             >
               <label
                 className="grid gap-space-1"
                 htmlFor="request-reopen-closed"
               >
-                Tell us why this needs more work
+                {t('Tell us why this needs more work')}
                 <textarea
                   className={fieldClass}
                   id="request-reopen-closed"
@@ -297,7 +301,7 @@ export function ServiceRequestDetailControls({
         </>
       ) : null}
       {canComment ? (
-        <Card className="min-w-0" title="Add a comment">
+        <Card className="min-w-0" title={t('Add a comment')}>
           <ServiceRequestActionForm
             action={addServiceRequestCommentAction}
             input={(formData) => ({
@@ -306,11 +310,11 @@ export function ServiceRequestDetailControls({
               clientRequestId: ensureCommentId(),
             })}
             onSuccess={() => setCommentId(crypto.randomUUID())}
-            submitLabel="Add comment"
+            submitLabel={t('Add comment')}
           >
             <input name="clientRequestId" type="hidden" value={commentId} />
             <label className="grid gap-space-1" htmlFor="request-comment">
-              Comment
+              {t('Comment')}
               <textarea
                 className={fieldClass}
                 id="request-comment"

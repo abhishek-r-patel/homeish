@@ -14,6 +14,12 @@ import {
   requireVisitorResident,
   type VisitorPreApproval,
 } from '@/core/visitor/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
+import {
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
 import {
   cancelVisitorPreApprovalAction,
   createVisitorPreApprovalAction,
@@ -33,6 +39,9 @@ function unitLabel(unit: { block: string | null; number: string }) {
 }
 
 export default async function ResidentVisitorsPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   await requireVisitorResident();
   const [units, entries, societyId, timezone] = await Promise.all([
     listVisitorUnits('own'),
@@ -67,16 +76,16 @@ export default async function ResidentVisitorsPage() {
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Visitors</h1>
+        <h1 className="text-title font-semibold">{t('Visitors')}</h1>
         <p className="text-body text-ink-muted">
-          Approve visitors at the gate and prepare one-time entry codes.
+          {t('Approve visitors at the gate and prepare one-time entry codes.')}
         </p>
       </header>
       <VisitorRealtimeRefresh societyId={societyId} />
 
       <Card
-        description="Approvals close after the society's response timeout."
-        title="Waiting for your response"
+        description={t("Approvals close after the society's response timeout.")}
+        title={t('Waiting for your response')}
       >
         {pending.length ? (
           <ul className="grid gap-space-3">
@@ -88,7 +97,8 @@ export default async function ResidentVisitorsPage() {
                 <div>
                   <h2 className="text-body-strong">{entry.visitor_name}</h2>
                   <p className="text-caption text-ink-muted">
-                    {entry.purpose} · {entry.people_count} people
+                    {entry.purpose} ·{' '}
+                    {formatLocalizedNumber(entry.people_count, locale)} people
                     {entry.visitor_phone ? ` · ${entry.visitor_phone}` : ''}
                   </p>
                 </div>
@@ -105,7 +115,7 @@ export default async function ResidentVisitorsPage() {
                         className={`min-h-14 rounded-md px-space-5 font-semibold focus-visible:outline-2 focus-visible:outline-focus ${decision === 'approve' ? 'bg-brand text-white' : 'border border-rule-strong text-ink'}`}
                         type="submit"
                       >
-                        {decision === 'approve' ? 'Allow' : 'Deny'}
+                        {decision === 'approve' ? t('Allow') : t('Deny')}
                       </button>
                     </VisitorActionForm>
                   ))}
@@ -114,13 +124,17 @@ export default async function ResidentVisitorsPage() {
             ))}
           </ul>
         ) : (
-          <p className="text-body text-ink-muted">No visitors need approval.</p>
+          <p className="text-body text-ink-muted">
+            {t('No visitors need approval.')}
+          </p>
         )}
       </Card>
 
       <Card
-        description="The QR and manual code represent the same single-use approval."
-        title="Pre-approve a visitor"
+        description={t(
+          'The QR and manual code represent the same single-use approval.',
+        )}
+        title={t('Pre-approve a visitor')}
       >
         {units.length ? (
           <VisitorActionForm
@@ -131,7 +145,7 @@ export default async function ResidentVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="preapproval-unit"
             >
-              Unit
+              {t('Unit')}
               <select
                 className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
                 id="preapproval-unit"
@@ -149,7 +163,7 @@ export default async function ResidentVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="preapproval-name"
             >
-              Visitor name
+              {t('Visitor name')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="preapproval-name"
@@ -162,7 +176,7 @@ export default async function ResidentVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="preapproval-from"
             >
-              Valid from (society time)
+              {t('Valid from (society time)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="preapproval-from"
@@ -175,7 +189,7 @@ export default async function ResidentVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="preapproval-to"
             >
-              Valid until (society time)
+              {t('Valid until (society time)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="preapproval-to"
@@ -188,7 +202,7 @@ export default async function ResidentVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="preapproval-vehicle"
             >
-              Vehicle number (optional)
+              {t('Vehicle number (optional)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="preapproval-vehicle"
@@ -200,19 +214,21 @@ export default async function ResidentVisitorsPage() {
               className="min-h-14 rounded-md bg-brand px-space-4 font-semibold text-white"
               type="submit"
             >
-              Create pre-approval
+              {t('Create pre-approval')}
             </button>
           </VisitorActionForm>
         ) : (
           <p className="text-body text-ink-muted">
-            Your account has no active unit occupancy.
+            {t('Your account has no active unit occupancy.')}
           </p>
         )}
       </Card>
 
       <Card
-        description="Save people who visit often, then create a one-time code for them in one step."
-        title="Frequent visitors"
+        description={t(
+          'Save people who visit often, then create a one-time code for them in one step.',
+        )}
+        title={t('Frequent visitors')}
       >
         {units.length ? (
           <div className="grid gap-space-4">
@@ -224,7 +240,7 @@ export default async function ResidentVisitorsPage() {
                 className="grid gap-space-1 text-body-strong"
                 htmlFor="frequent-unit"
               >
-                Unit
+                {t('Unit')}
                 <select
                   className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
                   id="frequent-unit"
@@ -242,7 +258,7 @@ export default async function ResidentVisitorsPage() {
                 className="grid gap-space-1 text-body-strong"
                 htmlFor="frequent-name"
               >
-                Visitor name
+                {t('Visitor name')}
                 <input
                   className="min-h-12 rounded-md border border-rule px-space-3"
                   id="frequent-name"
@@ -255,7 +271,7 @@ export default async function ResidentVisitorsPage() {
                 className="grid gap-space-1 text-body-strong"
                 htmlFor="frequent-vehicle"
               >
-                Vehicle number (optional)
+                {t('Vehicle number (optional)')}
                 <input
                   className="min-h-12 rounded-md border border-rule px-space-3"
                   id="frequent-vehicle"
@@ -267,7 +283,7 @@ export default async function ResidentVisitorsPage() {
                 className="min-h-12 w-fit rounded-md border border-rule-strong px-space-4 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
                 type="submit"
               >
-                Save frequent visitor
+                {t('Save frequent visitor')}
               </button>
             </VisitorActionForm>
             {frequentByUnit.some(({ visitors }) => visitors.length) ? (
@@ -300,7 +316,7 @@ export default async function ResidentVisitorsPage() {
                           className="grid gap-space-1 text-caption"
                           htmlFor={`frequent-from-${visitor.id}`}
                         >
-                          Valid from (society time)
+                          {t('Valid from (society time)')}
                           <input
                             className="min-h-11 rounded-md border border-rule px-space-3"
                             id={`frequent-from-${visitor.id}`}
@@ -313,7 +329,7 @@ export default async function ResidentVisitorsPage() {
                           className="grid gap-space-1 text-caption"
                           htmlFor={`frequent-to-${visitor.id}`}
                         >
-                          Valid until (society time)
+                          {t('Valid until (society time)')}
                           <input
                             className="min-h-11 rounded-md border border-rule px-space-3"
                             id={`frequent-to-${visitor.id}`}
@@ -323,11 +339,13 @@ export default async function ResidentVisitorsPage() {
                           />
                         </label>
                         <button
-                          aria-label={`Pre-approve ${visitor.visitor_name}`}
+                          aria-label={t('Pre-approve {name}', {
+                            name: visitor.visitor_name,
+                          })}
                           className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white focus-visible:outline-2 focus-visible:outline-focus"
                           type="submit"
                         >
-                          Pre-approve
+                          {t('Pre-approve')}
                         </button>
                       </VisitorActionForm>
                       <VisitorActionForm action={removeFrequentVisitorAction}>
@@ -337,11 +355,14 @@ export default async function ResidentVisitorsPage() {
                           value={visitor.id}
                         />
                         <button
-                          aria-label={`Remove ${visitor.visitor_name} from frequent visitors`}
+                          aria-label={t(
+                            'Remove {name} from frequent visitors',
+                            { name: visitor.visitor_name },
+                          )}
                           className="min-h-11 rounded-md border border-rule-strong px-space-3 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
                           type="submit"
                         >
-                          Remove
+                          {t('Remove')}
                         </button>
                       </VisitorActionForm>
                     </li>
@@ -350,18 +371,18 @@ export default async function ResidentVisitorsPage() {
               </ul>
             ) : (
               <p className="text-body text-ink-muted">
-                You have no saved frequent visitors.
+                {t('You have no saved frequent visitors.')}
               </p>
             )}
           </div>
         ) : (
           <p className="text-body text-ink-muted">
-            Your account has no active unit occupancy.
+            {t('Your account has no active unit occupancy.')}
           </p>
         )}
       </Card>
 
-      <Card title="Pre-approvals">
+      <Card title={t('Pre-approvals')}>
         {preApprovals.length ? (
           <ul className="grid gap-space-3">
             {approvalCards.map(({ approval, qrCode }) => (
@@ -374,10 +395,12 @@ export default async function ResidentVisitorsPage() {
                 approval.status === 'active' &&
                 !approval.is_expired ? (
                   <CodeDisplay
-                    label="Show this QR code or share the matching entry code."
+                    label={t(
+                      'Show this QR code or share the matching entry code.',
+                    )}
                     qrCode={
                       <Image
-                        alt="QR code for the visitor entry code"
+                        alt={t('QR code for the visitor entry code')}
                         height={160}
                         src={qrCode}
                         unoptimized
@@ -385,9 +408,11 @@ export default async function ResidentVisitorsPage() {
                       />
                     }
                     singleUse
-                    validity={`Valid until ${new Date(
-                      approval.valid_to,
-                    ).toLocaleString(undefined, { timeZone: timezone })}`}
+                    validity={`Valid until ${formatLocalizedDateTime(
+                      new Date(approval.valid_to),
+                      locale,
+                      { timeZone: timezone },
+                    )}`}
                     value={approval.code}
                   />
                 ) : (
@@ -396,7 +421,13 @@ export default async function ResidentVisitorsPage() {
                   </p>
                 )}
                 <p className="text-caption text-ink-muted">
-                  {approval.is_expired ? 'Expired' : approval.status}
+                  {approval.is_expired
+                    ? t('Expired')
+                    : approval.status === 'active'
+                      ? t('Active')
+                      : approval.status === 'used'
+                        ? t('Used')
+                        : t('Cancelled')}
                 </p>
                 {approval.status === 'active' ? (
                   <VisitorActionForm action={cancelVisitorPreApprovalAction}>
@@ -409,7 +440,7 @@ export default async function ResidentVisitorsPage() {
                       className="min-h-11 rounded-md border border-rule-strong px-space-3 font-semibold"
                       type="submit"
                     >
-                      Cancel
+                      {t('Cancel')}
                     </button>
                   </VisitorActionForm>
                 ) : null}
@@ -418,12 +449,12 @@ export default async function ResidentVisitorsPage() {
           </ul>
         ) : (
           <p className="text-body text-ink-muted">
-            You have no visitor pre-approvals.
+            {t('You have no visitor pre-approvals.')}
           </p>
         )}
       </Card>
 
-      <Card title="Visitor history">
+      <Card title={t('Visitor history')}>
         {entries.length ? (
           <ol className="grid gap-space-3">
             {entries.map((entry) => (
@@ -439,7 +470,9 @@ export default async function ResidentVisitorsPage() {
             ))}
           </ol>
         ) : (
-          <p className="text-body text-ink-muted">No visitor history yet.</p>
+          <p className="text-body text-ink-muted">
+            {t('No visitor history yet.')}
+          </p>
         )}
       </Card>
     </section>

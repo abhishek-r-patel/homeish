@@ -2,48 +2,100 @@
 import { Card } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
 import { JoinCodeControls } from '@/components/society/join-code-controls';
-import { AppError } from '@/core/errors';
-import { getJoinCodeSettings } from '@/core/society/operations';
+import { LanguageSettingsControls } from '@/components/society/language-settings-controls';
+import { AppError, createRequestId } from '@/core/errors';
+import {
+  getHindiAvailability,
+  getJoinCodeSettings,
+} from '@/core/society/operations';
+import { buildRequestContext } from '@/core/tenancy/request-context';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
-  title: 'Registration settings | Homeish',
+  title: 'Society settings | Homeish',
   robots: { index: false, follow: false },
 };
 
 export default async function SocietySettingsPage() {
-  let settings: Awaited<ReturnType<typeof getJoinCodeSettings>> | null = null;
-  let loadError: unknown;
-  try {
-    settings = await getJoinCodeSettings();
-  } catch (error) {
-    loadError = error;
-  }
-  if (!settings) {
-    if (loadError instanceof AppError && loadError.code === 'FORBIDDEN') {
-      return (
-        <ErrorPanel
-          message="Sign in with an administrator account for this society."
-          title="Registration settings are restricted"
-        />
-      );
-    }
-    throw loadError;
+  const context = await buildRequestContext(createRequestId());
+  const canManage = context.roles.includes('admin');
+  const canViewLanguage = canManage || context.roles.includes('committee');
+  if (!canViewLanguage) throw new AppError('FORBIDDEN');
+
+  const locale =
+    context.languagePreference === 'hi' && context.isHindiEnabled ? 'hi' : 'en';
+  const t = (source: string) => translateMessage(locale, source);
+  const [registrationSettings, languageSettings] = await Promise.all([
+    canManage ? getJoinCodeSettings(context) : Promise.resolve(null),
+    context.enabledModules.has('language')
+      ? getHindiAvailability(context)
+      : Promise.resolve(null),
+  ]);
+  if (!canManage && !languageSettings) {
+    return (
+      <ErrorPanel
+        message={t(
+          'Ask your platform developer to enable Language Support for this society.',
+        )}
+        title={t('Language settings are not enabled')}
+      />
+    );
   }
 
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Registration settings</h1>
+        <h1 className="text-title font-semibold">
+          {t(canManage ? 'Society settings' : 'Language settings')}
+        </h1>
         <p className="text-body text-ink-muted">
-          Manage the code residents use to request access to this society.
+          {t(
+            canManage
+              ? 'Manage society registration and language availability.'
+              : 'View the languages available to members of this society.',
+          )}
         </p>
       </header>
-      <Card
-        description="Requests remain pending until an administrator approves them."
-        title="Society join code"
-      >
-        <JoinCodeControls initialJoinCode={settings.joinCode} />
-      </Card>
+      {registrationSettings ? (
+        <Card
+          description={t(
+            'Requests remain pending until an administrator approves them.',
+          )}
+          title={t('Society join code')}
+        >
+          <JoinCodeControls initialJoinCode={registrationSettings.joinCode} />
+        </Card>
+      ) : null}
+      {!languageSettings && canManage ? (
+        <Card
+          description={t(
+            'Ask your platform developer to enable Language Support for this society.',
+          )}
+          title={t('Language settings are not enabled')}
+        >
+          <p className="text-body text-ink-muted">
+            {t(
+              'English is always available. Hindi is optional for this society.',
+            )}
+          </p>
+        </Card>
+      ) : null}
+      {languageSettings ? (
+        <Card
+          description={t(
+            'English is always available. Hindi is optional for this society.',
+          )}
+          title={t('Language availability')}
+        >
+          <div id="language">
+            <LanguageSettingsControls
+              canManage={languageSettings.canManage}
+              initialHindiAvailable={languageSettings.hindiAvailable}
+              initialVersion={languageSettings.version}
+            />
+          </div>
+        </Card>
+      ) : null}
     </section>
   );
 }

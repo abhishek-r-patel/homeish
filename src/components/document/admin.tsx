@@ -33,6 +33,7 @@ import {
   type DocumentActions,
   type UploadedDocumentFile,
 } from './files';
+import { useDocumentPresentation } from './presentation';
 
 const folderAudienceOptions = DOCUMENT_FOLDER_AUDIENCES.map((value) => ({
   value,
@@ -55,12 +56,15 @@ export function DocumentFolderForm({
   folder: DocumentFolder | null;
   action: DocumentActions['saveFolder'];
 }) {
+  const { t } = useDocumentPresentation();
   const id = useId();
   const [audience, setAudience] = useState(folder?.audience ?? 'all_residents');
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={folder ? `Save ${folder.name}` : 'Add folder'}
+      submitLabel={
+        folder ? t('Save {name}', { name: folder.name }) : t('Add folder')
+      }
       input={(form) =>
         documentFolderInputSchema.parse({
           folderId: folder?.id ?? null,
@@ -73,7 +77,7 @@ export function DocumentFolderForm({
       <TextInput
         id={`${id}-name`}
         name="name"
-        label="Folder name"
+        label={t('Folder name')}
         required
         maxLength={80}
         defaultValue={folder?.name ?? ''}
@@ -81,13 +85,16 @@ export function DocumentFolderForm({
       <SelectInput
         id={`${id}-audience`}
         name="audience"
-        label="Who can view"
-        options={folderAudienceOptions}
+        label={t('Who can view')}
+        options={folderAudienceOptions.map((option) => ({
+          ...option,
+          label: t(option.label),
+        }))}
         value={audience}
         onChange={(event) =>
           setAudience(documentFolderAudienceSchema.parse(event.target.value))
         }
-        helpText={DOCUMENT_FOLDER_AUDIENCE_HELP[audience]}
+        helpText={t(DOCUMENT_FOLDER_AUDIENCE_HELP[audience])}
       />
     </ModuleActionForm>
   );
@@ -100,17 +107,21 @@ export function DocumentFolderArchiveForm({
   folder: DocumentFolder;
   action: DocumentActions['setFolderArchived'];
 }) {
+  const { t } = useDocumentPresentation();
   const archived = folder.archived_at !== null;
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={
-        archived ? `Restore ${folder.name}` : `Archive ${folder.name}`
-      }
+      submitLabel={t(archived ? 'Restore {name}' : 'Archive {name}', {
+        name: folder.name,
+      })}
       confirmMessage={
         archived
           ? undefined
-          : `Archive ${folder.name}? Residents will no longer see it or its documents. Nothing is deleted.`
+          : t(
+              'Archive {name}? Residents will no longer see it or its documents. Nothing is deleted.',
+              { name: folder.name },
+            )
       }
       input={() =>
         documentFolderArchiveInputSchema.parse({
@@ -138,6 +149,7 @@ export function DocumentPublishForm({
   actions: DocumentActions;
   request?: typeof fetch;
 }) {
+  const { t } = useDocumentPresentation();
   const id = useId();
   const folders = workspace.folders.filter((folder) => !folder.archived_at);
   const [target, setTarget] = useState<'folder' | 'unit'>(
@@ -148,7 +160,7 @@ export function DocumentPublishForm({
     <ModuleActionForm
       action={actions.create}
       idempotent
-      submitLabel="Publish document"
+      submitLabel={t('Publish document')}
       submitDisabled={!file}
       onSaved={() => setFile(null)}
       input={(form, clientRequestId) => {
@@ -170,39 +182,39 @@ export function DocumentPublishForm({
       <SelectInput
         id={`${id}-target`}
         name="target"
-        label="Publish to"
+        label={t('Publish to')}
         value={target}
         onChange={(event) =>
           setTarget(event.target.value === 'unit' ? 'unit' : 'folder')
         }
         options={[
-          { value: 'folder', label: 'A society folder' },
-          { value: 'unit', label: 'A specific unit' },
+          { value: 'folder', label: t('A society folder') },
+          { value: 'unit', label: t('A specific unit') },
         ]}
       />
       {target === 'folder' ? (
         <SelectInput
           id={`${id}-folder`}
           name="folderId"
-          label="Folder"
+          label={t('Folder')}
           required
           defaultValue={folderId ?? ''}
-          placeholder="Choose a folder"
+          placeholder={t('Choose a folder')}
           options={folders.map((folder) => ({
             value: folder.id,
-            label: `${folder.name} (${DOCUMENT_FOLDER_AUDIENCE_LABELS[folder.audience]})`,
+            label: `${folder.name} (${t(DOCUMENT_FOLDER_AUDIENCE_LABELS[folder.audience])})`,
           }))}
-          helpText="The document inherits the folder's audience."
+          helpText={t("The document inherits the folder's audience.")}
         />
       ) : (
         <>
           <SelectInput
             id={`${id}-unit`}
             name="unitId"
-            label="Unit"
+            label={t('Unit')}
             required
             defaultValue={unitId ?? ''}
-            placeholder="Choose a unit"
+            placeholder={t('Choose a unit')}
             options={workspace.units.map((unit) => ({
               value: unit.id,
               label: documentUnitLabel(unit),
@@ -211,27 +223,30 @@ export function DocumentPublishForm({
           <SelectInput
             id={`${id}-unit-audience`}
             name="unitAudience"
-            label="Who in the unit can view"
+            label={t('Who in the unit can view')}
             defaultValue="all_occupants"
-            options={unitAudienceOptions}
+            options={unitAudienceOptions.map((option) => ({
+              ...option,
+              label: t(option.label),
+            }))}
           />
         </>
       )}
       <TextInput
         id={`${id}-title`}
         name="title"
-        label="Title"
+        label={t('Title')}
         required
         maxLength={120}
       />
       <TextAreaInput
         id={`${id}-description`}
         name="description"
-        label="Description (optional)"
+        label={t('Description (optional)')}
         maxLength={500}
       />
       <DocumentFilePicker
-        label="Document file"
+        label={t('Document file')}
         prepareUpload={actions.prepareUpload}
         request={request}
         onChange={setFile}
@@ -249,12 +264,13 @@ export function DocumentVersionForm({
   actions: DocumentActions;
   request?: typeof fetch;
 }) {
+  const { t } = useDocumentPresentation();
   const id = useId();
   const [file, setFile] = useState<UploadedDocumentFile | null>(null);
   return (
     <ModuleActionForm
       action={actions.addVersion}
-      submitLabel="Publish new version"
+      submitLabel={t('Publish new version')}
       submitDisabled={!file}
       onSaved={() => setFile(null)}
       input={(form) =>
@@ -268,7 +284,7 @@ export function DocumentVersionForm({
       }
     >
       <DocumentFilePicker
-        label="New version file"
+        label={t('New version file')}
         prepareUpload={actions.prepareUpload}
         request={request}
         onChange={setFile}
@@ -276,7 +292,7 @@ export function DocumentVersionForm({
       <TextAreaInput
         id={`${id}-note`}
         name="note"
-        label="What changed (optional)"
+        label={t('What changed (optional)')}
         maxLength={500}
       />
     </ModuleActionForm>
@@ -290,11 +306,12 @@ export function DocumentDetailsForm({
   document: DocumentItem;
   action: DocumentActions['update'];
 }) {
+  const { t } = useDocumentPresentation();
   const id = useId();
   return (
     <ModuleActionForm
       action={action}
-      submitLabel="Save details"
+      submitLabel={t('Save details')}
       input={(form) =>
         documentUpdateInputSchema.parse({
           documentId: document.id,
@@ -310,7 +327,7 @@ export function DocumentDetailsForm({
       <TextInput
         id={`${id}-title`}
         name="title"
-        label="Title"
+        label={t('Title')}
         required
         maxLength={120}
         defaultValue={document.title}
@@ -318,7 +335,7 @@ export function DocumentDetailsForm({
       <TextAreaInput
         id={`${id}-description`}
         name="description"
-        label="Description (optional)"
+        label={t('Description (optional)')}
         maxLength={500}
         defaultValue={document.description ?? ''}
       />
@@ -326,9 +343,12 @@ export function DocumentDetailsForm({
         <SelectInput
           id={`${id}-unit-audience`}
           name="unitAudience"
-          label="Who in the unit can view"
+          label={t('Who in the unit can view')}
           defaultValue={document.unit_audience ?? 'all_occupants'}
-          options={unitAudienceOptions}
+          options={unitAudienceOptions.map((option) => ({
+            ...option,
+            label: t(option.label),
+          }))}
         />
       ) : null}
     </ModuleActionForm>
@@ -342,15 +362,18 @@ export function DocumentArchiveForm({
   document: DocumentItem;
   action: DocumentActions['setArchived'];
 }) {
+  const { t } = useDocumentPresentation();
   const archived = document.archived_at !== null;
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={archived ? 'Restore document' : 'Archive document'}
+      submitLabel={t(archived ? 'Restore document' : 'Archive document')}
       confirmMessage={
         archived
           ? undefined
-          : 'Archive this document? Residents will no longer see it. Nothing is deleted.'
+          : t(
+              'Archive this document? Residents will no longer see it. Nothing is deleted.',
+            )
       }
       input={() =>
         documentArchiveInputSchema.parse({
@@ -374,15 +397,15 @@ export function DocumentVersionArchiveForm({
   version: DocumentVersion;
   action: DocumentActions['setVersionArchived'];
 }) {
+  const { t } = useDocumentPresentation();
   const archived = version.archived_at !== null;
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={
-        archived
-          ? `Restore version ${version.version_number}`
-          : `Archive version ${version.version_number}`
-      }
+      submitLabel={t(
+        archived ? 'Restore version {number}' : 'Archive version {number}',
+        { number: version.version_number },
+      )}
       input={() =>
         documentVersionArchiveInputSchema.parse({
           versionId: version.id,

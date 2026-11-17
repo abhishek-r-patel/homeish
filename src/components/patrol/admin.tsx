@@ -1,13 +1,11 @@
 // Let administrators manage patrol checkpoints, schedules and incidents and review missed rounds; committee members read only.
 'use client';
 import { useId, useMemo, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import {
   PATROL_CATEGORY_LABELS,
-  formatClockTime,
-  formatInterval,
-  formatPatrolClock,
   formatPatrolCode,
-  formatPatrolTime,
 } from '@/core/patrol/presentation';
 import {
   computePatrolRounds,
@@ -42,6 +40,10 @@ import {
 import {
   PATROL_ACTIONS,
   PatrolQuickAction,
+  formatClockTime,
+  formatInterval,
+  formatPatrolClock,
+  formatPatrolTime,
   type PatrolActions,
 } from './shared';
 
@@ -72,12 +74,17 @@ function CheckpointForm({
   checkpoint: PatrolCheckpoint | null;
   actions: PatrolActions;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   return (
     <ModuleActionForm
       action={actions.saveCheckpoint}
       idempotent
-      submitLabel={checkpoint ? `Save ${checkpoint.name}` : 'Add checkpoint'}
+      submitLabel={
+        checkpoint
+          ? t('Save {name}', { name: checkpoint.name })
+          : t('Add checkpoint')
+      }
       input={(form, clientRequestId) =>
         patrolCheckpointInputSchema.parse({
           checkpointId: checkpoint?.id ?? null,
@@ -91,8 +98,8 @@ function CheckpointForm({
       <TextInput
         id={`${id}-name`}
         name="name"
-        label="Checkpoint name"
-        helpText="For example Main gate, Tower B terrace or Pump room."
+        label={t('Checkpoint name')}
+        helpText={t('For example Main gate, Tower B terrace or Pump room.')}
         required
         maxLength={80}
         defaultValue={checkpoint?.name}
@@ -101,15 +108,16 @@ function CheckpointForm({
       <TextInput
         id={`${id}-location`}
         name="locationNote"
-        label="Where the sticker is (optional)"
+        label={t('Where the sticker is (optional)')}
         maxLength={200}
         defaultValue={checkpoint?.location_note ?? ''}
         autoComplete="off"
       />
       {checkpoint ? null : (
         <p className="text-caption text-ink-muted">
-          A 6-character code is created automatically and printed under the QR
-          code.
+          {t(
+            'A 6-character code is created automatically and printed under the QR code.',
+          )}
         </p>
       )}
     </ModuleActionForm>
@@ -125,6 +133,7 @@ function ScheduleForm({
   checkpoints: readonly PatrolCheckpoint[];
   actions: PatrolActions;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [start, setStart] = useState<TimeParts>(
     toParts(schedule?.shift_start ?? '22:00'),
@@ -141,7 +150,9 @@ function ScheduleForm({
     <ModuleActionForm
       action={actions.saveSchedule}
       idempotent
-      submitLabel={schedule ? `Save ${schedule.name}` : 'Add schedule'}
+      submitLabel={
+        schedule ? t('Save {name}', { name: schedule.name }) : t('Add schedule')
+      }
       input={(form, clientRequestId) =>
         patrolScheduleInputSchema.parse({
           scheduleId: schedule?.id ?? null,
@@ -161,8 +172,8 @@ function ScheduleForm({
       <TextInput
         id={`${id}-name`}
         name="name"
-        label="Schedule name"
-        helpText="For example Night shift."
+        label={t('Schedule name')}
+        helpText={t('For example Night shift.')}
         required
         maxLength={80}
         defaultValue={schedule?.name}
@@ -170,15 +181,15 @@ function ScheduleForm({
       />
       <TimePicker
         id={`${id}-start`}
-        label="Shift starts"
+        label={t('Shift starts')}
         required
         value={start}
         onChange={setStart}
       />
       <TimePicker
         id={`${id}-end`}
-        label="Shift ends"
-        helpText="An end time before the start runs past midnight."
+        label={t('Shift ends')}
+        helpText={t('An end time before the start runs past midnight.')}
         required
         value={end}
         onChange={setEnd}
@@ -189,7 +200,7 @@ function ScheduleForm({
           name="interval"
           type="number"
           inputMode="numeric"
-          label="A round every"
+          label={t('A round every')}
           required
           min={1}
           max={720}
@@ -198,11 +209,11 @@ function ScheduleForm({
         <SelectInput
           id={`${id}-unit`}
           name="intervalUnit"
-          label="Unit"
+          label={t('Unit')}
           defaultValue={inHours ? 'hours' : 'minutes'}
           options={[
-            { value: 'hours', label: 'Hours' },
-            { value: 'minutes', label: 'Minutes' },
+            { value: 'hours', label: t('Hours') },
+            { value: 'minutes', label: t('Minutes') },
           ]}
         />
       </div>
@@ -211,18 +222,22 @@ function ScheduleForm({
         name="grace"
         type="number"
         inputMode="numeric"
-        label="Grace period (minutes)"
-        helpText="Extra time after a round ends before a checkpoint counts as missed."
+        label={t('Grace period (minutes)')}
+        helpText={t(
+          'Extra time after a round ends before a checkpoint counts as missed.',
+        )}
         required
         min={0}
         max={120}
         defaultValue={schedule?.grace_minutes ?? 15}
       />
       <fieldset className="grid gap-space-1 border-0 p-0">
-        <legend className="text-body-strong">Checkpoints in each round</legend>
+        <legend className="text-body-strong">
+          {t('Checkpoints in each round')}
+        </legend>
         {checkpoints.length === 0 ? (
           <p className="text-caption text-ink-muted">
-            Add an active checkpoint first.
+            {t('Add an active checkpoint first.')}
           </p>
         ) : (
           checkpoints.map((checkpoint) => (
@@ -250,6 +265,9 @@ export function PatrolAdminView({
   actions?: PatrolActions;
   fileRequest?: typeof fetch;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const id = useId();
   const timeZone = workspace.timezone;
   const manage = workspace.can_manage;
@@ -303,23 +321,29 @@ export function PatrolAdminView({
 
   return (
     <section className="grid min-w-0 gap-space-5">
-      <h1 className="text-title font-semibold">Guard patrol</h1>
+      <h1 className="text-title font-semibold">{t('Guard patrol')}</h1>
       {manage ? null : (
-        <Banner tone="neutral" title="View only">
-          Only administrators can change checkpoints, schedules, incidents and
-          settings.
+        <Banner tone="neutral" title={t('View only')}>
+          {t(
+            'Only administrators can change checkpoints, schedules, incidents and settings.',
+          )}
         </Banner>
       )}
 
       <Card
-        title="Missed checkpoints"
-        description={`Checkpoints not scanned within their round and grace period in the last ${MISSED_HOURS} hours.`}
+        title={t('Missed checkpoints')}
+        description={t(
+          'Checkpoints not scanned within their round and grace period in the last {hours} hours.',
+          { hours: number(MISSED_HOURS) },
+        )}
       >
         {missed.length === 0 ? (
           <p className="text-body text-ink-muted">
-            {workspace.schedules.some((schedule) => schedule.active)
-              ? 'No missed checkpoints.'
-              : 'No active schedule. Add a schedule to track rounds.'}
+            {t(
+              workspace.schedules.some((schedule) => schedule.active)
+                ? 'No missed checkpoints.'
+                : 'No active schedule. Add a schedule to track rounds.',
+            )}
           </p>
         ) : (
           <ul className="grid gap-space-2">
@@ -329,11 +353,14 @@ export function PatrolAdminView({
                 className="text-caption"
               >
                 <span className="text-body-strong text-danger">
-                  {names.get(item.checkpointId) ?? 'Checkpoint'}
+                  {names.get(item.checkpointId) ?? t('Checkpoint')}
                 </span>{' '}
-                · {item.scheduleName} round from{' '}
-                {formatPatrolTime(item.windowStart, timeZone)}, due by{' '}
-                {formatPatrolClock(item.deadline, timeZone)}
+                ·{' '}
+                {t('{name} round from {start}, due by {deadline}', {
+                  name: item.scheduleName,
+                  start: formatPatrolTime(item.windowStart, timeZone, locale),
+                  deadline: formatPatrolClock(item.deadline, timeZone, locale),
+                })}
               </li>
             ))}
           </ul>
@@ -341,7 +368,7 @@ export function PatrolAdminView({
       </Card>
 
       {current.length > 0 ? (
-        <Card title="Rounds in progress">
+        <Card title={t('Rounds in progress')}>
           <ul className="grid gap-space-3">
             {current.map((round) => (
               <PatrolRoundItem
@@ -356,11 +383,16 @@ export function PatrolAdminView({
       ) : null}
 
       <Card
-        title="Incidents"
-        description={`${openIncidents.length} open. Guards report incidents from the patrol screen.`}
+        title={t('Incidents')}
+        description={t(
+          '{count} open. Guards report incidents from the patrol screen.',
+          { count: number(openIncidents.length) },
+        )}
       >
         {workspace.incidents.length === 0 ? (
-          <p className="text-body text-ink-muted">No incidents reported.</p>
+          <p className="text-body text-ink-muted">
+            {t('No incidents reported.')}
+          </p>
         ) : (
           <ul className="grid gap-space-3">
             {workspace.incidents.map((incident) => (
@@ -374,11 +406,11 @@ export function PatrolAdminView({
                   <div className="grid gap-space-3">
                     <details className="grid gap-space-2">
                       <summary className={summaryClass}>
-                        Add a follow-up note
+                        {t('Add a follow-up note')}
                       </summary>
                       <ModuleActionForm
                         action={actions.addIncidentNote}
-                        submitLabel="Add note"
+                        submitLabel={t('Add note')}
                         input={(form) =>
                           patrolIncidentNoteInputSchema.parse({
                             incidentId: incident.id,
@@ -389,7 +421,7 @@ export function PatrolAdminView({
                         <TextAreaInput
                           id={`${id}-note-${incident.id}`}
                           name="body"
-                          label="Follow-up note"
+                          label={t('Follow-up note')}
                           required
                           maxLength={1000}
                         />
@@ -397,15 +429,15 @@ export function PatrolAdminView({
                     </details>
                     <details className="grid gap-space-2">
                       <summary className={summaryClass}>
-                        Close{' '}
-                        {PATROL_CATEGORY_LABELS[
-                          incident.category
-                        ].toLowerCase()}{' '}
-                        incident
+                        {t('Close {category} incident', {
+                          category: t(
+                            PATROL_CATEGORY_LABELS[incident.category],
+                          ).toLowerCase(),
+                        })}
                       </summary>
                       <ModuleActionForm
                         action={actions.closeIncident}
-                        submitLabel="Close incident"
+                        submitLabel={t('Close incident')}
                         input={(form) =>
                           patrolIncidentCloseInputSchema.parse({
                             incidentId: incident.id,
@@ -416,8 +448,10 @@ export function PatrolAdminView({
                         <TextAreaInput
                           id={`${id}-resolution-${incident.id}`}
                           name="resolution"
-                          label="Resolution"
-                          helpText="What was done. The reporting guard is told."
+                          label={t('Resolution')}
+                          helpText={t(
+                            'What was done. The reporting guard is told.',
+                          )}
                           required
                           maxLength={1000}
                         />
@@ -432,8 +466,11 @@ export function PatrolAdminView({
       </Card>
 
       <Card
-        title="Checkpoints"
-        description={`${active.length} active. Each has a QR sticker and a typed code for phones that cannot scan.`}
+        title={t('Checkpoints')}
+        description={t(
+          '{count} active. Each has a QR sticker and a typed code for phones that cannot scan.',
+          { count: number(active.length) },
+        )}
       >
         <div className="grid gap-space-4">
           {manage && active.length > 0 ? (
@@ -441,11 +478,18 @@ export function PatrolAdminView({
               href="/admin/patrol/print"
               className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
             >
-              Print the QR sheet (A4)
+              {t('Print the QR sheet (A4)')}
             </a>
           ) : null}
+          {manage && active.length > 0 ? (
+            <p className="text-caption text-ink-muted">
+              {t('The printed checkpoint sheet is in English.')}
+            </p>
+          ) : null}
           {workspace.checkpoints.length === 0 ? (
-            <p className="text-body text-ink-muted">No checkpoints yet.</p>
+            <p className="text-body text-ink-muted">
+              {t('No checkpoints yet.')}
+            </p>
           ) : (
             <ul className="grid gap-space-3">
               {[...active, ...inactive].map((checkpoint) => (
@@ -456,10 +500,10 @@ export function PatrolAdminView({
                   <div className="grid gap-space-1">
                     <p className="text-body-strong break-words">
                       {checkpoint.name}
-                      {checkpoint.active ? '' : ' (turned off)'}
+                      {checkpoint.active ? '' : ` ${t('(turned off)')}`}
                     </p>
                     <p className="text-caption text-ink-muted">
-                      Code{' '}
+                      {t('Code')}{' '}
                       <span className="font-mono text-ink">
                         {formatPatrolCode(checkpoint.code)}
                       </span>
@@ -472,7 +516,7 @@ export function PatrolAdminView({
                     <div className="grid gap-space-3">
                       <details className="grid gap-space-2">
                         <summary className={summaryClass}>
-                          Edit {checkpoint.name}
+                          {t('Edit {name}', { name: checkpoint.name })}
                         </summary>
                         <CheckpointForm
                           checkpoint={checkpoint}
@@ -486,14 +530,17 @@ export function PatrolAdminView({
                           active: !checkpoint.active,
                           expectedVersion: checkpoint.version,
                         }}
-                        label={
+                        label={t(
                           checkpoint.active
-                            ? `Turn off ${checkpoint.name}`
-                            : `Turn on ${checkpoint.name}`
-                        }
+                            ? 'Turn off {name}'
+                            : 'Turn on {name}',
+                          { name: checkpoint.name },
+                        )}
                         confirmMessage={
                           checkpoint.active
-                            ? 'Turn off this checkpoint? Guards can no longer scan it and rounds skip it until you turn it back on.'
+                            ? t(
+                                'Turn off this checkpoint? Guards can no longer scan it and rounds skip it until you turn it back on.',
+                              )
                             : undefined
                         }
                       />
@@ -505,7 +552,9 @@ export function PatrolAdminView({
           )}
           {manage ? (
             <details className="grid gap-space-2">
-              <summary className={summaryClass}>Add a checkpoint</summary>
+              <summary className={summaryClass}>
+                {t('Add a checkpoint')}
+              </summary>
               <CheckpointForm checkpoint={null} actions={actions} />
             </details>
           ) : null}
@@ -513,12 +562,14 @@ export function PatrolAdminView({
       </Card>
 
       <Card
-        title="Schedules"
-        description="Each round needs every included checkpoint scanned once."
+        title={t('Schedules')}
+        description={t(
+          'Each round needs every included checkpoint scanned once.',
+        )}
       >
         <div className="grid gap-space-4">
           {workspace.schedules.length === 0 ? (
-            <p className="text-body text-ink-muted">No schedules yet.</p>
+            <p className="text-body text-ink-muted">{t('No schedules yet.')}</p>
           ) : (
             <ul className="grid gap-space-3">
               {workspace.schedules.map((schedule) => (
@@ -529,26 +580,34 @@ export function PatrolAdminView({
                   <div className="grid gap-space-1">
                     <p className="text-body-strong break-words">
                       {schedule.name}
-                      {schedule.active ? '' : ' (turned off)'}
+                      {schedule.active ? '' : ` ${t('(turned off)')}`}
                     </p>
                     <p className="text-caption text-ink-muted">
-                      {formatClockTime(schedule.shift_start)} to{' '}
-                      {formatClockTime(schedule.shift_end)}, a round{' '}
-                      {formatInterval(schedule.interval_minutes)}, grace{' '}
-                      {schedule.grace_minutes} minutes
+                      {t(
+                        '{start} to {end}, a round {interval}, grace {grace} minutes',
+                        {
+                          start: formatClockTime(schedule.shift_start, locale),
+                          end: formatClockTime(schedule.shift_end, locale),
+                          interval: formatInterval(
+                            schedule.interval_minutes,
+                            locale,
+                          ),
+                          grace: number(schedule.grace_minutes),
+                        },
+                      )}
                     </p>
                     <p className="text-caption">
                       {schedule.checkpoints
                         .map((link) => names.get(link.checkpoint_id))
                         .filter(Boolean)
-                        .join(', ') || 'No checkpoints'}
+                        .join(', ') || t('No checkpoints')}
                     </p>
                   </div>
                   {manage ? (
                     <div className="grid gap-space-3">
                       <details className="grid gap-space-2">
                         <summary className={summaryClass}>
-                          Edit {schedule.name}
+                          {t('Edit {name}', { name: schedule.name })}
                         </summary>
                         <ScheduleForm
                           schedule={schedule}
@@ -563,11 +622,12 @@ export function PatrolAdminView({
                           active: !schedule.active,
                           expectedVersion: schedule.version,
                         }}
-                        label={
+                        label={t(
                           schedule.active
-                            ? `Turn off ${schedule.name}`
-                            : `Turn on ${schedule.name}`
-                        }
+                            ? 'Turn off {name}'
+                            : 'Turn on {name}',
+                          { name: schedule.name },
+                        )}
                       />
                     </div>
                   ) : null}
@@ -577,7 +637,7 @@ export function PatrolAdminView({
           )}
           {manage ? (
             <details className="grid gap-space-2">
-              <summary className={summaryClass}>Add a schedule</summary>
+              <summary className={summaryClass}>{t('Add a schedule')}</summary>
               <ScheduleForm
                 schedule={null}
                 checkpoints={active}
@@ -589,30 +649,32 @@ export function PatrolAdminView({
       </Card>
 
       <Card
-        title="Recent scans"
-        description={`Who scanned what in the last ${MISSED_HOURS} hours.`}
+        title={t('Recent scans')}
+        description={t('Who scanned what in the last {hours} hours.', {
+          hours: number(MISSED_HOURS),
+        })}
       >
         {workspace.scans.length === 0 ? (
-          <p className="text-body text-ink-muted">No scans.</p>
+          <p className="text-body text-ink-muted">{t('No scans.')}</p>
         ) : (
           <ul className="grid gap-space-2">
             {workspace.scans.slice(0, 50).map((scan) => (
               <li key={scan.id} className="text-caption">
                 <span className="text-body-strong">
-                  {names.get(scan.checkpoint_id) ?? 'Checkpoint'}
+                  {names.get(scan.checkpoint_id) ?? t('Checkpoint')}
                 </span>{' '}
-                · {formatPatrolTime(scan.scanned_at, timeZone)} ·{' '}
+                · {formatPatrolTime(scan.scanned_at, timeZone, locale)} ·{' '}
                 {scan.scanned_by_name}
-                {scan.method === 'typed' ? ' · typed code' : ''}
+                {scan.method === 'typed' ? ` · ${t('typed code')}` : ''}
               </li>
             ))}
           </ul>
         )}
       </Card>
 
-      <Card title="Shift handover notes" description="Last 7 days.">
+      <Card title={t('Shift handover notes')} description={t('Last 7 days.')}>
         {workspace.handover_notes.length === 0 ? (
-          <p className="text-body text-ink-muted">No recent notes.</p>
+          <p className="text-body text-ink-muted">{t('No recent notes.')}</p>
         ) : (
           <ul className="grid gap-space-3">
             {workspace.handover_notes.map((note) => (
@@ -627,13 +689,15 @@ export function PatrolAdminView({
       </Card>
 
       <Card
-        title="Photo retention"
-        description="Incident photos are deleted automatically after this many days."
+        title={t('Photo retention')}
+        description={t(
+          'Incident photos are deleted automatically after this many days.',
+        )}
       >
         {manage ? (
           <ModuleActionForm
             action={actions.saveSettings}
-            submitLabel="Save retention"
+            submitLabel={t('Save retention')}
             input={(form) =>
               patrolSettingsInputSchema.parse({
                 photoRetentionDays: Number(form.get('photoRetentionDays')),
@@ -645,8 +709,11 @@ export function PatrolAdminView({
               name="photoRetentionDays"
               type="number"
               inputMode="numeric"
-              label="Keep photos for (days)"
-              helpText={`${PATROL_PHOTO_RETENTION_MIN_DAYS} to ${PATROL_PHOTO_RETENTION_MAX_DAYS} days.`}
+              label={t('Keep photos for (days)')}
+              helpText={t('{min} to {max} days.', {
+                min: number(PATROL_PHOTO_RETENTION_MIN_DAYS),
+                max: number(PATROL_PHOTO_RETENTION_MAX_DAYS),
+              })}
               min={PATROL_PHOTO_RETENTION_MIN_DAYS}
               max={PATROL_PHOTO_RETENTION_MAX_DAYS}
               required
@@ -655,7 +722,9 @@ export function PatrolAdminView({
           </ModuleActionForm>
         ) : (
           <p className="text-body">
-            Photos are kept for {workspace.settings.photo_retention_days} days.
+            {t('Photos are kept for {count} days.', {
+              count: number(workspace.settings.photo_retention_days),
+            })}
           </p>
         )}
       </Card>

@@ -1,0 +1,657 @@
+// Hindi messages used by reusable society-facing domain components.
+import type { Locale } from '../locale';
+import type { MessageValues } from '../messages';
+
+export const HI_COMPONENTS: Readonly<Record<string, string>> = {
+  Maintenance: 'रखरखाव',
+  Fine: 'जुर्माना',
+  'Late fee': 'देरी शुल्क',
+  Unit: 'यूनिट',
+  Bill: 'बिल',
+  'Due date': 'देय तारीख',
+  Total: 'कुल',
+  Outstanding: 'बाकी राशि',
+  '{amount} outstanding · due {date}': '{amount} बाकी · देय तारीख {date}',
+  'Paid on': 'भुगतान की तारीख',
+  Mode: 'माध्यम',
+  UPI: 'यूपीआई',
+  Cash: 'नकद',
+  Cheque: 'चेक',
+  'Bank transfer': 'बैंक ट्रांसफ़र',
+  'Ref. {reference}': 'संदर्भ: {reference}',
+  Amount: 'राशि',
+  'Reason: {reason}': 'कारण: {reason}',
+  Receipt: 'रसीद',
+  PDF: 'पीडीएफ़',
+  '{amount} on {date}': '{date} को {amount}',
+  'Rejected: {reason}': 'अस्वीकृत: {reason}',
+  Date: 'तारीख',
+  Description: 'विवरण',
+  Debit: 'डेबिट',
+  Credit: 'क्रेडिट',
+  Balance: 'बकाया',
+  '{amount} advance': '{amount} अग्रिम',
+  '{kind} {id}': '{kind} {id}',
+  '{kind} · {sign}{amount}': '{kind} · {sign}{amount}',
+  '{date} · balance {balance}': '{date} · बकाया {balance}',
+  Payment: 'भुगतान',
+  Waiver: 'छूट',
+  Adjustment: 'समायोजन',
+  'Could not clear the saved retry key. Refresh the page before creating another entry.':
+    'सहेजी गई दोबारा कोशिश की कुंजी हटाई नहीं जा सकी। नई एंट्री बनाने से पहले पेज रीफ़्रेश करें।',
+  'This visitor entry is already saved. Start a new entry.':
+    'यह आगंतुक एंट्री पहले ही सहेजी जा चुकी है। नई एंट्री शुरू करें।',
+  'Wait for the visitor photo upload to finish.':
+    'आगंतुक की फ़ोटो अपलोड होने तक प्रतीक्षा करें।',
+  'Could not safely prepare the visitor request. Check browser storage and retry.':
+    'आगंतुक अनुरोध सुरक्षित रूप से तैयार नहीं हो सका। ब्राउज़र स्टोरेज जाँचकर फिर कोशिश करें।',
+  'The request was saved, but its retry key could not be cleared. Do not submit this entry again.':
+    'अनुरोध सहेजा गया, लेकिन दोबारा कोशिश की कुंजी हटाई नहीं जा सकी। यह एंट्री फिर जमा न करें।',
+  'Could not reach the server. Your details remain here; reconnect and retry.':
+    'सर्वर से संपर्क नहीं हो सका। आपकी जानकारी यहीं है; फिर से कनेक्ट करके कोशिश करें।',
+  'Log another visitor': 'एक और आगंतुक दर्ज करें',
+  'Pre-approval created. Share the code with your visitor.':
+    'पहले से मंज़ूरी बनाई गई। कोड अपने आगंतुक के साथ साझा करें।',
+  'Your response was recorded.': 'आपकी प्रतिक्रिया दर्ज की गई।',
+  'Pre-approval cancelled.': 'पहले से मंज़ूरी रद्द की गई।',
+  'Frequent visitor saved.': 'नियमित आगंतुक सहेजा गया।',
+  'Frequent visitor removed.': 'नियमित आगंतुक हटाया गया।',
+  'Entry created. Warning: this phone number is on the society blacklist.':
+    'एंट्री बनाई गई। चेतावनी: यह फ़ोन नंबर सोसाइटी की प्रतिबंधित सूची में है।',
+  'Resident notified.': 'निवासी को सूचित किया गया।',
+  'Visitor checked out.': 'आगंतुक का निकास दर्ज हो गया।',
+  'Visitor allowed by guard. The action was recorded.':
+    'गार्ड ने आगंतुक को अनुमति दी। कार्रवाई दर्ज की गई।',
+  'Pre-approved visitor checked in.': 'पहले से मंज़ूर आगंतुक का प्रवेश दर्ज हो गया।',
+  'This unit already has 50 frequent visitors. Remove one first.':
+    'इस यूनिट में पहले से 50 नियमित आगंतुक हैं। पहले किसी एक को हटाएँ।',
+  'Reference:': 'संदर्भ:',
+  'Entry code for {visitor}': '{visitor} का प्रवेश कोड',
+  visitor: 'आगंतुक',
+  'QR code for the visitor entry code': 'आगंतुक प्रवेश कोड का QR कोड',
+  'Valid until {date}': '{date} तक मान्य',
+  'Working…': 'काम हो रहा है…',
+  'Visitor code': 'आगंतुक कोड',
+  'Check code': 'कोड जाँचें',
+  'Stop camera': 'कैमरा रोकें',
+  'Scan QR code': 'QR कोड स्कैन करें',
+  'Valid pre-approval for {visitor}.': '{visitor} के लिए पहले से मंज़ूरी मान्य है।',
+  'This visitor code has expired.': 'इस आगंतुक कोड की समय-सीमा समाप्त हो गई है।',
+  'This visitor code has already been used.':
+    'इस आगंतुक कोड का पहले ही उपयोग हो चुका है।',
+  'This visitor code is invalid.': 'यह आगंतुक कोड मान्य नहीं है।',
+  'Unit: {unit}': 'यूनिट: {unit}',
+  'Valid {from} – {to}': '{from} से {to} तक मान्य',
+  'Check in visitor': 'आगंतुक का प्रवेश दर्ज करें',
+  'Visitor checked in.': 'आगंतुक का प्रवेश दर्ज हो गया।',
+  'Amenity booking': 'सुविधा बुकिंग',
+  'One exclusive reservation per slot. Book at least 24 hours ahead; no maximum booking horizon or daily unit limit. All times use {timezone}.':
+    'हर स्लॉट के लिए केवल एक बुकिंग की जा सकती है। कम से कम 24 घंटे पहले बुक करें; बुकिंग की अधिकतम अवधि या रोज़ाना बुकिंग सीमा नहीं है। सभी समय {timezone} के अनुसार हैं।',
+  'Booking date': 'बुकिंग की तारीख',
+  'Show availability and bookings': 'उपलब्धता और बुकिंग दिखाएँ',
+  'Add amenity': 'सुविधा जोड़ें',
+  'Billing is disabled. Only free slots can be booked; cancellations still credit existing paid bookings.':
+    'बिलिंग बंद है। केवल मुफ़्त स्लॉट बुक किए जा सकते हैं; रद्द करने पर पहले से भुगतान की गई बुकिंग का क्रेडिट फिर भी दिया जाएगा।',
+  'Maximum guests: {count} · Fee: {amount}':
+    'अधिकतम अतिथि: {count} · शुल्क: {amount}',
+  Inactive: 'निष्क्रिय',
+  'Edit amenity and recurring slots': 'सुविधा और दोहराए जाने वाले स्लॉट संपादित करें',
+  to: 'से',
+  'Read-only access.': 'केवल देखने की अनुमति।',
+  'Active occupancy is required to book.':
+    'बुकिंग के लिए सक्रिय निवासी होना आवश्यक है।',
+  'Booked or unavailable: check the 24-hour lead and billing status.':
+    'बुक हो चुका है या उपलब्ध नहीं है: 24 घंटे की अग्रिम शर्त और बिलिंग स्थिति जाँचें।',
+  'No recurring slots on this date.':
+    'इस तारीख़ के लिए कोई दोहराया जाने वाला स्लॉट नहीं है।',
+  'Bookings for this date': 'इस तारीख़ की बुकिंग',
+  'Unit {unit}': 'यूनिट {unit}',
+  guests: 'अतिथि',
+  'Snapshotted fee {amount}': 'बुकिंग के समय का शुल्क {amount}',
+  'Accepted booking rules': 'स्वीकृत बुकिंग नियम',
+  'No accessible bookings on this date. Other units’ occupied slots remain anonymous.':
+    'इस तारीख़ की कोई देखने योग्य बुकिंग नहीं है। अन्य यूनिट के व्यस्त स्लॉट गुमनाम रहते हैं।',
+  'Amenity name': 'सुविधा का नाम',
+  'Maximum guests per booking': 'हर बुकिंग में अधिकतम अतिथि',
+  'Fee per booking in rupees (0 for free)': 'प्रति बुकिंग शुल्क रुपये में (मुफ़्त के लिए 0)',
+  'Amenity rules': 'सुविधा के नियम',
+  'Active amenity': 'सक्रिय सुविधा',
+  'Recurring weekday slots': 'हर सप्ताह दोहराए जाने वाले स्लॉट',
+  'Slot {number}': 'स्लॉट {number}',
+  Weekday: 'सप्ताह का दिन',
+  Sunday: 'रविवार',
+  Monday: 'सोमवार',
+  Tuesday: 'मंगलवार',
+  Wednesday: 'बुधवार',
+  Thursday: 'गुरुवार',
+  Friday: 'शुक्रवार',
+  Saturday: 'शनिवार',
+  'Slot start (society local time)': 'स्लॉट शुरू (सोसाइटी का स्थानीय समय)',
+  'Slot end (society local time)': 'स्लॉट समाप्त (सोसाइटी का स्थानीय समय)',
+  'Remove slot {number}': 'स्लॉट {number} हटाएँ',
+  'Add recurring slot': 'दोहराया जाने वाला स्लॉट जोड़ें',
+  'Bookings are exclusive. Slots cannot overlap on the same weekday. Schedule edits never change existing booking times, fees or rules.':
+    'हर स्लॉट की बुकिंग अलग होती है। एक ही दिन के स्लॉट एक-दूसरे पर नहीं चढ़ सकते। समय-सारणी में बदलाव से मौजूदा बुकिंग के समय, शुल्क या नियम नहीं बदलते।',
+  'Save amenity': 'सुविधा सहेजें',
+  'Confirm exclusive booking': 'एकमात्र बुकिंग की पुष्टि करें',
+  'Occupied unit': 'निवास वाली यूनिट',
+  'Guest count': 'अतिथियों की संख्या',
+  'I acknowledge the current amenity rules':
+    'मैं सुविधा के मौजूदा नियमों को स्वीकार करता/करती हूँ',
+  'Fee: {amount}. Confirmed immediately; any fee is charged to your unit ledger. Cancel before the slot starts for a full ledger credit.':
+    'शुल्क: {amount}। बुकिंग तुरंत पक्की हो जाती है; शुल्क आपकी यूनिट के खाते में जोड़ा जाएगा। पूरा क्रेडिट पाने के लिए स्लॉट शुरू होने से पहले रद्द करें।',
+  'Cancel booking': 'बुकिंग रद्द करें',
+  'Cancel this booking and credit any fee to the unit ledger?':
+    'क्या यह बुकिंग रद्द करके शुल्क यूनिट के खाते में वापस जोड़ा जाए?',
+  'Administrator cancellation reason': 'व्यवस्थापक द्वारा रद्द करने का कारण',
+  'Asset Register': 'संपत्ति सूची',
+  'Asset register': 'संपत्ति सूची',
+  'Loading the asset register': 'संपत्ति सूची लोड हो रही है',
+  'Loading the asset register.': 'संपत्ति सूची लोड हो रही है।',
+  'The Asset Register is for the admin and committee':
+    'संपत्ति सूची व्यवस्थापक और समिति के लिए है',
+  'You do not have access to this view. Return to your workspace or ask an administrator to review your access.':
+    'आपको यह दृश्य देखने की अनुमति नहीं है। अपने कार्यक्षेत्र पर लौटें या व्यवस्थापक से अपनी पहुँच की जाँच करने को कहें।',
+  'Not found': 'नहीं मिला',
+  'This asset does not exist in your society.':
+    'यह संपत्ति आपकी सोसाइटी में मौजूद नहीं है।',
+  'Could not load the asset register': 'संपत्ति सूची लोड नहीं हो सकी',
+  'Nothing has changed. Retry in a moment.':
+    'कुछ भी नहीं बदला है। थोड़ी देर में फिर कोशिश करें।',
+  Retry: 'फिर कोशिश करें',
+  Back: 'वापस',
+  'Society equipment, where it is, its warranty and its maintenance history.':
+    'सोसाइटी के उपकरण, उनका स्थान, वारंटी और रखरखाव का इतिहास।',
+  'Only admins can change the register.': 'सूची में बदलाव केवल व्यवस्थापक कर सकते हैं।',
+  'You can view the register; an admin keeps it up to date.':
+    'आप सूची देख सकते हैं; इसे अद्यतन रखने का काम व्यवस्थापक करते हैं।',
+  'Add an asset': 'संपत्ति जोड़ें',
+  'Manage categories': 'श्रेणियाँ प्रबंधित करें',
+  'View categories': 'श्रेणियाँ देखें',
+  Assets: 'संपत्तियाँ',
+  '{count} assets recorded. Retired assets are listed last.':
+    '{count} संपत्तियाँ दर्ज हैं। सेवा से हटाई गई संपत्तियाँ सूची के अंत में हैं।',
+  'No assets yet': 'अभी कोई संपत्ति नहीं है',
+  'Add the first asset, such as a lift, pump or generator.':
+    'लिफ़्ट, पंप या जनरेटर जैसी पहली संपत्ति जोड़ें।',
+  'Add a category first, such as Lifts or Pumps, then add assets.':
+    'पहले लिफ़्ट या पंप जैसी श्रेणी जोड़ें, फिर संपत्तियाँ जोड़ें।',
+  'An admin adds assets to the register.': 'व्यवस्थापक सूची में संपत्तियाँ जोड़ते हैं।',
+  'Search assets': 'संपत्तियाँ खोजें',
+  'All categories': 'सभी श्रेणियाँ',
+  '{name} (inactive)': '{name} (निष्क्रिय)',
+  Status: 'स्थिति',
+  'All statuses': 'सभी स्थितियाँ',
+  Warranty: 'वारंटी',
+  'Any warranty': 'कोई भी वारंटी',
+  'Showing {visible} of {total}.': '{total} में से {visible} दिखाए जा रहे हैं।',
+  'Only the first {count} assets are loaded, so search and filters cover those assets only.':
+    'केवल पहली {count} संपत्तियाँ लोड की गई हैं, इसलिए खोज और फ़िल्टर सिर्फ़ उन्हीं पर लागू होते हैं।',
+  'No assets match': 'कोई संपत्ति मेल नहीं खाती',
+  'Change the search or clear the filters.': 'खोज बदलें या फ़िल्टर हटाएँ।',
+  'In use': 'उपयोग में',
+  'Under repair': 'मरम्मत में',
+  Retired: 'सेवा से हटाई गई',
+  'No warranty recorded': 'वारंटी दर्ज नहीं है',
+  'Warranty ended {date}': '{date} को वारंटी समाप्त हुई',
+  'Warranty ends soon, on {date}': '{date} को वारंटी जल्द समाप्त होगी',
+  'Under warranty until {date}': '{date} तक वारंटी मान्य है',
+  'Under warranty': 'वारंटी मान्य है',
+  'Warranty ending soon': 'वारंटी जल्द समाप्त होगी',
+  'Warranty ended': 'वारंटी समाप्त हुई',
+  'Last maintained {date}': 'आख़िरी रखरखाव {date} को हुआ',
+  'No maintenance recorded': 'रखरखाव दर्ज नहीं है',
+  'Linked to an AMC': 'वार्षिक रखरखाव अनुबंध से जुड़ा है',
+  'Back to the register': 'सूची पर वापस जाएँ',
+  'Asset categories': 'संपत्ति की श्रेणियाँ',
+  'Categories group the register. Inactive categories stay on existing assets but cannot be chosen for new ones.':
+    'श्रेणियाँ सूची की संपत्तियों को व्यवस्थित करती हैं। निष्क्रिय श्रेणियाँ मौजूदा संपत्तियों पर बनी रहती हैं, लेकिन नई संपत्तियों के लिए नहीं चुनी जा सकतीं।',
+  'Add a category': 'श्रेणी जोड़ें',
+  Categories: 'श्रेणियाँ',
+  'No categories yet': 'अभी कोई श्रेणी नहीं है',
+  'Add the first category above.': 'ऊपर पहली श्रेणी जोड़ें।',
+  'An admin adds categories.': 'व्यवस्थापक श्रेणियाँ जोड़ते हैं।',
+  Active: 'सक्रिय',
+  'Assets: {count}': 'संपत्तियाँ: {count}',
+  'Rename category': 'श्रेणी का नाम बदलें',
+  'Add category': 'श्रेणी जोड़ें',
+  'New name for {name}': '{name} के लिए नया नाम',
+  'Category name': 'श्रेणी का नाम',
+  'For example Lifts, Pumps or CCTV.': 'उदाहरण: लिफ़्ट, पंप या CCTV।',
+  'Deactivate category': 'श्रेणी निष्क्रिय करें',
+  'Activate category': 'श्रेणी सक्रिय करें',
+  'Asset details': 'संपत्ति का विवरण',
+  'Add a category first': 'पहले श्रेणी जोड़ें',
+  'Every asset belongs to a category, such as Lifts or Pumps.':
+    'हर संपत्ति किसी श्रेणी में आती है, जैसे लिफ़्ट या पंप।',
+  'Choose a category': 'श्रेणी चुनें',
+  'Asset name': 'संपत्ति का नाम',
+  'For example Lift A1 or Borewell pump 2.': 'उदाहरण: लिफ़्ट A1 या बोरवेल पंप 2।',
+  Location: 'स्थान',
+  'Where the asset is, for example Tower A lobby.':
+    'संपत्ति कहाँ है, जैसे टावर A की लॉबी।',
+  'Make (optional)': 'निर्माता (वैकल्पिक)',
+  'Model (optional)': 'मॉडल (वैकल्पिक)',
+  'Serial number (optional)': 'सीरियल नंबर (वैकल्पिक)',
+  'Purchase date (optional)': 'खरीद की तारीख़ (वैकल्पिक)',
+  'Clear {field}': '{field} हटाएँ',
+  'purchase date': 'खरीद की तारीख़',
+  'Purchase cost (optional)': 'खरीद लागत (वैकल्पिक)',
+  'Supplier (optional)': 'आपूर्तिकर्ता (वैकल्पिक)',
+  'Warranty end date (optional)': 'वारंटी समाप्ति तारीख़ (वैकल्पिक)',
+  'warranty end date': 'वारंटी समाप्ति तारीख़',
+  'The register flags warranties ending within 30 days.':
+    'सूची उन वारंटियों को चिह्नित करती है जो अगले 30 दिनों में समाप्त होंगी।',
+  'AMC contract (optional)': 'वार्षिक रखरखाव अनुबंध (वैकल्पिक)',
+  "Linking shows the contract's service visits in this asset's history. Contracts are managed in AMC.":
+    'लिंक करने पर इस संपत्ति के इतिहास में अनुबंध की सेवा विज़िट दिखेंगी। अनुबंध AMC में प्रबंधित होते हैं।',
+  'No AMC contract': 'कोई वार्षिक रखरखाव अनुबंध नहीं',
+  '{asset} – {vendor} (ends {date})': '{asset} – {vendor} (समाप्ति {date})',
+  'Notes (optional)': 'नोट्स (वैकल्पिक)',
+  'Back to the asset': 'संपत्ति पर वापस जाएँ',
+  'Edit {name}': '{name} संपादित करें',
+  'Save asset': 'संपत्ति सहेजें',
+  'Edit asset details': 'संपत्ति का विवरण संपादित करें',
+  'This asset is retired. Its history is kept for reference.':
+    'यह संपत्ति सेवा से हटाई गई है। इसका इतिहास संदर्भ के लिए रखा गया है।',
+  Details: 'विवरण',
+  Make: 'निर्माता',
+  Model: 'मॉडल',
+  'Serial number': 'सीरियल नंबर',
+  'Not recorded': 'दर्ज नहीं है',
+  'Purchase date': 'खरीद की तारीख़',
+  'Purchase cost': 'खरीद लागत',
+  Supplier: 'आपूर्तिकर्ता',
+  Notes: 'नोट्स',
+  None: 'कोई नहीं',
+  'Annual maintenance contract': 'वार्षिक रखरखाव अनुबंध',
+  'Read-only. Contracts and visits are managed in AMC.':
+    'केवल देखने के लिए। अनुबंध और विज़िट AMC में प्रबंधित होते हैं।',
+  with: 'के साथ',
+  'renewed; visits from all terms shown':
+    'नवीनीकृत; सभी अवधि की विज़िट दिखाई गई हैं',
+  'No AMC contract is linked.': 'कोई वार्षिक रखरखाव अनुबंध लिंक नहीं है।',
+  'Link one by editing the asset.': 'संपत्ति संपादित करके इसे लिंक करें।',
+  'Maintenance history': 'रखरखाव का इतिहास',
+  'Manual entries and AMC service visits, newest first.':
+    'हाथ से दर्ज रखरखाव और AMC सेवा विज़िट, नई से पुरानी।',
+  'Manual entries, newest first.': 'हाथ से दर्ज रखरखाव, नया पहले।',
+  'Add the first entry below.': 'नीचे पहली एंट्री जोड़ें।',
+  'An admin records maintenance work.': 'व्यवस्थापक रखरखाव का काम दर्ज करते हैं।',
+  'AMC visit': 'AMC विज़िट',
+  'Manual entry': 'हाथ से दर्ज एंट्री',
+  'Technician:': 'तकनीशियन:',
+  'Done by': 'किसने किया',
+  'Remove entry': 'एंट्री हटाएँ',
+  'Remove this maintenance entry? It stays in the audit log.':
+    'क्या यह रखरखाव एंट्री हटाई जाए? यह ऑडिट लॉग में बनी रहेगी।',
+  'Record maintenance': 'रखरखाव दर्ज करें',
+  'Add maintenance entry': 'रखरखाव एंट्री जोड़ें',
+  'Enter an amount in rupees, for example 2500 or 1250.50.':
+    'रुपयों में राशि दर्ज करें, उदाहरण: 2500 या 1250.50।',
+  'Date of work': 'काम की तारीख़',
+  'Work done': 'किया गया काम',
+  'A technician, company or staff member.': 'तकनीशियन, कंपनी या स्टाफ़ सदस्य।',
+  'Cost (optional)': 'लागत (वैकल्पिक)',
+  'Create successor contract': 'अगला अनुबंध बनाएँ',
+  'Save contract details': 'अनुबंध का विवरण सहेजें',
+  'Add AMC contract': 'वार्षिक रखरखाव अनुबंध जोड़ें',
+  'Asset / service label': 'संपत्ति / सेवा का नाम',
+  'Vendor name': 'विक्रेता का नाम',
+  'Vendor contact': 'विक्रेता का संपर्क',
+  'Contract start': 'अनुबंध शुरू',
+  'Contract end': 'अनुबंध समाप्त',
+  'Contract cost in rupees': 'अनुबंध की लागत रुपये में',
+  'Payment terms': 'भुगतान की शर्तें',
+  'Service visit frequency': 'सेवा विज़िट की आवृत्ति',
+  'Renewal creates a linked successor. The previous contract, document and visits remain unchanged.':
+    'नवीनीकरण से जुड़ा हुआ अगला अनुबंध बनता है। पिछला अनुबंध, दस्तावेज़ और विज़िट वैसे ही रहते हैं।',
+  'Save visit correction': 'विज़िट का सुधार सहेजें',
+  'Add service visit': 'सेवा विज़िट जोड़ें',
+  'Service visit date': 'सेवा विज़िट की तारीख़',
+  'Visit summary': 'विज़िट का सारांश',
+  'Technician name': 'तकनीशियन का नाम',
+  'Administrator corrections are recorded in the audit history.':
+    'व्यवस्थापक के सुधार ऑडिट इतिहास में दर्ज होते हैं।',
+  'Save AMC link': 'वार्षिक रखरखाव अनुबंध का लिंक सहेजें',
+  'AMC contract': 'वार्षिक रखरखाव अनुबंध',
+  'Remove link': 'लिंक हटाएँ',
+  Parking: 'पार्किंग',
+  'Back to your workspace': 'अपने कार्यक्षेत्र पर वापस जाएँ',
+  'Society parking': 'सोसाइटी पार्किंग',
+  'View only': 'केवल देखने की अनुमति',
+  'Only administrators can change slots, allocations and settings.':
+    'स्लॉट, आवंटन और सेटिंग में बदलाव केवल व्यवस्थापक कर सकते हैं।',
+  Slots: 'स्लॉट',
+  Slot: 'पार्किंग स्लॉट',
+  'Vehicle number': 'वाहन नंबर',
+  'What is wrong? (optional)': 'क्या समस्या है? (वैकल्पिक)',
+  'Photo (optional)': 'फ़ोटो (वैकल्पिक)',
+  '{active} active slots, {allocated} allocated.':
+    '{active} सक्रिय स्लॉट, {allocated} आवंटित।',
+  'No slots yet.': 'अभी कोई स्लॉट नहीं है।',
+  'Add a slot': 'स्लॉट जोड़ें',
+  'Archived slots ({count})': 'संग्रहित स्लॉट ({count})',
+  Waitlists: 'प्रतीक्षा सूची',
+  'One queue per slot type, served in order. Allocate from a slot above.':
+    'हर स्लॉट प्रकार की अलग कतार है और अनुरोध क्रम से पूरे होते हैं। ऊपर दिए स्लॉट से आवंटित करें।',
+  'Nobody waiting.': 'कोई प्रतीक्षा में नहीं है।',
+  since: 'से',
+  'Not available': 'उपलब्ध नहीं',
+  'Visitor passes': 'आगंतुक पास',
+  'Visitor passes need the Visitors module, which is turned off.':
+    'आगंतुक पास के लिए आगंतुक मॉड्यूल चालू होना चाहिए, जो अभी बंद है।',
+  'No current visitor passes.': 'अभी कोई आगंतुक पास नहीं है।',
+  'Wrong-parking reports': 'गलत पार्किंग की रिपोर्ट',
+  '{count} open.': '{count} खुली रिपोर्ट।',
+  'No reports.': 'कोई रिपोर्ट नहीं है।',
+  'Mark resolved': 'समाधान हुआ चिह्नित करें',
+  'Resolution note (optional)': 'समाधान का विवरण (वैकल्पिक)',
+  'Photo retention': 'फ़ोटो रखने की अवधि',
+  'Wrong-parking photos are deleted automatically after this many days.':
+    'गलत पार्किंग की फ़ोटो इतने दिनों बाद अपने-आप मिटा दी जाती हैं।',
+  'Save retention': 'रखने की अवधि सहेजें',
+  'Keep photos for (days)': 'फ़ोटो इतने दिन रखें',
+  '{min} to {max} days.': '{min} से {max} दिन।',
+  'Photos are kept for {count} days.': 'फ़ोटो {count} दिनों तक रखी जाती हैं।',
+  'Slot label or number': 'स्लॉट का नाम या नंबर',
+  'Slot type': 'स्लॉट का प्रकार',
+  'Location note (optional)': 'जगह का विवरण (वैकल्पिक)',
+  'For example Basement 1, near lift B.': 'उदाहरण: बेसमेंट 1, लिफ़्ट B के पास।',
+  'Save slot {label}': 'स्लॉट {label} सहेजें',
+  'Add slot': 'स्लॉट जोड़ें',
+  'Type: {type}. Archive the slot and add a new one to change its type.':
+    'प्रकार: {type}। प्रकार बदलने के लिए इस स्लॉट को संग्रहित करें और नया जोड़ें।',
+  'Allocate slot {label}': 'स्लॉट {label} आवंटित करें',
+  'Next in the {type} waitlist: unit {unit}. Allocating to any other unit needs a reason, which is recorded.':
+    '{type} प्रतीक्षा सूची में अगली यूनिट {unit} है। किसी अन्य यूनिट को आवंटित करने पर कारण देना होगा, जो दर्ज किया जाएगा।',
+  'Nobody is waiting for this slot type.':
+    'इस प्रकार के स्लॉट के लिए कोई प्रतीक्षा में नहीं है।',
+  'Reason for skipping the waitlist (only if not the next unit)':
+    'प्रतीक्षा सूची छोड़ने का कारण (केवल अगली यूनिट न होने पर)',
+  'Slot {label} · {type}': 'स्लॉट {label} · {type}',
+  'Archived {date}': '{date} को संग्रहित',
+  'Allocated to unit {unit} since {date}': 'यूनिट {unit} को {date} से आवंटित',
+  'Visitor slot, used through visitor passes':
+    'आगंतुक स्लॉट, आगंतुक पास के लिए इस्तेमाल होता है',
+  Free: 'खाली',
+  'Waitlist skipped:': 'प्रतीक्षा सूची छोड़ी गई:',
+  'Vehicles:': 'वाहन:',
+  'none marked': 'कोई चिह्नित नहीं',
+  'End allocation of slot {label}': 'स्लॉट {label} का आवंटन समाप्त करें',
+  "End unit {unit}'s allocation of slot {label}?":
+    'क्या यूनिट {unit} को स्लॉट {label} का आवंटन समाप्त करें?',
+  'Edit slot {label}': 'स्लॉट {label} संपादित करें',
+  'Archive slot {label}': 'स्लॉट {label} संग्रहित करें',
+  'Archive slot {label}? Its history is kept.':
+    'क्या स्लॉट {label} संग्रहित करें? इसका इतिहास सुरक्षित रहेगा।',
+  'Find a slot holder': 'स्लॉट धारक खोजें',
+  'Search by slot label or vehicle number.': 'स्लॉट के नाम या वाहन नंबर से खोजें।',
+  'Slot or vehicle number': 'स्लॉट या वाहन नंबर',
+  Search: 'खोजें',
+  'No slot or vehicle matches “{query}”.':
+    '“{query}” से कोई स्लॉट या वाहन मेल नहीं खाता।',
+  'Free slot': 'खाली स्लॉट',
+  'Current passes and those starting in the next 12 hours.':
+    'अभी मान्य और अगले 12 घंटों में शुरू होने वाले पास।',
+  'Visitor passes are not available': 'आगंतुक पास उपलब्ध नहीं हैं',
+  'The Visitors module is turned off for this society.':
+    'इस सोसाइटी में आगंतुक मॉड्यूल बंद है।',
+  'No visitor passes right now.': 'अभी कोई आगंतुक पास नहीं है।',
+  'For unit {unit}': 'यूनिट {unit} के लिए',
+  'Report wrong parking': 'गलत पार्किंग की रिपोर्ट करें',
+  'The unit that holds the slot or owns the vehicle, and the administrators, are told.':
+    'स्लॉट रखने वाली या वाहन की मालिक यूनिट और व्यवस्थापकों को सूचित किया जाएगा।',
+  'End allocation of slot': 'स्लॉट का आवंटन समाप्त करें',
+  'No unit linked to you yet': 'अभी आपकी कोई यूनिट जुड़ी नहीं है',
+  'Parking is managed per unit. Ask your society administrator to add you to your unit.':
+    'पार्किंग हर यूनिट के लिए प्रबंधित होती है। अपनी यूनिट में जोड़ने के लिए सोसाइटी व्यवस्थापक से कहें।',
+  'My slots': 'मेरे स्लॉट',
+  'Slots your society has allocated to your units.':
+    'आपकी सोसाइटी ने आपकी यूनिट को जो स्लॉट आवंटित किए हैं।',
+  'No slot allocated yet. Join the waitlist below to ask for one.':
+    'अभी कोई स्लॉट आवंटित नहीं है। अनुरोध करने के लिए नीचे प्रतीक्षा सूची में शामिल हों।',
+  Waitlist: 'प्रतीक्षा सूची',
+  'Requests are served in the order they were made, one queue per slot type.':
+    'हर स्लॉट प्रकार की अलग कतार है और अनुरोध मिलने के क्रम में पूरे होते हैं।',
+  '{type} slot · Unit {unit}': '{type} स्लॉट · यूनिट {unit}',
+  Requested: 'अनुरोध किया',
+  'Cancel request': 'अनुरोध रद्द करें',
+  'Leave the waitlist? You would need to join again at the back of the queue.':
+    'क्या प्रतीक्षा सूची छोड़ें? फिर आपको कतार के अंत में दोबारा शामिल होना होगा।',
+  'Join waitlist': 'प्रतीक्षा सूची में शामिल हों',
+  'Note for the administrator (optional)': 'व्यवस्थापक के लिए नोट (वैकल्पिक)',
+  'Past requests ({count})': 'पिछले अनुरोध ({count})',
+  'Visitor parking passes': 'आगंतुक पार्किंग पास',
+  'Reserve a visitor slot for up to 24 hours. Guards see the pass at the gate.':
+    'आगंतुक स्लॉट अधिकतम 24 घंटों के लिए आरक्षित करें। गार्ड गेट पर पास देखेंगे।',
+  'Your society has not turned on the Visitors module.':
+    'आपकी सोसाइटी ने आगंतुक मॉड्यूल चालू नहीं किया है।',
+  'Your society has no visitor slots yet.':
+    'आपकी सोसाइटी में अभी कोई आगंतुक स्लॉट नहीं है।',
+  'No visitor passes.': 'कोई आगंतुक पास नहीं है।',
+  'Create visitor pass': 'आगंतुक पास बनाएँ',
+  'Visitor name': 'आगंतुक का नाम',
+  'Vehicle number (optional)': 'वाहन नंबर (वैकल्पिक)',
+  'Visitor slot': 'आगंतुक स्लॉट',
+  'Any free visitor slot': 'कोई भी खाली आगंतुक स्लॉट',
+  'Start date': 'शुरू होने की तारीख',
+  'India time. A pass can start up to 30 days ahead.':
+    'भारत के समय के अनुसार। पास अधिकतम 30 दिन आगे से शुरू हो सकता है।',
+  'Start time': 'शुरू होने का समय',
+  Duration: 'अवधि',
+  '{count} hours': '{count} घंटे',
+  'Link to a visitor entry (optional)': 'आगंतुक एंट्री से जोड़ें (वैकल्पिक)',
+  'No visitor entry': 'कोई आगंतुक एंट्री नहीं',
+  'Choose the slot or enter the vehicle number. The unit and administrators are told.':
+    'स्लॉट चुनें या वाहन नंबर दर्ज करें। यूनिट और व्यवस्थापकों को सूचित किया जाएगा।',
+  'No reports about your units or made by you.':
+    'आपकी यूनिट की या आपके द्वारा की गई कोई रिपोर्ट नहीं है।',
+  'Cancel this visitor pass?': 'क्या यह आगंतुक पास रद्द करें?',
+  'Reported by': 'रिपोर्ट की',
+  'a guard': 'गार्ड ने',
+  'a resident': 'निवासी ने',
+  on: 'को',
+  'No unit matched': 'कोई यूनिट मेल नहीं खाई',
+  'Resolution:': 'समाधान:',
+  'Stop using slot for {number}': '{number} के लिए स्लॉट का उपयोग बंद करें',
+  'Use slot for {number}': '{number} के लिए स्लॉट इस्तेमाल करें',
+  'Vehicles from your directory that use this slot.':
+    'आपकी निर्देशिका के वे वाहन जो इस स्लॉट का उपयोग करते हैं।',
+  'This slot takes two-wheelers only.': 'इस स्लॉट में केवल दोपहिया वाहन आ सकते हैं।',
+  'This slot takes one car plus any number of two-wheelers.':
+    'इस स्लॉट में एक कार और कितने भी दोपहिया वाहन आ सकते हैं।',
+  'uses this slot': 'इस स्लॉट का उपयोग करता है',
+  'uses another slot': 'दूसरे स्लॉट का उपयोग करता है',
+  'Add your vehicles in the directory to show which ones use this slot.':
+    'इस स्लॉट का उपयोग करने वाले वाहन दिखाने के लिए अपनी निर्देशिका में वाहन जोड़ें।',
+  'Slot {label}': 'स्लॉट {label}',
+  'Cancel pass for {name}': '{name} का पास रद्द करें',
+  'No slot': 'कोई स्लॉट नहीं',
+  'Uploading the photo privately.': 'फ़ोटो निजी रूप से अपलोड हो रही है।',
+  'Choose a JPG or PNG photo up to 5 MiB.': '5 MiB तक की JPG या PNG फ़ोटो चुनें।',
+  'The photo could not be uploaded. Retry or remove it.':
+    'फ़ोटो अपलोड नहीं हो सकी। फिर कोशिश करें या उसे हटाएँ।',
+  'Photo uploaded privately. Send the report to attach it.':
+    'फ़ोटो निजी रूप से अपलोड हो गई। उसे जोड़ने के लिए रिपोर्ट भेजें।',
+  'The upload timed out. Retry.': 'अपलोड का समय समाप्त हुआ। फिर कोशिश करें।',
+  'The upload failed. Retry.': 'अपलोड विफल हुआ। फिर कोशिश करें।',
+  'Send report': 'रिपोर्ट भेजें',
+  'No slot, I will enter the vehicle number':
+    'कोई स्लॉट नहीं, मैं वाहन नंबर दर्ज करूँगा/करूँगी',
+  'Choose a slot, enter the vehicle number, or both. For example MH01AB1234.':
+    'स्लॉट चुनें, वाहन नंबर दर्ज करें या दोनों करें। उदाहरण: MH01AB1234।',
+  'JPG or PNG up to 5 MiB. Only the unit, administrators and you can see it, and it is deleted after {days}.':
+    '5 MiB तक की JPG या PNG फ़ोटो। इसे केवल यूनिट, व्यवस्थापक और आप देख सकते हैं; यह {days} बाद मिट जाएगी।',
+  '{count} days': '{count} दिन',
+  'a few days': 'कुछ दिन',
+  'Photo removed. The report will be sent without it.':
+    'फ़ोटो हटा दी गई। रिपोर्ट इसके बिना भेजी जाएगी।',
+  'Could not open this photo. Retry.': 'यह फ़ोटो खुल नहीं सकी। फिर कोशिश करें।',
+  'Refresh photo link': 'फ़ोटो लिंक फिर से बनाएँ',
+  'View photo': 'फ़ोटो देखें',
+  'Open photo (private link, up to five minutes)':
+    'फ़ोटो खोलें (निजी लिंक, अधिकतम पाँच मिनट)',
+  'Meter readings': 'मीटर रीडिंग',
+  "JPG or PNG up to 5 MiB showing the meter display. Only the reading's unit and the administrators can see it. It is kept with the reading.":
+    'मीटर डिस्प्ले दिखाने वाली 5 MiB तक की JPG या PNG। इसे केवल यूनिट और प्रशासक देख सकते हैं। इसे रीडिंग के साथ रखा जाएगा।',
+  'Wait for the administrator to review the reading you sent before sending another one for this meter.':
+    'इस मीटर के लिए दूसरी रीडिंग भेजने से पहले प्रशासक द्वारा आपकी भेजी गई रीडिंग की समीक्षा की प्रतीक्षा करें।',
+  'This is lower than the last reading. Say why below, for example the meter was replaced or rolled over. It counts as 0 usage and becomes the new starting point.':
+    'यह पिछली रीडिंग से कम है। नीचे कारण बताएँ, जैसे मीटर बदला गया है या रीसेट हुआ है। इसे 0 खपत माना जाएगा और यह नई शुरुआती रीडिंग होगी।',
+  'Find a meter': 'मीटर खोजें',
+  'Search by unit number, meter label or serial number.':
+    'यूनिट नंबर, मीटर नाम या सीरियल नंबर से खोजें।',
+  'Unit, label or serial': 'यूनिट, नाम या सीरियल नंबर',
+  'Meters matching “{query}”': '“{query}” से मेल खाते मीटर',
+  'No meter in use matches “{query}”.':
+    '“{query}” से मेल खाता कोई उपयोग में मीटर नहीं है।',
+  'No meters in use yet.': 'अभी कोई मीटर उपयोग में नहीं है।',
+  saved: 'सहेजा गया',
+  'Recorded by': 'दर्ज किया',
+  you: 'आपने',
+  'Usage: {value} {unit}': 'उपयोग: {value} {unit}',
+  'meter reset': 'मीटर रीसेट',
+  'no reason given': 'कोई कारण नहीं दिया',
+  'Not accepted:': 'स्वीकार नहीं किया:',
+  'See your bills': 'अपने बिल देखें',
+  'Usage is not billed right now': 'अभी उपयोग का बिल नहीं बन रहा',
+  'My meters': 'मेरे मीटर',
+  'Water, electricity, DG and gas meters for your units.':
+    'आपकी यूनिट के पानी, बिजली, DG और गैस के मीटर।',
+  'No meter has been added for your unit yet.':
+    'आपकी यूनिट के लिए अभी कोई मीटर नहीं जोड़ा गया है।',
+  'Last approved {value} {unit} on {date}':
+    'आख़िरी स्वीकृत रीडिंग {value} {unit}, {date} को',
+  'Starting reading {value} {unit}': 'शुरुआती रीडिंग {value} {unit}',
+  'reading waiting for review': 'रीडिंग की समीक्षा बाकी है',
+  'Send a reading': 'रीडिंग भेजें',
+  'Waiting for review': 'समीक्षा की प्रतीक्षा',
+  'Reading history': 'रीडिंग का इतिहास',
+  'Current rates': 'मौजूदा दरें',
+  'Photo of the meter': 'मीटर की फ़ोटो',
+  'Photo of the meter (optional)': 'मीटर की फ़ोटो (वैकल्पिक)',
+  'Photo removed. Add a photo to send the reading.':
+    'फ़ोटो हटा दी गई। रीडिंग भेजने के लिए फ़ोटो जोड़ें।',
+  'Photo removed.': 'फ़ोटो हटा दी गई।',
+  'No meter is available here.': 'यहाँ कोई मीटर उपलब्ध नहीं है।',
+  'Send reading for approval': 'स्वीकृति के लिए रीडिंग भेजें',
+  'Save reading': 'रीडिंग सहेजें',
+  'Last approved reading {value} {unit} on {date}.':
+    'आख़िरी स्वीकृत रीडिंग {value} {unit}, {date} को।',
+  'No reading yet. Starting reading {value} {unit}.':
+    'अभी कोई रीडिंग नहीं है। शुरुआती रीडिंग {value} {unit} है।',
+  'A reading is waiting for review.': 'एक रीडिंग की समीक्षा बाकी है।',
+  'Reading ({unit})': 'रीडिंग ({unit})',
+  'Up to 3 decimals, as shown on the meter.':
+    'मीटर पर दिखाए अनुसार, अधिकतम 3 दशमलव।',
+  'Usage since the last reading: {value} {unit}.':
+    'पिछली रीडिंग के बाद उपयोग: {value} {unit}।',
+  'Reading date': 'रीडिंग की तारीख',
+  'Why is the reading lower?': 'रीडिंग कम क्यों है?',
+  'Why is the reading lower? (only if it is)':
+    'रीडिंग कम क्यों है? (सिर्फ़ कम होने पर)',
+  'View meter photo': 'मीटर की फ़ोटो देखें',
+  'Save meter {label}': 'मीटर {label} सहेजें',
+  'Type, scope and unit cannot change; add a new meter instead.':
+    'प्रकार, दायरा और यूनिट नहीं बदले जा सकते; इसके बजाय नया मीटर जोड़ें।',
+  'Meter type': 'मीटर का प्रकार',
+  'Belongs to': 'किसका है',
+  'Common-area meters are never billed to a unit.':
+    'साझा क्षेत्र के मीटर का बिल किसी यूनिट को नहीं दिया जाता।',
+  'Choose a unit': 'यूनिट चुनें',
+  'Meter label': 'मीटर का नाम',
+  'For example A-101 water or Clubhouse DG.':
+    'उदाहरण: A-101 पानी या क्लब हाउस DG।',
+  'Readings can only be added to meters in use.':
+    'रीडिंग केवल उपयोग में मौजूद मीटरों में जोड़ी जा सकती है।',
+  'Save rate': 'दर सहेजें',
+  'Enter rupees with up to 2 decimals, for example 8.50.':
+    'रुपये अधिकतम 2 दशमलव के साथ दर्ज करें, जैसे 8.50।',
+  'Rate in rupees per unit of usage': 'प्रति यूनिट उपयोग की दर रुपये में',
+  previous: 'पिछली',
+  'none given, add one to approve': 'कारण नहीं दिया; स्वीकृति के लिए कारण जोड़ें',
+  'Usage {value} {unit}': 'उपयोग {value} {unit}',
+  'Sent by': 'भेजा',
+  Approve: 'स्वीकृत करें',
+  'Reason for rejecting': 'अस्वीकृति का कारण',
+  'The resident sees this, for example the photo is unclear.':
+    'निवासी यह कारण देखेंगे, उदाहरण के लिए फ़ोटो स्पष्ट न हो।',
+  'Utility billing': 'उपयोगिता बिलिंग',
+  'Billing is turned off': 'बिलिंग बंद है',
+  'Readings and reports still work. Nothing is billed, and readings approved while billing is off are never billed later.':
+    'रीडिंग और रिपोर्ट काम करते रहेंगे। कोई बिल नहीं बनेगा और बिलिंग बंद रहने पर स्वीकृत रीडिंग का बिल बाद में भी नहीं बनेगा।',
+  'Waiting to bill': 'बिल बनने की प्रतीक्षा',
+  '{count} need a rate first.': '{count} के लिए पहले दर तय करनी होगी।',
+  'Billed so far': 'अब तक बिल किया',
+  '{count} charges, {amount}': '{count} शुल्क, {amount}',
+  'No charge': 'कोई शुल्क नहीं',
+  'Last billed': 'आख़िरी बिल',
+  'Not yet': 'अभी नहीं',
+  'Add usage to bills': 'बिलों में उपयोग जोड़ें',
+  'Bill date': 'बिल की तारीख',
+  'Readings dated on or before this day are billed. Run it once a month.':
+    'इस दिन या इससे पहले की रीडिंग का बिल बनेगा। इसे महीने में एक बार चलाएँ।',
+  'Usage by month': 'महीने के अनुसार उपयोग',
+  "Flags: high is more than twice the average of the previous {count} months with usage; zero is no usage on an occupied unit's meter in a month with a reading.":
+    'चेतावनी: अधिक का मतलब पिछले उपयोग वाले {count} महीनों के औसत से दोगुने से ज़्यादा; शून्य का मतलब रीडिंग वाले महीने में आबाद यूनिट के मीटर का उपयोग नहीं।',
+  'No approved readings in the last {count} months.':
+    'पिछले {count} महीनों में कोई स्वीकृत रीडिंग नहीं।',
+  'Usage per meter for the last {count} months':
+    'पिछले {count} महीनों में हर मीटर का उपयोग',
+  Meter: 'मीटर',
+  'Meter reset': 'मीटर रीसेट',
+  'No reading': 'कोई रीडिंग नहीं',
+  'Utility meters': 'उपयोगिता मीटर',
+  'Readings to review ({count})': 'समीक्षा की रीडिंग ({count})',
+  'Residents send readings with a photo. Check the photo before approving; only approved readings count.':
+    'निवासी फ़ोटो के साथ रीडिंग भेजते हैं। स्वीकृति से पहले फ़ोटो जाँचें; केवल स्वीकृत रीडिंग गिनी जाती हैं।',
+  'Nothing to review.': 'समीक्षा के लिए कुछ नहीं है।',
+  'Record a reading': 'रीडिंग दर्ज करें',
+  'Readings you record are approved straight away.':
+    'आपकी दर्ज की गई रीडिंग तुरंत स्वीकृत हो जाती हैं।',
+  Meters: 'मीटर',
+  '{count} meters in use.': '{count} मीटर उपयोग में हैं।',
+  'No meters yet.': 'अभी कोई मीटर नहीं है।',
+  Serial: 'सीरियल नंबर',
+  'Last {value} {unit} on {date}': 'आख़िरी {value} {unit}, {date} को',
+  'Starting {value} {unit}': 'शुरुआती {value} {unit}',
+  'Edit {label}': '{label} संपादित करें',
+  'Add a meter': 'मीटर जोड़ें',
+  Rates: 'दरें',
+  'No rates yet. Usage stays unbilled until a rate is set.':
+    'अभी कोई दर नहीं है। दर तय होने तक उपयोग का बिल नहीं बनेगा।',
+  'Rate history': 'दर का इतिहास',
+  'Recent readings': 'हाल की रीडिंग',
+  'No readings yet.': 'अभी कोई रीडिंग नहीं है।',
+  'usage {value}': 'उपयोग {value}',
+  'reset:': 'रीसेट:',
+  Approved: 'स्वीकृत',
+  Rejected: 'अस्वीकृत',
+  from: 'से',
+  'Only administrators can change meters and rates, review readings and bill usage.':
+    'मीटर और दर बदलना, रीडिंग की समीक्षा करना और उपयोग का बिल बनाना केवल व्यवस्थापक कर सकते हैं।',
+};
+
+export type ComponentTranslator = (
+  source: string,
+  values?: MessageValues,
+) => string;
+
+export function createComponentTranslator(
+  locale: Locale,
+  fallback: ComponentTranslator,
+): ComponentTranslator {
+  return (source, values) => {
+    if (locale === 'en') return fallback(source, values);
+    if (!Object.hasOwn(HI_COMPONENTS, source)) return fallback(source, values);
+    const message = HI_COMPONENTS[source]!;
+    return message.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key: string) => {
+      const value = values?.[key];
+      if (value === undefined) {
+        throw new Error(`Missing interpolation value "${key}" for: ${source}`);
+      }
+      return String(value);
+    });
+  };
+}

@@ -9,9 +9,12 @@ import { getRoleNavigation } from '../core/modules';
 import type { ModuleKey, RoleNavigationItem } from '../core/modules';
 import type { PermissionMaps } from '../core/permissions';
 import type { SocietyRole } from '../core/permissions';
+import type { MessageValues } from '../core/i18n/messages';
 import { Dialog } from './ui/dialog';
 import { NotificationBell } from './notifications/notification-bell';
 import { SosAlertBanner } from './sos/alert-banner';
+import { useLanguage } from './language-provider';
+import { LanguageSelector } from './language-selector';
 
 type SocietyShellProps = {
   activeSocietyId?: string;
@@ -28,6 +31,8 @@ type SocietyOption = {
   id: string;
   name: string;
 };
+
+type Translate = (source: string, values?: MessageValues) => string;
 
 type ShellNavigationItem = {
   href: string;
@@ -105,37 +110,91 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
   event:
     'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm7 7 1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4L12 12Z',
   community: 'M4 5h16v10H9l-5 4V5Zm4 4h8m-8 3h5',
+  language:
+    'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-9 9h18m-9-9a15 15 0 0 1 0 18m0-18a15 15 0 0 0 0 18',
 };
 
 function isActivePath(pathname: string, href: string) {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
 }
 
+const ROUTE_LABELS: Readonly<Record<string, string>> = {
+  actions: 'Actions',
+  admin: 'Dashboard',
+  amc: 'AMC',
+  amenities: 'Amenities',
+  analytics: 'Analytics',
+  assets: 'Assets',
+  audit: 'Audit Logs',
+  bills: 'Bills',
+  categories: 'Categories',
+  community: 'Community',
+  deliveries: 'Deliveries',
+  developer: 'Developer',
+  directory: 'Directory',
+  documents: 'Documents',
+  edit: 'Edit',
+  errors: 'Error Logs',
+  events: 'Events',
+  expenses: 'Expenses',
+  generate: 'Generate',
+  guard: 'Gate',
+  guards: 'Guards',
+  groups: 'Groups',
+  health: 'Health',
+  home: 'Home',
+  'home-services': 'Home services',
+  household: 'Household',
+  housekeeping: 'Housekeeping',
+  jobs: 'Jobs',
+  login: 'Sign In',
+  marketplace: 'Marketplace',
+  meetings: 'Meetings',
+  members: 'People',
+  metering: 'Meters',
+  mine: 'My listings',
+  mutes: 'Mutes',
+  new: 'New',
+  notices: 'Notices',
+  notifications: 'Notifications',
+  parking: 'Parking',
+  patrol: 'Patrol',
+  polls: 'Polls',
+  posts: 'Posts',
+  print: 'Print',
+  profile: 'Profile',
+  pay: 'Pay',
+  representatives: 'Representatives',
+  reports: 'Reports',
+  register: 'Register',
+  requests: 'Requests',
+  settings: 'Settings',
+  setup: 'Setup',
+  sos: 'Emergency',
+  staff: 'Staff',
+  structure: 'Structure',
+  units: 'Units',
+  tenancy: 'Tenancy',
+  vendors: 'Vendors',
+  vehicle: 'Vehicle lookup',
+  visitors: 'Visitors',
+  users: 'Users',
+  erase: 'Erase',
+};
+
 function displayLabel(segment: string) {
-  const labels: Readonly<Record<string, string>> = {
-    admin: 'Dashboard',
-    amc: 'AMC',
-    amenities: 'Amenities',
-    audit: 'Audit Logs',
-    bills: 'Bills',
-    deliveries: 'Deliveries',
-    developer: 'Developer',
-    errors: 'Error Logs',
-    guard: 'Gate',
-    health: 'Health',
-    housekeeping: 'Housekeeping',
-    notices: 'Notices',
-    profile: 'Profile',
-    requests: 'Requests',
-    staff: 'Staff',
-    visitors: 'Visitors',
-  };
   return (
-    labels[segment] ??
+    ROUTE_LABELS[segment] ??
     segment
       .replaceAll('_', ' ')
       .replace(/^\w/, (letter) => letter.toUpperCase())
   );
+}
+
+function translateRouteLabel(segment: string, translate: Translate) {
+  const label = ROUTE_LABELS[segment];
+  if (!label) return displayLabel(segment);
+  return translate(label);
 }
 
 function SvgIcon({ path }: { path: string }) {
@@ -174,23 +233,31 @@ function NavigationIcon({ item }: { item: ShellNavigationItem }) {
 function normalizeRoleNavigation(
   items: readonly RoleNavigationItem[],
   role: SocietyRole,
+  translate: Translate,
 ): ShellNavigationItem[] {
   return items.map((item) => ({
     href: item.href,
     icon: item.moduleKey,
-    label: item.label,
+    label: translate(item.label),
     moduleKey: item.moduleKey,
-    section:
+    section: translate(
       item.section ??
-      (item.moduleKey === 'core'
-        ? 'Overview'
-        : role === 'resident'
-          ? 'Home'
-          : 'Operations'),
+        (item.moduleKey === 'core'
+          ? 'Overview'
+          : role === 'resident'
+            ? 'Home'
+            : 'Operations'),
+    ),
   }));
 }
 
-function Breadcrumbs({ pathname }: { pathname: string }) {
+function Breadcrumbs({
+  pathname,
+  translate,
+}: {
+  pathname: string;
+  translate: Translate;
+}) {
   const segments = pathname.split('/').filter(Boolean);
 
   if (segments.length <= 2) {
@@ -198,7 +265,10 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="mt-space-1 hidden expanded:block">
+    <nav
+      aria-label={translate('Breadcrumb')}
+      className="mt-space-1 hidden expanded:block"
+    >
       <ol className="flex flex-wrap items-center gap-space-2 text-caption text-ink-muted">
         {segments.map((segment, index) => {
           const href = `/${segments.slice(0, index + 1).join('/')}`;
@@ -207,13 +277,15 @@ function Breadcrumbs({ pathname }: { pathname: string }) {
             <li className="flex items-center gap-space-2" key={href}>
               {index > 0 ? <span aria-hidden="true">/</span> : null}
               {current ? (
-                <span aria-current="page">{displayLabel(segment)}</span>
+                <span aria-current="page">
+                  {translateRouteLabel(segment, translate)}
+                </span>
               ) : (
                 <Link
                   className="underline-offset-2 hover:underline"
                   href={href}
                 >
-                  {displayLabel(segment)}
+                  {translateRouteLabel(segment, translate)}
                 </Link>
               )}
             </li>
@@ -234,6 +306,7 @@ function TopBar({
   onSocietyChange,
   pathname,
   role,
+  translate,
   societies = [],
   unreadNotifications = 0,
 }: {
@@ -246,11 +319,12 @@ function TopBar({
   onSocietyChange?: (societyId: string) => void;
   pathname: string;
   role: SocietyRole | 'developer';
+  translate: Translate;
   societies?: readonly SocietyOption[];
   unreadNotifications?: number;
 }) {
   const segments = pathname.split('/').filter(Boolean);
-  const pageTitle = displayLabel(segments.at(-1) ?? 'home');
+  const pageTitle = translateRouteLabel(segments.at(-1) ?? 'home', translate);
   const backHref =
     segments.length > 1 ? `/${segments.slice(0, -1).join('/')}` : homeHref;
   const barColor = dark
@@ -277,7 +351,9 @@ function TopBar({
           </button>
         ) : segments.length > 1 ? (
           <Link
-            aria-label={`Back to ${displayLabel(segments.at(-2) ?? '')}`}
+            aria-label={translate('Back to {label}', {
+              label: translateRouteLabel(segments.at(-2) ?? '', translate),
+            })}
             className={`inline-flex min-h-12 min-w-12 items-center justify-center rounded-md text-title focus-visible:outline-2 focus-visible:outline-focus ${menuColor}`}
             href={backHref}
           >
@@ -285,7 +361,7 @@ function TopBar({
           </Link>
         ) : (
           <Link
-            aria-label="Homeish home"
+            aria-label={translate('Homeish home')}
             className={`text-heading font-semibold ${dark ? 'text-dev-label' : 'text-brand'}`}
             href={homeHref}
           >
@@ -307,15 +383,15 @@ function TopBar({
           role === 'committee' ||
           role === 'hk_supervisor' ||
           role === 'developer' ? (
-            <Breadcrumbs pathname={pathname} />
+            <Breadcrumbs pathname={pathname} translate={translate} />
           ) : null}
         </div>
 
         {societies.length > 1 ? (
           <label className="hidden expanded:block">
-            <span className="sr-only">Switch society</span>
+            <span className="sr-only">{translate('Switch society')}</span>
             <select
-              aria-label="Switch society"
+              aria-label={translate('Switch society')}
               className="min-h-12 max-w-56 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink"
               disabled={!onSocietyChange}
               onChange={(event) => onSocietyChange?.(event.currentTarget.value)}
@@ -345,7 +421,7 @@ function TopBar({
             >
               <SvgIcon path="M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
             </span>
-            <span className="hidden medium:inline">Account</span>
+            <span className="hidden medium:inline">{translate('Account')}</span>
           </summary>
           <div
             className={`absolute right-0 top-full z-30 mt-space-2 grid min-w-48 gap-space-1 rounded-md border p-space-2 shadow-overlay ${dark ? 'border-dev-label/30 bg-dev-bar text-surface' : 'border-rule bg-surface text-ink'}`}
@@ -354,13 +430,13 @@ function TopBar({
               className={`rounded-sm px-space-3 py-space-2 ${dark ? 'hover:bg-surface/10' : 'hover:bg-brand-tint'}`}
               href="/profile"
             >
-              Profile
+              {translate('Profile')}
             </Link>
             <Link
               className={`rounded-sm px-space-3 py-space-2 ${dark ? 'hover:bg-surface/10' : 'hover:bg-brand-tint'}`}
               href="/login"
             >
-              Sign Out
+              {translate('Sign Out')}
             </Link>
           </div>
         </details>
@@ -376,6 +452,7 @@ function SideNavigation({
   collapsed = false,
   onToggle,
   desktopOnly = false,
+  translate,
 }: {
   dark?: boolean;
   items: readonly ShellNavigationItem[];
@@ -383,6 +460,7 @@ function SideNavigation({
   collapsed?: boolean;
   onToggle?: () => void;
   desktopOnly?: boolean;
+  translate: Translate;
 }) {
   const sections = [...new Set(items.map((item) => item.section))];
   const surface = dark
@@ -391,13 +469,15 @@ function SideNavigation({
 
   return (
     <aside
-      aria-label="Primary navigation"
+      aria-label={translate('Primary navigation')}
       className={`fixed bottom-0 left-0 top-14 z-10 hidden flex-col border-r pt-space-4 expanded:top-16 ${desktopOnly ? 'expanded:flex' : 'medium:flex'} ${collapsed ? 'medium:w-16' : 'medium:w-64'} expanded:w-64 ${surface}`}
     >
       {onToggle ? (
         <button
           aria-expanded={!collapsed}
-          aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+          aria-label={translate(
+            collapsed ? 'Expand navigation' : 'Collapse navigation',
+          )}
           className={`mx-space-2 mb-space-3 flex min-h-12 items-center justify-center rounded-md text-body-strong focus-visible:outline-2 focus-visible:outline-focus expanded:hidden ${dark ? 'hover:bg-surface/10' : 'hover:bg-surface-sunken'}`}
           onClick={onToggle}
           type="button"
@@ -408,13 +488,13 @@ function SideNavigation({
               collapsed ? 'sr-only expanded:not-sr-only' : 'ml-space-2'
             }
           >
-            {collapsed ? 'Expand' : 'Collapse'}
+            {translate(collapsed ? 'Expand' : 'Collapse')}
           </span>
         </button>
       ) : null}
       <nav
         className="flex-1 overflow-y-auto px-space-2 pb-space-4"
-        aria-label="Sections"
+        aria-label={translate('Sections')}
       >
         {sections.map((section) => (
           <div className="mb-space-4" key={section}>
@@ -470,11 +550,13 @@ function BottomNavigation({
   onOpenMore,
   pathname,
   moreOpen,
+  translate,
 }: {
   items: readonly ShellNavigationItem[];
   onOpenMore: () => void;
   pathname: string;
   moreOpen: boolean;
+  translate: Translate;
 }) {
   const visible = items.slice(0, 4);
   const hasMore = items.length > visible.length;
@@ -487,7 +569,7 @@ function BottomNavigation({
 
   return (
     <nav
-      aria-label="Primary navigation"
+      aria-label={translate('Primary navigation')}
       className="fixed inset-x-0 bottom-0 z-20 border-t border-rule bg-surface pb-space-1 medium:pb-space-2 expanded:hidden"
     >
       <ul
@@ -522,7 +604,9 @@ function BottomNavigation({
             <button
               aria-expanded={moreOpen}
               aria-haspopup="dialog"
-              aria-label={moreActive ? 'More, current section' : 'More'}
+              aria-label={translate(
+                moreActive ? 'More, current section' : 'More',
+              )}
               className={`relative flex min-h-14 w-full flex-col items-center justify-center gap-space-1 px-space-1 text-micro focus-visible:outline-2 focus-visible:outline-focus ${moreActive ? 'font-semibold text-brand' : 'text-ink-muted'}`}
               onClick={onOpenMore}
               type="button"
@@ -536,7 +620,7 @@ function BottomNavigation({
               <span aria-hidden="true" className="text-title leading-none">
                 ···
               </span>
-              <span>More</span>
+              <span>{translate('More')}</span>
             </button>
           </li>
         ) : null}
@@ -555,6 +639,7 @@ function MoreMenu({
   societies = [],
   showAccountActions = true,
   title = 'More',
+  translate,
 }: {
   activeSocietyId?: string;
   dark?: boolean;
@@ -565,6 +650,7 @@ function MoreMenu({
   societies?: readonly SocietyOption[];
   showAccountActions?: boolean;
   title?: string;
+  translate: Translate;
 }) {
   const menuItemStyle = dark
     ? 'border-dev-label/30 hover:bg-surface/10'
@@ -575,8 +661,8 @@ function MoreMenu({
       className={`!inset-0 !h-dvh !max-h-none !w-full !max-w-none !translate-x-0 !translate-y-0 !rounded-none ${dark ? '!border-dev-label/30 !bg-dev-bar !text-surface' : ''}`}
       description={
         showAccountActions
-          ? 'Additional destinations and account actions.'
-          : 'Developer tools and platform destinations.'
+          ? translate('Additional destinations and account actions.')
+          : translate('Developer tools and platform destinations.')
       }
       id="shell-more-menu"
       onOpenChange={onOpenChange}
@@ -601,9 +687,9 @@ function MoreMenu({
             <label
               className={`grid min-h-14 gap-space-2 rounded-md border px-space-4 py-space-2 text-body-strong ${menuItemStyle}`}
             >
-              <span>Switch Society</span>
+              <span>{translate('Switch Society')}</span>
               <select
-                aria-label="Switch society"
+                aria-label={translate('Switch society')}
                 className="min-h-10 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink"
                 disabled={!onSocietyChange}
                 onChange={(event) =>
@@ -628,7 +714,7 @@ function MoreMenu({
                 href="/profile"
                 onClick={() => onOpenChange(false)}
               >
-                Profile and Settings
+                {translate('Profile and Settings')}
               </Link>
             </li>
             <li>
@@ -637,7 +723,7 @@ function MoreMenu({
                 href="/login"
                 onClick={() => onOpenChange(false)}
               >
-                Sign Out
+                {translate('Sign Out')}
               </Link>
             </li>
           </>
@@ -657,6 +743,7 @@ function SocietyShell({
   societies = [],
   unreadNotifications,
 }: SocietyShellProps) {
+  const { locale, translate } = useLanguage();
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const [railExpanded, setRailExpanded] = useState(false);
@@ -667,6 +754,7 @@ function SocietyShell({
   const navigation = normalizeRoleNavigation(
     getRoleNavigation([role], enabledModules, permissionMaps),
     role,
+    translate,
   );
   const showSidebar = isResident || isStaff;
   const rootHref = isResident ? '/home' : isGuard ? '/guard' : '/admin';
@@ -687,12 +775,13 @@ function SocietyShell({
       : 'pb-24 medium:pb-space-6';
 
   return (
-    <div className="min-h-dvh bg-paper text-ink">
+    <div className="min-h-dvh bg-paper text-ink" lang={locale}>
       <a
+        aria-label={translate('Skip to content')}
         className="sr-only focus:not-sr-only focus:fixed focus:left-space-4 focus:top-space-4 focus:z-50 focus:rounded-md focus:bg-surface focus:p-space-3"
         href="#main-content"
       >
-        Skip to content
+        {translate('Skip to content')}
       </a>
       <TopBar
         activeSocietyId={activeSocietyId}
@@ -700,6 +789,7 @@ function SocietyShell({
         onSocietyChange={onSocietyChange}
         pathname={pathname}
         role={role}
+        translate={translate}
         societies={societies}
         unreadNotifications={unreadNotifications}
       />
@@ -714,6 +804,7 @@ function SocietyShell({
           }
           pathname={pathname}
           desktopOnly={isResident}
+          translate={translate}
         />
       ) : null}
       <div className={marginClasses}>
@@ -733,6 +824,7 @@ function SocietyShell({
           onOpenMore={() => setMoreOpen(true)}
           pathname={pathname}
           moreOpen={moreOpen}
+          translate={translate}
         />
       ) : null}
       <MoreMenu
@@ -742,6 +834,8 @@ function SocietyShell({
         onOpenChange={setMoreOpen}
         open={moreOpen}
         societies={societies}
+        title={translate('More')}
+        translate={translate}
       />
     </div>
   );
@@ -772,10 +866,12 @@ export function DeveloperShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [railExpanded, setRailExpanded] = useState(false);
   const darkItems = DEVELOPER_NAVIGATION;
+  const translate: Translate = (source) => source;
 
   return (
     <div className="min-h-dvh bg-dev-bar text-surface">
       <a
+        aria-label="Skip to content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-space-4 focus:top-space-4 focus:z-50 focus:rounded-md focus:bg-dev-bar focus:p-space-3 focus:text-dev-label"
         href="#main-content"
       >
@@ -789,6 +885,7 @@ export function DeveloperShell({ children }: { children: ReactNode }) {
         onOpenMenu={() => setMenuOpen(true)}
         pathname={pathname}
         role="developer"
+        translate={translate}
       />
       <SideNavigation
         collapsed={!railExpanded}
@@ -796,6 +893,7 @@ export function DeveloperShell({ children }: { children: ReactNode }) {
         items={darkItems}
         onToggle={() => setRailExpanded((expanded) => !expanded)}
         pathname={pathname}
+        translate={translate}
       />
       <div
         className={
@@ -818,14 +916,20 @@ export function DeveloperShell({ children }: { children: ReactNode }) {
         open={menuOpen}
         showAccountActions={false}
         title="Developer Menu"
+        translate={translate}
       />
     </div>
   );
 }
 
 export function AuthShell({ children }: { children: ReactNode }) {
+  const { locale } = useLanguage();
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-space-5 bg-paper px-space-4 py-space-6">
+    <main
+      className="flex min-h-dvh flex-col items-center justify-center gap-space-5 bg-paper px-space-4 py-space-6"
+      lang={locale}
+    >
+      <LanguageSelector />
       <Link className="text-title font-semibold text-brand" href="/">
         Homeish
       </Link>

@@ -1,5 +1,6 @@
 // Raise, follow and respond to emergency SOS alerts, with tap-to-call contacts for every role.
 'use client';
+import { useUiTranslator } from '@/components/ui/language';
 import { useId, useRef, useState, useTransition, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
@@ -112,6 +113,7 @@ export function SosRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage embedded moduleKey="sos" returnHref={returnHref} />
@@ -139,13 +141,13 @@ export function SosRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">Emergency SOS</h1>
+      <h1 className="text-title font-semibold">{t('Emergency SOS')}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={message ? translateFeedback(message) : t(copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
@@ -153,14 +155,14 @@ export function SosRouteState({
                 href="tel:112"
                 className="inline-flex min-h-12 items-center font-semibold text-danger underline"
               >
-                Call 112
+                {t('Call 112')}
               </a>
               {retryHref ? (
                 <a
                   href={retryHref}
                   className="inline-flex min-h-12 items-center text-brand underline"
                 >
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a
@@ -168,8 +170,8 @@ export function SosRouteState({
                 className="inline-flex min-h-12 items-center text-brand underline"
               >
                 {kind === 'invalid_filters'
-                  ? 'Clear filters'
-                  : 'Back to workspace'}
+                  ? t('Clear filters')
+                  : t('Back to workspace')}
               </a>
             </div>
           }
@@ -211,15 +213,16 @@ function useSosAction(action: ModuleFormAction) {
 }
 
 function ActionMessage({ result }: { result: ActionResult | null }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (!result) return null;
   return (
     <p
       role={result.ok ? 'status' : 'alert'}
       className={`text-caption ${result.ok ? 'text-ink-muted' : 'text-danger'}`}
     >
-      {result.message}
+      {result.message ? translateFeedback(result.message) : null}
       {!result.ok && result.referenceId
-        ? ` Reference: ${result.referenceId}`
+        ? ` ${t('Reference: {id}', { id: result.referenceId })}`
         : ''}
     </p>
   );
@@ -236,21 +239,22 @@ export function SosContactsCard({
   contacts: readonly SosContact[];
   dense?: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   const active = contacts.filter((contact) => !contact.archived);
   return (
     <Card
-      title="Emergency contacts"
-      description="Tap a number to call from this device."
+      title={t('Emergency contacts')}
+      description={t('Tap a number to call from this device.')}
     >
       <div className="grid gap-space-3">
-        <p className="text-caption text-ink-muted">{SOS_EMERGENCY_NOTICE}</p>
+        <p className="text-caption text-ink-muted">{t(SOS_EMERGENCY_NOTICE)}</p>
         {active.length === 0 ? (
           <p className="text-body">
-            No society contacts are listed. Call{' '}
+            {t('No society contacts are listed. Call')}{' '}
             <a className="font-semibold text-danger underline" href="tel:112">
               112
             </a>{' '}
-            in an emergency.
+            {t('in an emergency.')}
           </p>
         ) : (
           <ul
@@ -264,7 +268,7 @@ export function SosContactsCard({
                 >
                   <span className="text-body-strong">{contact.label}</span>
                   <span className="text-body text-danger">
-                    <span className="sr-only">Call </span>
+                    <span className="sr-only">{t('Call ')}</span>
                     {contact.phone}
                   </span>
                 </a>
@@ -286,6 +290,7 @@ function SosRaiseForm({
   audience: SosAudience;
   action: ModuleFormAction;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   const id = useId();
   const retryId = useRef<string | null>(null);
   const [category, setCategory] = useState<SosCategory | null>(null);
@@ -339,42 +344,51 @@ function SosRaiseForm({
 
   return (
     <Card
-      title={isGuard ? 'Raise an SOS from the gate' : 'Raise an SOS'}
-      description={sosRecipientSummary(workspace.settings)}
+      title={isGuard ? t('Raise an SOS from the gate') : t('Raise an SOS')}
+      description={sosRecipientSummary(workspace.settings, locale ?? 'en')}
     >
-      <div className="grid gap-space-4">
+      <form
+        className="grid gap-space-4"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          prepare();
+        }}
+      >
         <RadioGroup
           id={`${id}-category`}
           name={`${id}-category`}
-          label="What is the emergency?"
+          label={t('What is the emergency?')}
           required
           variant="cards"
           value={category ?? ''}
           onChange={(value) => setCategory(sosCategorySchema.parse(value))}
           options={SOS_CATEGORIES.map((value) => ({
             value,
-            label: SOS_CATEGORY_LABELS[value],
+            label: t(SOS_CATEGORY_LABELS[value]),
           }))}
         />
         {isGuard ? (
           <Combobox
             id={`${id}-unit`}
-            label={`${workspace.unit_label} (optional)`}
+            label={t('{unit} (optional)', { unit: workspace.unit_label })}
             value={unitId}
             onChange={setUnitId}
             options={workspace.units.map((unit) => ({
               value: unit.id,
               label: unit.label,
             }))}
-            helpText={`Leave empty for the gate or a common area.`}
-            emptyMessage="No matching unit."
+            helpText={t('Leave empty for the gate or a common area.')}
+            emptyMessage={t('No matching unit.')}
           />
         ) : workspace.my_units.length > 1 ? (
           <SelectInput
             id={`${id}-unit`}
             label={workspace.unit_label}
             required
-            placeholder={`Choose your ${workspace.unit_label.toLowerCase()}`}
+            placeholder={t('Choose your {unit}', {
+              unit: workspace.unit_label.toLowerCase(),
+            })}
             value={unitId ?? ''}
             onChange={(event) => setUnitId(event.currentTarget.value || null)}
             options={workspace.my_units.map((unit) => ({
@@ -384,14 +398,15 @@ function SosRaiseForm({
           />
         ) : unitLabel ? (
           <p className="text-body">
-            Location: <span className="font-semibold">{unitLabel}</span>{' '}
-            (attached automatically)
+            {t('Location: ')}
+            <span className="font-semibold">{unitLabel}</span>{' '}
+            {t('(attached automatically)')}
           </p>
         ) : null}
         <TextAreaInput
           id={`${id}-note`}
-          label="Short note (optional)"
-          helpText="For example: who needs help or where exactly."
+          label={t('Short note (optional)')}
+          helpText={t('For example: who needs help or where exactly.')}
           maxLength={SOS_NOTE_MAX}
           rows={2}
           value={note}
@@ -399,7 +414,7 @@ function SosRaiseForm({
         />
         {localError ? (
           <p role="alert" className="text-caption text-danger">
-            {localError}
+            {translateFeedback(localError)}
           </p>
         ) : null}
         <ActionMessage result={result} />
@@ -408,28 +423,33 @@ function SosRaiseForm({
           size="guard"
           className="text-heading"
           loading={pending}
-          onClick={prepare}
+          type="submit"
         >
-          Send SOS
+          {t('Send SOS')}
         </Button>
-      </div>
+      </form>
       <ConfirmDialog
         id={`${id}-confirm`}
         open={confirming}
         onOpenChange={setConfirming}
-        title="Send this SOS now?"
+        title={t('Send this SOS now?')}
         description={
           <>
-            {category ? SOS_CATEGORY_LABELS[category] : 'Emergency'} alert
-            {unitLabel
-              ? ` for ${unitLabel}`
-              : isGuard
-                ? ' from the gate'
-                : ''}. {sosRecipientSummary(workspace.settings)}{' '}
-            {SOS_EMERGENCY_NOTICE}
+            {t('{category} alert{location}.', {
+              category: t(
+                category ? SOS_CATEGORY_LABELS[category] : 'Emergency',
+              ),
+              location: unitLabel
+                ? t(' for {unit}', { unit: unitLabel })
+                : isGuard
+                  ? t(' from the gate')
+                  : '',
+            })}{' '}
+            {sosRecipientSummary(workspace.settings, locale ?? 'en')}{' '}
+            {t(SOS_EMERGENCY_NOTICE)}
           </>
         }
-        actionLabel="Send SOS"
+        actionLabel={t('Send SOS')}
         loading={pending}
         onConfirm={send}
       />
@@ -444,17 +464,18 @@ function SosEventList({
   alert: SosAlert;
   timezone: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <ol className="grid gap-space-2 border-l-2 border-rule pl-space-4">
       {alert.events.map((event) => (
         <li key={event.id} className="grid gap-space-1">
           <p className="text-body-strong">
-            {SOS_EVENT_LABELS[event.action]}
+            {t(SOS_EVENT_LABELS[event.action])}
             <span className="font-normal text-ink-muted">
               {' '}
               · {event.actor_name} ·{' '}
               <time dateTime={event.created_at}>
-                {formatSosTimestamp(event.created_at, timezone)}
+                {formatSosTimestamp(event.created_at, timezone, locale ?? 'en')}
               </time>
             </span>
           </p>
@@ -472,22 +493,25 @@ function SosCancelControl({
   alert: SosAlert;
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [open, setOpen] = useState(false);
   const { pending, result, run } = useSosAction(action);
   return (
     <div className="grid gap-space-2">
       <Button variant="secondary" onClick={() => setOpen(true)}>
-        Cancel — raised by mistake
+        {t('Cancel — raised by mistake')}
       </Button>
       <ActionMessage result={result} />
       <ConfirmDialog
         id={`${id}-cancel`}
         open={open}
         onOpenChange={setOpen}
-        title="Cancel this SOS?"
-        description="Responders will be told it was raised by mistake. This is recorded."
-        actionLabel="Cancel SOS"
+        title={t('Cancel this SOS?')}
+        description={t(
+          'Responders will be told it was raised by mistake. This is recorded.',
+        )}
+        actionLabel={t('Cancel SOS')}
         loading={pending}
         onConfirm={() => {
           run({ alertId: alert.id }, () => setOpen(false));
@@ -506,6 +530,7 @@ function SosRespondControls({
   actions: SosActions;
   size: 'default' | 'guard';
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [reason, setReason] = useState<SosCloseReason>('resolved');
   const acknowledge = useSosAction(actions.acknowledge);
@@ -517,7 +542,7 @@ function SosRespondControls({
           loading={acknowledge.pending}
           onClick={() => acknowledge.run({ alertId: alert.id })}
         >
-          Acknowledge — I am responding
+          {t('Acknowledge — I am responding')}
         </Button>
         <ActionMessage result={acknowledge.result} />
       </div>
@@ -528,7 +553,7 @@ function SosRespondControls({
     <div className="grid gap-space-4 medium:grid-cols-2">
       <ModuleActionForm
         action={actions.update}
-        submitLabel="Post update"
+        submitLabel={t('Post update')}
         input={(form) =>
           sosUpdateInputSchema.parse({
             alertId: alert.id,
@@ -539,7 +564,7 @@ function SosRespondControls({
         <TextAreaInput
           id={`${id}-update`}
           name="note"
-          label="Update for the raiser"
+          label={t('Update for the raiser')}
           maxLength={SOS_UPDATE_MAX}
           rows={2}
           required
@@ -547,7 +572,7 @@ function SosRespondControls({
       </ModuleActionForm>
       <ModuleActionForm
         action={actions.close}
-        submitLabel="Close SOS"
+        submitLabel={t('Close SOS')}
         input={(form) =>
           sosCloseInputSchema.parse({
             alertId: alert.id,
@@ -558,20 +583,22 @@ function SosRespondControls({
       >
         <SelectInput
           id={`${id}-reason`}
-          label="Close reason"
+          label={t('Close reason')}
           value={reason}
           onChange={(event) =>
             setReason(sosCloseReasonSchema.parse(event.currentTarget.value))
           }
           options={SOS_CLOSE_REASONS.map((value) => ({
             value,
-            label: SOS_CLOSE_REASON_LABELS[value],
+            label: t(SOS_CLOSE_REASON_LABELS[value]),
           }))}
         />
         <TextAreaInput
           id={`${id}-close-note`}
           name="note"
-          label={noteRequired ? 'Closing note' : 'Closing note (optional)'}
+          label={
+            noteRequired ? t('Closing note') : t('Closing note (optional)')
+          }
           maxLength={SOS_UPDATE_MAX}
           rows={2}
           required={noteRequired}
@@ -594,11 +621,12 @@ function SosAlertCard({
   audience: SosAudience;
   heading?: 'h2' | 'h3';
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const Heading = heading;
   const open = alert.status === 'raised' || alert.status === 'acknowledged';
   const where =
     alert.unit_label ??
-    (alert.raised_role === 'guard' ? 'Gate' : 'Unit not set');
+    t(alert.raised_role === 'guard' ? 'Gate' : 'Unit not set');
   return (
     <article
       className={`grid min-w-0 gap-space-3 rounded-md border p-space-4 ${alert.status === 'raised' ? 'border-danger bg-danger-tint' : 'border-rule bg-surface'}`}
@@ -606,22 +634,28 @@ function SosAlertCard({
       <header className="flex flex-wrap items-start justify-between gap-space-2">
         <div className="grid gap-space-1">
           <Heading className="text-subheading font-semibold">
-            {SOS_CATEGORY_LABELS[alert.category]} · {where}
+            {t(SOS_CATEGORY_LABELS[alert.category])} · {where}
           </Heading>
           <p className="text-caption text-ink-muted">
-            Raised by {alert.raised_by_name}
-            {alert.is_mine ? ' (you)' : ''} ·{' '}
+            {t('Raised by {name}', { name: alert.raised_by_name })}
+            {alert.is_mine ? t(' (you)') : ''} ·{' '}
             <time dateTime={alert.raised_at}>
-              {formatSosTimestamp(alert.raised_at, workspace.timezone)}
+              {formatSosTimestamp(
+                alert.raised_at,
+                workspace.timezone,
+                locale ?? 'en',
+              )}
             </time>
           </p>
         </div>
         {statusChip(alert.status)}
       </header>
-      {alert.note ? <p className="text-body">Note: {alert.note}</p> : null}
+      {alert.note ? (
+        <p className="text-body">{t('Note: {note}', { note: alert.note })}</p>
+      ) : null}
       {alert.close_reason ? (
         <p className="text-body">
-          {SOS_CLOSE_REASON_LABELS[alert.close_reason]}
+          {t(SOS_CLOSE_REASON_LABELS[alert.close_reason])}
           {alert.close_note ? ` — ${alert.close_note}` : ''}
         </p>
       ) : null}
@@ -637,7 +671,7 @@ function SosAlertCard({
           <SosCancelControl alert={alert} action={actions.cancel} />
         ) : alert.status === 'raised' ? (
           <p className="text-caption text-ink-muted">
-            Waiting for a responder to acknowledge.
+            {t('Waiting for a responder to acknowledge.')}
           </p>
         ) : null
       ) : null}
@@ -652,6 +686,7 @@ function SosSettingsForm({
   workspace: SosWorkspace;
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [guards, setGuards] = useState(workspace.settings.notify_guards);
   const [admins, setAdmins] = useState(workspace.settings.notify_admins);
@@ -663,12 +698,14 @@ function SosSettingsForm({
   );
   return (
     <Card
-      title="Who gets SOS alerts"
-      description="Recipients see a banner on every screen until they dismiss it. Alerts are in-app only; there are no SMS or calls."
+      title={t('Who gets SOS alerts')}
+      description={t(
+        'Recipients see a banner on every screen until they dismiss it. Alerts are in-app only; there are no SMS or calls.',
+      )}
     >
       <ModuleActionForm
         action={action}
-        submitLabel="Save recipients"
+        submitLabel={t('Save recipients')}
         submitDisabled={!guards && !admins && !committee}
         input={() =>
           sosSettingsInputSchema.parse({
@@ -681,26 +718,26 @@ function SosSettingsForm({
       >
         <SwitchInput
           id={`${id}-guards`}
-          label="All guards"
+          label={t('All guards')}
           checked={guards}
           onChange={(event) => setGuards(event.currentTarget.checked)}
         />
         <SwitchInput
           id={`${id}-admins`}
-          label="Administrators"
+          label={t('Administrators')}
           checked={admins}
           onChange={(event) => setAdmins(event.currentTarget.checked)}
         />
         <SwitchInput
           id={`${id}-committee`}
-          label="Committee members"
+          label={t('Committee members')}
           checked={committee}
           onChange={(event) => setCommittee(event.currentTarget.checked)}
         />
         <SelectInput
           id={`${id}-scope`}
-          label="Also alert residents"
-          helpText="Floor matching skips units without a floor number."
+          label={t('Also alert residents')}
+          helpText={t('Floor matching skips units without a floor number.')}
           value={scope}
           onChange={(event) =>
             setScope(
@@ -709,12 +746,12 @@ function SosSettingsForm({
           }
           options={SOS_RESIDENT_SCOPES.map((value) => ({
             value,
-            label: SOS_SCOPE_LABELS[value],
+            label: t(SOS_SCOPE_LABELS[value]),
           }))}
         />
         {!guards && !admins && !committee ? (
           <p role="alert" className="text-caption text-danger">
-            Keep at least one responder group notified.
+            {t('Keep at least one responder group notified.')}
           </p>
         ) : null}
       </ModuleActionForm>
@@ -731,11 +768,12 @@ function SosContactForm({
   action: ModuleFormAction;
   nextOrder: number;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={contact ? 'Save contact' : 'Add contact'}
+      submitLabel={contact ? t('Save contact') : t('Add contact')}
       input={(form) =>
         sosContactInputSchema.parse({
           contactId: contact?.id ?? null,
@@ -748,7 +786,7 @@ function SosContactForm({
       <TextInput
         id={`${id}-label`}
         name="label"
-        label="Name"
+        label={t('Name')}
         required
         maxLength={60}
         defaultValue={contact?.label}
@@ -756,7 +794,7 @@ function SosContactForm({
       <TextInput
         id={`${id}-phone`}
         name="phone"
-        label="Phone number"
+        label={t('Phone number')}
         type="tel"
         inputMode="tel"
         required
@@ -766,7 +804,7 @@ function SosContactForm({
       <TextInput
         id={`${id}-order`}
         name="sortOrder"
-        label="Display order"
+        label={t('Display order')}
         type="number"
         min={0}
         max={999}
@@ -784,6 +822,7 @@ function SosContactManager({
   contacts: readonly SosContact[];
   actions: SosActions;
 }) {
+  const { translate: t } = useUiTranslator();
   const archive = useSosAction(actions.archiveContact);
   const [editing, setEditing] = useState<string | null>(null);
   const nextOrder = Math.min(
@@ -793,8 +832,10 @@ function SosContactManager({
   );
   return (
     <Card
-      title="Manage emergency contacts"
-      description="Shown to everyone on the SOS screens. Archived contacts are hidden but kept."
+      title={t('Manage emergency contacts')}
+      description={t(
+        'Shown to everyone on the SOS screens. Archived contacts are hidden but kept.',
+      )}
     >
       <div className="grid gap-space-4">
         <ul className="grid gap-space-3">
@@ -809,23 +850,31 @@ function SosContactManager({
                   {contact.archived ? (
                     <span className="font-normal text-ink-muted">
                       {' '}
-                      (archived)
+                      {t('(archived)')}
                     </span>
                   ) : null}
                 </p>
                 <div className="flex flex-wrap gap-space-2">
                   <Button
                     variant="tertiary"
-                    aria-label={`${editing === contact.id ? 'Stop editing' : 'Edit'} ${contact.label}`}
+                    aria-label={t(
+                      editing === contact.id
+                        ? 'Stop editing {name}'
+                        : 'Edit {name}',
+                      { name: contact.label },
+                    )}
                     onClick={() =>
                       setEditing(editing === contact.id ? null : contact.id)
                     }
                   >
-                    {editing === contact.id ? 'Close' : 'Edit'}
+                    {editing === contact.id ? t('Close') : t('Edit')}
                   </Button>
                   <Button
                     variant="secondary"
-                    aria-label={`${contact.archived ? 'Restore' : 'Archive'} ${contact.label}`}
+                    aria-label={t(
+                      contact.archived ? 'Restore {name}' : 'Archive {name}',
+                      { name: contact.label },
+                    )}
                     loading={archive.pending}
                     onClick={() =>
                       archive.run({
@@ -834,7 +883,7 @@ function SosContactManager({
                       })
                     }
                   >
-                    {contact.archived ? 'Restore' : 'Archive'}
+                    {contact.archived ? t('Restore') : t('Archive')}
                   </Button>
                 </div>
               </div>
@@ -849,8 +898,8 @@ function SosContactManager({
           ))}
         </ul>
         <ActionMessage result={archive.result} />
-        <section aria-label="Add a contact" className="grid gap-space-2">
-          <h3 className="text-body-strong">Add a contact</h3>
+        <section aria-label={t('Add a contact')} className="grid gap-space-2">
+          <h3 className="text-body-strong">{t('Add a contact')}</h3>
           <SosContactForm action={actions.saveContact} nextOrder={nextOrder} />
         </section>
       </div>
@@ -896,6 +945,7 @@ export function SosWorkspaceView({
   actions?: SosActions;
   onPageChange?: (offset: number, size: PageSize) => void;
 }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const size = PAGE_SIZE.catch(25).parse(workspace.history.limit);
@@ -924,18 +974,22 @@ export function SosWorkspaceView({
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">
-          {audience === 'management' ? 'SOS alerts' : 'Emergency SOS'}
+          {audience === 'management' ? t('SOS alerts') : t('Emergency SOS')}
         </h1>
-        <Banner tone="warning" title="Not a replacement for emergency services">
-          {SOS_EMERGENCY_NOTICE}{' '}
+        <Banner
+          tone="warning"
+          title={t('Not a replacement for emergency services')}
+        >
+          {t(SOS_EMERGENCY_NOTICE)}{' '}
           <a className="font-semibold underline" href="tel:112">
-            Call 112
+            {t('Call 112')}
           </a>
         </Banner>
         {!workspace.can_write ? (
           <Banner tone="neutral">
-            This society is read-only. SOS alerts cannot be raised or changed
-            here; call an emergency number instead.
+            {t(
+              'This society is read-only. SOS alerts cannot be raised or changed here; call an emergency number instead.',
+            )}
           </Banner>
         ) : null}
       </header>
@@ -947,26 +1001,29 @@ export function SosWorkspaceView({
         />
       ) : audience === 'resident' && !workspace.can_raise ? (
         <Banner tone="info">
-          Your account is not linked to an active{' '}
-          {workspace.unit_label.toLowerCase()}, so you cannot raise an SOS here.
-          Use the emergency contacts below.
+          {t(
+            'Your account is not linked to an active {unit}, so you cannot raise an SOS here. Use the emergency contacts below.',
+            { unit: workspace.unit_label.toLowerCase() },
+          )}
         </Banner>
       ) : null}
       <Section
-        title={openTitle}
+        title={t(openTitle)}
         description={
           responder
-            ? 'Acknowledge to tell the raiser help is coming, post updates, then close with a reason.'
-            : 'You can cancel only until a responder acknowledges it.'
+            ? t(
+                'Acknowledge to tell the raiser help is coming, post updates, then close with a reason.',
+              )
+            : t('You can cancel only until a responder acknowledges it.')
         }
       >
         {open.length === 0 ? (
           <EmptyState
-            title="No open SOS"
+            title={t('No open SOS')}
             description={
               responder
-                ? 'New alerts appear here and in a banner on every screen.'
-                : 'Nothing is open right now.'
+                ? t('New alerts appear here and in a banner on every screen.')
+                : t('Nothing is open right now.')
             }
           />
         ) : (
@@ -990,11 +1047,14 @@ export function SosWorkspaceView({
           <SosContactManager contacts={workspace.contacts} actions={actions} />
         </div>
       ) : null}
-      <Section title="History" description="Closed and cancelled alerts.">
+      <Section
+        title={t('History')}
+        description={t('Closed and cancelled alerts.')}
+      >
         {workspace.history.items.length === 0 ? (
           <EmptyState
-            title="No past alerts"
-            description="Closed and cancelled alerts will be listed here."
+            title={t('No past alerts')}
+            description={t('Closed and cancelled alerts will be listed here.')}
           />
         ) : (
           <div className="grid gap-space-3">

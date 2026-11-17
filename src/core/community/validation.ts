@@ -1,9 +1,45 @@
 // Validate Resident Community & Marketplace settings, form input and the database read models.
 import { z } from 'zod';
 
-export const DEFAULT_COMMUNITY_SETTINGS = {} as const;
+// What a muted resident may still do; every key defaults to the strictest choice.
+export const DEFAULT_COMMUNITY_SETTINGS = {
+  muted_can_edit_pending: false,
+  muted_can_report: false,
+  muted_can_renew: false,
+} as const;
 
-export const communitySettingsSchema = z.object({}).strict();
+export const communitySettingsSchema = z
+  .object({
+    muted_can_edit_pending: z.boolean().optional(),
+    muted_can_report: z.boolean().optional(),
+    muted_can_renew: z.boolean().optional(),
+  })
+  .strict();
+
+const communitySettingsValuesSchema = z
+  .object({
+    muted_can_edit_pending: z.boolean(),
+    muted_can_report: z.boolean(),
+    muted_can_renew: z.boolean(),
+  })
+  .strict();
+
+export const communitySettingsInputSchema = z
+  .object({
+    settings: communitySettingsValuesSchema,
+    expectedUpdatedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+export const communitySettingsResultSchema = z.object({
+  settings: communitySettingsValuesSchema,
+  updatedAt: z.iso.datetime({ offset: true }),
+});
+
+export type CommunitySettings = z.infer<typeof communitySettingsValuesSchema>;
+export type CommunitySettingsResult = z.infer<
+  typeof communitySettingsResultSchema
+>;
 
 export const COMMUNITY_POST_BODY_MAX = 4000;
 export const COMMUNITY_REPLY_BODY_MAX = 2000;
@@ -420,6 +456,13 @@ export const communityMuteSchema = z.object({
   reason: maybe(z.string()),
 });
 
+// The caller's own mute on a detail read, with what the society's settings still allow.
+export const communityMyMuteSchema = communityMuteSchema.extend({
+  canEditPending: z.boolean(),
+  canReport: z.boolean(),
+  canRenew: z.boolean(),
+});
+
 export const communityHomeSchema = z.object({
   groups: z.array(
     z.object({
@@ -490,6 +533,7 @@ export const communityPostDetailSchema = z.object({
   replies: z.array(communityReplySchema),
   canReply: z.boolean(),
   reportedByMe: z.boolean(),
+  myMute: maybe(communityMyMuteSchema),
 });
 
 export const communityMarketplaceSchema = z.object({
@@ -533,6 +577,7 @@ export const communityListingDetailSchema = z.object({
   replies: z.array(communityReplySchema),
   canReply: z.boolean(),
   reportedByMe: z.boolean(),
+  myMute: maybe(communityMyMuteSchema),
 });
 
 export const communityMyItemsSchema = z.object({
@@ -653,6 +698,7 @@ export const communityMemberOptionsSchema = z.object({
 export type CommunityHome = z.infer<typeof communityHomeSchema>;
 export type CommunityHomeGroup = CommunityHome['groups'][number];
 export type CommunityMute = z.infer<typeof communityMuteSchema>;
+export type CommunityMyMute = z.infer<typeof communityMyMuteSchema>;
 export type CommunityPhoto = z.infer<typeof communityPhotoSchema>;
 export type CommunityReply = z.infer<typeof communityReplySchema>;
 export type CommunityGroupFeed = z.infer<typeof communityGroupFeedSchema>;

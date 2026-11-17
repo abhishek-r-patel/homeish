@@ -8,6 +8,7 @@ import type {
 } from 'react';
 import { useRef, useState } from 'react';
 import { TextInput } from './text-input';
+import { useUiTranslator } from './language';
 
 export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
@@ -117,6 +118,7 @@ export function SearchInput({
   value,
   ...props
 }: SearchInputProps) {
+  const { translate } = useUiTranslator();
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -126,7 +128,7 @@ export function SearchInput({
       endAdornment={
         value ? (
           <button
-            aria-label="Clear search"
+            aria-label={translate('Clear search')}
             className="flex size-12 shrink-0 items-center justify-center rounded-md text-ink-muted outline-none hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             onClick={() => {
               onClear();
@@ -188,6 +190,7 @@ export function TextAreaInput({
   value,
   ...textareaProps
 }: TextAreaInputProps) {
+  const { translate } = useUiTranslator();
   const [uncontrolledCount, setUncontrolledCount] = useState(
     typeof defaultValue === 'string' ? defaultValue.length : 0,
   );
@@ -204,7 +207,7 @@ export function TextAreaInput({
     <div className="grid gap-space-1">
       <label className="text-body-strong text-ink" htmlFor={id}>
         {label}
-        {required ? ' (required)' : ''}
+        {required ? ` ${translate('(required)')}` : ''}
       </label>
       <textarea
         {...textareaProps}

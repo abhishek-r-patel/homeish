@@ -8,8 +8,12 @@ import {
 } from '@/components/expense/controls';
 import { ExpenseNav } from '@/components/expense/nav';
 import { getExpenseWorkspace } from '@/core/expense/operations';
-import { formatSignedRupees } from '@/core/expense/documents';
-import { formatBillingDate } from '@/core/billing/format';
+import {
+  formatLocalizedCurrency,
+  formatLocalizedDate,
+} from '@/core/i18n/format';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Accounts setup | Homeish',
@@ -17,21 +21,31 @@ export const metadata = {
 };
 
 export default async function ExpenseSetupPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
+  const formatDate = (value: string) =>
+    formatLocalizedDate(
+      new Date(`${value.slice(0, 10)}T00:00:00.000Z`),
+      locale,
+      { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' },
+    );
   const w = await getExpenseWorkspace();
   if (!w.can_manage) notFound();
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
-      <h1 className="text-title font-semibold">Accounts setup</h1>
-      <ExpenseNav current="setup" canManage />
-      <Card title="Approval and collections">
+      <h1 className="text-title font-semibold">{t('Accounts setup')}</h1>
+      <ExpenseNav current="setup" canManage locale={locale} />
+      <Card title={t('Approval and collections')}>
         <ExpenseSettingsForm
           key={w.settings.updated_at ?? 'new'}
           workspace={w}
         />
       </Card>
       <Card
-        title="Cash and bank accounts"
-        description="Opening balances are fixed once an account has entries."
+        title={t('Cash and bank accounts')}
+        description={t(
+          'Opening balances are fixed once an account has entries.',
+        )}
       >
         <div className="grid min-w-0 gap-space-3">
           {w.accounts.map((a) => (
@@ -41,9 +55,9 @@ export default async function ExpenseSetupPage() {
             >
               <summary className="cursor-pointer">
                 {a.name}
-                {a.active ? '' : ' (inactive)'} ·{' '}
-                {formatSignedRupees(a.balance_paise)} · opened{' '}
-                {formatBillingDate(a.opening_on)}
+                {a.active ? '' : ` ${t('(inactive)')}`} ·{' '}
+                {`${a.balance_paise < 0 ? '-' : ''}${formatLocalizedCurrency(Math.abs(a.balance_paise), locale)}`}{' '}
+                · {t('opened')} {formatDate(a.opening_on)}
               </summary>
               <ExpenseAccountForm
                 key={a.updated_at}
@@ -53,12 +67,12 @@ export default async function ExpenseSetupPage() {
             </details>
           ))}
           <details className="rounded-md border border-rule p-space-3">
-            <summary className="cursor-pointer">Add account</summary>
+            <summary className="cursor-pointer">{t('Add account')}</summary>
             <ExpenseAccountForm today={w.today} />
           </details>
         </div>
       </Card>
-      <Card title="Expense categories">
+      <Card title={t('Expense categories')}>
         <div className="grid min-w-0 gap-space-3">
           {w.categories.map((c) => (
             <details
@@ -67,13 +81,13 @@ export default async function ExpenseSetupPage() {
             >
               <summary className="cursor-pointer">
                 {c.name}
-                {c.active ? '' : ' (inactive)'}
+                {c.active ? '' : ` ${t('(inactive)')}`}
               </summary>
               <ExpenseCategoryForm key={c.updated_at} category={c} />
             </details>
           ))}
           <details className="rounded-md border border-rule p-space-3">
-            <summary className="cursor-pointer">Add category</summary>
+            <summary className="cursor-pointer">{t('Add category')}</summary>
             <ExpenseCategoryForm />
           </details>
         </div>

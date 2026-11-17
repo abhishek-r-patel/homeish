@@ -413,7 +413,7 @@ export async function getDeveloperSociety(societyId: string) {
   const { data, error } = await client
     .from('societies')
     .select(
-      'id, name, unit_label, address, city, contact_email, contact_phone, timezone, currency, logo_path, status, plan, gate_login_mode, guard_identification, created_at, created_by, updated_at, updated_by',
+      'id, name, unit_label, address, city, contact_email, contact_phone, timezone, currency, logo_path, status, plan, gate_login_mode, guard_identification, hindi_available, created_at, created_by, updated_at, updated_by',
     )
     .eq('id', societyId)
     .maybeSingle();

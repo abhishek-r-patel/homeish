@@ -9,8 +9,10 @@ import type { ServerActionResult } from '@/core/actions/server-action';
 import { Banner } from '@/components/ui/feedback';
 import { Button } from '@/components/ui/button';
 import { TextInput } from '@/components/ui/text-input';
+import { useUiTranslator } from '@/components/ui/language';
 
 export function HandledByControl({ state }: { state: GuardDutyState }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const [editing, setEditing] = useState(!state.currentGuard);
   const [message, setMessage] = useState<ServerActionResult<unknown> | null>(
@@ -39,14 +41,14 @@ export function HandledByControl({ state }: { state: GuardDutyState }) {
 
   return (
     <section
-      aria-label="Guard on duty"
+      aria-label={t('Guard on duty')}
       className="mb-space-4 grid gap-space-3 rounded-lg border border-brand/30 bg-brand-tint p-space-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-space-3">
         <p className="text-body-strong">
-          Handled by:{' '}
+          {t('Handled by')}:{' '}
           <span className="font-normal">
-            {state.currentGuard?.name ?? 'Not identified'}
+            {state.currentGuard?.name ?? t('Not identified')}
           </span>
         </p>
         {state.currentGuard && !editing ? (
@@ -57,21 +59,23 @@ export function HandledByControl({ state }: { state: GuardDutyState }) {
             }}
             variant="secondary"
           >
-            Switch guard
+            {t('Switch guard')}
           </Button>
         ) : null}
       </div>
       {message ? (
         <Banner tone={message.ok ? 'success' : 'danger'}>
-          <p>{message.message}</p>
+          <p>{message.message ? translateFeedback(message.message) : null}</p>
           {!message.ok && message.referenceId ? (
             <p className="mt-space-2 text-caption">
-              Reference ID: <code>{message.referenceId}</code>
+              {t('Reference ID')}: <code>{message.referenceId}</code>
             </p>
           ) : null}
           {!message.ok && message.retryAfterSeconds ? (
             <p className="mt-space-2 text-caption">
-              Try again in {message.retryAfterSeconds} seconds.
+              {t('Try again in {seconds} seconds.', {
+                seconds: message.retryAfterSeconds,
+              })}
             </p>
           ) : null}
         </Banner>
@@ -80,13 +84,13 @@ export function HandledByControl({ state }: { state: GuardDutyState }) {
         state.guards.length > 0 ? (
           <form action={submit} className="grid gap-space-3">
             <label className="grid gap-space-1 text-body-strong">
-              Guard name
+              {t('Guard name')}
               <select
                 className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body"
                 name="guardId"
                 required
               >
-                <option value="">Choose your name</option>
+                <option value="">{t('Choose your name')}</option>
                 {state.guards.map((guard) => (
                   <option key={guard.id} value={guard.id}>
                     {guard.name}
@@ -99,7 +103,7 @@ export function HandledByControl({ state }: { state: GuardDutyState }) {
                 autoComplete="current-password"
                 id="guard-duty-pin"
                 inputMode="numeric"
-                label="Personal PIN"
+                label={t('Personal PIN')}
                 maxLength={6}
                 name="pin"
                 pattern="[0-9]{4,6}"
@@ -108,12 +112,12 @@ export function HandledByControl({ state }: { state: GuardDutyState }) {
               />
             ) : null}
             <Button disabled={pending} type="submit">
-              Confirm who is on duty
+              {t('Confirm who is on duty')}
             </Button>
           </form>
         ) : (
           <p className="text-caption text-ink-muted">
-            Ask an administrator to add guards to the roster.
+            {t('Ask an administrator to add guards to the roster.')}
           </p>
         )
       ) : null}

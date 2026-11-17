@@ -1,12 +1,11 @@
 // Show bill line items as a definition list with totals and a PDF download.
+'use client';
+
 import Link from 'next/link';
 import { Card, StatusChip } from '@/components/ui/data-display';
-import {
-  billDisplayStatus,
-  formatBillingDate,
-  formatBillingPeriod,
-  formatRupees,
-} from '@/core/billing/format';
+import { billDisplayStatus } from '@/core/billing/format';
+import { useUiTranslator } from '@/components/ui/language';
+import { billingDate, billingMoney, billingPeriod } from './presentation';
 import type { BillingBillDetails } from '@/core/billing/validation';
 import { linkButtonClass } from './styles';
 
@@ -25,6 +24,7 @@ export function BillDetail({
   ledgerHref?: string;
   today: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <section className="grid max-w-content-default gap-space-5">
       <Link className="text-body text-brand underline" href={backHref}>
@@ -35,52 +35,56 @@ export function BillDetail({
           <h1 className="text-title font-semibold">{bill.title}</h1>
           <p className="text-body text-ink-muted">
             {bill.unit_label} {bill.unit_number} ·{' '}
-            {formatBillingPeriod(bill.period_start)}
+            {billingPeriod(bill.period_start, locale)}
           </p>
         </div>
         <StatusChip status={billDisplayStatus(bill, today)} />
       </header>
-      <Card title="Bill details">
+      <Card title={t('Bill details')}>
         <dl className="grid gap-space-3 text-body">
           {bill.lines.map((line) => (
             <div className="flex justify-between gap-space-4" key={line.id}>
               <dt>{line.description}</dt>
               <dd className="tabular-nums">
-                {formatRupees(line.amount_paise)}
+                {billingMoney(line.amount_paise, locale)}
               </dd>
             </div>
           ))}
           <div className="flex justify-between gap-space-4 border-t border-rule pt-space-3 font-semibold">
-            <dt>Total</dt>
-            <dd className="tabular-nums">{formatRupees(bill.total_paise)}</dd>
+            <dt>{t('Total')}</dt>
+            <dd className="tabular-nums">
+              {billingMoney(bill.total_paise, locale)}
+            </dd>
           </div>
           {bill.paid_paise > 0 ? (
             <div className="flex justify-between gap-space-4">
-              <dt>Paid</dt>
-              <dd className="tabular-nums">{formatRupees(bill.paid_paise)}</dd>
+              <dt>{t('Paid')}</dt>
+              <dd className="tabular-nums">
+                {billingMoney(bill.paid_paise, locale)}
+              </dd>
             </div>
           ) : null}
           {bill.waived_paise > 0 ? (
             <div className="flex justify-between gap-space-4">
-              <dt>Waived</dt>
+              <dt>{t('Waived')}</dt>
               <dd className="tabular-nums">
-                {formatRupees(bill.waived_paise)}
+                {billingMoney(bill.waived_paise, locale)}
               </dd>
             </div>
           ) : null}
           <div className="flex justify-between gap-space-4 font-semibold">
-            <dt>Outstanding</dt>
+            <dt>{t('Outstanding')}</dt>
             <dd className="tabular-nums">
-              {formatRupees(bill.outstanding_paise)}
+              {billingMoney(bill.outstanding_paise, locale)}
             </dd>
           </div>
           <div className="flex justify-between gap-space-4">
-            <dt>Due date</dt>
-            <dd>{formatBillingDate(bill.due_date)}</dd>
+            <dt>{t('Due date')}</dt>
+            <dd>{billingDate(bill.due_date, locale)}</dd>
           </div>
           {bill.cancel_reason ? (
             <div className="flex justify-between gap-space-4">
-              <dt>Cancellation reason</dt>
+              <dt>{t('Cancellation reason')}</dt>
               <dd>{bill.cancel_reason}</dd>
             </div>
           ) : null}
@@ -92,14 +96,17 @@ export function BillDetail({
           download
           href={`/api/billing/bills/${bill.id}`}
         >
-          Download PDF
+          {t('Download PDF')}
         </a>
         {ledgerHref ? (
           <Link className={linkButtonClass} href={ledgerHref}>
-            View Unit Ledger
+            {t('View Unit Ledger')}
           </Link>
         ) : null}
       </div>
+      <p className="text-caption text-ink-muted">
+        {t('PDF documents remain in English.')}
+      </p>
       {children}
     </section>
   );

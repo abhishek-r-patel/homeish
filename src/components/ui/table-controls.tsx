@@ -15,6 +15,7 @@ import type { ProductStatus } from './data-display';
 import { StatusChip } from './data-display';
 import { SearchInput } from './specialized-inputs';
 import { SelectInput } from './select-input';
+import { useUiTranslator } from './language';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -25,12 +26,19 @@ type SortHeaderProps = {
 };
 
 export function SortHeader({ direction, label, onSort }: SortHeaderProps) {
+  const { translate } = useUiTranslator();
   const nextDirection = direction === 'asc' ? 'desc' : 'asc';
+  const sortDirection = translate(
+    nextDirection === 'asc' ? 'ascending' : 'descending',
+  );
   const icon = direction === 'asc' ? '↑' : direction === 'desc' ? '↓' : '↕';
 
   return (
     <button
-      aria-label={`Sort by ${label} ${nextDirection === 'asc' ? 'ascending' : 'descending'}`}
+      aria-label={translate('Sort by {label} {direction}', {
+        label,
+        direction: sortDirection,
+      })}
       className="inline-flex min-h-12 items-center gap-space-2 font-semibold text-ink hover:text-brand"
       onClick={() => onSort(nextDirection)}
       type="button"
@@ -84,6 +92,7 @@ export function DataTable<Row>({
   selectedIds = [],
   sort,
 }: DataTableProps<Row>) {
+  const { translate } = useUiTranslator();
   const selected = new Set(selectedIds);
   const selectionEnabled = onSelectRow !== undefined;
   const wrapperProps = scrollable
@@ -98,17 +107,19 @@ export function DataTable<Row>({
     <div className="grid gap-space-4">
       {selectionEnabled && selectedIds.length > 0 && bulkActions ? (
         <div
-          aria-label="Bulk actions"
+          aria-label={translate('Bulk actions')}
           className="flex flex-col gap-space-3 rounded-md border border-brand bg-brand-tint p-space-3 medium:flex-row medium:items-center medium:justify-between"
           role="region"
         >
-          <p className="text-body-strong">{selectedIds.length} selected</p>
+          <p className="text-body-strong">
+            {translate('{count} selected', { count: selectedIds.length })}
+          </p>
           <div className="flex flex-wrap gap-space-2">{bulkActions}</div>
         </div>
       ) : null}
       {rows.length === 0 ? (
         <p className="text-body text-ink-muted" role="status">
-          No results.
+          {translate('No results.')}
         </p>
       ) : null}
       <div
@@ -121,7 +132,7 @@ export function DataTable<Row>({
             <tr>
               {selectionEnabled ? (
                 <th scope="col">
-                  <span className="sr-only">Select row</span>
+                  <span className="sr-only">{translate('Select row')}</span>
                 </th>
               ) : null}
               {columns.map((column, index) => {
@@ -169,7 +180,9 @@ export function DataTable<Row>({
                   {selectionEnabled ? (
                     <td className="px-space-2 py-space-1">
                       <input
-                        aria-label={`Select ${getRowLabel(row)}`}
+                        aria-label={translate('Select {label}', {
+                          label: getRowLabel(row),
+                        })}
                         checked={isSelected}
                         className="size-6 accent-brand"
                         onChange={(event) =>
@@ -234,7 +247,9 @@ export function DataTable<Row>({
             >
               {selectionEnabled ? (
                 <input
-                  aria-label={`Select ${getRowLabel(row)}`}
+                  aria-label={translate('Select {label}', {
+                    label: getRowLabel(row),
+                  })}
                   checked={isSelected}
                   className="size-6 shrink-0 accent-brand"
                   onChange={(event) =>
@@ -287,22 +302,27 @@ export function Pagination({
   pageSize,
   total,
 }: PaginationProps) {
+  const { translate } = useUiTranslator();
   const id = useId();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={translate('Pagination')}
       className="flex flex-col gap-space-3 border-t border-rule py-space-4 expanded:flex-row expanded:items-center expanded:justify-between"
     >
       <p className="text-caption text-ink-muted" aria-live="polite">
-        Page {page} of {totalPages} · {total} results
+        {translate('Page {page} of {totalPages} · {total} results', {
+          page,
+          totalPages,
+          total,
+        })}
       </p>
       <div className="flex flex-wrap items-end gap-space-2">
         <SelectInput
           className="min-w-28"
           id={`page-size-${id}`}
-          label="Rows per page"
+          label={translate('Rows per page')}
           onChange={(event) => {
             const value = Number(event.currentTarget.value);
             if (isPageSize(value)) {
@@ -316,36 +336,36 @@ export function Pagination({
           value={String(pageSize)}
         />
         <Button
-          aria-label="First page"
+          aria-label={translate('First page')}
           disabled={page <= 1}
           onClick={() => onPageChange(1)}
           variant="secondary"
         >
-          First
+          {translate('First')}
         </Button>
         <Button
-          aria-label="Previous page"
+          aria-label={translate('Previous page')}
           disabled={page <= 1}
           onClick={() => onPageChange(Math.max(1, page - 1))}
           variant="secondary"
         >
-          Previous
+          {translate('Previous')}
         </Button>
         <Button
-          aria-label="Next page"
+          aria-label={translate('Next page')}
           disabled={page >= totalPages}
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           variant="secondary"
         >
-          Next
+          {translate('Next')}
         </Button>
         <Button
-          aria-label="Last page"
+          aria-label={translate('Last page')}
           disabled={page >= totalPages}
           onClick={() => onPageChange(totalPages)}
           variant="secondary"
         >
-          Last
+          {translate('Last')}
         </Button>
       </div>
     </nav>
@@ -385,6 +405,7 @@ export function FilterBar({
   searchLabel,
   searchValue,
 }: FilterBarProps) {
+  const { translate } = useUiTranslator();
   const id = useId();
   const [open, setOpen] = useState(false);
   const compact = useSyncExternalStore(
@@ -524,7 +545,7 @@ export function FilterBar({
           onClick={() => setOpen((currentlyOpen) => !currentlyOpen)}
           variant="secondary"
         >
-          Filters
+          {translate('Filters')}
           {appliedFilters.length > 0 ? ` (${appliedFilters.length})` : ''}
         </Button>
       </div>
@@ -537,7 +558,9 @@ export function FilterBar({
             >
               {filter.label}
               <Button
-                aria-label={`Remove filter ${filter.label}`}
+                aria-label={translate('Remove filter {label}', {
+                  label: filter.label,
+                })}
                 iconOnly
                 leadingIcon={<span aria-hidden="true">×</span>}
                 onClick={() => onRemoveFilter(filter.id)}
@@ -550,12 +573,12 @@ export function FilterBar({
             onClick={onClearAll}
             variant="tertiary"
           >
-            Clear all
+            {translate('Clear all')}
           </Button>
         </div>
       ) : (
         <Button disabled onClick={onClearAll} variant="tertiary">
-          Clear all
+          {translate('Clear all')}
         </Button>
       )}
       {compact ? (
@@ -563,12 +586,12 @@ export function FilterBar({
           id={`filters-${id}`}
           onOpenChange={setOpen}
           open={open}
-          title="Filters"
+          title={translate('Filters')}
         >
           {children}
           <div className="mt-space-4 flex justify-end">
             <Button onClick={() => setOpen(false)} variant="primary">
-              Apply filters
+              {translate('Apply filters')}
             </Button>
           </div>
         </Dialog>
@@ -592,10 +615,10 @@ export function FilterBar({
               className="text-heading font-semibold"
               id={`filters-${id}-title`}
             >
-              Filters
+              {translate('Filters')}
             </h2>
             <Button
-              aria-label="Close filters"
+              aria-label={translate('Close filters')}
               iconOnly
               leadingIcon={<span aria-hidden="true">×</span>}
               onClick={closePopover}
@@ -605,7 +628,7 @@ export function FilterBar({
           {children}
           <div className="mt-space-4 flex justify-end">
             <Button onClick={closePopover} variant="primary">
-              Apply filters
+              {translate('Apply filters')}
             </Button>
           </div>
         </div>

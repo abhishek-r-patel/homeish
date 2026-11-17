@@ -9,6 +9,8 @@ import {
   getDirectoryVehicles,
 } from '@/core/directory/operations';
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Resident & vehicle directory | Homeish',
@@ -16,6 +18,8 @@ export const metadata = {
 };
 
 export default async function AdminDirectoryPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   let workspace: React.ComponentProps<typeof DirectoryManagementWorkspace>;
   try {
     const [directory, residents, vehicles] = await Promise.all([
@@ -50,8 +54,10 @@ export default async function AdminDirectoryPage() {
     if (error instanceof AppError && error.code === 'FORBIDDEN') {
       return (
         <ErrorPanel
-          message="Sign in with an administrator or committee account for this society."
-          title="Directory management is restricted"
+          message={t(
+            'Sign in with an administrator or committee account for this society.',
+          )}
+          title={t('Directory management is restricted')}
         />
       );
     }

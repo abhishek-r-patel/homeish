@@ -2,6 +2,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { ErrorPanel } from '@/components/ui/feedback';
+import { useLanguage } from '@/components/language-provider';
 
 export default function Error({
   retry,
@@ -9,13 +10,14 @@ export default function Error({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  const { translate: t } = useLanguage();
   return (
     <ErrorPanel
-      title="Could not load events"
-      message="Nothing has changed. Try again in a moment."
+      title={t('Could not load events')}
+      message={t('Nothing has changed. Try again in a moment.')}
       action={
         <Button onClick={retry} type="button" variant="secondary">
-          Try again
+          {t('Try again')}
         </Button>
       }
     />

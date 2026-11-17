@@ -15,7 +15,6 @@ import {
 import { ValidationError } from '@/core/errors';
 import {
   TENANCY_KIND_LABELS,
-  formatTenancyTimestamp,
   tenancyTenantChoices,
 } from '@/core/tenancy/moves/presentation';
 import {
@@ -44,6 +43,7 @@ import {
   type ModuleFormAction,
 } from '@/components/ui/module-action-form';
 import { SelectInput } from '@/components/ui/select-input';
+import { useTenancyPresentation } from './presentation';
 
 export type TenancyActions = {
   create: ModuleFormAction;
@@ -84,6 +84,7 @@ export function TenancyCreateForm({
   action?: ModuleFormAction;
   onCreated?: (moveId: string) => void;
 }) {
+  const { t, time } = useTenancyPresentation();
   const id = useId();
   const router = useRouter();
   const [kind, setKind] = useState<'move_in' | 'move_out'>('move_in');
@@ -116,8 +117,10 @@ export function TenancyCreateForm({
 
   return (
     <Card
-      title="New move request"
-      description="Approval schedules the move only. An administrator confirms actual completion before household access changes."
+      title={t('New move request')}
+      description={t(
+        'Approval schedules the move only. An administrator confirms actual completion before household access changes.',
+      )}
     >
       <ModuleActionForm
         action={action}
@@ -130,7 +133,7 @@ export function TenancyCreateForm({
           !endDate ||
           (kind === 'move_in' && !expiry)
         }
-        submitLabel="Create Move Request"
+        submitLabel={t('Create Move Request')}
         onSaved={(data) => {
           const moveId = z.uuid().parse(data);
           if (onCreated) onCreated(moveId);
@@ -168,10 +171,10 @@ export function TenancyCreateForm({
       >
         <SelectInput
           id={`${id}-kind`}
-          label="Move type"
+          label={t('Move type')}
           value={kind}
           options={Object.entries(TENANCY_KIND_LABELS).map(
-            ([value, label]) => ({ value, label }),
+            ([value, label]) => ({ value, label: t(label) }),
           )}
           onChange={(event) => {
             setKind(tenancyKindSchema.parse(event.currentTarget.value));
@@ -192,31 +195,35 @@ export function TenancyCreateForm({
             setTenantId(null);
             setBookingId(null);
           }}
-          emptyMessage="No eligible household. Ask an administrator to review Core setup."
+          emptyMessage={t(
+            'No eligible household. Ask an administrator to review Core setup.',
+          )}
         />
         <Combobox
           id={`${id}-tenant`}
-          label="Tenant or invitation"
+          label={t('Tenant or invitation')}
           required
           value={tenantId}
           disabled={!unitId}
           options={tenants.map((tenant) => ({
             value: tenant.id,
-            label: `${tenant.name}${tenant.status === 'active' ? '' : ' (invitation)'}`,
+            label: `${tenant.name}${tenant.status === 'active' ? '' : t(' (invitation)')}`,
           }))}
           onChange={setTenantId}
-          helpText={
+          helpText={t(
             kind === 'move_in'
               ? 'Use the existing Core invitation. The tenant must claim it before completion.'
-              : 'Choose a currently active tenant of this household.'
-          }
-          emptyMessage="No eligible tenant. Ask an administrator to invite or assign the tenant in Core first."
+              : 'Choose a currently active tenant of this household.',
+          )}
+          emptyMessage={t(
+            'No eligible tenant. Ask an administrator to invite or assign the tenant in Core first.',
+          )}
         />
         <div className="grid gap-space-4 expanded:grid-cols-2">
           <div className="grid content-start gap-space-3">
             <DatePicker
               id={`${id}-start-date`}
-              label="Move start date"
+              label={t('Move start date')}
               min={workspace.today}
               value={startDate}
               onChange={(value) => {
@@ -227,7 +234,7 @@ export function TenancyCreateForm({
             />
             <TimePicker
               id={`${id}-start-time`}
-              label="Move start time"
+              label={t('Move start time')}
               required
               timeZone={workspace.timezone}
               value={startTime}
@@ -237,14 +244,14 @@ export function TenancyCreateForm({
           <div className="grid content-start gap-space-3">
             <DatePicker
               id={`${id}-end-date`}
-              label="Move end date"
+              label={t('Move end date')}
               min={startDate}
               value={endDate}
               onChange={setEndDate}
             />
             <TimePicker
               id={`${id}-end-time`}
-              label="Move end time"
+              label={t('Move end time')}
               required
               timeZone={workspace.timezone}
               value={endTime}
@@ -255,9 +262,11 @@ export function TenancyCreateForm({
         {kind === 'move_in' ? (
           <DatePicker
             id={`${id}-expiry`}
-            label="Rental agreement expiry (required)"
+            label={t('Rental agreement expiry (required)')}
             min={startDate}
-            helpText="Use the actual expiry date in the mandatory rental agreement."
+            helpText={t(
+              'Use the actual expiry date in the mandatory rental agreement.',
+            )}
             value={expiry}
             onChange={setExpiry}
           />
@@ -265,27 +274,32 @@ export function TenancyCreateForm({
         {workspace.amenity_enabled ? (
           <SelectInput
             id={`${id}-booking`}
-            label="Existing amenity booking (optional)"
-            helpText="Only a confirmed booking for this household covering the entire window can be linked. This does not reserve anything."
+            label={t('Existing amenity booking (optional)')}
+            helpText={t(
+              'Only a confirmed booking for this household covering the entire window can be linked. This does not reserve anything.',
+            )}
             value={bookingId ?? ''}
             onChange={(event) =>
               setBookingId(event.currentTarget.value || null)
             }
             options={[
-              { value: '', label: 'No linked booking' },
+              { value: '', label: t('No linked booking') },
               ...bookings.map((booking) => ({
                 value: booking.id,
-                label: `${booking.name}: ${formatTenancyTimestamp(booking.starts_at, workspace.timezone)}`,
+                label: `${booking.name}: ${time(booking.starts_at, workspace.timezone)}`,
               })),
             ]}
           />
         ) : null}
         <p className="text-caption text-ink-muted">
-          No move fee or deposit. Choose all required details to create a
-          request.
-          {kind === 'move_in'
-            ? ' Attach the rental agreement after creation; an active owner must then consent.'
-            : ' Positive unit dues block completion when Billing is enabled.'}
+          {t(
+            'No move fee or deposit. Choose all required details to create a request.',
+          )}
+          {t(
+            kind === 'move_in'
+              ? ' Attach the rental agreement after creation; an active owner must then consent.'
+              : ' Positive unit dues block completion when Billing is enabled.',
+          )}
         </p>
       </ModuleActionForm>
     </Card>
@@ -307,6 +321,7 @@ function TenancyConfirmation({
   requiresReason?: boolean;
   destructive?: boolean;
 }) {
+  const { translateFeedback } = useTenancyPresentation();
   const id = useId();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -323,7 +338,7 @@ function TenancyConfirmation({
       </Button>
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {translateFeedback(message)}
         </p>
       ) : null}
       <ConfirmDialog
@@ -336,7 +351,7 @@ function TenancyConfirmation({
         description={description}
         requiresReason={requiresReason}
         variant={destructive ? 'destructive' : 'primary'}
-        error={error}
+        error={error ? translateFeedback(error) : undefined}
         onConfirm={(reason) => {
           setError(undefined);
           startTransition(async () => {
@@ -378,6 +393,7 @@ export function TenancyDecisionControl({
     'consent' | 'approved' | 'rejected' | 'cancelled' | 'complete' | 'issue';
   action: ModuleFormAction;
 }) {
+  const { t } = useTenancyPresentation();
   const copy = {
     consent: {
       label: 'Give Owner Consent',
@@ -417,7 +433,8 @@ export function TenancyDecisionControl({
   }[decision];
   return (
     <TenancyConfirmation
-      {...copy}
+      label={t(copy.label)}
+      description={t(copy.description)}
       action={action}
       requiresReason={decision === 'rejected' || decision === 'cancelled'}
       destructive={decision === 'rejected' || decision === 'cancelled'}
@@ -441,30 +458,33 @@ export function TenancySettingsControl({
   workspace: TenancyWorkspace;
   action?: ModuleFormAction;
 }) {
+  const { t } = useTenancyPresentation();
   const id = useId();
   const [required, setRequired] = useState(
     workspace.police_verification_required,
   );
   return (
     <Card
-      title="Proof requirements"
-      description="Rental agreements are always required. Police-verification proof is off by default. Never collect Aadhaar or other government ID copies."
+      title={t('Proof requirements')}
+      description={t(
+        'Rental agreements are always required. Police-verification proof is off by default. Never collect Aadhaar or other government ID copies.',
+      )}
     >
       <CheckboxInput
         id={id}
-        label="Require police-verification proof"
+        label={t('Require police-verification proof')}
         checked={required}
         onChange={(event) => setRequired(event.currentTarget.checked)}
       />
       {required !== workspace.police_verification_required ? (
         <TenancyConfirmation
           action={action}
-          label="Save Proof Requirement"
-          description={
+          label={t('Save Proof Requirement')}
+          description={t(
             required
               ? 'Require police-verification proof before consenting, approving or completing open move-in requests? Existing consent cannot bypass the required proof.'
-              : 'Make police-verification proof optional? The rental agreement remains mandatory.'
-          }
+              : 'Make police-verification proof optional? The rental agreement remains mandatory.',
+          )}
           input={() =>
             tenancySettingsInputSchema.parse({
               policeVerificationRequired: required,
@@ -472,7 +492,9 @@ export function TenancySettingsControl({
           }
         />
       ) : (
-        <Banner tone="neutral">The current proof requirement is saved.</Banner>
+        <Banner tone="neutral">
+          {t('The current proof requirement is saved.')}
+        </Banner>
       )}
     </Card>
   );

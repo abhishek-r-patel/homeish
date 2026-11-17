@@ -27,6 +27,8 @@ import {
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Banner } from '@/components/ui/feedback';
+import { LanguageProvider } from '@/components/language-provider';
+import { LanguageSelector } from '@/components/language-selector';
 
 const residents: DirectoryResident[] = [
   {
@@ -64,6 +66,14 @@ const largerResidents: DirectoryResident[] = [
 ];
 
 export default function DirectoryFixturePage() {
+  return (
+    <LanguageProvider initialLocale="en" mode="device">
+      <DirectoryFixture />
+    </LanguageProvider>
+  );
+}
+
+function DirectoryFixture() {
   const [useLargerSample, setUseLargerSample] = useState(false);
   const [failReads, setFailReads] = useState(false);
   const sample = useLargerSample ? largerResidents : residents;
@@ -107,6 +117,7 @@ export default function DirectoryFixturePage() {
   };
   return (
     <main className="mx-auto grid min-h-dvh w-full min-w-0 max-w-content-default content-start gap-space-5 px-space-4 py-space-6 text-ink">
+      <LanguageSelector />
       <Banner title="Synthetic resident directory" tone="info">
         Development-only sample data. No resident data is read from or written
         to a database.

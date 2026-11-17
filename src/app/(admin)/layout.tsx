@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { AdminShell, CommitteeShell } from '@/components/app-shells';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { AppError, createRequestId } from '@/core/errors';
+import { LanguageProvider } from '@/components/language-provider';
 
 export default async function AdminLayout({
   children,
@@ -12,5 +13,13 @@ export default async function AdminLayout({
     throw new AppError('FORBIDDEN');
   }
   const Shell = context.roles.includes('admin') ? AdminShell : CommitteeShell;
-  return <Shell enabledModules={[...context.enabledModules]}>{children}</Shell>;
+  return (
+    <LanguageProvider
+      hindiEnabled={context.isHindiEnabled}
+      initialLocale={context.languagePreference}
+      mode="account"
+    >
+      <Shell enabledModules={[...context.enabledModules]}>{children}</Shell>
+    </LanguageProvider>
+  );
 }

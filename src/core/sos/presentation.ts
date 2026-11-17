@@ -1,4 +1,7 @@
 // Present emergency alerts, responder choices and tap-to-call contacts.
+import { formatLocalizedDateTime } from '../i18n/format';
+import type { Locale } from '../i18n/locale';
+import { translateMessage } from '../i18n/messages';
 import type {
   SosAlert,
   SosBannerAlert,
@@ -63,12 +66,16 @@ export function isSosOpen(status: SosStatus) {
   return status === 'raised' || status === 'acknowledged';
 }
 
-export function sosRecipientSummary(settings: {
-  notify_guards: boolean;
-  notify_admins: boolean;
-  notify_committee: boolean;
-  resident_scope: SosResidentScope;
-}) {
+export function sosRecipientSummary(
+  settings: {
+    notify_guards: boolean;
+    notify_admins: boolean;
+    notify_committee: boolean;
+    resident_scope: SosResidentScope;
+  },
+  locale: Locale = 'en',
+) {
+  const t = (source: string) => translateMessage(locale, source);
   const groups = [
     settings.notify_guards && 'guards',
     settings.notify_admins && 'admins',
@@ -79,27 +86,40 @@ export function sosRecipientSummary(settings: {
   if (settings.resident_scope === 'block')
     groups.push('residents in your block');
   if (settings.resident_scope === 'society') groups.push('all residents');
-  if (groups.length === 0) return 'No one is set up to be notified.';
-  const last = groups.pop();
-  return `Notifies ${groups.length ? `${groups.join(', ')} and ${last}` : last}.`;
+  if (groups.length === 0) return t('No one is set up to be notified.');
+  const last = t(groups.pop()!);
+  const recipients = groups.length
+    ? translateMessage(locale, '{groups} and {last}', {
+        groups: groups.map(t).join(', '),
+        last,
+      })
+    : last;
+  return translateMessage(locale, 'Notifies {recipients}.', { recipients });
 }
 
-export function sosBannerTitle(alert: SosBannerAlert) {
+export function sosBannerTitle(alert: SosBannerAlert, locale: Locale = 'en') {
   const where = alert.unit_label
-    ? `unit ${alert.unit_label}`
+    ? translateMessage(locale, 'unit {unit}', { unit: alert.unit_label })
     : alert.raised_role === 'guard'
-      ? 'the gate'
-      : 'a resident';
-  return `${SOS_CATEGORY_LABELS[alert.category]} SOS from ${where}`;
+      ? translateMessage(locale, 'the gate')
+      : translateMessage(locale, 'a resident');
+  return translateMessage(locale, '{category} SOS from {where}', {
+    category: translateMessage(locale, SOS_CATEGORY_LABELS[alert.category]),
+    where,
+  });
 }
 
-export function formatSosTimestamp(value: string, timeZone?: string) {
-  return new Intl.DateTimeFormat('en-IN', {
+export function formatSosTimestamp(
+  value: string,
+  timeZone?: string,
+  locale: Locale = 'en',
+) {
+  return formatLocalizedDateTime(new Date(value), locale, {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
     timeZoneName: 'short',
     ...(timeZone ? { timeZone } : {}),
-  }).format(new Date(value));
+  });
 }

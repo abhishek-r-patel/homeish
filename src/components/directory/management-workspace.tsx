@@ -18,6 +18,8 @@ import { EmptyState, ErrorPanel } from '../ui/feedback';
 import { SelectInput } from '../ui/select-input';
 import { TextInput } from '../ui/text-input';
 import { Pagination, type PageSize } from '../ui/table-controls';
+import { useUiTranslator } from '../ui/language';
+import { DIRECTORY_LABELS } from './labels';
 
 type SocietyUnit = { id: string; number: string };
 type ReadRetry = { pageSize: PageSize } & (
@@ -83,6 +85,7 @@ function useMutation(action: MutationAction) {
 }
 
 function Message({ result }: { result: ServerActionResult<unknown> | null }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (!result) return null;
   return (
     <p
@@ -90,22 +93,25 @@ function Message({ result }: { result: ServerActionResult<unknown> | null }) {
       className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
       role="status"
     >
-      {result.message}
+      {result.message ? translateFeedback(result.message) : null}
       {!result.ok && result.fieldErrors
-        ? ` ${Object.values(result.fieldErrors).join(' ')}`
+        ? ` ${Object.values(result.fieldErrors).map(translateFeedback).join(' ')}`
         : ''}
       {!result.ok && result.referenceId
-        ? ` Reference: ${result.referenceId}`
+        ? ` ${t('Reference: {reference}', { reference: result.referenceId })}`
         : ''}
     </p>
   );
 }
 
-function targetOptions(members: readonly DirectoryResident[]) {
+function targetOptions(
+  members: readonly DirectoryResident[],
+  t: (source: string) => string,
+) {
   return members
     .filter((member) => member.unit_id !== null)
     .map((member) => ({
-      label: `${member.full_name || 'Resident'} · ${member.unit_number ?? 'Unit'}`,
+      label: `${member.full_name || t('Resident')} · ${member.unit_number ?? t('Unit')}`,
       value: `${member.unit_id}|${member.membership_id}`,
     }));
 }
@@ -126,6 +132,7 @@ function AdminVehicleForm({
   members: readonly DirectoryResident[];
   vehicle?: DirectoryVehicle;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action);
   return (
     <form
@@ -145,22 +152,22 @@ function AdminVehicleForm({
       {vehicle ? null : (
         <SelectInput
           id="admin-vehicle-target"
-          label="Resident and unit"
+          label={t('Resident and unit')}
           name="target"
-          options={targetOptions(members)}
-          placeholder="Choose an active occupant"
+          options={targetOptions(members, t)}
+          placeholder={t('Choose an active occupant')}
           required
         />
       )}
       <SelectInput
         defaultValue={vehicle?.vehicle_type ?? 'car'}
         id={`admin-vehicle-type-${vehicle?.id ?? 'new'}`}
-        label="Vehicle type"
+        label={t('Vehicle type')}
         name="vehicleType"
         options={[
-          { label: 'Car', value: 'car' },
-          { label: 'Two-wheeler', value: 'two_wheeler' },
-          { label: 'Other', value: 'other' },
+          { label: t('Car'), value: 'car' },
+          { label: t('Two-wheeler'), value: 'two_wheeler' },
+          { label: t('Other'), value: 'other' },
         ]}
         required
       />
@@ -168,7 +175,7 @@ function AdminVehicleForm({
         autoComplete="off"
         defaultValue={vehicle?.registration_number}
         id={`admin-vehicle-registration-${vehicle?.id ?? 'new'}`}
-        label="Registration number"
+        label={t('Registration number')}
         maxLength={32}
         name="registrationNumber"
         required
@@ -176,12 +183,12 @@ function AdminVehicleForm({
       <TextInput
         defaultValue={vehicle?.tag_number ?? ''}
         id={`admin-vehicle-tag-${vehicle?.id ?? 'new'}`}
-        label="Parking tag (optional)"
+        label={t('Parking tag (optional)')}
         maxLength={40}
         name="tagNumber"
       />
       <Button disabled={pending} loading={pending} type="submit">
-        {vehicle ? 'Save vehicle' : 'Add vehicle'}
+        {t(vehicle ? 'Save vehicle' : 'Add vehicle')}
       </Button>
       <Message result={result} />
     </form>
@@ -197,6 +204,7 @@ function AdminContactForm({
   members: readonly DirectoryResident[];
   contact?: DirectoryEmergencyContact;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action);
   return (
     <form
@@ -216,17 +224,17 @@ function AdminContactForm({
       {contact ? null : (
         <SelectInput
           id="admin-contact-target"
-          label="Resident and unit"
+          label={t('Resident and unit')}
           name="target"
-          options={targetOptions(members)}
-          placeholder="Choose an active occupant"
+          options={targetOptions(members, t)}
+          placeholder={t('Choose an active occupant')}
           required
         />
       )}
       <TextInput
         defaultValue={contact?.full_name}
         id={`admin-contact-name-${contact?.id ?? 'new'}`}
-        label="Contact name"
+        label={t('Contact name')}
         maxLength={120}
         name="fullName"
         required
@@ -234,7 +242,7 @@ function AdminContactForm({
       <TextInput
         defaultValue={contact?.relationship}
         id={`admin-contact-relationship-${contact?.id ?? 'new'}`}
-        label="Relationship"
+        label={t('Relationship')}
         maxLength={80}
         name="relationship"
         required
@@ -243,13 +251,13 @@ function AdminContactForm({
         autoComplete="tel"
         defaultValue={contact?.phone}
         id={`admin-contact-phone-${contact?.id ?? 'new'}`}
-        label="Phone number"
+        label={t('Phone number')}
         name="phone"
         required
         type="tel"
       />
       <Button disabled={pending} loading={pending} type="submit">
-        {contact ? 'Save contact' : 'Add emergency contact'}
+        {t(contact ? 'Save contact' : 'Add emergency contact')}
       </Button>
       <Message result={result} />
     </form>
@@ -271,6 +279,7 @@ export function DirectoryManagementWorkspace({
   units: readonly SocietyUnit[];
   vehicles: DirectoryPage<DirectoryVehicle>;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   const [residentPage, setResidentPage] = useState(residents);
   const [residentSearch, setResidentSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -380,23 +389,24 @@ export function DirectoryManagementWorkspace({
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">
-          Resident & vehicle directory
+          {t('Resident & vehicle directory')}
         </h1>
         <p className="text-body text-ink-muted">
-          Review active residents, vehicle registrations and household emergency
-          contacts. Committee members have read-only access.
+          {t(
+            'Review active residents, vehicle registrations and household emergency contacts. Committee members have read-only access.',
+          )}
         </p>
       </header>
       <fieldset
-        aria-label="Directory management controls"
+        aria-label={t('Directory management controls')}
         className="grid min-w-0 gap-space-5"
         disabled={pending}
       >
         {loadError ? (
           <>
             <ErrorPanel
-              message={loadError}
-              title="Could not load directory data"
+              message={translateFeedback(loadError)}
+              title={t('Could not load directory data')}
             />
             {retryRead ? (
               <Button
@@ -414,15 +424,16 @@ export function DirectoryManagementWorkspace({
                 }}
                 variant="secondary"
               >
-                Retry directory read
+                {t('Retry directory read')}
               </Button>
             ) : null}
           </>
         ) : null}
-        <Card title="Residents">
+        <Card title={t('Residents')}>
           <p className="text-caption text-ink-muted">
-            Search and page through residents to choose a household for the
-            forms below.
+            {t(
+              'Search and page through residents to choose a household for the forms below.',
+            )}
           </p>
           <form
             className="flex flex-col items-end gap-space-3 medium:flex-row"
@@ -438,12 +449,12 @@ export function DirectoryManagementWorkspace({
           >
             <TextInput
               id="admin-directory-search"
-              label="Search residents by name or unit"
+              label={t('Search residents by name or unit')}
               onChange={(event) => setSearchInput(event.currentTarget.value)}
               value={searchInput}
             />
             <Button disabled={pending} loading={pending} type="submit">
-              Search
+              {t('Search')}
             </Button>
           </form>
           {residentPage.items.length ? (
@@ -454,10 +465,10 @@ export function DirectoryManagementWorkspace({
                   key={`${resident.membership_id}-${index}`}
                 >
                   <p className="text-body-strong">
-                    {resident.full_name || 'Resident'}
+                    {resident.full_name || t('Resident')}
                   </p>
                   <p className="text-caption text-ink-muted">
-                    {resident.unit_number ?? 'Unit not shared'}
+                    {resident.unit_number ?? t('Unit not shared')}
                     {resident.phone ? ` · ${resident.phone}` : ''}
                   </p>
                 </li>
@@ -465,8 +476,8 @@ export function DirectoryManagementWorkspace({
             </ul>
           ) : loadError ? null : (
             <EmptyState
-              description="Try another name or unit number."
-              title="No residents found"
+              description={t('Try another name or unit number.')}
+              title={t('No residents found')}
             />
           )}
           {residentPage.total > 10 ? (
@@ -495,7 +506,7 @@ export function DirectoryManagementWorkspace({
           ) : null}
         </Card>
 
-        <Card title="Vehicles">
+        <Card title={t('Vehicles')}>
           {vehiclePage.items.length ? (
             <ul className="grid gap-space-3">
               {vehiclePage.items.map((vehicle) => {
@@ -510,25 +521,35 @@ export function DirectoryManagementWorkspace({
                     key={vehicle.id}
                   >
                     <p className="text-body-strong">
-                      {vehicle.registration_number} · {vehicle.vehicle_type}
+                      {vehicle.registration_number} ·{' '}
+                      {locale === 'hi'
+                        ? t(
+                            DIRECTORY_LABELS[vehicle.vehicle_type] ??
+                              vehicle.vehicle_type,
+                          )
+                        : vehicle.vehicle_type}
                     </p>
                     <p className="text-caption text-ink-muted">
                       {occupant?.full_name ||
-                        'Resident outside current results'}{' '}
+                        t('Resident outside current results')}{' '}
                       ·{' '}
-                      {occupant?.unit_number ?? 'Unit outside current results'}{' '}
-                      · {vehicle.status}
+                      {occupant?.unit_number ??
+                        t('Unit outside current results')}{' '}
+                      ·{' '}
+                      {locale === 'hi'
+                        ? t(DIRECTORY_LABELS[vehicle.status] ?? vehicle.status)
+                        : vehicle.status}
                       {vehicle.status === 'active'
                         ? vehicle.is_verified
-                          ? ' · verified'
-                          : ' · awaiting verification'
+                          ? t(' · verified')
+                          : t(' · awaiting verification')
                         : ''}
                     </p>
                     {canManage && vehicle.status === 'active' ? (
                       <div className="flex flex-wrap gap-space-3">
                         <details className="w-full">
                           <summary className="min-h-12 cursor-pointer content-center text-brand underline underline-offset-4">
-                            Edit vehicle
+                            {t('Edit vehicle')}
                           </summary>
                           <AdminVehicleForm
                             action={actions.saveDirectoryVehicleAction}
@@ -569,9 +590,11 @@ export function DirectoryManagementWorkspace({
                             type="submit"
                             variant="secondary"
                           >
-                            {vehicle.is_verified
-                              ? 'Revoke verification'
-                              : 'Verify vehicle'}
+                            {t(
+                              vehicle.is_verified
+                                ? 'Revoke verification'
+                                : 'Verify vehicle',
+                            )}
                           </Button>
                         </form>
                         <DeactivateVehicleForm
@@ -586,8 +609,10 @@ export function DirectoryManagementWorkspace({
             </ul>
           ) : (
             <EmptyState
-              description="Vehicle records will appear here when residents register them."
-              title="No vehicles registered"
+              description={t(
+                'Vehicle records will appear here when residents register them.',
+              )}
+              title={t('No vehicles registered')}
             />
           )}
           {vehiclePage.total > 10 ? (
@@ -613,7 +638,7 @@ export function DirectoryManagementWorkspace({
           {canManage ? (
             <details className="mt-space-4">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline underline-offset-4">
-                Add a vehicle for an active resident
+                {t('Add a vehicle for an active resident')}
               </summary>
               <div className="mt-space-3">
                 <AdminVehicleForm
@@ -625,11 +650,11 @@ export function DirectoryManagementWorkspace({
           ) : null}
         </Card>
 
-        <Card title="Emergency contacts">
+        <Card title={t('Emergency contacts')}>
           {contactUnits.length ? (
             <SelectInput
               id="admin-contact-unit"
-              label="Unit"
+              label={t('Unit')}
               onChange={(event) => {
                 const unitId = event.currentTarget.value;
                 setContactUnitId(unitId);
@@ -647,7 +672,7 @@ export function DirectoryManagementWorkspace({
             />
           ) : (
             <p className="text-body text-ink-muted">
-              Add an active unit before managing emergency contacts.
+              {t('Add an active unit before managing emergency contacts.')}
             </p>
           )}
           {contactPage.items.length ? (
@@ -665,7 +690,7 @@ export function DirectoryManagementWorkspace({
                     <>
                       <details>
                         <summary className="min-h-12 cursor-pointer content-center text-brand underline underline-offset-4">
-                          Edit contact
+                          {t('Edit contact')}
                         </summary>
                         <div className="mt-space-3">
                           <AdminContactForm
@@ -688,8 +713,10 @@ export function DirectoryManagementWorkspace({
             </ul>
           ) : (
             <EmptyState
-              description="Emergency contacts for the selected unit will appear here."
-              title="No emergency contacts"
+              description={t(
+                'Emergency contacts for the selected unit will appear here.',
+              )}
+              title={t('No emergency contacts')}
             />
           )}
           {contactPage.total > 10 ? (
@@ -716,7 +743,7 @@ export function DirectoryManagementWorkspace({
           {canManage && contactUnitId ? (
             <details className="mt-space-4">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline underline-offset-4">
-                Add an emergency contact
+                {t('Add an emergency contact')}
               </summary>
               <div className="mt-space-3">
                 <AdminContactForm
@@ -739,6 +766,7 @@ function DeactivateVehicleForm({
   action: MutationAction;
   vehicleId: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action);
   return (
     <form className="grid gap-space-2" onSubmit={(event) => submit(event)}>
@@ -749,7 +777,7 @@ function DeactivateVehicleForm({
         type="submit"
         variant="destructive"
       >
-        Deactivate vehicle
+        {t('Deactivate vehicle')}
       </Button>
       <Message result={result} />
     </form>
@@ -763,6 +791,7 @@ function DeactivateContactForm({
   action: MutationAction;
   contactId: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const { pending, result, submit } = useMutation(action);
   return (
     <form className="grid gap-space-2" onSubmit={(event) => submit(event)}>
@@ -773,7 +802,7 @@ function DeactivateContactForm({
         type="submit"
         variant="destructive"
       >
-        Deactivate contact
+        {t('Deactivate contact')}
       </Button>
       <Message result={result} />
     </form>

@@ -10,6 +10,15 @@ import {
   verifyCodeAction,
   type AuthActionState,
 } from '../../app/(auth)/actions';
+import {
+  translateAuthMessage,
+  translateKnownAuthResponse,
+} from '../../core/i18n/catalogs/hi-auth';
+import {
+  translateFeedbackMessage,
+  type MessageValues,
+} from '../../core/i18n/messages';
+import { useLanguage } from '../language-provider';
 import { Banner } from '../ui/feedback';
 import { Button } from '../ui/button';
 import { TextInput } from '../ui/text-input';
@@ -22,14 +31,20 @@ function maskEmail(email: string): string {
   return `${visible}${'•'.repeat(Math.max(1, local.length - visible.length))}@${domain}`;
 }
 
-function ActionMessage({ state }: { state: AuthActionState | null }) {
+function ActionMessage({
+  state,
+  translateResponse,
+}: {
+  state: AuthActionState | null;
+  translateResponse: (source: string) => string;
+}) {
   if (!state) return null;
   return (
     <Banner tone={state.ok ? 'success' : 'danger'}>
-      <p>{state.message}</p>
+      <p>{translateResponse(state.message ?? 'The request completed.')}</p>
       {!state.ok && state.referenceId ? (
         <p className="mt-space-2 text-caption">
-          Reference ID: <code>{state.referenceId}</code>
+          {translateResponse('Reference ID:')} <code>{state.referenceId}</code>
         </p>
       ) : null}
     </Banner>
@@ -38,6 +53,13 @@ function ActionMessage({ state }: { state: AuthActionState | null }) {
 
 export function SignInFlow({ returnTo }: { returnTo: string | null }) {
   const router = useRouter();
+  const { locale, translate } = useLanguage();
+  const t = (source: string, values?: MessageValues) =>
+    translateAuthMessage(locale, source, values, translate);
+  const translateResponse = (source: string) =>
+    translateKnownAuthResponse(locale, source, (message) =>
+      translateFeedbackMessage(locale, message),
+    );
   const [screen, setScreen] = useState<Screen>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -126,15 +148,21 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
         <>
           <div className="grid gap-space-2">
             <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-              Sign in
+              {t('Sign in')}
             </p>
-            <h1 className="text-heading font-semibold">Welcome to Homeish</h1>
+            <h1 className="text-heading font-semibold">
+              {t('Welcome to Homeish')}
+            </h1>
             <p className="text-body text-ink-muted">
-              Enter the email address your society invited. We’ll send a
-              one-time code if it has access.
+              {t(
+                'Enter the email address your society invited. We’ll send a one-time code if it has access.',
+              )}
             </p>
           </div>
-          <ActionMessage state={requestState} />
+          <ActionMessage
+            state={requestState}
+            translateResponse={translateResponse}
+          />
           <form
             className="grid gap-space-5"
             onSubmit={(event) => submitCodeRequest(event, 'send')}
@@ -142,7 +170,7 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
             <TextInput
               autoComplete="email"
               id="sign-in-email"
-              label="Email address"
+              label={t('Email address')}
               maxLength={254}
               name="email"
               required
@@ -156,20 +184,21 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
               loading={isPending && pendingAction === 'send'}
               type="submit"
             >
-              Send code
+              {t('Send code')}
             </Button>
           </form>
           <p className="text-caption text-ink-muted">
-            We use your email only to confirm your sign-in. Account details are
-            never shown to someone who is not signed in.
+            {t(
+              'We use your email only to confirm your sign-in. Account details are never shown to someone who is not signed in.',
+            )}
           </p>
           <p className="text-caption text-ink-muted">
-            Have a society join code?{' '}
+            {t('Have a society join code?')}{' '}
             <Link
               className="text-brand underline underline-offset-2"
               href="/register"
             >
-              Request access
+              {t('Request access')}
             </Link>
           </p>
         </>
@@ -177,17 +206,28 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
         <>
           <div className="grid gap-space-2">
             <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-              Verify your email
+              {t('Verify your email')}
             </p>
-            <h1 className="text-heading font-semibold">Enter your code</h1>
+            <h1 className="text-heading font-semibold">
+              {t('Enter your code')}
+            </h1>
             <p className="text-body text-ink-muted">
-              If this email has access, a six-digit code was sent to{' '}
-              <strong className="break-all text-ink">{maskEmail(email)}</strong>
-              .
+              {t(
+                'If this email has access, a six-digit code was sent to {email}.',
+                {
+                  email: maskEmail(email),
+                },
+              )}
             </p>
           </div>
-          <ActionMessage state={requestState} />
-          <ActionMessage state={verifyState} />
+          <ActionMessage
+            state={requestState}
+            translateResponse={translateResponse}
+          />
+          <ActionMessage
+            state={verifyState}
+            translateResponse={translateResponse}
+          />
           <form className="grid gap-space-5" onSubmit={submitCode}>
             <input name="email" type="hidden" value={email} />
             {returnTo ? (
@@ -198,7 +238,7 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
               autoFocus
               id="sign-in-code"
               inputMode="numeric"
-              label="Six-digit code"
+              label={t('Six-digit code')}
               maxLength={6}
               name="code"
               pattern="[0-9]{6}"
@@ -215,14 +255,18 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
               loading={isPending && pendingAction === 'verify'}
               type="submit"
             >
-              Verify code
+              {t('Verify code')}
             </Button>
           </form>
           <div className="grid gap-space-2">
             <p aria-live="polite" className="text-caption text-ink-muted">
               {secondsRemaining > 0
-                ? `You can request another code in ${secondsRemaining} seconds.`
-                : 'Didn’t receive the email? Check your spam folder, then request a new code.'}
+                ? t('You can request another code in {seconds} seconds.', {
+                    seconds: secondsRemaining,
+                  })
+                : t(
+                    'Didn’t receive the email? Check your spam folder, then request a new code.',
+                  )}
             </p>
             <form onSubmit={(event) => submitCodeRequest(event, 'resend')}>
               <input name="email" type="hidden" value={email} />
@@ -233,7 +277,7 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
                 type="submit"
                 variant="secondary"
               >
-                Resend code
+                {t('Resend code')}
               </Button>
             </form>
             <Button
@@ -243,14 +287,14 @@ export function SignInFlow({ returnTo }: { returnTo: string | null }) {
               type="button"
               variant="tertiary"
             >
-              Use a different email
+              {t('Use a different email')}
             </Button>
           </div>
         </>
       )}
       <p className="text-center text-caption text-ink-muted">
         <Link className="underline underline-offset-2" href="/">
-          Return to Homeish
+          {t('Return to Homeish')}
         </Link>
       </p>
     </div>

@@ -9,12 +9,14 @@ import {
 } from '@/app/(admin)/admin/billing/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { ChargeType } from '@/core/billing/validation';
-import { rupeesFromPaise } from '@/core/billing/validation';
 import type { BillingPreview } from '@/core/billing/validation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/data-display';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { Banner } from '@/components/ui/feedback';
+import { useUiTranslator } from '@/components/ui/language';
+import { billingDate, billingMoney, billingPeriod } from './presentation';
+import { ActionResult } from './action-state';
 
 type GeneratorUnit = {
   id: string;
@@ -51,24 +53,23 @@ function currentPeriod(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 }
 
-function actionMessage(result: ServerActionResult<unknown> | null) {
-  if (!result) return null;
+function GeneratorMessage({
+  result,
+}: {
+  result: ServerActionResult<unknown> | null;
+}) {
+  const { translate: t } = useUiTranslator();
   return (
-    <Banner tone={result.ok ? 'success' : 'danger'}>
-      <p>{result.message}</p>
-      {!result.ok && result.fieldErrors ? (
-        <ul className="mt-space-2 list-inside list-disc">
-          {Object.entries(result.fieldErrors).map(([field, message]) => (
-            <li key={field}>
-              {field}: {message}
-            </li>
-          ))}
-        </ul>
+    <>
+      <ActionResult result={result} />
+      {result && !result.ok && result.code === 'CONFLICT' ? (
+        <Banner tone="danger">
+          {t(
+            'Refresh the preview and verify the bill details before retrying.',
+          )}
+        </Banner>
       ) : null}
-      {!result.ok && result.code === 'CONFLICT' ? (
-        <p>Refresh the preview and verify the bill details before retrying.</p>
-      ) : null}
-    </Banner>
+    </>
   );
 }
 
@@ -85,6 +86,7 @@ export function BillingGenerator({
   previewAction?: PreviewAction;
   generateAction?: GenerateAction;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const router = useRouter();
   const [periodStart, setPeriodStart] = useState(currentPeriod);
   const [unitIds, setUnitIds] = useState<string[]>([]);
@@ -198,14 +200,15 @@ export function BillingGenerator({
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Generate bills</h1>
+        <h1 className="text-title font-semibold">{t('Generate bills')}</h1>
         <p className="text-body text-ink-muted">
-          Review every amount before publishing. Published bills are immutable;
-          corrections use ledger entries.
+          {t(
+            'Review every amount before publishing. Published bills are immutable; corrections use ledger entries.',
+          )}
         </p>
       </header>
-      {actionMessage(result)}
-      <ol aria-label="Bill generation steps" className="grid gap-space-2">
+      <GeneratorMessage result={result} />
+      <ol aria-label={t('Bill generation steps')} className="grid gap-space-2">
         {['Billing period', 'Units and charges', 'Review', 'Generate'].map(
           (label, index) => (
             <li
@@ -215,18 +218,18 @@ export function BillingGenerator({
               }
               key={label}
             >
-              {index + 1}. {label}
+              {index + 1}. {t(label)}
             </li>
           ),
         )}
       </ol>
       {step === 1 ? (
         <Card
-          description="A billing period is one calendar month."
-          title="1. Choose a billing period"
+          description={t('A billing period is one calendar month.')}
+          title={t('1. Choose a billing period')}
         >
           <label className="grid max-w-sm gap-space-1 text-body-strong">
-            Billing month
+            {t('Billing month')}
             <input
               className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body"
               onChange={(event) => {
@@ -246,18 +249,20 @@ export function BillingGenerator({
             onClick={() => setStep(2)}
             type="button"
           >
-            Choose Units and Charges
+            {t('Choose Units and Charges')}
           </Button>
         </Card>
       ) : null}
       {step === 2 ? (
         <Card
-          description="Select active units and charge types. Custom charges need an amount for each selected unit."
-          title="2. Select units and charges"
+          description={t(
+            'Select active units and charge types. Custom charges need an amount for each selected unit.',
+          )}
+          title={t('2. Select units and charges')}
         >
           <div className="grid gap-space-4">
             <fieldset className="grid gap-space-2">
-              <legend className="text-body-strong">Units</legend>
+              <legend className="text-body-strong">{t('Units')}</legend>
               <div className="flex flex-wrap gap-space-2">
                 <Button
                   onClick={() => {
@@ -268,7 +273,7 @@ export function BillingGenerator({
                   type="button"
                   variant="secondary"
                 >
-                  Select All Units
+                  {t('Select All Units')}
                 </Button>
                 <Button
                   onClick={() => {
@@ -279,7 +284,7 @@ export function BillingGenerator({
                   type="button"
                   variant="secondary"
                 >
-                  Clear Units
+                  {t('Clear Units')}
                 </Button>
               </div>
               {units.length ? (
@@ -295,19 +300,21 @@ export function BillingGenerator({
                           type="checkbox"
                         />
                         {unit.number}
-                        {unit.areaSqft ? ` - ${unit.areaSqft} sq ft` : ''}
+                        {unit.areaSqft
+                          ? t(' - {area} sq ft', { area: unit.areaSqft })
+                          : ''}
                       </label>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <p className="text-body text-ink-muted">
-                  No active units are available.
+                  {t('No active units are available.')}
                 </p>
               )}
             </fieldset>
             <fieldset className="grid gap-space-2">
-              <legend className="text-body-strong">Charge types</legend>
+              <legend className="text-body-strong">{t('Charge types')}</legend>
               {charges.length ? (
                 <ul className="grid gap-space-2 sm:grid-cols-2">
                   {charges.map((charge) => (
@@ -324,21 +331,29 @@ export function BillingGenerator({
                           }
                           type="checkbox"
                         />
-                        {charge.name} ({charge.method.replace('_', ' ')})
+                        {charge.name} (
+                        {t(
+                          {
+                            fixed: 'Fixed per unit',
+                            per_sqft: 'Per square foot',
+                            custom: 'Custom per unit',
+                          }[charge.method],
+                        )}
+                        )
                       </label>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <p className="text-body text-ink-muted">
-                  Add an active charge type before generating bills.
+                  {t('Add an active charge type before generating bills.')}
                 </p>
               )}
             </fieldset>
             {selectedCustomCharges.length ? (
               <fieldset className="grid gap-space-3">
                 <legend className="text-body-strong">
-                  Custom amounts (INR)
+                  {t('Custom amounts (INR)')}
                 </legend>
                 {selectedCustomCharges.map((charge) =>
                   unitIds.map((unitId) => {
@@ -349,7 +364,10 @@ export function BillingGenerator({
                         className="grid max-w-sm gap-space-1 text-body-strong"
                         key={key}
                       >
-                        {charge.name} - Unit {unit?.number ?? ''}
+                        {t('{charge} - Unit {unit}', {
+                          charge: charge.name,
+                          unit: unit?.number ?? '',
+                        })}
                         <input
                           className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body"
                           inputMode="decimal"
@@ -375,7 +393,7 @@ export function BillingGenerator({
               type="button"
               variant="secondary"
             >
-              Back to Period
+              {t('Back to Period')}
             </Button>
             <Button
               disabled={
@@ -385,39 +403,58 @@ export function BillingGenerator({
               onClick={showPreview}
               type="button"
             >
-              Preview Bills
+              {t('Preview Bills')}
             </Button>
           </div>
         </Card>
       ) : null}
       {preview && step === 3 ? (
         <Card
-          description="Review the due date and exact calculated amounts. Already-generated charges are excluded from the new total."
-          title="3. Review bill preview"
+          description={t(
+            'Review the due date and exact calculated amounts. Already-generated charges are excluded from the new total.',
+          )}
+          title={t('3. Review bill preview')}
         >
           <dl className="mb-space-4 grid gap-space-2 text-body">
             <div>
-              <dt className="inline font-semibold">Billing period: </dt>
-              <dd className="inline">{preview.period_start}</dd>
-            </div>
-            <div>
-              <dt className="inline font-semibold">Due date: </dt>
-              <dd className="inline">{preview.due_date}</dd>
-            </div>
-            <div>
-              <dt className="inline font-semibold">Selected units: </dt>
-              <dd className="inline">{preview.unit_count}</dd>
-            </div>
-            <div>
-              <dt className="inline font-semibold">New charges: </dt>
+              <dt className="inline font-semibold">{t('Billing period')}: </dt>
               <dd className="inline">
-                {preview.new_line_count} line(s), INR{' '}
-                {rupeesFromPaise(preview.new_total_paise)}
+                {billingPeriod(preview.period_start, locale)}
               </dd>
             </div>
             <div>
-              <dt className="inline font-semibold">Area rounding: </dt>
-              <dd className="inline">Nearest {rounding}, half up</dd>
+              <dt className="inline font-semibold">{t('Due date')}: </dt>
+              <dd className="inline">
+                {billingDate(preview.due_date, locale)}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-semibold">{t('Selected units')}: </dt>
+              <dd className="inline">{preview.unit_count}</dd>
+            </div>
+            <div>
+              <dt className="inline font-semibold">{t('New charges')}: </dt>
+              <dd className="inline">
+                {t(
+                  preview.new_line_count === 1
+                    ? '{count} line, {amount}'
+                    : '{count} lines, {amount}',
+                  {
+                    count: preview.new_line_count,
+                    amount: billingMoney(preview.new_total_paise, locale),
+                  },
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-semibold">{t('Area rounding')}: </dt>
+              <dd className="inline">
+                {t(
+                  rounding === 'rupee'
+                    ? 'Nearest rupee, half up'
+                    : 'Nearest paise, half up',
+                )}
+              </dd>
             </div>
           </dl>
           <ul className="grid gap-space-2">
@@ -428,15 +465,17 @@ export function BillingGenerator({
               >
                 <span>
                   {line.unit_number} - {line.charge_name}
-                  {line.already_generated ? ' (already generated)' : ''}
+                  {line.already_generated ? t(' (already generated)') : ''}
                 </span>
-                <span>INR {rupeesFromPaise(line.amount_paise)}</span>
+                <span>{billingMoney(line.amount_paise, locale)}</span>
               </li>
             ))}
           </ul>
           {preview.new_line_count === 0 ? (
             <Banner tone="info">
-              All selected unit and charge combinations already have bills.
+              {t(
+                'All selected unit and charge combinations already have bills.',
+              )}
             </Banner>
           ) : (
             <div className="mt-space-4 flex flex-wrap gap-space-2">
@@ -445,7 +484,7 @@ export function BillingGenerator({
                 type="button"
                 variant="secondary"
               >
-                Back to Units and Charges
+                {t('Back to Units and Charges')}
               </Button>
               <Button
                 disabled={pending}
@@ -455,25 +494,32 @@ export function BillingGenerator({
                 }}
                 type="button"
               >
-                Review and Generate
+                {t('Review and Generate')}
               </Button>
             </div>
           )}
         </Card>
       ) : null}
       <ConfirmDialog
-        actionLabel="Generate Bills"
+        actionLabel={t('Generate Bills')}
         description={
           preview
-            ? `${preview.new_line_count} new charge line(s), totaling INR ${rupeesFromPaise(preview.new_total_paise)}, due on ${preview.due_date}. Residents in selected units will be notified.`
-            : 'Review the bill preview before generating.'
+            ? t(
+                '{count} new charge lines, totaling {amount}, due on {date}. Residents in selected units will be notified.',
+                {
+                  count: preview.new_line_count,
+                  amount: billingMoney(preview.new_total_paise, locale),
+                  date: billingDate(preview.due_date, locale),
+                },
+              )
+            : t('Review the bill preview before generating.')
         }
         id="billing-generate-confirm"
         loading={pending}
         onConfirm={generate}
         onOpenChange={setConfirming}
         open={confirming}
-        title="Publish these bills?"
+        title={t('Publish these bills?')}
         variant="primary"
       />
     </section>

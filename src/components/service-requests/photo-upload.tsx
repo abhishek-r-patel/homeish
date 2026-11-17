@@ -1,6 +1,7 @@
 // Upload up to three private request photos before submitting a request.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useEffect, useRef, useState } from 'react';
 import { publicEnvironment } from '@/core/config/public-env';
 
@@ -27,6 +28,7 @@ export function ServiceRequestPhotoUpload({
   getRequestId: () => string;
   requestId: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [paths, setPaths] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -125,7 +127,7 @@ export function ServiceRequestPhotoUpload({
         className="grid min-w-0 gap-space-1 text-body-strong"
         htmlFor="request-photos"
       >
-        Photos (optional, up to 3)
+        {t('Photos (optional, up to 3)')}
         <input
           accept="image/jpeg,image/png"
           className="min-h-12 w-full min-w-0 max-w-full rounded-md border border-rule px-space-3 py-space-2"
@@ -142,7 +144,7 @@ export function ServiceRequestPhotoUpload({
           className="flex items-center justify-between gap-space-3 text-caption"
           key={path}
         >
-          <span>Photo attached</span>
+          <span>{t('Photo attached')}</span>
           <button
             className="min-h-10 rounded-md px-space-2 text-danger underline"
             onClick={() =>
@@ -150,7 +152,7 @@ export function ServiceRequestPhotoUpload({
             }
             type="button"
           >
-            Remove photo
+            {t('Remove photo')}
           </button>
         </div>
       ))}
@@ -159,7 +161,11 @@ export function ServiceRequestPhotoUpload({
         className="text-caption text-ink-muted"
         role="status"
       >
-        {uploading ? 'Uploading photos…' : message}
+        {uploading
+          ? t('Uploading photos…')
+          : message
+            ? translateFeedback(message)
+            : null}
       </p>
     </div>
   );

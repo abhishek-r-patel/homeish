@@ -10,19 +10,22 @@ import {
   listDeliveryEntries,
   listDeliveryUnits,
 } from '@/core/delivery/operations';
+import { formatLocalizedDateTime } from '@/core/i18n/format';
 import { updateDeliverySettingsAction } from './actions';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Delivery management | Homeish',
   robots: { index: false, follow: false },
 };
 
-function dateTime(value: string, timeZone: string) {
-  return new Intl.DateTimeFormat(undefined, {
+function dateTime(value: string, locale: 'en' | 'hi', timeZone: string) {
+  return formatLocalizedDateTime(new Date(value), locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone,
-  }).format(new Date(value));
+  });
 }
 
 function unitLabel(unit: { block: string | null; number: string }) {
@@ -34,6 +37,8 @@ export default async function AdminDeliveriesPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   const access = await getDeliveryAdminAccess();
   const [{ q, status }, entries, units, settings, societyId, timezone] =
     await Promise.all([
@@ -57,21 +62,31 @@ export default async function AdminDeliveriesPage({
         false);
     return matchesStatus && matchesQuery;
   });
+  const deliveryStatusLabels: Readonly<Record<string, string>> = {
+    pending_response: 'Waiting',
+    allowed: 'Allowed inside',
+    left_at_gate: 'Left at gate',
+    denied: 'Denied / returned',
+    collected: 'Collected',
+    closed: 'Closed',
+  };
 
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Delivery management</h1>
+        <h1 className="text-title font-semibold">{t('Delivery management')}</h1>
         <p className="text-body text-ink-muted">
-          Review delivery activity and configure response and collection rules.
+          {t(
+            'Review delivery activity and configure response and collection rules.',
+          )}
         </p>
       </header>
       <DeliveryRealtimeRefresh societyId={societyId} />
 
       {access.canManage && settings ? (
         <Card
-          description="Updates apply immediately to new delivery requests."
-          title="Delivery settings"
+          description={t('Updates apply immediately to new delivery requests.')}
+          title={t('Delivery settings')}
         >
           <DeliveryActionForm
             action={updateDeliverySettingsAction}
@@ -81,7 +96,7 @@ export default async function AdminDeliveriesPage({
               className="grid gap-space-1 text-body-strong"
               htmlFor="delivery-response-timeout"
             >
-              Resident response timeout (minutes)
+              {t('Resident response timeout (minutes)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 defaultValue={settings.response_timeout_minutes}
@@ -97,7 +112,7 @@ export default async function AdminDeliveriesPage({
               className="grid gap-space-1 text-body-strong"
               htmlFor="delivery-uncollected-days"
             >
-              Mark uncollected after (days)
+              {t('Mark uncollected after (days)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 defaultValue={settings.uncollected_days}
@@ -115,25 +130,25 @@ export default async function AdminDeliveriesPage({
                 name="leaveAtGateEnabled"
                 type="checkbox"
               />
-              Allow residents to request leaving deliveries at the gate
+              {t('Allow residents to request leaving deliveries at the gate')}
             </label>
             <button
               className="min-h-12 w-fit rounded-md bg-brand px-space-4 font-semibold text-white focus-visible:outline-2 focus-visible:outline-focus"
               type="submit"
             >
-              Save settings
+              {t('Save settings')}
             </button>
           </DeliveryActionForm>
         </Card>
       ) : null}
 
-      <Card title="Delivery log">
+      <Card title={t('Delivery log')}>
         <form className="mb-space-4 flex flex-wrap gap-space-2" method="get">
           <label
             className="grid gap-space-1 text-caption"
             htmlFor="delivery-search"
           >
-            Search company, person or unit
+            {t('Search company, person or unit')}
             <input
               className="min-h-11 rounded-md border border-rule px-space-3"
               defaultValue={q ?? ''}
@@ -145,27 +160,27 @@ export default async function AdminDeliveriesPage({
             className="grid gap-space-1 text-caption"
             htmlFor="delivery-status"
           >
-            Status
+            {t('Status')}
             <select
               className="min-h-11 rounded-md border border-rule bg-surface px-space-3"
               defaultValue={status ?? 'all'}
               id="delivery-status"
               name="status"
             >
-              <option value="all">All</option>
-              <option value="pending_response">Waiting</option>
-              <option value="allowed">Allowed inside</option>
-              <option value="left_at_gate">Left at gate</option>
-              <option value="denied">Denied / returned</option>
-              <option value="collected">Collected</option>
-              <option value="closed">Closed</option>
+              <option value="all">{t('All')}</option>
+              <option value="pending_response">{t('Waiting')}</option>
+              <option value="allowed">{t('Allowed inside')}</option>
+              <option value="left_at_gate">{t('Left at gate')}</option>
+              <option value="denied">{t('Denied / returned')}</option>
+              <option value="collected">{t('Collected')}</option>
+              <option value="closed">{t('Closed')}</option>
             </select>
           </label>
           <button
             className="min-h-11 self-end rounded-md bg-brand px-space-4 font-semibold text-white"
             type="submit"
           >
-            Filter
+            {t('Filter')}
           </button>
         </form>
         {visibleEntries.length ? (
@@ -177,15 +192,16 @@ export default async function AdminDeliveriesPage({
               >
                 <p className="text-body-strong">{entry.company}</p>
                 <p className="text-caption text-ink-muted">
-                  {unitLabels.get(entry.unit_id) ?? 'Unit'} ·{' '}
-                  {entry.delivery_type} · {entry.status.replaceAll('_', ' ')}
+                  {unitLabels.get(entry.unit_id) ?? t('Unit')} ·{' '}
+                  {entry.delivery_type} ·{' '}
+                  {t(deliveryStatusLabels[entry.status] ?? entry.status)}
                   {entry.delivery_person ? ` · ${entry.delivery_person}` : ''}
                 </p>
                 <time
                   className="text-caption text-ink-muted"
                   dateTime={entry.created_at}
                 >
-                  {dateTime(entry.created_at, timezone)}
+                  {dateTime(entry.created_at, locale, timezone)}
                 </time>
                 {entry.photo_url ? (
                   <a
@@ -194,12 +210,12 @@ export default async function AdminDeliveriesPage({
                     rel="noreferrer"
                     target="_blank"
                   >
-                    View delivery photo
+                    {t('View delivery photo')}
                   </a>
                 ) : null}
                 {entry.is_uncollected_overdue ? (
                   <p className="text-caption text-danger">
-                    Uncollected beyond the configured threshold.
+                    {t('Uncollected beyond the configured threshold.')}
                   </p>
                 ) : null}
               </li>
@@ -207,7 +223,7 @@ export default async function AdminDeliveriesPage({
           </ol>
         ) : (
           <p className="text-body text-ink-muted">
-            No deliveries match these filters.
+            {t('No deliveries match these filters.')}
           </p>
         )}
       </Card>

@@ -441,7 +441,7 @@ test('proof upload limits, Storage retries and attachment retries never imply pr
   expect(requests).toHaveLength(signedRequests);
 });
 
-for (const fault of ['scope', 'origin', 'url-path'] as const) {
+for (const fault of ['scope', 'origin', 'url-path', 'url-encoding'] as const) {
   test(`rejects a ${fault} mismatch before sending a private proof`, async ({
     page,
   }) => {
@@ -461,7 +461,9 @@ for (const fault of ['scope', 'origin', 'url-path'] as const) {
       const urlPath =
         fault === 'url-path'
           ? path.replace(request.moveId, OTHER_MOVE_ID)
-          : path;
+          : fault === 'url-encoding'
+            ? `${path}%`
+            : path;
       await route.fulfill({
         json: {
           ok: true,

@@ -8,6 +8,8 @@ import {
   getNoticeComposeOptions,
   getNoticeDetail,
 } from '@/core/notices/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Edit notice | Homeish',
@@ -19,6 +21,8 @@ export default async function EditNoticePage({
 }: {
   params: Promise<{ noticeId: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   const { noticeId } = await params;
   if (!z.uuid().safeParse(noticeId).success) notFound();
   const [{ notice }, { blocks }] = await Promise.all([
@@ -30,18 +34,18 @@ export default async function EditNoticePage({
       className="text-body text-brand underline"
       href={`/admin/notices/${notice.id}`}
     >
-      Back to notice
+      {t('Back to notice')}
     </Link>
   );
   if (!notice.can_manage || notice.status === 'withdrawn') {
     return (
       <section className="grid min-w-0 gap-space-5">
         {backLink}
-        <h1 className="text-title font-semibold">Edit notice</h1>
+        <h1 className="text-title font-semibold">{t('Edit notice')}</h1>
         <p className="text-body text-ink-muted">
           {notice.status === 'withdrawn'
-            ? 'A withdrawn notice can no longer be edited.'
-            : 'Only the author or an administrator can edit this notice.'}
+            ? t('A withdrawn notice can no longer be edited.')
+            : t('Only the author or an administrator can edit this notice.')}
         </p>
       </section>
     );
@@ -50,7 +54,7 @@ export default async function EditNoticePage({
     <section className="grid min-w-0 max-w-content-narrow gap-space-5">
       <header className="grid gap-space-2">
         {backLink}
-        <h1 className="text-title font-semibold">Edit notice</h1>
+        <h1 className="text-title font-semibold">{t('Edit notice')}</h1>
       </header>
       <Card className="min-w-0">
         <NoticeForm blocks={blocks} notice={notice} />

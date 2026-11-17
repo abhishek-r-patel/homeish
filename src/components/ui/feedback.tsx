@@ -4,6 +4,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { FocusEvent, ReactNode } from 'react';
 import { Button } from './button';
+import { useUiTranslator } from './language';
 
 type BannerTone = 'info' | 'success' | 'warning' | 'danger' | 'neutral';
 
@@ -40,6 +41,8 @@ export function Banner({
   title,
   tone = 'info',
 }: BannerProps) {
+  const { translate } = useUiTranslator();
+
   return (
     <div
       className={`flex w-full items-start gap-space-3 rounded-md border p-space-4 ${bannerToneClasses[tone]}`}
@@ -58,7 +61,7 @@ export function Banner({
       </div>
       {dismissible && onDismiss ? (
         <Button
-          aria-label="Dismiss message"
+          aria-label={translate('Dismiss message')}
           iconOnly
           leadingIcon={
             <svg fill="none" viewBox="0 0 24 24">
@@ -91,6 +94,7 @@ export function Toast({
   onDismiss,
   onUndo,
 }: ToastProps) {
+  const { translate } = useUiTranslator();
   const [paused, setPaused] = useState(false);
   const remainingMs = useRef(durationMs);
 
@@ -133,11 +137,11 @@ export function Toast({
       <p className="min-w-0 flex-1 text-body">{message}</p>
       {onUndo ? (
         <Button onClick={onUndo} variant="tertiary">
-          Undo
+          {translate('Undo')}
         </Button>
       ) : null}
       <Button
-        aria-label="Dismiss notification"
+        aria-label={translate('Dismiss notification')}
         iconOnly
         leadingIcon={
           <svg fill="none" viewBox="0 0 24 24">
@@ -167,10 +171,8 @@ type ErrorSummaryProps = {
   title?: string;
 };
 
-export function ErrorSummary({
-  errors,
-  title = 'There is a problem',
-}: ErrorSummaryProps) {
+export function ErrorSummary({ errors, title }: ErrorSummaryProps) {
+  const { translate } = useUiTranslator();
   const id = useId();
   const summaryRef = useRef<HTMLDivElement>(null);
 
@@ -193,7 +195,7 @@ export function ErrorSummary({
       tabIndex={-1}
     >
       <h2 className="text-subheading" id={`${id}-title`}>
-        {title}
+        {title ?? translate('There is a problem')}
       </h2>
       <ul className="mt-space-2 list-inside list-disc">
         {errors.map((error) => (
@@ -219,8 +221,9 @@ export function ErrorPanel({
   action,
   message,
   referenceId,
-  title = 'We could not complete that request',
+  title,
 }: ErrorPanelProps) {
+  const { translate } = useUiTranslator();
   const id = useId();
 
   return (
@@ -230,12 +233,13 @@ export function ErrorPanel({
       role="alert"
     >
       <h2 className="text-heading" id={`${id}-title`}>
-        {title}
+        {title ?? translate('We could not complete that request')}
       </h2>
       <p className="text-body">{message}</p>
       {referenceId ? (
         <p className="text-caption text-ink-muted">
-          Reference ID: <code className="font-mono">{referenceId}</code>
+          {translate('Reference ID:')}{' '}
+          <code className="font-mono">{referenceId}</code>
         </p>
       ) : null}
       {action}
@@ -280,14 +284,13 @@ type SkeletonProps = {
   rows?: number;
 };
 
-export function Skeleton({
-  label = 'Loading content',
-  rows = 3,
-}: SkeletonProps) {
+export function Skeleton({ label, rows = 3 }: SkeletonProps) {
+  const { translate } = useUiTranslator();
+  const loadingLabel = label ?? translate('Loading content');
   const rowCount = Math.max(1, Math.min(rows, 8));
 
   return (
-    <div aria-busy="true" aria-label={label} role="status">
+    <div aria-busy="true" aria-label={loadingLabel} role="status">
       <div aria-hidden="true" className="grid gap-space-3">
         {Array.from({ length: rowCount }, (_, index) => (
           <span
@@ -296,7 +299,7 @@ export function Skeleton({
           />
         ))}
       </div>
-      <span className="sr-only">{label}</span>
+      <span className="sr-only">{loadingLabel}</span>
     </div>
   );
 }
@@ -305,9 +308,11 @@ type SpinnerProps = {
   label?: string;
 };
 
-export function Spinner({ label = 'Loading' }: SpinnerProps) {
+export function Spinner({ label }: SpinnerProps) {
+  const { translate } = useUiTranslator();
+
   return (
-    <span aria-label={label} role="status">
+    <span aria-label={label ?? translate('Loading')} role="status">
       <span
         aria-hidden="true"
         className="inline-block size-6 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"

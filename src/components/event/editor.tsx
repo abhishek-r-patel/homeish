@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import { CheckboxInput, RadioGroup } from '@/components/ui/choice-controls';
 import { Banner, EmptyState } from '@/components/ui/feedback';
 import { Card } from '@/components/ui/data-display';
@@ -102,6 +104,7 @@ function EventDateTimePicker({
   value: string | null;
   onChange: (value: string | null) => void;
 }) {
+  const { translate: t } = useUiTranslator();
   const initial = timeParts(value);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -109,7 +112,7 @@ function EventDateTimePicker({
     <div className="grid gap-space-2">
       <DatePicker
         id={`${id}-date`}
-        label={`${label} date`}
+        label={t('{label} date', { label })}
         value={date}
         onChange={(next) => {
           setDate(next);
@@ -118,7 +121,7 @@ function EventDateTimePicker({
       />
       <TimePicker
         id={`${id}-time`}
-        label={`${label} time`}
+        label={t('{label} time', { label })}
         value={time}
         onChange={(next) => {
           setTime(next);
@@ -149,6 +152,7 @@ export function EventEditor({
   billingEnabled: boolean;
   action: ModuleFormAction;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const router = useRouter();
   const id = useId();
   const event = detail?.event ?? null;
@@ -236,15 +240,17 @@ export function EventEditor({
   if (!editable) {
     return (
       <EmptyState
-        title="This event can no longer be edited"
-        description="Cancelled and finished events keep their details as recorded."
+        title={t('This event can no longer be edited')}
+        description={t(
+          'Cancelled and finished events keep their details as recorded.',
+        )}
         action={
           event ? (
             <Link
               className={EVENT_LINK_CLASS}
               href={`/admin/events/${event.id}`}
             >
-              Back to the event
+              {t('Back to the event')}
             </Link>
           ) : undefined
         }
@@ -263,31 +269,34 @@ export function EventEditor({
         className={EVENT_LINK_CLASS}
         href={event ? `/admin/events/${event.id}` : '/admin/events'}
       >
-        {event ? 'Back to the event' : 'Back to Events'}
+        {t(event ? 'Back to the event' : 'Back to Events')}
       </Link>
       <h1 className="text-title font-semibold">
-        {event ? 'Edit event' : 'New event'}
+        {t(event ? 'Edit event' : 'New event')}
       </h1>
       {event?.status === 'published' ? (
         <p className="text-body text-ink-muted">
-          This event is published. Changing the start, end or venue notifies the
-          invited homes again.
+          {t(
+            'This event is published. Changing the start, end or venue notifies the invited homes again.',
+          )}
         </p>
       ) : (
         <p className="text-body text-ink-muted">
-          Save a draft now and finish it later. Residents are only notified when
-          you publish it.
+          {t(
+            'Save a draft now and finish it later. Residents are only notified when you publish it.',
+          )}
         </p>
       )}
       {chargesSomething && !billingEnabled ? (
-        <Banner title="Billing is turned off" tone="warning">
-          You can save this draft, but an event with a contribution cannot be
-          published until Billing is turned on.
+        <Banner title={t('Billing is turned off')} tone="warning">
+          {t(
+            'You can save this draft, but an event with a contribution cannot be published until Billing is turned on.',
+          )}
         </Banner>
       ) : null}
       <ModuleActionForm
         action={action}
-        submitLabel={event ? 'Save Changes' : 'Save Draft'}
+        submitLabel={t(event ? 'Save Changes' : 'Save Draft')}
         idempotent={!event}
         input={(_form, clientRequestId) =>
           event
@@ -307,11 +316,11 @@ export function EventEditor({
             router.push(`/admin/events/${parsed.data.eventId}`);
         }}
       >
-        <Card title="Details">
+        <Card title={t('Details')}>
           <div className="grid min-w-0 gap-space-4">
             <TextInput
               id={`${id}-title`}
-              label="Event title"
+              label={t('Event title')}
               value={title}
               maxLength={EVENT_TITLE_MAX}
               required
@@ -319,7 +328,7 @@ export function EventEditor({
             />
             <TextAreaInput
               id={`${id}-description`}
-              label="Description (optional)"
+              label={t('Description (optional)')}
               value={description}
               maxLength={EVENT_DESCRIPTION_MAX}
               rows={4}
@@ -328,25 +337,25 @@ export function EventEditor({
           </div>
         </Card>
         <Card
-          title="When and where"
-          description="All times are India time (IST)."
+          title={t('When and where')}
+          description={t('All times are India time (IST).')}
         >
           <div className="grid min-w-0 gap-space-4">
             <EventDateTimePicker
               id={`${id}-starts`}
-              label="Starts"
+              label={t('Starts')}
               value={startsAt}
               onChange={setStartsAt}
             />
             <EventDateTimePicker
               id={`${id}-ends`}
-              label="Ends"
+              label={t('Ends')}
               value={endsAt}
               onChange={setEndsAt}
             />
             <TextInput
               id={`${id}-venue`}
-              label="Venue (optional)"
+              label={t('Venue (optional)')}
               value={venue}
               maxLength={EVENT_VENUE_MAX}
               onChange={(change) => setVenue(change.currentTarget.value)}
@@ -354,14 +363,16 @@ export function EventEditor({
           </div>
         </Card>
         <Card
-          title="RSVPs and limits"
-          description="Leave a limit blank for no limit."
+          title={t('RSVPs and limits')}
+          description={t('Leave a limit blank for no limit.')}
         >
           <div className="grid min-w-0 gap-space-4">
             <CheckboxInput
               id={`${id}-has-deadline`}
-              label="Close RSVPs before the event starts"
-              description="Without a deadline, RSVPs close when the event starts."
+              label={t('Close RSVPs before the event starts')}
+              description={t(
+                'Without a deadline, RSVPs close when the event starts.',
+              )}
               checked={hasDeadline}
               onChange={(change) =>
                 setHasDeadline(change.currentTarget.checked)
@@ -370,23 +381,23 @@ export function EventEditor({
             {hasDeadline ? (
               <EventDateTimePicker
                 id={`${id}-deadline`}
-                label="RSVP deadline"
+                label={t('RSVP deadline')}
                 value={rsvpDeadline}
                 onChange={setRsvpDeadline}
               />
             ) : null}
             <TextInput
               id={`${id}-capacity`}
-              label="Capacity in people (optional)"
+              label={t('Capacity in people (optional)')}
               inputMode="numeric"
               value={capacity}
               maxLength={String(EVENT_CAPACITY_MAX).length}
-              helpText="RSVPs are refused once this many people are going."
+              helpText={t('RSVPs are refused once this many people are going.')}
               onChange={(change) => setCapacity(change.currentTarget.value)}
             />
             <TextInput
               id={`${id}-max-per-unit`}
-              label="Most people per flat (optional)"
+              label={t('Most people per flat (optional)')}
               inputMode="numeric"
               value={maxPerUnit}
               maxLength={String(EVENT_HEADCOUNT_MAX).length}
@@ -395,8 +406,10 @@ export function EventEditor({
           </div>
         </Card>
         <Card
-          title="Contribution"
-          description="Contributions are added to the flat's maintenance bill when it RSVPs going."
+          title={t('Contribution')}
+          description={t(
+            "Contributions are added to the flat's maintenance bill when it RSVPs going.",
+          )}
         >
           {contributionLocked && event ? (
             <div className="grid gap-space-2">
@@ -404,10 +417,13 @@ export function EventEditor({
                 {describeContribution(
                   event.contributionType,
                   event.contributionPaise,
+                  locale,
                 )}
               </p>
               <p className="text-caption text-ink-muted">
-                The contribution cannot be changed after the event is published.
+                {t(
+                  'The contribution cannot be changed after the event is published.',
+                )}
               </p>
             </div>
           ) : (
@@ -415,9 +431,13 @@ export function EventEditor({
               <RadioGroup
                 id={`${id}-contribution-type`}
                 name="contributionType"
-                label="How is the contribution charged?"
+                label={t('How is the contribution charged?')}
                 value={contributionType}
-                options={CONTRIBUTION_OPTIONS}
+                options={CONTRIBUTION_OPTIONS.map((option) => ({
+                  ...option,
+                  label: t(option.label),
+                  description: t(option.description),
+                }))}
                 onChange={(value) => {
                   const next = CONTRIBUTION_OPTIONS.find(
                     (option) => option.value === value,
@@ -428,32 +448,34 @@ export function EventEditor({
               {contributionType !== 'none' ? (
                 <AmountInput
                   id={`${id}-amount`}
-                  label={
+                  label={t(
                     contributionType === 'per_unit'
                       ? 'Amount per flat'
-                      : 'Amount per person'
-                  }
+                      : 'Amount per person',
+                  )}
                   value={amount}
                   required
-                  helpText="Up to ₹1,00,000. It cannot be changed after publishing."
+                  helpText={t(
+                    'Up to ₹1,00,000. It cannot be changed after publishing.',
+                  )}
                   onChange={(change) => setAmount(change.currentTarget.value)}
                 />
               ) : null}
             </div>
           )}
         </Card>
-        <Card title="Who is invited">
+        <Card title={t('Who is invited')}>
           <div className="grid min-w-0 gap-space-4">
             <RadioGroup
               id={`${id}-audience`}
               name="audienceScope"
-              label="Invite"
+              label={t('Invite')}
               value={scope}
               options={[
-                { value: 'all', label: 'Every flat in the society' },
+                { value: 'all', label: t('Every flat in the society') },
                 {
                   value: 'blocks',
-                  label: 'Only flats in chosen blocks',
+                  label: t('Only flats in chosen blocks'),
                 },
               ]}
               onChange={(value) =>
@@ -463,14 +485,25 @@ export function EventEditor({
             {scope === 'blocks' ? (
               blocks.length === 0 ? (
                 <EmptyState
-                  title="No active blocks"
-                  description="Add blocks in Society setup, or invite every flat."
+                  title={t('No active blocks')}
+                  description={t(
+                    'Add blocks in Society setup, or invite every flat.',
+                  )}
                 />
               ) : (
                 <fieldset className="grid min-w-0 gap-space-2">
-                  <legend className="text-body-strong">Blocks</legend>
+                  <legend className="text-body-strong">{t('Blocks')}</legend>
                   <p role="status" className="text-caption text-ink-muted">
-                    {blockIds.size} of {blocks.length} blocks chosen
+                    {t('{count} of {total} blocks chosen', {
+                      count: formatLocalizedNumber(
+                        blockIds.size,
+                        locale ?? 'en',
+                      ),
+                      total: formatLocalizedNumber(
+                        blocks.length,
+                        locale ?? 'en',
+                      ),
+                    })}
                   </p>
                   {blocks.map((block) => (
                     <CheckboxInput

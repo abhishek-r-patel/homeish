@@ -27,6 +27,8 @@ import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { Banner } from '@/components/ui/feedback';
 import { Tabs } from '@/components/ui/tabs';
 import { TextInput } from '@/components/ui/text-input';
+import { useUiTranslator } from '@/components/ui/language';
+import { billingMoney, billingTimestamp } from './presentation';
 import { BillingQrUpload } from './qr-upload';
 
 type ChargeAction = (data: FormData) => Promise<ServerActionResult<ChargeType>>;
@@ -67,26 +69,28 @@ function ActionMessage({
 }: {
   result: ServerActionResult<unknown> | null;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (!result) return null;
   return (
     <Banner tone={result.ok ? 'success' : 'danger'}>
-      <p>{result.message}</p>
+      <p>{result.message ? translateFeedback(result.message) : null}</p>
       {!result.ok && result.fieldErrors ? (
         <ul className="mt-space-2 list-inside list-disc">
           {Object.entries(result.fieldErrors).map(([field, message]) => (
-            <li key={field}>{message}</li>
+            <li key={field}>{translateFeedback(message)}</li>
           ))}
         </ul>
       ) : null}
       {!result.ok && result.code === 'CONFLICT' ? (
         <p>
-          These details changed or the charge name already exists. Refresh and
-          review before saving again.
+          {t(
+            'These details changed or the charge name already exists. Refresh and review before saving again.',
+          )}
         </p>
       ) : null}
       {!result.ok && result.referenceId ? (
         <p>
-          Reference ID: <code>{result.referenceId}</code>
+          {t('Reference ID')}: <code>{result.referenceId}</code>
         </p>
       ) : null}
     </Banner>
@@ -120,6 +124,7 @@ function ChargeForm({
   onPendingChange: (pending: boolean) => void;
   onSaved: () => void;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [method, setMethod] = useState<ChargeType['method']>(
     charge?.method ?? 'fixed',
   );
@@ -188,9 +193,13 @@ function ChargeForm({
       <fieldset className="grid gap-space-4" disabled={pending}>
         <TextInput
           defaultValue={charge?.name ?? ''}
-          error={result && !result.ok ? result.fieldErrors?.name : undefined}
+          error={
+            result && !result.ok && result.fieldErrors?.name
+              ? translateFeedback(result.fieldErrors.name)
+              : undefined
+          }
           id="billing-charge-name"
-          label="Charge name"
+          label={t('Charge name')}
           maxLength={120}
           minLength={2}
           name="name"
@@ -200,7 +209,7 @@ function ChargeForm({
           className="grid gap-space-1 text-body-strong"
           htmlFor="billing-charge-method"
         >
-          Calculation method
+          {t('Calculation method')}
           <select
             className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
             id="billing-charge-method"
@@ -213,14 +222,14 @@ function ChargeForm({
           >
             {Object.entries(methodLabels).map(([value, label]) => (
               <option key={value} value={value}>
-                {label}
+                {t(label)}
               </option>
             ))}
           </select>
         </label>
         {method === 'custom' ? (
           <p className="text-body text-ink-muted">
-            Enter each unit&apos;s amount when generating bills.
+            {t("Enter each unit's amount when generating bills.")}
           </p>
         ) : (
           <TextInput
@@ -230,15 +239,19 @@ function ChargeForm({
             error={
               result && !result.ok
                 ? result.fieldErrors?.amountRupees
+                  ? translateFeedback(result.fieldErrors.amountRupees)
+                  : undefined
                 : undefined
             }
-            helpText="Use up to two decimal places. Amounts are stored exactly in paise."
+            helpText={t(
+              'Use up to two decimal places. Amounts are stored exactly in paise.',
+            )}
             id="billing-charge-amount"
             inputMode="decimal"
             label={
               method === 'per_sqft'
-                ? 'Rate per square foot (INR)'
-                : 'Amount per unit (INR)'
+                ? t('Rate per square foot (INR)')
+                : t('Amount per unit (INR)')
             }
             maxLength={32}
             name="amountRupees"
@@ -251,13 +264,15 @@ function ChargeForm({
             name="active"
             type="checkbox"
           />
-          Active for future bill generation
+          {t('Active for future bill generation')}
         </label>
         <p className="text-caption text-ink-muted">
-          Changes apply to future bills only. Published bills are never edited.
+          {t(
+            'Changes apply to future bills only. Published bills are never edited.',
+          )}
         </p>
         <Button loading={pending} type="submit">
-          {charge ? 'Save Charge Type' : 'Create Charge Type'}
+          {t(charge ? 'Save Charge Type' : 'Create Charge Type')}
         </Button>
       </fieldset>
     </form>
@@ -277,6 +292,7 @@ function SocietyBillingPreferencesForm({
   onDirtyChange: (dirty: boolean) => void;
   onSaved: (message: string) => void;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const [result, setResult] = useState<ServerActionResult<unknown> | null>(
     null,
   );
@@ -327,7 +343,7 @@ function SocietyBillingPreferencesForm({
           className="grid gap-space-1 text-body-strong"
           htmlFor="billing-due-day"
         >
-          Monthly due date
+          {t('Monthly due date')}
           <select
             className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
             defaultValue={String(settings.due_day_of_month)}
@@ -338,34 +354,37 @@ function SocietyBillingPreferencesForm({
               const day = index + 1;
               return (
                 <option key={day} value={day}>
-                  {ordinal(day)} of each month
+                  {locale === 'hi'
+                    ? t('Day {day} of each month', { day })
+                    : `${ordinal(day)} of each month`}
                 </option>
               );
             })}
-            <option value="last_day">Last day of each month</option>
+            <option value="last_day">{t('Last day of each month')}</option>
           </select>
         </label>
         <label
           className="grid gap-space-1 text-body-strong"
           htmlFor="billing-rounding"
         >
-          Per-square-foot rounding
+          {t('Per-square-foot rounding')}
           <select
             className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
             defaultValue={settings.rounding}
             id="billing-rounding"
             name="rounding"
           >
-            <option value="rupee">Nearest rupee, half up</option>
-            <option value="paise">Nearest paise, half up</option>
+            <option value="rupee">{t('Nearest rupee, half up')}</option>
+            <option value="paise">{t('Nearest paise, half up')}</option>
           </select>
         </label>
         <p className="text-caption text-ink-muted">
-          A numeric due day past the end of a shorter month falls on that
-          month&apos;s last day. These preferences affect future bills only.
+          {t(
+            "A numeric due day past the end of a shorter month falls on that month's last day. These preferences affect future bills only.",
+          )}
         </p>
         <Button loading={pending} type="submit">
-          Save Society Preferences
+          {t('Save Society Preferences')}
         </Button>
       </fieldset>
     </form>
@@ -385,6 +404,7 @@ function PaymentSettingsForm({
   onSaved: (message: string) => void;
   societyId: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [qrPath, setQrPath] = useState(details?.qr_path ?? null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(false);
@@ -462,10 +482,16 @@ function PaymentSettingsForm({
             autoCapitalize="none"
             autoComplete="off"
             defaultValue={details?.upi_id ?? ''}
-            error={result && !result.ok ? result.fieldErrors?.upiId : undefined}
-            helpText="Format: name@handle, for example society@bank. Check the account in your banking app."
+            error={
+              result && !result.ok && result.fieldErrors?.upiId
+                ? translateFeedback(result.fieldErrors.upiId)
+                : undefined
+            }
+            helpText={t(
+              'Format: name@handle, for example society@bank. Check the account in your banking app.',
+            )}
             id="billing-upi-id"
-            label="Society UPI ID"
+            label={t('Society UPI ID')}
             maxLength={100}
             minLength={5}
             name="upiId"
@@ -475,10 +501,12 @@ function PaymentSettingsForm({
           <TextInput
             defaultValue={details?.payee_name ?? ''}
             error={
-              result && !result.ok ? result.fieldErrors?.payeeName : undefined
+              result && !result.ok && result.fieldErrors?.payeeName
+                ? translateFeedback(result.fieldErrors.payeeName)
+                : undefined
             }
             id="billing-payee-name"
-            label="Payee name"
+            label={t('Payee name')}
             maxLength={100}
             minLength={2}
             name="payeeName"
@@ -502,25 +530,27 @@ function PaymentSettingsForm({
             loading={pending || uploading}
             type="submit"
           >
-            Review Payment Details
+            {t('Review Payment Details')}
           </Button>
         </fieldset>
       </form>
       <ConfirmDialog
-        actionLabel="Save Payment Details"
+        actionLabel={t('Save Payment Details')}
         description={
           <div className="grid gap-space-2">
             <p>
-              Residents will pay this society account directly. Check the UPI
-              ID, payee name and QR image carefully.
+              {t(
+                'Residents will pay this society account directly. Check the UPI ID, payee name and QR image carefully.',
+              )}
             </p>
             <p className="break-all font-semibold">
               {String(confirmation?.get('upiId') ?? '')}
             </p>
             <p>{String(confirmation?.get('payeeName') ?? '')}</p>
             <p>
-              Every change is recorded. All administrators and committee members
-              will be notified.
+              {t(
+                'Every change is recorded. All administrators and committee members will be notified.',
+              )}
             </p>
           </div>
         }
@@ -531,7 +561,7 @@ function PaymentSettingsForm({
           if (!open) setConfirmation(null);
         }}
         open={confirmation !== null}
-        title="Change society payment details?"
+        title={t('Change society payment details?')}
         variant="primary"
       />
     </>
@@ -571,6 +601,7 @@ export function BillingSetup({
   paymentAction = updateBillingPaymentDetailsAction,
   settingsAction = updateBillingSettingsAction,
 }: BillingSetupProps) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -678,18 +709,24 @@ export function BillingSetup({
 
   const chargesPanel = (
     <Card
-      description="Configure charges before generating bills. Deactivating a charge keeps its history."
-      title="Charge types"
+      description={t(
+        'Configure charges before generating bills. Deactivating a charge keeps its history.',
+      )}
+      title={t('Charge types')}
     >
-      {savedMessage ? <Banner tone="success">{savedMessage}</Banner> : null}
+      {savedMessage ? (
+        <Banner tone="success">{translateFeedback(savedMessage)}</Banner>
+      ) : null}
       {canManage ? (
         <div className="mb-space-4 flex flex-wrap gap-space-2">
-          <Button onClick={() => setEditing(null)}>Add Charge Type</Button>
+          <Button onClick={() => setEditing(null)}>
+            {t('Add Charge Type')}
+          </Button>
           <Button
             onClick={() => router.push('/admin/billing/generate')}
             variant="secondary"
           >
-            Generate Bills
+            {t('Generate Bills')}
           </Button>
         </div>
       ) : null}
@@ -703,22 +740,22 @@ export function BillingSetup({
               <div className="grid min-w-0 gap-space-1">
                 <h3 className="break-words text-body-strong">{charge.name}</h3>
                 <p className="text-caption text-ink-muted">
-                  {methodLabels[charge.method]}
+                  {t(methodLabels[charge.method])}
                   {charge.amount_paise !== null
-                    ? ` - INR ${rupeesFromPaise(charge.amount_paise)}`
+                    ? ` - ${locale === 'hi' ? billingMoney(charge.amount_paise, locale) : `INR ${rupeesFromPaise(charge.amount_paise)}`}`
                     : ''}
                 </p>
                 <p className="text-caption">
-                  {charge.active ? 'Active' : 'Inactive'}
+                  {t(charge.active ? 'Active' : 'Inactive')}
                 </p>
               </div>
               {canManage ? (
                 <Button
-                  aria-label={`Edit ${charge.name}`}
+                  aria-label={t('Edit {name}', { name: charge.name })}
                   onClick={() => setEditing(charge)}
                   variant="secondary"
                 >
-                  Edit
+                  {t('Edit')}
                 </Button>
               ) : null}
             </li>
@@ -726,8 +763,9 @@ export function BillingSetup({
         </ul>
       ) : (
         <p className="text-body text-ink-muted">
-          No charge types yet. An administrator can add the society&apos;s first
-          charge.
+          {t(
+            "No charge types yet. An administrator can add the society's first charge.",
+          )}
         </p>
       )}
     </Card>
@@ -735,28 +773,28 @@ export function BillingSetup({
 
   const paymentPanel = (
     <Card
-      description="Residents pay the society directly. Homeish never receives or holds the money."
-      title="Payment settings"
+      description={t(
+        'Residents pay the society directly. Homeish never receives or holds the money.',
+      )}
+      title={t('Payment settings')}
     >
-      {paymentMessage ? <Banner tone="success">{paymentMessage}</Banner> : null}
+      {paymentMessage ? (
+        <Banner tone="success">{translateFeedback(paymentMessage)}</Banner>
+      ) : null}
       {paymentDetails ? (
         <div className="mb-space-4 grid gap-space-2">
           <p className="break-all text-body-strong">{paymentDetails.upi_id}</p>
           <p className="text-body">{paymentDetails.payee_name}</p>
           <p className="text-caption text-ink-muted">
-            UPI details last changed on{' '}
+            {t('UPI details last changed on')}{' '}
             <time dateTime={paymentDetails.updated_at}>
-              {new Intl.DateTimeFormat('en-IN', {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-                timeZone: timezone,
-              }).format(new Date(paymentDetails.updated_at))}
+              {billingTimestamp(paymentDetails.updated_at, timezone, locale)}
             </time>{' '}
-            by {paymentDetails.updated_by_name}
+            {t('by {name}', { name: paymentDetails.updated_by_name })}
           </p>
           {qrUrl ? (
             <Image
-              alt="Society UPI QR image"
+              alt={t('Society UPI QR image')}
               className="size-48 rounded-md border border-rule object-contain p-space-2"
               height={192}
               src={qrUrl}
@@ -767,8 +805,9 @@ export function BillingSetup({
         </div>
       ) : (
         <p className="mb-space-4 text-body text-ink-muted">
-          The society has not added payment details. Do not send money until an
-          administrator configures and verifies the account.
+          {t(
+            'The society has not added payment details. Do not send money until an administrator configures and verifies the account.',
+          )}
         </p>
       )}
       {canManage ? (
@@ -790,8 +829,9 @@ export function BillingSetup({
       {canManage && pendingQrPaths.length > 0 ? (
         <div className="mt-space-4 grid gap-space-2">
           <p className="text-caption text-ink-muted">
-            Unattached QR uploads are not used for payments. Remove an unused
-            upload before uploading another.
+            {t(
+              'Unattached QR uploads are not used for payments. Remove an unused upload before uploading another.',
+            )}
           </p>
           {pendingQrPaths.map((path, index) => (
             <Button
@@ -802,7 +842,7 @@ export function BillingSetup({
               }}
               variant="secondary"
             >
-              Remove Unused QR Image {index + 1}
+              {t('Remove Unused QR Image {number}', { number: index + 1 })}
             </Button>
           ))}
         </div>
@@ -813,47 +853,65 @@ export function BillingSetup({
   const rulesPanel = (
     <>
       <Card
-        description="Configured by the platform developer. These rules will apply when bills and reminders are processed."
-        title="Billing rules"
+        description={t(
+          'Configured by the platform developer. These rules will apply when bills and reminders are processed.',
+        )}
+        title={t('Billing rules')}
       >
         <dl className="grid gap-space-2 text-body">
           <div>
-            <dt className="inline font-semibold">Grace period: </dt>
-            <dd className="inline">{settings.grace_days} days</dd>
+            <dt className="inline font-semibold">{t('Grace period')}: </dt>
+            <dd className="inline">
+              {t(settings.grace_days === 1 ? '{count} day' : '{count} days', {
+                count: settings.grace_days,
+              })}
+            </dd>
           </div>
           <div>
-            <dt className="inline font-semibold">Late fee: </dt>
+            <dt className="inline font-semibold">{t('Late fee')}: </dt>
             <dd className="inline">
               {settings.late_fee
                 ? settings.late_fee.type === 'flat'
-                  ? `INR ${rupeesFromPaise(settings.late_fee.value)}`
+                  ? locale === 'hi'
+                    ? billingMoney(settings.late_fee.value, locale)
+                    : `INR ${rupeesFromPaise(settings.late_fee.value)}`
                   : `${settings.late_fee.value}%`
-                : 'Off'}
+                : t('Off')}
             </dd>
           </div>
           <div>
-            <dt className="inline font-semibold">Reminders: </dt>
+            <dt className="inline font-semibold">{t('Reminders')}: </dt>
             <dd className="inline">
-              {settings.reminders.before_due_days} days before due,{' '}
-              {settings.reminders.on_due ? 'on the due date, ' : ''}then every{' '}
-              {settings.reminders.overdue_every_days} days overdue
+              {t(
+                '{before} days before due, {onDue}then every {after} days overdue',
+                {
+                  before: settings.reminders.before_due_days,
+                  onDue: settings.reminders.on_due
+                    ? t('on the due date, ')
+                    : '',
+                  after: settings.reminders.overdue_every_days,
+                },
+              )}
             </dd>
           </div>
           <div>
-            <dt className="inline font-semibold">Review alert: </dt>
+            <dt className="inline font-semibold">{t('Review alert')}: </dt>
             <dd className="inline">
-              After {settings.pending_confirmation_alert_days} days awaiting
-              confirmation
+              {t('After {count} days awaiting confirmation', {
+                count: settings.pending_confirmation_alert_days,
+              })}
             </dd>
           </div>
         </dl>
       </Card>
       <Card
-        description="Choose when future bills are due and how per-square-foot charges are rounded."
-        title="Society billing preferences"
+        description={t(
+          'Choose when future bills are due and how per-square-foot charges are rounded.',
+        )}
+        title={t('Society billing preferences')}
       >
         {settingsMessage ? (
-          <Banner tone="success">{settingsMessage}</Banner>
+          <Banner tone="success">{translateFeedback(settingsMessage)}</Banner>
         ) : null}
         {canManage ? (
           <SocietyBillingPreferencesForm
@@ -870,18 +928,28 @@ export function BillingSetup({
         ) : (
           <dl className="grid gap-space-2 text-body">
             <div>
-              <dt className="inline font-semibold">Monthly due date: </dt>
+              <dt className="inline font-semibold">
+                {t('Monthly due date')}:{' '}
+              </dt>
               <dd className="inline">
                 {settings.due_day_of_month === 'last_day'
-                  ? 'Last day of each month'
-                  : `Day ${settings.due_day_of_month} of each month`}
+                  ? t('Last day of each month')
+                  : t('Day {day} of each month', {
+                      day: settings.due_day_of_month,
+                    })}
               </dd>
             </div>
             <div>
               <dt className="inline font-semibold">
-                Per-square-foot rounding:{' '}
+                {t('Per-square-foot rounding')}:{' '}
               </dt>
-              <dd className="inline">Nearest {settings.rounding}, half up</dd>
+              <dd className="inline">
+                {t(
+                  settings.rounding === 'rupee'
+                    ? 'Nearest rupee, half up'
+                    : 'Nearest paise, half up',
+                )}
+              </dd>
             </div>
           </dl>
         )}
@@ -894,16 +962,18 @@ export function BillingSetup({
       {embedded ? null : (
         <>
           <header className="grid gap-space-2">
-            <h1 className="text-title font-semibold">Billing setup</h1>
+            <h1 className="text-title font-semibold">{t('Billing setup')}</h1>
             <p className="text-body text-ink-muted">
-              Manage charge types and the society&apos;s payment details.
+              {t("Manage charge types and the society's payment details.")}
             </p>
           </header>
           {!canManage ? (
             <Banner tone="info">
-              {suspended
-                ? 'This society is suspended. Billing information is read-only.'
-                : 'Read-only access. Only administrators can change billing setup.'}
+              {t(
+                suspended
+                  ? 'This society is suspended. Billing information is read-only.'
+                  : 'Read-only access. Only administrators can change billing setup.',
+              )}
             </Banner>
           ) : null}
         </>
@@ -924,16 +994,16 @@ export function BillingSetup({
             items={[
               {
                 id: 'charge-types',
-                label: 'Charge Types',
+                label: t('Charge Types'),
                 panel: chargesPanel,
               },
               {
                 id: 'payment-settings',
-                label: 'Payment Settings',
+                label: t('Payment Settings'),
                 panel: paymentPanel,
               },
             ]}
-            label="Billing setup"
+            label={t('Billing setup')}
             onChange={changeTab}
             value={tab}
           />
@@ -950,7 +1020,7 @@ export function BillingSetup({
           }
         }}
         open={editing !== undefined}
-        title={editing ? 'Edit charge type' : 'Add charge type'}
+        title={t(editing ? 'Edit charge type' : 'Add charge type')}
       >
         {editing !== undefined ? (
           <ChargeForm
@@ -971,8 +1041,8 @@ export function BillingSetup({
         ) : null}
       </Dialog>
       <ConfirmDialog
-        actionLabel="Leave Without Saving"
-        description="Your payment-setting changes will be discarded."
+        actionLabel={t('Leave Without Saving')}
+        description={t('Your payment-setting changes will be discarded.')}
         id="billing-leave-unsaved"
         onConfirm={() => {
           if (navigation) {
@@ -987,11 +1057,11 @@ export function BillingSetup({
           if (!open) setNavigation(null);
         }}
         open={navigation !== null}
-        title="Leave without saving?"
+        title={t('Leave without saving?')}
       />
       <ConfirmDialog
-        actionLabel="Discard Changes"
-        description="Your unsaved charge-type changes will be discarded."
+        actionLabel={t('Discard Changes')}
+        description={t('Your unsaved charge-type changes will be discarded.')}
         id="billing-charge-discard"
         onConfirm={() => {
           setChargeDirty(false);
@@ -1000,12 +1070,14 @@ export function BillingSetup({
         }}
         onOpenChange={setDiscardCharge}
         open={discardCharge}
-        title="Discard charge changes?"
+        title={t('Discard charge changes?')}
       />
       <ConfirmDialog
-        actionLabel="Remove Unused Image"
-        description="This removes an image that is not saved in the current society payment settings. Another administrator may still be preparing it."
-        error={cleanupError}
+        actionLabel={t('Remove Unused Image')}
+        description={t(
+          'This removes an image that is not saved in the current society payment settings. Another administrator may still be preparing it.',
+        )}
+        error={cleanupError ? translateFeedback(cleanupError) : undefined}
         id="billing-qr-cleanup"
         loading={cleaning}
         onConfirm={removeUnusedQr}
@@ -1013,7 +1085,7 @@ export function BillingSetup({
           if (!open) setCleanupPath(null);
         }}
         open={cleanupPath !== null}
-        title="Remove unused QR image?"
+        title={t('Remove unused QR image?')}
       />
     </section>
   );

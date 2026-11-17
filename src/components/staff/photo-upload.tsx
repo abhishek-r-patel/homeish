@@ -1,6 +1,7 @@
 // Upload one private staff portrait before saving the staff profile.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useId, useRef, useState } from 'react';
 import { publicEnvironment } from '@/core/config/public-env';
 
@@ -27,6 +28,7 @@ export function StaffPhotoUpload({
   initialPath?: string | null;
   required?: boolean;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [path, setPath] = useState<string | null>(initialPath);
   const [uploading, setUploading] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -130,7 +132,7 @@ export function StaffPhotoUpload({
       />
       <input name="photoPath" type="hidden" value={path ?? ''} />
       <label className="grid gap-space-1 text-body-strong" htmlFor={inputId}>
-        Staff photo (JPEG or PNG, up to 5 MB)
+        {t('Staff photo (JPEG or PNG, up to 5 MB)')}
         <input
           accept={ACCEPTED_TYPES.join(',')}
           className="min-h-12 w-full min-w-0 rounded-md border border-rule px-space-3 py-space-2 focus-visible:outline-2 focus-visible:outline-focus"
@@ -145,7 +147,7 @@ export function StaffPhotoUpload({
       {path ? (
         <div className="flex items-center justify-between gap-space-3">
           <span className="text-caption text-ink-muted">
-            {initialPath === path ? 'Current photo' : 'Photo uploaded'}
+            {initialPath === path ? t('Current photo') : t('Photo uploaded')}
           </span>
           <button
             className="min-h-10 rounded-md px-space-2 text-danger underline focus-visible:outline-2 focus-visible:outline-focus"
@@ -153,7 +155,7 @@ export function StaffPhotoUpload({
             onClick={() => void removePhoto()}
             type="button"
           >
-            {removing ? 'Removing…' : 'Remove photo'}
+            {removing ? t('Removing…') : t('Remove photo')}
           </button>
         </div>
       ) : null}
@@ -162,7 +164,11 @@ export function StaffPhotoUpload({
         className="text-caption text-ink-muted"
         role="status"
       >
-        {uploading ? 'Uploading photo…' : message}
+        {uploading
+          ? t('Uploading photo…')
+          : message
+            ? translateFeedback(message)
+            : null}
       </p>
     </div>
   );

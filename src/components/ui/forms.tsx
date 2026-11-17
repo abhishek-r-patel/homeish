@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { ConfirmDialog } from './dialog';
+import { useUiTranslator } from './language';
 
 type FormLayoutProps = {
   children: ReactNode;
@@ -59,10 +60,12 @@ export function UnsavedChangesPrompt({
   onLeave: () => void;
   open: boolean;
 }) {
+  const { translate } = useUiTranslator();
+
   return (
     <ConfirmDialog
-      actionLabel="Leave"
-      description="Your changes will be lost."
+      actionLabel={translate('Leave')}
+      description={translate('Your changes will be lost.')}
       id={id}
       onConfirm={onLeave}
       onOpenChange={(nextOpen) => {
@@ -71,7 +74,7 @@ export function UnsavedChangesPrompt({
         }
       }}
       open={open}
-      title="Leave without saving?"
+      title={translate('Leave without saving?')}
       variant="primary"
     />
   );
