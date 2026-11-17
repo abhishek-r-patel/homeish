@@ -736,6 +736,47 @@ Pages are `/admin/analytics` (admin and committee) and `/admin/analytics/setting
 no-permission state). A metric whose data does not match the expected shape is shown as "not available right now"
 and logged as a warning instead of breaking the page. The `/fixtures/analytics` page uses synthetic data.
 
+### 5.28 Events & RSVPs (`event`, P30; D-63)
+
+Operations live in `src/core/event/`; Server Actions are in the resident and admin Events routes. The module ships
+disabled. Writes use the `otherWritesUserMinute` limit and an idempotency request ID. Permissions: `event:attend`
+(resident), `event:list` and `event:manage` (admin, committee). Guards and housekeeping supervisors have no access.
+
+| Operation / RPC                                                                 | Caller            | Contract                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getEventMemberList`, `getEventMemberDetail`                                    | Resident          | Published and cancelled events for units the caller occupies (upcoming or past), the caller's own units' answers, spots left and the contribution. Invisible events return not found.                                                   |
+| `setEventRsvp` / `event_rsvp_set`                                               | Resident occupant | Going with headcount or Not going for one unit; optimistic RSVP version; refused when closed (`event_rsvp_closed`), full (`event_full`), over the per-flat limit or without `billing` for a paid event; charges or refunds.             |
+| `getEventAdminList`, `getEventAdminDetail`, `getEventBlockOptions`              | Admin, committee  | Filtered list (upcoming, past, drafts, cancelled, all) and detail with totals, collected net amount and every unit's answer.                                                                                                            |
+| `createEvent`, `updateEvent`, `deleteEventDraft`, `publishEvent`, `cancelEvent` | Admin, committee  | Idempotent create; optimistic-version edits until the event ends (contribution locked once published); publish readiness keys; cancel needs a reason and refunds every charge; publish, cancel and time/venue changes notify residents. |
+
+Pages are `/events`, `/events/{eventId}`, `/admin/events`, `/admin/events/new`, `/admin/events/{eventId}` and
+`/admin/events/{eventId}/edit`. Notifications are in-app plus push through `sendNotificationPushesForRequest`. The
+`/fixtures/event` page uses synthetic scenarios and does not call production services.
+
+### 5.29 Resident Community & Marketplace (`community`, P29; D-64)
+
+Operations live in `src/core/community/`; Server Actions are in the resident and admin Community routes. The module
+ships disabled. Writes use the `otherWritesUserMinute` limit and an idempotency request ID. Permissions:
+`community:participate` (resident) and `community:moderate` (admin). Committee members, guards and housekeeping
+supervisors have no access. Errors: `community_invalid_state`, `community_group_archived` and
+`community_already_reported` map to a conflict; `community_muted` and `community_not_member` to forbidden;
+`community_own_item` and `community_photo_invalid` to validation errors.
+
+| Operation area              | Caller   | Contract                                                                                                                                                                                                                                              |
+| --------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home, groups and feed       | Resident | Join or leave active groups; only members see a group's approved posts (plus their own pending or hidden ones). The new-listing alert switch and any active mute are shown on `/community`.                                                           |
+| Posts, listings and replies | Resident | New posts and listings wait for admin approval; authors edit only while pending (not while muted) and can withdraw later; listing authors close or renew; replies appear at once on approved, open items. Up to 3 JPG/PNG photos per post or listing. |
+| Reports                     | Resident | One report per person and flat per item, never on your own; 3 different flats hide the item until review.                                                                                                                                             |
+| Moderation                  | Admin    | Queues pending, hidden, reported and removed; approve, reject (reason), remove (reason) and restore; groups create, rename and archive; mute for 7 days, 30 days or until lifted, and lift early.                                                     |
+
+Photos are uploaded through a community Server Action that calls `community_photo_upload_path` and returns a signed
+upload; view links last 300 seconds and are signed on the server only after `community_photo_access`. Pages are
+`/community`, `/community/groups/{groupId}`, `/community/posts/{postId}`, `/community/marketplace`,
+`/community/marketplace/new`, `/community/marketplace/{listingId}`, `/community/mine`, `/admin/community`,
+`/admin/community/items/{targetType}/{targetId}`, `/admin/community/groups` and `/admin/community/mutes`.
+Notifications are in-app plus push through `sendNotificationPushesForRequest`. The `/fixtures/community` page uses
+synthetic scenarios and does not call production services.
+
 ## 6. HTTP Routes
 
 | Route                               | Method       | Caller                         | Authentication                                                                                                                   | Purpose                                                                                                                                                                                                                           |
@@ -765,20 +806,21 @@ Vercel Cron sends `GET`; `POST` remains supported for authenticated manual invoc
 
 Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each society-scoped task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. A global task claims one run key using the first eligible society; if there are no eligible societies, the retention task still runs because its database operations are idempotent. Each task failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
 
-| Task                                   | Behavior                                                                                                                                                               |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Late fees                              | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                             |
-| Reminders                              | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                 |
-| Stale payments                         | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                            |
-| Visitor expiry                         | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                 |
-| Delivery overdue view                  | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                  |
-| Request auto-close                     | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                            |
-| Request SLA escalation                 | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set |
-| Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60) |
-| Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)      |
-| Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                  |
-| Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                          |
-| Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)   |
+| Task                                   | Behavior                                                                                                                                                                                           |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Late fees                              | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                                                         |
+| Reminders                              | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                                             |
+| Stale payments                         | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                                                        |
+| Visitor expiry                         | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                                             |
+| Delivery overdue view                  | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                                              |
+| Request auto-close                     | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                                                        |
+| Request SLA escalation                 | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set                             |
+| Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60)                             |
+| Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)                                  |
+| Event reminders                        | `event.reminders`, after `meeting.action_reminders`: one reminder per published event starting tomorrow (society-local) to flats that answered Going, in-app plus push; capped at 2000 (P30, D-63) |
+| Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                                              |
+| Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                                                      |
+| Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)                               |
 
 A task failure is logged (error log + Sentry) and does not stop the other tasks; the next day's run retries unfinished work because tasks are idempotent.
 

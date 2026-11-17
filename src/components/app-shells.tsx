@@ -102,6 +102,9 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
   poll: 'M4 4h16v16H4zM8 12l3 3 5-6',
   meeting:
     'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm4 9h6m-6 3h4',
+  event:
+    'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm7 7 1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4L12 12Z',
+  community: 'M4 5h16v10H9l-5 4V5Zm4 4h8m-8 3h5',
 };
 
 function isActivePath(pathname: string, href: string) {

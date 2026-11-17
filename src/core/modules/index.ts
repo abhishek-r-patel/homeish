@@ -61,6 +61,14 @@ import {
   DEFAULT_MEETING_SETTINGS,
   meetingSettingsSchema,
 } from '../meeting/validation';
+import {
+  DEFAULT_EVENT_SETTINGS,
+  eventSettingsSchema,
+} from '../event/validation';
+import {
+  DEFAULT_COMMUNITY_SETTINGS,
+  communitySettingsSchema,
+} from '../community/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -1016,6 +1024,58 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     },
     settingsSchema: meetingSettingsSchema,
   },
+  event: {
+    core: false,
+    defaultSettings: DEFAULT_EVENT_SETTINGS,
+    key: 'event',
+    name: 'Events & RSVPs',
+    navigation: {
+      resident: [
+        { href: '/events', label: 'Events', permission: 'event:attend' },
+      ],
+      admin: [
+        { href: '/admin/events', label: 'Events', permission: 'event:list' },
+      ],
+      committee: [
+        { href: '/admin/events', label: 'Events', permission: 'event:list' },
+      ],
+    },
+    permissions: {
+      'event:attend': ['resident'],
+      'event:list': ['admin', 'committee'],
+      'event:manage': ['admin', 'committee'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: eventSettingsSchema,
+  },
+  community: {
+    core: false,
+    defaultSettings: DEFAULT_COMMUNITY_SETTINGS,
+    key: 'community',
+    name: 'Community & Marketplace',
+    navigation: {
+      resident: [
+        {
+          href: '/community',
+          label: 'Community',
+          permission: 'community:participate',
+        },
+      ],
+      admin: [
+        {
+          href: '/admin/community',
+          label: 'Community',
+          permission: 'community:moderate',
+        },
+      ],
+    },
+    permissions: {
+      'community:participate': ['resident'],
+      'community:moderate': ['admin'],
+    },
+    settingsAccess: emptySettingsAccess,
+    settingsSchema: communitySettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -1055,6 +1115,8 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'home_services',
     'poll',
     'meeting',
+    'event',
+    'community',
   ],
   committee: [
     'core',
@@ -1078,6 +1140,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'home_services',
     'poll',
     'meeting',
+    'event',
   ],
   guard: [
     'core',
@@ -1110,6 +1173,8 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'home_services',
     'poll',
     'meeting',
+    'event',
+    'community',
   ],
 };
 

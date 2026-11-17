@@ -130,21 +130,21 @@ Arrows are recommended build order; "after Pxx" inside a box marks a phase that 
 | P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅                                |
 | P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅                                |
 | P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅                                |
-| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | 🟡 Locally verified and committed |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | 🟡 Locally verified and committed |
+| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ✅                                |
+| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ✅                                |
 | P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅                                |
 | P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅                                |
 | P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅                                |
-| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | 🟡 Locally verified and committed |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | 🟡 Locally verified and committed |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ⬜ Not started                    |
-| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ⬜ Not started                    |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | 🟡 Locally verified and committed |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | 🟡 Locally verified and committed |
+| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅                                |
+| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅                                |
+| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | 🟡 Locally verified and committed |
+| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | 🟡 Locally verified and committed |
+| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅                                |
+| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅                                |
 | P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ⬜ Not started                    |
 | P34   | Multi-society / federation view   | Core              | 5.10.13, P5-7 | L    | 3+     | Core memberships, tenancy model (D-24)      | ⬜ Not started                    |
 
-Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave 13 blocks; P5 wave about 14 blocks.
+Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 14 blocks, with P28, P31 and P32 released.
 
 ---
 
@@ -1077,7 +1077,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD POL-1 to POL-6 verified, including zero duplicate, partial or post-deadline ballots under load; ships disabled.
 
-**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`; the owner approved the database mapping. The module ships disabled. Owner UAT, manual screen-reader/zoom checks and release remain pending. No hosted database migration or module enablement was performed.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The owner approved the database mapping. Owner UAT and manual screen-reader/zoom checks remain pending. No live (production) migration or enablement was performed.
 
 **Verification:** `npm run check` passed (638 unit tests); `npm run test:integration:local` passed (61 files, 245 tests; 2 files and 10 tests skipped as configured); `$env:PERF_POLL='1'; npm run test:integration:local -- tests/integration/performance-poll.test.ts` passed with the opt-in 500-unit/100-voter capacity check (62 files, 246 tests; 1 file and 9 tests skipped); `npx playwright test --workers=4` passed (140 tests); and `npm run build` passed. A first full browser run exposed a 320px overflow in the Polls list, which was fixed and verified by the passing full suite. The focused Polls journey covers resident private-ballot review/submission without choice leakage, administrator draft editing and committee read-only access. The database mapping is in DATABASE.md.
 
@@ -1104,7 +1104,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; PRD MTG-1 to MTG-4 verified; ships disabled.
 
-**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`. The module ships disabled. A database-safety review found no critical or high issues; its one medium and three low findings (resident visibility through action items, self check-in existence leak, draft polls in resident reads, unaudited attendance removal) were fixed with tests, and the resolution limit was aligned to 50. Owner UAT, manual screen-reader/zoom checks and release remain pending. No hosted database migration or module enablement was performed. Deferred: a poll picker for linking resolutions (the admin pastes a poll ID) and a test of the 2000-recipient notification cap.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** A database-safety review found no critical or high issues; its one medium and three low findings (resident visibility through action items, self check-in existence leak, draft polls in resident reads, unaudited attendance removal) were fixed with tests, and the resolution limit was aligned to 50. Owner UAT and manual screen-reader/zoom checks remain pending. No live (production) migration or enablement was performed. Deferred: a poll picker for linking resolutions (the admin pastes a poll ID) and a test of the 2000-recipient notification cap.
 
 **Verification:** `npm run check` passed (661 unit tests); `npm run test:integration:local` passed (66 files, 290 tests; 2 files and 10 tests skipped as configured); `npx playwright test --workers=4` passed (146 tests), and after the final fixes the meeting and accessibility specs passed again (90 tests); `npm run build` passed.
 
@@ -1228,7 +1228,7 @@ DATABASE 15.2.
 
 **Completion criteria:** applicable parts of the module gate (2.2) pass; PRD ANL-1 to ANL-2 verified.
 
-**Status (2026-11-16):** implementation is locally verified and committed on `feature-build-2`. Analytics is part of Core: the admin picks from the 49-metric catalogue in PRD §5.10.12 (six on by default), the committee can view, and only the admin can change settings or export CSV/PDF. Figures are calculated live; no summary tables. Evidence: `npm run check` (**683 unit tests**), the complete database suite on a disposable local PostgreSQL (**316 tests passed, 11 skipped**), the opt-in performance test (full dashboard about 1.2 s at 500 units; target under 2 s), `npm run build` and the complete Playwright suite (**155 tests**, including axe, reflow and keyboard checks on `/fixtures/analytics`). A database-safety review found no critical or high issues; the blocking audit-log index was removed and the export audit now lists only metrics of enabled modules. Still required: owner review of the metric catalogue and its assumptions (DATABASE §9.19), owner UAT and release. Not fixed: dashboard reads are not rate limited (like other reads), and retrying an already-saved settings change shows the version-conflict message. No hosted database migration was performed.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green).** Analytics is part of Core: the admin picks from the 49-metric catalogue in PRD §5.10.12 (six on by default), the committee can view, and only the admin can change settings or export CSV/PDF. Figures are calculated live; no summary tables. Evidence: `npm run check` (**683 unit tests**), the complete database suite on a disposable local PostgreSQL (**316 tests passed, 11 skipped**), the opt-in performance test (full dashboard about 1.2 s at 500 units; target under 2 s), `npm run build` and the complete Playwright suite (**155 tests**, including axe, reflow and keyboard checks on `/fixtures/analytics`). A database-safety review found no critical or high issues; the blocking audit-log index was removed and the export audit now lists only metrics of enabled modules. Still required: owner review of the metric catalogue and its assumptions (DATABASE §9.19) and owner UAT. Not fixed: dashboard reads are not rate limited (like other reads), and retrying an already-saved settings change shows the version-conflict message. No live (production) migration was performed.
 
 ---
 
@@ -1248,7 +1248,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb; the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (stale-form AMC link guard, linked contract always in the picker, 200-category cap, `truncated` flag, full update audit, race-safe creates). Still required: owner review of the assumptions below, release approval, owner UAT.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (stale-form AMC link guard, linked contract always in the picker, 200-category cap, `truncated` flag, full update audit, race-safe creates). Still required: owner review of the assumptions below and owner UAT. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1263,23 +1263,27 @@ DATABASE 15.2.
 
 **Goal:** moderated discussion groups and buy/sell/give-away and lost-and-found listings, with no payments (PRD 5.10.13, P5-2).
 
-**Prerequisites:** Core files and notifications. Size L, about 3 blocks. **Kickoff decisions (open):** moderation model (pre- or post-moderation); allowed listing categories; reporting and ban rules; retention.
+**Prerequisites:** Core files and notifications. Size L, about 3 blocks. **Kickoff decisions (settled, D-64):** pre-moderation by the admin only (replies are not pre-moderated); admin-created groups residents join; sale, give-away, wanted, lost and found listings with up to 3 private photos and no payments; reports from 3 different flats hide an item until review; mutes for 7 days, 30 days or until lifted; listings expire after 30 days and can be renewed; rejected, removed and withdrawn content deleted after 30 days; new-listing alerts residents can turn off.
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                | Status |
-| ----- | ------------------------------------------------------------------- | ------ |
-| P29.1 | Migration: groups, posts, listings, private images and reports; RLS | ⬜     |
-| P29.2 | Discussion groups and posts                                         | ⬜     |
-| P29.3 | Buy/sell/give-away and lost-and-found listings; no payments         | ⬜     |
-| P29.4 | Admin moderation, reporting and removal                             | ⬜     |
-| P29.5 | Resident and admin screens                                          | ⬜     |
+| ID    | Task                                                                                                                                                        | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P29.1 | Migrations `20261122100000`–`20261122130000`: groups, posts, listings, replies, photos, reports, mutes and preferences; RLS, private bucket (DATABASE 9.21) | 🟡     |
+| P29.2 | Discussion groups with join/leave, pre-moderated posts and replies                                                                                          | 🟡     |
+| P29.3 | Sale, give-away, wanted, lost and found listings with close, renew and 30-day expiry; no payments                                                           | 🟡     |
+| P29.4 | Admin moderation queues, reports with auto-hide, removal, restore, mutes and retention (API 5.29)                                                           | 🟡     |
+| P29.5 | Resident `/community` and admin `/admin/community` screens; fixture `/fixtures/community`                                                                   | 🟡     |
 
 **Tests:** moderation states, reporting and removal, retention, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-18): locally verified and committed on the feature branch; not pushed, not migrated to testdb, and the module ships disabled.** The full local gate passed: `npm run check` (**740 unit tests**), the complete database suite on a disposable local PostgreSQL (**403 tests passed, 11 skipped**), `npm run build` and the complete Playwright suite (**168 tests**, including axe on `/fixtures/community`). A database safety review found no blocking issues; its four findings were fixed (fresh-upload check when attaching photos, serialised mutes, muted residents cannot edit pending items, retention index for removed replies). Still required: owner review of the assumptions below and owner UAT.
+
+**Assumptions for owner review:**
+
+- Restoring a hidden item does not notify its author.
+- Muted residents can still report items, withdraw their own items and close or renew listings, but cannot create or edit content.
+- Retention runs for every society even when the module is turned off, because it only deletes content that is already due.
 
 ---
 
@@ -1287,22 +1291,26 @@ DATABASE 15.2.
 
 **Goal:** event announcements with RSVPs and optional contributions billed through the existing bills (PRD 5.10.13, P5-3).
 
-**Prerequisites:** `billing` contributions. Size M, about 2 blocks. **Kickoff decisions (open):** event visibility; RSVP limits; contribution handling.
+**Prerequisites:** `billing` contributions. Size M, about 2 blocks. **Kickoff decisions (settled, D-63):** admin and committee manage events for the whole society or chosen blocks; one answer per flat (Going with a headcount, or Not going); optional capacity, per-flat limit and deadline, no waitlist; optional per-flat or per-person contribution charged to the flat's bill when `billing` is on, refunded on withdrawal before the deadline or cancellation; in-app and push notices plus a day-before reminder; records kept permanently.
 
-**Draft tasks — revisit at kickoff:**
-
-| ID    | Task                                                                         | Status |
-| ----- | ---------------------------------------------------------------------------- | ------ |
-| P30.1 | Migration: events and RSVPs with guest count; RLS                            | ⬜     |
-| P30.2 | Event announcements and RSVP with guest count                                | ⬜     |
-| P30.3 | Optional contribution recorded as a billing charge when `billing` is enabled | ⬜     |
-| P30.4 | Admin and resident screens                                                   | ⬜     |
+| ID    | Task                                                                                                                                      | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| P30.1 | Migrations `20261121100000`–`20261121130000`: events, audience blocks, RSVPs and append-only charge links; RLS and guards (DATABASE 9.20) | 🟡     |
+| P30.2 | Publish, edit, cancel and RSVP with headcount, capacity, per-flat limit and deadline; notifications and the `event.reminders` daily job   | 🟡     |
+| P30.3 | Contribution charged and refunded through billing ledger adjustments when `billing` is enabled (API 5.28)                                 | 🟡     |
+| P30.4 | Resident `/events` and admin `/admin/events` screens; fixture `/fixtures/event`                                                           | 🟡     |
 
 **Tests:** RSVP limits, billing on/off combinations, role matrix, end-to-end journeys with axe.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status:** not started.
+**Status (2026-11-18): locally verified and committed on the feature branch; not pushed, not migrated to testdb, and the module ships disabled.** The full local gate passed: `npm run check` (**715 unit tests**), the complete database suite on a disposable local PostgreSQL (**353 tests passed, 11 skipped**), `npm run build` and the complete Playwright suite (**161 tests**, including axe on `/fixtures/event`). A database safety review found no blocking issues; its one finding (lock order when cancelling) was fixed. Still required: owner review of the assumptions below and owner UAT.
+
+**Assumptions for owner review:**
+
+- A flat that already answered keeps seeing the event after the audience is narrowed, so it can still withdraw.
+- Cancelling refunds every paid answer even if `billing` was switched off after people answered.
+- Changing the start time sends a fresh day-before reminder.
 
 ---
 
@@ -1322,7 +1330,7 @@ DATABASE 15.2.
 
 **Completion criteria:** module gate (2.2) passes; ships disabled.
 
-**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb; the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (committee sees rater names, hidden comment text limited to admins and the author, race-safe rating audit and creates, `truncated` flag on lists). Still required: owner review of the assumptions below, release approval, owner UAT.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green); the module ships disabled.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (committee sees rater names, hidden comment text limited to admins and the author, race-safe rating audit and creates, `truncated` flag on lists). Still required: owner review of the assumptions below and owner UAT. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
@@ -1349,7 +1357,7 @@ DATABASE 15.2.
 
 **Completion criteria:** escalation verified for every level; existing service-request tests stay green.
 
-**Status (2026-11-16): built, locally verified and committed; not released or migrated to testdb.** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (escalation rows cascade with retention, `request_list` keeps the P10.3 paged query, in-app always sent, bounded run date, suspended societies skipped, constraint changes added without a long lock). Still required: owner review of the assumptions below, release approval, owner UAT.
+**Status (2026-11-16): released to beta and main and migrated to testdb (CI and CodeQL green).** The full local gate passed on the combined P28/P31/P32 change: `npm run check` (**627 unit tests**), the complete database suite on a disposable local PostgreSQL (**216 tests passed, 9 skipped**), `npm run build` and the complete Playwright suite (**134 tests**, including axe, 320/640px reflow and keyboard focus on `/fixtures/asset` and `/fixtures/home-services`). A database safety review was done and its findings fixed (escalation rows cascade with retention, `request_list` keeps the P10.3 paged query, in-app always sent, bounded run date, suspended societies skipped, constraint changes added without a long lock). Still required: owner review of the assumptions below and owner UAT. No live (production) migration or enablement was performed.
 
 **Assumptions for owner review:**
 
