@@ -89,7 +89,10 @@ const memberList: EventMemberList = {
       rsvpClosesAt: DEADLINE,
       contributionType: 'per_head',
       contributionPaise: 25_000,
-      myRsvp: { unitId: UNIT_A, status: 'going', headcount: 2 },
+      myRsvps: [
+        { unitId: UNIT_A, label: 'A-101', status: 'going', headcount: 2 },
+        { unitId: UNIT_B, label: 'B-201', status: null, headcount: null },
+      ],
     },
     {
       id: id('2'),
@@ -102,7 +105,9 @@ const memberList: EventMemberList = {
       rsvpClosesAt: STARTS,
       contributionType: 'none',
       contributionPaise: 0,
-      myRsvp: null,
+      myRsvps: [
+        { unitId: UNIT_A, label: 'A-101', status: null, headcount: null },
+      ],
     },
     {
       id: id('3'),
@@ -115,7 +120,9 @@ const memberList: EventMemberList = {
       rsvpClosesAt: STARTS,
       contributionType: 'per_unit',
       contributionPaise: 10_000,
-      myRsvp: { unitId: UNIT_A, status: 'not_going', headcount: 0 },
+      myRsvps: [
+        { unitId: UNIT_A, label: 'A-101', status: 'not_going', headcount: 0 },
+      ],
     },
   ],
 };

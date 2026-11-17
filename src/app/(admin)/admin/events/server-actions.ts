@@ -11,6 +11,7 @@ import {
   publishEvent,
   updateEvent,
 } from '@/core/event/operations';
+import { eventUpdateMessage } from '@/core/event/summary';
 
 export async function createEventAction(form: FormData) {
   return runServerAction('/admin/events/new', async (requestId) => ({
@@ -23,9 +24,7 @@ export async function updateEventAction(form: FormData) {
   return runServerAction('/admin/events/edit', async (requestId) => {
     const result = await updateEvent(readModuleActionInput(form), requestId);
     return {
-      message: result.notified
-        ? 'Changes saved and invited homes notified.'
-        : 'Changes saved.',
+      message: eventUpdateMessage(result),
       data: result,
     };
   });

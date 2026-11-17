@@ -215,6 +215,8 @@ export const eventWriteResultSchema = z.object({ eventId: uuid, version });
 
 export const eventUpdateResultSchema = eventWriteResultSchema.extend({
   notified: z.boolean(),
+  withdrawnUnits: count,
+  refundedUnits: count,
 });
 
 export const eventPublishResultSchema = eventWriteResultSchema.extend({
@@ -315,13 +317,14 @@ export const eventMemberListSchema = z.object({
       rsvpClosesAt: timestamp,
       contributionType: eventContributionTypeSchema,
       contributionPaise: paise,
-      myRsvp: z
-        .object({
+      myRsvps: z.array(
+        z.object({
           unitId: uuid,
-          status: eventRsvpStatusSchema,
-          headcount: count,
-        })
-        .nullable(),
+          label: z.string(),
+          status: eventRsvpStatusSchema.nullable(),
+          headcount: count.nullable(),
+        }),
+      ),
     }),
   ),
 });
@@ -372,5 +375,7 @@ export type EventBlockOption = z.infer<
   typeof eventBlockOptionsSchema
 >['blocks'][number];
 export type EventMemberList = z.infer<typeof eventMemberListSchema>;
+export type EventMemberListItem = EventMemberList['items'][number];
+export type EventUpdateResult = z.infer<typeof eventUpdateResultSchema>;
 export type EventMemberDetail = z.infer<typeof eventMemberGetSchema>;
 export type EventMemberUnit = EventMemberDetail['myUnits'][number];

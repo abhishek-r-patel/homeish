@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/module-action-form';
 import { TextInput } from '@/components/ui/text-input';
 import { rsvpChargePreview } from '@/core/event/pricing';
+import { memberRsvpStatus, memberRsvpSummary } from '@/core/event/summary';
 import {
   EVENT_HEADCOUNT_MAX,
   eventRsvpInputSchema,
@@ -34,13 +35,12 @@ const FILTER_LABELS: Readonly<Record<EventMemberFilter, string>> = {
   past: 'Past',
 };
 
-function rsvpSummary(item: EventMemberList['items'][number]) {
-  if (item.status === 'cancelled') return 'Cancelled';
-  if (item.myRsvp?.status === 'going') {
-    return `Going · ${item.myRsvp.headcount} ${item.myRsvp.headcount === 1 ? 'person' : 'people'}`;
-  }
-  if (item.myRsvp?.status === 'not_going') return 'Not going';
-  return 'No RSVP yet';
+function listStatus(item: EventMemberList['items'][number]) {
+  if (item.status === 'cancelled') return 'event.cancelled' as const;
+  const status = memberRsvpStatus(item.myRsvps);
+  if (status === 'going') return 'event_rsvp.going' as const;
+  if (status === 'not_going') return 'event_rsvp.not_going' as const;
+  return undefined;
 }
 
 export function ResidentEventListView({
@@ -97,16 +97,10 @@ export function ResidentEventListView({
                       item.contributionType,
                       item.contributionPaise,
                     )}{' '}
-                    · {rsvpSummary(item)}
+                    · {memberRsvpSummary(item)}
                   </span>
                 }
-                status={
-                  item.status === 'cancelled'
-                    ? 'event.cancelled'
-                    : item.myRsvp
-                      ? `event_rsvp.${item.myRsvp.status}`
-                      : undefined
-                }
+                status={listStatus(item)}
               />
             </li>
           ))}
