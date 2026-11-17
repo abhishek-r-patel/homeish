@@ -11,6 +11,9 @@ import {
   getServiceRequestWorkspace,
 } from '@/core/service-requests/operations';
 import { serviceRequestStatusSchema } from '@/core/service-requests/validation';
+import { formatLocalizedDate, formatLocalizedNumber } from '@/core/i18n/format';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Requests | Homeish',
@@ -28,6 +31,8 @@ export default async function AdminRequestsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   const params = await searchParams;
   const rawTab = single(params, 'tab');
   const tab = rawTab === 'categories' ? rawTab : 'requests';
@@ -49,9 +54,9 @@ export default async function AdminRequestsPage({
   if (!workspace.canReport) {
     return (
       <section className="grid min-w-0 gap-space-5">
-        <h1 className="text-title font-semibold">Service requests</h1>
+        <h1 className="text-title font-semibold">{t('Service requests')}</h1>
         <p className="text-body text-ink-muted">
-          You do not have access to the request administration workspace.
+          {t('You do not have access to the request administration workspace.')}
         </p>
       </section>
     );
@@ -60,12 +65,12 @@ export default async function AdminRequestsPage({
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Service requests</h1>
+        <h1 className="text-title font-semibold">{t('Service requests')}</h1>
         <p className="text-body text-ink-muted">
-          Triage requests, track service targets and manage categories.
+          {t('Triage requests, track service targets and manage categories.')}
         </p>
       </header>
-      <nav aria-label="Request administration sections">
+      <nav aria-label={t('Request administration sections')}>
         <ul className="flex gap-space-4 border-b border-rule">
           <li>
             <Link
@@ -73,7 +78,7 @@ export default async function AdminRequestsPage({
               className="inline-flex min-h-12 items-center text-body-strong underline-offset-4 hover:underline"
               href="/admin/requests"
             >
-              Requests
+              {t('Requests')}
             </Link>
           </li>
           {workspace.canManage ? (
@@ -83,7 +88,7 @@ export default async function AdminRequestsPage({
                 className="inline-flex min-h-12 items-center text-body-strong underline-offset-4 hover:underline"
                 href="/admin/requests?tab=categories"
               >
-                Categories
+                {t('Categories')}
               </Link>
             </li>
           ) : null}
@@ -101,34 +106,49 @@ export default async function AdminRequestsPage({
           {workspace.dashboard ? (
             <div className="grid gap-space-3 small:grid-cols-2 medium:grid-cols-4">
               <StatTile
-                label="Open requests"
-                value={workspace.dashboard.total_open}
-              />
-              <StatTile label="Overdue" value={workspace.dashboard.overdue} />
-              <StatTile
-                label="Resolved"
-                value={workspace.dashboard.by_status.resolved ?? 0}
+                label={t('Open requests')}
+                value={formatLocalizedNumber(
+                  workspace.dashboard.total_open,
+                  locale,
+                )}
               />
               <StatTile
-                label="Closed"
-                value={workspace.dashboard.by_status.closed ?? 0}
+                label={t('Overdue')}
+                value={formatLocalizedNumber(
+                  workspace.dashboard.overdue,
+                  locale,
+                )}
+              />
+              <StatTile
+                label={t('Resolved')}
+                value={formatLocalizedNumber(
+                  workspace.dashboard.by_status.resolved ?? 0,
+                  locale,
+                )}
+              />
+              <StatTile
+                label={t('Closed')}
+                value={formatLocalizedNumber(
+                  workspace.dashboard.by_status.closed ?? 0,
+                  locale,
+                )}
               />
             </div>
           ) : null}
-          <Card className="min-w-0" title="Filter requests">
+          <Card className="min-w-0" title={t('Filter requests')}>
             <form className="flex flex-wrap items-end gap-space-3">
               <label
                 className="grid gap-space-1 text-body-strong"
                 htmlFor="admin-request-status"
               >
-                Status
+                {t('Status')}
                 <select
                   className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
                   defaultValue={status ?? ''}
                   id="admin-request-status"
                   name="status"
                 >
-                  <option value="">All statuses</option>
+                  <option value="">{t('All statuses')}</option>
                   {serviceRequestStatusSchema.options.map((value) => (
                     <option key={value} value={value}>
                       {value.replaceAll('_', ' ')}
@@ -140,14 +160,14 @@ export default async function AdminRequestsPage({
                 className="grid gap-space-1 text-body-strong"
                 htmlFor="admin-request-category"
               >
-                Category
+                {t('Category')}
                 <select
                   className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
                   defaultValue={categoryId ?? ''}
                   id="admin-request-category"
                   name="categoryId"
                 >
-                  <option value="">All categories</option>
+                  <option value="">{t('All categories')}</option>
                   {workspace.categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -159,27 +179,29 @@ export default async function AdminRequestsPage({
                 className="grid gap-space-1 text-body-strong"
                 htmlFor="admin-request-sort"
               >
-                Sort
+                {t('Sort')}
                 <select
                   className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
                   defaultValue={sort}
                   id="admin-request-sort"
                   name="sort"
                 >
-                  <option value="default">Overdue first, then newest</option>
-                  <option value="votes">Most upvoted</option>
+                  <option value="default">
+                    {t('Overdue first, then newest')}
+                  </option>
+                  <option value="votes">{t('Most upvoted')}</option>
                 </select>
               </label>
               <button
                 className="min-h-12 rounded-md border border-rule-strong px-space-4 font-semibold"
                 type="submit"
               >
-                Apply
+                {t('Apply')}
               </button>
             </form>
           </Card>
           {workspace.dashboard?.by_category.length ? (
-            <Card className="min-w-0" title="Category performance">
+            <Card className="min-w-0" title={t('Category performance')}>
               <ul className="grid gap-space-2">
                 {workspace.dashboard.by_category.map((category) => (
                   <li
@@ -188,11 +210,20 @@ export default async function AdminRequestsPage({
                   >
                     <span className="font-semibold">{category.category}</span>
                     <span className="text-body text-ink-muted">
-                      {category.total} · Avg. resolution{' '}
+                      {formatLocalizedNumber(category.total, locale)} ·{' '}
+                      {t('Avg. resolution')}{' '}
                       {category.avg_resolution_hours === null
                         ? '—'
-                        : `${category.avg_resolution_hours.toFixed(1)} h`}
-                      {' · '}Rating {category.avg_rating?.toFixed(1) ?? '—'}
+                        : `${formatLocalizedNumber(category.avg_resolution_hours, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} h`}
+                      {' · '}
+                      {t('Rating')}{' '}
+                      {category.avg_rating === null ||
+                      category.avg_rating === undefined
+                        ? '—'
+                        : formatLocalizedNumber(category.avg_rating, locale, {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          })}
                     </span>
                   </li>
                 ))}
@@ -200,9 +231,9 @@ export default async function AdminRequestsPage({
             </Card>
           ) : null}
           {workspace.requests.length === 0 ? (
-            <Card title="No requests found">
+            <Card title={t('No requests found')}>
               <p className="text-body text-ink-muted">
-                No service requests match these filters.
+                {t('No service requests match these filters.')}
               </p>
             </Card>
           ) : (
@@ -221,7 +252,7 @@ export default async function AdminRequestsPage({
                         {request.category_name}
                         {request.unit_number
                           ? ` · ${request.unit_number}`
-                          : ' · Common area'}
+                          : ` · ${t('Common area')}`}
                       </span>
                       <span className="flex flex-wrap gap-space-2">
                         <StatusChip status={`request.${request.status}`} />
@@ -239,14 +270,19 @@ export default async function AdminRequestsPage({
                       {request.description}
                     </span>
                     <span className="text-caption text-ink-muted">
-                      {request.requester_name ?? 'Resident'} ·{' '}
-                      {new Date(request.created_at).toLocaleDateString('en-IN')}
-                      {' · '}Assigned to{' '}
+                      {request.requester_name ?? t('Resident')} ·{' '}
+                      {formatLocalizedDate(
+                        new Date(request.created_at),
+                        locale,
+                        { day: '2-digit', month: '2-digit', year: 'numeric' },
+                      )}
+                      {' · '}
+                      {t('Assigned to')}{' '}
                       {request.assignee_name ??
                         request.assigned_vendor_name ??
-                        'nobody'}
+                        t('nobody')}
                       {request.location_type === 'common_area'
-                        ? ` · ${request.upvote_count} ${request.upvote_count === 1 ? 'upvote' : 'upvotes'}`
+                        ? ` · ${formatLocalizedNumber(request.upvote_count, locale)} ${t('votes')}`
                         : ''}
                     </span>
                   </Link>

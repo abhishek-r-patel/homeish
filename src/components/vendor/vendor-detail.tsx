@@ -1,11 +1,7 @@
 // Show one vendor with its private documents, ratings and quotes to the admin and committee.
 'use client';
 import { useId, useState } from 'react';
-import {
-  VENDOR_REQUEST_STATUS_LABELS,
-  formatPaise,
-  ratingText,
-} from '@/core/vendor/presentation';
+import { VENDOR_REQUEST_STATUS_LABELS } from '@/core/vendor/presentation';
 import {
   vendorDocumentInputSchema,
   vendorRatingInputSchema,
@@ -25,12 +21,7 @@ import {
   type VendorActions,
 } from './shared';
 import { VendorForm } from './workspace';
-
-const dateFormat = new Intl.DateTimeFormat('en-IN', {
-  dateStyle: 'medium',
-  timeZone: 'Asia/Kolkata',
-});
-const formatDate = (value: string) => dateFormat.format(new Date(value));
+import { useVendorPresentation } from './presentation';
 
 function DocumentForm({
   vendorId,
@@ -39,13 +30,14 @@ function DocumentForm({
   vendorId: string;
   actions: VendorActions;
 }) {
+  const { t } = useVendorPresentation();
   const id = useId();
   const [path, setPath] = useState<string | null>(null);
   return (
     <ModuleActionForm
       action={actions.addDocument}
       idempotent
-      submitLabel="Attach document"
+      submitLabel={t('Attach document')}
       submitDisabled={!path}
       input={(form, clientRequestId) =>
         vendorDocumentInputSchema.parse({
@@ -59,14 +51,14 @@ function DocumentForm({
       <TextInput
         id={`${id}-title`}
         name="title"
-        label="Document title"
-        helpText="For example Trade licence or Insurance certificate."
+        label={t('Document title')}
+        helpText={t('For example Trade licence or Insurance certificate.')}
         required
         maxLength={120}
         autoComplete="off"
       />
       <VendorFilePicker
-        label="Document file"
+        label={t('Document file')}
         prepareUpload={actions.prepareDocumentUpload}
         request={actions.uploadRequest}
         onChange={setPath}
@@ -82,11 +74,12 @@ function RatingForm({
   detail: VendorDetail;
   actions: VendorActions;
 }) {
+  const { t } = useVendorPresentation();
   const id = useId();
   return (
     <ModuleActionForm
       action={actions.saveRating}
-      submitLabel={detail.my_rating ? 'Update my rating' : 'Save my rating'}
+      submitLabel={t(detail.my_rating ? 'Update my rating' : 'Save my rating')}
       input={(form) =>
         vendorRatingInputSchema.parse({
           vendorId: detail.vendor.id,
@@ -98,18 +91,20 @@ function RatingForm({
       <SelectInput
         id={`${id}-stars`}
         name="stars"
-        label="Stars"
+        label={t('Stars')}
         required
         defaultValue={String(detail.my_rating?.stars ?? 5)}
         options={[5, 4, 3, 2, 1].map((stars) => ({
           value: String(stars),
-          label: `${stars} ${stars === 1 ? 'star' : 'stars'}`,
+          label: t(stars === 1 ? '{count} star' : '{count} stars', {
+            count: stars,
+          }),
         }))}
       />
       <TextAreaInput
         id={`${id}-comment`}
         name="comment"
-        label="Comment (optional)"
+        label={t('Comment (optional)')}
         maxLength={500}
         defaultValue={detail.my_rating?.comment ?? ''}
       />
@@ -124,6 +119,7 @@ export function VendorDetailView({
   detail: VendorDetail;
   actions?: VendorActions;
 }) {
+  const { t, money, date, rating: ratingSummary } = useVendorPresentation();
   const vendor = detail.vendor;
   const documents = detail.documents.filter(
     (document) => document.archived_at === null,
@@ -136,15 +132,15 @@ export function VendorDetailView({
           href={VENDOR_BASE_HREF}
           className="inline-flex min-h-12 w-fit items-center text-brand underline"
         >
-          Back to vendors and purchases
+          {t('Back to vendors and purchases')}
         </a>
         <h1 className="text-title font-semibold">{vendor.name}</h1>
         <p className="text-body text-ink-muted">
           {vendor.category}
-          {vendor.active ? '' : ' · Inactive, cannot receive new quotes'}
+          {vendor.active ? '' : t(' · Inactive, cannot receive new quotes')}
         </p>
       </header>
-      <Card title="Contact">
+      <Card title={t('Contact')}>
         <dl className="grid gap-space-2 text-body">
           {(
             [
@@ -156,23 +152,25 @@ export function VendorDetailView({
             ] as const
           ).map(([label, value]) => (
             <div key={label} className="grid gap-space-1">
-              <dt className="text-caption text-ink-muted">{label}</dt>
-              <dd className="break-words">{value ?? 'Not recorded'}</dd>
+              <dt className="text-caption text-ink-muted">{t(label)}</dt>
+              <dd className="break-words">{value ?? t('Not recorded')}</dd>
             </div>
           ))}
         </dl>
       </Card>
       <Card
-        title="Ratings"
-        description={ratingText(detail.rating_average, detail.rating_count)}
+        title={t('Ratings')}
+        description={ratingSummary(detail.rating_average, detail.rating_count)}
       >
         <div className="grid gap-space-4">
           {detail.ratings.length > 0 ? (
             <ul className="grid gap-space-2">
               {detail.ratings.map((rating) => (
                 <li key={rating.id} className="text-body">
-                  {rating.stars} of 5 ·{' '}
-                  {rating.mine ? 'You' : (rating.rater_name ?? 'A member')}
+                  {t('{count} of 5', { count: rating.stars })} ·{' '}
+                  {rating.mine
+                    ? t('You')
+                    : (rating.rater_name ?? t('A member'))}
                   {rating.comment ? `: ${rating.comment}` : ''}
                 </li>
               ))}
@@ -182,11 +180,16 @@ export function VendorDetailView({
         </div>
       </Card>
       <Card
-        title="Documents"
+        title={t('Documents')}
         description={
           archived > 0
-            ? `${archived} archived ${archived === 1 ? 'document is' : 'documents are'} kept but hidden.`
-            : 'Private to the admin and committee.'
+            ? t(
+                archived === 1
+                  ? '{count} archived document is kept but hidden.'
+                  : '{count} archived documents are kept but hidden.',
+                { count: archived },
+              )
+            : t('Private to the admin and committee.')
         }
       >
         <div className="grid gap-space-4">
@@ -199,7 +202,7 @@ export function VendorDetailView({
                 >
                   <p className="text-body-strong">{document.title}</p>
                   <p className="text-caption text-ink-muted">
-                    Added {formatDate(document.created_at)}
+                    {t('Added {date}', { date: date(document.created_at) })}
                   </p>
                   <VendorFileLink
                     path={document.path}
@@ -210,22 +213,26 @@ export function VendorDetailView({
                     <VendorQuickAction
                       action={actions.archiveDocument}
                       input={{ documentId: document.id }}
-                      label={`Archive ${document.title}`}
-                      confirmMessage="Archive this document? It is kept but hidden."
+                      label={t('Archive {title}', { title: document.title })}
+                      confirmMessage={t(
+                        'Archive this document? It is kept but hidden.',
+                      )}
                     />
                   ) : null}
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-body text-ink-muted">No documents attached.</p>
+            <p className="text-body text-ink-muted">
+              {t('No documents attached.')}
+            </p>
           )}
           {detail.can_manage ? (
             <DocumentForm vendorId={vendor.id} actions={actions} />
           ) : null}
         </div>
       </Card>
-      <Card title="Quotes from this vendor">
+      <Card title={t('Quotes from this vendor')}>
         {detail.quotes.length > 0 ? (
           <ul className="grid gap-space-2">
             {detail.quotes.map((quote) => (
@@ -236,22 +243,22 @@ export function VendorDetailView({
                 >
                   {quote.request_title}
                 </a>{' '}
-                · {formatPaise(quote.amount_paise)} ·{' '}
-                {VENDOR_REQUEST_STATUS_LABELS[quote.request_status]}
-                {quote.selected ? ' · Selected' : ''}
+                · {money(quote.amount_paise)} ·{' '}
+                {t(VENDOR_REQUEST_STATUS_LABELS[quote.request_status])}
+                {quote.selected ? t(' · Selected') : ''}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-body text-ink-muted">No quotes yet.</p>
+          <p className="text-body text-ink-muted">{t('No quotes yet.')}</p>
         )}
       </Card>
       {detail.can_manage ? (
         <>
-          <Card title="Edit vendor">
+          <Card title={t('Edit vendor')}>
             <VendorForm vendor={vendor} actions={actions} />
           </Card>
-          <Card title={vendor.active ? 'Deactivate' : 'Reactivate'}>
+          <Card title={t(vendor.active ? 'Deactivate' : 'Reactivate')}>
             <VendorQuickAction
               action={actions.setActive}
               input={{
@@ -259,10 +266,12 @@ export function VendorDetailView({
                 active: !vendor.active,
                 expectedVersion: vendor.version,
               }}
-              label={vendor.active ? 'Mark inactive' : 'Mark active'}
+              label={t(vendor.active ? 'Mark inactive' : 'Mark active')}
               confirmMessage={
                 vendor.active
-                  ? 'Mark this vendor inactive? Existing quotes stay; new quotes are blocked.'
+                  ? t(
+                      'Mark this vendor inactive? Existing quotes stay; new quotes are blocked.',
+                    )
                   : undefined
               }
             />

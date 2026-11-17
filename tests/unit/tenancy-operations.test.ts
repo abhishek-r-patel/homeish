@@ -150,6 +150,8 @@ function context(overrides: Partial<RequestContext> = {}): RequestContext {
     enabledModules: new Set(['core', 'tenancy']),
     isDeveloper: false,
     isDeveloperAccount: false,
+    isHindiEnabled: false,
+    languagePreference: 'en',
     mfaVerified: false,
     logger: {
       debug: vi.fn(),

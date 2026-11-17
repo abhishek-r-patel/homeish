@@ -14,6 +14,9 @@ import {
   getVisitorSocietyTimezone,
   listVisitorUnits,
 } from '@/core/visitor/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
+import { formatLocalizedTime } from '@/core/i18n/format';
 import {
   checkInPreApprovedVisitorAction,
   checkOutVisitorAction,
@@ -32,6 +35,9 @@ function unitLabel(unit: { block: string | null; number: string }) {
 }
 
 export default async function GuardVisitorsPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const [guard, units, waiting, inside, today, settings, societyId, timezone] =
     await Promise.all([
       requireIdentifiedGuard(),
@@ -47,19 +53,19 @@ export default async function GuardVisitorsPage() {
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
         <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-          Gate · Handled by {guard.name}
+          {t('Gate · Handled by {name}', { name: guard.name })}
         </p>
-        <h1 className="text-title font-semibold">Visitors</h1>
+        <h1 className="text-title font-semibold">{t('Visitors')}</h1>
       </header>
       <VisitorRealtimeRefresh gate societyId={societyId} />
 
       <Card
-        description="Send a request to the unit's active approvers."
-        title="New visitor"
+        description={t("Send a request to the unit's active approvers.")}
+        title={t('New visitor')}
       >
         {units.length === 0 ? (
           <p className="text-body text-ink-muted">
-            No active units are available.
+            {t('No active units are available.')}
           </p>
         ) : (
           <VisitorActionForm
@@ -72,7 +78,7 @@ export default async function GuardVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="visitor-unit"
             >
-              Unit
+              {t('Unit')}
               <select
                 className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
                 id="visitor-unit"
@@ -90,7 +96,7 @@ export default async function GuardVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="visitor-name"
             >
-              Visitor name
+              {t('Visitor name')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="visitor-name"
@@ -103,7 +109,7 @@ export default async function GuardVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="visitor-phone"
             >
-              Mobile number (optional)
+              {t('Mobile number (optional)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="visitor-phone"
@@ -116,25 +122,25 @@ export default async function GuardVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="visitor-purpose"
             >
-              Purpose
+              {t('Purpose')}
               <select
                 className="min-h-12 rounded-md border border-rule bg-surface px-space-3"
                 id="visitor-purpose"
                 name="purpose"
                 required
               >
-                <option value="guest">Guest</option>
-                <option value="cab">Cab</option>
-                <option value="service">Service</option>
-                <option value="official">Official</option>
-                <option value="other">Other</option>
+                <option value="guest">{t('Guest')}</option>
+                <option value="cab">{t('Cab')}</option>
+                <option value="service">{t('Service')}</option>
+                <option value="official">{t('Official')}</option>
+                <option value="other">{t('Other')}</option>
               </select>
             </label>
             <label
               className="grid gap-space-1 text-body-strong"
               htmlFor="visitor-people-count"
             >
-              Number of people
+              {t('Number of people')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 defaultValue={1}
@@ -149,7 +155,7 @@ export default async function GuardVisitorsPage() {
               className="grid gap-space-1 text-body-strong"
               htmlFor="visitor-vehicle"
             >
-              Vehicle number (optional)
+              {t('Vehicle number (optional)')}
               <input
                 className="min-h-12 rounded-md border border-rule px-space-3"
                 id="visitor-vehicle"
@@ -165,15 +171,15 @@ export default async function GuardVisitorsPage() {
               className="min-h-14 rounded-md bg-brand px-space-4 font-semibold text-white focus-visible:outline-2 focus-visible:outline-focus"
               type="submit"
             >
-              Notify resident
+              {t('Notify resident')}
             </button>
           </VisitorActionForm>
         )}
       </Card>
 
       <Card
-        description="Waiting requests update on refresh."
-        title="Waiting for response"
+        description={t('Waiting requests update on refresh.')}
+        title={t('Waiting for response')}
       >
         {waiting.length ? (
           <ul className="grid gap-space-3">
@@ -184,21 +190,20 @@ export default async function GuardVisitorsPage() {
               >
                 <p className="text-body-strong">{entry.visitor_name}</p>
                 <p className="text-caption text-ink-muted">
-                  {entry.purpose} · {entry.people_count} people
-                  {entry.is_blacklisted ? ' · Blacklist warning' : ''}
+                  {entry.purpose} ·{' '}
+                  {t('{count} people', { count: entry.people_count })}
+                  {entry.is_blacklisted ? ` · ${t('Blacklist warning')}` : ''}
                 </p>
                 {entry.respond_by ? (
                   <p className="text-caption text-ink-muted">
-                    Respond by{' '}
                     <time dateTime={entry.respond_by}>
-                      {new Date(entry.respond_by).toLocaleTimeString(
-                        undefined,
-                        {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          timeZone: timezone,
-                        },
-                      )}
+                      {t('Respond by {date}', {
+                        date: formatLocalizedTime(
+                          new Date(entry.respond_by),
+                          locale,
+                          { timeZone: timezone },
+                        ),
+                      })}
                     </time>
                   </p>
                 ) : null}
@@ -212,7 +217,7 @@ export default async function GuardVisitorsPage() {
                       className="grid gap-space-1 text-caption"
                       htmlFor={`override-${entry.id}`}
                     >
-                      Allow by guard (reason required)
+                      {t('Allow by guard (reason required)')}
                       <input
                         className="min-h-11 rounded-md border border-rule px-space-3"
                         id={`override-${entry.id}`}
@@ -225,23 +230,28 @@ export default async function GuardVisitorsPage() {
                       className="min-h-12 rounded-md border border-rule-strong px-space-3 font-semibold text-ink"
                       type="submit"
                     >
-                      Allow by guard
+                      {t('Allow by guard')}
                     </button>
                   </VisitorActionForm>
                 ) : (
                   <p className="text-caption text-ink-muted">
-                    Guard approval is disabled for this society.
+                    {t('Guard approval is disabled for this society.')}
                   </p>
                 )}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-body text-ink-muted">No visitors are waiting.</p>
+          <p className="text-body text-ink-muted">
+            {t('No visitors are waiting.')}
+          </p>
         )}
       </Card>
 
-      <Card description="Check out visitors as they leave." title="Inside now">
+      <Card
+        description={t('Check out visitors as they leave.')}
+        title={t('Inside now')}
+      >
         {inside.length ? (
           <ul className="grid gap-space-3">
             {inside.map((entry) => (
@@ -253,8 +263,8 @@ export default async function GuardVisitorsPage() {
                   <p className="text-body-strong">{entry.visitor_name}</p>
                   <p className="text-caption text-ink-muted">
                     {entry.is_overstay
-                      ? 'Still inside · Overstay'
-                      : 'Still inside'}
+                      ? t('Still inside · Overstay')
+                      : t('Still inside')}
                   </p>
                 </div>
                 <VisitorActionForm action={checkOutVisitorAction}>
@@ -263,18 +273,23 @@ export default async function GuardVisitorsPage() {
                     className="min-h-12 rounded-md border border-rule-strong px-space-4 font-semibold"
                     type="submit"
                   >
-                    Check out
+                    {t('Check out')}
                   </button>
                 </VisitorActionForm>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-body text-ink-muted">No visitors are inside.</p>
+          <p className="text-body text-ink-muted">
+            {t('No visitors are inside.')}
+          </p>
         )}
       </Card>
 
-      <Card description="Entries handled at this gate today." title="Today">
+      <Card
+        description={t('Entries handled at this gate today.')}
+        title={t('Today')}
+      >
         {today.length ? (
           <ol className="grid gap-space-2">
             {today.map((entry) => (
@@ -290,13 +305,17 @@ export default async function GuardVisitorsPage() {
             ))}
           </ol>
         ) : (
-          <p className="text-body text-ink-muted">No visitor entries today.</p>
+          <p className="text-body text-ink-muted">
+            {t('No visitor entries today.')}
+          </p>
         )}
       </Card>
 
       <Card
-        description="Enter a 6-digit code from the resident's QR or message."
-        title="Validate pre-approved code"
+        description={t(
+          "Enter a 6-digit code from the resident's QR or message.",
+        )}
+        title={t('Validate pre-approved code')}
       >
         <VisitorCodeControl
           checkInAction={checkInPreApprovedVisitorAction}

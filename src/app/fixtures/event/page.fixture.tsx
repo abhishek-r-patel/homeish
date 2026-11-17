@@ -2,6 +2,8 @@
 'use client';
 import { useState } from 'react';
 import { z } from 'zod';
+import { LanguageProvider } from '@/components/language-provider';
+import { LanguageSelector } from '@/components/language-selector';
 import {
   EventAdminDetailView,
   EventAdminListView,
@@ -89,7 +91,10 @@ const memberList: EventMemberList = {
       rsvpClosesAt: DEADLINE,
       contributionType: 'per_head',
       contributionPaise: 25_000,
-      myRsvp: { unitId: UNIT_A, status: 'going', headcount: 2 },
+      myRsvps: [
+        { unitId: UNIT_A, label: 'A-101', status: 'going', headcount: 2 },
+        { unitId: UNIT_B, label: 'B-201', status: null, headcount: null },
+      ],
     },
     {
       id: id('2'),
@@ -102,7 +107,9 @@ const memberList: EventMemberList = {
       rsvpClosesAt: STARTS,
       contributionType: 'none',
       contributionPaise: 0,
-      myRsvp: null,
+      myRsvps: [
+        { unitId: UNIT_A, label: 'A-101', status: null, headcount: null },
+      ],
     },
     {
       id: id('3'),
@@ -115,7 +122,9 @@ const memberList: EventMemberList = {
       rsvpClosesAt: STARTS,
       contributionType: 'per_unit',
       contributionPaise: 10_000,
-      myRsvp: { unitId: UNIT_A, status: 'not_going', headcount: 0 },
+      myRsvps: [
+        { unitId: UNIT_A, label: 'A-101', status: 'not_going', headcount: 0 },
+      ],
     },
   ],
 };
@@ -402,12 +411,13 @@ export default function EventFixturePage() {
   })();
 
   return (
-    <>
+    <LanguageProvider initialLocale="en" mode="device">
       <header className="mx-auto grid w-full max-w-content-default gap-space-4 px-space-4 pt-space-5">
         <Banner title="Synthetic Events & RSVPs fixture" tone="info">
           Sample homes, events and RSVPs only. No hosted Auth, database writes,
           bills or notifications.
         </Banner>
+        <LanguageSelector />
         <div className="grid gap-space-4 medium:grid-cols-2">
           <SelectInput
             id="event-fixture-role"
@@ -438,6 +448,6 @@ export default function EventFixturePage() {
       <main className="mx-auto grid min-h-dvh w-full max-w-content-default gap-space-5 px-space-4 py-space-6 text-ink">
         {content}
       </main>
-    </>
+    </LanguageProvider>
   );
 }

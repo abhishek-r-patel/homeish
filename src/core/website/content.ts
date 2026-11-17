@@ -197,7 +197,6 @@ export const websiteContent = {
         'Home-services directory',
         'Service-request escalation',
         'More languages',
-        'Multi-society views',
       ],
     },
   ],

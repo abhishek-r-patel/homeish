@@ -340,3 +340,79 @@ test('failed resident and manager reads remain retryable without showing an empt
     workspace.getByRole('region', { name: 'Residents', exact: true }),
   ).toContainText('Resident Alpha');
 });
+
+test('Hindi directory workflows preserve entered identifiers and translate retry feedback', async ({
+  page,
+}) => {
+  const serviceRequests: string[] = [];
+  await page.route(/\/(?:auth|rest)\/v1\//, async (route) => {
+    serviceRequests.push(route.request().url());
+    await route.abort();
+  });
+  await page.goto('/fixtures/directory');
+  await expect(
+    page.getByRole('heading', { name: 'Resident directory', exact: true }),
+  ).toBeVisible();
+  await page
+    .getByText('Test household and management workflows', { exact: true })
+    .click();
+  const workspace = page.getByRole('region', {
+    name: 'Synthetic directory workflows',
+  });
+  const vehicleForm = workspace.locator('form').filter({
+    has: page.getByRole('button', { name: 'Add vehicle', exact: true }),
+  });
+  await vehicleForm
+    .getByLabel('Household unit')
+    .selectOption({ label: 'A-101' });
+  const selectedHouseholdValue = await vehicleForm
+    .getByLabel('Household unit')
+    .inputValue();
+  await vehicleForm.getByLabel('Registration number').fill('MH02CD5678');
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('unsaved changes');
+    await dialog.accept();
+  });
+  await page
+    .getByRole('combobox', { name: 'Choose a language' })
+    .selectOption('hi');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
+  await expect(
+    page.getByRole('heading', { name: 'निवासी डायरेक्टरी', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', {
+      name: 'Resident Bravo को +12025550123 पर कॉल करें',
+    }),
+  ).toHaveAttribute('href', 'tel:+12025550123');
+
+  const hindiForm = workspace.locator('form').filter({
+    has: page.getByRole('button', { name: 'वाहन जोड़ें', exact: true }),
+  });
+  await expect(hindiForm.getByLabel('पंजीकरण नंबर')).toHaveValue('MH02CD5678');
+  await expect(hindiForm.getByLabel('परिवार की यूनिट')).toHaveValue(
+    selectedHouseholdValue,
+  );
+  await workspace.getByLabel('Simulate action failure').check();
+  await hindiForm
+    .getByRole('button', { name: 'वाहन जोड़ें', exact: true })
+    .click();
+  await expect(hindiForm.getByRole('status')).toContainText(
+    'नमूने की कार्रवाई असफल रही। फिर कोशिश करें।',
+  );
+  await expect(hindiForm.getByRole('status')).toContainText(
+    'directory-fixture-reference',
+  );
+  await expect(hindiForm.getByLabel('पंजीकरण नंबर')).toHaveValue('MH02CD5678');
+  await workspace.getByLabel('Simulate action failure').uncheck();
+  await hindiForm
+    .getByRole('button', { name: 'वाहन जोड़ें', exact: true })
+    .click();
+  const vehicle = workspace
+    .getByRole('listitem')
+    .filter({ hasText: 'MH02CD5678' });
+  await expect(vehicle).toContainText('कार');
+  await expect(vehicle).toContainText('सत्यापन बाकी');
+  await expect(vehicle).toContainText('A-101');
+  expect(serviceRequests).toEqual([]);
+});

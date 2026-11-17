@@ -14,8 +14,10 @@ import {
 } from '@/core/members/residents-csv';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';
+import { useUiTranslator } from '@/components/ui/language';
 
 export function ResidentsImportControl() {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const [csv, setCsv] = useState('');
   const [fileName, setFileName] = useState('');
@@ -86,13 +88,13 @@ export function ResidentsImportControl() {
         download="homeish-residents-template.csv"
         href="/admin/members/template.csv"
       >
-        Download CSV template
+        {t('Download CSV template')}
       </a>
       <label
         className="grid gap-space-1 text-body-strong"
         htmlFor="residents-csv"
       >
-        Resident CSV file
+        {t('Resident CSV file')}
         <input
           accept=".csv,text/csv"
           className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 py-space-2 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
@@ -104,7 +106,9 @@ export function ResidentsImportControl() {
         />
       </label>
       {fileName ? (
-        <p className="text-caption text-ink-muted">Selected: {fileName}</p>
+        <p className="text-caption text-ink-muted">
+          {t('Selected: {file}', { file: fileName })}
+        </p>
       ) : null}
       {state ? (
         <p
@@ -112,9 +116,9 @@ export function ResidentsImportControl() {
           className={`text-caption ${state.ok ? 'text-success' : 'text-danger'}`}
           role="status"
         >
-          {state.message}
+          {state.message ? translateFeedback(state.message) : null}
           {!state.ok && state.fieldErrors
-            ? ` ${Object.values(state.fieldErrors).join(' ')}`
+            ? ` ${Object.values(state.fieldErrors).map(translateFeedback).join(' ')}`
             : ''}
         </p>
       ) : null}
@@ -125,7 +129,7 @@ export function ResidentsImportControl() {
           onClick={runPreview}
           variant="secondary"
         >
-          Preview Import
+          {t('Preview Import')}
         </Button>
         <Button
           disabled={
@@ -136,14 +140,16 @@ export function ResidentsImportControl() {
           }
           onClick={() => setConfirmOpen(true)}
         >
-          Import Residents
+          {t('Import Residents')}
         </Button>
       </div>
       {preview ? (
         <section aria-live="polite" className="grid gap-space-2" role="status">
           <h3 className="text-body-strong">
-            {preview.rows.length} rows checked · {preview.issues.length} issue
-            {preview.issues.length === 1 ? '' : 's'}
+            {t('{rows} rows checked · {issues} issues', {
+              rows: preview.rows.length,
+              issues: preview.issues.length,
+            })}
           </h3>
           {preview.issues.length ? (
             <ul className="grid gap-space-1">
@@ -152,28 +158,40 @@ export function ResidentsImportControl() {
                   className="text-caption text-danger"
                   key={`${issue.rowNumber}-${issue.field}-${index}`}
                 >
-                  Row {issue.rowNumber}, {issue.field}: {issue.message}
+                  {t('Row {row}, {field}: {message}', {
+                    row: issue.rowNumber,
+                    field: issue.field,
+                    message: translateFeedback(issue.message),
+                  })}
                 </li>
               ))}
             </ul>
           ) : (
             <p className="text-caption text-success">
-              All rows are valid. Preview made no database changes.
+              {t('All rows are valid. Preview made no database changes.')}
             </p>
           )}
         </section>
       ) : null}
       <ConfirmDialog
-        actionLabel="Create resident invitations"
-        description={`Create ${preview?.rows.length ?? 0} resident invitations and review the import job?`}
+        actionLabel={t('Create resident invitations')}
+        description={t(
+          'Create {count} resident invitations and review the import job?',
+          { count: preview?.rows.length ?? 0 },
+        )}
         id="confirm-resident-import"
         loading={confirmPending}
         onConfirm={confirmImport}
         onOpenChange={setConfirmOpen}
         open={confirmOpen}
-        title="Confirm resident import"
+        title={t('Confirm resident import')}
         variant="primary"
       />
+      <p className="text-caption text-ink-muted">
+        {t(
+          'CSV templates and error reports remain in English. Keep the column names unchanged.',
+        )}
+      </p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 // Refresh delivery views from Realtime, with a five-second fallback.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createNotificationBrowserClient } from '@/core/notifications/browser-client';
@@ -12,6 +13,7 @@ export function DeliveryRealtimeRefresh({
   societyId: string;
   gate?: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [online, setOnline] = useState(true);
 
@@ -66,17 +68,23 @@ export function DeliveryRealtimeRefresh({
     >
       <span>
         {online
-          ? 'Delivery updates refresh automatically. Unsent details remain in the form if a request fails.'
+          ? t(
+              'Delivery updates refresh automatically. Unsent details remain in the form if a request fails.',
+            )
           : gate
-            ? "Can't reach the server. Call the resident to confirm; unsent details remain in the form."
-            : 'Connection lost. Keep this page open; unsent details remain in the form.'}
+            ? t(
+                "Can't reach the server. Call the resident to confirm; unsent details remain in the form.",
+              )
+            : t(
+                'Connection lost. Keep this page open; unsent details remain in the form.',
+              )}
       </span>
       <button
         className="min-h-11 rounded-md border border-rule-strong px-space-3 font-semibold focus-visible:outline-2 focus-visible:outline-focus"
         onClick={() => router.refresh()}
         type="button"
       >
-        Retry refresh
+        {t('Retry refresh')}
       </button>
     </aside>
   );

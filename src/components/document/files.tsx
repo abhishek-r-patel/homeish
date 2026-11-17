@@ -25,6 +25,7 @@ import {
   updateDocumentAction,
 } from '@/app/(admin)/admin/documents/actions';
 import { documentDownloadAction } from '@/app/(resident)/documents/actions';
+import { useDocumentPresentation } from './presentation';
 
 export type DocumentActions = {
   download: (form: FormData) => Promise<
@@ -77,9 +78,17 @@ function storagePrefix(upload: boolean) {
 }
 
 export function documentStorageUrl(value: string, path?: string): string {
-  const url = new URL(value);
+  let url: URL;
+  let objectPath: string;
+  try {
+    url = new URL(value);
+    objectPath = decodeURIComponent(url.pathname);
+  } catch {
+    throw new Error(
+      'The private file link is invalid. Nothing was sent; refresh and retry.',
+    );
+  }
   const { origin, prefix } = storagePrefix(path !== undefined);
-  const objectPath = decodeURIComponent(url.pathname);
   const remainder = objectPath.startsWith(prefix)
     ? objectPath.slice(prefix.length)
     : null;
@@ -119,6 +128,7 @@ export function DocumentFilePicker({
   request?: typeof fetch;
   onChange: (file: UploadedDocumentFile | null) => void;
 }) {
+  const { t, translateFeedback } = useDocumentPresentation();
   const id = useId();
   const current = useRef<AbortController | null>(null);
   const [files, setFiles] = useState<readonly UploadFile[]>([]);
@@ -188,10 +198,10 @@ export function DocumentFilePicker({
         {
           ...selected,
           error: controller.signal.aborted
-            ? 'The upload timed out. Nothing was published; retry.'
+            ? t('The upload timed out. Nothing was published; retry.')
             : error instanceof Error
-              ? error.message
-              : 'The upload failed. Nothing was published; retry.',
+              ? translateFeedback(error.message)
+              : t('The upload failed. Nothing was published; retry.'),
         },
       ]);
       setMessage(null);
@@ -214,7 +224,7 @@ export function DocumentFilePicker({
         maxFileBytes={MAX_FILE_BYTES}
         maxFiles={1}
         files={files}
-        helpText="PDF, JPG or PNG, up to 5 MB. Stored privately."
+        helpText={t('PDF, JPG or PNG, up to 5 MB. Stored privately.')}
         onRetry={(file) => void upload(file)}
         onFilesChange={(next) => {
           if (next.length > 0) void upload(next[0]!);
@@ -230,7 +240,7 @@ export function DocumentFilePicker({
       />
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {t(message)}
         </p>
       ) : null}
     </div>
@@ -246,6 +256,7 @@ export function DocumentDownloadButton({
   label: string;
   download: DocumentActions['download'];
 }) {
+  const { t, translateFeedback } = useDocumentPresentation();
   const [pending, setPending] = useState(false);
   const [link, setLink] = useState<{ url: string; expiresIn: number } | null>(
     null,
@@ -269,7 +280,10 @@ export function DocumentDownloadButton({
     try {
       const result = await download(actionInput({ versionId }));
       if (!result.ok) throw new Error(failureText(result));
-      const data = downloadResult.parse(result.data);
+      const parsed = downloadResult.safeParse(result.data);
+      if (!parsed.success)
+        throw new Error('Could not open this document. Retry.');
+      const data = parsed.data;
       setLink({
         url: documentStorageUrl(data.signedUrl),
         expiresIn: data.expiresIn,
@@ -292,7 +306,7 @@ export function DocumentDownloadButton({
         loading={pending}
         onClick={() => void prepare()}
       >
-        {link ? `Refresh link: ${label}` : `Get ${label}`}
+        {t(link ? 'Refresh link: {label}' : 'Get {label}', { label })}
       </Button>
       {link ? (
         <a
@@ -301,17 +315,19 @@ export function DocumentDownloadButton({
           rel="noopener noreferrer"
           className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         >
-          Download {label} (private link, valid for five minutes)
+          {t('Download {label} (private link, valid for five minutes)', {
+            label,
+          })}
         </a>
       ) : null}
       {error ? (
         <p role="alert" className="text-caption text-danger">
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {t(message)}
         </p>
       ) : null}
     </div>

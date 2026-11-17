@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { FileUpload, type UploadFile } from '@/components/ui/file-upload';
+import { useUiTranslator } from '@/components/ui/language';
 import { publicEnvironment } from '@/core/config/public-env';
 
 const uploadResponseSchema = z.object({
@@ -25,6 +26,7 @@ export function BillingQrUpload({
   onUploadingChange: (uploading: boolean) => void;
   societyId: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [path, setPath] = useState(initialPath);
   const [message, setMessage] = useState<string | null>(null);
@@ -139,7 +141,9 @@ export function BillingQrUpload({
       onErrorChange(true);
       setFiles((current) =>
         current.map((item) =>
-          item.id === upload.id ? { ...item, error: errorMessage } : item,
+          item.id === upload.id
+            ? { ...item, error: translateFeedback(errorMessage) }
+            : item,
         ),
       );
     } finally {
@@ -196,15 +200,17 @@ export function BillingQrUpload({
           }}
           variant="tertiary"
         >
-          Remove Saved QR Image
+          {t('Remove Saved QR Image')}
         </Button>
       ) : null}
       <FileUpload
         acceptedTypes={['image/jpeg', 'image/png']}
         files={files}
-        helpText="Optional JPG or PNG, up to 5 MB. Check that the QR belongs to the displayed UPI account."
+        helpText={t(
+          'Optional JPG or PNG, up to 5 MB. Check that the QR belongs to the displayed UPI account.',
+        )}
         id="billing-qr-upload"
-        label="UPI QR image"
+        label={t('UPI QR image')}
         maxFileBytes={5 * 1024 * 1024}
         maxFiles={1}
         onFilesChange={(next) => void changeFiles(next)}
@@ -212,7 +218,7 @@ export function BillingQrUpload({
       />
       {message ? (
         <p className="text-caption text-danger" role="alert">
-          {message}
+          {translateFeedback(message)}
         </p>
       ) : null}
     </div>

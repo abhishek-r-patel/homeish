@@ -4,6 +4,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ChangeEvent, KeyboardEvent, ReactNode } from 'react';
 import type { SelectOption } from './select-input';
+import { useUiTranslator } from './language';
 
 type ComboboxProps = {
   disabled?: boolean;
@@ -21,17 +22,18 @@ type ComboboxProps = {
 
 export function Combobox({
   disabled = false,
-  emptyMessage = 'No matching options',
+  emptyMessage,
   error,
   helpText,
   id,
   label,
   onChange,
   options,
-  placeholder = 'Search options',
+  placeholder,
   required = false,
   value,
 }: ComboboxProps) {
+  const { translate } = useUiTranslator();
   const reactId = useId();
   const listboxId = `${id}-listbox`;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -46,6 +48,10 @@ export function Combobox({
   const helpId = helpText ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [helpId, errorId].filter(Boolean).join(' ') || undefined;
+  const resolvedEmptyMessage =
+    emptyMessage === undefined
+      ? translate('No matching options')
+      : emptyMessage;
 
   useEffect(() => {
     if (!isOpen) {
@@ -114,7 +120,7 @@ export function Combobox({
     <div className="grid gap-space-1">
       <label className="text-body-strong text-ink" htmlFor={id}>
         {label}
-        {required ? ' (required)' : ''}
+        {required ? ` ${translate('(required)')}` : ''}
       </label>
       <div className="relative" ref={containerRef}>
         <input
@@ -136,7 +142,7 @@ export function Combobox({
           onChange={handleChange}
           onFocus={openOptions}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={placeholder ?? translate('Search options')}
           role="combobox"
           value={isOpen ? query : (selected?.label ?? '')}
         />
@@ -158,7 +164,7 @@ export function Combobox({
           <div className="fixed inset-x-0 bottom-0 z-50 max-h-96 overflow-auto rounded-t-lg border border-rule bg-surface p-space-2 shadow-overlay medium:absolute medium:inset-x-0 medium:top-full medium:bottom-auto medium:mt-space-1 medium:rounded-md">
             {filteredOptions.length > 0 ? (
               <div
-                aria-label={`${label} options`}
+                aria-label={translate('{label} options', { label })}
                 id={listboxId}
                 role="listbox"
               >
@@ -187,7 +193,7 @@ export function Combobox({
                 className="px-space-4 py-space-3 text-body text-ink-muted"
                 role="status"
               >
-                {emptyMessage}
+                {resolvedEmptyMessage}
               </div>
             )}
           </div>
@@ -195,7 +201,12 @@ export function Combobox({
       </div>
       <p aria-live="polite" className="sr-only">
         {isOpen
-          ? `${filteredOptions.length} result${filteredOptions.length === 1 ? '' : 's'} available`
+          ? translate(
+              filteredOptions.length === 1
+                ? '{count} result available'
+                : '{count} results available',
+              { count: filteredOptions.length },
+            )
           : ''}
       </p>
       {helpText ? (

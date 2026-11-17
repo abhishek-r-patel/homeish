@@ -784,7 +784,8 @@ export async function passEventDeadline(
 ): Promise<void> {
   await withReplicaRole(
     fixture,
-    `update public.events set rsvp_deadline = clock_timestamp() - interval '1 minute'
+    // Millisecond precision so stored inputs round-trip through JS dates unchanged.
+    `update public.events set rsvp_deadline = date_trunc('milliseconds', clock_timestamp()) - interval '1 minute'
      where society_id=$1 and id=$2`,
     [fixture.societyId, eventId],
   );

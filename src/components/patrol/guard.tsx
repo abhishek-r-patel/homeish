@@ -1,10 +1,7 @@
 // Let guards follow patrol rounds, scan checkpoints, report incidents and hand over shifts on a phone.
 'use client';
 import { useId, useMemo } from 'react';
-import {
-  formatPatrolClock,
-  formatPatrolTime,
-} from '@/core/patrol/presentation';
+import { useUiTranslator } from '@/components/ui/language';
 import {
   computePatrolRounds,
   currentPatrolRounds,
@@ -27,6 +24,8 @@ import {
   PATROL_ACTIONS,
   PatrolIncidentForm,
   PatrolQuickAction,
+  formatPatrolClock,
+  formatPatrolTime,
   type PatrolActions,
 } from './shared';
 
@@ -41,6 +40,7 @@ export function PatrolGuardView({
   actions?: PatrolActions;
   fileRequest?: typeof fetch;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const id = useId();
   const timeZone = workspace.timezone;
   const now = useMemo(
@@ -76,22 +76,23 @@ export function PatrolGuardView({
 
   return (
     <section className="grid min-w-0 gap-space-5">
-      <h1 className="text-title font-semibold">Patrol</h1>
+      <h1 className="text-title font-semibold">{t('Patrol')}</h1>
 
       <Card
-        title="Current round"
-        description="Scan every checkpoint listed before the finish time."
+        title={t('Current round')}
+        description={t('Scan every checkpoint listed before the finish time.')}
       >
         {workspace.schedules.length === 0 ? (
           <p className="text-body text-ink-muted">
-            No patrol rounds are scheduled. You can still scan checkpoints as
-            you pass them.
+            {t(
+              'No patrol rounds are scheduled. You can still scan checkpoints as you pass them.',
+            )}
           </p>
         ) : current.length === 0 ? (
           <p className="text-body text-ink-muted">
-            No round is due right now.
+            {t('No round is due right now.')}
             {next[0]
-              ? ` The next round starts at ${formatPatrolClock(next[0].start, timeZone)}.`
+              ? ` ${t('The next round starts at {time}.', { time: formatPatrolClock(next[0].start, timeZone, locale) })}`
               : ''}
           </p>
         ) : (
@@ -109,25 +110,28 @@ export function PatrolGuardView({
       </Card>
 
       <Card
-        title="Scan a checkpoint"
-        description="The camera starts only when you tap Scan."
+        title={t('Scan a checkpoint')}
+        description={t('The camera starts only when you tap Scan.')}
       >
         <PatrolScanPanel action={actions.scan} />
       </Card>
 
-      <Card title="Recent scans" description="All guards, last 24 hours.">
+      <Card
+        title={t('Recent scans')}
+        description={t('All guards, last 24 hours.')}
+      >
         {recentScans.length === 0 ? (
-          <p className="text-body text-ink-muted">No scans yet.</p>
+          <p className="text-body text-ink-muted">{t('No scans yet.')}</p>
         ) : (
           <ul className="grid gap-space-2">
             {recentScans.map((scan) => (
               <li key={scan.id} className="text-caption">
                 <span className="text-body-strong">
-                  {names.get(scan.checkpoint_id) ?? 'Checkpoint'}
+                  {names.get(scan.checkpoint_id) ?? t('Checkpoint')}
                 </span>{' '}
-                · {formatPatrolTime(scan.scanned_at, timeZone)} ·{' '}
-                {scan.is_mine ? 'You' : scan.scanned_by_name}
-                {scan.method === 'typed' ? ' · typed code' : ''}
+                · {formatPatrolTime(scan.scanned_at, timeZone, locale)} ·{' '}
+                {scan.is_mine ? t('You') : scan.scanned_by_name}
+                {scan.method === 'typed' ? ` · ${t('typed code')}` : ''}
               </li>
             ))}
           </ul>
@@ -135,8 +139,10 @@ export function PatrolGuardView({
       </Card>
 
       <Card
-        title="Report an incident"
-        description="Administrators see every report. High and critical alert them straight away."
+        title={t('Report an incident')}
+        description={t(
+          'Administrators see every report. High and critical alert them straight away.',
+        )}
       >
         <PatrolIncidentForm
           action={actions.createIncident}
@@ -145,7 +151,7 @@ export function PatrolGuardView({
       </Card>
 
       {workspace.incidents.length > 0 ? (
-        <Card title="Your recent incidents">
+        <Card title={t('Your recent incidents')}>
           <ul className="grid gap-space-3">
             {workspace.incidents.map((incident) => (
               <PatrolIncidentItem
@@ -160,14 +166,16 @@ export function PatrolGuardView({
       ) : null}
 
       <Card
-        title="Shift handover"
-        description="Notes from the last 7 days. Acknowledge a note when you take over."
+        title={t('Shift handover')}
+        description={t(
+          'Notes from the last 7 days. Acknowledge a note when you take over.',
+        )}
       >
         <div className="grid gap-space-4">
           <ModuleActionForm
             action={actions.createHandover}
             idempotent
-            submitLabel="Save handover note"
+            submitLabel={t('Save handover note')}
             input={(form, clientRequestId) =>
               patrolHandoverInputSchema.parse({
                 body: String(form.get('body') ?? ''),
@@ -178,14 +186,16 @@ export function PatrolGuardView({
             <TextAreaInput
               id={`${id}-handover`}
               name="body"
-              label="Handover note"
-              helpText="What the next guard should know, for example a broken light or an expected delivery."
+              label={t('Handover note')}
+              helpText={t(
+                'What the next guard should know, for example a broken light or an expected delivery.',
+              )}
               required
               maxLength={1000}
             />
           </ModuleActionForm>
           {workspace.handover_notes.length === 0 ? (
-            <p className="text-body text-ink-muted">No recent notes.</p>
+            <p className="text-body text-ink-muted">{t('No recent notes.')}</p>
           ) : (
             <ul className="grid gap-space-3">
               {workspace.handover_notes.map((note) => (
@@ -198,7 +208,7 @@ export function PatrolGuardView({
                     <PatrolQuickAction
                       action={actions.acknowledgeHandover}
                       input={{ noteId: note.id }}
-                      label="Acknowledge"
+                      label={t('Acknowledge')}
                     />
                   ) : null}
                 </PatrolHandoverItem>

@@ -3,7 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '../../src/core/errors';
 
-const mocks = vi.hoisted(() => ({ buildRequestContext: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  buildRequestContext: vi.fn(),
+  getRequestLocale: vi.fn(),
+}));
 vi.mock('../../src/core/directory/operations', () => ({
   getDirectoryResidents: vi.fn(),
 }));
@@ -13,6 +16,9 @@ vi.mock('../../src/app/directory/actions', () => ({
 vi.mock('../../src/core/tenancy/request-context', () => ({
   buildRequestContext: mocks.buildRequestContext,
 }));
+vi.mock('../../src/core/i18n/request-locale', () => ({
+  getRequestLocale: mocks.getRequestLocale,
+}));
 
 import ResidentDirectoryPage from '../../src/app/(resident)/directory/page';
 import { getDirectoryResidents } from '../../src/core/directory/operations';
@@ -21,6 +27,7 @@ describe('resident directory page', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.buildRequestContext.mockResolvedValue({ roles: [] });
+    mocks.getRequestLocale.mockResolvedValue('en');
   });
 
   it('renders only the returned contact details with permitted phone links', async () => {

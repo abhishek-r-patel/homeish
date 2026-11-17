@@ -4,6 +4,14 @@ import { Card, StatusChip } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
 import { getSocietyJob } from '@/core/jobs/operations';
 import type { ProductStatus } from '@/components/ui/data-display';
+import {
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
+import { JOB_TYPE_LABELS } from '@/components/structure/job-labels';
+import { JobResult } from '@/components/structure/job-result';
 
 export const metadata = {
   title: 'Job Details | Homeish',
@@ -23,6 +31,8 @@ const jobStatus: Readonly<Record<string, ProductStatus>> = {
 } as const;
 
 export default async function JobDetailPage({ params }: JobDetailPageProps) {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   const { jobId } = await params;
   if (
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -30,7 +40,10 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     )
   ) {
     return (
-      <ErrorPanel message="Check the job address." title="Job not found" />
+      <ErrorPanel
+        message={t('Check the job address.')}
+        title={t('Job not found')}
+      />
     );
   }
   const job = await getSocietyJob(jobId);
@@ -39,52 +52,52 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
         <Link className="text-caption text-brand underline" href="/admin/jobs">
-          Back to Jobs
+          {t('Back to Jobs')}
         </Link>
-        <h1 className="text-title font-semibold">Job Details</h1>
+        <h1 className="text-title font-semibold">{t('Job Details')}</h1>
       </header>
-      <Card title={job.type}>
+      <Card title={t(JOB_TYPE_LABELS[job.type] ?? job.type)}>
         <dl className="grid gap-space-3 medium:grid-cols-2">
           <div>
-            <dt className="text-caption text-ink-muted">Status</dt>
+            <dt className="text-caption text-ink-muted">{t('Status')}</dt>
             <dd className="mt-space-1">
               <StatusChip status={status} />
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Progress</dt>
-            <dd className="text-body">{job.progress}%</dd>
-          </div>
-          <div>
-            <dt className="text-caption text-ink-muted">Created</dt>
+            <dt className="text-caption text-ink-muted">{t('Progress')}</dt>
             <dd className="text-body">
-              {new Intl.DateTimeFormat('en', {
-                dateStyle: 'full',
-                timeStyle: 'long',
-                timeZone: 'Asia/Kolkata',
-              }).format(new Date(job.created_at))}
+              {formatLocalizedNumber(job.progress, locale)}%
             </dd>
           </div>
           <div>
-            <dt className="text-caption text-ink-muted">Finished</dt>
+            <dt className="text-caption text-ink-muted">{t('Created')}</dt>
+            <dd className="text-body">
+              {formatLocalizedDateTime(new Date(job.created_at), locale, {
+                dateStyle: 'full',
+                timeStyle: 'long',
+                timeZone: 'Asia/Kolkata',
+              })}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-caption text-ink-muted">{t('Finished')}</dt>
             <dd className="text-body">
               {job.finished_at
-                ? new Intl.DateTimeFormat('en', {
+                ? formatLocalizedDateTime(new Date(job.finished_at), locale, {
                     dateStyle: 'full',
                     timeStyle: 'long',
                     timeZone: 'Asia/Kolkata',
-                  }).format(new Date(job.finished_at))
-                : 'Not finished'}
+                  })
+                : t('Not finished')}
             </dd>
           </div>
         </dl>
       </Card>
-      <Card title="Result">
+      <Card title={t('Result')}>
         {job.summary ? (
           <div className="grid gap-space-3">
-            <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface-sunken p-space-3 font-mono text-caption">
-              {JSON.stringify(job.summary, null, 2)}
-            </pre>
+            <JobResult summary={job.summary} />
             {job.type === 'csv_import_units' &&
             typeof job.summary === 'object' &&
             !Array.isArray(job.summary) &&
@@ -94,13 +107,13 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 className="w-fit text-body text-brand underline"
                 href={`/admin/jobs/${job.id}/errors.csv`}
               >
-                Download row error report
+                {t('Download row error report')}
               </a>
             ) : null}
           </div>
         ) : (
           <p className="text-body text-ink-muted">
-            No result is available yet.
+            {t('No result is available yet.')}
           </p>
         )}
       </Card>

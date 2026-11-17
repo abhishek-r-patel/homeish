@@ -1,13 +1,7 @@
 // Let guards find a meter by unit, label or serial and record its reading quickly on a phone.
 'use client';
 import { useId, useState, type FormEvent } from 'react';
-import {
-  METERING_UNIT_LABELS,
-  formatConsumption,
-  formatMeterValue,
-  formatMeteringDate,
-  formatMeteringTime,
-} from '@/core/metering/presentation';
+import { METERING_UNIT_LABELS } from '@/core/metering/presentation';
 import type { MeteringGuardBoard } from '@/core/metering/validation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/data-display';
@@ -16,6 +10,10 @@ import {
   METERING_ACTIONS,
   MeteringReadingForm,
   meteringMeterName,
+  meteringDisplayDate,
+  meteringDisplayTime,
+  meteringDisplayValue,
+  useMeteringCopy,
   type MeteringActions,
 } from './shared';
 
@@ -32,6 +30,7 @@ export function MeteringGuardView({
   fileRequest?: typeof fetch;
   onSearch?: (query: string) => void;
 }) {
+  const { locale, t } = useMeteringCopy();
   const id = useId();
   const [query, setQuery] = useState(board.query ?? '');
 
@@ -43,11 +42,11 @@ export function MeteringGuardView({
 
   return (
     <section className="grid min-w-0 gap-space-5">
-      <h1 className="text-title font-semibold">Meter readings</h1>
+      <h1 className="text-title font-semibold">{t('Meter readings')}</h1>
 
       <Card
-        title="Find a meter"
-        description="Search by unit number, meter label or serial number."
+        title={t('Find a meter')}
+        description={t('Search by unit number, meter label or serial number.')}
       >
         <form
           action={baseHref}
@@ -59,27 +58,35 @@ export function MeteringGuardView({
           <TextInput
             id={`${id}-query`}
             name="q"
-            label="Unit, label or serial"
+            label={t('Unit, label or serial')}
             maxLength={40}
             autoComplete="off"
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
           />
           <Button type="submit" size="guard">
-            Search
+            {t('Search')}
           </Button>
         </form>
       </Card>
 
       <Card
-        title={board.query ? `Meters matching “${board.query}”` : 'Meters'}
-        description="Open a meter, read its display and save. Your readings count straight away."
+        title={
+          board.query
+            ? t('Meters matching “{query}”', { query: board.query })
+            : t('Meters')
+        }
+        description={t(
+          'Open a meter, read its display and save. Your readings count straight away.',
+        )}
       >
         {board.meters.length === 0 ? (
           <p role="status" className="text-body text-ink-muted">
             {board.query
-              ? `No meter in use matches “${board.query}”.`
-              : 'No meters in use yet.'}
+              ? t('No meter in use matches “{query}”.', {
+                  query: board.query,
+                })
+              : t('No meters in use yet.')}
           </p>
         ) : (
           <ul className="grid gap-space-3">
@@ -91,12 +98,28 @@ export function MeteringGuardView({
                 <details className="grid gap-space-3">
                   <summary className="grid min-h-12 cursor-pointer content-center">
                     <span className="text-body-strong">
-                      {meteringMeterName(meter)}
+                      {meteringMeterName(meter, t)}
                     </span>
                     <span className="text-caption text-ink-muted">
                       {meter.last_reading_date
-                        ? `Last ${formatMeterValue(meter.base_value)} ${METERING_UNIT_LABELS[meter.meter_type]} on ${formatMeteringDate(meter.last_reading_date)}`
-                        : `Starting ${formatMeterValue(meter.base_value)} ${METERING_UNIT_LABELS[meter.meter_type]}`}
+                        ? t('Last {value} {unit} on {date}', {
+                            value: meteringDisplayValue(
+                              meter.base_value,
+                              locale,
+                            ),
+                            unit: METERING_UNIT_LABELS[meter.meter_type],
+                            date: meteringDisplayDate(
+                              meter.last_reading_date,
+                              locale,
+                            ),
+                          })
+                        : t('Starting {value} {unit}', {
+                            value: meteringDisplayValue(
+                              meter.base_value,
+                              locale,
+                            ),
+                            unit: METERING_UNIT_LABELS[meter.meter_type],
+                          })}
                     </span>
                   </summary>
                   <MeteringReadingForm
@@ -114,9 +137,9 @@ export function MeteringGuardView({
         )}
       </Card>
 
-      <Card title="Recent readings">
+      <Card title={t('Recent readings')}>
         {board.recent.length === 0 ? (
-          <p className="text-body text-ink-muted">No readings yet.</p>
+          <p className="text-body text-ink-muted">{t('No readings yet.')}</p>
         ) : (
           <ul className="grid gap-space-2">
             {board.recent.map((reading) => (
@@ -125,21 +148,26 @@ export function MeteringGuardView({
                 className="rounded-md border border-rule p-space-3"
               >
                 <p className="text-body-strong">
-                  {meteringMeterName({
-                    label: reading.meter_label,
-                    meter_type: reading.meter_type,
-                    unit_number: reading.unit_number,
-                  })}
+                  {meteringMeterName(
+                    {
+                      label: reading.meter_label,
+                      meter_type: reading.meter_type,
+                      unit_number: reading.unit_number,
+                    },
+                    t,
+                  )}
                 </p>
                 <p className="text-caption text-ink-muted">
-                  {formatMeterValue(reading.reading_value)}{' '}
-                  {METERING_UNIT_LABELS[reading.meter_type]} on{' '}
-                  {formatMeteringDate(reading.reading_date)}
+                  {meteringDisplayValue(reading.reading_value, locale)}{' '}
+                  {METERING_UNIT_LABELS[reading.meter_type]} {t('on')}{' '}
+                  {meteringDisplayDate(reading.reading_date, locale)}
                   {reading.consumption !== null
-                    ? ` · usage ${formatConsumption(reading.consumption, reading.meter_type)}`
+                    ? ` · ${t('usage {value}', {
+                        value: `${meteringDisplayValue(reading.consumption, locale)} ${METERING_UNIT_LABELS[reading.meter_type]}`,
+                      })}`
                     : ''}
-                  {reading.is_reset ? ' · meter reset' : ''} · saved{' '}
-                  {formatMeteringTime(reading.created_at)}
+                  {reading.is_reset ? ` · ${t('meter reset')}` : ''} ·{' '}
+                  {t('saved')} {meteringDisplayTime(reading.created_at, locale)}
                 </p>
               </li>
             ))}

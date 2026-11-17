@@ -2,6 +2,8 @@
 'use client';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import { Button } from '@/components/ui/button';
 import { FileUpload, type UploadFile } from '@/components/ui/file-upload';
 import type { ModuleFormAction } from '@/components/ui/module-action-form';
@@ -194,11 +196,14 @@ export function CommunityPhotoField({
   state: CommunityPhotoState;
   photoUrls?: CommunityPhotoUrls;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const room = COMMUNITY_MAX_PHOTOS - state.kept.length;
   return (
     <div className="grid min-w-0 gap-space-3">
       {state.kept.length > 0 ? (
-        <ul aria-label="Attached photos" className="grid gap-space-2">
+        <ul aria-label={t('Attached photos')} className="grid gap-space-2">
           {state.kept.map((path, index) => (
             <li
               key={path}
@@ -206,7 +211,9 @@ export function CommunityPhotoField({
             >
               {photoUrls[path] ? (
                 <Image
-                  alt={`Attached photo ${index + 1}`}
+                  alt={t('Attached photo {number}', {
+                    number: number(index + 1),
+                  })}
                   className="size-16 rounded-md border border-rule object-cover"
                   height={64}
                   src={photoUrls[path]}
@@ -214,14 +221,16 @@ export function CommunityPhotoField({
                   width={64}
                 />
               ) : (
-                <span className="text-body">Photo {index + 1}</span>
+                <span className="text-body">
+                  {t('Photo {number}', { number: number(index + 1) })}
+                </span>
               )}
               <Button
                 type="button"
                 variant="tertiary"
                 onClick={() => state.removeKept(path)}
               >
-                Remove photo {index + 1}
+                {t('Remove photo {number}', { number: number(index + 1) })}
               </Button>
             </li>
           ))}
@@ -230,18 +239,26 @@ export function CommunityPhotoField({
       {room > 0 ? (
         <FileUpload
           id={id}
-          label="Photos (optional)"
+          label={t('Photos (optional)')}
           acceptedTypes={COMMUNITY_PHOTO_CONTENT_TYPES}
           maxFileBytes={COMMUNITY_PHOTO_MAX_BYTES}
           maxFiles={room}
-          files={state.photos}
-          helpText={`Up to ${COMMUNITY_MAX_PHOTOS} JPG or PNG photos, 5 MiB each. Only residents who can see this item, and the administrators, can see them.`}
+          files={state.photos.map((photo) => ({
+            ...photo,
+            error: photo.error ? translateFeedback(photo.error) : undefined,
+          }))}
+          helpText={t(
+            'Up to {count} JPG or PNG photos, 5 MiB each. Only residents who can see this item, and the administrators, can see them.',
+            { count: number(COMMUNITY_MAX_PHOTOS) },
+          )}
           onRetry={state.retry}
           onFilesChange={state.changeFiles}
         />
       ) : (
         <p className="text-caption text-ink-muted">
-          {COMMUNITY_MAX_PHOTOS} photos attached. Remove one to add another.
+          {t('{count} photos attached. Remove one to add another.', {
+            count: number(COMMUNITY_MAX_PHOTOS),
+          })}
         </p>
       )}
       <input
@@ -251,7 +268,7 @@ export function CommunityPhotoField({
       />
       {state.message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {state.message}
+          {translateFeedback(state.message)}
         </p>
       ) : null}
     </div>
@@ -267,6 +284,9 @@ export function CommunityPhotoGallery({
   photoUrls: CommunityPhotoUrls;
   label: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   if (paths.length === 0) return null;
   return (
     <ul
@@ -283,7 +303,10 @@ export function CommunityPhotoGallery({
               target="_blank"
             >
               <Image
-                alt={`Photo ${index + 1} of ${paths.length} (opens full size)`}
+                alt={t('Photo {number} of {total} (opens full size)', {
+                  number: number(index + 1),
+                  total: number(paths.length),
+                })}
                 className="aspect-[4/3] h-auto w-full rounded-md border border-rule object-cover"
                 height={480}
                 src={photoUrls[path]}
@@ -293,7 +316,10 @@ export function CommunityPhotoGallery({
             </a>
           ) : (
             <p className="rounded-md border border-rule p-space-3 text-caption text-ink-muted">
-              Photo {index + 1} is not available right now. Refresh to retry.
+              {t(
+                'Photo {number} is not available right now. Refresh to retry.',
+                { number: number(index + 1) },
+              )}
             </p>
           )}
         </li>

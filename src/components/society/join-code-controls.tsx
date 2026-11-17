@@ -1,6 +1,7 @@
 // Admin controls for rotating or disabling the society's registration code.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useState, useTransition } from 'react';
 import {
   disableJoinCodeAction,
@@ -15,6 +16,7 @@ function ActionMessage({
 }: {
   result: ServerActionResult<string> | null;
 }) {
+  const { translateFeedback } = useUiTranslator();
   if (!result) return null;
   return (
     <p
@@ -22,7 +24,7 @@ function ActionMessage({
       className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
       role="status"
     >
-      {result.message}
+      {result.message ? translateFeedback(result.message) : null}
     </p>
   );
 }
@@ -32,6 +34,7 @@ export function JoinCodeControls({
 }: {
   initialJoinCode: string | null;
 }) {
+  const { translate: t } = useUiTranslator();
   const [joinCode, setJoinCode] = useState(initialJoinCode);
   const [result, setResult] = useState<ServerActionResult<string> | null>(null);
   const [pending, startTransition] = useTransition();
@@ -60,14 +63,17 @@ export function JoinCodeControls({
   return (
     <div className="grid gap-space-4">
       <div className="grid gap-space-1">
-        <p className="text-caption text-ink-muted">Current society code</p>
+        <p className="text-caption text-ink-muted">
+          {t('Current society code')}
+        </p>
         <p className="font-mono text-title font-semibold" aria-live="polite">
-          {joinCode ?? 'Disabled'}
+          {joinCode ?? t('Disabled')}
         </p>
       </div>
       <p className="text-body text-ink-muted">
-        Share this code with residents who need to request access. Rotating it
-        immediately invalidates the previous code.
+        {t(
+          'Share this code with residents who need to request access. Rotating it immediately invalidates the previous code.',
+        )}
       </p>
       <div className="flex flex-wrap gap-space-3">
         <Button
@@ -75,7 +81,7 @@ export function JoinCodeControls({
           onClick={() => setConfirmAction('rotate')}
           type="button"
         >
-          {joinCode ? 'Rotate code' : 'Create code'}
+          {joinCode ? t('Rotate code') : t('Create code')}
         </Button>
         {joinCode ? (
           <Button
@@ -84,19 +90,23 @@ export function JoinCodeControls({
             type="button"
             variant="secondary"
           >
-            Disable code
+            {t('Disable code')}
           </Button>
         ) : null}
       </div>
       <ActionMessage result={result} />
       <ConfirmDialog
         actionLabel={
-          confirmAction === 'disable' ? 'Disable code' : 'Rotate code'
+          confirmAction === 'disable' ? t('Disable code') : t('Rotate code')
         }
         description={
           confirmAction === 'disable'
-            ? 'New resident registration requests using this code will stop immediately.'
-            : 'The old code will stop working as soon as the new code is created.'
+            ? t(
+                'New resident registration requests using this code will stop immediately.',
+              )
+            : t(
+                'The old code will stop working as soon as the new code is created.',
+              )
         }
         id="join-code-confirmation"
         loading={pending}
@@ -107,8 +117,8 @@ export function JoinCodeControls({
         open={confirmAction !== null}
         title={
           confirmAction === 'disable'
-            ? 'Disable registration code?'
-            : 'Change registration code?'
+            ? t('Disable registration code?')
+            : t('Change registration code?')
         }
         variant="destructive"
       />

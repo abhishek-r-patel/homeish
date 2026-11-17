@@ -1,6 +1,7 @@
 // Compose or edit a notice with its audience, expiry and optional attachment.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -58,6 +59,7 @@ export function NoticeForm({
   /** Replaces the default navigation to the saved notice. */
   onSaved?: (data: unknown) => void;
 }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [audience, setAudience] = useState<NoticeAudience>(
     notice?.audience ?? 'all',
@@ -114,13 +116,13 @@ export function NoticeForm({
         if (id) router.push(`/admin/notices/${id}`);
       }}
       refresh={!onSaved}
-      submitLabel={notice ? 'Save changes' : 'Publish notice'}
+      submitLabel={notice ? t('Save changes') : t('Publish notice')}
     >
       <label
         className="grid min-w-0 gap-space-1 text-body-strong"
         htmlFor="notice-title"
       >
-        Title
+        {t('Title')}
         <input
           className={fieldClass}
           defaultValue={notice?.title}
@@ -134,7 +136,7 @@ export function NoticeForm({
         className="grid min-w-0 gap-space-1 text-body-strong"
         htmlFor="notice-body"
       >
-        Notice
+        {t('Notice')}
         <textarea
           className="min-h-40 rounded-md border border-rule-strong bg-surface p-space-3 text-body focus-visible:outline-2 focus-visible:outline-focus"
           defaultValue={notice?.body}
@@ -145,7 +147,7 @@ export function NoticeForm({
         />
       </label>
       <fieldset className="grid min-w-0 gap-space-2 border-0 p-0">
-        <legend className="text-body-strong">Who should see it?</legend>
+        <legend className="text-body-strong">{t('Who should see it?')}</legend>
         {(
           [
             ['all', 'All residents'],
@@ -161,16 +163,16 @@ export function NoticeForm({
               type="radio"
               value={value}
             />
-            {text}
+            {t(text)}
           </label>
         ))}
       </fieldset>
       {audience === 'blocks' ? (
         <fieldset className="grid min-w-0 gap-space-2 border-0 p-0">
-          <legend className="text-body-strong">Blocks</legend>
+          <legend className="text-body-strong">{t('Blocks')}</legend>
           {blocks.length === 0 ? (
             <p className="text-caption text-ink-muted">
-              This society has no active blocks.
+              {t('This society has no active blocks.')}
             </p>
           ) : (
             blocks.map((block) => (
@@ -192,9 +194,9 @@ export function NoticeForm({
       ) : null}
       <div className="grid min-w-0 gap-space-1">
         <DatePicker
-          helpText="Residents stop seeing the notice after this day ends."
+          helpText={t('Residents stop seeing the notice after this day ends.')}
           id="notice-expires"
-          label="Expires on (optional)"
+          label={t('Expires on (optional)')}
           min={notice ? undefined : today}
           onChange={setExpiresOn}
           value={expiresOn}
@@ -205,25 +207,28 @@ export function NoticeForm({
             onClick={() => setExpiresOn('')}
             type="button"
           >
-            Remove expiry
+            {t('Remove expiry')}
           </button>
         ) : null}
       </div>
       {notice ? null : (
         <label className="flex min-h-10 items-center gap-space-2 text-body-strong">
           <input name="pinned" type="checkbox" />
-          Pin to the top as important
+          {t('Pin to the top as important')}
         </label>
       )}
       <NoticeAttachmentUpload initialPath={notice?.attachment_path ?? null} />
       {notice ? (
         <p className="text-caption text-ink-muted">
-          Residents see an “Edited” label. Saving changes does not send a new
-          notification.
+          {t(
+            'Residents see an “Edited” label. Saving changes does not send a new notification.',
+          )}
         </p>
       ) : (
         <p className="text-caption text-ink-muted">
-          Publishing notifies everyone in the audience by push and in the app.
+          {t(
+            'Publishing notifies everyone in the audience by push and in the app.',
+          )}
         </p>
       )}
     </NoticeActionForm>

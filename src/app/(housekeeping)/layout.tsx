@@ -8,6 +8,7 @@ import {
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { createRequestId } from '@/core/errors';
 import { authorizeRequest } from '@/core/permissions/authorize';
+import { LanguageProvider } from '@/components/language-provider';
 export default async function HousekeepingLayout({
   children,
 }: {
@@ -23,5 +24,13 @@ export default async function HousekeepingLayout({
     : context.roles.includes('committee')
       ? CommitteeShell
       : HousekeepingShell;
-  return <Shell enabledModules={[...context.enabledModules]}>{children}</Shell>;
+  return (
+    <LanguageProvider
+      hindiEnabled={context.isHindiEnabled}
+      initialLocale={context.languagePreference}
+      mode="account"
+    >
+      <Shell enabledModules={[...context.enabledModules]}>{children}</Shell>
+    </LanguageProvider>
+  );
 }

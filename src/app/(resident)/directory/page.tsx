@@ -12,6 +12,8 @@ import {
 import { AppError, createRequestId } from '../../../core/errors';
 import { ModuleDisabledPage } from '../../../core/modules/module-disabled-page';
 import { buildRequestContext } from '../../../core/tenancy/request-context';
+import { getRequestLocale } from '../../../core/i18n/request-locale';
+import { translateMessage } from '../../../core/i18n/messages';
 
 export const metadata = {
   title: 'Resident directory | Homeish',
@@ -19,6 +21,8 @@ export const metadata = {
 };
 
 export default async function ResidentDirectoryPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   let residents: Awaited<ReturnType<typeof getDirectoryResidents>>;
   let householdControls: {
     contacts: {
@@ -65,10 +69,14 @@ export default async function ResidentDirectoryPage() {
     if (error instanceof AppError && error.code === 'FORBIDDEN') {
       return (
         <section className="grid gap-space-5">
-          <h1 className="text-title font-semibold">Resident directory</h1>
+          <h1 className="text-title font-semibold">
+            {t('Resident directory')}
+          </h1>
           <ErrorPanel
-            message="An active household membership is required to browse the directory. Contact your society administrator if you need help with your access."
-            title="Directory access is not available"
+            message={t(
+              'An active household membership is required to browse the directory. Contact your society administrator if you need help with your access.',
+            )}
+            title={t('Directory access is not available')}
           />
         </section>
       );

@@ -1,6 +1,7 @@
 // Keep delivery forms retry-safe and expose server-action feedback accessibly.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useRef, useState, useTransition } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { ServerActionResult } from '@/core/actions/server-action';
@@ -20,6 +21,7 @@ export function DeliveryActionForm({
   className?: string;
   requestIdStorageKey?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const formRef = useRef<HTMLFormElement>(null);
   const [result, setResult] = useState<ServerActionResult<unknown> | null>(
     null,
@@ -96,7 +98,7 @@ export function DeliveryActionForm({
           onClick={startAnotherEntry}
           type="button"
         >
-          Log another delivery
+          {t('Log another delivery')}
         </button>
       ) : null}
       {message ? (
@@ -105,7 +107,7 @@ export function DeliveryActionForm({
           className="text-caption text-danger"
           role="status"
         >
-          {message}
+          {translateFeedback(message)}
         </p>
       ) : null}
       {result ? (
@@ -114,14 +116,14 @@ export function DeliveryActionForm({
           className={`text-caption ${result.ok ? 'text-ink-muted' : 'text-danger'}`}
           role="status"
         >
-          {result.message}
+          {result.message ? translateFeedback(result.message) : null}
           {!result.ok && result.referenceId
-            ? ` Reference: ${result.referenceId}`
+            ? ` ${t('Reference: {id}', { id: result.referenceId })}`
             : ''}
         </p>
       ) : null}
       <span aria-live="polite" className="sr-only" role="status">
-        {pending ? 'Working…' : ''}
+        {pending ? t('Working…') : ''}
       </span>
     </form>
   );

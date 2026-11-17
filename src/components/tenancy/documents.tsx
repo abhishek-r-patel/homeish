@@ -18,6 +18,7 @@ import {
   ModuleActionForm,
   type ModuleFormAction,
 } from '@/components/ui/module-action-form';
+import { useTenancyPresentation } from './presentation';
 
 const uploadEnvelope = z.object({
   ok: z.literal(true),
@@ -66,13 +67,19 @@ async function fileResult<T>(
 }
 
 function storageUrl(value: string, path: string, upload = false) {
-  const url = new URL(value);
+  let url: URL;
+  let objectPath: string;
+  try {
+    url = new URL(value);
+    objectPath = decodeURIComponent(url.pathname);
+  } catch {
+    throw new Error(
+      'The private file link is invalid. No file was sent; refresh and retry.',
+    );
+  }
   const configured = new URL(publicEnvironment.NEXT_PUBLIC_SUPABASE_URL);
   const expectedPath = `${configured.pathname.replace(/\/$/, '')}/storage/v1/object/${upload ? 'upload/sign' : 'sign'}/tenancy-files/${path}`;
-  if (
-    url.origin !== configured.origin ||
-    decodeURIComponent(url.pathname) !== expectedPath
-  ) {
+  if (url.origin !== configured.origin || objectPath !== expectedPath) {
     throw new Error(
       'The private file link is invalid. No file was sent; refresh and retry.',
     );
@@ -91,13 +98,14 @@ export function TenancyProofUpload({
   action?: ModuleFormAction;
   request?: typeof fetch;
 }) {
+  const { t, translateFeedback } = useTenancyPresentation();
   const id = useId();
   const currentUpload = useRef<AbortController | null>(null);
   const [files, setFiles] = useState<readonly UploadFile[]>([]);
   const [path, setPath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const label = TENANCY_DOCUMENT_LABELS[kind];
+  const label = t(TENANCY_DOCUMENT_LABELS[kind]);
   useEffect(
     () => () => {
       const active = currentUpload.current;
@@ -181,10 +189,10 @@ export function TenancyProofUpload({
         {
           ...selected,
           error: controller.signal.aborted
-            ? 'The upload timed out. No proof was attached; retry.'
+            ? t('The upload timed out. No proof was attached; retry.')
             : error instanceof Error
-              ? error.message
-              : 'The upload failed. No proof was attached; retry.',
+              ? translateFeedback(error.message)
+              : t('The upload failed. No proof was attached; retry.'),
         },
       ]);
       setMessage(null);
@@ -201,7 +209,7 @@ export function TenancyProofUpload({
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={`Attach ${label}`}
+      submitLabel={t('Attach {label}', { label })}
       submitDisabled={!path || uploading}
       input={() =>
         tenancyDocumentInputSchema.parse({
@@ -219,7 +227,9 @@ export function TenancyProofUpload({
         maxFileBytes={MAX_FILE_BYTES}
         maxFiles={1}
         files={files}
-        helpText="Private PDF, JPG or PNG, up to 5 MiB. Do not upload Aadhaar or other government ID copies."
+        helpText={t(
+          'Private PDF, JPG or PNG, up to 5 MiB. Do not upload Aadhaar or other government ID copies.',
+        )}
         onRetry={(file) => void upload(file)}
         onFilesChange={(next) => {
           if (next.length > 0) void upload(next[0]!);
@@ -237,7 +247,7 @@ export function TenancyProofUpload({
       />
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {t(message)}
         </p>
       ) : null}
     </ModuleActionForm>
@@ -253,6 +263,7 @@ export function TenancyDocumentLink({
   label: string;
   request?: typeof fetch;
 }) {
+  const { t, translateFeedback } = useTenancyPresentation();
   const [pending, setPending] = useState(false);
   const [link, setLink] = useState<{ url: string; expiresIn: number } | null>(
     null,
@@ -295,7 +306,9 @@ export function TenancyDocumentLink({
       });
     } catch (cause) {
       setError(
-        cause instanceof Error
+        cause instanceof Error &&
+          cause.name !== 'TimeoutError' &&
+          cause.name !== 'AbortError'
           ? cause.message
           : 'Could not open this private document. Retry.',
       );
@@ -310,7 +323,7 @@ export function TenancyDocumentLink({
         variant="secondary"
         onClick={() => void prepare()}
       >
-        {link ? `Refresh ${label} link` : `View ${label}`}
+        {t(link ? 'Refresh {label} link' : 'View {label}', { label })}
       </Button>
       {link ? (
         <a
@@ -319,17 +332,17 @@ export function TenancyDocumentLink({
           rel="noopener noreferrer"
           className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         >
-          Open {label} (private link, up to five minutes)
+          {t('Open {label} (private link, up to five minutes)', { label })}
         </a>
       ) : null}
       {error ? (
         <p role="alert" className="text-caption text-danger">
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {t(message)}
         </p>
       ) : null}
     </div>

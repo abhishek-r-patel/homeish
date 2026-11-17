@@ -1,5 +1,13 @@
 // Share Events & RSVPs labels, India-time and money formatting, status chips and route states.
+'use client';
 import Link from 'next/link';
+import { useUiTranslator } from '@/components/ui/language';
+import {
+  formatLocalizedCurrency,
+  formatLocalizedDateTime,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
+import { translateMessage } from '@/core/i18n/messages';
 import { StatusChip } from '@/components/ui/data-display';
 import { EmptyState, ErrorPanel } from '@/components/ui/feedback';
 import type {
@@ -17,27 +25,36 @@ export const EVENT_LINK_CLASS =
 export const EVENT_PRIMARY_LINK_CLASS =
   'inline-flex min-h-12 items-center justify-center rounded-md bg-brand px-space-4 text-body-strong text-on-brand outline-none hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus';
 
-export function formatEventDateTime(value: string | null | undefined) {
-  if (!value) return 'Not set';
-  return new Intl.DateTimeFormat('en-IN', {
+export function formatEventDateTime(
+  value: string | null | undefined,
+  locale: Locale | null = null,
+) {
+  if (!value) return translateMessage(locale ?? 'en', 'Not set');
+  return formatLocalizedDateTime(new Date(value), locale ?? 'en', {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'Asia/Kolkata',
-  }).format(new Date(value));
+  });
 }
 
-export function formatEventMoney(paise: number) {
-  return `₹${rupeesFromPaise(paise)}`;
+export function formatEventMoney(paise: number, locale: Locale | null = null) {
+  return locale === 'hi'
+    ? formatLocalizedCurrency(paise, locale)
+    : `₹${rupeesFromPaise(paise)}`;
 }
 
 export function describeContribution(
   type: EventContributionTypeValue,
   paise: number,
+  locale: Locale | null = null,
 ) {
-  if (type === 'none' || paise === 0) return 'Free';
-  return type === 'per_unit'
-    ? `${formatEventMoney(paise)} per flat`
-    : `${formatEventMoney(paise)} per person`;
+  if (type === 'none' || paise === 0)
+    return translateMessage(locale ?? 'en', 'Free');
+  return translateMessage(
+    locale ?? 'en',
+    type === 'per_unit' ? '{amount} per flat' : '{amount} per person',
+    { amount: formatEventMoney(paise, locale) },
+  );
 }
 
 export function EventStatusChip({
@@ -71,6 +88,7 @@ export function EventRouteState({
   message?: string;
   referenceId?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (kind === 'disabled') {
     return (
       <ModuleDisabledPage embedded moduleKey="event" returnHref={returnHref} />
@@ -79,11 +97,11 @@ export function EventRouteState({
   if (kind === 'denied') {
     return (
       <EmptyState
-        title="You do not have access to this page"
-        description="Return to your Homeish home page."
+        title={t('You do not have access to this page')}
+        description={t('Return to your Homeish home page.')}
         action={
           <Link className={EVENT_LINK_CLASS} href={returnHref}>
-            Back to Home
+            {t('Back to Home')}
           </Link>
         }
       />
@@ -92,11 +110,13 @@ export function EventRouteState({
   if (kind === 'not-found') {
     return (
       <EmptyState
-        title="We cannot find this event"
-        description="It may have been removed, or it may not be open to your home."
+        title={t('We cannot find this event')}
+        description={t(
+          'It may have been removed, or it may not be open to your home.',
+        )}
         action={
           <Link className={EVENT_LINK_CLASS} href={returnHref}>
-            Back to Events
+            {t('Back to Events')}
           </Link>
         }
       />
@@ -104,21 +124,22 @@ export function EventRouteState({
   }
   return (
     <ErrorPanel
-      title="Something went wrong"
+      title={t('Something went wrong')}
       message={
-        message ??
-        'We could not load this event. Refresh the page and try again.'
+        message
+          ? translateFeedback(message)
+          : t('We could not load this event. Refresh the page and try again.')
       }
       referenceId={referenceId}
       action={
         <div className="flex flex-wrap gap-space-3">
           {retryHref ? (
             <Link className={EVENT_LINK_CLASS} href={retryHref}>
-              Retry
+              {t('Retry')}
             </Link>
           ) : null}
           <Link className={EVENT_LINK_CLASS} href={returnHref}>
-            Back
+            {t('Back')}
           </Link>
         </div>
       }

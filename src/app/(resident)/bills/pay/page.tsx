@@ -4,6 +4,8 @@ import { BillingPayForm } from '@/components/billing/pay-form';
 import { EmptyState } from '@/components/ui/feedback';
 import { todayInTimeZone } from '@/core/billing/format';
 import { getResidentBilling } from '@/core/billing/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Pay maintenance | Homeish',
@@ -15,11 +17,14 @@ export default async function ResidentPayPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const params = await searchParams;
   const billing = await getResidentBilling();
   const back = (
     <Link className="text-body text-brand underline" href="/bills">
-      ← Bills
+      {t('← Bills')}
     </Link>
   );
 
@@ -31,16 +36,22 @@ export default async function ResidentPayPage({
     return (
       <section className="grid gap-space-5">
         {back}
-        <h1 className="text-title font-semibold">Pay maintenance</h1>
+        <h1 className="text-title font-semibold">{t('Pay maintenance')}</h1>
         <EmptyState
           description={
             billing.suspended
-              ? 'This society is suspended. Payments cannot be submitted right now.'
+              ? t(
+                  'This society is suspended. Payments cannot be submitted right now.',
+                )
               : billing.units.length === 0
-                ? `You are not linked to an active ${billing.unitLabel.toLowerCase()}.`
-                : 'The society has not added UPI payment details yet. Pay at the society office.'
+                ? t('You are not linked to an active {unit}.', {
+                    unit: billing.unitLabel.toLowerCase(),
+                  })
+                : t(
+                    'The society has not added UPI payment details yet. Pay at the society office.',
+                  )
           }
-          title="Online payment unavailable"
+          title={t('Online payment unavailable')}
         />
       </section>
     );
@@ -68,10 +79,11 @@ export default async function ResidentPayPage({
     <section className="grid max-w-content-default gap-space-5">
       {back}
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Pay maintenance</h1>
+        <h1 className="text-title font-semibold">{t('Pay maintenance')}</h1>
         <p className="text-body text-ink-muted">
-          Pay with your UPI app, then submit the reference so the society can
-          confirm it and issue a receipt.
+          {t(
+            'Pay with your UPI app, then submit the reference so the society can confirm it and issue a receipt.',
+          )}
         </p>
       </header>
       <BillingPayForm
@@ -81,7 +93,8 @@ export default async function ResidentPayPage({
         qrUrl={billing.qrUrl}
         resubmitReason={
           rejected
-            ? (rejected.reject_reason ?? 'The society rejected this payment.')
+            ? (rejected.reject_reason ??
+              t('The society rejected this payment.'))
             : null
         }
         timezone={billing.timezone}

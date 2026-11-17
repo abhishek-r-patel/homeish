@@ -1,4 +1,5 @@
-// Verify event operations map RPC errors, send RPC arguments by contract and push only after notifying writes.
+// Verify event operations map RPC errors, send RPC arguments by contract, push only after notifying writes,
+// and summarise per-flat replies and edit results.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -36,6 +37,11 @@ import {
   setEventRsvp,
   updateEvent,
 } from '../../src/core/event/operations';
+import {
+  eventUpdateMessage,
+  memberRsvpStatus,
+  memberRsvpSummary,
+} from '../../src/core/event/summary';
 
 const id = (number: string) =>
   `f0000000-0000-4000-8000-${number.padStart(12, '0')}`;
@@ -152,12 +158,14 @@ describe('event operations', () => {
     expect(mocks.sendPushes).toHaveBeenCalledWith(REQUEST);
   });
 
-  it('pushes after an update only when the audience was notified', async () => {
+  it('pushes after an update only when the audience was notified or flats were withdrawn', async () => {
     const input = { eventId: EVENT, expectedVersion: 3, event: eventInput };
     mocks.callModuleRpc.mockResolvedValueOnce({
       eventId: EVENT,
       version: 4,
       notified: false,
+      withdrawnUnits: 0,
+      refundedUnits: 0,
     });
     await updateEvent(input, REQUEST);
     expect(mocks.sendPushes).not.toHaveBeenCalled();
@@ -166,6 +174,8 @@ describe('event operations', () => {
       eventId: EVENT,
       version: 5,
       notified: true,
+      withdrawnUnits: 0,
+      refundedUnits: 0,
     });
     await updateEvent({ ...input, expectedVersion: 4 }, REQUEST);
     expect(mocks.sendPushes).toHaveBeenCalledTimes(1);
@@ -174,6 +184,16 @@ describe('event operations', () => {
       p_expected_version: 4,
       p_event: eventInput,
     });
+
+    mocks.callModuleRpc.mockResolvedValueOnce({
+      eventId: EVENT,
+      version: 6,
+      notified: false,
+      withdrawnUnits: 1,
+      refundedUnits: 1,
+    });
+    await updateEvent({ ...input, expectedVersion: 5 }, REQUEST);
+    expect(mocks.sendPushes).toHaveBeenCalledTimes(2);
   });
 
   it('creates a draft idempotently without pushing', async () => {
@@ -257,5 +277,66 @@ describe('event operations', () => {
       p_limit: 100,
       p_offset: 0,
     });
+  });
+});
+
+describe('event summaries', () => {
+  const flat = (
+    label: string,
+    status: 'going' | 'not_going' | null,
+    headcount: number | null,
+  ) => ({ unitId: id(label.length.toString()), label, status, headcount });
+
+  it('summarises one flat as before and several flats per flat', () => {
+    expect(
+      memberRsvpSummary({
+        status: 'published',
+        myRsvps: [flat('A-101', 'going', 1)],
+      }),
+    ).toBe('Going · 1 person');
+    expect(
+      memberRsvpSummary({
+        status: 'published',
+        myRsvps: [flat('A-101', 'going', 2), flat('B-202', null, null)],
+      }),
+    ).toBe('A-101: Going · 2 people; B-202: No RSVP yet');
+    expect(
+      memberRsvpSummary({
+        status: 'cancelled',
+        myRsvps: [flat('A-101', 'going', 2), flat('B-202', null, null)],
+      }),
+    ).toBe('Cancelled');
+  });
+
+  it('shows going if any flat goes and not going only when every flat declined', () => {
+    expect(
+      memberRsvpStatus([
+        flat('A-101', 'not_going', 0),
+        flat('B-1', 'going', 1),
+      ]),
+    ).toBe('going');
+    expect(
+      memberRsvpStatus([
+        flat('A-101', 'not_going', 0),
+        flat('B-1', null, null),
+      ]),
+    ).toBeNull();
+    expect(
+      memberRsvpStatus([
+        flat('A-101', 'not_going', 0),
+        flat('B-1', 'not_going', 0),
+      ]),
+    ).toBe('not_going');
+  });
+
+  it('mentions withdrawn and refunded flats after an edit', () => {
+    const base = { notified: false, withdrawnUnits: 0, refundedUnits: 0 };
+    expect(eventUpdateMessage(base)).toBe('Changes saved.');
+    expect(
+      eventUpdateMessage({ ...base, withdrawnUnits: 2, refundedUnits: 1 }),
+    ).toBe('Changes saved. 2 flats were withdrawn and 1 refunded.');
+    expect(
+      eventUpdateMessage({ ...base, notified: true, withdrawnUnits: 1 }),
+    ).toBe('Changes saved and invited homes notified. 1 flat was withdrawn.');
   });
 });

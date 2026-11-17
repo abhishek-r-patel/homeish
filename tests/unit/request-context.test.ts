@@ -14,7 +14,15 @@ const userId = 'cddc7f54-a5cd-4bd0-9cc1-8c11a9157d95';
 const activeSocietyId = 'ce62701d-1618-46ed-9435-e53557a65bf4';
 const otherSocietyId = '31f809c1-614d-4c87-86d4-e50c2410d2d7';
 
-function createTestClient() {
+function createTestClient({
+  enabledModules = ['visitor'],
+  hindiAvailable = false,
+  languagePreference = 'en',
+}: {
+  enabledModules?: string[];
+  hindiAvailable?: boolean;
+  languagePreference?: string;
+} = {}) {
   const fetcher: typeof fetch = async (input) => {
     const url = new URL(
       input instanceof Request ? input.url : input.toString(),
@@ -26,7 +34,10 @@ function createTestClient() {
       ]);
     }
     if (url.pathname.endsWith('/profiles')) {
-      return Response.json({ status: 'active' });
+      return Response.json({
+        status: 'active',
+        language_preference: languagePreference,
+      });
     }
     if (url.pathname.endsWith('/rpc/session_developer_access')) {
       return Response.json([
@@ -34,10 +45,15 @@ function createTestClient() {
       ]);
     }
     if (url.pathname.endsWith('/societies')) {
-      return Response.json({ status: 'active' });
+      return Response.json({
+        status: 'active',
+        hindi_available: hindiAvailable,
+      });
     }
     if (url.pathname.endsWith('/module_configs')) {
-      return Response.json([{ module_key: 'visitor' }]);
+      return Response.json(
+        enabledModules.map((module_key) => ({ module_key })),
+      );
     }
     return new Response('Unexpected test request.', { status: 500 });
   };
@@ -81,6 +97,8 @@ describe('buildRequestContext', () => {
       userId,
       societyId: activeSocietyId,
       societyStatus: 'active',
+      languagePreference: 'en',
+      isHindiEnabled: false,
       roles: ['admin', 'resident'],
       isDeveloper: false,
       isDeveloperAccount: false,
@@ -90,6 +108,50 @@ describe('buildRequestContext', () => {
     expect(context.enabledModules.has('visitor')).toBe(true);
     expect(context.enabledModules.has('billing')).toBe(false);
     expect(context.memberships).toHaveLength(2);
+  });
+
+  it('enables Hindi only when the society allows it and Language Support is enabled', async () => {
+    const client = createTestClient({
+      enabledModules: ['language'],
+      hindiAvailable: true,
+      languagePreference: 'hi',
+    });
+    vi.mocked(createUserSupabaseClient).mockResolvedValue({
+      client,
+      activeSocietyId,
+    });
+
+    const context = await buildRequestContext(
+      '4f05ab7e-17d6-4d74-8a8b-3b37304c83f0',
+    );
+
+    expect(context).toMatchObject({
+      languagePreference: 'hi',
+      isHindiEnabled: true,
+    });
+  });
+
+  it('keeps Hindi disabled when either availability gate is off', async () => {
+    for (const options of [
+      { enabledModules: ['visitor'], hindiAvailable: true },
+      { enabledModules: ['language'], hindiAvailable: false },
+    ]) {
+      const client = createTestClient({
+        ...options,
+        languagePreference: 'hi',
+      });
+      vi.mocked(createUserSupabaseClient).mockResolvedValue({
+        client,
+        activeSocietyId,
+      });
+
+      const context = await buildRequestContext(
+        '4f05ab7e-17d6-4d74-8a8b-3b37304c83f0',
+      );
+
+      expect(context.languagePreference).toBe('hi');
+      expect(context.isHindiEnabled).toBe(false);
+    }
   });
 
   it('does not select a society when a hint matches no membership', async () => {

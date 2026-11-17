@@ -1,6 +1,7 @@
 // Collect a resident service request and attach verified private photos.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useState } from 'react';
 import { createServiceRequestAction } from '@/app/(resident)/requests/actions';
 import {
@@ -28,6 +29,7 @@ export function ServiceRequestCreateForm({
   refresh?: boolean;
   units: RequestUnit[];
 }) {
+  const { translate: t } = useUiTranslator();
   const [requestId, setRequestId] = useState('');
   const [locationType, setLocationType] = useState<'unit' | 'common_area'>(
     'unit',
@@ -75,20 +77,20 @@ export function ServiceRequestCreateForm({
         onCreated?.();
       }}
       refresh={refresh}
-      submitLabel="Submit request"
+      submitLabel={t('Submit request')}
     >
       <label
         className="grid min-w-0 gap-space-1 text-body-strong"
         htmlFor="request-category"
       >
-        Category
+        {t('Category')}
         <select
           className={fieldClass}
           id="request-category"
           name="categoryId"
           required
         >
-          <option value="">Choose a category</option>
+          <option value="">{t('Choose a category')}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -97,7 +99,7 @@ export function ServiceRequestCreateForm({
         </select>
       </label>
       <fieldset className="grid min-w-0 gap-space-2 border-0 p-0">
-        <legend className="text-body-strong">Where is the issue?</legend>
+        <legend className="text-body-strong">{t('Where is the issue?')}</legend>
         <label className="flex min-h-10 items-center gap-space-2">
           <input
             checked={locationType === 'unit'}
@@ -106,7 +108,7 @@ export function ServiceRequestCreateForm({
             type="radio"
             value="unit"
           />
-          My unit
+          {t('My unit')}
         </label>
         <label className="flex min-h-10 items-center gap-space-2">
           <input
@@ -116,7 +118,7 @@ export function ServiceRequestCreateForm({
             type="radio"
             value="common_area"
           />
-          Common area
+          {t('Common area')}
         </label>
       </fieldset>
       {locationType === 'unit' ? (
@@ -124,14 +126,14 @@ export function ServiceRequestCreateForm({
           className="grid min-w-0 gap-space-1 text-body-strong"
           htmlFor="request-unit"
         >
-          Unit
+          {t('Unit')}
           <select
             className={fieldClass}
             id="request-unit"
             name="unitId"
             required
           >
-            <option value="">Choose a unit</option>
+            <option value="">{t('Choose a unit')}</option>
             {units.map((unit) => (
               <option key={unit.id} value={unit.id}>
                 {unit.block ? `${unit.block} · ` : ''}
@@ -141,7 +143,7 @@ export function ServiceRequestCreateForm({
           </select>
           {units.length === 0 ? (
             <span className="text-caption text-ink-muted">
-              No active unit is linked to your household.
+              {t('No active unit is linked to your household.')}
             </span>
           ) : null}
         </label>
@@ -152,7 +154,7 @@ export function ServiceRequestCreateForm({
         className="grid min-w-0 gap-space-1 text-body-strong"
         htmlFor="request-description"
       >
-        Describe the issue
+        {t('Describe the issue')}
         <textarea
           className="min-h-32 rounded-md border border-rule-strong bg-surface p-space-3 text-body focus-visible:outline-2 focus-visible:outline-focus"
           id="request-description"
@@ -165,15 +167,15 @@ export function ServiceRequestCreateForm({
         className="grid min-w-0 gap-space-1 text-body-strong"
         htmlFor="request-priority"
       >
-        Priority
+        {t('Priority')}
         <select
           className={fieldClass}
           defaultValue="normal"
           id="request-priority"
           name="priority"
         >
-          <option value="normal">Normal</option>
-          <option value="urgent">Urgent</option>
+          <option value="normal">{t('Normal')}</option>
+          <option value="urgent">{t('Urgent')}</option>
         </select>
       </label>
       <input name="clientRequestId" type="hidden" value={requestId} />

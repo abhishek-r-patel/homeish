@@ -105,3 +105,40 @@ test('administrator publishes a draft, then cancels the event with a reason', as
     'Cancel this event? Residents will be notified and every contribution will be credited back.',
   );
 });
+
+test('Hindi event UI preserves written content, formats dates and keeps form input', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/event');
+  await page.getByLabel('Fixture screen').selectOption('resident-open');
+  await page.getByLabel('How many people are coming?').fill('3');
+
+  const confirmation = page.waitForEvent('dialog');
+  const changing = page
+    .getByRole('combobox', { name: 'Choose a language' })
+    .selectOption('hi');
+  const dialog = await confirmation;
+  expect(dialog.message()).toContain('unsaved changes');
+  await dialog.accept();
+  await changing;
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: 'New Year community dinner',
+    }),
+  ).toBeVisible();
+  await expect(page.getByText('Clubhouse lawn', { exact: true })).toBeVisible();
+  await expect(page.getByText(/दिस/).first()).toBeVisible();
+  await expect(page.getByLabel('कितने लोग आ रहे हैं?')).toHaveValue('3');
+  await expect(
+    page.getByRole('button', { name: 'A-101 का आने का जवाब सहेजें' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'A-101 का आने का जवाब सहेजें' }).click();
+  await expect(
+    page.getByText('नमूना कार्रवाई पूरी हुई। कुछ भी नहीं सहेजा गया।', {
+      exact: true,
+    }),
+  ).toBeVisible();
+});

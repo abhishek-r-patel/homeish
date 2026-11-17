@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import { Button } from '@/components/ui/button';
+import { useUiTranslator } from '@/components/ui/language';
 
 export type NoticeFormAction = (
   formData: FormData,
@@ -32,6 +33,7 @@ export function NoticeActionForm({
   submitLabel: string;
   submitVariant?: 'primary' | 'secondary' | 'destructive';
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ServerActionResult<unknown> | null>(
@@ -75,7 +77,7 @@ export function NoticeActionForm({
       {children}
       {localError ? (
         <p className="text-caption text-danger" role="alert">
-          {localError}
+          {translateFeedback(localError)}
         </p>
       ) : null}
       {result ? (
@@ -84,15 +86,15 @@ export function NoticeActionForm({
           role={result.ok ? 'status' : 'alert'}
         >
           <p>
-            {result.message}
+            {result.message ? translateFeedback(result.message) : null}
             {!result.ok && result.referenceId
-              ? ` Reference: ${result.referenceId}`
+              ? ` ${t('Reference: {id}', { id: result.referenceId })}`
               : ''}
           </p>
           {!result.ok && result.fieldErrors ? (
             <ul className="list-disc pl-space-5">
               {Object.entries(result.fieldErrors).map(([field, message]) => (
-                <li key={field}>{message}</li>
+                <li key={field}>{translateFeedback(message)}</li>
               ))}
             </ul>
           ) : null}

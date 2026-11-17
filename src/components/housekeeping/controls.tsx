@@ -1,5 +1,6 @@
 // Render inventory definition and append-only stock transaction forms.
 'use client';
+import { useUiTranslator } from '@/components/ui/language';
 import { useId, useState } from 'react';
 import { TextInput } from '@/components/ui/text-input';
 import {
@@ -22,11 +23,12 @@ export function InventoryItemForm({
   item?: InventoryItem;
   action?: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const prefix = useId();
   return (
     <ModuleActionForm
       action={action}
-      submitLabel={item ? 'Save inventory item' : 'Add inventory item'}
+      submitLabel={item ? t('Save inventory item') : t('Add inventory item')}
       input={(data) => ({
         itemId: item?.id ?? null,
         expectedUpdatedAt: item?.updated_at ?? null,
@@ -39,7 +41,7 @@ export function InventoryItemForm({
     >
       <TextInput
         id={`${prefix}-name`}
-        label="Item name"
+        label={t('Item name')}
         name="name"
         required
         maxLength={120}
@@ -47,7 +49,7 @@ export function InventoryItemForm({
       />
       <TextInput
         id={`${prefix}-unit`}
-        label="Unit of measure (for example, litres)"
+        label={t('Unit of measure (for example, litres)')}
         name="unitOfMeasure"
         required
         maxLength={30}
@@ -57,22 +59,22 @@ export function InventoryItemForm({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-category`}
       >
-        Category
+        {t('Category')}
         <select
           className={controlClass}
           id={`${prefix}-category`}
           name="category"
           defaultValue={item?.category ?? 'cleaning'}
         >
-          <option value="cleaning">Cleaning</option>
-          <option value="tools">Tools</option>
-          <option value="consumables">Consumables</option>
-          <option value="other">Other</option>
+          <option value="cleaning">{t('Cleaning')}</option>
+          <option value="tools">{t('Tools')}</option>
+          <option value="consumables">{t('Consumables')}</option>
+          <option value="other">{t('Other')}</option>
         </select>
       </label>
       <TextInput
         id={`${prefix}-minimum`}
-        label="Minimum stock level"
+        label={t('Minimum stock level')}
         name="minimumStock"
         inputMode="decimal"
         required
@@ -84,7 +86,7 @@ export function InventoryItemForm({
           type="checkbox"
           defaultChecked={item?.active ?? true}
         />
-        Active inventory item
+        {t('Active inventory item')}
       </label>
     </ModuleActionForm>
   );
@@ -99,13 +101,14 @@ export function StockTransactionForm({
   today: string;
   action?: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const prefix = useId();
   const [kind, setKind] = useState('in');
   return (
     <ModuleActionForm
       action={action}
       idempotent
-      submitLabel="Record stock transaction"
+      submitLabel={t('Record stock transaction')}
       input={(data) => ({
         itemId: item.id,
         kind: data.get('kind'),
@@ -120,7 +123,7 @@ export function StockTransactionForm({
         className="grid gap-space-1 text-body-strong"
         htmlFor={`${prefix}-kind`}
       >
-        Transaction type
+        {t('Transaction type')}
         <select
           className={controlClass}
           id={`${prefix}-kind`}
@@ -128,15 +131,17 @@ export function StockTransactionForm({
           value={kind}
           onChange={(event) => setKind(event.target.value)}
         >
-          <option value="in">Stock in / opening stock</option>
-          <option value="out">Stock out / usage</option>
-          <option value="adjustment">Adjustment with reason</option>
+          <option value="in">{t('Stock in / opening stock')}</option>
+          <option value="out">{t('Stock out / usage')}</option>
+          <option value="adjustment">{t('Adjustment with reason')}</option>
         </select>
       </label>
       <TextInput
         id={`${prefix}-quantity`}
         label={
-          kind === 'adjustment' ? 'Signed adjustment quantity' : 'Quantity'
+          kind === 'adjustment'
+            ? t('Signed adjustment quantity')
+            : t('Quantity')
         }
         name="quantity"
         required
@@ -144,7 +149,7 @@ export function StockTransactionForm({
       />
       <TextInput
         id={`${prefix}-date`}
-        label="Transaction date"
+        label={t('Transaction date')}
         name="effectiveDate"
         type="date"
         required
@@ -155,13 +160,13 @@ export function StockTransactionForm({
         <>
           <TextInput
             id={`${prefix}-vendor`}
-            label="Vendor (optional)"
+            label={t('Vendor (optional)')}
             name="vendor"
             maxLength={120}
           />
           <TextInput
             id={`${prefix}-cost`}
-            label="Purchase cost in rupees (optional)"
+            label={t('Purchase cost in rupees (optional)')}
             name="costRupees"
             inputMode="decimal"
           />
@@ -170,16 +175,18 @@ export function StockTransactionForm({
       <TextInput
         id={`${prefix}-purpose`}
         label={
-          kind === 'adjustment' ? 'Adjustment reason' : 'Issued to / purpose'
+          kind === 'adjustment'
+            ? t('Adjustment reason')
+            : t('Issued to / purpose')
         }
         name="purpose"
         required={kind !== 'in'}
         maxLength={500}
       />
       <p className="text-caption text-ink-muted">
-        Transactions cannot be edited. Correct a mistake using a signed
-        adjustment with a reason. Backdated entries must leave every historical
-        stock balance nonnegative.
+        {t(
+          'Transactions cannot be edited. Correct a mistake using a signed adjustment with a reason. Backdated entries must leave every historical stock balance nonnegative.',
+        )}
       </p>
     </ModuleActionForm>
   );

@@ -1,9 +1,9 @@
 // Account profile settings for the signed-in user.
-import Link from 'next/link';
-import { Card } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
-import { ProfileForm } from '@/components/members/profile-controls';
+import { ProfileContent } from '@/components/members/profile-controls';
+import { LanguageProvider } from '@/components/language-provider';
 import { AppError } from '@/core/errors';
+import { isLocale } from '@/core/i18n/locale';
 import { getProfile } from '@/core/members/operations';
 
 export const metadata = {
@@ -34,20 +34,16 @@ export default async function ProfilePage() {
     if (loadError !== undefined) throw loadError;
     throw new Error('Profile lookup returned no result.');
   }
+  if (!isLocale(profile.language_preference)) {
+    throw new Error('The saved language preference is unsupported.');
+  }
   return (
-    <main className="mx-auto grid min-h-dvh max-w-content-default content-start gap-space-5 px-space-4 py-space-6">
-      <Link className="text-brand underline-offset-2 hover:underline" href="/">
-        Back to Homeish
-      </Link>
-      <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Your Profile</h1>
-        <p className="text-body text-ink-muted">
-          Update your contact details and saved display preferences.
-        </p>
-      </header>
-      <Card title="Account details">
-        <ProfileForm profile={profile} />
-      </Card>
-    </main>
+    <LanguageProvider
+      hindiEnabled={profile.isHindiEnabled}
+      initialLocale={profile.language_preference}
+      mode="account"
+    >
+      <ProfileContent profile={profile} />
+    </LanguageProvider>
   );
 }

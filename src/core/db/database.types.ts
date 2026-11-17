@@ -7167,6 +7167,7 @@ export type Database = {
           font_preference: string;
           full_name: string;
           id: string;
+          language_preference: string;
           phone: string | null;
           photo_path: string | null;
           status: string;
@@ -7179,6 +7180,7 @@ export type Database = {
           font_preference?: string;
           full_name: string;
           id: string;
+          language_preference?: string;
           phone?: string | null;
           photo_path?: string | null;
           status?: string;
@@ -7190,6 +7192,7 @@ export type Database = {
           font_preference?: string;
           full_name?: string;
           id?: string;
+          language_preference?: string;
           phone?: string | null;
           photo_path?: string | null;
           status?: string;
@@ -7777,6 +7780,7 @@ export type Database = {
           currency: string;
           gate_login_mode: string;
           guard_identification: string;
+          hindi_available: boolean;
           id: string;
           join_code: string | null;
           logo_path: string | null;
@@ -7800,6 +7804,7 @@ export type Database = {
           currency?: string;
           gate_login_mode?: string;
           guard_identification?: string;
+          hindi_available?: boolean;
           id?: string;
           join_code?: string | null;
           logo_path?: string | null;
@@ -7822,6 +7827,7 @@ export type Database = {
           currency?: string;
           gate_login_mode?: string;
           guard_identification?: string;
+          hindi_available?: boolean;
           id?: string;
           join_code?: string | null;
           logo_path?: string | null;
@@ -9850,6 +9856,15 @@ export type Database = {
         };
         Returns: undefined;
       };
+      admin_set_hindi_availability: {
+        Args: {
+          p_expected_updated_at: string;
+          p_hindi_available: boolean;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       admin_update_gate_settings: {
         Args: {
           p_gate_login_mode: string;
@@ -10558,6 +10573,16 @@ export type Database = {
         Args: { p_request_trace: string; p_today: string };
         Returns: Json;
       };
+      community_settings_get: { Args: { p_society_id: string }; Returns: Json };
+      community_settings_update: {
+        Args: {
+          p_expected_updated_at: string;
+          p_request_id: string;
+          p_settings: Json;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       community_unmute: {
         Args: {
           p_membership_id: string;
@@ -11034,6 +11059,7 @@ export type Database = {
           currency: string;
           gate_login_mode: string;
           guard_identification: string;
+          hindi_available: boolean;
           id: string;
           join_code: string | null;
           logo_path: string | null;
@@ -11065,6 +11091,7 @@ export type Database = {
           currency: string;
           gate_login_mode: string;
           guard_identification: string;
+          hindi_available: boolean;
           id: string;
           join_code: string | null;
           logo_path: string | null;
@@ -11156,6 +11183,7 @@ export type Database = {
           currency: string;
           gate_login_mode: string;
           guard_identification: string;
+          hindi_available: boolean;
           id: string;
           join_code: string | null;
           logo_path: string | null;
@@ -11191,6 +11219,7 @@ export type Database = {
           currency: string;
           gate_login_mode: string;
           guard_identification: string;
+          hindi_available: boolean;
           id: string;
           join_code: string | null;
           logo_path: string | null;

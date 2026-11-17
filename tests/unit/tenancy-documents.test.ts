@@ -155,6 +155,8 @@ describe('tenancy NOC documents', () => {
       enabledModules: new Set(['core', 'tenancy']),
       isDeveloper: false,
       isDeveloperAccount: false,
+      isHindiEnabled: false,
+      languagePreference: 'en',
       mfaVerified: false,
       logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
     };

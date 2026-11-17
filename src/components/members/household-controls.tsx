@@ -6,12 +6,15 @@ import { useState, useTransition } from 'react';
 import { setHouseholdApproverAction } from '@/app/(resident)/household/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { getHouseholdMembers } from '@/core/members/operations';
+import { useUiTranslator } from '@/components/ui/language';
+import { MEMBER_LABELS } from './presentation';
 
 type HouseholdData = Awaited<ReturnType<typeof getHouseholdMembers>>;
 type Household = HouseholdData['households'][number];
 type HouseholdMember = Household['members'][number];
 
 function ApproverControl({ member }: { member: HouseholdMember }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const [result, setResult] = useState<ServerActionResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -29,7 +32,9 @@ function ApproverControl({ member }: { member: HouseholdMember }) {
 
   if (member.is_primary) {
     return (
-      <span className="text-caption text-ink-muted">Primary resident</span>
+      <span className="text-caption text-ink-muted">
+        {t('Primary resident')}
+      </span>
     );
   }
   return (
@@ -41,7 +46,7 @@ function ApproverControl({ member }: { member: HouseholdMember }) {
           onChange={(event) => submit(event.currentTarget.checked)}
           type="checkbox"
         />
-        Can approve visitors
+        {t('Can approve visitors')}
       </label>
       {result ? (
         <p
@@ -49,7 +54,7 @@ function ApproverControl({ member }: { member: HouseholdMember }) {
           className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
           role="status"
         >
-          {result.message}
+          {result.message ? translateFeedback(result.message) : null}
         </p>
       ) : null}
     </div>
@@ -57,10 +62,11 @@ function ApproverControl({ member }: { member: HouseholdMember }) {
 }
 
 export function HouseholdDirectory({ data }: { data: HouseholdData }) {
+  const { translate: t } = useUiTranslator();
   if (!data.households.length) {
     return (
       <p className="text-body text-ink-muted">
-        No active household has been assigned to your account yet.
+        {t('No active household has been assigned to your account yet.')}
       </p>
     );
   }
@@ -87,8 +93,10 @@ export function HouseholdDirectory({ data }: { data: HouseholdData }) {
                 <div>
                   <p className="text-body-strong">{member.full_name}</p>
                   <p className="text-caption text-ink-muted">
-                    {member.relationship}
-                    {member.is_primary ? ' · primary resident' : ''}
+                    {t(
+                      MEMBER_LABELS[member.relationship] ?? member.relationship,
+                    )}
+                    {member.is_primary ? t(' · primary resident') : ''}
                   </p>
                 </div>
                 <ApproverControl member={member} />

@@ -1,6 +1,7 @@
 // Keep open SOS alerts in front of every recipient until they dismiss them, with a repeating gate alarm.
 'use client';
 
+import { useUiTranslator } from '../ui/language';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createNotificationBrowserClient } from '../../core/notifications/browser-client';
@@ -42,11 +43,12 @@ export function SosAlertBannerView({
   onEnableSound?: () => void;
   onToggleMute?: () => void;
 }) {
+  const { locale, translate: t, translateFeedback } = useUiTranslator();
   if (alerts.length === 0) return null;
   const societies = new Set(alerts.map((alert) => alert.society_id));
   return (
     <section
-      aria-label="Emergency alerts"
+      aria-label={t('Emergency alerts')}
       className="sticky top-14 z-10 max-h-[50dvh] overflow-y-auto expanded:top-16 mb-space-4 grid min-w-0 gap-space-2 rounded-md border-2 border-danger bg-danger-tint px-space-4 py-space-3 text-danger shadow-md"
     >
       <div className="flex flex-wrap items-center justify-between gap-space-2">
@@ -57,13 +59,15 @@ export function SosAlertBannerView({
           />
           <span role="alert">
             {alerts.length === 1
-              ? 'Emergency SOS open'
-              : `${alerts.length} emergency SOS alerts open`}
+              ? t('Emergency SOS open')
+              : t('{count} emergency SOS alerts open', {
+                  count: alerts.length,
+                })}
           </span>
         </p>
         {sound === 'blocked' && onEnableSound ? (
           <Button variant="destructive" onClick={onEnableSound}>
-            Turn on alert sound
+            {t('Turn on alert sound')}
           </Button>
         ) : (sound === 'on' || sound === 'muted') && onToggleMute ? (
           <Button
@@ -71,17 +75,21 @@ export function SosAlertBannerView({
             aria-pressed={sound === 'muted'}
             onClick={onToggleMute}
           >
-            {sound === 'muted' ? 'Unmute alert sound' : 'Mute alert sound'}
+            {sound === 'muted'
+              ? t('Unmute alert sound')
+              : t('Mute alert sound')}
           </Button>
         ) : null}
       </div>
       {sound === 'blocked' ? (
         <p className="text-caption">
-          This browser blocked the alarm until you interact with the page.
+          {t(
+            'This browser blocked the alarm until you interact with the page.',
+          )}
         </p>
       ) : sound === 'unsupported' ? (
         <p className="text-caption">
-          This device cannot play the alarm. Keep this screen in view.
+          {t('This device cannot play the alarm. Keep this screen in view.')}
         </p>
       ) : null}
       <ul className="grid gap-space-2">
@@ -92,15 +100,19 @@ export function SosAlertBannerView({
           >
             <div className="grid min-w-0 gap-space-1 [overflow-wrap:anywhere]">
               <p className="text-body-strong text-danger">
-                {sosBannerTitle(alert)}
+                {sosBannerTitle(alert, locale ?? 'en')}
               </p>
               <p className="text-caption text-ink-muted">
                 {alert.status === 'acknowledged'
-                  ? 'A responder is on it'
-                  : 'Waiting for a responder'}{' '}
+                  ? t('A responder is on it')
+                  : t('Waiting for a responder')}{' '}
                 ·{' '}
                 <time dateTime={alert.raised_at}>
-                  {formatSosTimestamp(alert.raised_at)}
+                  {formatSosTimestamp(
+                    alert.raised_at,
+                    undefined,
+                    locale ?? 'en',
+                  )}
                 </time>
                 {societies.size > 1 ? ` · ${alert.society_name}` : ''}
               </p>
@@ -112,18 +124,20 @@ export function SosAlertBannerView({
                   href={respondHref(alert)}
                   className="inline-flex min-h-12 items-center justify-center rounded-md border border-danger bg-danger px-space-4 text-body-strong text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 >
-                  Respond
+                  {t('Respond')}
                 </Link>
               ) : null}
               <Button
                 variant="secondary"
                 loading={pendingId === alert.id}
-                aria-label={`Dismiss ${sosBannerTitle(alert)}`}
+                aria-label={t('Dismiss {alert}', {
+                  alert: sosBannerTitle(alert, locale ?? 'en'),
+                })}
                 onClick={() => onDismiss(alert.id)}
               >
                 {alert.audience === 'resident'
-                  ? 'Dismiss'
-                  : 'Seen — stop alert'}
+                  ? t('Dismiss')
+                  : t('Seen — stop alert')}
               </Button>
             </div>
           </li>
@@ -131,7 +145,7 @@ export function SosAlertBannerView({
       </ul>
       {error ? (
         <p role="alert" className="text-caption">
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
     </section>

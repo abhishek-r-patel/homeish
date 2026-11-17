@@ -10,6 +10,7 @@ import {
   muteCommunityMember,
   saveCommunityGroup,
   unmuteCommunityMember,
+  updateCommunitySettings,
 } from '@/core/community/operations';
 import { formatCommunityDateTime } from '@/core/community/presentation';
 
@@ -17,7 +18,7 @@ const DECISION_MESSAGES: Readonly<Record<string, string>> = {
   approved: 'Approved. Residents can see it now and the author was told.',
   rejected: 'Rejected. The author was told the reason.',
   removed: 'Removed. The author was told the reason.',
-  visible: 'Restored. Residents can see it again.',
+  visible: 'Restored. Residents can see it again and the author was told.',
 };
 
 export async function moderateCommunityItemAction(form: FormData) {
@@ -74,4 +75,11 @@ export async function archiveCommunityGroupAction(form: FormData) {
         : 'Group is active again.';
     },
   );
+}
+
+export async function updateCommunitySettingsAction(form: FormData) {
+  return runServerAction('/admin/community/settings', async (requestId) => {
+    await updateCommunitySettings(readModuleActionInput(form), requestId);
+    return 'Settings saved.';
+  });
 }

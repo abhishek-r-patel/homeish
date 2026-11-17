@@ -6,6 +6,7 @@ import {
   muteCommunityMemberAction,
   saveCommunityGroupAction,
   unmuteCommunityMemberAction,
+  updateCommunitySettingsAction,
 } from './server-actions';
 
 export const communityAdminActions: CommunityAdminActions = {
@@ -14,4 +15,5 @@ export const communityAdminActions: CommunityAdminActions = {
   unmute: unmuteCommunityMemberAction,
   saveGroup: saveCommunityGroupAction,
   archiveGroup: archiveCommunityGroupAction,
+  saveSettings: updateCommunitySettingsAction,
 };

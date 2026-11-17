@@ -32,6 +32,8 @@ import {
 import { Banner } from '@/components/ui/feedback';
 import { CheckboxInput } from '@/components/ui/choice-controls';
 import { SelectInput } from '@/components/ui/select-input';
+import { LanguageProvider } from '@/components/language-provider';
+import { LanguageSelector } from '@/components/language-selector';
 
 const SOCIETY_ID = 'c0d55fc3-0751-4b79-86c1-5b3e25942392';
 const UNIT_ID = 'd0d55fc3-0751-4b79-86c1-5b3e25942392';
@@ -152,6 +154,14 @@ function historyAlerts(count: number): SosAlert[] {
 }
 
 export default function SosFixturePage() {
+  return (
+    <LanguageProvider initialLocale="en" mode="device">
+      <SosFixtureContent />
+    </LanguageProvider>
+  );
+}
+
+function SosFixtureContent() {
   const [role, setRole] = useState<FixtureRole>('resident');
   const [scenario, setScenario] = useState<Scenario>('open');
   const [readOnly, setReadOnly] = useState(false);
@@ -392,6 +402,7 @@ export default function SosFixturePage() {
   return (
     <>
       <header className="mx-auto grid w-full max-w-content-default gap-space-4 px-space-4 pt-space-5">
+        <LanguageSelector />
         <Banner title="Synthetic SOS fixture" tone="info">
           Development-only alerts and injected actions. No hosted Auth, database
           writes, notifications or Realtime. Reload to reset.

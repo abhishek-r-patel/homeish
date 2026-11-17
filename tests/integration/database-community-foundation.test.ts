@@ -264,6 +264,8 @@ describe.skipIf(!hasDatabase)('community database foundation', () => {
       'community_report',
       'community_retention_files_list',
       'community_retention_run',
+      'community_settings_get',
+      'community_settings_update',
       'community_unmute',
     ]);
     for (const fn of functions.rows) {

@@ -1,6 +1,7 @@
 // Upload one optional private notice attachment (image or PDF) before saving.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useRef, useState } from 'react';
 import { publicEnvironment } from '@/core/config/public-env';
 
@@ -29,10 +30,9 @@ export function NoticeAttachmentUpload({
   bucket?: 'notice-files' | 'amc-files' | 'expense-files';
   id?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [path, setPath] = useState<string | null>(initialPath);
-  const [label, setLabel] = useState<string | null>(
-    initialPath ? 'Current attachment' : null,
-  );
+  const [label, setLabel] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,7 +106,7 @@ export function NoticeAttachmentUpload({
         value={uploading ? 'true' : 'false'}
       />
       <label className="grid min-w-0 gap-space-1 text-body-strong" htmlFor={id}>
-        Attachment (optional: JPEG, PNG or PDF up to 5 MB)
+        {t('Attachment (optional: JPEG, PNG or PDF up to 5 MB)')}
         <input
           accept={ACCEPTED_TYPES.join(',')}
           className="min-h-12 w-full min-w-0 max-w-full rounded-md border border-rule px-space-3 py-space-2"
@@ -119,7 +119,9 @@ export function NoticeAttachmentUpload({
       </label>
       {path ? (
         <div className="flex items-center justify-between gap-space-3 text-caption">
-          <span className="min-w-0 break-words">{label}</span>
+          <span className="min-w-0 break-words">
+            {label ?? t('Current attachment')}
+          </span>
           <button
             className="min-h-10 rounded-md px-space-2 text-danger underline focus-visible:outline-2 focus-visible:outline-focus"
             onClick={() => {
@@ -129,12 +131,16 @@ export function NoticeAttachmentUpload({
             }}
             type="button"
           >
-            Remove attachment
+            {t('Remove attachment')}
           </button>
         </div>
       ) : null}
       <p className="text-caption text-ink-muted" role="status">
-        {uploading ? 'Uploading attachment…' : message}
+        {uploading
+          ? t('Uploading attachment…')
+          : message
+            ? translateFeedback(message)
+            : null}
       </p>
     </div>
   );

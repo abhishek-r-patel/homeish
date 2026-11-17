@@ -1,6 +1,7 @@
 // Let a signed-in user opt in to and out of Web Push on this device.
 'use client';
 
+import { useUiTranslator } from '../ui/language';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { publicEnvironment } from '../../core/config/public-env';
 
@@ -41,6 +42,7 @@ async function updateSubscription(method: 'DELETE' | 'POST', body: unknown) {
 }
 
 export function PushSubscriptionControl() {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [state, setState] = useState<PushState>('loading');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -139,13 +141,15 @@ export function PushSubscriptionControl() {
   if (!supported) {
     return (
       <p className="text-caption text-ink-muted">
-        Push alerts are not supported in this browser.
+        {t('Push alerts are not supported in this browser.')}
       </p>
     );
   }
   if (state === 'loading') {
     return (
-      <p className="text-caption text-ink-muted">Checking device alerts…</p>
+      <p className="text-caption text-ink-muted">
+        {t('Checking device alerts…')}
+      </p>
     );
   }
 
@@ -158,10 +162,10 @@ export function PushSubscriptionControl() {
         type="button"
       >
         {busy
-          ? 'Updating…'
+          ? t('Updating…')
           : state === 'subscribed'
-            ? 'Turn off device alerts'
-            : 'Turn on device alerts'}
+            ? t('Turn off device alerts')
+            : t('Turn on device alerts')}
       </button>
       {message ? (
         <p
@@ -169,7 +173,7 @@ export function PushSubscriptionControl() {
           className="text-caption text-danger"
           role="status"
         >
-          {message}
+          {translateFeedback(message)}
         </p>
       ) : null}
     </div>

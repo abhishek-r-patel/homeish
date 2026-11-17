@@ -9,6 +9,8 @@ import {
   getBillingLedger,
   listBillingUnits,
 } from '@/core/billing/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Unit ledger | Homeish',
@@ -20,6 +22,9 @@ export default async function AdminUnitLedgerPage({
 }: {
   params: Promise<{ unitId: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   const { unitId } = await params;
   if (!isUuid(unitId)) notFound();
   const [admin, entries, units] = await Promise.all([
@@ -32,17 +37,21 @@ export default async function AdminUnitLedgerPage({
   return (
     <section className="grid gap-space-5">
       <Link className="text-body text-brand underline" href="/admin/billing">
-        ← Billing
+        ← {t('Billing')}
       </Link>
       <header className="grid gap-space-1">
-        <h1 className="text-title font-semibold">{name} ledger</h1>
+        <h1 className="text-title font-semibold">
+          {name} {t('ledger')}
+        </h1>
         <p className="text-body text-ink-muted">
-          Every bill, payment, waiver and adjustment with the running balance.
+          {t(
+            'Every bill, payment, waiver and adjustment with the running balance.',
+          )}
         </p>
       </header>
-      <Card title="Ledger">
+      <Card title={t('Ledger')}>
         <LedgerTable
-          caption={`${name} ledger`}
+          caption={t('{name} ledger', { name })}
           entries={entries}
           timeZone={admin.timezone}
         />

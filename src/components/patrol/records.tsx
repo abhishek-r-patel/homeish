@@ -1,14 +1,17 @@
 // Render patrol incidents, handover notes and round progress for guard and administrator screens.
 'use client';
 import type { ReactNode } from 'react';
-import {
-  PATROL_CATEGORY_LABELS,
-  formatPatrolClock,
-  formatPatrolTime,
-} from '@/core/patrol/presentation';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
+import { PATROL_CATEGORY_LABELS } from '@/core/patrol/presentation';
 import type { PatrolRound } from '@/core/patrol/rounds';
 import type { PatrolHandover, PatrolIncident } from '@/core/patrol/validation';
-import { PatrolPhotoLink, PatrolSeverityChip } from './shared';
+import {
+  PatrolPhotoLink,
+  PatrolSeverityChip,
+  formatPatrolClock,
+  formatPatrolTime,
+} from './shared';
 
 export function PatrolIncidentItem({
   incident,
@@ -21,21 +24,24 @@ export function PatrolIncidentItem({
   request?: typeof fetch;
   children?: ReactNode;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <li className="grid min-w-0 gap-space-3 rounded-md border border-rule p-space-4">
       <div className="grid gap-space-1">
         <div className="flex flex-wrap items-center gap-space-2">
           <p className="text-body-strong">
-            {PATROL_CATEGORY_LABELS[incident.category]}
+            {t(PATROL_CATEGORY_LABELS[incident.category])}
           </p>
           <PatrolSeverityChip severity={incident.severity} />
           <span className="text-micro text-ink-muted">
-            {incident.status === 'open' ? 'Open' : 'Closed'}
+            {t(incident.status === 'open' ? 'Open' : 'Closed')}
           </span>
         </div>
         <p className="text-caption text-ink-muted">
-          Reported by {incident.reported_by_name} on{' '}
-          {formatPatrolTime(incident.created_at, timeZone)}
+          {t('Reported by {name} on {date}', {
+            name: incident.reported_by_name,
+            date: formatPatrolTime(incident.created_at, timeZone, locale),
+          })}
           {incident.location ? ` · ${incident.location}` : ''}
         </p>
         <p className="text-body break-words whitespace-pre-line">
@@ -56,12 +62,12 @@ export function PatrolIncidentItem({
       ) : null}
       {incident.notes.length > 0 ? (
         <div className="grid gap-space-2">
-          <h3 className="text-body-strong">Follow-up</h3>
+          <h3 className="text-body-strong">{t('Follow-up')}</h3>
           <ol className="grid gap-space-2">
             {incident.notes.map((note) => (
               <li key={note.id} className="text-caption">
                 <span className="text-body-strong">{note.author_name}</span>,{' '}
-                {formatPatrolTime(note.created_at, timeZone)}:{' '}
+                {formatPatrolTime(note.created_at, timeZone, locale)}:{' '}
                 <span className="break-words whitespace-pre-line">
                   {note.body}
                 </span>
@@ -72,11 +78,21 @@ export function PatrolIncidentItem({
       ) : null}
       {incident.status === 'closed' ? (
         <p className="text-caption">
-          Closed
-          {incident.closed_by_name ? ` by ${incident.closed_by_name}` : ''}
-          {incident.closed_at
-            ? ` on ${formatPatrolTime(incident.closed_at, timeZone)}`
-            : ''}
+          {t(
+            incident.closed_by_name && incident.closed_at
+              ? 'Closed by {name} on {date}'
+              : incident.closed_by_name
+                ? 'Closed by {name}'
+                : incident.closed_at
+                  ? 'Closed on {date}'
+                  : 'Closed',
+            {
+              name: incident.closed_by_name ?? '',
+              date: incident.closed_at
+                ? formatPatrolTime(incident.closed_at, timeZone, locale)
+                : '',
+            },
+          )}
           : <span className="break-words">{incident.resolution}</span>
         </p>
       ) : null}
@@ -94,17 +110,23 @@ export function PatrolHandoverItem({
   timeZone: string;
   children?: ReactNode;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <li className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-4">
       <p className="text-caption text-ink-muted">
-        {note.is_mine ? 'You' : note.author_name} wrote on{' '}
-        {formatPatrolTime(note.created_at, timeZone)}
+        {t('{name} wrote on {date}', {
+          name: note.is_mine ? t('You') : note.author_name,
+          date: formatPatrolTime(note.created_at, timeZone, locale),
+        })}
       </p>
       <p className="text-body break-words whitespace-pre-line">{note.body}</p>
       <p className="text-caption">
         {note.acknowledged_at
-          ? `Acknowledged by ${note.acknowledged_by_name ?? 'a guard'} on ${formatPatrolTime(note.acknowledged_at, timeZone)}`
-          : 'Not acknowledged yet'}
+          ? t('Acknowledged by {name} on {date}', {
+              name: note.acknowledged_by_name ?? t('a guard'),
+              date: formatPatrolTime(note.acknowledged_at, timeZone, locale),
+            })
+          : t('Not acknowledged yet')}
       </p>
       {children}
     </li>
@@ -134,18 +156,28 @@ export function PatrolRoundItem({
   checkpointNames: ReadonlyMap<string, string>;
   timeZone: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const done = round.checkpoints.filter(
     (checkpoint) => checkpoint.status === 'done',
   ).length;
   return (
     <li className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-4">
       <p className="text-body-strong">
-        {round.scheduleName}: {formatPatrolClock(round.start, timeZone)} to{' '}
-        {formatPatrolClock(round.end, timeZone)}
+        {t('{name}: {start} to {end}', {
+          name: round.scheduleName,
+          start: formatPatrolClock(round.start, timeZone, locale),
+          end: formatPatrolClock(round.end, timeZone, locale),
+        })}
       </p>
       <p className="text-caption text-ink-muted">
-        {done} of {round.checkpoints.length} scanned · finish by{' '}
-        {formatPatrolClock(round.deadline, timeZone)}
+        {t('{count} of {total} scanned · finish by {time}', {
+          count: formatLocalizedNumber(done, locale ?? 'en'),
+          total: formatLocalizedNumber(
+            round.checkpoints.length,
+            locale ?? 'en',
+          ),
+          time: formatPatrolClock(round.deadline, timeZone, locale),
+        })}
       </p>
       <ul className="grid gap-space-1">
         {round.checkpoints.map((checkpoint) => (
@@ -154,12 +186,12 @@ export function PatrolRoundItem({
             className="flex flex-wrap justify-between gap-space-2 text-body"
           >
             <span className="min-w-0 break-words">
-              {checkpointNames.get(checkpoint.checkpointId) ?? 'Checkpoint'}
+              {checkpointNames.get(checkpoint.checkpointId) ?? t('Checkpoint')}
             </span>
             <span className={ROUND_STATUS_CLASSES[checkpoint.status]}>
-              {ROUND_STATUS_TEXT[checkpoint.status]}
+              {t(ROUND_STATUS_TEXT[checkpoint.status])}
               {checkpoint.scannedAt
-                ? ` at ${formatPatrolClock(checkpoint.scannedAt, timeZone)}`
+                ? ` ${t('at {time}', { time: formatPatrolClock(checkpoint.scannedAt, timeZone, locale) })}`
                 : ''}
             </span>
           </li>

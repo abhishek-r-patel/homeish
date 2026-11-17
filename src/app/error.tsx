@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createRequestId } from '@/core/errors';
+import { useUiTranslator } from '@/components/ui/language';
 
 function getReferenceId(value: unknown): string | null {
   if (typeof value !== 'object' || value === null || !('data' in value)) {
@@ -26,6 +27,7 @@ export default function AppErrorBoundary({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  const { translate: t } = useUiTranslator();
   const reportedError = useRef<Error | null>(null);
   const [referenceId, setReferenceId] = useState<string | null>(null);
 
@@ -72,13 +74,14 @@ export default function AppErrorBoundary({
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-content-narrow flex-col items-start justify-center gap-space-4 px-space-4 text-ink">
-      <h1 className="text-title font-semibold">Something went wrong</h1>
+      <h1 className="text-title font-semibold">{t('Something went wrong')}</h1>
       <p className="text-ink-muted">
-        We could not complete that request. Please try again.
+        {t('We could not complete that request. Please try again.')}
       </p>
       {referenceId && (
         <p role="status" className="text-body">
-          Reference ID: <code>{referenceId}</code>
+          {t('Reference ID: ')}
+          <code>{referenceId}</code>
         </p>
       )}
       <button
@@ -86,7 +89,7 @@ export default function AppErrorBoundary({
         onClick={() => retry()}
         type="button"
       >
-        Try again
+        {t('Try again')}
       </button>
     </main>
   );

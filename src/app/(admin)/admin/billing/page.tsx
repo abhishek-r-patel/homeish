@@ -12,11 +12,12 @@ import { primaryLinkClass, textLinkClass } from '@/components/billing/styles';
 import { BillsTable, PaymentsTable } from '@/components/billing/tables';
 import { Card, StatTile } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
+import { todayInTimeZone } from '@/core/billing/format';
 import {
-  formatBillingDate,
-  formatRupees,
-  todayInTimeZone,
-} from '@/core/billing/format';
+  formatLocalizedCurrency,
+  formatLocalizedDate,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
 import {
   getBillingAdminContext,
   getBillingDashboard,
@@ -25,6 +26,8 @@ import {
   listBillingPayments,
   listBillingUnits,
 } from '@/core/billing/operations';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Billing | Homeish',
@@ -65,7 +68,7 @@ function isoDate(value: string | undefined) {
     : undefined;
 }
 
-function Pager({
+async function Pager({
   hasNext,
   page,
   tab,
@@ -74,26 +77,29 @@ function Pager({
   page: number;
   tab: TabId;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   if (page === 1 && !hasNext) return null;
   return (
-    <nav aria-label="Pagination" className="flex gap-space-4">
+    <nav aria-label={t('Pagination')} className="flex gap-space-4">
       {page > 1 ? (
         <Link
           className={textLinkClass}
           href={`/admin/billing?tab=${tab}&page=${page - 1}`}
         >
-          ← Previous
+          {t('← Previous')}
         </Link>
       ) : null}
       <span className="inline-flex items-center text-body text-ink-muted">
-        Page {page}
+        {t('Page')} {formatLocalizedNumber(page, locale)}
       </span>
       {hasNext ? (
         <Link
           className={textLinkClass}
           href={`/admin/billing?tab=${tab}&page=${page + 1}`}
         >
-          Next →
+          {t('Next →')}
         </Link>
       ) : null}
     </nav>
@@ -109,23 +115,28 @@ async function BillsSection({
   page: number;
   today: string;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   const bills = await listBillingBills(page, PAGE_SIZE);
   return (
     <Card
-      description="Open a bill to download its PDF, view the unit ledger, waive an amount or cancel it."
-      title="Bills"
+      description={t(
+        'Open a bill to download its PDF, view the unit ledger, waive an amount or cancel it.',
+      )}
+      title={t('Bills')}
     >
       <div className="grid gap-space-4">
         {canManage ? (
           <div>
             <Link className={primaryLinkClass} href="/admin/billing/generate">
-              Generate Bills
+              {t('Generate Bills')}
             </Link>
           </div>
         ) : null}
         <BillsTable
           bills={bills}
-          caption="Society bills"
+          caption={t('Society bills')}
           hrefBase="/admin/billing/bills"
           showUnit
           today={today}
@@ -147,6 +158,9 @@ async function PaymentsSection({
   staleDays: number;
   today: string;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   const [pending, recent, units] = await Promise.all([
     listBillingPayments(1, 100, 'awaiting_confirmation'),
     listBillingPayments(page, PAGE_SIZE),
@@ -155,8 +169,13 @@ async function PaymentsSection({
   return (
     <div className="grid gap-space-5">
       <Card
-        description={`Check each UPI reference against the society bank statement before confirming. Payments waiting ${staleDays} days or more are flagged.`}
-        title={`Awaiting confirmation (${pending.length})`}
+        description={t(
+          'Check each UPI reference against the society bank statement before confirming. Payments waiting {days} days or more are flagged.',
+          { days: formatLocalizedNumber(staleDays, locale) },
+        )}
+        title={t('Awaiting confirmation ({count})', {
+          count: formatLocalizedNumber(pending.length, locale),
+        })}
       >
         <PaymentReviewQueue
           canManage={canManage}
@@ -166,8 +185,8 @@ async function PaymentsSection({
         />
       </Card>
       <Card
-        description="Confirmed payments include a downloadable receipt."
-        title="All payments"
+        description={t('Confirmed payments include a downloadable receipt.')}
+        title={t('All payments')}
       >
         <div className="grid gap-space-4">
           {canManage ? (
@@ -176,7 +195,7 @@ async function PaymentsSection({
             </div>
           ) : null}
           <PaymentsTable
-            caption="Society payments"
+            caption={t('Society payments')}
             payments={recent}
             showUnit
           />
@@ -198,6 +217,9 @@ async function FinesSection({
   canManage: boolean;
   today: string;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   const [units, bills] = await Promise.all([
     canManage ? listBillingUnits() : Promise.resolve([]),
     listBillingBills(1, 100),
@@ -207,19 +229,21 @@ async function FinesSection({
     <div className="grid gap-space-5">
       {canManage ? (
         <Card
-          description="Fines are billed immediately and residents of the unit are notified."
-          title="Add fine"
+          description={t(
+            'Fines are billed immediately and residents of the unit are notified.',
+          )}
+          title={t('Add fine')}
         >
           <AddFineForm today={today} units={units} />
         </Card>
       ) : null}
       <Card
-        description="Recent fines and automatic late fees."
-        title="Fines and late fees"
+        description={t('Recent fines and automatic late fees.')}
+        title={t('Fines and late fees')}
       >
         <BillsTable
           bills={fines}
-          caption="Fines and late fees"
+          caption={t('Fines and late fees')}
           hrefBase="/admin/billing/bills"
           showUnit
           today={today}
@@ -230,12 +254,23 @@ async function FinesSection({
 }
 
 async function ReportsSection({ from, to }: { from: string; to: string }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
+  const formatDate = (value: string) =>
+    formatLocalizedDate(
+      new Date(`${value.slice(0, 10)}T00:00:00.000Z`),
+      locale,
+      { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' },
+    );
   const dashboard = await getBillingDashboard({ from, to });
   return (
     <div className="grid gap-space-5">
       <Card
-        description="Bills are counted by due date and collections by payment date."
-        title="Report period"
+        description={t(
+          'Bills are counted by due date and collections by payment date.',
+        )}
+        title={t('Report period')}
       >
         <form
           action="/admin/billing"
@@ -244,7 +279,7 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
         >
           <input name="tab" type="hidden" value="reports" />
           <label className="grid gap-space-1 text-body-strong">
-            From
+            {t('From')}
             <input
               className={dateInputClass}
               defaultValue={from}
@@ -254,7 +289,7 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
             />
           </label>
           <label className="grid gap-space-1 text-body-strong">
-            To
+            {t('To')}
             <input
               className={dateInputClass}
               defaultValue={to}
@@ -267,39 +302,63 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
             className="inline-flex min-h-12 items-center rounded-md border border-rule-strong bg-surface px-space-4 text-body-strong hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             type="submit"
           >
-            Update
+            {t('Update')}
           </button>
         </form>
       </Card>
       <div className="grid gap-space-3 medium:grid-cols-2 large:grid-cols-4">
         <StatTile
-          context={`${dashboard.bill_count} bill${dashboard.bill_count === 1 ? '' : 's'} due in period`}
-          label="Billed"
-          value={formatRupees(dashboard.billed_paise)}
+          context={t('{count} bills due in period', {
+            count: formatLocalizedNumber(dashboard.bill_count, locale),
+          })}
+          label={t('Billed')}
+          value={formatLocalizedCurrency(
+            Number(dashboard.billed_paise),
+            locale,
+          )}
         />
         <StatTile
           context={
             dashboard.collection_percent === null
-              ? 'No bills in period'
-              : `${dashboard.collection_percent}% of billed`
+              ? t('No bills in period')
+              : t('{percent}% of billed', {
+                  percent: formatLocalizedNumber(
+                    dashboard.collection_percent,
+                    locale,
+                  ),
+                })
           }
-          label="Collected"
-          value={formatRupees(dashboard.collected_paise)}
+          label={t('Collected')}
+          value={formatLocalizedCurrency(
+            Number(dashboard.collected_paise),
+            locale,
+          )}
         />
         <StatTile
-          context={`${formatRupees(dashboard.waived_paise)} waived`}
-          label="Outstanding"
-          value={formatRupees(dashboard.outstanding_paise)}
+          context={t('{amount} waived', {
+            amount: formatLocalizedCurrency(
+              Number(dashboard.waived_paise),
+              locale,
+            ),
+          })}
+          label={t('Outstanding')}
+          value={formatLocalizedCurrency(
+            Number(dashboard.outstanding_paise),
+            locale,
+          )}
         />
         <StatTile
-          context="Confirmed payments dated in period"
-          label="Received"
-          value={formatRupees(dashboard.received_paise)}
+          context={t('Confirmed payments dated in period')}
+          label={t('Received')}
+          value={formatLocalizedCurrency(
+            Number(dashboard.received_paise),
+            locale,
+          )}
         />
       </div>
       <Card
-        description="Units with the highest overdue balance today."
-        title="Top defaulters"
+        description={t('Units with the highest overdue balance today.')}
+        title={t('Top defaulters')}
       >
         {dashboard.top_defaulters.length ? (
           <ol className="grid gap-space-2">
@@ -312,23 +371,33 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
                   className={textLinkClass}
                   href={`/admin/billing/units/${row.unit_id}`}
                 >
-                  {row.rank}. {row.unit_number}
+                  {formatLocalizedNumber(row.rank, locale)}. {row.unit_number}
                 </Link>
                 <span className="text-body tabular-nums">
-                  {formatRupees(row.overdue_paise)} · {row.overdue_bill_count}{' '}
-                  bill{row.overdue_bill_count === 1 ? '' : 's'} since{' '}
-                  {formatBillingDate(row.oldest_due_date)}
+                  {t('{amount} · {count} bills since {date}', {
+                    amount: formatLocalizedCurrency(
+                      Number(row.overdue_paise),
+                      locale,
+                    ),
+                    count: formatLocalizedNumber(
+                      row.overdue_bill_count,
+                      locale,
+                    ),
+                    date: formatDate(row.oldest_due_date),
+                  })}
                 </span>
               </li>
             ))}
           </ol>
         ) : (
-          <p className="text-body text-ink-muted">No overdue units.</p>
+          <p className="text-body text-ink-muted">{t('No overdue units.')}</p>
         )}
       </Card>
       <Card
-        description="Exports are recorded in the audit log. CSV files open in spreadsheet apps."
-        title="Export"
+        description={t(
+          'Exports are recorded in the audit log. CSV files open in spreadsheet apps.',
+        )}
+        title={t('Export')}
       >
         <ReportExportButtons from={from} to={to} />
       </Card>
@@ -341,6 +410,9 @@ export default async function BillingPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: Record<string, string | number>) =>
+    translateMessage(locale, source, values);
   const params = await searchParams;
   const requested = single(params, 'tab');
   const tab: TabId = TABS.find((item) => item.id === requested)?.id ?? 'bills';
@@ -382,25 +454,26 @@ export default async function BillingPage({
   return (
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Billing</h1>
+        <h1 className="text-title font-semibold">{t('Billing')}</h1>
         <p className="text-body text-ink-muted">
-          Maintenance bills, payments, fines and collection reports. Residents
-          pay the society directly.
+          {t(
+            'Maintenance bills, payments, fines and collection reports. Residents pay the society directly.',
+          )}
         </p>
       </header>
       {!admin.canManage ? (
         <Banner tone="info">
           {admin.suspended
-            ? 'This society is suspended. Billing information is read-only.'
-            : 'Read-only access. Only administrators can change billing.'}
+            ? t('This society is suspended. Billing information is read-only.')
+            : t('Read-only access. Only administrators can change billing.')}
         </Banner>
       ) : null}
       {tab === 'reports' && rangeReset ? (
         <Banner tone="warning">
-          The start date was after the end date, so this month is shown.
+          {t('The start date was after the end date, so this month is shown.')}
         </Banner>
       ) : null}
-      <nav aria-label="Billing sections" className="overflow-x-auto">
+      <nav aria-label={t('Billing sections')} className="overflow-x-auto">
         <ul className="flex min-w-max gap-space-1 border-b border-rule">
           {TABS.map((item) => {
             const active = item.id === tab;
@@ -411,7 +484,7 @@ export default async function BillingPage({
                   className={`inline-flex min-h-12 items-center border-b-2 px-space-4 text-body-strong focus-visible:outline-2 focus-visible:outline-focus ${active ? 'border-brand text-brand' : 'border-transparent text-ink-muted hover:text-ink'}`}
                   href={`/admin/billing?tab=${item.id}`}
                 >
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               </li>
             );

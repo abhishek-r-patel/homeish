@@ -1,5 +1,13 @@
 // Share Polls & Voting status labels, result projections and route states.
+'use client';
 import Link from 'next/link';
+import { useUiTranslator } from '@/components/ui/language';
+import {
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
+import { translateMessage } from '@/core/i18n/messages';
 import { StatusChip } from '@/components/ui/data-display';
 import { EmptyState, ErrorPanel } from '@/components/ui/feedback';
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
@@ -12,13 +20,16 @@ import type {
 
 export type PollRouteStateKind = 'disabled' | 'denied' | 'error' | 'not-found';
 
-export function formatPollDateTime(value: string | null) {
-  if (!value) return 'Not set';
-  return new Intl.DateTimeFormat('en-IN', {
+export function formatPollDateTime(
+  value: string | null,
+  locale: Locale | null = null,
+) {
+  if (!value) return translateMessage(locale ?? 'en', 'Not set');
+  return formatLocalizedDateTime(new Date(value), locale ?? 'en', {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'Asia/Kolkata',
-  }).format(new Date(value));
+  });
 }
 
 export function PollStatus({ status }: { status: PollStatus }) {
@@ -38,6 +49,7 @@ export function PollRouteState({
   message?: string;
   referenceId?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (kind === 'disabled') {
     return (
       <ModuleDisabledPage embedded moduleKey="poll" returnHref={returnHref} />
@@ -46,14 +58,14 @@ export function PollRouteState({
   if (kind === 'denied') {
     return (
       <EmptyState
-        title="You do not have access to this page"
-        description="Return to your Homeish home page."
+        title={t('You do not have access to this page')}
+        description={t('Return to your Homeish home page.')}
         action={
           <Link
             className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
             href={returnHref}
           >
-            Back to Home
+            {t('Back to Home')}
           </Link>
         }
       />
@@ -62,14 +74,16 @@ export function PollRouteState({
   if (kind === 'not-found') {
     return (
       <EmptyState
-        title="We cannot find this poll"
-        description="It may have been removed or may no longer be visible to you."
+        title={t('We cannot find this poll')}
+        description={t(
+          'It may have been removed or may no longer be visible to you.',
+        )}
         action={
           <Link
             className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
             href={returnHref}
           >
-            Back to Polls
+            {t('Back to Polls')}
           </Link>
         }
       />
@@ -77,10 +91,11 @@ export function PollRouteState({
   }
   return (
     <ErrorPanel
-      title="Something went wrong"
+      title={t('Something went wrong')}
       message={
-        message ??
-        'We could not load this poll. Refresh the page and try again.'
+        message
+          ? translateFeedback(message)
+          : t('We could not load this poll. Refresh the page and try again.')
       }
       referenceId={referenceId}
       action={
@@ -90,14 +105,14 @@ export function PollRouteState({
               className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
               href={retryHref}
             >
-              Retry
+              {t('Retry')}
             </Link>
           ) : null}
           <Link
             className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
             href={returnHref}
           >
-            Back
+            {t('Back')}
           </Link>
         </div>
       }
@@ -105,11 +120,24 @@ export function PollRouteState({
   );
 }
 
-function percentage(value: number | null) {
-  return value === null ? 'Not available' : `${value.toFixed(1)}%`;
-}
-
 export function PollResultsView({ results }: { results: PollResults }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
+  const percentage = (value: number | null) =>
+    value === null
+      ? t('Not available')
+      : `${formatLocalizedNumber(value, locale ?? 'en', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+  const turnout = (
+    submitted: number,
+    eligible: number,
+    percent: number | null,
+  ) =>
+    t('{submitted} of {eligible} units voted · turnout {percent}', {
+      submitted: number(submitted),
+      eligible: number(eligible),
+      percent: percentage(percent),
+    });
   const projection = projectPollResults(results);
   if (projection.votingType === 'public') {
     return (
@@ -118,15 +146,18 @@ export function PollResultsView({ results }: { results: PollResults }) {
         aria-labelledby="poll-results-title"
       >
         <h2 className="text-subheading" id="poll-results-title">
-          {results.status === 'active' ? 'Live public results' : 'Results'}
+          {t(results.status === 'active' ? 'Live public results' : 'Results')}
         </h2>
         <p className="text-body text-ink-muted">
-          {projection.submitted} of {projection.eligible} units voted · turnout{' '}
-          {percentage(projection.turnoutPercent)}
+          {turnout(
+            projection.submitted,
+            projection.eligible,
+            projection.turnoutPercent,
+          )}
         </p>
         {projection.options.length === 0 ? (
           <p className="text-body text-ink-muted">
-            No option totals are available.
+            {t('No option totals are available.')}
           </p>
         ) : (
           <ul className="grid gap-space-2">
@@ -139,9 +170,14 @@ export function PollResultsView({ results }: { results: PollResults }) {
                   {option.label}
                 </span>
                 <span className="text-caption text-ink-muted">
-                  {option.count} selections ·{' '}
-                  {percentage(option.submittedPercent)} of submitted ·{' '}
-                  {percentage(option.eligiblePercent)} of eligible
+                  {t(
+                    '{count} selections · {submitted} of submitted · {eligible} of eligible',
+                    {
+                      count: number(option.count),
+                      submitted: percentage(option.submittedPercent),
+                      eligible: percentage(option.eligiblePercent),
+                    },
+                  )}
                 </span>
               </li>
             ))}
@@ -149,23 +185,25 @@ export function PollResultsView({ results }: { results: PollResults }) {
         )}
         {projection.outcome.kind === 'winner' ? (
           <p className="text-body-strong">
-            Current leader: {projection.outcome.label}
+            {t('Current leader: {name}', { name: projection.outcome.label })}
           </p>
         ) : projection.outcome.kind === 'tie' ? (
           <p className="text-body-strong">
-            Current tie: {projection.outcome.labels.join(', ')}
+            {t('Current tie: {names}', {
+              names: projection.outcome.labels.join(', '),
+            })}
           </p>
         ) : (
           <p className="text-body text-ink-muted">
-            No votes have been submitted yet.
+            {t('No votes have been submitted yet.')}
           </p>
         )}
         {results.status === 'completed' && projection.responses ? (
           <div className="grid gap-space-2">
-            <h3 className="text-body-strong">Named responses</h3>
+            <h3 className="text-body-strong">{t('Named responses')}</h3>
             {projection.responses.length === 0 ? (
               <p className="text-body text-ink-muted">
-                No named responses remain.
+                {t('No named responses remain.')}
               </p>
             ) : (
               <ul className="grid gap-space-2">
@@ -201,14 +239,19 @@ export function PollResultsView({ results }: { results: PollResults }) {
         aria-labelledby="poll-results-title"
       >
         <h2 className="text-subheading" id="poll-results-title">
-          Private election turnout
+          {t('Private election turnout')}
         </h2>
         <p className="text-body text-ink-muted">
-          {projection.submitted} of {projection.eligible} units voted · turnout{' '}
-          {percentage(projection.turnoutPercent)}
+          {turnout(
+            projection.submitted,
+            projection.eligible,
+            projection.turnoutPercent,
+          )}
         </p>
         <p className="text-caption text-ink-muted">
-          Candidate totals and voter names stay hidden until voting is complete.
+          {t(
+            'Candidate totals and voter names stay hidden until voting is complete.',
+          )}
         </p>
       </section>
     );
@@ -217,11 +260,14 @@ export function PollResultsView({ results }: { results: PollResults }) {
   return (
     <section className="grid gap-space-3" aria-labelledby="poll-results-title">
       <h2 className="text-subheading" id="poll-results-title">
-        Election results
+        {t('Election results')}
       </h2>
       <p className="text-body text-ink-muted">
-        {projection.submitted} of {projection.eligible} units voted · turnout{' '}
-        {percentage(projection.turnoutPercent)}
+        {turnout(
+          projection.submitted,
+          projection.eligible,
+          projection.turnoutPercent,
+        )}
       </p>
       {projection.offices.map((office) => (
         <div className="grid gap-space-2" key={office.id}>
@@ -229,26 +275,42 @@ export function PollResultsView({ results }: { results: PollResults }) {
           <ul className="grid gap-space-1">
             {office.candidates.map((candidate) => (
               <li className="text-body" key={candidate.id}>
-                {candidate.name}: {candidate.count} ·{' '}
-                {percentage(candidate.submittedPercent)} of submitted ·{' '}
-                {percentage(candidate.eligiblePercent)} of eligible
+                {t(
+                  '{name}: {count} · {submitted} of submitted · {eligible} of eligible',
+                  {
+                    name: candidate.name,
+                    count: number(candidate.count),
+                    submitted: percentage(candidate.submittedPercent),
+                    eligible: percentage(candidate.eligiblePercent),
+                  },
+                )}
               </li>
             ))}
             <li className="text-body">
-              None of the above: {office.notaCount} ·{' '}
-              {percentage(office.notaSubmittedPercent)} of submitted ·{' '}
-              {percentage(office.notaEligiblePercent)} of eligible
+              {t(
+                '{name}: {count} · {submitted} of submitted · {eligible} of eligible',
+                {
+                  name: t('None of the above'),
+                  count: number(office.notaCount),
+                  submitted: percentage(office.notaSubmittedPercent),
+                  eligible: percentage(office.notaEligiblePercent),
+                },
+              )}
             </li>
           </ul>
           {office.outcome.kind === 'winner' ? (
-            <p className="text-body-strong">Winner: {office.outcome.name}</p>
+            <p className="text-body-strong">
+              {t('Winner: {name}', { name: office.outcome.name })}
+            </p>
           ) : office.outcome.kind === 'tie' ? (
             <p className="text-body-strong">
-              Tie: {office.outcome.names.join(', ')}
+              {t('Tie: {names}', { names: office.outcome.names.join(', ') })}
             </p>
           ) : (
             <p className="text-body text-ink-muted">
-              No candidate received a vote. None of the above does not win.
+              {t(
+                'No candidate received a vote. None of the above does not win.',
+              )}
             </p>
           )}
         </div>
@@ -266,18 +328,30 @@ export function PollParticipationView({
   committeeView: boolean;
   status: PollStatus;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <section
       className="grid gap-space-3"
       aria-labelledby="poll-participation-title"
     >
       <h2 className="text-subheading" id="poll-participation-title">
-        {committeeView && participation.units === null
-          ? 'Turnout'
-          : 'Voting units'}
+        {t(
+          committeeView && participation.units === null
+            ? 'Turnout'
+            : 'Voting units',
+        )}
       </h2>
       <p className="text-body text-ink-muted">
-        {participation.submitted} of {participation.eligible} units have voted.
+        {t('{submitted} of {eligible} units have voted.', {
+          submitted: formatLocalizedNumber(
+            participation.submitted,
+            locale ?? 'en',
+          ),
+          eligible: formatLocalizedNumber(
+            participation.eligible,
+            locale ?? 'en',
+          ),
+        })}
       </p>
       {participation.units ? (
         <ul className="grid gap-space-2">
@@ -290,18 +364,20 @@ export function PollParticipationView({
                 {unit.unitLabel} · {unit.representativeName}
               </span>
               <span className="text-caption text-ink-muted">
-                {unit.submitted ? 'Voted' : 'Not voted'}
+                {t(unit.submitted ? 'Voted' : 'Not voted')}
               </span>
             </li>
           ))}
         </ul>
       ) : (
         <p className="text-caption text-ink-muted">
-          {status === 'active'
-            ? 'Individual participation is hidden until voting is complete.'
-            : status === 'completed'
-              ? 'Individual participation records are no longer retained. Aggregate results remain available.'
-              : 'Individual participation is not available for this cancelled poll.'}
+          {t(
+            status === 'active'
+              ? 'Individual participation is hidden until voting is complete.'
+              : status === 'completed'
+                ? 'Individual participation records are no longer retained. Aggregate results remain available.'
+                : 'Individual participation is not available for this cancelled poll.',
+          )}
         </p>
       )}
     </section>

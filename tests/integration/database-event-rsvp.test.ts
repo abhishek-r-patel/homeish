@@ -407,7 +407,7 @@ describe.skipIf(!hasDatabase)('event RSVP database contracts', () => {
     );
   });
 
-  it('limits RSVPs to audience blocks and keeps RSVPs of units dropped by a narrowed audience', async () => {
+  it('limits RSVPs to audience blocks and withdraws RSVPs of units dropped by a narrowed audience', async () => {
     const blockA = await createPublishedEvent(fixture, {
       audience: { scope: 'blocks', blockIds: [fixture.blocks.A] },
     });
@@ -448,7 +448,7 @@ describe.skipIf(!hasDatabase)('event RSVP database contracts', () => {
     ).toMatchObject({ status: 'going' });
 
     const everyone = await createPublishedEvent(fixture);
-    const bGoing = await setRsvp(
+    await setRsvp(
       fixture,
       'multi',
       everyone.eventId,
@@ -457,22 +457,98 @@ describe.skipIf(!hasDatabase)('event RSVP database contracts', () => {
       2,
       null,
     );
-    await updateEvent(fixture, everyone.eventId, {
-      audience: { scope: 'blocks', blockIds: [fixture.blocks.A] },
-    });
-    expect(
-      await rsvpRow(fixture, everyone.eventId, fixture.units.b101.id),
-    ).toMatchObject({ status: 'going', headcount: 2 });
-    const withdrawn = await setRsvp(
+    const aGoing = await setRsvp(
+      fixture,
+      'owner',
+      everyone.eventId,
+      fixture.units.a101.id,
+      'going',
+      1,
+      null,
+    );
+    await setRsvp(
       fixture,
       'multi',
       everyone.eventId,
-      fixture.units.b101.id,
+      fixture.units.a201.id,
       'not_going',
       0,
-      bGoing.version as number,
+      null,
     );
-    expect(withdrawn).toMatchObject({ status: 'not_going', headcount: 0 });
+    const listBefore = await callEvent(fixture, 'multi', 'event_member_list', [
+      fixture.societyId,
+      'upcoming',
+    ]);
+    expect(
+      records(listBefore.items).find((item) => item.id === everyone.eventId)
+        ?.myRsvps,
+    ).toEqual([
+      {
+        unitId: fixture.units.a201.id,
+        label: 'A-201',
+        status: 'not_going',
+        headcount: 0,
+      },
+      {
+        unitId: fixture.units.b101.id,
+        label: 'B-101',
+        status: 'going',
+        headcount: 2,
+      },
+    ]);
+    const narrowed = await updateEvent(fixture, everyone.eventId, {
+      audience: { scope: 'blocks', blockIds: [fixture.blocks.A] },
+    });
+    expect(narrowed).toMatchObject({ withdrawnUnits: 1, refundedUnits: 0 });
+    expect(
+      await rsvpRow(fixture, everyone.eventId, fixture.units.b101.id),
+    ).toMatchObject({ status: 'not_going', headcount: 0, version: 2 });
+    expect(
+      await rsvpRow(fixture, everyone.eventId, fixture.units.a101.id),
+    ).toMatchObject({ status: 'going', headcount: 1, version: aGoing.version });
+    await expectCode(
+      setRsvp(
+        fixture,
+        'owner3',
+        everyone.eventId,
+        fixture.units.b101.id,
+        'going',
+        1,
+        null,
+      ),
+      'P0002',
+    );
+    await expectCode(memberGet('owner3', everyone.eventId), 'P0002');
+    const ownerList = await callEvent(fixture, 'owner3', 'event_member_list', [
+      fixture.societyId,
+      'upcoming',
+    ]);
+    expect(records(ownerList.items).map((item) => item.id)).not.toContain(
+      everyone.eventId,
+    );
+    await expectDomainError(
+      setRsvp(
+        fixture,
+        'multi',
+        everyone.eventId,
+        fixture.units.b101.id,
+        'going',
+        1,
+        null,
+      ),
+      'event_not_in_audience',
+    );
+    const multiView = await memberGet('multi', everyone.eventId);
+    expect(records(multiView.myUnits).map((unit) => unit.unitId)).toEqual([
+      fixture.units.a201.id,
+    ]);
+    const again = await updateEvent(fixture, everyone.eventId, {
+      title: 'Synthetic re-saved event',
+    });
+    expect(again).toMatchObject({ withdrawnUnits: 0, refundedUnits: 0 });
+    expect(
+      await rsvpRow(fixture, everyone.eventId, fixture.units.b101.id),
+    ).toMatchObject({ status: 'not_going', version: 2 });
   });
 
   it('shows residents their own units only, with spots left and RSVP state', async () => {
@@ -560,7 +636,14 @@ describe.skipIf(!hasDatabase)('event RSVP database contracts', () => {
         (entry) => entry.id === published.eventId,
       ),
     ).toMatchObject({
-      myRsvp: { unitId: fixture.units.a101.id, status: 'going', headcount: 2 },
+      myRsvps: [
+        {
+          unitId: fixture.units.a101.id,
+          label: 'A-101',
+          status: 'going',
+          headcount: 2,
+        },
+      ],
     });
     expect(JSON.stringify(listForOwner)).not.toContain('@example.test');
   });

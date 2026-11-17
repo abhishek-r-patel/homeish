@@ -6,11 +6,7 @@ import { z } from 'zod';
 import { ValidationError } from '@/core/errors';
 import {
   VENDOR_REQUEST_STATUS_LABELS,
-  approvalsText,
-  formatPaise,
   paiseToRupeesInput,
-  quoteRuleText,
-  ratingText,
   rupeesToPaise,
 } from '@/core/vendor/presentation';
 import {
@@ -29,6 +25,7 @@ import { SelectInput } from '@/components/ui/select-input';
 import { AmountInput, TextAreaInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
 import { VENDOR_ACTIONS, VENDOR_BASE_HREF, type VendorActions } from './shared';
+import { useVendorPresentation } from './presentation';
 
 /** Reads a rupee field and returns paise, or explains the expected format. */
 export function readRupees(form: FormData, name: string, field: string) {
@@ -50,13 +47,14 @@ export function VendorForm({
   actions: VendorActions;
   onSaved?: (id: string) => void;
 }) {
+  const { t } = useVendorPresentation();
   const id = useId();
   const text = (form: FormData, name: string) => String(form.get(name) ?? '');
   return (
     <ModuleActionForm
       action={actions.saveVendor}
       idempotent
-      submitLabel={vendor ? 'Save vendor' : 'Add vendor'}
+      submitLabel={t(vendor ? 'Save vendor' : 'Add vendor')}
       onSaved={(data) => {
         const saved = z.uuid().safeParse(data);
         if (saved.success) onSaved?.(saved.data);
@@ -79,7 +77,7 @@ export function VendorForm({
       <TextInput
         id={`${id}-name`}
         name="name"
-        label="Vendor name"
+        label={t('Vendor name')}
         required
         maxLength={120}
         defaultValue={vendor?.name}
@@ -88,8 +86,8 @@ export function VendorForm({
       <TextInput
         id={`${id}-category`}
         name="category"
-        label="Category"
-        helpText="For example Plumbing, Electrical or Housekeeping."
+        label={t('Category')}
+        helpText={t('For example Plumbing, Electrical or Housekeeping.')}
         required
         maxLength={60}
         defaultValue={vendor?.category}
@@ -98,7 +96,7 @@ export function VendorForm({
       <TextInput
         id={`${id}-contact`}
         name="contactPerson"
-        label="Contact person (optional)"
+        label={t('Contact person (optional)')}
         maxLength={120}
         defaultValue={vendor?.contact_person ?? ''}
         autoComplete="off"
@@ -106,7 +104,7 @@ export function VendorForm({
       <TextInput
         id={`${id}-phone`}
         name="phone"
-        label="Phone (optional)"
+        label={t('Phone (optional)')}
         type="tel"
         inputMode="tel"
         maxLength={20}
@@ -116,7 +114,7 @@ export function VendorForm({
       <TextInput
         id={`${id}-email`}
         name="email"
-        label="Email (optional)"
+        label={t('Email (optional)')}
         type="email"
         maxLength={254}
         defaultValue={vendor?.email ?? ''}
@@ -125,8 +123,8 @@ export function VendorForm({
       <TextInput
         id={`${id}-gstin`}
         name="gstin"
-        label="GSTIN (optional)"
-        helpText="15 characters, for example 27ABCDE1234F1Z5."
+        label={t('GSTIN (optional)')}
+        helpText={t('15 characters, for example 27ABCDE1234F1Z5.')}
         maxLength={20}
         defaultValue={vendor?.gstin ?? ''}
         autoComplete="off"
@@ -135,7 +133,7 @@ export function VendorForm({
       <TextAreaInput
         id={`${id}-notes`}
         name="notes"
-        label="Notes (optional)"
+        label={t('Notes (optional)')}
         maxLength={1000}
         defaultValue={vendor?.notes ?? ''}
       />
@@ -150,6 +148,7 @@ function SettingsForm({
   workspace: VendorWorkspace;
   actions: VendorActions;
 }) {
+  const { t } = useVendorPresentation();
   const id = useId();
   const settings = workspace.settings;
   const counts = (min: number, max: number) =>
@@ -160,7 +159,7 @@ function SettingsForm({
   return (
     <ModuleActionForm
       action={actions.saveSettings}
-      submitLabel="Save approval settings"
+      submitLabel={t('Save approval settings')}
       input={(form) =>
         vendorSettingsInputSchema.parse({
           quoteThresholdPaise:
@@ -175,15 +174,15 @@ function SettingsForm({
       <AmountInput
         id={`${id}-threshold`}
         name="threshold"
-        label="Quote threshold"
-        helpText="Below this amount one quote is enough."
+        label={t('Quote threshold')}
+        helpText={t('Below this amount one quote is enough.')}
         required
         defaultValue={paiseToRupeesInput(settings.quote_threshold_paise)}
       />
       <SelectInput
         id={`${id}-quotes`}
         name="quotes"
-        label="Quotes needed at or above the threshold"
+        label={t('Quotes needed at or above the threshold')}
         required
         defaultValue={String(settings.quotes_above_threshold)}
         options={counts(1, VENDOR_QUOTES_MAX)}
@@ -191,8 +190,10 @@ function SettingsForm({
       <SelectInput
         id={`${id}-approvals`}
         name="approvals"
-        label="Approvals needed"
-        helpText="Distinct admin or committee members. With 0, an admin approves alone. The person who raised a request never approves it."
+        label={t('Approvals needed')}
+        helpText={t(
+          'Distinct admin or committee members. With 0, an admin approves alone. The person who raised a request never approves it.',
+        )}
         required
         defaultValue={String(settings.approvals_required)}
         options={counts(0, VENDOR_APPROVALS_MAX)}
@@ -217,12 +218,13 @@ export function PurchaseRequestForm({
   actions: VendorActions;
   onSaved?: (id: string) => void;
 }) {
+  const { t } = useVendorPresentation();
   const id = useId();
   return (
     <ModuleActionForm
       action={actions.saveRequest}
       idempotent
-      submitLabel={request ? 'Save request' : 'Create draft request'}
+      submitLabel={t(request ? 'Save request' : 'Create draft request')}
       onSaved={(data) => {
         const saved = z.uuid().safeParse(data);
         if (saved.success) onSaved?.(saved.data);
@@ -246,7 +248,7 @@ export function PurchaseRequestForm({
       <TextInput
         id={`${id}-title`}
         name="title"
-        label="What do you want to buy?"
+        label={t('What do you want to buy?')}
         required
         maxLength={120}
         defaultValue={request?.title}
@@ -255,15 +257,17 @@ export function PurchaseRequestForm({
       <TextAreaInput
         id={`${id}-description`}
         name="description"
-        label="Details (optional)"
+        label={t('Details (optional)')}
         maxLength={2000}
         defaultValue={request?.description ?? ''}
       />
       <TextInput
         id={`${id}-category`}
         name="category"
-        label="Category (optional)"
-        helpText="Used to pick the expense category when the request is approved."
+        label={t('Category (optional)')}
+        helpText={t(
+          'Used to pick the expense category when the request is approved.',
+        )}
         maxLength={60}
         defaultValue={request?.category ?? ''}
         autoComplete="off"
@@ -271,7 +275,7 @@ export function PurchaseRequestForm({
       <AmountInput
         id={`${id}-estimate`}
         name="estimate"
-        label="Estimated amount"
+        label={t('Estimated amount')}
         required
         defaultValue={
           request ? paiseToRupeesInput(request.estimated_amount_paise) : ''
@@ -282,15 +286,16 @@ export function PurchaseRequestForm({
 }
 
 function VendorList({ workspace }: { workspace: VendorWorkspace }) {
+  const { t, rating } = useVendorPresentation();
   if (workspace.vendors.length === 0) {
     return (
       <EmptyState
-        title="No vendors yet"
-        description={
+        title={t('No vendors yet')}
+        description={t(
           workspace.can_manage
             ? 'Add the first vendor below.'
-            : 'An admin adds vendors to the directory.'
-        }
+            : 'An admin adds vendors to the directory.',
+        )}
       />
     );
   }
@@ -309,12 +314,12 @@ function VendorList({ workspace }: { workspace: VendorWorkspace }) {
           </a>
           <p className="text-caption text-ink-muted">
             {vendor.category}
-            {vendor.active ? '' : ' · Inactive'}
+            {vendor.active ? '' : t(' · Inactive')}
             {vendor.contact_person ? ` · ${vendor.contact_person}` : ''}
             {vendor.phone ? ` · ${vendor.phone}` : ''}
           </p>
           <p className="text-caption">
-            {ratingText(vendor.rating_average, vendor.rating_count)}
+            {rating(vendor.rating_average, vendor.rating_count)}
           </p>
         </li>
       ))}
@@ -323,11 +328,14 @@ function VendorList({ workspace }: { workspace: VendorWorkspace }) {
 }
 
 function RequestList({ workspace }: { workspace: VendorWorkspace }) {
+  const { t, money, quoteRule, approvals } = useVendorPresentation();
   if (workspace.requests.length === 0) {
     return (
       <EmptyState
-        title="No purchase requests yet"
-        description="Create a draft request below, add quotes and submit it for approval."
+        title={t('No purchase requests yet')}
+        description={t(
+          'Create a draft request below, add quotes and submit it for approval.',
+        )}
       />
     );
   }
@@ -345,21 +353,23 @@ function RequestList({ workspace }: { workspace: VendorWorkspace }) {
             {request.title}
           </a>
           <p className="text-caption text-ink-muted">
-            {VENDOR_REQUEST_STATUS_LABELS[request.status]} ·{' '}
-            {formatPaise(
+            {t(VENDOR_REQUEST_STATUS_LABELS[request.status])} ·{' '}
+            {money(
               request.selected_amount_paise ?? request.estimated_amount_paise,
             )}
             {request.selected_vendor_name
               ? ` · ${request.selected_vendor_name}`
               : ''}
             {request.created_by_name
-              ? ` · Raised by ${request.mine ? 'you' : request.created_by_name}`
+              ? t(' · Raised by {name}', {
+                  name: request.mine ? t('you') : request.created_by_name,
+                })
               : ''}
           </p>
           <p className="text-caption">
-            {quoteRuleText(request.rule)}
+            {quoteRule(request.rule)}
             {request.status === 'submitted'
-              ? ` · ${approvalsText(request.approvals, request.approvals_required)}`
+              ? ` · ${approvals(request.approvals, request.approvals_required)}`
               : ''}
           </p>
         </li>
@@ -375,47 +385,60 @@ export function VendorWorkspaceView({
   workspace: VendorWorkspace;
   actions?: VendorActions;
 }) {
+  const { t, money } = useVendorPresentation();
   const router = useRouter();
   const settings = workspace.settings;
   return (
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Vendors & Purchases</h1>
+        <h1 className="text-title font-semibold">{t('Vendors & Purchases')}</h1>
         <p className="text-body text-ink-muted">
-          Below {formatPaise(settings.quote_threshold_paise)} one quote is
-          enough; at or above it, {settings.quotes_above_threshold} quotes are
-          needed.{' '}
+          {t(
+            'Below {threshold} one quote is enough; at or above it, {count} quotes are needed.',
+            {
+              threshold: money(settings.quote_threshold_paise),
+              count: settings.quotes_above_threshold,
+            },
+          )}{' '}
           {settings.approvals_required === 0
-            ? 'An admin approves requests alone.'
-            : `${settings.approvals_required} ${settings.approvals_required === 1 ? 'approval is' : 'approvals are'} needed.`}{' '}
-          Ratings and vendor documents are visible to the admin and committee
-          only.
+            ? t('An admin approves requests alone.')
+            : t(
+                settings.approvals_required === 1
+                  ? '{count} approval is needed.'
+                  : '{count} approvals are needed.',
+                { count: settings.approvals_required },
+              )}{' '}
+          {t(
+            'Ratings and vendor documents are visible to the admin and committee only.',
+          )}
         </p>
       </header>
       {workspace.expense_enabled ? null : (
         <Banner tone="info">
-          Expenses is off, so approved requests do not create expense drafts.
+          {t(
+            'Expenses is off, so approved requests do not create expense drafts.',
+          )}
         </Banner>
       )}
       <Card
-        title="Purchase requests"
-        description="Draft, submitted and decided requests, newest first."
+        title={t('Purchase requests')}
+        description={t('Draft, submitted and decided requests, newest first.')}
       >
         <RequestList workspace={workspace} />
       </Card>
-      <Card title="New purchase request">
+      <Card title={t('New purchase request')}>
         <PurchaseRequestForm
           request={null}
           actions={actions}
           onSaved={(id) => router.push(`${VENDOR_BASE_HREF}/requests/${id}`)}
         />
       </Card>
-      <Card title="Vendors">
+      <Card title={t('Vendors')}>
         <VendorList workspace={workspace} />
       </Card>
       {workspace.can_manage ? (
         <>
-          <Card title="Add a vendor">
+          <Card title={t('Add a vendor')}>
             <VendorForm
               vendor={null}
               actions={actions}
@@ -423,8 +446,8 @@ export function VendorWorkspaceView({
             />
           </Card>
           <Card
-            title="Approval settings"
-            description="Changes apply to requests submitted from now on."
+            title={t('Approval settings')}
+            description={t('Changes apply to requests submitted from now on.')}
           >
             <SettingsForm workspace={workspace} actions={actions} />
           </Card>

@@ -1,6 +1,7 @@
 // Upload one private delivery photo and attach its verified storage path.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useEffect, useRef, useState } from 'react';
 import { publicEnvironment } from '@/core/config/public-env';
 
@@ -9,11 +10,20 @@ type UploadEnvelope = {
   data?: { path?: string; signedUrl?: string };
 };
 
+async function readEnvelope(response: Response): Promise<UploadEnvelope> {
+  try {
+    return (await response.json()) as UploadEnvelope;
+  } catch {
+    throw new Error('The upload service returned an invalid response.');
+  }
+}
+
 export function DeliveryPhotoUpload({
   unitSelectId,
 }: {
   unitSelectId: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const [path, setPath] = useState('');
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -59,7 +69,7 @@ export function DeliveryPhotoUpload({
           unitId: unit.value,
         }),
       });
-      const result = (await response.json()) as UploadEnvelope;
+      const result = await readEnvelope(response);
       const signedUrl = result.data?.signedUrl;
       const nextPath = result.data?.path;
       if (!response.ok || !result.ok || !signedUrl || !nextPath) {
@@ -108,7 +118,7 @@ export function DeliveryPhotoUpload({
         className="grid gap-space-1 text-body-strong"
         htmlFor="delivery-photo"
       >
-        Delivery photo (optional)
+        {t('Delivery photo (optional)')}
         <input
           accept="image/jpeg,image/png"
           className="min-h-12 rounded-md border border-rule px-space-3 py-space-2"
@@ -124,7 +134,7 @@ export function DeliveryPhotoUpload({
       </label>
       {path ? (
         <p className="text-caption text-ink-muted">
-          Photo attached to this delivery.
+          {t('Photo attached to this delivery.')}
         </p>
       ) : null}
       <p
@@ -132,7 +142,11 @@ export function DeliveryPhotoUpload({
         className="text-caption text-ink-muted"
         role="status"
       >
-        {uploading ? 'Uploading photo…' : message}
+        {uploading
+          ? t('Uploading photo…')
+          : message
+            ? translateFeedback(message)
+            : null}
       </p>
     </div>
   );

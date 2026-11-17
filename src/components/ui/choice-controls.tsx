@@ -2,6 +2,7 @@
 'use client';
 
 import type { ChangeEventHandler, InputHTMLAttributes, ReactNode } from 'react';
+import { useUiTranslator } from './language';
 
 type ChoiceInputProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -124,11 +125,13 @@ export function RadioGroup({
   value,
   variant = 'standard',
 }: RadioGroupProps) {
+  const { translate } = useUiTranslator();
+
   return (
     <fieldset className="grid gap-space-2">
       <legend className="text-body-strong text-ink">
         {label}
-        {required ? ' (required)' : ''}
+        {required ? ` ${translate('(required)')}` : ''}
       </legend>
       {options.map((option, index) => {
         const sharedProps = {
@@ -215,6 +218,8 @@ export function SwitchInput({
   label,
   onChange,
 }: SwitchInputProps) {
+  const { translate } = useUiTranslator();
+
   return (
     <label className="inline-flex min-h-12 cursor-pointer items-center gap-space-3 text-body text-ink">
       <span id={`${id}-label`}>{label}</span>
@@ -239,7 +244,7 @@ export function SwitchInput({
         />
       </span>
       <span className="text-caption text-ink-muted">
-        {checked ? 'On' : 'Off'}
+        {translate(checked ? 'On' : 'Off')}
       </span>
     </label>
   );

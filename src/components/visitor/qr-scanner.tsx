@@ -1,6 +1,7 @@
 // Scan visitor QR codes with the device camera when the browser supports it.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useEffect, useRef, useState } from 'react';
 
 type Barcode = { rawValue: string };
@@ -18,6 +19,7 @@ export function QrScanner({
   active: boolean;
   onCode: (code: string) => void;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,7 +97,7 @@ export function QrScanner({
   return (
     <div className="grid gap-space-2">
       <video
-        aria-label="Camera view for scanning a visitor QR code"
+        aria-label={t('Camera view for scanning a visitor QR code')}
         className="aspect-video w-full rounded-md bg-ink"
         muted
         playsInline
@@ -107,7 +109,7 @@ export function QrScanner({
           className="text-caption text-danger"
           role="status"
         >
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
     </div>

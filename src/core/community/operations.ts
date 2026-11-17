@@ -60,6 +60,8 @@ import {
   communityReplyIdInputSchema,
   communityReportInputSchema,
   communityReportResultSchema,
+  communitySettingsInputSchema,
+  communitySettingsResultSchema,
   communityTargetTypeSchema,
   communityUnmuteInputSchema,
   communityUnmuteResultSchema,
@@ -699,7 +701,7 @@ export async function getCommunityAdminGroups() {
 export async function getCommunityAdminMutes(search: string | null) {
   const { context, societyId } = await getContext('community:moderate');
   const term = search?.trim().slice(0, COMMUNITY_SEARCH_MAX) || null;
-  const [mutes, members] = await Promise.all([
+  const [mutes, members, settings] = await Promise.all([
     callCommunityRpc(
       context,
       'community_admin_mutes',
@@ -716,12 +718,42 @@ export async function getCommunityAdminMutes(search: string | null) {
           'Could not search residents. Refresh and retry.',
         )
       : Promise.resolve(null),
+    callCommunityRpc(
+      context,
+      'community_settings_get',
+      { p_society_id: societyId },
+      communitySettingsResultSchema,
+      'Could not load the muted-resident settings. Refresh and retry.',
+    ),
   ]);
-  return { mutes, members: members?.items ?? null, search: term };
+  return { mutes, members: members?.items ?? null, search: term, settings };
 }
 
 // Administrator writes
 
+export async function updateCommunitySettings(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'community:moderate',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(communitySettingsInputSchema, input);
+  return callCommunityRpc(
+    context,
+    'community_settings_update',
+    {
+      p_society_id: societyId,
+      p_settings: values.settings,
+      p_expected_updated_at: values.expectedUpdatedAt,
+      p_request_id: context.requestId,
+    },
+    communitySettingsResultSchema,
+    'The settings were not saved. Refresh and retry.',
+  );
+}
 export async function saveCommunityGroup(input: unknown, requestId: string) {
   const { context, societyId } = await getContext(
     'community:moderate',

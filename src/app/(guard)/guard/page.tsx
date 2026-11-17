@@ -5,8 +5,13 @@ import { AppError, createRequestId } from '@/core/errors';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { requireIdentifiedGuard } from '@/core/guards/operations';
 import { Banner } from '@/components/ui/feedback';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage, type MessageValues } from '@/core/i18n/messages';
 
 export default async function GuardHomePage() {
+  const locale = await getRequestLocale();
+  const t = (source: string, values?: MessageValues) =>
+    translateMessage(locale, source, values);
   const context = await buildRequestContext(createRequestId());
   let guard: { id: string; name: string } | null = null;
   try {
@@ -28,34 +33,42 @@ export default async function GuardHomePage() {
     <section className="grid gap-space-4">
       <header className="grid gap-space-2">
         <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
-          Gate
+          {t('Gate')}
         </p>
-        <h1 className="text-heading font-semibold">Gate home</h1>
+        <h1 className="text-heading font-semibold">{t('Gate home')}</h1>
       </header>
       {guard ? (
         <Banner tone="success">
-          <p>Ready to record gate activity as {guard.name}.</p>
+          <p>
+            {t('Ready to record gate activity as {name}.', {
+              name: guard.name,
+            })}
+          </p>
         </Banner>
       ) : (
         <Banner tone="warning">
-          <p>Identify the guard on duty before recording gate activity.</p>
+          <p>
+            {t('Identify the guard on duty before recording gate activity.')}
+          </p>
         </Banner>
       )}
       {gateLinks.length ? (
-        <nav aria-label="Gate activity" className="grid gap-space-3">
+        <nav aria-label={t('Gate activity')} className="grid gap-space-3">
           {gateLinks.map((item) => (
             <Link
               className="flex min-h-16 items-center rounded-md border border-rule bg-surface px-space-4 text-body-strong focus-visible:outline-2 focus-visible:outline-focus"
               href={item.href}
               key={item.href}
             >
-              {item.label}
+              {t(item.label)}
             </Link>
           ))}
         </nav>
       ) : (
         <p className="text-body text-ink-muted">
-          Gate activity tools will appear here as society modules are enabled.
+          {t(
+            'Gate activity tools will appear here as society modules are enabled.',
+          )}
         </p>
       )}
     </section>

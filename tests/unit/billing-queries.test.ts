@@ -36,6 +36,8 @@ describe('billing queries', () => {
       enabledModules: new Set(['core', 'billing']),
       isDeveloper: false,
       isDeveloperAccount: false,
+      isHindiEnabled: false,
+      languagePreference: 'en',
       memberships: [{ societyId, roles: ['resident'] }],
       mfaVerified: false,
       requestId: 'billing-query-test',

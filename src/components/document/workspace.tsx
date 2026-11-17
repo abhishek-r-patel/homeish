@@ -7,7 +7,6 @@ import {
   DOCUMENT_UNIT_AUDIENCE_LABELS,
   documentFileKind,
   documentUnitLabel,
-  formatDocumentDate,
   formatDocumentFileSize,
 } from '@/core/document/presentation';
 import type {
@@ -40,6 +39,7 @@ import {
   DocumentDownloadButton,
   type DocumentActions,
 } from './files';
+import { useDocumentPresentation } from './presentation';
 
 export type DocumentMode = 'resident' | 'management';
 export type DocumentRouteStateKind =
@@ -83,6 +83,7 @@ export function DocumentRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { t, translateFeedback } = useDocumentPresentation();
   if (kind === 'disabled') {
     return (
       <ModuleDisabledPage
@@ -111,23 +112,23 @@ export function DocumentRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">Documents</h1>
+      <h1 className="text-title font-semibold">{t('Documents')}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={message ? translateFeedback(message) : t(copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
               {retryHref ? (
                 <a href={retryHref} className={linkClass}>
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a href={returnHref} className={linkClass}>
-                Back to workspace
+                {t('Back to workspace')}
               </a>
             </div>
           }
@@ -138,16 +139,22 @@ export function DocumentRouteState({
 }
 
 function DocumentMeta({ document }: { document: DocumentItem }) {
+  const { t, date } = useDocumentPresentation();
   const current = document.current_version;
   return (
     <p className="text-caption text-ink-muted">
       {current
-        ? `${documentFileKind(current.content_type)} · ${formatDocumentFileSize(current.size_bytes)} · Version ${current.version_number} · Updated ${formatDocumentDate(current.created_at)}`
-        : 'No active file'}
+        ? t('{kind} · {size} · Version {number} · Updated {date}', {
+            kind: t(documentFileKind(current.content_type)),
+            size: formatDocumentFileSize(current.size_bytes),
+            number: current.version_number,
+            date: date(current.created_at),
+          })
+        : t('No active file')}
       {document.unit_audience
-        ? ` · ${DOCUMENT_UNIT_AUDIENCE_LABELS[document.unit_audience]}`
+        ? ` · ${t(DOCUMENT_UNIT_AUDIENCE_LABELS[document.unit_audience])}`
         : ''}
-      {document.archived_at ? ' · Archived' : ''}
+      {document.archived_at ? t(' · Archived') : ''}
     </p>
   );
 }
@@ -165,6 +172,7 @@ function DocumentRow({
   selection: DocumentSelection;
   actions: DocumentActions;
 }) {
+  const { t } = useDocumentPresentation();
   return (
     <li className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-4">
       <h3 className="text-body-strong break-words">{document.title}</h3>
@@ -188,7 +196,7 @@ function DocumentRow({
             })}
             className={linkClass}
           >
-            Versions and details: {document.title}
+            {t('Versions and details: {title}', { title: document.title })}
           </a>
         ) : null}
       </div>
@@ -211,13 +219,16 @@ function DocumentDetailPanel({
   actions: DocumentActions;
   request?: typeof fetch;
 }) {
+  const { t, date } = useDocumentPresentation();
   const { document, versions } = detail;
   const canEdit = workspace.can_manage && workspace.writable;
   const activeVersions = versions.filter((version) => !version.archived_at);
   return (
     <Card
-      title={`Version history: ${document.title}`}
-      description="Every version is kept. Residents see only the latest active version."
+      title={t('Version history: {title}', { title: document.title })}
+      description={t(
+        'Every version is kept. Residents see only the latest active version.',
+      )}
     >
       <div className="grid gap-space-4">
         <ol className="grid gap-space-3">
@@ -227,16 +238,17 @@ function DocumentDetailPanel({
               className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-4"
             >
               <p className="text-body-strong">
-                Version {version.version_number}
+                {t('Version {number}', { number: version.version_number })}
                 {version.id === document.current_version?.id
-                  ? ' (current)'
+                  ? t(' (current)')
                   : ''}
-                {version.archived_at ? ' (archived)' : ''}
+                {version.archived_at ? t(' (archived)') : ''}
               </p>
               <p className="text-caption text-ink-muted break-words">
-                {version.file_name} · {documentFileKind(version.content_type)} ·{' '}
-                {formatDocumentFileSize(version.size_bytes)} · Uploaded{' '}
-                {formatDocumentDate(version.created_at)}
+                {version.file_name} ·{' '}
+                {t(documentFileKind(version.content_type))} ·{' '}
+                {formatDocumentFileSize(version.size_bytes)} ·{' '}
+                {t('Uploaded {date}', { date: date(version.created_at) })}
               </p>
               {version.note ? (
                 <p className="text-body break-words">{version.note}</p>
@@ -244,7 +256,9 @@ function DocumentDetailPanel({
               <div className="flex flex-wrap items-start gap-space-3">
                 <DocumentDownloadButton
                   versionId={version.id}
-                  label={`version ${version.version_number}`}
+                  label={t('version {number}', {
+                    number: version.version_number,
+                  })}
                   download={actions.download}
                 />
                 {canEdit &&
@@ -261,13 +275,13 @@ function DocumentDetailPanel({
         </ol>
         {canEdit ? (
           <>
-            <h3 className="text-subheading">Publish a new version</h3>
+            <h3 className="text-subheading">{t('Publish a new version')}</h3>
             <DocumentVersionForm
               document={document}
               actions={actions}
               request={request}
             />
-            <h3 className="text-subheading">Edit details</h3>
+            <h3 className="text-subheading">{t('Edit details')}</h3>
             <DocumentDetailsForm document={document} action={actions.update} />
             <DocumentArchiveForm
               document={document}
@@ -279,7 +293,7 @@ function DocumentDetailPanel({
           href={documentHref(baseHref, { ...selection, document: undefined })}
           className={linkClass}
         >
-          Close version history
+          {t('Close version history')}
         </a>
       </div>
     </Card>
@@ -305,6 +319,7 @@ export function DocumentWorkspaceView({
   actions?: DocumentActions;
   request?: typeof fetch;
 }) {
+  const { t, date } = useDocumentPresentation();
   const management = mode === 'management';
   const canEdit = management && workspace.can_manage && workspace.writable;
   const folders = management
@@ -315,33 +330,38 @@ export function DocumentWorkspaceView({
   return (
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
-        <h1 className="text-title font-semibold">Documents</h1>
+        <h1 className="text-title font-semibold">{t('Documents')}</h1>
         <p className="text-body text-ink-muted">
-          {management
-            ? 'Society folders and unit documents. Every download is recorded.'
-            : 'Society documents and documents issued to your unit. Links are private and expire after five minutes.'}
+          {t(
+            management
+              ? 'Society folders and unit documents. Every download is recorded.'
+              : 'Society documents and documents issued to your unit. Links are private and expire after five minutes.',
+          )}
         </p>
       </header>
       {management && !workspace.can_manage ? (
-        <Banner title="Read-only view">
-          Committee members can view every document. Only administrators can
-          publish, edit or archive.
+        <Banner title={t('Read-only view')}>
+          {t(
+            'Committee members can view every document. Only administrators can publish, edit or archive.',
+          )}
         </Banner>
       ) : null}
       {management && workspace.can_manage && !workspace.writable ? (
-        <Banner title="Changes are paused" tone="warning">
-          This society is read-only. Documents can still be viewed.
+        <Banner title={t('Changes are paused')} tone="warning">
+          {t('This society is read-only. Documents can still be viewed.')}
         </Banner>
       ) : null}
       <div className="grid min-w-0 gap-space-5 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
         <nav
-          aria-label="Document folders"
+          aria-label={t('Document folders')}
           className="grid content-start gap-space-4"
         >
           <div className="grid gap-space-2">
-            <h2 className="text-subheading">Society folders</h2>
+            <h2 className="text-subheading">{t('Society folders')}</h2>
             {folders.length === 0 ? (
-              <p className="text-body text-ink-muted">No folders to show.</p>
+              <p className="text-body text-ink-muted">
+                {t('No folders to show.')}
+              </p>
             ) : (
               <ul className="grid gap-space-1">
                 {folders.map((folder) => (
@@ -354,7 +374,7 @@ export function DocumentWorkspaceView({
                       className={`${linkClass} break-words`}
                     >
                       {folder.name} ({folder.document_count})
-                      {folder.archived_at ? ' · archived' : ''}
+                      {folder.archived_at ? t(' · archived') : ''}
                     </a>
                   </li>
                 ))}
@@ -363,13 +383,15 @@ export function DocumentWorkspaceView({
           </div>
           <div className="grid gap-space-2">
             <h2 className="text-subheading">
-              {management ? 'Unit documents' : 'My unit'}
+              {t(management ? 'Unit documents' : 'My unit')}
             </h2>
             {workspace.units.length === 0 ? (
               <p className="text-body text-ink-muted">
-                {management
-                  ? 'No active units.'
-                  : 'You are not linked to a unit.'}
+                {t(
+                  management
+                    ? 'No active units.'
+                    : 'You are not linked to a unit.',
+                )}
               </p>
             ) : workspace.units.length <= 12 ? (
               <ul className="grid gap-space-1">
@@ -392,16 +414,16 @@ export function DocumentWorkspaceView({
                 <SelectInput
                   id="document-unit-picker"
                   name="unit"
-                  label="Unit"
+                  label={t('Unit')}
                   defaultValue={selection.unit ?? ''}
-                  placeholder="Choose a unit"
+                  placeholder={t('Choose a unit')}
                   options={workspace.units.map((unit) => ({
                     value: unit.id,
                     label: documentUnitLabel(unit),
                   }))}
                 />
                 <Button type="submit" variant="secondary">
-                  Show unit documents
+                  {t('Show unit documents')}
                 </Button>
               </form>
             )}
@@ -427,13 +449,13 @@ export function DocumentWorkspaceView({
                 {list.folder
                   ? list.folder.name
                   : list.unit
-                    ? `Unit ${documentUnitLabel(list.unit)}`
-                    : 'Documents'}
+                    ? t('Unit {unit}', { unit: documentUnitLabel(list.unit) })
+                    : t('Documents')}
               </h2>
               {list.folder ? (
                 <p className="text-caption text-ink-muted">
-                  {DOCUMENT_FOLDER_AUDIENCE_LABELS[list.folder.audience]}:{' '}
-                  {DOCUMENT_FOLDER_AUDIENCE_HELP[list.folder.audience]}
+                  {t(DOCUMENT_FOLDER_AUDIENCE_LABELS[list.folder.audience])}:{' '}
+                  {t(DOCUMENT_FOLDER_AUDIENCE_HELP[list.folder.audience])}
                 </p>
               ) : null}
               {management ? (
@@ -445,19 +467,21 @@ export function DocumentWorkspaceView({
                   })}
                   className={linkClass}
                 >
-                  {selection.archived
-                    ? 'Hide archived documents'
-                    : 'Show archived documents'}
+                  {t(
+                    selection.archived
+                      ? 'Hide archived documents'
+                      : 'Show archived documents',
+                  )}
                 </a>
               ) : null}
               {list.items.length === 0 ? (
                 <EmptyState
-                  title="No documents yet"
-                  description={
+                  title={t('No documents yet')}
+                  description={t(
                     canEdit
                       ? 'Publish a document below to share it with this audience.'
-                      : 'Documents shared here will appear in this list.'
-                  }
+                      : 'Documents shared here will appear in this list.',
+                  )}
                 />
               ) : (
                 <ul className="grid gap-space-3">
@@ -475,7 +499,7 @@ export function DocumentWorkspaceView({
               )}
               {list.total > DOCUMENT_PAGE_SIZE ? (
                 <nav
-                  aria-label="Document pages"
+                  aria-label={t('Document pages')}
                   className="flex flex-wrap gap-space-4"
                 >
                   {selection.offset > 0 ? (
@@ -487,7 +511,7 @@ export function DocumentWorkspaceView({
                       })}
                       className={linkClass}
                     >
-                      Previous page
+                      {t('Previous page')}
                     </a>
                   ) : null}
                   {nextOffset < list.total ? (
@@ -499,7 +523,7 @@ export function DocumentWorkspaceView({
                       })}
                       className={linkClass}
                     >
-                      Next page
+                      {t('Next page')}
                     </a>
                   ) : null}
                 </nav>
@@ -510,10 +534,10 @@ export function DocumentWorkspaceView({
                   className="grid gap-space-3"
                 >
                   <h3 id="document-noc-title" className="text-subheading">
-                    Move-out NOCs
+                    {t('Move-out NOCs')}
                   </h3>
                   <p className="text-caption text-ink-muted">
-                    Issued through Move-in / Move-out. Read-only here.
+                    {t('Issued through Move-in / Move-out. Read-only here.')}
                   </p>
                   <ul className="grid gap-space-3">
                     {list.tenancy_nocs.map((noc) => (
@@ -522,12 +546,14 @@ export function DocumentWorkspaceView({
                         className="grid gap-space-2 rounded-md border border-rule p-space-4"
                       >
                         <p className="text-caption text-ink-muted">
-                          Issued {formatDocumentDate(noc.created_at)} ·{' '}
+                          {t('Issued {date}', { date: date(noc.created_at) })} ·{' '}
                           {formatDocumentFileSize(noc.size_bytes)}
                         </p>
                         <TenancyDocumentLink
                           path={noc.path}
-                          label={`move-out NOC of ${formatDocumentDate(noc.created_at)}`}
+                          label={t('move-out NOC of {date}', {
+                            date: date(noc.created_at),
+                          })}
                           request={request}
                         />
                       </li>
@@ -538,14 +564,18 @@ export function DocumentWorkspaceView({
             </section>
           ) : (
             <EmptyState
-              title="Choose a folder or unit"
-              description="Pick a society folder or a unit to see its documents."
+              title={t('Choose a folder or unit')}
+              description={t(
+                'Pick a society folder or a unit to see its documents.',
+              )}
             />
           )}
           {canEdit ? (
             <Card
-              title="Publish a document"
-              description="Residents in the audience are notified when you publish."
+              title={t('Publish a document')}
+              description={t(
+                'Residents in the audience are notified when you publish.',
+              )}
             >
               <DocumentPublishForm
                 key={`${selection.folder ?? ''}${selection.unit ?? ''}`}
@@ -559,20 +589,22 @@ export function DocumentWorkspaceView({
           ) : null}
           {canEdit ? (
             <Card
-              title="Manage folders"
-              description="Folders are archived, never deleted. Documents follow their folder's audience."
+              title={t('Manage folders')}
+              description={t(
+                "Folders are archived, never deleted. Documents follow their folder's audience.",
+              )}
             >
               <div className="grid gap-space-5">
                 <DocumentFolderForm folder={null} action={actions.saveFolder} />
                 {workspace.folders.map((folder) => (
                   <section
                     key={`${folder.id}-${folder.version}`}
-                    aria-label={`Folder ${folder.name}`}
+                    aria-label={t('Folder {name}', { name: folder.name })}
                     className="grid gap-space-3 rounded-md border border-rule p-space-4"
                   >
                     <h3 className="text-body-strong break-words">
                       {folder.name}
-                      {folder.archived_at ? ' (archived)' : ''}
+                      {folder.archived_at ? t(' (archived)') : ''}
                     </h3>
                     {folder.archived_at ? null : (
                       <DocumentFolderForm
@@ -591,6 +623,11 @@ export function DocumentWorkspaceView({
           ) : null}
         </div>
       </div>
+      <p className="text-caption text-ink-muted">
+        {t(
+          'NOCs and other generated documents remain in English. Document titles and content are shown as uploaded.',
+        )}
+      </p>
     </section>
   );
 }

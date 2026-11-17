@@ -291,7 +291,13 @@ export async function updateEvent(input: unknown, requestId: string) {
     eventUpdateResultSchema,
     'The event was not saved. Check the details and retry.',
   );
-  if (result.notified) await pushFor(context);
+  if (
+    result.notified ||
+    result.withdrawnUnits > 0 ||
+    result.refundedUnits > 0
+  ) {
+    await pushFor(context);
+  }
   return result;
 }
 

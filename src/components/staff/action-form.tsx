@@ -1,6 +1,7 @@
 // Submit staff forms through server actions and render accessible feedback.
 'use client';
 
+import { useUiTranslator } from '@/components/ui/language';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FormEvent, ReactNode } from 'react';
@@ -30,6 +31,7 @@ export function StaffActionForm({
   submitLabel: string;
   submitVariant?: 'primary' | 'secondary' | 'destructive';
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ServerActionResult<unknown> | null>(
@@ -102,7 +104,7 @@ export function StaffActionForm({
       {children}
       {localError ? (
         <p className="text-caption text-danger" role="alert">
-          {localError}
+          {translateFeedback(localError)}
         </p>
       ) : null}
       {result ? (
@@ -110,12 +112,12 @@ export function StaffActionForm({
           className={`text-caption ${result.ok ? 'text-ink-muted' : 'text-danger'}`}
           role={result.ok ? 'status' : 'alert'}
         >
-          {result.message}
+          {result.message ? translateFeedback(result.message) : null}
           {!result.ok && result.referenceId
-            ? ` Reference: ${result.referenceId}`
+            ? ` ${t('Reference: {id}', { id: result.referenceId })}`
             : ''}
           {!result.ok && result.fieldErrors
-            ? ` ${Object.values(result.fieldErrors).join(' ')}`
+            ? ` ${Object.values(result.fieldErrors).map(translateFeedback).join(' ')}`
             : ''}
         </p>
       ) : null}

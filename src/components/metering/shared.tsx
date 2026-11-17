@@ -2,6 +2,7 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
 import { z } from 'zod';
+import { useUiTranslator } from '@/components/ui/language';
 import { publicEnvironment } from '@/core/config/public-env';
 import { MAX_FILE_BYTES } from '@/core/files/constraints';
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
@@ -16,10 +17,24 @@ import {
 import {
   METERING_TYPE_LABELS,
   METERING_UNIT_LABELS,
+  METERING_SCOPE_LABELS,
+  METERING_TIME_ZONE,
+  formatMeteringPaise,
+  formatRatePaise,
   formatMeterValue,
-  formatMeteringDate,
   meteringConsumption,
 } from '@/core/metering/presentation';
+import {
+  createComponentTranslator,
+  type ComponentTranslator,
+} from '@/core/i18n/catalogs/hi-components';
+import {
+  formatLocalizedCurrency,
+  formatLocalizedDate,
+  formatLocalizedDateTime,
+  formatLocalizedNumber,
+} from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
 import {
   recordMeteringReadingAction,
   reviewMeteringReadingAction,
@@ -57,6 +72,75 @@ export const METERING_ACTIONS: MeteringActions = {
   runBilling: runMeteringBillingAction,
 };
 
+export function useMeteringCopy() {
+  const {
+    locale: activeLocale,
+    translate,
+    translateFeedback,
+  } = useUiTranslator();
+  const locale = activeLocale ?? 'en';
+  return {
+    locale,
+    t: createComponentTranslator(locale, translate),
+    translateFeedback,
+  };
+}
+
+export function meteringDisplayValue(value: string, locale: Locale) {
+  return formatLocalizedNumber(Number(formatMeterValue(value)), locale, {
+    maximumFractionDigits: 3,
+  });
+}
+
+export function meteringDisplayDate(value: string, locale: Locale) {
+  return formatLocalizedDate(
+    new Date(`${value.slice(0, 10)}T00:00:00.000Z`),
+    locale,
+    {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    },
+  );
+}
+
+export function meteringDisplayMonth(value: string, locale: Locale) {
+  return formatLocalizedDate(
+    new Date(`${value.slice(0, 7)}-01T00:00:00.000Z`),
+    locale,
+    { month: 'short', year: 'numeric', timeZone: 'UTC' },
+  );
+}
+
+export function meteringDisplayTime(
+  value: string,
+  locale: Locale,
+  timeZone = METERING_TIME_ZONE,
+) {
+  return formatLocalizedDateTime(new Date(value), locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone,
+  });
+}
+
+export function meteringDisplayPaise(paise: number, locale: Locale) {
+  return locale === 'hi'
+    ? formatLocalizedCurrency(paise, locale)
+    : formatMeteringPaise(paise);
+}
+
+export function meteringDisplayRate(
+  paise: number,
+  meterType: MeteringMeter['meter_type'],
+  locale: Locale,
+) {
+  return locale === 'hi'
+    ? `${meteringDisplayPaise(paise, locale)} प्रति ${METERING_UNIT_LABELS[meterType]}`
+    : formatRatePaise(paise, meterType);
+}
+
 export type MeteringRouteStateKind =
   'loading' | 'error' | 'disabled' | 'denied';
 
@@ -75,6 +159,7 @@ export function MeteringRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { t, translateFeedback } = useMeteringCopy();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage
@@ -97,13 +182,13 @@ export function MeteringRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">{title}</h1>
+      <h1 className="text-title font-semibold">{t(title)}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={translateFeedback(message ?? copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
@@ -112,14 +197,14 @@ export function MeteringRouteState({
                   href={retryHref}
                   className="inline-flex min-h-12 items-center text-brand underline"
                 >
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a
                 href={returnHref}
                 className="inline-flex min-h-12 items-center text-brand underline"
               >
-                Back to your workspace
+                {t('Back to your workspace')}
               </a>
             </div>
           }
@@ -198,6 +283,7 @@ function MeteringPhotoField({
   resetKey: number;
   onChange: (path: string | null, uploading: boolean) => void;
 }) {
+  const { t, translateFeedback } = useMeteringCopy();
   const currentUpload = useRef<AbortController | null>(null);
   const [files, setFiles] = useState<readonly UploadFile[]>([]);
   const [message, setMessage] = useState<string | null>(null);
@@ -289,14 +375,20 @@ function MeteringPhotoField({
       <FileUpload
         id={id}
         label={
-          required ? 'Photo of the meter' : 'Photo of the meter (optional)'
+          required
+            ? t('Photo of the meter')
+            : t('Photo of the meter (optional)')
         }
         acceptedTypes={METERING_PHOTO_CONTENT_TYPES}
         maxFileBytes={MAX_FILE_BYTES}
         maxFiles={1}
         capturePhoto
-        files={files}
-        helpText="JPG or PNG up to 5 MiB showing the meter display. Only the reading's unit and the administrators can see it. It is kept with the reading."
+        files={files.map((file) =>
+          file.error ? { ...file, error: translateFeedback(file.error) } : file,
+        )}
+        helpText={t(
+          "JPG or PNG up to 5 MiB showing the meter display. Only the reading's unit and the administrators can see it. It is kept with the reading.",
+        )}
         onRetry={(file) => void upload(file)}
         onFilesChange={(next) => {
           if (next.length > 0) void upload(next[0]!);
@@ -315,19 +407,22 @@ function MeteringPhotoField({
       />
       {message ? (
         <p role="status" className="text-caption text-ink-muted">
-          {message}
+          {translateFeedback(message)}
         </p>
       ) : null}
     </>
   );
 }
 
-export function meteringMeterName(meter: {
-  label: string;
-  meter_type: MeteringMeter['meter_type'];
-  unit_number?: string | null;
-}) {
-  return `${meter.label} · ${METERING_TYPE_LABELS[meter.meter_type]}${meter.unit_number ? ` · Unit ${meter.unit_number}` : ' · Common area'}`;
+export function meteringMeterName(
+  meter: {
+    label: string;
+    meter_type: MeteringMeter['meter_type'];
+    unit_number?: string | null;
+  },
+  t: ComponentTranslator = (source) => source,
+) {
+  return `${meter.label} · ${t(METERING_TYPE_LABELS[meter.meter_type])}${meter.unit_number ? ` · ${t('Unit {unit}', { unit: meter.unit_number })}` : ` · ${t(METERING_SCOPE_LABELS.common)}`}`;
 }
 
 /**
@@ -349,6 +444,7 @@ export function MeteringReadingForm({
   request?: typeof fetch;
   fixedMeterId?: string;
 }) {
+  const { locale, t } = useMeteringCopy();
   const id = useId();
   const [meterId, setMeterId] = useState(
     fixedMeterId ??
@@ -363,7 +459,9 @@ export function MeteringReadingForm({
   const meter = meters.find((item) => item.id === meterId) ?? null;
   if (!meter) {
     return (
-      <p className="text-body text-ink-muted">No meter is available here.</p>
+      <p className="text-body text-ink-muted">
+        {t('No meter is available here.')}
+      </p>
     );
   }
   const clean = normaliseMeterValue(value);
@@ -378,7 +476,7 @@ export function MeteringReadingForm({
       action={action}
       idempotent
       submitLabel={
-        mode === 'submit' ? 'Send reading for approval' : 'Save reading'
+        mode === 'submit' ? t('Send reading for approval') : t('Save reading')
       }
       submitDisabled={
         blocked || uploading || (requirePhoto && photoPath === null)
@@ -404,33 +502,41 @@ export function MeteringReadingForm({
         <SelectInput
           id={`${id}-meter`}
           name="meterId"
-          label="Meter"
+          label={t('Meter')}
           required
           value={meterId}
           onChange={(event) => setMeterId(event.currentTarget.value)}
           options={meters.map((item) => ({
             value: item.id,
-            label: meteringMeterName(item),
+            label: meteringMeterName(item, t),
           }))}
         />
       )}
       <p className="text-caption text-ink-muted">
         {meter.last_reading_date
-          ? `Last approved reading ${formatMeterValue(meter.base_value)} ${unitLabel} on ${formatMeteringDate(meter.last_reading_date)}.`
-          : `No reading yet. Starting reading ${formatMeterValue(meter.base_value)} ${unitLabel}.`}
-        {meter.has_pending ? ' A reading is waiting for review.' : ''}
+          ? t('Last approved reading {value} {unit} on {date}.', {
+              value: meteringDisplayValue(meter.base_value, locale),
+              unit: unitLabel,
+              date: meteringDisplayDate(meter.last_reading_date, locale),
+            })
+          : t('No reading yet. Starting reading {value} {unit}.', {
+              value: meteringDisplayValue(meter.base_value, locale),
+              unit: unitLabel,
+            })}
+        {meter.has_pending ? ` ${t('A reading is waiting for review.')}` : ''}
       </p>
       {blocked ? (
         <p role="status" className="text-caption">
-          Wait for the administrator to review the reading you sent before
-          sending another one for this meter.
+          {t(
+            'Wait for the administrator to review the reading you sent before sending another one for this meter.',
+          )}
         </p>
       ) : null}
       <TextInput
         id={`${id}-value`}
         name="readingValue"
-        label={`Reading (${unitLabel})`}
-        helpText="Up to 3 decimals, as shown on the meter."
+        label={t('Reading ({unit})', { unit: unitLabel })}
+        helpText={t('Up to 3 decimals, as shown on the meter.')}
         inputMode="decimal"
         autoComplete="off"
         required
@@ -441,15 +547,20 @@ export function MeteringReadingForm({
       {preview ? (
         <p role="status" className="text-caption">
           {preview.isReset
-            ? 'This is lower than the last reading. Say why below, for example the meter was replaced or rolled over. It counts as 0 usage and becomes the new starting point.'
-            : `Usage since the last reading: ${formatMeterValue(preview.consumption)} ${unitLabel}.`}
+            ? t(
+                'This is lower than the last reading. Say why below, for example the meter was replaced or rolled over. It counts as 0 usage and becomes the new starting point.',
+              )
+            : t('Usage since the last reading: {value} {unit}.', {
+                value: meteringDisplayValue(preview.consumption, locale),
+                unit: unitLabel,
+              })}
         </p>
       ) : null}
       <TextInput
         id={`${id}-date`}
         name="readingDate"
         type="date"
-        label="Reading date"
+        label={t('Reading date')}
         required
         max={today}
         defaultValue={today}
@@ -459,8 +570,8 @@ export function MeteringReadingForm({
         name="lowerReason"
         label={
           preview?.isReset
-            ? 'Why is the reading lower?'
-            : 'Why is the reading lower? (only if it is)'
+            ? t('Why is the reading lower?')
+            : t('Why is the reading lower? (only if it is)')
         }
         required={preview?.isReset ?? false}
         maxLength={METERING_REASON_MAX}
@@ -486,6 +597,7 @@ export function MeteringPhotoLink({
   path: string;
   request?: typeof fetch;
 }) {
+  const { t, translateFeedback } = useMeteringCopy();
   const [pending, setPending] = useState(false);
   const [link, setLink] = useState<{ url: string; expiresIn: number } | null>(
     null,
@@ -536,7 +648,7 @@ export function MeteringPhotoLink({
         variant="secondary"
         onClick={() => void prepare()}
       >
-        {link ? 'Refresh photo link' : 'View meter photo'}
+        {link ? t('Refresh photo link') : t('View meter photo')}
       </Button>
       {link ? (
         <a
@@ -545,12 +657,12 @@ export function MeteringPhotoLink({
           rel="noopener noreferrer"
           className="inline-flex min-h-12 items-center text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         >
-          Open photo (private link, up to five minutes)
+          {t('Open photo (private link, up to five minutes)')}
         </a>
       ) : null}
       {error ? (
         <p role="alert" className="text-caption text-danger">
-          {error}
+          {translateFeedback(error)}
         </p>
       ) : null}
     </div>

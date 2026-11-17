@@ -1,9 +1,11 @@
 // Show the current user's unread count and refresh it from the RLS-protected channel.
 'use client';
 
+import { useUiTranslator } from '../ui/language';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createNotificationBrowserClient } from '../../core/notifications/browser-client';
+import { formatLocalizedNumber } from '../../core/i18n/format';
 
 export function NotificationBell({
   dark = false,
@@ -12,6 +14,7 @@ export function NotificationBell({
   dark?: boolean;
   initialUnreadCount?: number;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
 
   useEffect(() => {
@@ -85,8 +88,10 @@ export function NotificationBell({
     <Link
       aria-label={
         unreadCount > 0
-          ? `Notifications, ${unreadCount} unread`
-          : 'Notifications'
+          ? t('Notifications, {count} unread', {
+              count: formatLocalizedNumber(unreadCount, locale ?? 'en'),
+            })
+          : t('Notifications')
       }
       className={`relative inline-flex size-12 shrink-0 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-focus ${dark ? 'text-dev-label hover:bg-surface/10' : 'text-brand hover:bg-brand-tint'}`}
       href="/notifications"

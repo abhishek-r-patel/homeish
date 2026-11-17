@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { ValidationError } from '@/core/errors';
 import {
   ASSET_STATUS_LABELS,
-  amcContractLabel,
   paiseToRupeesInput,
   rupeesToPaise,
 } from '@/core/asset/presentation';
@@ -28,6 +27,8 @@ import {
   ASSET_ACTIONS,
   ASSET_BASE_HREF,
   ASSET_LINK_CLASS,
+  assetDisplayDate,
+  useAssetCopy,
   type AssetActions,
 } from './shared';
 
@@ -36,13 +37,14 @@ export function readOptionalRupees(
   form: FormData,
   name: string,
   field: string,
+  invalidMessage = 'Enter an amount in rupees, for example 25000 or 1250.50.',
 ): number | null {
   const raw = String(form.get(name) ?? '').trim();
   if (!raw) return null;
   const paise = rupeesToPaise(raw);
   if (paise === null) {
     throw new ValidationError({
-      [field]: 'Enter an amount in rupees, for example 25000 or 1250.50.',
+      [field]: invalidMessage,
     });
   }
   return paise;
@@ -56,6 +58,7 @@ function OptionalDate({
   min,
   max,
   helpText,
+  clearLabel,
 }: {
   id: string;
   label: string;
@@ -64,7 +67,9 @@ function OptionalDate({
   min?: string;
   max?: string;
   helpText?: string;
+  clearLabel: string;
 }) {
+  const { t } = useAssetCopy();
   return (
     <div className="grid min-w-0 gap-space-2">
       <DatePicker
@@ -78,7 +83,7 @@ function OptionalDate({
       />
       {value ? (
         <Button variant="secondary" onClick={() => onChange('')}>
-          Clear {label.replace(' (optional)', '').toLowerCase()}
+          {t('Clear {field}', { field: clearLabel })}
         </Button>
       ) : null}
     </div>
@@ -96,6 +101,7 @@ export function AssetForm({
   actions: AssetActions;
   onSaved?: (id: string) => void;
 }) {
+  const { locale, t } = useAssetCopy();
   const id = useId();
   const [purchaseDate, setPurchaseDate] = useState(asset?.purchase_date ?? '');
   const [warrantyEndDate, setWarrantyEndDate] = useState(
@@ -109,7 +115,7 @@ export function AssetForm({
     <ModuleActionForm
       action={actions.saveAsset}
       idempotent
-      submitLabel={asset ? 'Save asset' : 'Add asset'}
+      submitLabel={t(asset ? 'Save asset' : 'Add asset')}
       onSaved={(data) => {
         const saved = z.uuid().safeParse(data);
         if (saved.success) onSaved?.(saved.data);
@@ -128,6 +134,7 @@ export function AssetForm({
             form,
             'purchaseCost',
             'purchaseCostPaise',
+            t('Enter an amount in rupees, for example 25000 or 1250.50.'),
           ),
           supplier: text(form, 'supplier'),
           warrantyEndDate: warrantyEndDate || null,
@@ -145,24 +152,24 @@ export function AssetForm({
       <SelectInput
         id={`${id}-category`}
         name="categoryId"
-        label="Category"
+        label={t('Category')}
         required
         defaultValue={asset?.category_id ?? ''}
         options={[
-          { value: '', label: 'Choose a category' },
+          { value: '', label: t('Choose a category') },
           ...categories.map((category) => ({
             value: category.id,
             label: category.active
               ? category.name
-              : `${category.name} (inactive)`,
+              : t('{name} (inactive)', { name: category.name }),
           })),
         ]}
       />
       <TextInput
         id={`${id}-name`}
         name="name"
-        label="Asset name"
-        helpText="For example Lift A1 or Borewell pump 2."
+        label={t('Asset name')}
+        helpText={t('For example Lift A1 or Borewell pump 2.')}
         required
         maxLength={120}
         defaultValue={asset?.name}
@@ -171,8 +178,8 @@ export function AssetForm({
       <TextInput
         id={`${id}-location`}
         name="location"
-        label="Location"
-        helpText="Where the asset is, for example Tower A lobby."
+        label={t('Location')}
+        helpText={t('Where the asset is, for example Tower A lobby.')}
         required
         maxLength={120}
         defaultValue={asset?.location}
@@ -181,18 +188,18 @@ export function AssetForm({
       <SelectInput
         id={`${id}-status`}
         name="status"
-        label="Status"
+        label={t('Status')}
         required
         defaultValue={asset?.status ?? 'active'}
         options={ASSET_STATUSES.map((status) => ({
           value: status,
-          label: ASSET_STATUS_LABELS[status],
+          label: t(ASSET_STATUS_LABELS[status]),
         }))}
       />
       <TextInput
         id={`${id}-make`}
         name="make"
-        label="Make (optional)"
+        label={t('Make (optional)')}
         maxLength={80}
         defaultValue={asset?.make ?? ''}
         autoComplete="off"
@@ -200,7 +207,7 @@ export function AssetForm({
       <TextInput
         id={`${id}-model`}
         name="model"
-        label="Model (optional)"
+        label={t('Model (optional)')}
         maxLength={80}
         defaultValue={asset?.model ?? ''}
         autoComplete="off"
@@ -208,14 +215,15 @@ export function AssetForm({
       <TextInput
         id={`${id}-serial`}
         name="serialNumber"
-        label="Serial number (optional)"
+        label={t('Serial number (optional)')}
         maxLength={80}
         defaultValue={asset?.serial_number ?? ''}
         autoComplete="off"
       />
       <OptionalDate
         id={`${id}-purchase-date`}
-        label="Purchase date (optional)"
+        label={t('Purchase date (optional)')}
+        clearLabel={t('purchase date')}
         value={purchaseDate}
         onChange={setPurchaseDate}
         max={options.today}
@@ -223,7 +231,7 @@ export function AssetForm({
       <AmountInput
         id={`${id}-cost`}
         name="purchaseCost"
-        label="Purchase cost (optional)"
+        label={t('Purchase cost (optional)')}
         defaultValue={
           asset?.purchase_cost_paise != null
             ? paiseToRupeesInput(asset.purchase_cost_paise)
@@ -233,15 +241,16 @@ export function AssetForm({
       <TextInput
         id={`${id}-supplier`}
         name="supplier"
-        label="Supplier (optional)"
+        label={t('Supplier (optional)')}
         maxLength={120}
         defaultValue={asset?.supplier ?? ''}
         autoComplete="off"
       />
       <OptionalDate
         id={`${id}-warranty`}
-        label="Warranty end date (optional)"
-        helpText="The register flags warranties ending within 30 days."
+        label={t('Warranty end date (optional)')}
+        clearLabel={t('warranty end date')}
+        helpText={t('The register flags warranties ending within 30 days.')}
         value={warrantyEndDate}
         onChange={setWarrantyEndDate}
         min={purchaseDate || undefined}
@@ -250,14 +259,20 @@ export function AssetForm({
         <SelectInput
           id={`${id}-amc`}
           name="amcContractId"
-          label="AMC contract (optional)"
-          helpText="Linking shows the contract's service visits in this asset's history. Contracts are managed in AMC."
+          label={t('AMC contract (optional)')}
+          helpText={t(
+            "Linking shows the contract's service visits in this asset's history. Contracts are managed in AMC.",
+          )}
           defaultValue={asset?.amc_contract_id ?? ''}
           options={[
-            { value: '', label: 'No AMC contract' },
+            { value: '', label: t('No AMC contract') },
             ...options.amc_contracts.map((contract) => ({
               value: contract.id,
-              label: amcContractLabel(contract),
+              label: t('{asset} – {vendor} (ends {date})', {
+                asset: contract.asset_label,
+                vendor: contract.vendor_name,
+                date: assetDisplayDate(contract.end_date, locale),
+              }),
             })),
           ]}
         />
@@ -265,7 +280,7 @@ export function AssetForm({
       <TextAreaInput
         id={`${id}-notes`}
         name="notes"
-        label="Notes (optional)"
+        label={t('Notes (optional)')}
         maxLength={1000}
         defaultValue={asset?.notes ?? ''}
       />
@@ -282,6 +297,7 @@ export function AssetFormView({
   options: AssetFormOptions;
   actions?: AssetActions;
 }) {
+  const { t } = useAssetCopy();
   const router = useRouter();
   const backHref = asset ? `${ASSET_BASE_HREF}/${asset.id}` : ASSET_BASE_HREF;
   const hasCategory = options.categories.some(
@@ -291,13 +307,13 @@ export function AssetFormView({
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
         <a href={backHref} className={ASSET_LINK_CLASS}>
-          {asset ? 'Back to the asset' : 'Back to the register'}
+          {t(asset ? 'Back to the asset' : 'Back to the register')}
         </a>
         <h1 className="text-title font-semibold break-words">
-          {asset ? `Edit ${asset.name}` : 'Add an asset'}
+          {asset ? t('Edit {name}', { name: asset.name }) : t('Add an asset')}
         </h1>
       </header>
-      <Card title="Asset details">
+      <Card title={t('Asset details')}>
         {hasCategory ? (
           <AssetForm
             asset={asset}
@@ -307,14 +323,16 @@ export function AssetFormView({
           />
         ) : (
           <EmptyState
-            title="Add a category first"
-            description="Every asset belongs to a category, such as Lifts or Pumps."
+            title={t('Add a category first')}
+            description={t(
+              'Every asset belongs to a category, such as Lifts or Pumps.',
+            )}
             action={
               <a
                 href={`${ASSET_BASE_HREF}/categories`}
                 className={ASSET_LINK_CLASS}
               >
-                Manage categories
+                {t('Manage categories')}
               </a>
             }
           />

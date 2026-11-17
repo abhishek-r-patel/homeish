@@ -379,6 +379,117 @@ describe.skipIf(!hasDatabase)('event contribution database contracts', () => {
     expect(detail.totals).toMatchObject({ collectedPaise: 0 });
   });
 
+  it('withdraws and fully refunds flats dropped from the audience, even after the deadline', async () => {
+    const published = await createPublishedEvent(fixture, {
+      title: TITLE,
+      contributionType: 'per_head',
+      contributionPaise: 10_000,
+      rsvpDeadline: await databaseTimestamp(fixture, "+ interval '3 days'"),
+    });
+    const dropped = await setRsvp(
+      fixture,
+      'owner3',
+      published.eventId,
+      fixture.units.b101.id,
+      'going',
+      3,
+      null,
+    );
+    await setRsvp(
+      fixture,
+      'owner',
+      published.eventId,
+      fixture.units.a101.id,
+      'going',
+      2,
+      null,
+    );
+    await passEventDeadline(fixture, published.eventId);
+    const request = requestId('narrow');
+    const narrowed = await updateEvent(
+      fixture,
+      published.eventId,
+      { audience: { scope: 'blocks', blockIds: [fixture.blocks.A] } },
+      request,
+    );
+    expect(narrowed).toMatchObject({
+      notified: false,
+      withdrawnUnits: 1,
+      refundedUnits: 1,
+    });
+    const { charges } = await expectChargesMirrorLedger(published.eventId);
+    const refunds = charges.filter(
+      (charge) => charge.reason === 'audience_removed',
+    );
+    expect(
+      refunds.map(({ unit_id, direction, amount_paise }) => ({
+        unit_id,
+        direction,
+        amount_paise,
+      })),
+    ).toEqual([
+      {
+        unit_id: fixture.units.b101.id,
+        direction: 'credit',
+        amount_paise: 30_000,
+      },
+    ]);
+    expect(
+      netOf(
+        charges.filter((charge) => charge.unit_id === fixture.units.b101.id),
+      ),
+    ).toBe(0);
+    expect(
+      netOf(
+        charges.filter((charge) => charge.unit_id === fixture.units.a101.id),
+      ),
+    ).toBe(20_000);
+
+    const notices = await database.asSuperuser((client) =>
+      client.query<{
+        user_id: string;
+        type: string;
+        title: string;
+        body: string;
+        entity_type: string;
+      }>(
+        `select user_id,type,title,body,entity_type from public.notifications
+         where request_id=$1 order by user_id`,
+        [request],
+      ),
+    );
+    expect(notices.rows.map((row) => row.user_id).sort()).toEqual(
+      [fixture.actors.owner3, fixture.actors.multi].sort(),
+    );
+    for (const row of notices.rows) {
+      expect(row).toMatchObject({
+        type: 'event_updated',
+        title: 'Event audience changed',
+        body: `${TITLE} is no longer open to your flat. Your reply was withdrawn and your contribution refunded.`,
+        entity_type: 'event',
+      });
+    }
+    const audit = await database.asSuperuser((client) =>
+      client.query<{ after: Record<string, unknown> }>(
+        `select after from public.audit_logs where request_id=$1 and action='event.update'`,
+        [request],
+      ),
+    );
+    expect(audit.rows[0]?.after).toMatchObject({
+      withdrawnUnits: 1,
+      refundedUnits: 1,
+    });
+
+    const again = await updateEvent(fixture, published.eventId, {
+      title: TITLE,
+    });
+    expect(again).toMatchObject({ withdrawnUnits: 0, refundedUnits: 0 });
+    expect(await chargeRows(fixture, published.eventId)).toHaveLength(
+      charges.length,
+    );
+    expect(dropped.chargedPaise).toBe(30_000);
+  });
+
   it('validates contribution amounts and locks them once published', async () => {
     const attempt = async (
       contributionType: string,

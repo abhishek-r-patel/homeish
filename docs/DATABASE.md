@@ -137,10 +137,11 @@ Not drawn (to keep the diagram readable): every tenant table also points to `soc
 | phone                  | text        | yes  | Optional profile field (A-34). Format check `^\+?[0-9]{10,15}$`                                                                                                      |
 | photo_path             | text        | yes  | Storage path                                                                                                                                                         |
 | font_preference        | text        | no   | `manrope_sora` or `device_default`; default `manrope_sora` (CORE-18)                                                                                                 |
+| language_preference    | text        | no   | `en` or `hi`; default `en` (P33, D-66)                                                                                                                               |
 | status                 | text        | no   | `active`, `disabled`, `anonymized`; default `active`                                                                                                                 |
 | created_at, updated_at | timestamptz | no   |                                                                                                                                                                      |
 
-Constraints: unique `email`; check `font_preference` against the documented values. A profile is created after the auth email is confirmed, initially with the placeholder name `Homeish member`; the user can supply their name in profile onboarding. An auth trigger keeps the email copy synchronized without overwriting profile fields or reactivating a disabled profile. Active and disabled profiles must have a matching `auth.users` row; only `anonymized` tombstones may remain after the Auth account is deleted. The database enforces this rule with a profile trigger.
+Constraints: unique `email`; check `font_preference` and `language_preference` against their documented values. A profile is created after the auth email is confirmed, initially with the placeholder name `Homeish member`; the user can supply their name in profile onboarding. An auth trigger keeps the email copy synchronized without overwriting profile fields or reactivating a disabled profile. Active and disabled profiles must have a matching `auth.users` row; only `anonymized` tombstones may remain after the Auth account is deleted. The database enforces this rule with a profile trigger. An anonymized profile's language is reset to English, and a trigger keeps it English if a stale authenticated session attempts to change it later.
 
 ### 3.2 `developers` — platform operators
 
@@ -153,36 +154,41 @@ No API grants: rows are added only by a database administrator (ARCHITECTURE 8.1
 
 ### 3.3 `societies`
 
-| Column                       | Type   | Null | Notes                                                                                                                                                                                                                                                         |
-| ---------------------------- | ------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| id                           | uuid   | PK   |                                                                                                                                                                                                                                                               |
-| name                         | text   | no   | 2–120                                                                                                                                                                                                                                                         |
-| unit_label                   | text   | no   | Default `Unit`; trimmed, 1–24 letters or spaces (CORE-17, DD-05)                                                                                                                                                                                              |
-| address, city                | text   | yes  |                                                                                                                                                                                                                                                               |
-| contact_email                | citext | yes  |                                                                                                                                                                                                                                                               |
-| contact_phone                | text   | yes  |                                                                                                                                                                                                                                                               |
-| timezone                     | text   | no   | Default `Asia/Kolkata`                                                                                                                                                                                                                                        |
-| currency                     | text   | no   | Default `INR`; check = 3 letters                                                                                                                                                                                                                              |
-| logo_path                    | text   | yes  |                                                                                                                                                                                                                                                               |
-| status                       | text   | no   | `trial`, `active`, `suspended`, `archived`; default `trial` (SAAS-1)                                                                                                                                                                                          |
-| plan                         | text   | yes  | Free text label set by developer (PRD D-08: manual)                                                                                                                                                                                                           |
-| gate_login_mode              | text   | no   | `individual` or `shared`; default `individual` (PRD CORE-16)                                                                                                                                                                                                  |
-| join_code                    | text   | yes  | Society code that lets an un-invited resident ask to join (self-registration). Unique; random, 8 characters, upper-case letters and digits without look-alikes; null = self-registration switched off. Rotatable by admin (audited) **[API APD-1, approved]** |
-| guard_identification         | text   | no   | `pick_name` or `pin`; default `pick_name`. Only used when `gate_login_mode = shared` **[DBD-3, approved]**                                                                                                                                                    |
-| created_at/by, updated_at/by |        |      | Std                                                                                                                                                                                                                                                           |
+| Column                       | Type    | Null | Notes                                                                                                                                                                                                                                                         |
+| ---------------------------- | ------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id                           | uuid    | PK   |                                                                                                                                                                                                                                                               |
+| name                         | text    | no   | 2–120                                                                                                                                                                                                                                                         |
+| unit_label                   | text    | no   | Default `Unit`; trimmed, 1–24 letters or spaces (CORE-17, DD-05)                                                                                                                                                                                              |
+| address, city                | text    | yes  |                                                                                                                                                                                                                                                               |
+| contact_email                | citext  | yes  |                                                                                                                                                                                                                                                               |
+| contact_phone                | text    | yes  |                                                                                                                                                                                                                                                               |
+| timezone                     | text    | no   | Default `Asia/Kolkata`                                                                                                                                                                                                                                        |
+| hindi_available              | boolean | no   | Default `false`; effective Hindi also requires the non-core `language` module to be enabled (P33, D-67)                                                                                                                                                       |
+| currency                     | text    | no   | Default `INR`; check = 3 letters                                                                                                                                                                                                                              |
+| logo_path                    | text    | yes  |                                                                                                                                                                                                                                                               |
+| status                       | text    | no   | `trial`, `active`, `suspended`, `archived`; default `trial` (SAAS-1)                                                                                                                                                                                          |
+| plan                         | text    | yes  | Free text label set by developer (PRD D-08: manual)                                                                                                                                                                                                           |
+| gate_login_mode              | text    | no   | `individual` or `shared`; default `individual` (PRD CORE-16)                                                                                                                                                                                                  |
+| join_code                    | text    | yes  | Society code that lets an un-invited resident ask to join (self-registration). Unique; random, 8 characters, upper-case letters and digits without look-alikes; null = self-registration switched off. Rotatable by admin (audited) **[API APD-1, approved]** |
+| guard_identification         | text    | no   | `pick_name` or `pin`; default `pick_name`. Only used when `gate_login_mode = shared` **[DBD-3, approved]**                                                                                                                                                    |
+| created_at/by, updated_at/by |         |      | Std                                                                                                                                                                                                                                                           |
 
-Constraints: unique `(id)` and implicit tenant root; `unit_label`, `status`, `gate_login_mode`, `guard_identification` checks. Editable by: developer (all columns); admin (profile columns, `unit_label`, `gate_login_mode`, `guard_identification` only) through a function.
+Constraints: unique `(id)` and implicit tenant root; `unit_label`, `status`, `gate_login_mode`, `guard_identification` checks. Editable by: developer (all columns); admin (profile columns, `unit_label`, `gate_login_mode`, `guard_identification`, `hindi_available` only) through a function.
+
+Authenticated members can read `hindi_available` through a column-only grant and the existing own-society row policy, including while Language Support is off so request-context loading keeps working. Grant each additional request-context column explicitly; never replace these grants with whole-table SELECT, which would expose restricted columns such as `join_code`.
+
+`hindi_available` is changed only by `admin_set_hindi_availability(society_id, hindi_available, expected_updated_at, request_id)`. The security-definer function requires an admin of the writable society and an enabled `language` module, locks the row, rejects a stale `updated_at`, and writes an audit row when the value changes. API roles cannot update this column directly. Disabling the module or this setting affects signed-in display only; saved profile preferences are retained.
 
 Daily jobs discover trial and active society IDs through the service-role-only `daily_job_societies()` function; direct table access remains revoked.
 
 ### 3.4 `modules` — reference data
 
-| Column     | Type    | Null | Notes                                                                                                            |
-| ---------- | ------- | ---- | ---------------------------------------------------------------------------------------------------------------- |
-| key        | text    | PK   | `core`, `visitor`, `delivery`, `billing`, `service_request`, `staff`, `housekeeping`, `amc`, `notice`, `amenity` |
-| name       | text    | no   | Display name                                                                                                     |
-| is_core    | boolean | no   | `core` only is true; cannot be disabled                                                                          |
-| sort_order | int     | no   |                                                                                                                  |
+| Column     | Type    | Null | Notes                                                                                                                                                                                                                                                                                            |
+| ---------- | ------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| key        | text    | PK   | `core`, `visitor`, `delivery`, `billing`, `service_request`, `staff`, `housekeeping`, `amc`, `notice`, `amenity`, `directory`, `expense`, `tenancy`, `document`, `parking`, `sos`, `vendor`, `patrol`, `metering`, `asset`, `home_services`, `poll`, `meeting`, `event`, `community`, `language` |
+| name       | text    | no   | Display name                                                                                                                                                                                                                                                                                     |
+| is_core    | boolean | no   | `core` only is true; cannot be disabled                                                                                                                                                                                                                                                          |
+| sort_order | int     | no   |                                                                                                                                                                                                                                                                                                  |
 
 Maintained only by migrations (Section 14). Gives `module_configs` a real foreign key instead of free text.
 
@@ -1171,7 +1177,8 @@ local PostgreSQL only.
 ### 9.20 Events & RSVPs (P30; D-63)
 
 Migrations `20261121100000_core_register_event_module.sql`, `20261121110000_event_foundation.sql`,
-`20261121120000_event_lifecycle_rsvp.sql` and `20261121130000_event_reads_reminders.sql`. The module is disabled by
+`20261121120000_event_lifecycle_rsvp.sql`, `20261121130000_event_reads_reminders.sql` and
+`20261123100000_event_audience_withdraw.sql`. The module is disabled by
 default and has no settings. Every event table is society-scoped, carries the society id on every link, has RLS with a
 deny-all direct-access policy, revokes direct table privileges (including `service_role`) and rejects `TRUNCATE`;
 access is through authorized security-definer RPCs. Records are kept permanently because they back ledger entries.
@@ -1183,22 +1190,27 @@ access is through authorized security-definer RPCs. Records are kept permanently
   contribution and publish fields once published, freezes cancelled events and allows deleting drafts only.
 - `event_audience_blocks`: the chosen blocks when the audience is `blocks`.
 - `event_rsvps`: one row per event and unit; `going` with headcount 1–100 or `not_going` with 0; optimistic version.
-  Rows are never deleted. A unit that answered keeps access after the audience is narrowed, so it can still withdraw.
+  Rows are never deleted. When an organiser narrows a published event's audience, any excluded flat's answer is
+  automatically changed to `not_going`, its headcount becomes 0, and the flat loses access to the event.
 - `event_rsvp_charges` (append-only): every contribution debit and refund credit, each linked once to its
-  `billing_ledger_entries` row (`adjustment`, reasons `Event contribution: <title>` and `Event refund: <title>`)
+  `billing_ledger_entries` row (`adjustment`, reasons `Event contribution: <title>` and `Event refund: <title>`);
+  reason codes include `audience_removed`
   through the same-society, same-unit composite key. Going charges immediately (per flat, or per person × headcount);
   a per-person headcount change refunds the previous charge and charges the new amount; withdrawing before the
-  deadline refunds the net; cancelling refunds every unit with a net charge (in unit order, even if billing was later
-  switched off). The net per RSVP never goes below zero.
+  deadline refunds the net; narrowing the audience refunds an excluded flat's net in full regardless of the deadline;
+  cancelling refunds every unit with a net charge (in unit order, even if billing was later switched off). These
+  automatic refunds do not require billing to be enabled. The net per RSVP never goes below zero.
 - RSVPs, edits and cancellation lock the event row before reading the going total, so parallel answers never exceed
-  capacity, and capacity cannot be lowered below the current going headcount. Contributions require `billing`
-  enabled at publish and at each Going answer.
+  capacity, and capacity cannot be lowered below the going headcount for flats remaining in the audience.
+  Contributions require `billing` enabled at publish and at each Going answer.
 - RPCs: `event_create`, `event_update`, `event_draft_delete`, `event_publish`, `event_cancel` (admin, committee),
   `event_rsvp_set` (resident occupant), read models `event_admin_list`, `event_admin_get`, `event_block_options`,
   `event_member_list` and `event_member_get`, and the service-role-only `event_reminders_run` (published events
   starting on society-local tomorrow, once per event via `reminder_sent_at` and `SKIP LOCKED`; reset when the start
-  changes). Resident reads return only the caller's occupied units plus total going headcount and spots left;
-  drafts and events outside the caller's audience return `P0002`. Notification fan-out is capped at 2000 recipients.
+  changes). Resident list reads return an answer for each of the caller's occupied flats; detail reads return each
+  invited flat separately plus total going headcount and spots left. Drafts and events outside the caller's current
+  audience return `P0002`. Narrowing an audience withdraws excluded answers, refunds their net contribution and
+  notifies their active occupants. Notification fan-out is capped at 2000 recipients.
 
 The integration tests cover society isolation, role and module gates, lifecycle triggers, audience by blocks, limits
 including 10 parallel RSVPs, every charge and refund path with billing on and off, and reminder idempotency; they have
@@ -1207,8 +1219,10 @@ run against disposable local PostgreSQL only.
 ### 9.21 Resident Community & Marketplace (P29; D-64)
 
 Migrations `20261122100000_core_register_community_module.sql`, `20261122110000_community_foundation.sql`,
-`20261122120000_community_content.sql` and `20261122130000_community_moderation_reads.sql`. The module is disabled by
-default and has no settings. Every table is society-scoped with same-society composite foreign keys, RLS with a
+`20261122120000_community_content.sql`, `20261122130000_community_moderation_reads.sql` and
+`20261123110000_community_mute_settings_restore.sql`. The module is disabled by
+default. Its only settings control muted-resident pending edits, reports and listing renewals. Every table is
+society-scoped with same-society composite foreign keys, RLS with a
 deny-all direct-access policy, direct privileges revoked (including `service_role`), guard triggers that freeze
 identity and author columns, and `TRUNCATE` rejected; access is through security-definer RPCs that authorise the
 caller before checking arguments.
@@ -1226,15 +1240,20 @@ caller before checking arguments.
   `community_preferences` (`new_listing_alerts`, default on).
 - Pre-moderation: pending, rejected, hidden, removed and withdrawn content and moderation reasons are returned only to
   the author and admins; group posts only to group members. Reports lock the target, count distinct flats among open
-  reports and hide the item at 3. Restore dismisses open reports; remove marks them actioned. Muted residents can read
-  and report but cannot create or edit content; mutes are serialised per membership.
+  reports and hide the item at 3. Restore dismisses open reports; remove marks them actioned. Restoring hidden content
+  notifies its author. Muted residents can read, withdraw their own posts/listings and close their own listings.
+  Creating posts/listings/replies and uploading photos stays blocked while muted. Editing pending posts/listings,
+  reporting, and renewing are disabled by default and can each be enabled in the admin's Community settings;
+  mutes are serialised per membership.
 - RPCs: participant `community_photo_upload_path`, `community_group_join`/`_leave`, `community_post_create`/`_update`/
   `_withdraw`, `community_listing_create`/`_update`/`_withdraw`/`_close`/`_renew`, `community_reply_create`/`_delete`,
   `community_report`, `community_preferences_set`; admin `community_group_save`/`_archive`, `community_moderate`
   (`approve`, `reject`, `remove`, `restore`), `community_mute`/`_unmute`; reads `community_home`,
   `community_group_feed`, `community_post_get`, `community_marketplace`, `community_listing_get`,
   `community_my_items`, `community_admin_queue`, `community_admin_item_get`, `community_admin_groups`,
-  `community_admin_mutes`, `community_member_options` and `community_photo_access`. Pages are 1–100 rows (default 20).
+  `community_admin_mutes`, `community_settings_get`, `community_settings_update`, `community_member_options` and
+  `community_photo_access`. Community settings accept only `muted_can_edit_pending`, `muted_can_report` and
+  `muted_can_renew` boolean keys; missing keys default to false. Pages are 1–100 rows (default 20).
 - Notifications: replies to the author, moderation outcomes and mutes to the affected resident, pending items to
   admins (cap 50) and approved listings to residents with alerts on (cap 2000; overflow logged and audited).
 - Retention (service role only, every society): `community_retention_files_list` returns photos of items rejected,
@@ -1352,7 +1371,7 @@ All purges are performed by the daily job (idempotent, logged). It removes expir
 
 ### 11.4 User erasure
 
-A developer with a current MFA-verified session can request erasure. The process first replaces the profile's email, name, phone and photo with anonymous values, marks it `anonymized`, deactivates memberships, disables linked guard access, and removes notifications and push subscriptions. It then deletes the Auth account through Supabase's Admin API and records completion. The profile tombstone remains so retained audit, error, visitor, delivery, service-request and financial records keep valid foreign keys; their content is preserved, and profile joins resolve to `Deleted user`. The operation is retry-safe if Auth deletion or completion logging fails, and self-erasure is refused.
+A developer with a current MFA-verified session can request erasure. The process first replaces the profile's email, name, phone and photo with anonymous values, resets its language to English, marks it `anonymized`, deactivates memberships, disables linked guard access, and removes notifications and push subscriptions. It then deletes the Auth account through Supabase's Admin API and records completion. The profile tombstone remains so retained audit, error, visitor, delivery, service-request and financial records keep valid foreign keys; their content is preserved, and profile joins resolve to `Deleted user`. The operation is retry-safe if Auth deletion or completion logging fails, and self-erasure is refused.
 
 ---
 
@@ -1443,7 +1462,7 @@ RLS is **enabled on every table**; with no policy, access is denied. "Occupant" 
 
 | Table                                                                                          | Read                                                                                                                 | Write path                                                                                                                                                                   |
 | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `profiles`                                                                                     | Self; admin/committee of a shared society get name only through a view/function; developer all                       | Self (name, phone, photo) direct; status/anonymise by function                                                                                                               |
+| `profiles`                                                                                     | Self; admin/committee of a shared society get name only through a view/function; developer all                       | Self (name, phone, photo, font and language preferences) direct; status/anonymise by function                                                                                |
 | `developers`                                                                                   | Nobody via API                                                                                                       | Database admin only                                                                                                                                                          |
 | `societies`                                                                                    | Members of the society; developer all                                                                                | Function (developer: all columns; admin: whitelisted profile/setting columns)                                                                                                |
 | `modules`                                                                                      | Any signed-in user                                                                                                   | Migrations only                                                                                                                                                              |

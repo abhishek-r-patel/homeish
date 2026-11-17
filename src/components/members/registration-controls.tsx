@@ -10,8 +10,11 @@ import {
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { SocietyMember } from '@/core/members/operations';
 import { Button } from '@/components/ui/button';
+import { useUiTranslator } from '@/components/ui/language';
+import { MEMBER_LABELS } from './presentation';
 
 function ResultMessage({ result }: { result: ServerActionResult | null }) {
+  const { translateFeedback } = useUiTranslator();
   if (!result) return null;
   return (
     <p
@@ -19,7 +22,7 @@ function ResultMessage({ result }: { result: ServerActionResult | null }) {
       className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
       role="status"
     >
-      {result.message}
+      {result.message ? translateFeedback(result.message) : null}
     </p>
   );
 }
@@ -29,6 +32,7 @@ export function PendingRegistrations({
 }: {
   registrations: readonly SocietyMember[];
 }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ServerActionResult | null>(null);
@@ -60,7 +64,7 @@ export function PendingRegistrations({
   if (registrations.length === 0) {
     return (
       <p className="text-body text-ink-muted">
-        There are no registrations waiting for approval.
+        {t('There are no registrations waiting for approval.')}
       </p>
     );
   }
@@ -82,7 +86,7 @@ export function PendingRegistrations({
                 ? ` · ${registration.block_name ? `${registration.block_name} · ` : ''}${registration.unit_number}`
                 : ''}
               {registration.relationship
-                ? ` · ${registration.relationship}`
+                ? ` · ${t(MEMBER_LABELS[registration.relationship] ?? registration.relationship)}`
                 : ''}
             </p>
           </div>
@@ -90,7 +94,7 @@ export function PendingRegistrations({
             className="grid gap-space-1 text-caption"
             htmlFor={`reject-reason-${registration.membership_id}`}
           >
-            Rejection note (optional)
+            {t('Rejection note (optional)')}
             <input
               className="min-h-10 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink"
               id={`reject-reason-${registration.membership_id}`}
@@ -112,7 +116,7 @@ export function PendingRegistrations({
               onClick={() => decide(registration, 'approve')}
               type="button"
             >
-              Approve
+              {t('Approve')}
             </Button>
             <Button
               disabled={pending}
@@ -120,7 +124,7 @@ export function PendingRegistrations({
               type="button"
               variant="secondary"
             >
-              Reject
+              {t('Reject')}
             </Button>
           </div>
         </article>

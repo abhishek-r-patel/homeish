@@ -1,5 +1,8 @@
 // Format committee analytics figures, months and ranges for screens and exports (pure, client-safe).
 import type { ModuleKey } from '../modules/module-types';
+import { formatLocalizedDate, formatLocalizedDateTime } from '../i18n/format';
+import type { Locale } from '../i18n/locale';
+import { translateMessage } from '../i18n/messages';
 
 export type AnalyticsUnit =
   'count' | 'paise' | 'percent' | 'days' | 'minutes' | 'rating' | 'quantity';
@@ -47,6 +50,7 @@ const MODULE_LABELS: Readonly<Record<ModuleKey, string>> = {
   meeting: 'Meetings',
   event: 'Events',
   community: 'Community',
+  language: 'Language',
 };
 
 export function analyticsModuleLabel(moduleKey: string): string {
@@ -63,7 +67,7 @@ function decimal(value: number, maximumFractionDigits: number) {
 // Whole rupees with Indian digit grouping, e.g. 12345600 paise -> "₹1,23,456".
 export function formatPaise(
   paise: number | null,
-  options: { plain?: boolean } = {},
+  options: { plain?: boolean; locale?: Locale } = {},
 ): string {
   if (paise === null) return NO_VALUE;
   const rupees = Math.round(paise / 100);
@@ -75,7 +79,7 @@ export function formatPaise(
 export function formatAnalyticsValue(
   value: number | null,
   unit: AnalyticsUnit,
-  options: { plain?: boolean } = {},
+  options: { plain?: boolean; locale?: Locale } = {},
 ): string {
   if (value === null || !Number.isFinite(value)) return NO_VALUE;
   switch (unit) {
@@ -84,9 +88,15 @@ export function formatAnalyticsValue(
     case 'percent':
       return `${decimal(value, 1)}%`;
     case 'days':
-      return `${decimal(value, 1)} ${value === 1 ? 'day' : 'days'}`;
+      return translateMessage(
+        options.locale ?? 'en',
+        value === 1 ? '{count} day' : '{count} days',
+        { count: decimal(value, 1) },
+      );
     case 'minutes':
-      return `${decimal(value, 1)} min`;
+      return translateMessage(options.locale ?? 'en', '{count} min', {
+        count: decimal(value, 1),
+      });
     case 'rating':
       return options.plain
         ? `${value.toFixed(1)} / 5`
@@ -126,50 +136,86 @@ export function unitLabel(unit: AnalyticsUnit): string {
 }
 
 // "2026-04" -> "Apr 2026"; anything else is returned unchanged.
-export function formatPeriod(period: string): string {
+export function formatPeriod(period: string, locale: Locale = 'en'): string {
   const match = /^(\d{4})-(\d{2})$/.exec(period);
   if (!match) return period;
   const month = MONTHS[Number(match[2]) - 1];
-  return month ? `${month} ${match[1]}` : period;
+  if (!month) return period;
+  return locale === 'en'
+    ? `${month} ${match[1]}`
+    : formatLocalizedDate(new Date(`${period}-01T00:00:00Z`), locale, {
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
 }
 
 // Financial year (1 April -> 31 March) containing a YYYY-MM-DD date, e.g. "FY 2026–27".
-export function formatFinancialYear(date: string): string {
+export function formatFinancialYear(
+  date: string,
+  locale: Locale = 'en',
+): string {
   const match = /^(\d{4})-(\d{2})/.exec(date);
   if (!match) return date;
   const year = Number(match[1]);
   const start = Number(match[2]) >= 4 ? year : year - 1;
-  return `FY ${start}–${String((start + 1) % 100).padStart(2, '0')}`;
+  return translateMessage(locale, 'FY {from}–{to}', {
+    from: start,
+    to: String((start + 1) % 100).padStart(2, '0'),
+  });
 }
 
 // "2026-11-16" -> "16 Nov 2026".
-export function formatAnalyticsDate(date: string): string {
+export function formatAnalyticsDate(
+  date: string,
+  locale: Locale = 'en',
+): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (!match) return date;
   const month = MONTHS[Number(match[2]) - 1];
-  return month ? `${Number(match[3])} ${month} ${match[1]}` : date;
+  if (!month) return date;
+  return locale === 'en'
+    ? `${Number(match[3])} ${month} ${match[1]}`
+    : formatLocalizedDate(new Date(`${date}T00:00:00Z`), locale, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
 }
 
-export function formatRangeCaption(metric: {
-  kind: 'trend' | 'breakdown' | 'stat' | 'unavailable';
-  from: string;
-  to: string;
-  range: 'months' | 'fy';
-}): string {
-  if (metric.kind === 'stat') return `Today, ${formatAnalyticsDate(metric.to)}`;
+export function formatRangeCaption(
+  metric: {
+    kind: 'trend' | 'breakdown' | 'stat' | 'unavailable';
+    from: string;
+    to: string;
+    range: 'months' | 'fy';
+  },
+  locale: Locale = 'en',
+): string {
+  if (metric.kind === 'stat')
+    return translateMessage(locale, 'Today, {date}', {
+      date: formatAnalyticsDate(metric.to, locale),
+    });
   if (metric.range === 'fy') {
-    return `${formatFinancialYear(metric.from)} to date (${formatAnalyticsDate(metric.from)} – ${formatAnalyticsDate(metric.to)})`;
+    return translateMessage(locale, '{year} to date ({from} – {to})', {
+      year: formatFinancialYear(metric.from, locale),
+      from: formatAnalyticsDate(metric.from, locale),
+      to: formatAnalyticsDate(metric.to, locale),
+    });
   }
-  return `${formatPeriod(metric.from.slice(0, 7))} – ${formatPeriod(metric.to.slice(0, 7))}`;
+  return `${formatPeriod(metric.from.slice(0, 7), locale)} – ${formatPeriod(metric.to.slice(0, 7), locale)}`;
 }
 
-export function formatGeneratedAt(value: string, timeZone = 'Asia/Kolkata') {
+export function formatGeneratedAt(
+  value: string,
+  timeZone = 'Asia/Kolkata',
+  locale: Locale = 'en',
+) {
   // ICU may emit narrow no-break spaces, which the PDF's standard font cannot encode.
-  return new Intl.DateTimeFormat('en-IN', {
+  return formatLocalizedDateTime(new Date(value), locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone,
-  })
-    .format(new Date(value))
-    .replace(/[\u00a0\u202f]/g, ' ');
+  }).replace(/[\u00a0\u202f]/g, ' ');
 }

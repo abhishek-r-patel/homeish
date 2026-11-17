@@ -9,6 +9,8 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUiTranslator } from '@/components/ui/language';
+import type { MessageValues } from '@/core/i18n/messages';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import {
   normalizePatrolCode,
@@ -47,6 +49,7 @@ function PatrolCamera({
   onCode: (code: string) => void;
   onFailure: (message: string) => void;
 }) {
+  const { translate: t } = useUiTranslator();
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -116,7 +119,7 @@ function PatrolCamera({
 
   return (
     <video
-      aria-label="Camera view for scanning a checkpoint QR code"
+      aria-label={t('Camera view for scanning a checkpoint QR code')}
       className="aspect-video w-full rounded-md bg-ink"
       muted
       playsInline
@@ -126,13 +129,17 @@ function PatrolCamera({
 }
 
 export function PatrolScanPanel({ action }: { action: ModuleFormAction }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   const id = useId();
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
   const [pending, setPending] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(
-    null,
-  );
+  const [result, setResult] = useState<{
+    ok: boolean;
+    text: string;
+    values?: MessageValues;
+    referenceId?: string;
+  } | null>(null);
   const supported = useSyncExternalStore(
     subscribeNever,
     () => Boolean(barcodeDetector()),
@@ -175,14 +182,18 @@ export function PatrolScanPanel({ action }: { action: ModuleFormAction }) {
             setResult({
               ok: true,
               text: scan.success
-                ? `${scan.data.checkpoint_name} recorded.`
+                ? '{name} recorded.'
                 : (response.message ?? 'Checkpoint recorded.'),
+              values: scan.success
+                ? { name: scan.data.checkpoint_name }
+                : undefined,
             });
             router.refresh();
           } else {
             setResult({
               ok: false,
-              text: `${response.message}${response.referenceId ? ` Reference: ${response.referenceId}` : ''}`,
+              text: response.message,
+              referenceId: response.referenceId,
             });
           }
         })
@@ -208,7 +219,7 @@ export function PatrolScanPanel({ action }: { action: ModuleFormAction }) {
               variant="secondary"
               onClick={() => setScanning(false)}
             >
-              Stop camera
+              {t('Stop camera')}
             </Button>
           </>
         ) : (
@@ -227,13 +238,14 @@ export function PatrolScanPanel({ action }: { action: ModuleFormAction }) {
               setScanning(true);
             }}
           >
-            Scan checkpoint QR code
+            {t('Scan checkpoint QR code')}
           </Button>
         )}
         {supported === false ? (
           <p className="text-caption text-ink-muted">
-            This browser cannot scan QR codes. Type the code printed under the
-            QR code instead.
+            {t(
+              'This browser cannot scan QR codes. Type the code printed under the QR code instead.',
+            )}
           </p>
         ) : null}
         {result ? (
@@ -241,14 +253,19 @@ export function PatrolScanPanel({ action }: { action: ModuleFormAction }) {
             role={result.ok ? 'status' : 'alert'}
             className={`text-body ${result.ok ? 'text-success' : 'text-danger'}`}
           >
-            {result.text}
+            {result.values
+              ? t(result.text, result.values)
+              : translateFeedback(result.text)}
+            {result.referenceId
+              ? ` ${t('Reference: {reference}', { reference: result.referenceId })}`
+              : ''}
           </p>
         ) : null}
       </div>
       <ModuleActionForm
         action={action}
         idempotent
-        submitLabel="Record checkpoint"
+        submitLabel={t('Record checkpoint')}
         input={(form, clientRequestId) =>
           patrolScanInputSchema.parse({
             code: String(form.get('code') ?? ''),
@@ -260,8 +277,10 @@ export function PatrolScanPanel({ action }: { action: ModuleFormAction }) {
         <TextInput
           id={`${id}-code`}
           name="code"
-          label="Or type the checkpoint code"
-          helpText="The 6 letters and numbers printed under the QR code, for example K7M 2QX."
+          label={t('Or type the checkpoint code')}
+          helpText={t(
+            'The 6 letters and numbers printed under the QR code, for example K7M 2QX.',
+          )}
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
