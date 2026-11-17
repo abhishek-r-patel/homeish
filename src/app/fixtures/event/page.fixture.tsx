@@ -2,6 +2,8 @@
 'use client';
 import { useState } from 'react';
 import { z } from 'zod';
+import { LanguageProvider } from '@/components/language-provider';
+import { LanguageSelector } from '@/components/language-selector';
 import {
   EventAdminDetailView,
   EventAdminListView,
@@ -409,12 +411,13 @@ export default function EventFixturePage() {
   })();
 
   return (
-    <>
+    <LanguageProvider initialLocale="en" mode="device">
       <header className="mx-auto grid w-full max-w-content-default gap-space-4 px-space-4 pt-space-5">
         <Banner title="Synthetic Events & RSVPs fixture" tone="info">
           Sample homes, events and RSVPs only. No hosted Auth, database writes,
           bills or notifications.
         </Banner>
+        <LanguageSelector />
         <div className="grid gap-space-4 medium:grid-cols-2">
           <SelectInput
             id="event-fixture-role"
@@ -445,6 +448,6 @@ export default function EventFixturePage() {
       <main className="mx-auto grid min-h-dvh w-full max-w-content-default gap-space-5 px-space-4 py-space-6 text-ink">
         {content}
       </main>
-    </>
+    </LanguageProvider>
   );
 }

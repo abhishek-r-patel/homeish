@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { z } from 'zod';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import { Button } from '@/components/ui/button';
 import { CheckboxInput, RadioGroup } from '@/components/ui/choice-controls';
 import { Card, ListItem } from '@/components/ui/data-display';
@@ -19,13 +21,9 @@ import { ValidationError } from '@/core/errors';
 import {
   COMMUNITY_LISTING_TYPE_LABELS,
   COMMUNITY_REPORT_REASON_LABELS,
-  authorLine,
   canRenewListing,
   excerpt,
-  formatCommunityDateTime,
-  formatCommunityPrice,
   listingStateFromFlags,
-  muteEndsText,
   paiseFromRupeeText,
   rupeeTextFromPaise,
 } from '@/core/community/presentation';
@@ -77,6 +75,10 @@ import {
   CommunityPageHeader,
   CommunityPager,
   CommunityStatusChip,
+  authorLine,
+  formatCommunityDateTime,
+  formatCommunityPrice,
+  muteEndsText,
 } from './shared';
 
 export type CommunityResidentActions = {
@@ -105,21 +107,29 @@ function text(form: FormData, name: string) {
 }
 
 function MuteBanner({ mute }: { mute: CommunityMute | null }) {
+  const { locale, translate: t } = useUiTranslator();
   if (!mute) return null;
   return (
-    <Banner title="Your posting is paused" tone="warning">
-      An administrator has paused your posts, listings and replies{' '}
-      {muteEndsText(mute)}.{mute.reason ? ` Reason: ${mute.reason}` : ''} You
-      can still read everything.
+    <Banner title={t('Your posting is paused')} tone="warning">
+      {t(
+        mute.reason
+          ? 'An administrator has paused your posts, listings and replies {until}. Reason: {reason} You can still read everything.'
+          : 'An administrator has paused your posts, listings and replies {until}. You can still read everything.',
+        { until: muteEndsText(mute, locale), reason: mute.reason ?? '' },
+      )}
     </Banner>
   );
 }
 
 // Stands in for a control the society's mute settings do not allow.
 function MutedNote({ mute, action }: { mute: CommunityMute; action: string }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <p className="text-caption text-ink-muted">
-      You are muted {muteEndsText(mute)}. You cannot {action} while muted.
+      {t('You are muted {until}. You cannot {action} while muted.', {
+        until: muteEndsText(mute, locale),
+        action: t(action),
+      })}
     </p>
   );
 }
@@ -131,10 +141,13 @@ function ModerationNote({
   status: string;
   reason: string | null;
 }) {
+  const { translate: t } = useUiTranslator();
   if (status === 'pending') {
     return (
-      <Banner title="Waiting for an administrator" tone="info">
-        Only you and the administrators can see this until it is approved.
+      <Banner title={t('Waiting for an administrator')} tone="info">
+        {t(
+          'Only you and the administrators can see this until it is approved.',
+        )}
       </Banner>
     );
   }
@@ -146,8 +159,10 @@ function ModerationNote({
           ? 'Removed by an administrator'
           : 'Hidden while an administrator reviews reports';
     return (
-      <Banner title={title} tone="warning">
-        {reason ? `Reason: ${reason}` : 'Other residents cannot see this.'}
+      <Banner title={t(title)} tone="warning">
+        {reason
+          ? t('Reason: {reason}', { reason })
+          : t('Other residents cannot see this.')}
       </Banner>
     );
   }
@@ -163,9 +178,11 @@ function Byline({
   unitLabel: string | null;
   at: string;
 }) {
+  const { locale } = useUiTranslator();
   return (
     <p className="text-caption text-ink-muted break-words">
-      {authorLine(name, unitLabel)} · {formatCommunityDateTime(at)} IST
+      {authorLine(name, unitLabel, locale)} ·{' '}
+      {formatCommunityDateTime(at, locale)} IST
     </p>
   );
 }
@@ -179,13 +196,18 @@ function GroupMembershipForm({
   group: CommunityHomeGroup;
   actions: CommunityResidentActions;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <ModuleActionForm
       action={group.joined ? actions.leaveGroup : actions.joinGroup}
-      submitLabel={group.joined ? `Leave ${group.name}` : `Join ${group.name}`}
+      submitLabel={t(group.joined ? 'Leave {name}' : 'Join {name}', {
+        name: group.name,
+      })}
       confirmMessage={
         group.joined
-          ? `Leave ${group.name}? You will stop seeing its posts.`
+          ? t('Leave {name}? You will stop seeing its posts.', {
+              name: group.name,
+            })
           : undefined
       }
       input={() => communityGroupIdInputSchema.parse({ groupId: group.id })}
@@ -202,19 +224,20 @@ function AlertsForm({
   enabled: boolean;
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [checked, setChecked] = useState(enabled);
   return (
     <ModuleActionForm
       action={action}
-      submitLabel="Save alert setting"
+      submitLabel={t('Save alert setting')}
       input={() =>
         communityPreferencesInputSchema.parse({ newListingAlerts: checked })
       }
     >
       <CheckboxInput
         id={`${id}-alerts`}
-        label="Tell me when a new marketplace listing is approved"
+        label={t('Tell me when a new marketplace listing is approved')}
         checked={checked}
         onChange={(event) => setChecked(event.currentTarget.checked)}
       />
@@ -229,32 +252,40 @@ export function CommunityHomeView({
   home: CommunityHome;
   actions: CommunityResidentActions;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <section className="grid min-w-0 gap-space-5">
       <CommunityPageHeader
-        title="Community"
-        description="Talk with your neighbours in groups, and buy, sell or give away things in the marketplace. An administrator checks every post and listing before others see it."
+        title={t('Community')}
+        description={t(
+          'Talk with your neighbours in groups, and buy, sell or give away things in the marketplace. An administrator checks every post and listing before others see it.',
+        )}
       />
       <MuteBanner mute={home.myMute} />
-      <nav aria-label="Community pages" className="flex flex-wrap gap-space-3">
+      <nav
+        aria-label={t('Community pages')}
+        className="flex flex-wrap gap-space-3"
+      >
         <Link
           className={COMMUNITY_PRIMARY_LINK_CLASS}
           href="/community/marketplace"
         >
-          Marketplace
+          {t('Marketplace')}
         </Link>
         <Link className={COMMUNITY_LINK_CLASS} href="/community/mine">
-          My posts and listings
+          {t('My posts and listings')}
         </Link>
       </nav>
       <section aria-labelledby="community-groups" className="grid gap-space-3">
         <h2 id="community-groups" className="text-heading">
-          Groups
+          {t('Groups')}
         </h2>
         {home.groups.length === 0 ? (
           <EmptyState
-            title="No groups yet"
-            description="An administrator has not created any groups. Check back later."
+            title={t('No groups yet')}
+            description={t(
+              'An administrator has not created any groups. Check back later.',
+            )}
           />
         ) : (
           <ul className="grid gap-space-3">
@@ -266,19 +297,28 @@ export function CommunityHomeView({
                 >
                   <div className="grid gap-space-3">
                     <p className="text-caption text-ink-muted">
-                      {group.memberCount}{' '}
-                      {group.memberCount === 1 ? 'member' : 'members'}
+                      {t(
+                        group.memberCount === 1
+                          ? '{count} member'
+                          : '{count} members',
+                        {
+                          count: formatLocalizedNumber(
+                            group.memberCount,
+                            locale ?? 'en',
+                          ),
+                        },
+                      )}
                       {group.latestPostAt
-                        ? ` · Latest post ${formatCommunityDateTime(group.latestPostAt)} IST`
-                        : ' · No posts yet'}
-                      {group.joined ? ' · You are a member' : ''}
+                        ? ` · ${t('Latest post {date} IST', { date: formatCommunityDateTime(group.latestPostAt, locale) })}`
+                        : ` · ${t('No posts yet')}`}
+                      {group.joined ? ` · ${t('You are a member')}` : ''}
                     </p>
                     {group.joined ? (
                       <Link
                         className={COMMUNITY_LINK_CLASS}
                         href={`/community/groups/${group.id}`}
                       >
-                        Open {group.name}
+                        {t('Open {name}', { name: group.name })}
                       </Link>
                     ) : null}
                     <GroupMembershipForm group={group} actions={actions} />
@@ -290,8 +330,10 @@ export function CommunityHomeView({
         )}
       </section>
       <Card
-        title="Marketplace alerts"
-        description="We send a notification when a neighbour's new listing is approved."
+        title={t('Marketplace alerts')}
+        description={t(
+          "We send a notification when a neighbour's new listing is approved.",
+        )}
       >
         <AlertsForm
           enabled={home.preferences.newListingAlerts}
@@ -319,6 +361,7 @@ function PostForm({
   groupId: string;
   actions: CommunityResidentActions;
 } & PhotoRequest) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [body, setBody] = useState('');
   const photos = useCommunityPhotos({
@@ -329,7 +372,7 @@ function PostForm({
     <ModuleActionForm
       action={actions.createPost}
       idempotent
-      submitLabel="Send for review"
+      submitLabel={t('Send for review')}
       submitDisabled={photos.uploading}
       onSaved={() => {
         setBody('');
@@ -346,12 +389,12 @@ function PostForm({
     >
       <TextAreaInput
         id={`${id}-body`}
-        label="Your post"
+        label={t('Your post')}
         required
         rows={4}
         maxLength={COMMUNITY_POST_BODY_MAX}
         value={body}
-        helpText="Your name and flat are shown with the post."
+        helpText={t('Your name and flat are shown with the post.')}
         onChange={(event) => setBody(event.currentTarget.value)}
       />
       <CommunityPhotoField id={`${id}-photos`} state={photos} />
@@ -369,11 +412,12 @@ export function CommunityGroupView({
   pageNumber: number;
   actions: CommunityResidentActions;
 } & PhotoRequest) {
+  const { locale, translate: t } = useUiTranslator();
   const { group, feed } = page;
   return (
     <section className="grid min-w-0 gap-space-5">
       <Link className={COMMUNITY_LINK_CLASS} href="/community">
-        Back to Community
+        {t('Back to Community')}
       </Link>
       <CommunityPageHeader
         title={group.name}
@@ -381,27 +425,33 @@ export function CommunityGroupView({
       />
       {!feed ? (
         <EmptyState
-          title="Join this group to see its posts"
-          description="Only members can read and post in a group. You can leave at any time."
+          title={t('Join this group to see its posts')}
+          description={t(
+            'Only members can read and post in a group. You can leave at any time.',
+          )}
           action={<GroupMembershipForm group={group} actions={actions} />}
         />
       ) : (
         <>
           <MuteBanner mute={page.myMute} />
           <Card
-            title="Write a post"
-            description="An administrator checks each post before the group sees it."
+            title={t('Write a post')}
+            description={t(
+              'An administrator checks each post before the group sees it.',
+            )}
           >
             <PostForm groupId={group.id} actions={actions} request={request} />
           </Card>
           <section aria-labelledby="group-posts" className="grid gap-space-3">
             <h2 id="group-posts" className="text-heading">
-              Posts
+              {t('Posts')}
             </h2>
             {feed.items.length === 0 ? (
               <EmptyState
-                title="No posts yet"
-                description="Be the first to share something with the group."
+                title={t('No posts yet')}
+                description={t(
+                  'Be the first to share something with the group.',
+                )}
               />
             ) : (
               <ul className="grid gap-space-3">
@@ -436,9 +486,9 @@ export function CommunityGroupView({
                         className={COMMUNITY_LINK_CLASS}
                         href={`/community/posts/${item.id}`}
                       >
-                        Open post
+                        {t('Open post')}
                         {item.replyCount > 0
-                          ? ` (${item.replyCount} ${item.replyCount === 1 ? 'reply' : 'replies'})`
+                          ? ` (${t(item.replyCount === 1 ? '{count} reply' : '{count} replies', { count: formatLocalizedNumber(item.replyCount, locale ?? 'en') })})`
                           : ''}
                       </Link>
                     </article>
@@ -473,17 +523,18 @@ function ReportForm({
   action: ModuleFormAction;
   noun: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [reason, setReason] = useState<string>('spam');
   return (
     <details className="min-w-0 rounded-md border border-rule p-space-3">
       <summary className="min-h-12 cursor-pointer content-center text-body-strong focus-visible:outline-2 focus-visible:outline-focus">
-        Report this {noun}
+        {t('Report this {item}', { item: t(noun) })}
       </summary>
       <div className="mt-space-3">
         <ModuleActionForm
           action={action}
-          submitLabel={`Send report`}
+          submitLabel={t('Send report')}
           input={(form) =>
             communityReportInputSchema.parse({
               targetType,
@@ -494,25 +545,27 @@ function ReportForm({
           }
         >
           <p className="text-caption text-ink-muted">
-            The administrators see which flat reported it, but the author does
-            not. When three different flats report something, it is hidden until
-            an administrator checks it.
+            {t(
+              'The administrators see which flat reported it, but the author does not. When three different flats report something, it is hidden until an administrator checks it.',
+            )}
           </p>
           <RadioGroup
             id={`${id}-reason`}
             name={`${id}-reason`}
-            label="Why are you reporting it?"
+            label={t('Why are you reporting it?')}
             value={reason}
             onChange={setReason}
             options={COMMUNITY_REPORT_REASONS.map((value) => ({
               value,
-              label: COMMUNITY_REPORT_REASON_LABELS[value],
+              label: t(COMMUNITY_REPORT_REASON_LABELS[value]),
             }))}
           />
           <TextAreaInput
             id={`${id}-note`}
             name="note"
-            label="Anything else the administrators should know? (optional)"
+            label={t(
+              'Anything else the administrators should know? (optional)',
+            )}
             maxLength={COMMUNITY_REPORT_NOTE_MAX}
           />
         </ModuleActionForm>
@@ -530,13 +583,14 @@ function ReplyForm({
   targetId: string;
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [body, setBody] = useState('');
   return (
     <ModuleActionForm
       action={action}
       idempotent
-      submitLabel="Send reply"
+      submitLabel={t('Send reply')}
       onSaved={() => setBody('')}
       input={(_form, clientRequestId) =>
         communityReplyCreateInputSchema.parse({
@@ -549,11 +603,13 @@ function ReplyForm({
     >
       <TextAreaInput
         id={`${id}-reply`}
-        label="Your reply"
+        label={t('Your reply')}
         required
         maxLength={COMMUNITY_REPLY_BODY_MAX}
         value={body}
-        helpText="Replies appear straight away. Your name and flat are shown."
+        helpText={t(
+          'Replies appear straight away. Your name and flat are shown.',
+        )}
         onChange={(event) => setBody(event.currentTarget.value)}
       />
     </ModuleActionForm>
@@ -569,6 +625,7 @@ function ReplyItem({
   actions: CommunityResidentActions;
   reportBlocked: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <li className="grid min-w-0 gap-space-2 border-t border-rule pt-space-3">
       <div className="flex flex-wrap items-center gap-space-2">
@@ -585,8 +642,8 @@ function ReplyItem({
       {reply.mine && reply.status === 'visible' ? (
         <ModuleActionForm
           action={actions.deleteReply}
-          submitLabel="Delete my reply"
-          confirmMessage="Delete your reply? This cannot be undone."
+          submitLabel={t('Delete my reply')}
+          confirmMessage={t('Delete your reply? This cannot be undone.')}
           input={() => communityReplyIdInputSchema.parse({ replyId: reply.id })}
         >
           {null}
@@ -625,15 +682,18 @@ function RepliesSection({
   actions: CommunityResidentActions;
   myMute: CommunityMyMute | null;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const headingId = useId();
   const reportBlocked = Boolean(myMute && !myMute.canReport);
   return (
     <section aria-labelledby={headingId} className="grid min-w-0 gap-space-3">
       <h2 id={headingId} className="text-heading">
-        Replies ({replies.length})
+        {t('Replies ({count})', {
+          count: formatLocalizedNumber(replies.length, locale ?? 'en'),
+        })}
       </h2>
       {replies.length === 0 ? (
-        <p className="text-body text-ink-muted">No replies yet.</p>
+        <p className="text-body text-ink-muted">{t('No replies yet.')}</p>
       ) : (
         <ul className="grid gap-space-3">
           {replies.map((reply) => (
@@ -656,7 +716,7 @@ function RepliesSection({
           action={actions.createReply}
         />
       ) : (
-        <p className="text-caption text-ink-muted">{closedText}</p>
+        <p className="text-caption text-ink-muted">{t(closedText)}</p>
       )}
     </section>
   );
@@ -678,6 +738,7 @@ function PostEditForm({
   photoUrls: CommunityPhotoUrls;
   actions: CommunityResidentActions;
 } & PhotoRequest) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [body, setBody] = useState(post.body);
   const photos = useCommunityPhotos({
@@ -688,12 +749,12 @@ function PostEditForm({
   return (
     <details className="min-w-0 rounded-md border border-rule p-space-3">
       <summary className="min-h-12 cursor-pointer content-center text-body-strong focus-visible:outline-2 focus-visible:outline-focus">
-        Edit post
+        {t('Edit post')}
       </summary>
       <div className="mt-space-3">
         <ModuleActionForm
           action={actions.updatePost}
-          submitLabel="Save changes"
+          submitLabel={t('Save changes')}
           submitDisabled={photos.uploading}
           input={() =>
             communityPostUpdateInputSchema.parse({
@@ -706,7 +767,7 @@ function PostEditForm({
         >
           <TextAreaInput
             id={`${id}-body`}
-            label="Your post"
+            label={t('Your post')}
             required
             rows={4}
             maxLength={COMMUNITY_POST_BODY_MAX}
@@ -734,6 +795,7 @@ export function CommunityPostView({
   photoUrls: CommunityPhotoUrls;
   actions: CommunityResidentActions;
 } & PhotoRequest) {
+  const { translate: t } = useUiTranslator();
   const { post } = detail;
   const paths = [...detail.photos]
     .sort((a, b) => a.position - b.position)
@@ -750,12 +812,16 @@ export function CommunityPostView({
         className={COMMUNITY_LINK_CLASS}
         href={post.groupId ? `/community/groups/${post.groupId}` : '/community'}
       >
-        {post.groupName ? `Back to ${post.groupName}` : 'Back to Community'}
+        {post.groupName
+          ? t('Back to {name}', { name: post.groupName })
+          : t('Back to Community')}
       </Link>
       <article className="grid min-w-0 gap-space-3">
         <div className="flex flex-wrap items-center gap-space-2">
           <h1 className="text-title font-semibold break-words">
-            {post.groupName ? `Post in ${post.groupName}` : 'Post'}
+            {post.groupName
+              ? t('Post in {name}', { name: post.groupName })
+              : t('Post')}
           </h1>
           {post.status !== 'approved' ? (
             <CommunityStatusChip status={post.status} />
@@ -773,7 +839,7 @@ export function CommunityPostView({
         <CommunityPhotoGallery
           paths={paths}
           photoUrls={photoUrls}
-          label="Post photos"
+          label={t('Post photos')}
         />
       </article>
       {editable && post.version && (!mute || mute.canEditPending) ? (
@@ -792,8 +858,10 @@ export function CommunityPostView({
       {canWithdraw ? (
         <ModuleActionForm
           action={actions.withdrawPost}
-          submitLabel="Delete my post"
-          confirmMessage="Delete your post? Its replies and photos are deleted too."
+          submitLabel={t('Delete my post')}
+          confirmMessage={t(
+            'Delete your post? Its replies and photos are deleted too.',
+          )}
           input={() => communityPostIdInputSchema.parse({ postId: post.id })}
         >
           {null}
@@ -812,7 +880,7 @@ export function CommunityPostView({
       ) : null}
       {detail.reportedByMe ? (
         <p className="text-caption text-ink-muted">
-          Your flat has reported this post.
+          {t('Your flat has reported this post.')}
         </p>
       ) : null}
       {post.status === 'approved' || detail.replies.length > 0 ? (
@@ -861,29 +929,32 @@ export function CommunityMarketplaceView({
   filter: CommunityMarketplaceFilter;
   basePath?: string;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const id = useId();
   return (
     <section className="grid min-w-0 gap-space-5">
       <Link className={COMMUNITY_LINK_CLASS} href="/community">
-        Back to Community
+        {t('Back to Community')}
       </Link>
       <CommunityPageHeader
-        title="Marketplace"
-        description="Items for sale, free to a good home, wanted, lost and found in your society. Listings stay up for 30 days after approval. Homeish does not handle payments."
+        title={t('Marketplace')}
+        description={t(
+          'Items for sale, free to a good home, wanted, lost and found in your society. Listings stay up for 30 days after approval. Homeish does not handle payments.',
+        )}
       />
       <div className="flex flex-wrap gap-space-3">
         <Link
           className={COMMUNITY_PRIMARY_LINK_CLASS}
           href="/community/marketplace/new"
         >
-          New listing
+          {t('New listing')}
         </Link>
         <Link className={COMMUNITY_LINK_CLASS} href="/community/mine">
-          My listings
+          {t('My listings')}
         </Link>
       </div>
       <nav
-        aria-label="Listing types"
+        aria-label={t('Listing types')}
         className="flex flex-wrap gap-x-space-4 gap-y-space-2"
       >
         {[null, ...COMMUNITY_LISTING_TYPES].map((value) => (
@@ -896,7 +967,7 @@ export function CommunityMarketplaceView({
             })}
             aria-current={filter.type === value ? 'page' : undefined}
           >
-            {value ? COMMUNITY_LISTING_TYPE_LABELS[value] : 'All'}
+            {t(value ? COMMUNITY_LISTING_TYPE_LABELS[value] : 'All')}
           </Link>
         ))}
       </nav>
@@ -913,32 +984,32 @@ export function CommunityMarketplaceView({
           id={`${id}-search`}
           name="q"
           type="search"
-          label="Search listings"
+          label={t('Search listings')}
           defaultValue={filter.search ?? ''}
           maxLength={COMMUNITY_SEARCH_MAX}
           autoComplete="off"
         />
         <Button type="submit" variant="secondary">
-          Search
+          {t('Search')}
         </Button>
       </form>
       {marketplace.items.length === 0 ? (
         <EmptyState
-          title={
+          title={t(
             filter.search || filter.type
               ? 'No matching listings'
-              : 'No listings yet'
-          }
-          description={
+              : 'No listings yet',
+          )}
+          description={t(
             filter.search || filter.type
               ? 'Try another type or search word.'
-              : 'Post the first listing for your neighbours.'
-          }
+              : 'Post the first listing for your neighbours.',
+          )}
         />
       ) : (
         <ul className="grid gap-space-2">
           {marketplace.items.map((item) => {
-            const price = formatCommunityPrice(item.pricePaise);
+            const price = formatCommunityPrice(item.pricePaise, locale);
             return (
               <li key={item.id}>
                 <ListItem
@@ -946,14 +1017,18 @@ export function CommunityMarketplaceView({
                   title={<span className="break-words">{item.title}</span>}
                   secondary={
                     <span className="break-words">
-                      {COMMUNITY_LISTING_TYPE_LABELS[item.listingType]}
+                      {t(COMMUNITY_LISTING_TYPE_LABELS[item.listingType])}
                       {price ? ` · ${price}` : ''} ·{' '}
-                      {authorLine(item.authorName, item.authorUnitLabel)}
+                      {authorLine(
+                        item.authorName,
+                        item.authorUnitLabel,
+                        locale,
+                      )}
                       {item.approvedAt
-                        ? ` · ${formatCommunityDateTime(item.approvedAt)} IST`
+                        ? ` · ${formatCommunityDateTime(item.approvedAt, locale)} IST`
                         : ''}
                       {item.replyCount > 0
-                        ? ` · ${item.replyCount} ${item.replyCount === 1 ? 'reply' : 'replies'}`
+                        ? ` · ${t(item.replyCount === 1 ? '{count} reply' : '{count} replies', { count: formatLocalizedNumber(item.replyCount, locale ?? 'en') })}`
                         : ''}
                     </span>
                   }
@@ -997,6 +1072,7 @@ export function CommunityListingForm({
   actions: CommunityResidentActions;
   navigate?: boolean;
 } & PhotoRequest) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const router = useRouter();
   const [type, setType] = useState<CommunityListingType>(
@@ -1032,7 +1108,7 @@ export function CommunityListingForm({
     <ModuleActionForm
       action={listing ? actions.updateListing : actions.createListing}
       idempotent={!listing}
-      submitLabel={listing ? 'Save changes' : 'Send for review'}
+      submitLabel={t(listing ? 'Save changes' : 'Send for review')}
       submitDisabled={photos.uploading}
       onSaved={(data) => {
         const created = listingCreatedSchema.safeParse(data);
@@ -1058,7 +1134,7 @@ export function CommunityListingForm({
       <RadioGroup
         id={`${id}-type`}
         name={`${id}-type`}
-        label="What kind of listing is it?"
+        label={t('What kind of listing is it?')}
         value={type}
         onChange={(value) =>
           setType(
@@ -1069,13 +1145,13 @@ export function CommunityListingForm({
         }
         options={COMMUNITY_LISTING_TYPES.map((value) => ({
           value,
-          label: COMMUNITY_LISTING_TYPE_LABELS[value],
+          label: t(COMMUNITY_LISTING_TYPE_LABELS[value]),
         }))}
       />
       <TextInput
         id={`${id}-title`}
         name="title"
-        label="Title"
+        label={t('Title')}
         required
         maxLength={COMMUNITY_LISTING_TITLE_MAX}
         defaultValue={listing?.title ?? ''}
@@ -1084,7 +1160,7 @@ export function CommunityListingForm({
       <TextAreaInput
         id={`${id}-description`}
         name="description"
-        label="Description (optional)"
+        label={t('Description (optional)')}
         rows={4}
         maxLength={COMMUNITY_LISTING_DESCRIPTION_MAX}
         defaultValue={listing?.description ?? ''}
@@ -1093,21 +1169,25 @@ export function CommunityListingForm({
         <AmountInput
           id={`${id}-price`}
           name="price"
-          label="Price (optional)"
+          label={t('Price (optional)')}
           defaultValue={rupeeTextFromPaise(listing?.pricePaise ?? null)}
-          helpText="In rupees. Enter 0 to show it as free. Payment is between you and the buyer."
+          helpText={t(
+            'In rupees. Enter 0 to show it as free. Payment is between you and the buyer.',
+          )}
         />
       ) : null}
       <TextInput
         id={`${id}-phone`}
         name="contactPhone"
-        label="Phone number to share (optional)"
+        label={t('Phone number to share (optional)')}
         type="tel"
         inputMode="tel"
         autoComplete="tel"
         maxLength={16}
         defaultValue={listing?.contactPhone ?? ''}
-        helpText="Shown to residents of your society with the listing. Leave it empty to be contacted through replies only."
+        helpText={t(
+          'Shown to residents of your society with the listing. Leave it empty to be contacted through replies only.',
+        )}
       />
       <CommunityPhotoField
         id={`${id}-photos`}
@@ -1115,8 +1195,9 @@ export function CommunityListingForm({
         photoUrls={photoUrls}
       />
       <p className="text-caption text-ink-muted">
-        An administrator checks each listing before neighbours see it. Your name
-        and flat are shown with it.
+        {t(
+          'An administrator checks each listing before neighbours see it. Your name and flat are shown with it.',
+        )}
       </p>
     </ModuleActionForm>
   );
@@ -1130,12 +1211,13 @@ export function CommunityNewListingView({
   actions: CommunityResidentActions;
   navigate?: boolean;
 } & PhotoRequest) {
+  const { translate: t } = useUiTranslator();
   return (
     <section className="grid min-w-0 gap-space-5">
       <Link className={COMMUNITY_LINK_CLASS} href="/community/marketplace">
-        Back to Marketplace
+        {t('Back to Marketplace')}
       </Link>
-      <CommunityPageHeader title="New listing" />
+      <CommunityPageHeader title={t('New listing')} />
       <CommunityListingForm
         actions={actions}
         request={request}
@@ -1156,6 +1238,7 @@ function ListingAuthorActions({
   actions: CommunityResidentActions;
   mute: CommunityMyMute | null;
 }) {
+  const { translate: t } = useUiTranslator();
   const state = listingStateFromFlags(listing);
   const input = () =>
     communityListingIdInputSchema.parse({ listingId: listing.id });
@@ -1167,8 +1250,10 @@ function ListingAuthorActions({
         {state === 'live' ? (
           <ModuleActionForm
             action={actions.closeListing}
-            submitLabel="Mark as closed"
-            confirmMessage="Close this listing? It leaves the marketplace and no new replies can be sent."
+            submitLabel={t('Mark as closed')}
+            confirmMessage={t(
+              'Close this listing? It leaves the marketplace and no new replies can be sent.',
+            )}
             input={input}
           >
             {null}
@@ -1177,7 +1262,7 @@ function ListingAuthorActions({
         {canRenewListing(state) && !renewBlocked ? (
           <ModuleActionForm
             action={actions.renewListing}
-            submitLabel="Renew for 30 days"
+            submitLabel={t('Renew for 30 days')}
             input={input}
           >
             {null}
@@ -1186,8 +1271,10 @@ function ListingAuthorActions({
         {['pending', 'approved', 'hidden'].includes(listing.status) ? (
           <ModuleActionForm
             action={actions.withdrawListing}
-            submitLabel="Delete listing"
-            confirmMessage="Delete this listing? Its replies and photos are deleted too."
+            submitLabel={t('Delete listing')}
+            confirmMessage={t(
+              'Delete this listing? Its replies and photos are deleted too.',
+            )}
             input={input}
           >
             {null}
@@ -1211,9 +1298,10 @@ export function CommunityListingView({
   photoUrls: CommunityPhotoUrls;
   actions: CommunityResidentActions;
 } & PhotoRequest) {
+  const { locale, translate: t } = useUiTranslator();
   const { listing } = detail;
   const state = listingStateFromFlags(listing);
-  const price = formatCommunityPrice(listing.pricePaise);
+  const price = formatCommunityPrice(listing.pricePaise, locale);
   const mute = detail.myMute ?? null;
   const editable =
     listing.mine && listing.status === 'pending' && listing.version;
@@ -1225,7 +1313,7 @@ export function CommunityListingView({
   return (
     <section className="grid min-w-0 gap-space-5">
       <Link className={COMMUNITY_LINK_CLASS} href="/community/marketplace">
-        Back to Marketplace
+        {t('Back to Marketplace')}
       </Link>
       <article className="grid min-w-0 gap-space-3">
         <div className="flex flex-wrap items-center gap-space-2">
@@ -1235,7 +1323,7 @@ export function CommunityListingView({
           {state !== 'live' ? <CommunityStatusChip status={state} /> : null}
         </div>
         <p className="text-body-strong">
-          {COMMUNITY_LISTING_TYPE_LABELS[listing.listingType]}
+          {t(COMMUNITY_LISTING_TYPE_LABELS[listing.listingType])}
           {price ? ` · ${price}` : ''}
         </p>
         <Byline
@@ -1250,19 +1338,23 @@ export function CommunityListingView({
           />
         ) : null}
         {state === 'expired' ? (
-          <Banner title="This listing has expired" tone="info">
-            It is no longer shown in the marketplace.
-            {listing.mine ? ' Renew it to show it for another 30 days.' : ''}
+          <Banner title={t('This listing has expired')} tone="info">
+            {t('It is no longer shown in the marketplace.')}
+            {listing.mine
+              ? ` ${t('Renew it to show it for another 30 days.')}`
+              : ''}
           </Banner>
         ) : null}
         {state === 'closed' ? (
-          <Banner title="This listing is closed" tone="info">
-            The poster has marked it as done.
+          <Banner title={t('This listing is closed')} tone="info">
+            {t('The poster has marked it as done.')}
           </Banner>
         ) : null}
         {state === 'live' && listing.expiresAt ? (
           <p className="text-caption text-ink-muted">
-            Shown until {formatCommunityDateTime(listing.expiresAt)} IST.
+            {t('Shown until {date} IST.', {
+              date: formatCommunityDateTime(listing.expiresAt, locale),
+            })}
           </p>
         ) : null}
         {listing.description ? (
@@ -1272,7 +1364,7 @@ export function CommunityListingView({
         ) : null}
         {listing.contactPhone ? (
           <p className="text-body">
-            Phone:{' '}
+            {t('Phone:')}{' '}
             <a
               className={COMMUNITY_LINK_CLASS}
               href={`tel:${listing.contactPhone.replaceAll(' ', '')}`}
@@ -1284,13 +1376,13 @@ export function CommunityListingView({
         <CommunityPhotoGallery
           paths={paths}
           photoUrls={photoUrls}
-          label="Listing photos"
+          label={t('Listing photos')}
         />
       </article>
       {editable && listing.version && (!mute || mute.canEditPending) ? (
         <details className="min-w-0 rounded-md border border-rule p-space-3">
           <summary className="min-h-12 cursor-pointer content-center text-body-strong focus-visible:outline-2 focus-visible:outline-focus">
-            Edit listing
+            {t('Edit listing')}
           </summary>
           <div className="mt-space-3">
             <CommunityListingForm
@@ -1322,7 +1414,7 @@ export function CommunityListingView({
       ) : null}
       {detail.reportedByMe ? (
         <p className="text-caption text-ink-muted">
-          Your flat has reported this listing.
+          {t('Your flat has reported this listing.')}
         </p>
       ) : null}
       {listing.status === 'approved' || detail.replies.length > 0 ? (
@@ -1347,24 +1439,40 @@ export function CommunityListingView({
 // My items
 
 export function CommunityMyItemsView({ items }: { items: CommunityMyItems }) {
+  const { locale, translate: t } = useUiTranslator();
   const [view, setView] = useState<'listings' | 'posts'>('listings');
   const id = useId();
   return (
     <section className="grid min-w-0 gap-space-5">
       <Link className={COMMUNITY_LINK_CLASS} href="/community">
-        Back to Community
+        {t('Back to Community')}
       </Link>
       <CommunityPageHeader
-        title="My posts and listings"
-        description="Everything you have posted, including items waiting for review, rejected or removed. Rejected, removed and deleted items are erased 30 days later."
+        title={t('My posts and listings')}
+        description={t(
+          'Everything you have posted, including items waiting for review, rejected or removed. Rejected, removed and deleted items are erased 30 days later.',
+        )}
       />
       <SelectInput
         id={`${id}-view`}
-        label="Show"
+        label={t('Show')}
         value={view}
         options={[
-          { value: 'listings', label: `Listings (${items.listings.length})` },
-          { value: 'posts', label: `Posts (${items.posts.length})` },
+          {
+            value: 'listings',
+            label: t('Listings ({count})', {
+              count: formatLocalizedNumber(
+                items.listings.length,
+                locale ?? 'en',
+              ),
+            }),
+          },
+          {
+            value: 'posts',
+            label: t('Posts ({count})', {
+              count: formatLocalizedNumber(items.posts.length, locale ?? 'en'),
+            }),
+          },
         ]}
         onChange={(event) =>
           setView(event.currentTarget.value === 'posts' ? 'posts' : 'listings')
@@ -1373,14 +1481,14 @@ export function CommunityMyItemsView({ items }: { items: CommunityMyItems }) {
       {view === 'listings' ? (
         items.listings.length === 0 ? (
           <EmptyState
-            title="No listings yet"
-            description="Your marketplace listings will appear here."
+            title={t('No listings yet')}
+            description={t('Your marketplace listings will appear here.')}
             action={
               <Link
                 className={COMMUNITY_LINK_CLASS}
                 href="/community/marketplace/new"
               >
-                Create a listing
+                {t('Create a listing')}
               </Link>
             }
           />
@@ -1395,10 +1503,10 @@ export function CommunityMyItemsView({ items }: { items: CommunityMyItems }) {
                     title={<span className="break-words">{item.title}</span>}
                     secondary={
                       <span className="break-words">
-                        {COMMUNITY_LISTING_TYPE_LABELS[item.listingType]} ·{' '}
-                        {formatCommunityDateTime(item.createdAt)} IST
+                        {t(COMMUNITY_LISTING_TYPE_LABELS[item.listingType])} ·{' '}
+                        {formatCommunityDateTime(item.createdAt, locale)} IST
                         {item.moderationReason
-                          ? ` · Reason: ${item.moderationReason}`
+                          ? ` · ${t('Reason: {reason}', { reason: item.moderationReason })}`
                           : ''}
                       </span>
                     }
@@ -1415,8 +1523,10 @@ export function CommunityMyItemsView({ items }: { items: CommunityMyItems }) {
         )
       ) : items.posts.length === 0 ? (
         <EmptyState
-          title="No posts yet"
-          description="Join a group and share something with your neighbours."
+          title={t('No posts yet')}
+          description={t(
+            'Join a group and share something with your neighbours.',
+          )}
         />
       ) : (
         <ul className="grid gap-space-2">
@@ -1430,9 +1540,9 @@ export function CommunityMyItemsView({ items }: { items: CommunityMyItems }) {
                 secondary={
                   <span className="break-words">
                     {item.groupName ? `${item.groupName} · ` : ''}
-                    {formatCommunityDateTime(item.createdAt)} IST
+                    {formatCommunityDateTime(item.createdAt, locale)} IST
                     {item.moderationReason
-                      ? ` · Reason: ${item.moderationReason}`
+                      ? ` · ${t('Reason: {reason}', { reason: item.moderationReason })}`
                       : ''}
                   </span>
                 }

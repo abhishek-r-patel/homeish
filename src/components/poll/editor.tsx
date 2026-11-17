@@ -1,6 +1,8 @@
 // Let administrators edit all mutable draft settings and ballot configuration.
 'use client';
 import { useId, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckboxInput } from '@/components/ui/choice-controls';
@@ -68,6 +70,9 @@ export function PollDraftEditor({
   blocks: readonly { id: string; name: string }[];
   action: ModuleFormAction;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const { vote } = detail;
   const id = useId();
   const [optionRows, setOptionRows] = useState(
@@ -95,15 +100,17 @@ export function PollDraftEditor({
         className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         href={`/admin/polls/${vote.id}`}
       >
-        Back to poll details
+        {t('Back to poll details')}
       </Link>
       <Card
-        title="Edit poll draft"
-        description="A draft can be changed until it is scheduled or opened. The voter list is frozen when voting is scheduled or opened."
+        title={t('Edit poll draft')}
+        description={t(
+          'A draft can be changed until it is scheduled or opened. The voter list is frozen when voting is scheduled or opened.',
+        )}
       >
         <ModuleActionForm
           action={action}
-          submitLabel="Save draft"
+          submitLabel={t('Save draft')}
           input={(form) =>
             pollDraftSaveInputSchema.parse({
               voteId: vote.id,
@@ -115,41 +122,45 @@ export function PollDraftEditor({
           <TextInput
             id={`${id}-title`}
             name="title"
-            label="Poll title"
+            label={t('Poll title')}
             defaultValue={vote.title}
             maxLength={150}
           />
           <TextAreaInput
             id={`${id}-instructions`}
             name="instructions"
-            label={`Instructions${vote.votingType === 'private' ? ' (required before opening)' : ' (optional)'}`}
+            label={t(
+              vote.votingType === 'private'
+                ? 'Instructions (required before opening)'
+                : 'Instructions (optional)',
+            )}
             defaultValue={vote.instructions ?? ''}
             maxLength={2000}
           />
           <PollDateTimePicker
             key={`open-${vote.opensAt ?? ''}`}
             id={`${id}-opens`}
-            label="Planned opening"
+            label={t('Planned opening')}
             value={vote.opensAt}
             fieldName="opensAt"
           />
           <PollDateTimePicker
             key={`close-${vote.closesAt ?? ''}`}
             id={`${id}-closes`}
-            label="Closing"
+            label={t('Closing')}
             value={vote.closesAt}
             fieldName="closesAt"
           />
           <SelectInput
             id={`${id}-tenant`}
             name="tenantVotingOverride"
-            label="Tenant voting for this poll"
+            label={t('Tenant voting for this poll')}
             value={tenantOverride}
             onChange={(event) => setTenantOverride(event.currentTarget.value)}
             options={[
-              { value: 'default', label: 'Use society default' },
-              { value: 'false', label: 'Owners only' },
-              { value: 'true', label: 'Owners and tenants' },
+              { value: 'default', label: t('Use society default') },
+              { value: 'false', label: t('Owners only') },
+              { value: 'true', label: t('Owners and tenants') },
             ]}
           />
           {vote.votingType === 'public' ? (
@@ -157,7 +168,7 @@ export function PollDraftEditor({
               <SelectInput
                 id={`${id}-selection-mode`}
                 name="selectionMode"
-                label="How residents can vote"
+                label={t('How residents can vote')}
                 value={selectionMode}
                 onChange={(event) => {
                   const value = event.currentTarget.value;
@@ -165,15 +176,15 @@ export function PollDraftEditor({
                     setSelectionMode(value);
                 }}
                 options={[
-                  { value: 'single', label: 'Choose one option' },
-                  { value: 'multiple', label: 'Choose multiple options' },
+                  { value: 'single', label: t('Choose one option') },
+                  { value: 'multiple', label: t('Choose multiple options') },
                 ]}
               />
               {selectionMode === 'multiple' ? (
                 <TextInput
                   id={`${id}-selection-limit`}
                   name="selectionLimit"
-                  label="Maximum selections (optional)"
+                  label={t('Maximum selections (optional)')}
                   inputMode="numeric"
                   type="number"
                   min={2}
@@ -188,7 +199,9 @@ export function PollDraftEditor({
                 <input type="hidden" name="selectionLimit" value="1" />
               )}
               <fieldset className="grid gap-space-2 border-0 p-0">
-                <legend className="text-body-strong">Poll options</legend>
+                <legend className="text-body-strong">
+                  {t('Poll options')}
+                </legend>
                 {optionRows.map((label, index) => (
                   <div
                     className="flex min-w-0 items-end gap-space-2"
@@ -197,7 +210,9 @@ export function PollDraftEditor({
                     <TextInput
                       id={`${id}-option-${index}`}
                       name="option"
-                      label={`Option ${index + 1}`}
+                      label={t('Option {number}', {
+                        number: number(index + 1),
+                      })}
                       value={label}
                       onChange={(event) =>
                         setOptionRows((current) =>
@@ -212,7 +227,9 @@ export function PollDraftEditor({
                     />
                     {optionRows.length > 2 ? (
                       <Button
-                        aria-label={`Remove option ${index + 1}`}
+                        aria-label={t('Remove option {number}', {
+                          number: number(index + 1),
+                        })}
                         onClick={() =>
                           setOptionRows((current) =>
                             current.filter(
@@ -223,7 +240,7 @@ export function PollDraftEditor({
                         type="button"
                         variant="tertiary"
                       >
-                        Remove
+                        {t('Remove')}
                       </Button>
                     ) : null}
                   </div>
@@ -234,7 +251,7 @@ export function PollDraftEditor({
                     type="button"
                     variant="secondary"
                   >
-                    Add option
+                    {t('Add option')}
                   </Button>
                 ) : null}
               </fieldset>
@@ -242,8 +259,9 @@ export function PollDraftEditor({
           ) : (
             <div className="grid gap-space-3">
               <p className="text-caption text-ink-muted">
-                Private elections are single-select and include None of the
-                above for every office.
+                {t(
+                  'Private elections are single-select and include None of the above for every office.',
+                )}
               </p>
               {offices.map((office, officeIndex) => (
                 <fieldset
@@ -251,12 +269,12 @@ export function PollDraftEditor({
                   key={`office-${officeIndex}`}
                 >
                   <legend className="px-space-1 text-body-strong">
-                    Office {officeIndex + 1}
+                    {t('Office {number}', { number: number(officeIndex + 1) })}
                   </legend>
                   <TextInput
                     id={`${id}-office-${officeIndex}`}
                     name={`office-${officeIndex}`}
-                    label="Office name"
+                    label={t('Office name')}
                     value={office.name}
                     onChange={(event) =>
                       setOffices((current) =>
@@ -277,7 +295,9 @@ export function PollDraftEditor({
                       <TextInput
                         id={`${id}-candidate-${officeIndex}-${candidateIndex}`}
                         name={`candidate-${officeIndex}`}
-                        label={`Candidate ${candidateIndex + 1}`}
+                        label={t('Candidate {number}', {
+                          number: number(candidateIndex + 1),
+                        })}
                         value={candidate}
                         onChange={(event) =>
                           setOffices((current) =>
@@ -300,7 +320,9 @@ export function PollDraftEditor({
                       />
                       {office.candidates.length > 1 ? (
                         <Button
-                          aria-label={`Remove candidate ${candidateIndex + 1}`}
+                          aria-label={t('Remove candidate {number}', {
+                            number: number(candidateIndex + 1),
+                          })}
                           onClick={() =>
                             setOffices((current) =>
                               current.map((item, index) =>
@@ -320,7 +342,7 @@ export function PollDraftEditor({
                           type="button"
                           variant="tertiary"
                         >
-                          Remove
+                          {t('Remove')}
                         </Button>
                       ) : null}
                     </div>
@@ -342,7 +364,7 @@ export function PollDraftEditor({
                       type="button"
                       variant="secondary"
                     >
-                      Add candidate
+                      {t('Add candidate')}
                     </Button>
                   ) : null}
                   {offices.length > 1 ? (
@@ -355,7 +377,7 @@ export function PollDraftEditor({
                       type="button"
                       variant="tertiary"
                     >
-                      Remove office
+                      {t('Remove office')}
                     </Button>
                   ) : null}
                 </fieldset>
@@ -371,16 +393,16 @@ export function PollDraftEditor({
                   type="button"
                   variant="secondary"
                 >
-                  Add office
+                  {t('Add office')}
                 </Button>
               ) : null}
             </div>
           )}
           {blocks.length ? (
             <fieldset className="grid gap-space-2 border-0 p-0">
-              <legend className="text-body-strong">Voting area</legend>
+              <legend className="text-body-strong">{t('Voting area')}</legend>
               <p className="text-caption text-ink-muted">
-                Leave all blocks unchecked to include the whole society.
+                {t('Leave all blocks unchecked to include the whole society.')}
               </p>
               {blocks.map((block, index) => (
                 <CheckboxInput
@@ -395,8 +417,9 @@ export function PollDraftEditor({
             </fieldset>
           ) : (
             <p className="text-caption text-ink-muted">
-              No active blocks are available; this poll covers the whole
-              society.
+              {t(
+                'No active blocks are available; this poll covers the whole society.',
+              )}
             </p>
           )}
         </ModuleActionForm>

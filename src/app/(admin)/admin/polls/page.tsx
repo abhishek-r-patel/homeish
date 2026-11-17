@@ -4,6 +4,8 @@ import { PollRouteState } from '@/components/poll/shared';
 import { PollAdminListView } from '@/components/poll/admin';
 import { getPollAdminList } from '@/core/poll/operations';
 import { loadPollPage } from '@/core/poll/page-access';
+import { getRequestLocale } from '@/core/i18n/request-locale';
+import { translateMessage } from '@/core/i18n/messages';
 
 export const metadata = {
   title: 'Polls | Homeish',
@@ -11,6 +13,8 @@ export const metadata = {
 };
 
 export default async function AdminPollsPage() {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
   const result = await loadPollPage(['admin', 'committee'], getPollAdminList);
   if (result.state) {
     return (
@@ -25,20 +29,20 @@ export default async function AdminPollsPage() {
     <>
       {result.data.canManage ? (
         <nav
-          aria-label="Poll management"
+          aria-label={t('Poll management')}
           className="mb-space-4 flex gap-space-3"
         >
           <Link
             className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
             href="/admin/polls/representatives"
           >
-            Voting representatives
+            {t('Voting representatives')}
           </Link>
           <Link
             className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
             href="/admin/polls/settings"
           >
-            Poll settings
+            {t('Poll settings')}
           </Link>
         </nav>
       ) : null}

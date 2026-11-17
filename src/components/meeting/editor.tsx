@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useMemo, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import { Button } from '@/components/ui/button';
 import { CheckboxInput, RadioGroup } from '@/components/ui/choice-controls';
 import { Card } from '@/components/ui/data-display';
@@ -99,6 +101,7 @@ function MeetingDateTimePicker({
   value: string | null;
   onChange: (value: string | null) => void;
 }) {
+  const { translate: t } = useUiTranslator();
   const initial = timeParts(value);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -106,7 +109,7 @@ function MeetingDateTimePicker({
     <div className="grid gap-space-2">
       <DatePicker
         id={`${id}-date`}
-        label={`${label} date`}
+        label={t('{label} date', { label })}
         value={date}
         onChange={(next) => {
           setDate(next);
@@ -115,7 +118,7 @@ function MeetingDateTimePicker({
       />
       <TimePicker
         id={`${id}-time`}
-        label={`${label} time`}
+        label={t('{label} time', { label })}
         value={time}
         onChange={(next) => {
           setTime(next);
@@ -142,6 +145,9 @@ function AgendaEditor({
   items: AgendaDraft[];
   onChange: (items: AgendaDraft[]) => void;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const id = useId();
   function update(index: number, patch: Partial<AgendaDraft>) {
     onChange(
@@ -159,9 +165,11 @@ function AgendaEditor({
   }
   return (
     <fieldset className="grid min-w-0 gap-space-3">
-      <legend className="text-body-strong">Agenda</legend>
+      <legend className="text-body-strong">{t('Agenda')}</legend>
       {items.length === 0 ? (
-        <p className="text-caption text-ink-muted">No agenda items yet.</p>
+        <p className="text-caption text-ink-muted">
+          {t('No agenda items yet.')}
+        </p>
       ) : (
         <ol className="grid gap-space-4">
           {items.map((item, index) => (
@@ -171,7 +179,9 @@ function AgendaEditor({
             >
               <TextInput
                 id={`${id}-${item.key}-title`}
-                label={`Agenda item ${index + 1} title`}
+                label={t('Agenda item {number} title', {
+                  number: number(index + 1),
+                })}
                 value={item.title}
                 maxLength={MEETING_AGENDA_TITLE_MAX}
                 onChange={(event) =>
@@ -180,7 +190,9 @@ function AgendaEditor({
               />
               <TextAreaInput
                 id={`${id}-${item.key}-description`}
-                label={`Agenda item ${index + 1} details (optional)`}
+                label={t('Agenda item {number} details (optional)', {
+                  number: number(index + 1),
+                })}
                 value={item.description}
                 maxLength={MEETING_AGENDA_DESCRIPTION_MAX}
                 rows={2}
@@ -195,7 +207,7 @@ function AgendaEditor({
                   disabled={index === 0}
                   onClick={() => move(index, -1)}
                 >
-                  Move item {index + 1} up
+                  {t('Move item {number} up', { number: number(index + 1) })}
                 </Button>
                 <Button
                   type="button"
@@ -203,7 +215,7 @@ function AgendaEditor({
                   disabled={index === items.length - 1}
                   onClick={() => move(index, 1)}
                 >
-                  Move item {index + 1} down
+                  {t('Move item {number} down', { number: number(index + 1) })}
                 </Button>
                 <Button
                   type="button"
@@ -212,7 +224,7 @@ function AgendaEditor({
                     onChange(items.filter((_, position) => position !== index))
                   }
                 >
-                  Remove item {index + 1}
+                  {t('Remove item {number}', { number: number(index + 1) })}
                 </Button>
               </div>
             </li>
@@ -230,7 +242,7 @@ function AgendaEditor({
           ])
         }
       >
-        Add agenda item
+        {t('Add agenda item')}
       </Button>
     </fieldset>
   );
@@ -245,13 +257,16 @@ function UnitInviteePicker({
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const number = (value: number) =>
+    formatLocalizedNumber(value, locale ?? 'en');
   const id = useId();
   const blocks = useMemo(() => {
-    const map = new Map<string, { name: string; unitIds: string[] }>();
+    const map = new Map<string, { name: string | null; unitIds: string[] }>();
     for (const unit of units) {
       const key = unit.blockId ?? 'none';
       const entry = map.get(key) ?? {
-        name: unit.blockName ?? 'No block',
+        name: unit.blockName,
         unitIds: [],
       };
       entry.unitIds.push(unit.unitId);
@@ -281,15 +296,18 @@ function UnitInviteePicker({
   if (units.length === 0) {
     return (
       <EmptyState
-        title="No active units"
-        description="Add units in Society setup before choosing invitees."
+        title={t('No active units')}
+        description={t('Add units in Society setup before choosing invitees.')}
       />
     );
   }
   return (
     <div className="grid min-w-0 gap-space-3">
       <p role="status" className="text-body-strong">
-        {selected.size} of {units.length} units selected
+        {t('{count} of {total} units selected', {
+          count: number(selected.size),
+          total: number(units.length),
+        })}
       </p>
       <div className="flex flex-wrap gap-space-2">
         <Button
@@ -297,14 +315,14 @@ function UnitInviteePicker({
           variant="secondary"
           onClick={() => add(units.map((unit) => unit.unitId))}
         >
-          Select all units
+          {t('Select all units')}
         </Button>
         <Button
           type="button"
           variant="tertiary"
           onClick={() => onChange(new Set())}
         >
-          Clear selection
+          {t('Clear selection')}
         </Button>
       </div>
       <div className="flex flex-wrap gap-space-2">
@@ -315,7 +333,7 @@ function UnitInviteePicker({
             variant="tertiary"
             onClick={() => add(block.unitIds)}
           >
-            Add all in {block.name}
+            {t('Add all in {block}', { block: block.name ?? t('No block') })}
           </Button>
         ))}
       </div>
@@ -323,12 +341,12 @@ function UnitInviteePicker({
         <div className="flex flex-wrap items-end gap-space-2">
           <SelectInput
             id={`${id}-floor`}
-            label="Floor"
+            label={t('Floor')}
             value={floor}
-            placeholder="Choose a floor"
+            placeholder={t('Choose a floor')}
             options={floors.map((value) => ({
               value: String(value),
-              label: `Floor ${value}`,
+              label: t('Floor {number}', { number: number(value) }),
             }))}
             onChange={(event) => setFloor(event.currentTarget.value)}
           />
@@ -344,7 +362,7 @@ function UnitInviteePicker({
               )
             }
           >
-            Add this floor
+            {t('Add this floor')}
           </Button>
         </div>
       ) : null}
@@ -357,7 +375,9 @@ function UnitInviteePicker({
             description={
               [
                 unit.blockName,
-                unit.floor === null ? null : `Floor ${unit.floor}`,
+                unit.floor === null
+                  ? null
+                  : t('Floor {number}', { number: number(unit.floor) }),
               ]
                 .filter(Boolean)
                 .join(' · ') || undefined
@@ -382,19 +402,25 @@ function MemberInviteePicker({
   selected: Set<string>;
   onChange: (next: Set<string>) => void;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const id = useId();
   if (members.length === 0) {
     return (
       <EmptyState
-        title="No committee members"
-        description="Give members the committee role before choosing invitees."
+        title={t('No committee members')}
+        description={t(
+          'Give members the committee role before choosing invitees.',
+        )}
       />
     );
   }
   return (
     <div className="grid min-w-0 gap-space-2">
       <p role="status" className="text-body-strong">
-        {selected.size} of {members.length} committee members selected
+        {t('{count} of {total} committee members selected', {
+          count: formatLocalizedNumber(selected.size, locale ?? 'en'),
+          total: formatLocalizedNumber(members.length, locale ?? 'en'),
+        })}
       </p>
       {members.map((member) => (
         <CheckboxInput
@@ -427,6 +453,7 @@ export function MeetingEditor({
   action: ModuleFormAction;
   now: string;
 }) {
+  const { translate: t } = useUiTranslator();
   const router = useRouter();
   const id = useId();
   const meeting = detail?.meeting ?? null;
@@ -491,15 +518,17 @@ export function MeetingEditor({
   if (!editable) {
     return (
       <EmptyState
-        title="This meeting can no longer be edited"
-        description="Held and cancelled meetings keep their details as recorded."
+        title={t('This meeting can no longer be edited')}
+        description={t(
+          'Held and cancelled meetings keep their details as recorded.',
+        )}
         action={
           meeting ? (
             <Link
               className={MEETING_LINK_CLASS}
               href={`/admin/meetings/${meeting.id}`}
             >
-              Back to the meeting
+              {t('Back to the meeting')}
             </Link>
           ) : undefined
         }
@@ -513,25 +542,27 @@ export function MeetingEditor({
         className={MEETING_LINK_CLASS}
         href={meeting ? `/admin/meetings/${meeting.id}` : '/admin/meetings'}
       >
-        {meeting ? 'Back to the meeting' : 'Back to Meetings'}
+        {t(meeting ? 'Back to the meeting' : 'Back to Meetings')}
       </Link>
       <h1 className="text-title font-semibold">
-        {meeting ? 'Edit meeting' : 'New meeting'}
+        {t(meeting ? 'Edit meeting' : 'New meeting')}
       </h1>
       {meeting?.status === 'scheduled' ? (
         <p className="text-body text-ink-muted">
-          This meeting is scheduled. Changing the time, venue or online link
-          notifies invitees again.
+          {t(
+            'This meeting is scheduled. Changing the time, venue or online link notifies invitees again.',
+          )}
         </p>
       ) : (
         <p className="text-body text-ink-muted">
-          Save a draft now and finish it later. Invitees are only notified when
-          you schedule it.
+          {t(
+            'Save a draft now and finish it later. Invitees are only notified when you schedule it.',
+          )}
         </p>
       )}
       <ModuleActionForm
         action={action}
-        submitLabel={meeting ? 'Save changes' : 'Save draft'}
+        submitLabel={t(meeting ? 'Save changes' : 'Save draft')}
         idempotent={!meeting}
         input={(_form, clientRequestId) =>
           meeting
@@ -551,21 +582,21 @@ export function MeetingEditor({
             router.push(`/admin/meetings/${parsed.data.meetingId}`);
         }}
       >
-        <Card title="Details">
+        <Card title={t('Details')}>
           <div className="grid min-w-0 gap-space-4">
             <SelectInput
               id={`${id}-type`}
-              label="Meeting type"
+              label={t('Meeting type')}
               value={meetingType}
               disabled={typeLocked}
               helpText={
                 typeLocked
-                  ? 'The type is fixed once the meeting is scheduled.'
+                  ? t('The type is fixed once the meeting is scheduled.')
                   : undefined
               }
               options={MEETING_TYPES.map((value) => ({
                 value,
-                label: MEETING_TYPE_NAMES[value],
+                label: t(MEETING_TYPE_NAMES[value]),
               }))}
               onChange={(event) => {
                 const next = MEETING_TYPES.find(
@@ -576,7 +607,7 @@ export function MeetingEditor({
             />
             <TextInput
               id={`${id}-title`}
-              label="Meeting title"
+              label={t('Meeting title')}
               value={title}
               maxLength={MEETING_TITLE_MAX}
               required
@@ -584,7 +615,7 @@ export function MeetingEditor({
             />
             <TextAreaInput
               id={`${id}-description`}
-              label="Description (optional)"
+              label={t('Description (optional)')}
               value={description}
               maxLength={MEETING_DESCRIPTION_MAX}
               rows={4}
@@ -593,19 +624,19 @@ export function MeetingEditor({
           </div>
         </Card>
         <Card
-          title="When and where"
-          description="All times are India time (IST)."
+          title={t('When and where')}
+          description={t('All times are India time (IST).')}
         >
           <div className="grid min-w-0 gap-space-4">
             <MeetingDateTimePicker
               id={`${id}-starts`}
-              label="Starts"
+              label={t('Starts')}
               value={startsAt}
               onChange={setStartsAt}
             />
             <MeetingDateTimePicker
               id={`${id}-ends`}
-              label="Ends"
+              label={t('Ends')}
               value={endsAt}
               onChange={setEndsAt}
             />
@@ -617,38 +648,38 @@ export function MeetingEditor({
             ) : null}
             <TextInput
               id={`${id}-venue`}
-              label="Venue (optional)"
+              label={t('Venue (optional)')}
               value={venue}
               maxLength={MEETING_VENUE_MAX}
               onChange={(event) => setVenue(event.currentTarget.value)}
             />
             <TextInput
               id={`${id}-online`}
-              label="Online meeting link (optional)"
+              label={t('Online meeting link (optional)')}
               type="url"
               inputMode="url"
               value={onlineUrl}
               maxLength={MEETING_ONLINE_URL_MAX}
-              helpText="Use a secure link that starts with https://."
+              helpText={t('Use a secure link that starts with https://.')}
               onChange={(event) => setOnlineUrl(event.currentTarget.value)}
             />
           </div>
         </Card>
-        <Card title="Agenda">
+        <Card title={t('Agenda')}>
           <AgendaEditor items={agenda} onChange={setAgenda} />
         </Card>
         <Card
-          title="Invitees"
-          description={
+          title={t('Invitees')}
+          description={t(
             unitMeeting
               ? 'By default every active unit is invited.'
-              : 'By default every committee member is invited.'
-          }
+              : 'By default every committee member is invited.',
+          )}
         >
           <div className="grid min-w-0 gap-space-4">
             <RadioGroup
               id={`${id}-scope`}
-              label="Who is invited"
+              label={t('Who is invited')}
               name={`${id}-scope`}
               value={scope}
               onChange={(value) =>
@@ -657,15 +688,17 @@ export function MeetingEditor({
               options={[
                 {
                   value: 'default',
-                  label: unitMeeting
-                    ? 'Every active unit'
-                    : 'Every committee member',
+                  label: t(
+                    unitMeeting
+                      ? 'Every active unit'
+                      : 'Every committee member',
+                  ),
                 },
                 {
                   value: 'custom',
-                  label: unitMeeting
-                    ? 'Chosen units'
-                    : 'Chosen committee members',
+                  label: t(
+                    unitMeeting ? 'Chosen units' : 'Chosen committee members',
+                  ),
                 },
               ]}
             />

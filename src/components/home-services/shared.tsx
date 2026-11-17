@@ -1,8 +1,11 @@
 // Shared Home-Services route states, action wiring, rating display and provider contact.
 'use client';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedDate, formatLocalizedNumber } from '@/core/i18n/format';
+import type { Locale } from '@/core/i18n/locale';
+import { formatHomeServicesDate } from '@/core/home-services/presentation';
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
 import {
-  homeServicesRatingSummary,
   homeServicesStarGlyphs,
   homeServicesTelHref,
 } from '@/core/home-services/presentation';
@@ -44,6 +47,17 @@ export const HOME_SERVICES_LINK_CLASS =
 export type HomeServicesRouteStateKind =
   'loading' | 'error' | 'disabled' | 'denied';
 
+export function formatHomeServicesUiDate(value: string, locale: Locale | null) {
+  return locale
+    ? formatLocalizedDate(new Date(value), locale, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Kolkata',
+      })
+    : formatHomeServicesDate(value);
+}
+
 export function HomeServicesRouteState({
   kind,
   title = 'Home services',
@@ -59,6 +73,7 @@ export function HomeServicesRouteState({
   referenceId?: string;
   message?: string;
 }) {
+  const { translate: t, translateFeedback } = useUiTranslator();
   if (kind === 'disabled')
     return (
       <ModuleDisabledPage
@@ -84,23 +99,23 @@ export function HomeServicesRouteState({
   }[kind];
   return (
     <section className="grid min-w-0 gap-space-4">
-      <h1 className="text-title font-semibold">{title}</h1>
+      <h1 className="text-title font-semibold">{t(title)}</h1>
       {kind === 'loading' ? (
-        <Skeleton label={copy.title} rows={5} />
+        <Skeleton label={t(copy.title)} rows={5} />
       ) : (
         <ErrorPanel
-          title={copy.title}
-          message={message ?? copy.message}
+          title={t(copy.title)}
+          message={message ? translateFeedback(message) : t(copy.message)}
           referenceId={referenceId}
           action={
             <div className="flex flex-wrap gap-space-3">
               {retryHref ? (
                 <a href={retryHref} className={HOME_SERVICES_LINK_CLASS}>
-                  Retry
+                  {t('Retry')}
                 </a>
               ) : null}
               <a href={returnHref} className={HOME_SERVICES_LINK_CLASS}>
-                Back to your workspace
+                {t('Back to your workspace')}
               </a>
             </div>
           }
@@ -118,6 +133,7 @@ export function HomeServicesRating({
   average: number | null;
   count: number;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <p className="flex flex-wrap items-center gap-space-2 text-caption text-ink-muted">
       {average !== null && count > 0 ? (
@@ -125,7 +141,22 @@ export function HomeServicesRating({
           {homeServicesStarGlyphs(average)}
         </span>
       ) : null}
-      <span>{homeServicesRatingSummary(average, count)}</span>
+      <span>
+        {count === 0 || average === null
+          ? t('No ratings yet')
+          : t(
+              count === 1
+                ? '{average} out of 5 from {count} rating'
+                : '{average} out of 5 from {count} ratings',
+              {
+                average: formatLocalizedNumber(average, locale ?? 'en', {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                }),
+                count: formatLocalizedNumber(count, locale ?? 'en'),
+              },
+            )}
+      </span>
     </p>
   );
 }
@@ -137,13 +168,14 @@ export function HomeServicesPhone({
   name: string;
   phone: string;
 }) {
+  const { translate: t } = useUiTranslator();
   return (
     <a
       href={homeServicesTelHref(phone)}
-      aria-label={`Call ${phone} for ${name}`}
+      aria-label={t('Call {phone} for {name}', { phone, name })}
       className={HOME_SERVICES_LINK_CLASS}
     >
-      Call {phone}
+      {t('Call {phone}', { phone })}
     </a>
   );
 }
@@ -153,9 +185,10 @@ export function HomeServicesCommentText({
 }: {
   comment: string | null;
 }) {
+  const { translate: t } = useUiTranslator();
   return comment === null ? (
     <p className="text-body text-ink-muted italic">
-      Comment hidden by an admin.
+      {t('Comment hidden by an admin.')}
     </p>
   ) : (
     <p className="text-body break-words whitespace-pre-line">{comment}</p>
@@ -168,10 +201,12 @@ export function HomeServicesTruncatedNote({
 }: {
   truncated: boolean;
 }) {
+  const { translate: t } = useUiTranslator();
   return truncated ? (
     <p className="text-caption text-ink-muted">
-      Only the first 500 providers are shown. Use the search or service type to
-      narrow the list, or archive providers that are no longer needed.
+      {t(
+        'Only the first 500 providers are shown. Use the search or service type to narrow the list, or archive providers that are no longer needed.',
+      )}
     </p>
   ) : null;
 }

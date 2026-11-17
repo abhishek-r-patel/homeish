@@ -2,6 +2,8 @@
 'use client';
 import Link from 'next/link';
 import { useId, useState } from 'react';
+import { useUiTranslator } from '@/components/ui/language';
+import { formatLocalizedNumber } from '@/core/i18n/format';
 import { CheckboxInput, RadioInput } from '@/components/ui/choice-controls';
 import { Card, ListItem } from '@/components/ui/data-display';
 import { EmptyState } from '@/components/ui/feedback';
@@ -22,25 +24,29 @@ import {
 import { PollResultsView, PollStatus, formatPollDateTime } from './shared';
 
 export function ResidentPollListView({ polls }: { polls: PollMemberList }) {
+  const { locale, translate: t } = useUiTranslator();
   return (
     <section className="grid min-w-0 gap-space-4">
       <div className="grid gap-space-1">
-        <h1 className="text-title font-semibold">Polls</h1>
+        <h1 className="text-title font-semibold">{t('Polls')}</h1>
         <p className="text-body text-ink-muted">
-          See society polls and elections for units you live in. Only the unit’s
-          voting representative can submit a ballot.
+          {t(
+            'See society polls and elections for units you live in. Only the unit’s voting representative can submit a ballot.',
+          )}
         </p>
         <Link
           className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
           href="/polls/representatives"
         >
-          Choose your unit’s voting representative
+          {t('Choose your unit’s voting representative')}
         </Link>
       </div>
       {polls.votes.length === 0 ? (
         <EmptyState
-          title="No polls yet"
-          description="Polls for your units will appear here when your society schedules or opens them."
+          title={t('No polls yet')}
+          description={t(
+            'Polls for your units will appear here when your society schedules or opens them.',
+          )}
         />
       ) : (
         <ul className="grid gap-space-2">
@@ -53,9 +59,26 @@ export function ResidentPollListView({ polls }: { polls: PollMemberList }) {
                 <ListItem
                   href={`/polls/${vote.id}`}
                   title={<span className="break-words">{vote.title}</span>}
-                  secondary={`${vote.votingType === 'public' ? 'Public poll' : 'Private election'} · closes ${formatPollDateTime(vote.closesAt)} (IST)`}
+                  secondary={t('{type} · closes {date} (IST)', {
+                    type: t(
+                      vote.votingType === 'public'
+                        ? 'Public poll'
+                        : 'Private election',
+                    ),
+                    date: formatPollDateTime(vote.closesAt, locale),
+                  })}
                   status={`poll.${vote.status}`}
-                  trailing={`${representativeUnits} voting unit${representativeUnits === 1 ? '' : 's'}`}
+                  trailing={t(
+                    representativeUnits === 1
+                      ? '{count} voting unit'
+                      : '{count} voting units',
+                    {
+                      count: formatLocalizedNumber(
+                        representativeUnits,
+                        locale ?? 'en',
+                      ),
+                    },
+                  )}
                 />
               </li>
             );
@@ -81,16 +104,19 @@ function UnitPublicBallot({
   unit: PollMemberVote['units'][number];
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const selectedOptionIds = unit.myOptionIds ?? [];
   return (
     <Card
-      title={`Vote for unit ${unit.unitLabel}`}
-      description="Your unit’s ballot can be changed until the poll closes."
+      title={t('Vote for unit {unit}', { unit: unit.unitLabel })}
+      description={t(
+        'Your unit’s ballot can be changed until the poll closes.',
+      )}
     >
       <ModuleActionForm
         action={action}
-        submitLabel={unit.submitted ? 'Update ballot' : 'Submit ballot'}
+        submitLabel={t(unit.submitted ? 'Update ballot' : 'Submit ballot')}
         input={(form) =>
           pollPublicBallotInputSchema.parse({
             voteId: vote.id,
@@ -101,9 +127,11 @@ function UnitPublicBallot({
       >
         <fieldset className="grid gap-space-2 border-0 p-0">
           <legend className="text-body-strong">
-            {vote.selectionMode === 'single'
-              ? 'Choose one option'
-              : 'Choose one or more options'}
+            {t(
+              vote.selectionMode === 'single'
+                ? 'Choose one option'
+                : 'Choose one or more options',
+            )}
           </legend>
           {vote.selectionMode === 'single'
             ? options.map((option, index) => (
@@ -146,6 +174,7 @@ export function ResidentPollDetailView({
   publicAction: ModuleFormAction;
   privateAction: ModuleFormAction;
 }) {
+  const { locale, translate: t } = useUiTranslator();
   const { vote } = detail;
   const representatives = detail.units.filter((unit) => unit.isRepresentative);
   const deadlinePassed =
@@ -158,7 +187,7 @@ export function ResidentPollDetailView({
         className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         href="/polls"
       >
-        Back to Polls
+        {t('Back to Polls')}
       </Link>
       <div className="grid gap-space-2">
         <div className="flex flex-wrap items-center gap-space-2">
@@ -166,14 +195,19 @@ export function ResidentPollDetailView({
           <PollStatus status={vote.status} />
         </div>
         <p className="text-body text-ink-muted">
-          {vote.votingType === 'public' ? 'Public poll' : 'Private election'} ·
-          Opens {formatPollDateTime(vote.opensAt)} · Closes{' '}
-          {formatPollDateTime(vote.closesAt)} (IST)
+          {t('{type} · Opens {opens} · Closes {closes} (IST)', {
+            type: t(
+              vote.votingType === 'public' ? 'Public poll' : 'Private election',
+            ),
+            opens: formatPollDateTime(vote.opensAt, locale),
+            closes: formatPollDateTime(vote.closesAt, locale),
+          })}
         </p>
         {vote.status === 'scheduled' ? (
           <p className="text-caption text-ink-muted">
-            This poll is scheduled. Ballot options will appear when voting
-            opens.
+            {t(
+              'This poll is scheduled. Ballot options will appear when voting opens.',
+            )}
           </p>
         ) : null}
         {vote.instructions ? (
@@ -183,12 +217,16 @@ export function ResidentPollDetailView({
         ) : null}
         {vote.status === 'cancelled' && vote.cancellationReason ? (
           <p className="text-body text-ink-muted">
-            This poll was cancelled: {vote.cancellationReason}
+            {t('This poll was cancelled: {reason}', {
+              reason: vote.cancellationReason,
+            })}
           </p>
         ) : null}
         {vote.completionReason ? (
           <p className="text-body text-ink-muted">
-            Voting was completed early: {vote.completionReason}
+            {t('Voting was completed early: {reason}', {
+              reason: vote.completionReason,
+            })}
           </p>
         ) : null}
       </div>
@@ -210,11 +248,14 @@ export function ResidentPollDetailView({
             unit.submitted ? (
               <Card
                 key={unit.unitId}
-                title={`Ballot received for unit ${unit.unitLabel}`}
+                title={t('Ballot received for unit {unit}', {
+                  unit: unit.unitLabel,
+                })}
               >
                 <p className="text-body text-ink-muted">
-                  Your private ballot was received. Your choices are not
-                  displayed here.
+                  {t(
+                    'Your private ballot was received. Your choices are not displayed here.',
+                  )}
                 </p>
               </Card>
             ) : (
@@ -228,21 +269,25 @@ export function ResidentPollDetailView({
           )
         )
       ) : vote.status === 'active' && !deadlinePassed ? (
-        <Card title="Ballot not available">
+        <Card title={t('Ballot not available')}>
           <p className="text-body text-ink-muted">
-            You can see this poll, but only its unit representative can vote.
+            {t(
+              'You can see this poll, but only its unit representative can vote.',
+            )}
           </p>
         </Card>
       ) : null}
       {deadlinePassed ? (
-        <Card title="Voting has closed">
+        <Card title={t('Voting has closed')}>
           <p className="text-body text-ink-muted">
-            The poll is being updated. Refresh shortly to see its final status.
+            {t(
+              'The poll is being updated. Refresh shortly to see its final status.',
+            )}
           </p>
         </Card>
       ) : null}
       {results ? (
-        <Card title="Poll results">
+        <Card title={t('Poll results')}>
           <PollResultsView results={results} />
         </Card>
       ) : null}
@@ -280,15 +325,21 @@ function PrivateBallot({
   unit: PollMemberVote['units'][number];
   action: ModuleFormAction;
 }) {
+  const { translate: t } = useUiTranslator();
   const id = useId();
   const [review, setReview] = useState(false);
   const [choices, setChoices] = useState<Record<string, string>>({});
   if (review) {
     return (
-      <Card title={`Review private ballot for unit ${unit.unitLabel}`}>
+      <Card
+        title={t('Review private ballot for unit {unit}', {
+          unit: unit.unitLabel,
+        })}
+      >
         <p className="text-body text-ink-muted">
-          Check each choice. After you confirm, you cannot submit another
-          private ballot.
+          {t(
+            'Check each choice. After you confirm, you cannot submit another private ballot.',
+          )}
         </p>
         <ul className="grid gap-space-1">
           {offices.map((office) => (
@@ -296,14 +347,16 @@ function PrivateBallot({
               {office.name}:{' '}
               {office.candidates.find(
                 (candidate) => candidate.id === choices[office.id],
-              )?.name ?? 'None of the above'}
+              )?.name ?? t('None of the above')}
             </li>
           ))}
         </ul>
         <ModuleActionForm
           action={action}
-          submitLabel="Confirm and submit ballot"
-          confirmMessage="Submit this private ballot? You cannot change it after submission."
+          submitLabel={t('Confirm and submit ballot')}
+          confirmMessage={t(
+            'Submit this private ballot? You cannot change it after submission.',
+          )}
           input={(form) => {
             const officeIds = ballotActionInput(form, 'officeId');
             const candidateIds = ballotActionInput(form, 'candidateId');
@@ -332,8 +385,9 @@ function PrivateBallot({
             </div>
           ))}
           <p className="text-caption text-ink-muted">
-            After submission, this page will only confirm that your ballot was
-            received.
+            {t(
+              'After submission, this page will only confirm that your ballot was received.',
+            )}
           </p>
         </ModuleActionForm>
         <button
@@ -341,19 +395,23 @@ function PrivateBallot({
           onClick={() => setReview(false)}
           type="button"
         >
-          Return to ballot
+          {t('Return to ballot')}
         </button>
       </Card>
     );
   }
   return (
     <Card
-      title={`Private ballot for unit ${unit.unitLabel}`}
-      description="Your choices are not linked to your unit in the stored results. You can submit once."
+      title={t('Private ballot for unit {unit}', { unit: unit.unitLabel })}
+      description={t(
+        'Your choices are not linked to your unit in the stored results. You can submit once.',
+      )}
     >
       <p className="mb-space-3 text-body text-ink-muted">
-        You are voting for unit {unit.unitLabel}. Choose one candidate or None
-        of the above for each office, then review your ballot.
+        {t(
+          'You are voting for unit {unit}. Choose one candidate or None of the above for each office, then review your ballot.',
+          { unit: unit.unitLabel },
+        )}
       </p>
       {offices.map((office, officeIndex) => (
         <fieldset
@@ -385,7 +443,7 @@ function PrivateBallot({
             onChange={() =>
               setChoices((current) => ({ ...current, [office.id]: 'nota' }))
             }
-            label="None of the above"
+            label={t('None of the above')}
           />
         </fieldset>
       ))}
@@ -398,7 +456,7 @@ function PrivateBallot({
         onClick={() => setReview(true)}
         type="button"
       >
-        Review ballot
+        {t('Review ballot')}
       </button>
     </Card>
   );
@@ -411,6 +469,14 @@ export function PollRepresentativesView({
   representatives: PollRepresentatives & { canSetRepresentative: boolean };
   action: ModuleFormAction;
 }) {
+  const { locale, translate: t } = useUiTranslator();
+  const relationship = (value: string) => {
+    if (locale !== 'hi') return value;
+    if (value === 'owner') return t('Owner');
+    if (value === 'tenant') return t('Tenant');
+    if (value === 'family') return t('Family member');
+    throw new Error(`Unknown voting relationship: ${value}`);
+  };
   const id = useId();
   return (
     <section className="grid gap-space-4">
@@ -418,19 +484,22 @@ export function PollRepresentativesView({
         className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
         href="/polls"
       >
-        Back to Polls
+        {t('Back to Polls')}
       </Link>
       <div className="grid gap-space-1">
-        <h1 className="text-title font-semibold">Voting representatives</h1>
+        <h1 className="text-title font-semibold">
+          {t('Voting representatives')}
+        </h1>
         <p className="text-body text-ink-muted">
-          Each unit gets one vote. An active owner can choose the representative
-          for their own unit. Administrators can manage all units.
+          {t(
+            'Each unit gets one vote. An active owner can choose the representative for their own unit. Administrators can manage all units.',
+          )}
         </p>
       </div>
       {representatives.units.length === 0 ? (
         <EmptyState
-          title="No units to show"
-          description="Eligible units and occupants will appear here."
+          title={t('No units to show')}
+          description={t('Eligible units and occupants will appear here.')}
         />
       ) : (
         <ul className="grid gap-space-3">
@@ -441,21 +510,26 @@ export function PollRepresentativesView({
               >
                 <div className="grid gap-space-2">
                   <p className="text-body text-ink-muted">
-                    Current default or designated voter:{' '}
-                    {unit.effective
-                      ? `${unit.effective.name} (${unit.effective.relationship})`
-                      : 'No eligible representative'}
+                    {t('Current default or designated voter: {voter}', {
+                      voter: unit.effective
+                        ? `${unit.effective.name} (${relationship(unit.effective.relationship)})`
+                        : t('No eligible representative'),
+                    })}
                   </p>
                   {unit.designated ? (
                     <p className="text-caption text-ink-muted">
-                      Designated: {unit.designated.name} (
-                      {unit.designated.relationship})
+                      {t('Designated: {name} ({relationship})', {
+                        name: unit.designated.name,
+                        relationship: relationship(
+                          unit.designated.relationship,
+                        ),
+                      })}
                     </p>
                   ) : null}
                   {representatives.canSetRepresentative ? (
                     <ModuleActionForm
                       action={action}
-                      submitLabel="Save representative"
+                      submitLabel={t('Save representative')}
                       input={(form) =>
                         pollRepresentativeSetInputSchema.parse({
                           unitId: unit.unitId,
@@ -469,13 +543,21 @@ export function PollRepresentativesView({
                       <SelectInput
                         id={`${id}-membership-${index}`}
                         name={`membership-${index}`}
-                        label="Choose the voting representative"
+                        label={t('Choose the voting representative')}
                         defaultValue={unit.designated?.membershipId ?? ''}
                         options={[
-                          { value: '', label: 'Use the unit default' },
+                          { value: '', label: t('Use the unit default') },
                           ...unit.options.map((option) => ({
                             value: option.membershipId,
-                            label: `${option.name} (${option.relationship}${option.isPrimary ? ', primary occupant' : ''})`,
+                            label: t(
+                              option.isPrimary
+                                ? '{name} ({relationship}, primary occupant)'
+                                : '{name} ({relationship})',
+                              {
+                                name: option.name,
+                                relationship: relationship(option.relationship),
+                              },
+                            ),
                           })),
                         ]}
                       />
