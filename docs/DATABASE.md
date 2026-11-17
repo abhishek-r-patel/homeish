@@ -585,7 +585,7 @@ Constraints: `paid_paise + waived_paise ≤ total_paise`; `late_fee` requires `r
 | mode                       | text   | no   | `upi`, `cash`, `cheque`, `bank_transfer`                                                                                                |
 | source                     | text   | no   | `resident_submitted`, `admin_recorded`                                                                                                  |
 | reference                  | text   | yes  | UPI UTR or cheque/transfer number. **Required** for `upi` and `bank_transfer`/`cheque`; format `^[A-Za-z0-9]{6,30}$`; stored upper-case |
-| paid_on                    | date   | no   |                                                                                                                                         |
+| paid_on                    | date   | no   | Not after today in the society timezone; RPC validation and the table check do not depend on the session timezone                       |
 | proof_path                 | text   | yes  | Screenshot in a private bucket (optional, BIL-6)                                                                                        |
 | status                     | text   | no   | `awaiting_confirmation`, `confirmed`, `rejected`. Admin-recorded payments are inserted as `confirmed`                                   |
 | submitted_by               | uuid   | no   | → `profiles`                                                                                                                            |
