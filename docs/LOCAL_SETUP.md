@@ -4,12 +4,21 @@ Step-by-step setup for a Windows development machine. Docker Desktop cannot be i
 
 ## 1. Tools
 
-- Node.js 24.20.0 and npm (see README).
+- Node.js 26.13.1 and npm (see README and `.nvmrc`).
 - The Supabase CLI is a project development dependency (`supabase` in `package.json`); it is installed by `npm ci`. Do not install it globally.
 
 ```powershell
 npm ci
 ```
+
+After an approved CLI update, check the installed project version and validate the local configuration:
+
+```powershell
+npx --no-install supabase --version
+npx --no-install supabase config validate
+```
+
+Without `--resolve-env`, configuration validation does not read environment secrets or contact hosted resources. It does not apply the local configuration to testdb or live.
 
 ## 2. Network certificates (company networks)
 
