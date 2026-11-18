@@ -501,9 +501,15 @@ is deployed.
 - **Tenant isolation:** `tests/integration/database-cross-society.test.ts`
   calls every society-scoped RPC as an admin of another society and expects a
   refusal.
-- **Dependencies:** `npm audit --omit=dev` reports 0 vulnerabilities. The
-  moderate `minimatch` advisory affects development tooling only and is an
-  accepted residual.
+- **Dependencies (rechecked 2026-11-18):** `npm audit` reports 19 high
+  affected dependency entries, all from the `picomatch` ReDoS advisory
+  (GHSA-fc5q-39xc-vjpf); no patched version is published. The production-only
+  dependency tree contains 7 affected entries, which does not by itself prove
+  that attacker-controlled input can reach the vulnerable matcher at runtime.
+  No formal exploitability assessment has been completed. The owner accepts
+  this residual risk until an upstream fix is available. Recheck before each
+  release and dependency update; do not force a downgrade or add an unverified
+  override.
 - **Secrets:** gitleaks reports no findings in files that can be committed;
   local `.env.*.local` profiles stay git-ignored.
 - **Low findings fixed:**
