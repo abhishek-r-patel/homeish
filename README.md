@@ -6,7 +6,7 @@ Homeish is a multi-tenant society-management web app. Its approved foundation is
 
 ## Requirements
 
-- Node.js 24.20.0 (npm 11.19.0 was used for this setup)
+- Node.js 26.13.1, as pinned in `.nvmrc` (npm 11.20.0 was used for this setup); `package.json` requires Node 26.x so Vercel uses the same major version
 - npm
 
 ## Start locally
@@ -65,7 +65,7 @@ Until database/auth foundations exist, hosted entry pages may use `NEXT_PUBLIC_A
 ### Hosting setup and resume approval (2026-11-09)
 
 - Implementation and documentation are committed and pushed to `main` and `beta` in the same GitHub repository.
-- The GitHub repository is `abhishek-r-patel/homeish`. Vercel projects `homeish` and `beta-homeish` are connected to it, with Production branches `main` and `beta` respectively, Next.js preset and Node.js 24.
+- The GitHub repository is `abhishek-r-patel/homeish`. Vercel projects `homeish` and `beta-homeish` are connected to it, with Production branches `main` and `beta` respectively, Next.js preset and Node.js 24 at setup (both projects were set to Node.js 26.x on 2026-11-18, matching `package.json` engines).
 - `homeish.vercel.app` is attached to `homeish` and `beta-homeish.vercel.app` to `beta-homeish`. The originally requested product address belonged to another Vercel project, which led to the Homeish name (PRD D-01).
 - Earlier pushes created scaffold deployments under the previous name; the owner temporarily paused both projects. The owner subsequently approved resuming both projects, committing/pushing this configuration, and publishing the current feature branch through `beta` and then `main`. Release-branch Git deployments are now enabled in repository configuration. No demo/beta nested domains or real society hosts have been attached.
 - Each project has its own scaffold-only environment configuration; no backend, SMTP or real society credentials are connected. `APP_BASE_DOMAIN` is `homeish.vercel.app` in both projects. The planned canonical beta URL is `https://beta.homeish.vercel.app`; use the attached `https://beta-homeish.vercel.app` address for current hosted testing. Verify deployment success, HTTPS and host isolation after merging. Attaching additional domains and activating societies remain separate work.
@@ -112,9 +112,11 @@ npm run build
 
 ## Dependencies
 
-Runtime foundations: Next.js 16.4.5, React 19.3.1, Tailwind CSS 4.3.5, Supabase SSR 0.12.7, Supabase JS 2.119.0, Zod 4.6.7, and self-hosted Manrope and Sora 5.3.0. Development foundations: TypeScript 5.9.3, ESLint 10.14.0, Prettier 3.9.10, Vitest 5.1.0, Playwright 1.65.0 and axe 4.14.0. `package-lock.json` records exact transitive versions.
+Runtime foundations: Next.js 16.4.6, React 19.3.1, Tailwind CSS 4.3.5, Supabase SSR 0.12.7, Supabase JS 2.119.0, Sentry 11.14.0, Zod 4.6.7, and self-hosted Manrope and Sora 5.3.0. Development foundations: TypeScript 7.0.2, ESLint 10.15.0, Prettier 3.10.1, Vitest 5.1.0, Playwright 1.65.1, axe 4.14.0 and Supabase CLI 3.2.0. `package-lock.json` records exact transitive versions.
 
 Use `package.json` and `package-lock.json` as the dependency source of truth, rather than the original foundation snapshot above. Core services, database schema and product modules are implemented; their local, released and acceptance status is recorded in [the implementation plan](docs/IMPLEMENTATION_PLAN.md).
+
+TypeScript follows Microsoft's side-by-side setup for the 7.0 transition: `@typescript/native` is TypeScript 7 and provides the `tsc` command used by `npm run typecheck`, while the `typescript` name points to Microsoft's `@typescript/typescript6` compatibility package because ESLint's TypeScript support and the source-scanning unit test still need the TypeScript 6 programming interface. Keep both type checks clean (`npm run typecheck` and `npx tsc6 --noEmit`). Remove the split once those tools support TypeScript 7.
 
 ## Project documents
 
