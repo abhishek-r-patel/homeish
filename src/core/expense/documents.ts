@@ -47,6 +47,7 @@ export function expenseEntriesCsv(rows: ExpenseEntry[]): string {
   return toCsv(
     [
       'Date',
+      'Voucher',
       'Account',
       'Type',
       'Category or income',
@@ -60,6 +61,7 @@ export function expenseEntriesCsv(rows: ExpenseEntry[]): string {
     ],
     rows.map((row) => [
       row.entry_date,
+      row.voucher_no,
       row.account_name,
       entrySourceLabel(row.source),
       row.category_name ??
@@ -168,7 +170,7 @@ export async function expenseReportPdf(
     line(
       writer,
       formatBillingPeriod(month.month),
-      `In ${formatSignedRupees(month.income_paise)}   Out ${formatSignedRupees(month.expense_paise)}`,
+      `In ${formatSignedRupees(month.income_paise)}   Out ${formatSignedRupees(month.expense_paise)}   Net ${formatSignedRupees(month.net_paise)}   FY to date ${formatSignedRupees(month.cumulative_net_paise)}`,
     );
   section(writer, 'Expenses by category');
   for (const row of report.categories)
@@ -191,7 +193,7 @@ export async function expenseReportPdf(
   for (const entry of [...entries].reverse())
     line(
       writer,
-      `${entry.entry_date}  ${entry.account_name}  ${entrySourceLabel(entry.source)}  ${entry.counterparty}`,
+      `${entry.entry_date}  ${entry.voucher_no}  ${entry.account_name}  ${entrySourceLabel(entry.source)}  ${entry.counterparty}`,
       `${entry.direction === 'in' ? '+' : '-'}${formatSignedRupees(entry.amount_paise)}`,
     );
   if (entries.length === 0) line(writer, 'No entries in this period.');

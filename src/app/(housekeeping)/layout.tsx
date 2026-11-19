@@ -7,6 +7,7 @@ import {
 } from '@/components/app-shells';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { createRequestId } from '@/core/errors';
+import { isPettyCashCustodian } from '@/core/expense/operations';
 import { authorizeRequest } from '@/core/permissions/authorize';
 import { LanguageProvider } from '@/components/language-provider';
 export default async function HousekeepingLayout({
@@ -24,13 +25,20 @@ export default async function HousekeepingLayout({
     : context.roles.includes('committee')
       ? CommitteeShell
       : HousekeepingShell;
+  const showPettyCash =
+    Shell === HousekeepingShell && (await isPettyCashCustodian(context));
   return (
     <LanguageProvider
       hindiEnabled={context.isHindiEnabled}
       initialLocale={context.languagePreference}
       mode="account"
     >
-      <Shell enabledModules={[...context.enabledModules]}>{children}</Shell>
+      <Shell
+        enabledModules={[...context.enabledModules]}
+        showPettyCash={showPettyCash}
+      >
+        {children}
+      </Shell>
     </LanguageProvider>
   );
 }

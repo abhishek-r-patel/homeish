@@ -1,12 +1,17 @@
-// Verify expense input rules, default periods and export rendering.
+// Verify expense input rules, default periods, P39 reconciliation and petty-cash inputs and exports.
 import { describe, expect, it } from 'vitest';
 import {
+  cashCountInputSchema,
+  cashDifferenceKind,
   expenseAccountInputSchema,
   expenseDecisionInputSchema,
   expenseFinancialYearStart,
   expenseMonthCloseInputSchema,
   expenseRangeOrDefault,
   expenseRangeSchema,
+  pettyCashAssignInputSchema,
+  statementItemCancelInputSchema,
+  statementItemInputSchema,
   type ExpenseEntry,
   type ExpenseReport,
 } from '../../src/core/expense/validation';
@@ -35,6 +40,8 @@ const entry: ExpenseEntry = {
   reverses_entry_id: null,
   reversed_by_entry_id: null,
   month_closed: false,
+  voucher_no: 'RV/2026-27/1',
+  running_balance_paise: null,
 };
 
 describe('expense validation', () => {
@@ -116,6 +123,53 @@ describe('expense validation', () => {
   });
 });
 
+describe('P39 accounts additions', () => {
+  it('converts statement and count rupees to paise and keeps optional text empty as null', () => {
+    const item = statementItemInputSchema.parse({
+      accountId: id,
+      statementDate: '2026-05-04',
+      reference: ' ',
+      party: 'Water board',
+      direction: 'out',
+      amountRupees: '1200.50',
+      clientRequestId: id,
+    });
+    expect(item.amountRupees).toBe(120_050);
+    expect(item.reference).toBeNull();
+    expect(
+      statementItemInputSchema.safeParse({ ...item, amountRupees: '0' })
+        .success,
+    ).toBe(false);
+    expect(
+      statementItemCancelInputSchema.safeParse({ itemId: id, reason: ' ' })
+        .success,
+    ).toBe(false);
+    expect(
+      cashCountInputSchema.parse({
+        countDate: '2026-05-04',
+        countedRupees: '0',
+        note: '',
+        clientRequestId: id,
+      }).countedRupees,
+    ).toBe(0);
+    expect(
+      pettyCashAssignInputSchema.parse({
+        accountId: id,
+        custodianUserId: id,
+        handoverCountRupees: null,
+        handoverNote: '',
+        clientRequestId: id,
+      }).handoverCountRupees,
+    ).toBeNull();
+  });
+
+  it('describes a count difference as over, short or matching', () => {
+    expect(cashDifferenceKind(4_000)).toBe('over');
+    expect(cashDifferenceKind(-12_000)).toBe('short');
+    expect(cashDifferenceKind(0)).toBe('matches');
+  });
+});
+
 describe('expense exports', () => {
   it('writes entries with separate in and out columns', () => {
     const csv = expenseEntriesCsv([
@@ -132,6 +186,8 @@ describe('expense exports', () => {
     ]);
     const lines = csv.trim().split(/\r?\n/);
     expect(lines[0]).toContain('In (Rs.),Out (Rs.)');
+    expect(lines[0]).toMatch(/^Date,Voucher,/);
+    expect(lines[1]).toContain('RV/2026-27/1');
     expect(lines[1]).toContain('Maintenance collection');
     expect(lines[1]).toContain('Maintenance collections');
     expect(lines[2]).toContain('Repairs');
@@ -146,7 +202,13 @@ describe('expense exports', () => {
       income_paise: 250_000,
       expense_paise: 100,
       months: [
-        { month: '2026-05-01', income_paise: 250_000, expense_paise: 100 },
+        {
+          month: '2026-05-01',
+          income_paise: 250_000,
+          expense_paise: 100,
+          net_paise: 249_900,
+          cumulative_net_paise: 249_900,
+        },
       ],
       categories: [{ category: 'Repairs', expense_paise: 100 }],
       income_sources: [{ source: 'billing', income_paise: 250_000 }],

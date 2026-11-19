@@ -470,6 +470,16 @@ Routes: `/admin/expenses` (balances, approvals, record forms, cash and bank book
 - `GET /api/expense/export?from=YYYY-MM-DD&to=YYYY-MM-DD&format=csv|pdf` downloads the formula-safe entry CSV or a summary PDF for admins and committee members.
 - `/api/files/upload-url` accepts the private `expense-files` bucket (JPEG/PNG/PDF, 5 MB maximum), admin only, under `{society}/{user}/expense/`.
 
+**Accounts additions (P39, D-69).** Database contract in DATABASE.md §9.7. None of these operations creates, changes or deletes a cash or bank entry.
+
+- `listExpenseEntries` returns `voucherNo` on every row and `runningBalancePaise` when filtered to one account. CSV and PDF exports include the voucher number.
+- `getReconciliation(account, page)` (admin, committee) returns statement items with `isOld` and unmatched book entries. `recordStatementItem`, `matchStatementItem` and `cancelStatementItem` (reason required) are admin-only. Recording is idempotent by `clientRequestId`; repeating a match to the same entry or a cancel with the same reason changes nothing, and any other change to a settled item is a conflict.
+- `assignPettyCash` (admin): marks the cash account and names the custodian; changing the custodian requires a `handoverCountPaise`.
+- `getPettyCash` (current custodian, admin, committee) and `recordCashCount` (current custodian, admin): the book amount, counts, differences and custodian history. The custodian check is per user in the database, not a role permission; a non-admin custodian sees only `/petty-cash`, and its navigation link (resident and housekeeping navigation, a tile on the guard home) appears only for that person. Admins and committee reach it from the Accounts tabs.
+- `getExpenseReport` adds monthly net and the cumulative net from the financial-year start.
+
+Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
+
 ---
 
 ### 5.16 Tenancy and moves (`tenancy`, P18; D-50)

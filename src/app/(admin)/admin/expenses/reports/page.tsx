@@ -175,6 +175,12 @@ export default async function ExpenseReportsPage({
                   {t('Expenditure')}{' '}
                   {formatLocalizedCurrency(row?.expense_paise ?? 0, locale)}
                 </p>
+                <p>
+                  {t('Net surplus or deficit')}{' '}
+                  {formatSignedCurrency(row?.net_paise ?? 0)} ·{' '}
+                  {t('Financial year to date (not a balance)')}{' '}
+                  {formatSignedCurrency(row?.cumulative_net_paise ?? 0)}
+                </p>
                 {w.can_manage && month < currentMonth ? (
                   isClosed ? (
                     <details>

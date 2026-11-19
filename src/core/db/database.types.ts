@@ -3273,6 +3273,7 @@ export type Database = {
           created_at: string;
           created_by: string;
           id: string;
+          is_petty_cash: boolean;
           name: string;
           opening_balance_paise: number;
           opening_on: string;
@@ -3287,6 +3288,7 @@ export type Database = {
           created_at?: string;
           created_by: string;
           id?: string;
+          is_petty_cash?: boolean;
           name: string;
           opening_balance_paise?: number;
           opening_on: string;
@@ -3300,6 +3302,7 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           id?: string;
+          is_petty_cash?: boolean;
           name?: string;
           opening_balance_paise?: number;
           opening_on?: string;
@@ -3445,6 +3448,71 @@ export type Database = {
           },
         ];
       };
+      expense_cash_counts: {
+        Row: {
+          account_id: string;
+          book_paise: number;
+          client_request_id: string;
+          count_date: string;
+          counted_by: string;
+          counted_paise: number;
+          created_at: string;
+          id: string;
+          kind: string;
+          note: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          book_paise: number;
+          client_request_id: string;
+          count_date: string;
+          counted_by: string;
+          counted_paise: number;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          note?: string | null;
+          society_id: string;
+        };
+        Update: {
+          account_id?: string;
+          book_paise?: number;
+          client_request_id?: string;
+          count_date?: string;
+          counted_by?: string;
+          counted_paise?: number;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          note?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_cash_counts_account_fkey';
+            columns: ['society_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_accounts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_cash_counts_counted_by_fkey';
+            columns: ['counted_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_cash_counts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       expense_categories: {
         Row: {
           active: boolean;
@@ -3531,6 +3599,226 @@ export type Database = {
           },
           {
             foreignKeyName: 'expense_month_locks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_petty_cash_custodians: {
+        Row: {
+          account_id: string;
+          count_id: string | null;
+          custodian_user_id: string;
+          ended_at: string | null;
+          id: string;
+          society_id: string;
+          started_at: string;
+          started_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          count_id?: string | null;
+          custodian_user_id: string;
+          ended_at?: string | null;
+          id?: string;
+          society_id: string;
+          started_at?: string;
+          started_by: string;
+        };
+        Update: {
+          account_id?: string;
+          count_id?: string | null;
+          custodian_user_id?: string;
+          ended_at?: string | null;
+          id?: string;
+          society_id?: string;
+          started_at?: string;
+          started_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_petty_cash_custodians_account_fkey';
+            columns: ['society_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_accounts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_petty_cash_custodians_count_fkey';
+            columns: ['society_id', 'count_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_cash_counts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_petty_cash_custodians_custodian_user_id_fkey';
+            columns: ['custodian_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_petty_cash_custodians_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_petty_cash_custodians_started_by_fkey';
+            columns: ['started_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_statement_items: {
+        Row: {
+          account_id: string;
+          amount_paise: number;
+          cancel_reason: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          direction: string;
+          id: string;
+          matched_entry_id: string | null;
+          party: string | null;
+          reference: string | null;
+          society_id: string;
+          statement_date: string;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          amount_paise: number;
+          cancel_reason?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          direction: string;
+          id?: string;
+          matched_entry_id?: string | null;
+          party?: string | null;
+          reference?: string | null;
+          society_id: string;
+          statement_date: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          amount_paise?: number;
+          cancel_reason?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          direction?: string;
+          id?: string;
+          matched_entry_id?: string | null;
+          party?: string | null;
+          reference?: string | null;
+          society_id?: string;
+          statement_date?: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_statement_items_account_fkey';
+            columns: ['society_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_accounts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_items_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_items_decided_by_fkey';
+            columns: ['decided_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_items_entry_fkey';
+            columns: ['society_id', 'account_id', 'matched_entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_book_entries';
+            referencedColumns: ['society_id', 'account_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_items_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_items_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_vouchers: {
+        Row: {
+          created_at: string;
+          entry_id: string;
+          financial_year: number;
+          sequence: number;
+          society_id: string;
+          voucher_type: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          entry_id: string;
+          financial_year: number;
+          sequence: number;
+          society_id: string;
+          voucher_type: string;
+        };
+        Update: {
+          created_at?: string;
+          entry_id?: string;
+          financial_year?: number;
+          sequence?: number;
+          society_id?: string;
+          voucher_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_vouchers_entry_fkey';
+            columns: ['society_id', 'entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_book_entries';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_vouchers_society_id_fkey';
             columns: ['society_id'];
             isOneToOne: false;
             referencedRelation: 'societies';
@@ -11664,6 +11952,17 @@ export type Database = {
         };
         Returns: string;
       };
+      expense_cash_count_record: {
+        Args: {
+          p_client_request_id: string;
+          p_count_date: string;
+          p_counted_paise: number;
+          p_note: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
       expense_category_save: {
         Args: {
           p_active: boolean;
@@ -11748,6 +12047,35 @@ export type Database = {
         };
         Returns: undefined;
       };
+      expense_petty_cash_assign: {
+        Args: {
+          p_account_id: string;
+          p_client_request_id: string;
+          p_custodian_user_id: string;
+          p_handover_count_paise: number;
+          p_handover_note: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_petty_cash_custodian_check: {
+        Args: { p_society_id: string };
+        Returns: boolean;
+      };
+      expense_petty_cash_view: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      expense_reconciliation_page: {
+        Args: {
+          p_account_id: string;
+          p_limit: number;
+          p_offset: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       expense_record: {
         Args: {
           p_account_id: string;
@@ -11778,6 +12106,38 @@ export type Database = {
           p_society_id: string;
         };
         Returns: Json;
+      };
+      expense_statement_item_cancel: {
+        Args: {
+          p_item_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      expense_statement_item_match: {
+        Args: {
+          p_entry_id: string;
+          p_item_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      expense_statement_item_record: {
+        Args: {
+          p_account_id: string;
+          p_amount_paise: number;
+          p_client_request_id: string;
+          p_direction: string;
+          p_party: string;
+          p_reference: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_statement_date: string;
+        };
+        Returns: string;
       };
       expense_workspace: { Args: { p_society_id: string }; Returns: Json };
       export_job_get: { Args: { p_job_id: string }; Returns: Json };

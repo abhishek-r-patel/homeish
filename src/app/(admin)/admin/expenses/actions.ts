@@ -1,12 +1,17 @@
-// Run authorized expense, income, approval, setup and month-close mutations.
+// Run authorized expense, income, approval, setup, reconciliation, petty-cash and month-close mutations.
 'use server';
 import { runServerAction } from '@/core/actions/server-action';
 import { ValidationError } from '@/core/errors';
 import {
+  assignPettyCash,
+  cancelStatementItem,
   closeExpenseMonth,
   decideExpense,
+  matchStatementItem,
+  recordCashCount,
   recordExpense,
   recordIncome,
+  recordStatementItem,
   reopenExpenseMonth,
   reverseExpenseEntry,
   saveExpenseAccount,
@@ -81,5 +86,35 @@ export async function reopenExpenseMonthAction(form: FormData) {
   return runServerAction('/admin/expenses/reports', async (id) => {
     await reopenExpenseMonth(input(form), id);
     return 'Month reopened.';
+  });
+}
+export async function recordStatementItemAction(form: FormData) {
+  return runServerAction('/admin/expenses/reconciliation', async (id) => {
+    await recordStatementItem(input(form), id);
+    return 'Statement item added.';
+  });
+}
+export async function matchStatementItemAction(form: FormData) {
+  return runServerAction('/admin/expenses/reconciliation', async (id) => {
+    await matchStatementItem(input(form), id);
+    return 'Statement item matched.';
+  });
+}
+export async function cancelStatementItemAction(form: FormData) {
+  return runServerAction('/admin/expenses/reconciliation', async (id) => {
+    await cancelStatementItem(input(form), id);
+    return 'Statement item cancelled.';
+  });
+}
+export async function assignPettyCashAction(form: FormData) {
+  return runServerAction('/admin/expenses/setup', async (id) => {
+    await assignPettyCash(input(form), id);
+    return 'Petty cash custodian saved.';
+  });
+}
+export async function recordCashCountAction(form: FormData) {
+  return runServerAction('/petty-cash', async (id) => {
+    await recordCashCount(input(form), id);
+    return 'Cash count recorded.';
   });
 }

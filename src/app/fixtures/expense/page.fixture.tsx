@@ -1,4 +1,5 @@
-// Exercise account setup, threshold approval and reversals with in-memory books.
+// Exercise account setup, threshold approval, reversals, vouchers, bank reconciliation
+// and petty-cash counts with in-memory books.
 'use client';
 import { useState } from 'react';
 import {
@@ -7,20 +8,48 @@ import {
   ExpenseRecordForm,
   ExpenseReverseForm,
 } from '@/components/expense/controls';
+import {
+  CashCountForm,
+  PettyCashAssignForm,
+  StatementCancelForm,
+  StatementItemForm,
+  StatementMatchForm,
+} from '@/components/expense/reconciliation-controls';
 import { Banner } from '@/components/ui/feedback';
 import type { ModuleFormAction } from '@/components/ui/module-action-form';
 import {
+  cashCountInputSchema,
+  cashDifferenceKind,
   DEFAULT_EXPENSE_APPROVAL_THRESHOLD_PAISE,
   expenseAccountInputSchema,
   expenseDecisionInputSchema,
   expenseRecordInputSchema,
   expenseReverseInputSchema,
+  pettyCashAssignInputSchema,
+  statementItemCancelInputSchema,
+  statementItemInputSchema,
+  statementItemMatchInputSchema,
   type ExpenseAccount,
   type ExpenseCategory,
 } from '@/core/expense/validation';
 import { formatSignedRupees } from '@/core/expense/documents';
 
 const today = new Date().toISOString().slice(0, 10);
+const financialYear =
+  Number(today.slice(0, 4)) - (Number(today.slice(5, 7)) < 4 ? 1 : 0);
+const yearLabel = `${financialYear}-${String((financialYear + 1) % 100).padStart(2, '0')}`;
+const cashAccountId = '00000000-0000-4000-8000-000000000010';
+const pettyBookPaise = 500_000;
+const members = [
+  {
+    user_id: '00000000-0000-4000-8000-000000000021',
+    full_name: 'Synthetic Guard',
+  },
+  {
+    user_id: '00000000-0000-4000-8000-000000000022',
+    full_name: 'Synthetic Resident',
+  },
+];
 const categories: ExpenseCategory[] = [
   {
     id: '00000000-0000-4000-8000-000000000001',
@@ -36,6 +65,15 @@ type Entry = {
   signedPaise: number;
   reversed: boolean;
 };
+type StatementItem = {
+  id: string;
+  direction: 'in' | 'out';
+  amountPaise: number;
+  status: 'unmatched' | 'matched' | 'cancelled';
+  matchedEntryId: string | null;
+  reason: string | null;
+};
+type CashCount = { id: string; countedPaise: number; kind: string };
 type Pending = {
   id: string;
   accountId: string;
@@ -56,6 +94,18 @@ export default function ExpenseFixturePage() {
   const [accounts, setAccounts] = useState<ExpenseAccount[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [pending, setPending] = useState<Pending[]>([]);
+  const [items, setItems] = useState<StatementItem[]>([]);
+  const [custodianId, setCustodianId] = useState<string | null>(null);
+  const [counts, setCounts] = useState<CashCount[]>([]);
+  const voucher = (entry: Entry) => {
+    const receipt = entry.signedPaise > 0;
+    const sequence = entries
+      .slice(0, entries.indexOf(entry) + 1)
+      .filter((row) => row.signedPaise > 0 === receipt).length;
+    return `${receipt ? 'RV' : 'PV'}/${yearLabel}/${sequence}`;
+  };
+  const bankAccount = accounts.find((a) => a.account_type === 'bank');
+  const matchedIds = new Set(items.map((item) => item.matchedEntryId));
   const balance = (account: ExpenseAccount) =>
     account.opening_balance_paise +
     entries
@@ -155,6 +205,86 @@ export default function ExpenseFixturePage() {
     return { ok: true, message: 'Reversal recorded.' };
   };
 
+  const recordItem: ModuleFormAction = async (data) => {
+    const parsed = statementItemInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    const v = parsed.data;
+    setItems((rows) => [
+      ...rows,
+      {
+        id: crypto.randomUUID(),
+        direction: v.direction,
+        amountPaise: v.amountRupees,
+        status: 'unmatched',
+        matchedEntryId: null,
+        reason: null,
+      },
+    ]);
+    return { ok: true, message: 'Statement item added.' };
+  };
+  const matchItem: ModuleFormAction = async (data) => {
+    const parsed = statementItemMatchInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    if (matchedIds.has(parsed.data.entryId))
+      return failure('This statement item is already settled.');
+    setItems((rows) =>
+      rows.map((item) =>
+        item.id === parsed.data.itemId
+          ? { ...item, status: 'matched', matchedEntryId: parsed.data.entryId }
+          : item,
+      ),
+    );
+    return { ok: true, message: 'Statement item matched.' };
+  };
+  const cancelItem: ModuleFormAction = async (data) => {
+    const parsed = statementItemCancelInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    setItems((rows) =>
+      rows.map((item) =>
+        item.id === parsed.data.itemId
+          ? { ...item, status: 'cancelled', reason: parsed.data.reason }
+          : item,
+      ),
+    );
+    return { ok: true, message: 'Statement item cancelled.' };
+  };
+  const assignCustodian: ModuleFormAction = async (data) => {
+    const parsed = pettyCashAssignInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    const v = parsed.data;
+    if (custodianId && v.custodianUserId === custodianId)
+      return { ok: true, message: 'Petty cash custodian saved.' };
+    if (custodianId && v.handoverCountRupees === null)
+      return failure(
+        'Choose the active cash account and an active member. Changing the custodian needs the handover count.',
+      );
+    if (v.handoverCountRupees !== null) {
+      const counted = v.handoverCountRupees;
+      setCounts((rows) => [
+        { id: crypto.randomUUID(), countedPaise: counted, kind: 'handover' },
+        ...rows,
+      ]);
+    }
+    setCustodianId(v.custodianUserId);
+    return { ok: true, message: 'Petty cash custodian saved.' };
+  };
+  const recordCount: ModuleFormAction = async (data) => {
+    const parsed = cashCountInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    const counted = parsed.data.countedRupees;
+    setCounts((rows) => [
+      { id: crypto.randomUUID(), countedPaise: counted, kind: 'routine' },
+      ...rows,
+    ]);
+    return { ok: true, message: 'Cash count recorded.' };
+  };
+  const differenceText = (countedPaise: number) => {
+    const difference = countedPaise - pettyBookPaise;
+    const kind = cashDifferenceKind(difference);
+    if (kind === 'matches') return 'Matches the book';
+    return `${formatSignedRupees(Math.abs(difference))} ${kind}`;
+  };
+
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-content-default gap-space-5 px-space-4 py-space-6 text-ink [overflow-wrap:anywhere]">
       <Banner title="Synthetic accounts fixture" tone="info">
@@ -205,6 +335,7 @@ export default function ExpenseFixturePage() {
         {entries.map((e) => (
           <div key={e.id} className="grid min-w-0 gap-space-3">
             <p>Entry: {e.label}</p>
+            <p>Voucher {voucher(e)}</p>
             {!e.reversed ? (
               <ExpenseReverseForm
                 entryId={e.id}
@@ -214,6 +345,84 @@ export default function ExpenseFixturePage() {
             ) : null}
           </div>
         ))}
+      </section>
+      {bankAccount ? (
+        <section
+          aria-label="Reconciliation"
+          className="grid min-w-0 gap-space-3"
+        >
+          <h2 className="text-heading font-semibold">Reconciliation</h2>
+          <StatementItemForm
+            accountId={bankAccount.id}
+            today={today}
+            action={recordItem}
+          />
+          <ul className="grid min-w-0 gap-space-3">
+            {items.map((item) => {
+              const matched = entries.find((e) => e.id === item.matchedEntryId);
+              const candidates = entries.filter(
+                (e) =>
+                  e.accountId === bankAccount.id &&
+                  !matchedIds.has(e.id) &&
+                  e.signedPaise > 0 === (item.direction === 'in') &&
+                  Math.abs(e.signedPaise) === item.amountPaise,
+              );
+              return (
+                <li key={item.id} className="grid min-w-0 gap-space-2">
+                  <p>
+                    Item {item.direction} {formatSignedRupees(item.amountPaise)}
+                    : {item.status}
+                  </p>
+                  {matched ? <p>Matched to {voucher(matched)}</p> : null}
+                  {item.reason ? <p>Cancelled: {item.reason}</p> : null}
+                  {item.status === 'unmatched' && candidates.length ? (
+                    <StatementMatchForm
+                      itemId={item.id}
+                      candidates={candidates.map((e) => ({
+                        id: e.id,
+                        label: `${voucher(e)} ${e.label}`,
+                      }))}
+                      action={matchItem}
+                    />
+                  ) : null}
+                  {item.status === 'unmatched' ? (
+                    <StatementCancelForm itemId={item.id} action={cancelItem} />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+      <section aria-label="Petty cash" className="grid min-w-0 gap-space-3">
+        <h2 className="text-heading font-semibold">Petty cash</h2>
+        <p>Book: {formatSignedRupees(pettyBookPaise)}</p>
+        <p>
+          Custodian:{' '}
+          {members.find((m) => m.user_id === custodianId)?.full_name ??
+            'Not named'}
+        </p>
+        <PettyCashAssignForm
+          key={custodianId ?? 'none'}
+          accountId={cashAccountId}
+          members={members}
+          currentCustodianId={custodianId}
+          action={assignCustodian}
+        />
+        {custodianId ? (
+          <CashCountForm
+            today={today}
+            openingOn={`${financialYear}-04-01`}
+            action={recordCount}
+          />
+        ) : null}
+        <ul className="grid min-w-0 gap-space-2">
+          {counts.map((count) => (
+            <li key={count.id}>
+              Count ({count.kind}): {differenceText(count.countedPaise)}
+            </li>
+          ))}
+        </ul>
       </section>
     </main>
   );

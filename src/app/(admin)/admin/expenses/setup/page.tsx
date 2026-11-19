@@ -1,4 +1,4 @@
-// Let administrators manage accounts, categories and approval settings.
+// Let administrators manage accounts, categories, approval settings and petty cash.
 import { notFound } from 'next/navigation';
 import { Card } from '@/components/ui/data-display';
 import {
@@ -6,8 +6,9 @@ import {
   ExpenseCategoryForm,
   ExpenseSettingsForm,
 } from '@/components/expense/controls';
+import { PettyCashAssignForm } from '@/components/expense/reconciliation-controls';
 import { ExpenseNav } from '@/components/expense/nav';
-import { getExpenseWorkspace } from '@/core/expense/operations';
+import { getExpenseWorkspace, getPettyCash } from '@/core/expense/operations';
 import {
   formatLocalizedCurrency,
   formatLocalizedDate,
@@ -31,6 +32,8 @@ export default async function ExpenseSetupPage() {
     );
   const w = await getExpenseWorkspace();
   if (!w.can_manage) notFound();
+  const petty = await getPettyCash();
+  const pettyAccount = petty.account ?? petty.cash_account;
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
       <h1 className="text-title font-semibold">{t('Accounts setup')}</h1>
@@ -71,6 +74,29 @@ export default async function ExpenseSetupPage() {
             <ExpenseAccountForm today={w.today} />
           </details>
         </div>
+      </Card>
+      <Card
+        title={t('Petty cash')}
+        description={t(
+          'The custodian can open the petty cash page and record counts. Changing the custodian needs a handover count.',
+        )}
+      >
+        {pettyAccount ? (
+          <>
+            <p>
+              {pettyAccount.name} · {t('Custodian')}:{' '}
+              {petty.custodian?.full_name ?? t('Not named')}
+            </p>
+            <PettyCashAssignForm
+              key={petty.custodian?.user_id ?? 'none'}
+              accountId={pettyAccount.id}
+              members={petty.members}
+              currentCustodianId={petty.custodian?.user_id ?? null}
+            />
+          </>
+        ) : (
+          <p>{t('Add an active cash account first.')}</p>
+        )}
       </Card>
       <Card title={t('Expense categories')}>
         <div className="grid min-w-0 gap-space-3">

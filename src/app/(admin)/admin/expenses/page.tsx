@@ -295,12 +295,17 @@ export default async function ExpensesPage({
                 </span>
               </p>
               <p>
-                {entrySourceLabel(e.source)} ·{' '}
+                {t('Voucher')} {e.voucher_no} · {entrySourceLabel(e.source)} ·{' '}
                 {e.category_name ??
                   (e.income_kind ? incomeSourceLabel(e.income_kind) : '')}{' '}
                 · {e.account_name}
                 {e.reference ? ` · ${e.reference}` : ''}
               </p>
+              {e.running_balance_paise !== null ? (
+                <p className="text-caption text-ink-muted">
+                  {t('Balance')} {formatSignedCurrency(e.running_balance_paise)}
+                </p>
+              ) : null}
               {e.description ? (
                 <p className="text-caption text-ink-muted">{e.description}</p>
               ) : null}

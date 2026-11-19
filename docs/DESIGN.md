@@ -790,6 +790,13 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - Request lists and details show an **Escalated to admins** or **Escalated to committee** chip (words, not colour alone) next to the overdue state, and the timeline shows the escalation entry. The requester never sees who was notified.
 - The admin **Categories** tab adds "Escalate to committee after (days)" (1–30, default 2) to each category and an **SLA escalation** card ("Send escalations by": **In-app** or **In-app + email**) explaining that recipients always get an in-app notification and residents see only that the request was escalated.
 
+### 12.17 Accounts additions (P39)
+
+- **Cash and bank book:** when one account is selected, rows show the **Balance** after each entry; every row shows its **Voucher** (`RV/2026-27/12`). Reversals stay as their own rows. CSV and PDF exports include the voucher.
+- **Reconciliation (`/admin/expenses/reconciliation`):** choose a bank account, then **Statement items** (date, reference, party, in/out, amount, status chip Unmatched/Matched/Cancelled, an **Older than 30 days** chip) and **Book entries not yet matched**. Admins add items, match an item to an entry with the same amount and direction, or cancel with a reason; committee members get a **View only** banner. A note says differences are never posted automatically.
+- **Petty cash:** setup (admin) marks the cash account as petty cash and picks the custodian from active members; changing the custodian asks for the handover count. `/petty-cash` shows the book amount, **Record a count** (date, counted amount in rupees, note), counts with the difference as signed words ("₹120 short", "₹40 over") and custodian history. A non-admin custodian sees only this page, reached from a **Petty cash** link in their navigation (a tile on the guard home); admins and committee use the Accounts tabs, and committee members read without recording.
+- **Report:** the period report adds **Net surplus or deficit** per month and **Financial year to date (not a balance)**.
+
 ---
 
 ## 13. Iconography and Imagery

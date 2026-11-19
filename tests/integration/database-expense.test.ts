@@ -1,4 +1,5 @@
-// Verify P16 expense storage, approvals, append-only books, month close and billing income.
+// Verify P16 expense storage, approvals, append-only books, month close and billing income,
+// and P39 vouchers, running balances, net flow, bank reconciliation and petty cash.
 import { describe, expect, it } from 'vitest';
 import {
   createTestDatabase,
@@ -597,6 +598,408 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
         [society, fixture.previous_month, fixture.today],
       );
       expect(page.total).toBe(6);
+    } finally {
+      await db.drop();
+    }
+  });
+  it('numbers vouchers, reconciles bank statements and tracks petty cash custody', async () => {
+    const db = await createTestDatabase();
+    try {
+      const fixture = await db.asSuperuser(async (client) => {
+        const users = new Map<string, string>();
+        const roles: Record<string, string[]> = {
+          admin: ['admin'],
+          committee: ['committee'],
+          resident: ['resident'],
+          guard: ['guard'],
+        };
+        for (const key of Object.keys(roles)) {
+          const id = await newAuthUser(client, `p39-${key}@example.test`);
+          await client.query(
+            'insert into public.profiles(id,email,full_name) values($1,$2,$3)',
+            [id, `p39-${key}@example.test`, `P39 ${key}`],
+          );
+          users.set(key, id);
+        }
+        const societyId = (
+          await client.query<{ id: string }>(
+            "insert into public.societies(name,created_by) values('P39 society',$1) returning id",
+            [users.get('admin')],
+          )
+        ).rows[0]!.id;
+        for (const [key, id] of users)
+          await client.query(
+            "insert into public.memberships(society_id,user_id,roles,status) values($1,$2,$3,'active')",
+            [societyId, id, roles[key]],
+          );
+        await client.query(
+          "insert into public.module_configs(society_id,module_key,enabled,settings) values($1,'core',true,'{}'),($1,'expense',true,'{}')",
+          [societyId],
+        );
+        const dates = (
+          await client.query<{
+            today: string;
+            opening: string;
+            last_year_day: string;
+            old_day: string;
+            future_day: string;
+            year: number;
+          }>(
+            `with base as (
+               select private.housekeeping_local_date($1) as today,
+                 make_date(private.expense_financial_year(private.housekeeping_local_date($1)), 4, 1) as year_start
+             )
+             select today::text, (year_start - 30)::text as opening,
+               (year_start - 10)::text as last_year_day, (today - 40)::text as old_day,
+               (today + 1)::text as future_day,
+               extract(year from year_start)::integer as year
+             from base`,
+            [societyId],
+          )
+        ).rows[0]!;
+        return { users, societyId, ...dates };
+      });
+      const society = fixture.societyId;
+      const call = async <T = unknown>(
+        key: string,
+        sql: string,
+        params: unknown[] = [],
+      ) =>
+        (
+          await db.asRole(
+            'authenticated',
+            { sub: fixture.users.get(key)! },
+            (client) =>
+              client.query<{ result: T }>(`select ${sql} as result`, params),
+            { commit: true },
+          )
+        ).rows[0]!.result;
+      const code = async (promise: Promise<unknown>) =>
+        (await dbError(promise)).code;
+      const label = (type: string, year: number, sequence: number) =>
+        `${type}/${year}-${String((year + 1) % 100).padStart(2, '0')}/${sequence}`;
+
+      const saveAccount = (name: string, type: string, opening: number) =>
+        call<string>(
+          'admin',
+          "public.expense_account_save($1,null,$2,$3,$4,$5,true,null,'p39-test')",
+          [society, name, type, opening, fixture.opening],
+        );
+      const cash = await saveAccount('Cash box', 'cash', 100000);
+      const bank = await saveAccount('Main bank', 'bank', 50000);
+      const income = (day: string, amount: number) =>
+        call<string>(
+          'admin',
+          "public.expense_income_record($1,$2,$3,'donation','Synthetic donor',$4,null,null,$5,'p39-test')",
+          [society, bank, day, amount, crypto.randomUUID()],
+        );
+      await income(fixture.last_year_day, 10000);
+      await income(fixture.today, 20000);
+      await income(fixture.today, 30000);
+      const repairs = (
+        await call<{ categories: { id: string; name: string }[] }>(
+          'admin',
+          'public.expense_workspace($1)',
+          [society],
+        )
+      ).categories.find(({ name }) => name === 'Repairs')!.id;
+      await call(
+        'admin',
+        "public.expense_record($1,$2,$3,$4,'Synthetic Vendor',7000,'upi',null,null,null,$5,'p39-test')",
+        [society, bank, repairs, fixture.today, crypto.randomUUID()],
+      );
+
+      type Entry = {
+        id: string;
+        amount_paise: number;
+        voucher_no: string;
+        running_balance_paise: number | null;
+      };
+      const entries = async (account: string | null) =>
+        (
+          await call<{ rows: Entry[] }>(
+            'committee',
+            'public.expense_entries_page($1,$2,$3,$4,50,0)',
+            [society, fixture.opening, fixture.today, account],
+          )
+        ).rows;
+      const bankRows = await entries(bank);
+      const byAmount = (amount: number) =>
+        bankRows.find(({ amount_paise }) => amount_paise === amount)!;
+      expect(byAmount(10000)).toMatchObject({
+        voucher_no: label('RV', fixture.year - 1, 1),
+        running_balance_paise: 60000,
+      });
+      expect(byAmount(20000).voucher_no).toBe(label('RV', fixture.year, 1));
+      expect(byAmount(30000).voucher_no).toBe(label('RV', fixture.year, 2));
+      expect(byAmount(7000).voucher_no).toBe(label('PV', fixture.year, 1));
+      expect(bankRows[0]!.running_balance_paise).toBe(103000);
+      expect(
+        (await entries(null)).every(
+          ({ running_balance_paise }) => running_balance_paise === null,
+        ),
+      ).toBe(true);
+      expect(
+        await code(
+          db.asSuperuser((client) =>
+            client.query(
+              'delete from public.expense_vouchers where entry_id=$1',
+              [byAmount(7000).id],
+            ),
+          ),
+        ),
+      ).toBe('55000');
+
+      type Month = {
+        month: string;
+        net_paise: number;
+        cumulative_net_paise: number;
+      };
+      const months = (
+        await call<{ months: Month[] }>(
+          'committee',
+          'public.expense_report($1,$2,$3)',
+          [society, fixture.last_year_day, fixture.today],
+        )
+      ).months;
+      expect(months[0]).toMatchObject({
+        net_paise: 10000,
+        cumulative_net_paise: 10000,
+      });
+      expect(months[1]!.cumulative_net_paise).toBe(
+        months.length === 2 ? 43000 : 0,
+      );
+      expect(months.at(-1)).toMatchObject({
+        net_paise: 43000,
+        cumulative_net_paise: 43000,
+      });
+
+      const recordItem = (
+        key: string,
+        account: string,
+        direction: string,
+        amount: number,
+        retryId: string = crypto.randomUUID(),
+        day = fixture.today,
+      ) =>
+        call<string>(
+          key,
+          "public.expense_statement_item_record($1,$2,$3,'UTR-1',' ',$4,$5,$6,'p39-test')",
+          [society, account, day, direction, amount, retryId],
+        );
+      expect(await code(recordItem('admin', cash, 'in', 100))).toBe('22023');
+      expect(await code(recordItem('committee', bank, 'in', 100))).toBe(
+        '42501',
+      );
+      expect(
+        await code(
+          recordItem('admin', bank, 'in', 100, undefined, fixture.future_day),
+        ),
+      ).toBe('22023');
+      const retryId = crypto.randomUUID();
+      const itemA = await recordItem('admin', bank, 'in', 20000, retryId);
+      expect(await recordItem('admin', bank, 'in', 20000, retryId)).toBe(itemA);
+      expect(await code(recordItem('admin', bank, 'in', 20001, retryId))).toBe(
+        '23505',
+      );
+      const itemB = await recordItem('admin', bank, 'out', 7000);
+      const itemC = await recordItem(
+        'admin',
+        bank,
+        'in',
+        999,
+        undefined,
+        fixture.old_day,
+      );
+      const itemD = await recordItem('admin', bank, 'in', 20000);
+
+      const match = (item: string, entry: string) =>
+        call(
+          'admin',
+          "public.expense_statement_item_match($1,$2,$3,'p39-test')",
+          [society, item, entry],
+        );
+      expect(await code(match(itemA, byAmount(7000).id))).toBe('22023');
+      expect(await code(match(itemA, byAmount(30000).id))).toBe('22023');
+      await match(itemA, byAmount(20000).id);
+      await match(itemA, byAmount(20000).id);
+      expect(await code(match(itemA, byAmount(10000).id))).toBe('23505');
+      expect(await code(match(itemD, byAmount(20000).id))).toBe('23505');
+      await match(itemB, byAmount(7000).id);
+
+      type Reconciliation = {
+        total: number;
+        old_total: number;
+        items: {
+          id: string;
+          status: string;
+          is_old: boolean;
+          matched_voucher_no: string | null;
+          party: string | null;
+        }[];
+        unmatched_entries_total: number;
+      };
+      const reconciliation = (key: string, account = bank) =>
+        call<Reconciliation>(
+          key,
+          'public.expense_reconciliation_page($1,$2,50,0)',
+          [society, account],
+        );
+      const before = await reconciliation('committee');
+      expect(before).toMatchObject({
+        total: 4,
+        old_total: 1,
+        unmatched_entries_total: 2,
+      });
+      const itemOf = (page: Reconciliation, id: string) =>
+        page.items.find((item) => item.id === id)!;
+      expect(itemOf(before, itemC).is_old).toBe(true);
+      expect(itemOf(before, itemA)).toMatchObject({
+        status: 'matched',
+        matched_voucher_no: label('RV', fixture.year, 1),
+        party: null,
+      });
+      expect(await code(reconciliation('resident'))).toBe('42501');
+      expect(await code(reconciliation('admin', cash))).toBe('22023');
+
+      const cancel = (item: string, reason: string) =>
+        call(
+          'admin',
+          "public.expense_statement_item_cancel($1,$2,$3,'p39-test')",
+          [society, item, reason],
+        );
+      expect(await code(cancel(itemC, ' '))).toBe('22023');
+      await cancel(itemC, 'Bank charge reversed');
+      await cancel(itemC, 'Bank charge reversed');
+      expect(await code(cancel(itemA, 'Wrong'))).toBe('23505');
+      expect((await reconciliation('admin')).old_total).toBe(0);
+      expect(
+        await code(
+          db.asSuperuser((client) =>
+            client.query(
+              'delete from public.expense_statement_items where id=$1',
+              [itemD],
+            ),
+          ),
+        ),
+      ).toBe('55000');
+
+      type PettyCash = {
+        can_assign: boolean;
+        can_record: boolean;
+        is_custodian: boolean;
+        book_paise: number | null;
+        custodian: { user_id: string } | null;
+        counts: { difference_paise: number; kind: string }[];
+        history: {
+          ended_at: string | null;
+          handover_counted_paise: number | null;
+          handover_book_paise: number | null;
+        }[];
+        cash_account: { id: string } | null;
+        members: unknown[];
+      };
+      const view = (key: string) =>
+        call<PettyCash>(key, 'public.expense_petty_cash_view($1)', [society]);
+      const isCustodian = (key: string) =>
+        call<boolean>(key, 'public.expense_petty_cash_custodian_check($1)', [
+          society,
+        ]);
+      const assign = (
+        key: string,
+        account: string,
+        custodian: string,
+        handover: number | null,
+        retry: string = crypto.randomUUID(),
+      ) =>
+        call<string>(
+          key,
+          "public.expense_petty_cash_assign($1,$2,$3,$4,'Handed over',$5,'p39-test')",
+          [society, account, fixture.users.get(custodian), handover, retry],
+        );
+      const count = (
+        key: string,
+        amount: number,
+        day = fixture.today,
+        retry: string = crypto.randomUUID(),
+      ) =>
+        call<string>(
+          key,
+          "public.expense_cash_count_record($1,$2,$3,'Drawer',$4,'p39-test')",
+          [society, day, amount, retry],
+        );
+
+      expect(await code(view('resident'))).toBe('42501');
+      expect(await isCustodian('resident')).toBe(false);
+      expect(await code(count('admin', 100000))).toBe('22023');
+      expect(await code(assign('committee', cash, 'resident', null))).toBe(
+        '42501',
+      );
+      expect(await code(assign('admin', bank, 'resident', null))).toBe('22023');
+      const firstCustody = await assign('admin', cash, 'resident', null);
+      expect(await assign('admin', cash, 'resident', null)).toBe(firstCustody);
+      expect(await isCustodian('resident')).toBe(true);
+      expect(await view('resident')).toMatchObject({
+        can_assign: false,
+        can_record: true,
+        is_custodian: true,
+        book_paise: 100000,
+        cash_account: null,
+        members: [],
+      });
+
+      const countRetry = crypto.randomUUID();
+      const counted = await count('resident', 95000, fixture.today, countRetry);
+      expect(await count('resident', 95000, fixture.today, countRetry)).toBe(
+        counted,
+      );
+      expect(
+        await code(count('resident', 95001, fixture.today, countRetry)),
+      ).toBe('23505');
+      expect(await code(count('resident', 1, fixture.future_day))).toBe(
+        '22023',
+      );
+      expect(await code(count('guard', 1))).toBe('42501');
+      expect((await view('committee')).counts[0]).toMatchObject({
+        difference_paise: -5000,
+        kind: 'routine',
+      });
+      const countAudit = await db.asSuperuser((client) =>
+        client.query<{ actor_role: string; after: Record<string, unknown> }>(
+          "select actor_role, after from public.audit_logs where action='expense.cash_count.record' and entity_id=$1",
+          [counted],
+        ),
+      );
+      expect(countAudit.rows[0]!.actor_role).toBe('custodian');
+      expect(countAudit.rows[0]!.after).not.toHaveProperty('note');
+
+      expect(await code(assign('admin', cash, 'guard', null))).toBe('22023');
+      await assign('admin', cash, 'guard', 98000);
+      expect(await code(view('resident'))).toBe('42501');
+      const adminView = await view('admin');
+      expect(adminView).toMatchObject({
+        can_assign: true,
+        custodian: { user_id: fixture.users.get('guard') },
+        cash_account: { id: cash },
+      });
+      expect(adminView.members).toHaveLength(4);
+      expect(adminView.history).toHaveLength(2);
+      expect(adminView.history[0]).toMatchObject({
+        ended_at: null,
+        handover_counted_paise: 98000,
+        handover_book_paise: 100000,
+      });
+      expect(adminView.history[1]!.ended_at).not.toBeNull();
+      expect(adminView.counts.map(({ kind }) => kind)).toContain('handover');
+      expect(
+        await code(
+          db.asSuperuser((client) =>
+            client.query('delete from public.expense_cash_counts where id=$1', [
+              counted,
+            ]),
+          ),
+        ),
+      ).toBe('55000');
     } finally {
       await db.drop();
     }

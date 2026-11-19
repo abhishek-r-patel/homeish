@@ -1,4 +1,4 @@
-// Validate P16 expense inputs, RPC payloads and module settings.
+// Validate P16/P39 expense inputs, RPC payloads and module settings.
 import { z } from 'zod';
 import { nonnegativeRupeesSchema, rupeesSchema } from '../billing/validation';
 
@@ -238,6 +238,8 @@ export const expenseEntrySchema = z.object({
   reverses_entry_id: z.uuid().nullable(),
   reversed_by_entry_id: z.uuid().nullable(),
   month_closed: z.boolean(),
+  voucher_no: z.string(),
+  running_balance_paise: money.nullable(),
 });
 export const expenseEntriesPageSchema = z.object({
   total: z.number().int().nonnegative(),
@@ -253,6 +255,8 @@ export const expenseReportSchema = z.object({
       month: z.iso.date(),
       income_paise: money,
       expense_paise: money,
+      net_paise: money,
+      cumulative_net_paise: money,
     }),
   ),
   categories: z.array(z.object({ category: z.string(), expense_paise: money })),
@@ -278,6 +282,138 @@ export const expenseRecordResultSchema = z.object({
   status: z.enum(EXPENSE_STATUSES),
 });
 
+export const STATEMENT_ITEM_STATUSES = [
+  'unmatched',
+  'matched',
+  'cancelled',
+] as const;
+export const statementItemInputSchema = z
+  .object({
+    accountId: z.uuid(),
+    statementDate: z.iso.date(),
+    reference: optionalText(80),
+    party: optionalText(120),
+    direction: z.enum(['in', 'out']),
+    amountRupees: rupeesSchema,
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const statementItemMatchInputSchema = z
+  .object({ itemId: z.uuid(), entryId: z.uuid() })
+  .strict();
+export const statementItemCancelInputSchema = z
+  .object({ itemId: z.uuid(), reason: text(1000) })
+  .strict();
+export const reconciliationSchema = z.object({
+  today: z.iso.date(),
+  total: z.number().int().nonnegative(),
+  old_total: z.number().int().nonnegative(),
+  items: z.array(
+    z.object({
+      id: z.uuid(),
+      statement_date: z.iso.date(),
+      reference: z.string().nullable(),
+      party: z.string().nullable(),
+      direction: z.enum(['in', 'out']),
+      amount_paise: money.positive(),
+      status: z.enum(STATEMENT_ITEM_STATUSES),
+      matched_entry_id: z.uuid().nullable(),
+      matched_voucher_no: z.string().nullable(),
+      cancel_reason: z.string().nullable(),
+      decided_by_name: z.string().nullable(),
+      decided_at: timestamp.nullable(),
+      is_old: z.boolean(),
+    }),
+  ),
+  unmatched_entries_total: z.number().int().nonnegative(),
+  unmatched_entries: z.array(
+    z.object({
+      id: z.uuid(),
+      entry_date: z.iso.date(),
+      direction: z.enum(['in', 'out']),
+      amount_paise: money.positive(),
+      counterparty: z.string(),
+      reference: z.string().nullable(),
+      voucher_no: z.string(),
+    }),
+  ),
+});
+
+export const pettyCashAssignInputSchema = z
+  .object({
+    accountId: z.uuid(),
+    custodianUserId: z.uuid(),
+    handoverCountRupees: nonnegativeRupeesSchema.nullable(),
+    handoverNote: optionalText(500),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const cashCountInputSchema = z
+  .object({
+    countDate: z.iso.date(),
+    countedRupees: nonnegativeRupeesSchema,
+    note: optionalText(500),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const pettyCashViewSchema = z.object({
+  today: z.iso.date(),
+  can_assign: z.boolean(),
+  can_record: z.boolean(),
+  is_custodian: z.boolean(),
+  account: z
+    .object({
+      id: z.uuid(),
+      name: z.string(),
+      active: z.boolean(),
+      opening_on: z.iso.date(),
+    })
+    .nullable(),
+  book_paise: money.nullable(),
+  custodian: z
+    .object({
+      user_id: z.uuid(),
+      full_name: z.string(),
+      started_at: timestamp,
+    })
+    .nullable(),
+  counts: z.array(
+    z.object({
+      id: z.uuid(),
+      count_date: z.iso.date(),
+      counted_paise: money.nonnegative(),
+      book_paise: money,
+      difference_paise: money,
+      note: z.string().nullable(),
+      kind: z.enum(['routine', 'handover']),
+      counted_by_name: z.string(),
+      created_at: timestamp,
+    }),
+  ),
+  history: z.array(
+    z.object({
+      id: z.uuid(),
+      full_name: z.string(),
+      started_at: timestamp,
+      ended_at: timestamp.nullable(),
+      started_by_name: z.string(),
+      handover_counted_paise: money.nullable(),
+      handover_book_paise: money.nullable(),
+    }),
+  ),
+  cash_account: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+  members: z.array(z.object({ user_id: z.uuid(), full_name: z.string() })),
+});
+
+// A count above the book is "over"; below is "short" (EXP-10 shows, never posts).
+export function cashDifferenceKind(
+  differencePaise: number,
+): 'over' | 'short' | 'matches' {
+  if (differencePaise > 0) return 'over';
+  if (differencePaise < 0) return 'short';
+  return 'matches';
+}
+
 // Financial years run April to March; default views start at the current one.
 export function expenseFinancialYearStart(today: string): string {
   const [year, month] = today.split('-').map(Number);
@@ -302,3 +438,5 @@ export type ExpenseCategory = z.infer<typeof categorySchema>;
 export type ExpenseRow = z.infer<typeof expenseRowSchema>;
 export type ExpenseEntry = z.infer<typeof expenseEntrySchema>;
 export type ExpenseReport = z.infer<typeof expenseReportSchema>;
+export type Reconciliation = z.infer<typeof reconciliationSchema>;
+export type PettyCashView = z.infer<typeof pettyCashViewSchema>;
