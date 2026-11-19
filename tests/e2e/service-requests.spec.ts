@@ -114,7 +114,10 @@ test('administrator creates a category accessibly', async ({ page }) => {
   }
 
   await page.getByLabel('Name').first().fill('Electrical');
-  await page.getByLabel('SLA target (hours, optional)').first().fill('12');
+  await page
+    .getByLabel('Escalate to committee after (days, per-category wait)')
+    .first()
+    .fill('5');
   await page.getByLabel('Display order').first().fill('1');
   await page.getByRole('button', { name: 'Add category' }).click();
 
