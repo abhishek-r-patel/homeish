@@ -11,10 +11,12 @@ import {
 } from '../tenancy/request-context';
 import { toCsv } from '../csv/serialize';
 import {
+  amcExpirySettingsInputSchema,
   amcContractInputSchema,
   amcVisitInputSchema,
   amcWorkspaceSchema,
   amcRequestLinkSchema,
+  amcScheduleInputSchema,
   type AmcContract,
   type AmcVisit,
 } from './validation';
@@ -79,6 +81,22 @@ export async function getAmcWorkspace() {
   ]);
   return { ...workspace, contracts, visits };
 }
+export async function saveAmcExpirySettings(input: unknown, requestId: string) {
+  const { context, societyId } = await amcContext(true, requestId);
+  const settings = parseModuleInput(amcExpirySettingsInputSchema, input);
+  await callModuleRpc(
+    context,
+    'amc_settings_update',
+    {
+      p_society_id: societyId,
+      p_due_soon_days: settings.dueSoonDays,
+      p_urgent_days: settings.urgentDays,
+      p_request_trace: requestId,
+    },
+    z.null(),
+    'The expiry windows were not saved. Urgent must be shorter than Due Soon.',
+  );
+}
 export async function saveAmcContract(input: unknown, requestId: string) {
   const { context, societyId } = await amcContext(true, requestId);
   const v = parseModuleInput(amcContractInputSchema, input);
@@ -105,6 +123,25 @@ export async function saveAmcContract(input: unknown, requestId: string) {
     },
     z.uuid(),
     'Check the contract details and renewal history.',
+  );
+}
+export async function saveAmcSchedule(input: unknown, requestId: string) {
+  const { context, societyId } = await amcContext(true, requestId);
+  const v = parseModuleInput(amcScheduleInputSchema, input);
+  await callModuleRpc(
+    context,
+    'amc_schedule_save',
+    {
+      p_society_id: societyId,
+      p_contract_id: v.contractId,
+      p_amc_type: v.amcType,
+      p_asset_category_id: v.assetCategoryId,
+      p_services_per_year: v.servicesPerYear,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.null(),
+    'The service schedule was not saved. Services per year must be 1 to 12.',
   );
 }
 export async function saveAmcVisit(input: unknown, requestId: string) {

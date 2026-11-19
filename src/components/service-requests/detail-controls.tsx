@@ -13,6 +13,7 @@ import {
   updateServiceRequestStatusAction,
 } from '@/app/(resident)/requests/actions';
 import { Card } from '@/components/ui/data-display';
+import { Banner } from '@/components/ui/feedback';
 import { ServiceRequestActionForm } from './action-form';
 import type { ServiceRequestStatus } from '@/core/service-requests/validation';
 
@@ -22,7 +23,13 @@ type Assignee = {
   roles: string[];
 };
 
-type ListedVendor = { id: string; name: string; phone: string | null };
+type ListedVendor = {
+  id: string;
+  name: string;
+  phone: string | null;
+  blacklisted: boolean;
+  blacklist_reason: string | null;
+};
 
 const FEEDBACK_SCORES = [
   { name: 'quality', label: 'Resolution quality' },
@@ -54,6 +61,10 @@ export function ServiceRequestDetailControls({
 }) {
   const { translate: t } = useUiTranslator();
   const [commentId, setCommentId] = useState('');
+  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const selectedVendor = vendors?.find(
+    (vendor) => vendor.id === selectedVendorId,
+  );
   function ensureCommentId() {
     if (commentId) return commentId;
     const id = crypto.randomUUID();
@@ -129,16 +140,30 @@ export function ServiceRequestDetailControls({
                     defaultValue=""
                     id="request-vendor-listed"
                     name="vendorId"
+                    onChange={(event) =>
+                      setSelectedVendorId(event.currentTarget.value)
+                    }
                   >
                     <option value="">{t('No listed vendor')}</option>
                     {vendors.map((vendor) => (
                       <option key={vendor.id} value={vendor.id}>
                         {vendor.name}
                         {vendor.phone ? ` · ${vendor.phone}` : ''}
+                        {vendor.blacklisted ? ` · ${t('Blacklisted')}` : ''}
                       </option>
                     ))}
                   </select>
                 </label>
+              ) : null}
+              {selectedVendor?.blacklisted ? (
+                <Banner tone="warning" title={t('Blacklisted vendor')}>
+                  <p>
+                    {t(
+                      'This assignment can continue, but review the blacklist reason before saving.',
+                    )}
+                  </p>
+                  <p>{selectedVendor.blacklist_reason}</p>
+                </Banner>
               ) : null}
               <label className="grid gap-space-1" htmlFor="request-vendor-name">
                 {t('Vendor name')}

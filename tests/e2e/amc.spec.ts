@@ -1,6 +1,56 @@
 // Verify AMC contract validation, preserved renewals, visit corrections and accessibility.
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from './fixtures';
+test('administrators configure ordered AMC expiry windows', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/amc');
+  const settings = page.getByRole('region', { name: 'AMC expiry settings' });
+  const dueSoon = settings.getByLabel('Due Soon window (days)');
+  const urgent = settings.getByLabel('Urgent window (days)');
+  await expect(dueSoon).toHaveValue('60');
+  await expect(urgent).toHaveValue('30');
+  await dueSoon.fill('30');
+  await urgent.fill('30');
+  await settings.getByRole('button', { name: 'Save settings' }).click();
+  await expect(settings.getByRole('alert')).toContainText(
+    'Urgent must be shorter than Due Soon.',
+  );
+  await dueSoon.fill('60');
+  await urgent.fill('15');
+  await settings.getByRole('button', { name: 'Save settings' }).click();
+  await expect(settings.getByRole('status')).toContainText(
+    'AMC expiry windows saved.',
+  );
+});
+
+test('administrators schedule AMC services from the last visit', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/amc');
+  const form = page.getByRole('region', { name: 'New contract' });
+  await form.getByLabel('Asset / service label').fill('Pump');
+  await form.getByLabel('Vendor name').fill('Fixture vendor');
+  await form.getByLabel('Vendor contact').fill('Fixture contact');
+  await form.getByLabel('Service visit frequency').fill('Quarterly');
+  await form.getByLabel('Contract end').fill('2099-01-01');
+  await form.getByRole('button', { name: 'Add AMC contract' }).click();
+  const contract = page.getByRole('region', { name: 'Original history' });
+  await expect(contract).toContainText('Next service: Unscheduled');
+
+  await contract.getByLabel('AMC type').selectOption('comprehensive');
+  await contract.getByLabel('Asset type').selectOption({ label: 'Pump' });
+  await contract.getByLabel('Services per year (optional)').fill('4');
+  await contract.getByRole('button', { name: 'Save service schedule' }).click();
+  await expect(contract).toContainText('Services per year: 4');
+  await expect(contract).toContainText('Next service: Unscheduled');
+
+  await contract.getByLabel('Visit summary').fill('Inspection');
+  await contract.getByLabel('Technician name').fill('Fixture technician');
+  await contract.getByRole('button', { name: 'Add service visit' }).click();
+  await expect(contract).toContainText(/Next service: \d{4}-\d{2}-\d{2}/);
+});
+
 test('administrators renew AMC contracts without losing original visits', async ({
   page,
 }) => {

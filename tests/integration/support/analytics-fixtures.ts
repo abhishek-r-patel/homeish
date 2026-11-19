@@ -47,6 +47,7 @@ export const OPERATIONS_METRICS = [
   'housekeeping.consumption',
   'housekeeping.low_stock',
   'amc.expiring',
+  'amc.expiry_bands',
   'amc.visits',
   'notice.published',
   'notice.read_rate',

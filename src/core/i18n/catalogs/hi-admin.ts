@@ -37,6 +37,7 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
     'निवासियों को गेट पर डिलीवरी छोड़ने का अनुरोध करने दें',
   'Allowed inside': 'अंदर आने की अनुमति',
   'AMC contracts': 'AMC अनुबंध',
+  'AMC expiry windows': 'AMC समाप्ति अवधि',
   'An administrator needs to add them first.': 'पहले प्रशासक को खाते जोड़ने होंगे।',
   'Another committee member must approve an expense you recorded.':
     'आपके दर्ज किए गए खर्च को समिति के किसी अन्य सदस्य की मंज़ूरी आवश्यक है।',
@@ -126,6 +127,9 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Expenses above {amount} post only after a committee member who did not record them approves.':
     '{amount} से अधिक के खर्च केवल उस समिति सदस्य की मंज़ूरी के बाद दर्ज होंगे जिसने उन्हें दर्ज नहीं किया है।',
   Expired: 'समाप्त',
+  'Due Soon': 'जल्द देय',
+  'Due Soon: {days} days': 'जल्द देय: {days} दिन',
+  'Urgent: {days} days': 'तत्काल: {days} दिन',
   'Expired and withdrawn notices will appear here.':
     'समाप्त और वापस ली गई सूचनाएँ यहाँ दिखेंगी।',
   'Expires:': 'समाप्ति:',

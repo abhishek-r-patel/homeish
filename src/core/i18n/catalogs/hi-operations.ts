@@ -1178,6 +1178,9 @@ export const HI_OPERATIONS: Readonly<Record<string, string>> = {
   'Resident cancellation ends when the slot starts. Administrators must provide a reason.':
     'समय शुरू होने के बाद निवासी बुकिंग रद्द नहीं कर सकते। प्रशासक को कारण देना होगा।',
   'Could not load AMC contracts.': 'AMC अनुबंध नहीं खुल सके।',
+  'AMC expiry windows saved.': 'AMC समाप्ति अवधि सहेजी गई।',
+  'The expiry windows were not saved. Urgent must be shorter than Due Soon.':
+    'समाप्ति अवधियाँ सहेजी नहीं गईं। तत्काल अवधि, जल्द देय अवधि से कम होनी चाहिए।',
   'Check the contract details and renewal history.':
     'अनुबंध की जानकारी और नवीनीकरण का पुराना रिकॉर्ड जांचें।',
   'Check the service visit details. Future visit dates are not allowed.':
@@ -1348,6 +1351,35 @@ export const HI_OPERATIONS: Readonly<Record<string, string>> = {
     'प्राथमिकता के अनुसार समिति की प्रतीक्षा (दिन)',
   'Choose a vendor': 'विक्रेता चुनें',
   'No listed vendor': 'कोई सूचीबद्ध विक्रेता नहीं',
+  'PAN (optional)': 'पैन (वैकल्पिक)',
+  'Enter the 10-character Indian PAN. It is stored uppercase.':
+    '10 अक्षरों और अंकों वाला भारतीय पैन डालें। इसे बड़े अक्षरों में सहेजा जाएगा।',
+  'Payment terms in days (optional)': 'भुगतान की अवधि (दिन, वैकल्पिक)',
+  'Use 0 for due immediately, or leave blank for the five-day bill default.':
+    'तुरंत देय के लिए 0 डालें, या बिल के लिए पाँच दिन की डिफ़ॉल्ट अवधि हेतु खाली छोड़ें।',
+  'Onboarded date (optional)': 'जोड़ने की तारीख (वैकल्पिक)',
+  'Due immediately': 'तुरंत देय',
+  Blacklisted: 'ब्लैकलिस्ट किया गया',
+  'Blacklisted vendor': 'ब्लैकलिस्ट किया गया विक्रेता',
+  'Blacklist status': 'ब्लैकलिस्ट स्थिति',
+  'Reason for blacklist change': 'ब्लैकलिस्ट स्थिति बदलने का कारण',
+  'This reason is recorded in the audit log.': 'यह कारण ऑडिट लॉग में दर्ज होगा।',
+  'Blacklist vendor': 'विक्रेता को ब्लैकलिस्ट करें',
+  'Remove blacklist': 'ब्लैकलिस्ट से हटाएँ',
+  'Remove this vendor from the blacklist? The reason will be recorded.':
+    'इस विक्रेता को ब्लैकलिस्ट से हटाएँ? कारण दर्ज किया जाएगा।',
+  'Blacklist this vendor? New purchases and assignments will show a warning but will not be blocked.':
+    'इस विक्रेता को ब्लैकलिस्ट करें? नई खरीद और असाइनमेंट पर चेतावनी दिखेगी, लेकिन वे रोके नहीं जाएँगे।',
+  'New purchases and service-request assignments show a warning but are not blocked.':
+    'नई खरीद और सेवा अनुरोध असाइनमेंट पर चेतावनी दिखेगी, लेकिन वे रोके नहीं जाएँगे।',
+  'This quote can still be added, but review the blacklist reason before continuing.':
+    'यह कोट फिर भी जोड़ा जा सकता है, लेकिन आगे बढ़ने से पहले ब्लैकलिस्ट का कारण देखें।',
+  'This vendor was blacklisted. The quote remains unchanged.':
+    'इस विक्रेता को ब्लैकलिस्ट किया गया है। कोट में बदलाव नहीं किया गया।',
+  'This assignment can continue, but review the blacklist reason before saving.':
+    'यह असाइनमेंट जारी रह सकता है, लेकिन सहेजने से पहले ब्लैकलिस्ट का कारण देखें।',
+  'Vendor blacklist status updated and recorded.':
+    'विक्रेता की ब्लैकलिस्ट स्थिति अपडेट और दर्ज की गई।',
   'Details (optional; rate all three or none)':
     'विवरण (वैकल्पिक; तीनों को रेटिंग दें या किसी को नहीं)',
   'Not rated': 'रेटिंग नहीं दी',
@@ -1416,4 +1448,260 @@ export const HI_OPERATIONS: Readonly<Record<string, string>> = {
   'Add point': 'स्थान जोड़ें',
   'Where to find it (optional)': 'यह कहाँ है (वैकल्पिक)',
   'Add a check point': 'जाँच स्थान जोड़ें',
+  // P47 vendor registers and AMC service schedule.
+  Monthly: 'मासिक',
+  Quarterly: 'तिमाही',
+  'Half-yearly': 'छमाही',
+  Yearly: 'वार्षिक',
+  'One-time': 'एक बार',
+  'Vendor summary': 'वेंडर सारांश',
+  'Active vendors': 'सक्रिय वेंडर',
+  'Active contract value': 'सक्रिय अनुबंध मूल्य',
+  'Per year': 'प्रति वर्ष',
+  'Renewals due': 'बकाया नवीनीकरण',
+  '{general} contracts · {amc} AMC': '{general} अनुबंध · {amc} AMC',
+  '{average} of 5': '5 में से {average}',
+  '{count} ratings': '{count} रेटिंग',
+  'Open work orders': 'खुले कार्य आदेश',
+  'Overdue AMC services': 'बकाया AMC सेवाएँ',
+  'Bills owed': 'देय बिल',
+  '{count} open bills': '{count} खुले बिल',
+  'Save renewal': 'नवीनीकरण सहेजें',
+  'Save contract': 'अनुबंध सहेजें',
+  Scope: 'दायरा',
+  'What the vendor provides, for example Security staff.':
+    'वेंडर क्या देता है, जैसे सुरक्षा कर्मचारी।',
+  'End date': 'समाप्ति तिथि',
+  'Annual value': 'वार्षिक मूल्य',
+  'Payment frequency': 'भुगतान की आवृत्ति',
+  'Auto-renews': 'अपने आप नवीनीकृत होता है',
+  'Notice period in days (optional)': 'सूचना अवधि दिनों में (वैकल्पिक)',
+  'Default sanctioned days (optional)': 'डिफ़ॉल्ट स्वीकृत दिन (वैकल्पिक)',
+  'For agency staff checks, for example 26 days a month.':
+    'एजेंसी कर्मचारी जाँच के लिए, जैसे महीने में 26 दिन।',
+  'Deduction per missing day (optional)': 'हर अनुपस्थित दिन की कटौती (वैकल्पिक)',
+  'Remove the current contract document': 'मौजूदा अनुबंध दस्तावेज़ हटाएँ',
+  'Replace contract document (optional)': 'अनुबंध दस्तावेज़ बदलें (वैकल्पिक)',
+  'Contract document (optional)': 'अनुबंध दस्तावेज़ (वैकल्पिक)',
+  'End contract early': 'अनुबंध समय से पहले समाप्त करें',
+  'End this contract early? It stays in the register with the reason.':
+    'यह अनुबंध समय से पहले समाप्त करें? यह कारण के साथ रजिस्टर में बना रहेगा।',
+  'Reason for ending early': 'समय से पहले समाप्त करने का कारण',
+  '{amount} a year, paid {frequency}': '{amount} प्रति वर्ष, भुगतान {frequency}',
+  'Does not auto-renew': 'अपने आप नवीनीकृत नहीं होता',
+  'Give notice by {date} ({count} days before the end).':
+    '{date} तक सूचना दें (समाप्ति से {count} दिन पहले)।',
+  '{count} sanctioned days a month': 'महीने में {count} स्वीकृत दिन',
+  '{amount} deducted per missing day': 'हर अनुपस्थित दिन पर {amount} कटौती',
+  'Ended early on {date}: {reason}': '{date} को समय से पहले समाप्त: {reason}',
+  'Renewed; the renewal is listed separately.':
+    'नवीनीकृत; नवीनीकरण अलग से सूचीबद्ध है।',
+  'Contract document': 'अनुबंध दस्तावेज़',
+  'End early': 'समय से पहले समाप्त करें',
+  Contracts: 'अनुबंध',
+  'Renewal alerts use {soon} days for Due Soon and {urgent} days for Urgent.':
+    'नवीनीकरण अलर्ट जल्द देय के लिए {soon} दिन और अत्यावश्यक के लिए {urgent} दिन का उपयोग करते हैं।',
+  'No contracts yet': 'अभी कोई अनुबंध नहीं',
+  'Add a contract below to track its renewal.':
+    'नवीनीकरण पर नज़र रखने के लिए नीचे अनुबंध जोड़ें।',
+  'An admin adds vendor contracts.': 'एडमिन वेंडर अनुबंध जोड़ते हैं।',
+  'Manage AMC contracts': 'AMC अनुबंध प्रबंधित करें',
+  'Add a contract': 'अनुबंध जोड़ें',
+  'Save check': 'जाँच सहेजें',
+  'Add check': 'जाँच जोड़ें',
+  'Sanctioned days': 'स्वीकृत दिन',
+  'Pre-filled from the contract; change it if needed.':
+    'अनुबंध से पहले से भरा गया; ज़रूरत हो तो बदलें।',
+  'Actual days worked': 'वास्तव में काम किए दिन',
+  'Contracted amount for the month': 'महीने की अनुबंधित राशि',
+  'Use either a per-day rate or a manual deduction.':
+    'या तो प्रति दिन दर या मैन्युअल कटौती का उपयोग करें।',
+  'Manual deduction (optional)': 'मैन्युअल कटौती (वैकल्पिक)',
+  'Reason for manual deduction': 'मैन्युअल कटौती का कारण',
+  'Bill raised by the agency (optional)': 'एजेंसी द्वारा भेजा गया बिल (वैकल्पिक)',
+  'Reason for editing': 'बदलाव का कारण',
+  'Agency checks': 'एजेंसी जाँच',
+  'Monthly staff-day checks. Record only; creates no bill or payment.':
+    'मासिक कर्मचारी-दिन जाँच। केवल रिकॉर्ड; कोई बिल या भुगतान नहीं बनता।',
+  'No agency checks yet': 'अभी कोई एजेंसी जाँच नहीं',
+  'Record a month below to compare days worked with the bill.':
+    'काम किए दिनों की बिल से तुलना के लिए नीचे एक महीना दर्ज करें।',
+  'An admin records monthly agency checks.': 'एडमिन मासिक एजेंसी जाँच दर्ज करते हैं।',
+  '{actual} of {sanctioned} days worked · {short} days short':
+    '{sanctioned} में से {actual} दिन काम · {short} दिन कम',
+  'Contracted {contracted} · Deduction {deduction} · Payable {payable}':
+    'अनुबंधित {contracted} · कटौती {deduction} · देय {payable}',
+  'Manual deduction: {reason}': 'मैन्युअल कटौती: {reason}',
+  'Agency bill not recorded': 'एजेंसी बिल दर्ज नहीं',
+  'Agency bill {bill} differs from payable by {variance}':
+    'एजेंसी बिल {bill} देय राशि से {variance} अलग है',
+  'Agency bill {bill} matches payable': 'एजेंसी बिल {bill} देय राशि से मेल खाता है',
+  'Edit check': 'जाँच बदलें',
+  'Add an agency check': 'एजेंसी जाँच जोड़ें',
+  'Add a contract first to record agency checks.':
+    'एजेंसी जाँच दर्ज करने के लिए पहले अनुबंध जोड़ें।',
+  'Issue work order': 'कार्य आदेश जारी करें',
+  'Approved purchase request': 'स्वीकृत खरीद अनुरोध',
+  'Leave blank to use the request title.':
+    'अनुरोध का शीर्षक उपयोग करने के लिए खाली छोड़ें।',
+  'Value (optional)': 'मूल्य (वैकल्पिक)',
+  'Leave blank to use the selected quote amount.':
+    'चुने गए कोटेशन की राशि उपयोग करने के लिए खाली छोड़ें।',
+  'Issue date': 'जारी करने की तिथि',
+  'Due date (optional)': 'नियत तिथि (वैकल्पिक)',
+  'Mark completed': 'पूरा चिह्नित करें',
+  'Completion date': 'पूरा होने की तिथि',
+  'Edit work order': 'कार्य आदेश बदलें',
+  'Save work order': 'कार्य आदेश सहेजें',
+  'Cancel work order': 'कार्य आदेश रद्द करें',
+  'Cancel this work order? It stays in the register with the reason.':
+    'यह कार्य आदेश रद्द करें? यह कारण के साथ रजिस्टर में बना रहेगा।',
+  'Work orders': 'कार्य आदेश',
+  'Issued from approved purchase requests.': 'स्वीकृत खरीद अनुरोधों से जारी।',
+  'No work orders yet': 'अभी कोई कार्य आदेश नहीं',
+  'Issue one below from an approved purchase request.':
+    'नीचे किसी स्वीकृत खरीद अनुरोध से एक जारी करें।',
+  'An admin issues work orders from approved purchase requests.':
+    'एडमिन स्वीकृत खरीद अनुरोधों से कार्य आदेश जारी करते हैं।',
+  'Completed {date}': '{date} को पूरा',
+  '{count} days open': '{count} दिन से खुला',
+  'Delay: {delay}': 'देरी: {delay}',
+  'Issue a work order': 'कार्य आदेश जारी करें',
+  'No approved purchase requests are waiting for a work order.':
+    'कोई स्वीकृत खरीद अनुरोध कार्य आदेश की प्रतीक्षा में नहीं है।',
+  'Save bill': 'बिल सहेजें',
+  'Add bill': 'बिल जोड़ें',
+  'Invoice number': 'इनवॉइस संख्या',
+  'Invoice date': 'इनवॉइस तिथि',
+  'Link payment': 'भुगतान जोड़ें',
+  'Cash-book payment': 'कैश-बुक भुगतान',
+  'No payee': 'कोई प्राप्तकर्ता नहीं',
+  '{amount} not yet linked': '{amount} अभी जुड़ा नहीं',
+  'Amount to link': 'जोड़ने की राशि',
+  'Up to the bill balance and the unlinked amount.':
+    'बिल की बाकी राशि और न जुड़ी राशि तक।',
+  '{amount} · invoice {date} · due {due}':
+    '{amount} · इनवॉइस {date} · देय {due}',
+  'Paid {paid} · Outstanding {outstanding}':
+    'भुगतान {paid} · बकाया {outstanding}',
+  'Unlinked – not counted': 'अलग किया गया – गिना नहीं गया',
+  'Reversed – not counted': 'उलटा गया – गिना नहीं गया',
+  'Unlink payment': 'भुगतान अलग करें',
+  'Reason for unlinking': 'अलग करने का कारण',
+  'Link a payment': 'भुगतान जोड़ें',
+  'No unlinked cash-book payments to link.':
+    'जोड़ने के लिए कोई न जुड़ा कैश-बुक भुगतान नहीं है।',
+  'Edit bill': 'बिल बदलें',
+  'Cancel this bill? It stays in the register with the reason.':
+    'यह बिल रद्द करें? यह कारण के साथ रजिस्टर में बना रहेगा।',
+  'Paid status comes only from linked cash-book payments.':
+    'भुगतान स्थिति केवल जुड़े कैश-बुक भुगतानों से आती है।',
+  'No bills recorded': 'कोई बिल दर्ज नहीं',
+  'Add a vendor bill below to track what is owed.':
+    'देय राशि पर नज़र रखने के लिए नीचे वेंडर बिल जोड़ें।',
+  'An admin records vendor bills.': 'एडमिन वेंडर बिल दर्ज करते हैं।',
+  'Add a bill': 'बिल जोड़ें',
+  'Describe what the contract covers.': 'बताएँ कि अनुबंध में क्या शामिल है।',
+  'Choose a payment frequency.': 'भुगतान की आवृत्ति चुनें।',
+  'Use a notice period of 0 to 365 days.': '0 से 365 दिन की सूचना अवधि रखें।',
+  'Use 1 to 31 sanctioned days.': '1 से 31 स्वीकृत दिन रखें।',
+  'Refresh the contract before saving.': 'सहेजने से पहले अनुबंध रीफ़्रेश करें।',
+  'Enter a reason for ending the contract early.':
+    'अनुबंध समय से पहले समाप्त करने का कारण दर्ज करें।',
+  'Choose a contract.': 'अनुबंध चुनें।',
+  'Use 0 to 31 actual days.': '0 से 31 वास्तविक दिन रखें।',
+  'Enter a reason for the manual deduction.': 'मैन्युअल कटौती का कारण दर्ज करें।',
+  'Enter the manual deduction amount for this reason.':
+    'इस कारण के लिए मैन्युअल कटौती की राशि दर्ज करें।',
+  'Refresh the check before saving.': 'सहेजने से पहले जाँच रीफ़्रेश करें।',
+  'Enter a reason for editing this check.': 'इस जाँच में बदलाव का कारण दर्ज करें।',
+  'Choose an approved purchase request.': 'स्वीकृत खरीद अनुरोध चुनें।',
+  'The due date must be on or after the issue date.':
+    'नियत तिथि जारी करने की तिथि के दिन या बाद की होनी चाहिए।',
+  'Describe the work.': 'काम का वर्णन करें।',
+  'Enter the completion date.': 'पूरा होने की तिथि दर्ज करें।',
+  'Enter a reason for cancelling.': 'रद्द करने का कारण दर्ज करें।',
+  'Enter the invoice number.': 'इनवॉइस संख्या दर्ज करें।',
+  'Refresh the bill before saving.': 'सहेजने से पहले बिल रीफ़्रेश करें।',
+  'Enter a reason for cancelling the bill.': 'बिल रद्द करने का कारण दर्ज करें।',
+  'Choose a cash-book entry.': 'कैश-बुक प्रविष्टि चुनें।',
+  'Enter a reason for unlinking.': 'अलग करने का कारण दर्ज करें।',
+  'Could not load contracts. Refresh and retry.':
+    'अनुबंध लोड नहीं हो सके। रीफ़्रेश करके फिर कोशिश करें।',
+  'Could not load agency checks. Refresh and retry.':
+    'एजेंसी जाँच लोड नहीं हो सकीं। रीफ़्रेश करके फिर कोशिश करें।',
+  'Could not load work orders. Refresh and retry.':
+    'कार्य आदेश लोड नहीं हो सके। रीफ़्रेश करके फिर कोशिश करें।',
+  'Could not load bills owed. Refresh and retry.':
+    'देय बिल लोड नहीं हो सके। रीफ़्रेश करके फिर कोशिश करें।',
+  'Could not load the vendor summary. Refresh and retry.':
+    'वेंडर सारांश लोड नहीं हो सका। रीफ़्रेश करके फिर कोशिश करें।',
+  'The contract was not saved. Check the period, annual value, payment frequency and notice days.':
+    'अनुबंध सहेजा नहीं गया। अवधि, वार्षिक मूल्य, भुगतान आवृत्ति और सूचना दिन जाँचें।',
+  'The renewal was not saved. A terminated contract cannot be renewed; check the new period and terms.':
+    'नवीनीकरण सहेजा नहीं गया। समाप्त अनुबंध का नवीनीकरण नहीं हो सकता; नई अवधि और शर्तें जाँचें।',
+  'The contract was not ended. Choose a date within the contract period and enter a reason.':
+    'अनुबंध समाप्त नहीं हुआ। अनुबंध अवधि के भीतर की तिथि चुनें और कारण दर्ज करें।',
+  'The agency check was not saved. The month must fall within the contract period, and sanctioned days must be 1 to 31.':
+    'एजेंसी जाँच सहेजी नहीं गई। महीना अनुबंध अवधि में होना चाहिए और स्वीकृत दिन 1 से 31 होने चाहिए।',
+  'The work order was not issued. Only an approved purchase request can get one, and the due date must be on or after the issue date.':
+    'कार्य आदेश जारी नहीं हुआ। केवल स्वीकृत खरीद अनुरोध के लिए जारी हो सकता है, और नियत तिथि जारी करने की तिथि के दिन या बाद की होनी चाहिए।',
+  'The work order was not saved. Only an open work order can be edited, and the due date must be on or after the issue date.':
+    'कार्य आदेश सहेजा नहीं गया। केवल खुला कार्य आदेश बदला जा सकता है, और नियत तिथि जारी करने की तिथि के दिन या बाद की होनी चाहिए।',
+  'The status was not changed. Status only moves forward; a completion date must be between the issue date and today.':
+    'स्थिति नहीं बदली। स्थिति केवल आगे बढ़ती है; पूरा होने की तिथि जारी करने की तिथि और आज के बीच होनी चाहिए।',
+  'The bill was not saved. A bill with a counted payment or a cancelled bill cannot be edited.':
+    'बिल सहेजा नहीं गया। गिने गए भुगतान वाला या रद्द बिल बदला नहीं जा सकता।',
+  'The bill was not cancelled. A bill with a counted payment cannot be cancelled.':
+    'बिल रद्द नहीं हुआ। गिने गए भुगतान वाला बिल रद्द नहीं किया जा सकता।',
+  "The payment was not linked. The amount cannot exceed the bill's balance or the entry's unlinked amount.":
+    'भुगतान नहीं जुड़ा। राशि बिल की बाकी राशि या प्रविष्टि की न जुड़ी राशि से अधिक नहीं हो सकती।',
+  'The payment was not unlinked. Refresh and retry.':
+    'भुगतान अलग नहीं हुआ। रीफ़्रेश करके फिर कोशिश करें।',
+  'Contract saved.': 'अनुबंध सहेजा गया।',
+  'Renewal saved. The earlier contract is kept unchanged.':
+    'नवीनीकरण सहेजा गया। पिछला अनुबंध बिना बदलाव के रखा गया है।',
+  'Contract ended early. The reason is recorded.':
+    'अनुबंध समय से पहले समाप्त हुआ। कारण दर्ज है।',
+  'Agency check saved. No bill or payment was created.':
+    'एजेंसी जाँच सहेजी गई। कोई बिल या भुगतान नहीं बना।',
+  'Work order issued.': 'कार्य आदेश जारी हुआ।',
+  'Work order saved.': 'कार्य आदेश सहेजा गया।',
+  'Work order status updated.': 'कार्य आदेश की स्थिति अपडेट हुई।',
+  'Bill saved.': 'बिल सहेजा गया।',
+  'Bill cancelled. The reason is recorded.': 'बिल रद्द हुआ। कारण दर्ज है।',
+  'Payment linked to the bill.': 'भुगतान बिल से जुड़ गया।',
+  'Payment unlinked. It stays listed as not counted.':
+    'भुगतान अलग हुआ। यह न गिने गए के रूप में सूची में रहेगा।',
+  'Save service schedule': 'सेवा अनुसूची सहेजें',
+  'AMC type': 'AMC प्रकार',
+  Comprehensive: 'व्यापक',
+  'Non-comprehensive': 'गैर-व्यापक',
+  'Asset type': 'संपत्ति प्रकार',
+  'Services per year (optional)': 'प्रति वर्ष सेवाएँ (वैकल्पिक)',
+  'The next service date is worked out from the last visit. Until the first visit it shows as Unscheduled.':
+    'अगली सेवा तिथि पिछली विज़िट से तय होती है। पहली विज़िट तक यह अनिर्धारित दिखती है।',
+  'AMC type:': 'AMC प्रकार:',
+  'Asset type:': 'संपत्ति प्रकार:',
+  'Services per year:': 'प्रति वर्ष सेवाएँ:',
+  'Last visit:': 'पिछली विज़िट:',
+  'None yet': 'अभी कोई नहीं',
+  'Next service:': 'अगली सेवा:',
+  Unscheduled: 'अनिर्धारित',
+  'Edit service schedule': 'सेवा अनुसूची बदलें',
+  'Service schedule saved.': 'सेवा अनुसूची सहेजी गई।',
+  'Choose a valid AMC type.': 'मान्य AMC प्रकार चुनें।',
+  'Choose a valid asset type.': 'मान्य संपत्ति प्रकार चुनें।',
+  'Services per year must be 1 to 12.': 'प्रति वर्ष सेवाएँ 1 से 12 होनी चाहिए।',
+  'The service schedule was not saved. Services per year must be 1 to 12.':
+    'सेवा अनुसूची सहेजी नहीं गई। प्रति वर्ष सेवाएँ 1 से 12 होनी चाहिए।',
+  'Service overdue': 'सेवा बकाया',
+  'Enter a valid date.': 'मान्य तिथि दर्ज करें।',
+  'Refresh the page and retry.': 'पेज रीफ़्रेश करके फिर कोशिश करें।',
+  'Enter a reason for this change.': 'इस बदलाव का कारण दर्ज करें।',
+  Terminated: 'समाप्त',
+  'Partly paid': 'आंशिक भुगतान',
+  'AMC renewal bands': 'AMC नवीनीकरण श्रेणियाँ',
+  "AMC contracts in the society's Urgent and Due Soon windows today.":
+    'आज सोसाइटी की अत्यावश्यक और जल्द देय अवधि में AMC अनुबंध।',
 };

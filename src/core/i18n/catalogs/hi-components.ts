@@ -9,6 +9,10 @@ export const HI_COMPONENTS: Readonly<Record<string, string>> = {
   Unit: 'यूनिट',
   Bill: 'बिल',
   'Due date': 'देय तारीख',
+  'Due Soon window (days)': 'जल्द देय अवधि (दिन)',
+  'Urgent window (days)': 'तत्काल अवधि (दिन)',
+  'Urgent must be shorter than Due Soon.':
+    'तत्काल अवधि, जल्द देय अवधि से कम होनी चाहिए।',
   Total: 'कुल',
   Outstanding: 'बाकी राशि',
   '{amount} outstanding · due {date}': '{amount} बाकी · देय तारीख {date}',

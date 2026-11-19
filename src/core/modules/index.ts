@@ -585,7 +585,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     },
     settingsAccess: {
       reminder_days: 'developer',
-      expiring_soon_days: 'developer',
+      due_soon_days: 'admin',
+      urgent_days: 'admin',
     },
     settingsSchema: amcSettingsSchema,
   },

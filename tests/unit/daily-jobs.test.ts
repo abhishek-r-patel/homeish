@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   runServiceRequestEscalationPrivileged: vi.fn(),
   runInventoryRemindersPrivileged: vi.fn(),
   runAmcRemindersPrivileged: vi.fn(),
+  runVendorContractRemindersPrivileged: vi.fn(),
   runTenancyRemindersPrivileged: vi.fn(),
   runPollReconcilePrivileged: vi.fn(),
   runPollRetentionPrivileged: vi.fn(),
@@ -36,6 +37,8 @@ vi.mock('../../src/core/privileged', () => ({
     mocks.runServiceRequestEscalationPrivileged,
   runInventoryRemindersPrivileged: mocks.runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged: mocks.runAmcRemindersPrivileged,
+  runVendorContractRemindersPrivileged:
+    mocks.runVendorContractRemindersPrivileged,
   runTenancyRemindersPrivileged: mocks.runTenancyRemindersPrivileged,
   runPollReconcilePrivileged: mocks.runPollReconcilePrivileged,
   runPollRetentionPrivileged: mocks.runPollRetentionPrivileged,
@@ -208,6 +211,7 @@ describe('daily jobs', () => {
       'service_request.escalate',
       'housekeeping.low_stock',
       'amc.reminders',
+      'vendor.contract_reminders',
       'tenancy.reminders',
       'poll.reconcile',
       'meeting.action_reminders',
@@ -244,6 +248,10 @@ describe('daily jobs', () => {
       ['society-2'],
     ]);
     expect(mocks.runAmcRemindersPrivileged.mock.calls).toEqual([
+      ['society-1'],
+      ['society-2'],
+    ]);
+    expect(mocks.runVendorContractRemindersPrivileged.mock.calls).toEqual([
       ['society-1'],
       ['society-2'],
     ]);

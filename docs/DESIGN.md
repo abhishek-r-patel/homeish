@@ -184,36 +184,37 @@ Cards and sections have a border, **no shadow**. Elevation is reserved for thing
 
 A chip = icon + sentence-case label + tint background + full-strength text. 6px radius, `micro` size, minimum chip height 24px (chips are display-only unless inside a 48px interactive row).
 
-| Domain status                                  | Tone                              | Icon (concept)        |
-| ---------------------------------------------- | --------------------------------- | --------------------- |
-| Visitor: Pending                               | warning                           | clock                 |
-| Visitor: Approved                              | success                           | check                 |
-| Visitor: Denied                                | danger                            | cross                 |
-| Visitor: Expired / No response                 | neutral                           | clock-off             |
-| Visitor: Checked in                            | info                              | arrow-in              |
-| Visitor: Checked out                           | neutral                           | arrow-out             |
-| Visitor: Still inside (overdue, VIS-9)         | warning                           | alert                 |
-| Delivery: Pending response                     | warning                           | clock                 |
-| Delivery: Allowed / Left at gate               | info                              | check / package       |
-| Delivery: Denied                               | danger                            | cross                 |
-| Delivery: Collected / Closed                   | success / neutral                 | check                 |
-| Bill: Due                                      | info                              | receipt               |
-| Bill: Overdue                                  | danger                            | alert                 |
-| Bill: Paid                                     | success                           | check                 |
-| Bill: Partially paid                           | warning                           | half-circle           |
-| Bill / fine: Waived / Cancelled                | neutral                           | slash                 |
-| Payment: Awaiting confirmation                 | warning                           | clock                 |
-| Payment: Confirmed                             | success                           | check                 |
-| Payment: Rejected                              | danger                            | cross                 |
-| Request: Open / Assigned / In progress         | info                              | dot / user / progress |
-| Request: Resolved / Closed                     | success / neutral                 | check                 |
-| Request: Rejected                              | danger                            | cross                 |
-| Request: Reopened / Overdue (SLA)              | warning / danger                  | refresh / alert       |
-| AMC: Active / Expiring soon / Expired          | success / warning / danger        | check / clock / alert |
-| Stock: Low                                     | warning                           | alert                 |
-| Society: Trial / Active / Suspended / Archived | info / success / danger / neutral |                       |
-| Error log: Open / Resolved / Ignored           | danger / success / neutral        |                       |
-| Severity: Critical / Error / Warning / Info    | danger / danger / warning / info  |                       |
+| Domain status                                                  | Tone                                        | Icon (concept)                                |
+| -------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------- |
+| Visitor: Pending                                               | warning                                     | clock                                         |
+| Visitor: Approved                                              | success                                     | check                                         |
+| Visitor: Denied                                                | danger                                      | cross                                         |
+| Visitor: Expired / No response                                 | neutral                                     | clock-off                                     |
+| Visitor: Checked in                                            | info                                        | arrow-in                                      |
+| Visitor: Checked out                                           | neutral                                     | arrow-out                                     |
+| Visitor: Still inside (overdue, VIS-9)                         | warning                                     | alert                                         |
+| Delivery: Pending response                                     | warning                                     | clock                                         |
+| Delivery: Allowed / Left at gate                               | info                                        | check / package                               |
+| Delivery: Denied                                               | danger                                      | cross                                         |
+| Delivery: Collected / Closed                                   | success / neutral                           | check                                         |
+| Bill: Due                                                      | info                                        | receipt                                       |
+| Bill: Overdue                                                  | danger                                      | alert                                         |
+| Bill: Paid                                                     | success                                     | check                                         |
+| Bill: Partially paid                                           | warning                                     | half-circle                                   |
+| Vendor bill: Pending / Partly paid / Paid / Due Soon / Overdue | info / warning / success / warning / danger | receipt / half-circle / check / clock / alert |
+| Bill / fine: Waived / Cancelled                                | neutral                                     | slash                                         |
+| Payment: Awaiting confirmation                                 | warning                                     | clock                                         |
+| Payment: Confirmed                                             | success                                     | check                                         |
+| Payment: Rejected                                              | danger                                      | cross                                         |
+| Request: Open / Assigned / In progress                         | info                                        | dot / user / progress                         |
+| Request: Resolved / Closed                                     | success / neutral                           | check                                         |
+| Request: Rejected                                              | danger                                      | cross                                         |
+| Request: Reopened / Overdue (SLA)                              | warning / danger                            | refresh / alert                               |
+| AMC/contract: Upcoming / Active / Due Soon / Urgent / Expired  | info / success / warning / danger           | calendar / check / clock / alert              |
+| Stock: Low                                                     | warning                                     | alert                                         |
+| Society: Trial / Active / Suspended / Archived                 | info / success / danger / neutral           |                                               |
+| Error log: Open / Resolved / Ignored                           | danger / success / neutral                  |                                               |
+| Severity: Critical / Error / Warning / Info                    | danger / danger / warning / info            |                                               |
 
 Rule: a status keeps the same tone, icon and wording in lists, details, notifications and exports.
 
@@ -809,6 +810,19 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **Reconciliation (`/admin/expenses/reconciliation`):** choose a bank account, then **Statement items** (date, reference, party, in/out, amount, status chip Unmatched/Matched/Cancelled, an **Older than 30 days** chip) and **Book entries not yet matched**. Admins add items, match an item to an entry with the same amount and direction, or cancel with a reason; committee members get a **View only** banner. A note says differences are never posted automatically.
 - **Petty cash:** setup (admin) marks the cash account as petty cash and picks the custodian from active members; changing the custodian asks for the handover count. `/petty-cash` shows the book amount, **Record a count** (date, counted amount in rupees, note), counts with the difference as signed words ("₹120 short", "₹40 over") and custodian history. A non-admin custodian sees only this page, reached from a **Petty cash** link in their navigation (a tile on the guard home); admins and committee use the Accounts tabs, and committee members read without recording.
 - **Report:** the period report adds **Net surplus or deficit** per month and **Financial year to date (not a balance)**.
+
+### 12.18 Vendor, contract and AMC additions (P47; D-71 approved for Batch 2 implementation)
+
+- `/admin/vendors` adds **Contracts**, **Agency checks**, **Work orders** and **Bills owed** views. Admins manage the records; committee members get read-only views. The existing P24 purchase-request and approval behavior is unchanged.
+- Vendor details add optional PAN in the standard 10-character Indian format (stored uppercase), payment terms from 0 to 365 days (0 means due immediately; blank uses the five-day bill default) and onboarded date. Blacklisted status requires a reason and is audited; a clear warning appears for new purchase requests and service-request assignments, but the action is not blocked. PAN is visible only to admins.
+- General contracts remain separate from AMCs. Contract and AMC lists show Upcoming, Active, Due Soon, Urgent or Expired using admin-editable 60-day and 30-day windows by default; a terminated contract shows **Terminated**. Contracts show **Auto-renews** as a label, the notice deadline when notice days are set, and **Renew** and **End early** actions for admins. Admins edit the windows on the AMC page; committee members can view but not change them. Existing 60/30/7 reminder behavior remains unchanged.
+- `/admin/amc` includes an admin-only expiry-window form showing Due Soon (default 60 days) and Urgent (default 30 days). Save rejects zero, out-of-range values and any Urgent value that is not shorter than Due Soon; committee members see the current values without edit controls.
+- AMC service schedules allow 1–12 visits per year, spaced by `round(365 / services per year)` days from the latest logged visit, and an optional asset category picked from the asset register. Before the first visit, show the schedule as unscheduled rather than implying it is overdue.
+- Agency checks show sanctioned and actual staff-days, shortfall, contracted amount, deduction, payable and bill-raised variance. The deduction uses the contract's per-missing-day rate, capped at contracted amount; when no rate is configured, an admin enters a deduction and reason, still capped at contracted amount. The contract's defaults pre-fill a new check. Editing a saved check asks for a reason. Label the check as a record only; it creates no bill or payment.
+- Work orders require an approved P24 purchase request and show the per-society yearly number, status, optional due date, completion date and derived delay/days open (delay shows "—" without a due date). Only the allowed next statuses are offered (Issued also offers Completed); cancelling asks for a reason.
+- Bills owed show invoice date, due date, effective terms, linked P16 payments, partial balance and separate payment-status and due-state chips. Use saved vendor terms or a five-day fallback at creation and retain the effective terms with the bill. **Due Soon** appears in the seven days through the due date; **Overdue** begins the next day. A partly paid overdue bill shows **Partly paid** and **Overdue**. There is no manual Paid action. **Link payment** lists eligible cash-book entries with their payee and unlinked amount; a reversed payment stays listed as **Reversed – not counted**. **Unlink** on a counting payment asks for a reason, and the payment stays listed as **Unlinked – not counted** with that reason. Edit is offered only before a payment counts; **Cancel bill** asks for a reason.
+- The vendor list shows a summary strip with society totals; each vendor page shows the same figures for that vendor. Every figure links to its source view.
+- Empty, disabled, denied, loading and error states follow Section 9.3. All amounts use existing rupee/paise input and display patterns.
 
 ### 12.19 Dues and arrears additions (P38; D-71 approved for P38.2–P38.4)
 

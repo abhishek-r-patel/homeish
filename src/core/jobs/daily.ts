@@ -11,6 +11,7 @@ import {
   runVisitorExpirationPrivileged,
   runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged,
+  runVendorContractRemindersPrivileged,
   runTenancyRemindersPrivileged,
   runPollReconcilePrivileged,
   runPollRetentionPrivileged,
@@ -83,6 +84,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'amc.reminders',
     run: async (societyId: string) => {
       await runAmcRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'vendor.contract_reminders',
+    run: async (societyId: string) => {
+      await runVendorContractRemindersPrivileged(societyId);
     },
   },
   {

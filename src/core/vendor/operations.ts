@@ -9,6 +9,16 @@ import { buildRequestContext } from '../tenancy/request-context';
 import {
   vendorActiveInputSchema,
   vendorApproveResultSchema,
+  vendorBillCancelInputSchema,
+  vendorBillInputSchema,
+  vendorBillPaymentLinkInputSchema,
+  vendorBillPaymentUnlinkInputSchema,
+  vendorBillsSchema,
+  vendorBlacklistInputSchema,
+  vendorContractInputSchema,
+  vendorContractRenewInputSchema,
+  vendorContractTerminateInputSchema,
+  vendorContractsSchema,
   vendorDetailSchema,
   vendorDocumentArchiveInputSchema,
   vendorDocumentInputSchema,
@@ -26,6 +36,13 @@ import {
   vendorRequestRejectInputSchema,
   vendorRequestSubmitInputSchema,
   vendorSettingsInputSchema,
+  vendorStaffDayCheckInputSchema,
+  vendorStaffDayChecksSchema,
+  vendorSummarySchema,
+  vendorWorkOrderCreateInputSchema,
+  vendorWorkOrderStatusInputSchema,
+  vendorWorkOrderUpdateInputSchema,
+  vendorWorkOrdersSchema,
   vendorWorkspaceSchema,
 } from './validation';
 
@@ -123,6 +140,9 @@ export async function saveVendor(input: unknown, requestId: string) {
       p_phone: vendor.phone,
       p_email: vendor.email,
       p_gstin: vendor.gstin,
+      p_pan: vendor.pan,
+      p_payment_terms_days: vendor.paymentTermsDays,
+      p_onboarded_date: vendor.onboardedDate,
       p_notes: vendor.notes,
       p_expected_version: vendor.expectedVersion,
       p_client_request_id: vendor.clientRequestId,
@@ -152,6 +172,29 @@ export async function setVendorActive(input: unknown, requestId: string) {
     },
     z.null(),
     'The vendor was not updated. Refresh and retry.',
+  );
+}
+
+export async function setVendorBlacklisted(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorBlacklistInputSchema, input);
+  await callModuleRpc(
+    context,
+    'vendor_set_blacklisted',
+    {
+      p_society_id: societyId,
+      p_vendor_id: values.vendorId,
+      p_blacklisted: values.blacklisted,
+      p_expected_version: values.expectedVersion,
+      p_reason: values.reason,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The blacklist status was not updated. Enter a reason and refresh the vendor before retrying.',
   );
 }
 
@@ -441,5 +484,369 @@ export async function retryPurchaseExpenseDraft(
     },
     vendorExpenseDraftStatusSchema,
     'The expense draft was not created. Refresh and retry.',
+  );
+}
+
+export type VendorRegisterScope = { vendorId?: string };
+
+function registerArgs(societyId: string, scope: VendorRegisterScope) {
+  return scope.vendorId
+    ? {
+        p_society_id: societyId,
+        p_vendor_id: parseModuleInput(z.uuid(), scope.vendorId),
+      }
+    : { p_society_id: societyId };
+}
+
+export async function getVendorContracts(scope: VendorRegisterScope = {}) {
+  const { context, societyId } = await getVendorContext('vendor:list');
+  return callModuleRpc(
+    context,
+    'vendor_contracts_get',
+    registerArgs(societyId, scope),
+    vendorContractsSchema,
+    'Could not load contracts. Refresh and retry.',
+  );
+}
+
+export async function getVendorStaffDayChecks(scope: VendorRegisterScope = {}) {
+  const { context, societyId } = await getVendorContext('vendor:list');
+  return callModuleRpc(
+    context,
+    'vendor_staff_day_checks_get',
+    registerArgs(societyId, scope),
+    vendorStaffDayChecksSchema,
+    'Could not load agency checks. Refresh and retry.',
+  );
+}
+
+export async function getVendorWorkOrders(scope: VendorRegisterScope = {}) {
+  const { context, societyId } = await getVendorContext('vendor:list');
+  return callModuleRpc(
+    context,
+    'vendor_work_orders_get',
+    registerArgs(societyId, scope),
+    vendorWorkOrdersSchema,
+    'Could not load work orders. Refresh and retry.',
+  );
+}
+
+export async function getVendorBills(scope: VendorRegisterScope = {}) {
+  const { context, societyId } = await getVendorContext('vendor:list');
+  return callModuleRpc(
+    context,
+    'vendor_bills_get',
+    registerArgs(societyId, scope),
+    vendorBillsSchema,
+    'Could not load bills owed. Refresh and retry.',
+  );
+}
+
+export async function getVendorSummary(scope: VendorRegisterScope = {}) {
+  const { context, societyId } = await getVendorContext('vendor:list');
+  return callModuleRpc(
+    context,
+    'vendor_summary_get',
+    registerArgs(societyId, scope),
+    vendorSummarySchema,
+    'Could not load the vendor summary. Refresh and retry.',
+  );
+}
+
+const CONTRACT_FAILURE =
+  'The contract was not saved. Check the period, annual value, payment frequency and notice days.';
+
+export async function saveVendorContract(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorContractInputSchema, input);
+  return callModuleRpc(
+    context,
+    'vendor_contract_save',
+    {
+      p_society_id: societyId,
+      p_contract_id: values.contractId,
+      p_vendor_id: values.vendorId,
+      p_scope: values.scope,
+      p_start_date: values.startDate,
+      p_end_date: values.endDate,
+      p_annual_value_paise: values.annualValuePaise,
+      p_payment_frequency: values.paymentFrequency,
+      p_auto_renew: values.autoRenew,
+      p_notice_days: values.noticeDays,
+      p_document_path: values.documentPath,
+      p_default_sanctioned_days: values.defaultSanctionedDays,
+      p_deduction_per_day_paise: values.deductionPerDayPaise,
+      p_expected_version: values.expectedVersion,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    CONTRACT_FAILURE,
+  );
+}
+
+export async function renewVendorContract(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorContractRenewInputSchema, input);
+  return callModuleRpc(
+    context,
+    'vendor_contract_renew',
+    {
+      p_society_id: societyId,
+      p_predecessor_id: values.predecessorId,
+      p_scope: values.scope,
+      p_start_date: values.startDate,
+      p_end_date: values.endDate,
+      p_annual_value_paise: values.annualValuePaise,
+      p_payment_frequency: values.paymentFrequency,
+      p_auto_renew: values.autoRenew,
+      p_notice_days: values.noticeDays,
+      p_document_path: values.documentPath,
+      p_default_sanctioned_days: values.defaultSanctionedDays,
+      p_deduction_per_day_paise: values.deductionPerDayPaise,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The renewal was not saved. A terminated contract cannot be renewed; check the new period and terms.',
+  );
+}
+
+export async function terminateVendorContract(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorContractTerminateInputSchema, input);
+  await callModuleRpc(
+    context,
+    'vendor_contract_terminate',
+    {
+      p_society_id: societyId,
+      p_contract_id: values.contractId,
+      p_terminated_on: values.terminatedOn,
+      p_reason: values.reason,
+      p_expected_version: values.expectedVersion,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The contract was not ended. Choose a date within the contract period and enter a reason.',
+  );
+}
+
+export async function saveVendorStaffDayCheck(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorStaffDayCheckInputSchema, input);
+  return callModuleRpc(
+    context,
+    'vendor_staff_day_check_save',
+    {
+      p_society_id: societyId,
+      p_check_id: values.checkId,
+      p_contract_id: values.contractId,
+      p_month: values.month,
+      p_sanctioned_days: values.sanctionedDays,
+      p_actual_days: values.actualDays,
+      p_contracted_amount_paise: values.contractedAmountPaise,
+      p_rate_paise: values.ratePaise,
+      p_manual_deduction_paise: values.manualDeductionPaise,
+      p_manual_deduction_reason: values.manualDeductionReason,
+      p_bill_raised_paise: values.billRaisedPaise,
+      p_edit_reason: values.editReason,
+      p_expected_version: values.expectedVersion,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The agency check was not saved. The month must fall within the contract period, and sanctioned days must be 1 to 31.',
+  );
+}
+
+export async function createVendorWorkOrder(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorWorkOrderCreateInputSchema, input);
+  return callModuleRpc(
+    context,
+    'vendor_work_order_create',
+    {
+      p_society_id: societyId,
+      p_purchase_request_id: values.purchaseRequestId,
+      p_description: values.description,
+      p_value_paise: values.valuePaise,
+      p_issued_on: values.issuedOn,
+      p_due_on: values.dueOn,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The work order was not issued. Only an approved purchase request can get one, and the due date must be on or after the issue date.',
+  );
+}
+
+export async function updateVendorWorkOrder(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorWorkOrderUpdateInputSchema, input);
+  await callModuleRpc(
+    context,
+    'vendor_work_order_update',
+    {
+      p_society_id: societyId,
+      p_work_order_id: values.workOrderId,
+      p_description: values.description,
+      p_due_on: values.dueOn,
+      p_expected_version: values.expectedVersion,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The work order was not saved. Only an open work order can be edited, and the due date must be on or after the issue date.',
+  );
+}
+
+export async function setVendorWorkOrderStatus(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorWorkOrderStatusInputSchema, input);
+  await callModuleRpc(
+    context,
+    'vendor_work_order_set_status',
+    {
+      p_society_id: societyId,
+      p_work_order_id: values.workOrderId,
+      p_status: values.status,
+      p_completed_on: values.status === 'completed' ? values.completedOn : null,
+      p_reason: values.status === 'cancelled' ? values.reason : null,
+      p_expected_version: values.expectedVersion,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The status was not changed. Status only moves forward; a completion date must be between the issue date and today.',
+  );
+}
+
+export async function saveVendorBill(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorBillInputSchema, input);
+  return callModuleRpc(
+    context,
+    'vendor_bill_save',
+    {
+      p_society_id: societyId,
+      p_bill_id: values.billId,
+      p_vendor_id: values.vendorId,
+      p_invoice_number: values.invoiceNumber,
+      p_invoice_date: values.invoiceDate,
+      p_amount_paise: values.amountPaise,
+      p_expected_version: values.expectedVersion,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The bill was not saved. A bill with a counted payment or a cancelled bill cannot be edited.',
+  );
+}
+
+export async function cancelVendorBill(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorBillCancelInputSchema, input);
+  await callModuleRpc(
+    context,
+    'vendor_bill_cancel',
+    {
+      p_society_id: societyId,
+      p_bill_id: values.billId,
+      p_reason: values.reason,
+      p_expected_version: values.expectedVersion,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The bill was not cancelled. A bill with a counted payment cannot be cancelled.',
+  );
+}
+
+export async function linkVendorBillPayment(input: unknown, requestId: string) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorBillPaymentLinkInputSchema, input);
+  return callModuleRpc(
+    context,
+    'vendor_bill_payment_link',
+    {
+      p_society_id: societyId,
+      p_bill_id: values.billId,
+      p_entry_id: values.entryId,
+      p_amount_paise: values.amountPaise,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    "The payment was not linked. The amount cannot exceed the bill's balance or the entry's unlinked amount.",
+  );
+}
+
+export async function unlinkVendorBillPayment(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getVendorContext(
+    'vendor:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(vendorBillPaymentUnlinkInputSchema, input);
+  await callModuleRpc(
+    context,
+    'vendor_bill_payment_unlink',
+    {
+      p_society_id: societyId,
+      p_payment_id: values.paymentId,
+      p_reason: values.reason,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The payment was not unlinked. Refresh and retry.',
   );
 }

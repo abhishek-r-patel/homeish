@@ -3,11 +3,13 @@
 import { useId, useState } from 'react';
 import { VENDOR_REQUEST_STATUS_LABELS } from '@/core/vendor/presentation';
 import {
+  vendorBlacklistInputSchema,
   vendorDocumentInputSchema,
   vendorRatingInputSchema,
   type VendorDetail,
 } from '@/core/vendor/validation';
 import { Card } from '@/components/ui/data-display';
+import { Banner } from '@/components/ui/feedback';
 import { ModuleActionForm } from '@/components/ui/module-action-form';
 import { SelectInput } from '@/components/ui/select-input';
 import { TextAreaInput } from '@/components/ui/specialized-inputs';
@@ -22,6 +24,12 @@ import {
 } from './shared';
 import { VendorForm } from './workspace';
 import { useVendorPresentation } from './presentation';
+import {
+  VENDOR_REGISTER_ANCHORS,
+  VendorRegisters,
+  VendorSummaryStrip,
+  type VendorRegisterLoads,
+} from './registers';
 
 function DocumentForm({
   vendorId,
@@ -112,11 +120,55 @@ function RatingForm({
   );
 }
 
+function BlacklistForm({
+  detail,
+  actions,
+}: {
+  detail: VendorDetail;
+  actions: VendorActions;
+}) {
+  const { t } = useVendorPresentation();
+  const id = useId();
+  const vendor = detail.vendor;
+  return (
+    <ModuleActionForm
+      action={actions.setBlacklisted}
+      submitLabel={t(
+        vendor.blacklisted ? 'Remove blacklist' : 'Blacklist vendor',
+      )}
+      confirmMessage={t(
+        vendor.blacklisted
+          ? 'Remove this vendor from the blacklist? The reason will be recorded.'
+          : 'Blacklist this vendor? New purchases and assignments will show a warning but will not be blocked.',
+      )}
+      input={(form) =>
+        vendorBlacklistInputSchema.parse({
+          vendorId: vendor.id,
+          blacklisted: !vendor.blacklisted,
+          reason: String(form.get('reason') ?? ''),
+          expectedVersion: vendor.version,
+        })
+      }
+    >
+      <TextAreaInput
+        id={`${id}-reason`}
+        name="reason"
+        label={t('Reason for blacklist change')}
+        helpText={t('This reason is recorded in the audit log.')}
+        required
+        maxLength={500}
+      />
+    </ModuleActionForm>
+  );
+}
+
 export function VendorDetailView({
   detail,
+  registers,
   actions = VENDOR_ACTIONS,
 }: {
   detail: VendorDetail;
+  registers?: VendorRegisterLoads;
   actions?: VendorActions;
 }) {
   const { t, money, date, rating: ratingSummary } = useVendorPresentation();
@@ -125,6 +177,27 @@ export function VendorDetailView({
     (document) => document.archived_at === null,
   );
   const archived = detail.documents.length - documents.length;
+  const contactRows: { label: string; value: string | null }[] = [
+    { label: 'Contact person', value: vendor.contact_person },
+    { label: 'Phone', value: vendor.phone },
+    { label: 'Email', value: vendor.email },
+    { label: 'GSTIN', value: vendor.gstin },
+    ...(detail.can_manage ? [{ label: 'PAN', value: vendor.pan }] : []),
+    {
+      label: 'Payment terms',
+      value:
+        vendor.payment_terms_days === null
+          ? null
+          : vendor.payment_terms_days === 0
+            ? t('Due immediately')
+            : t('{count} days', { count: vendor.payment_terms_days }),
+    },
+    {
+      label: 'Onboarded date',
+      value: vendor.onboarded_date ? date(vendor.onboarded_date) : null,
+    },
+    { label: 'Notes', value: vendor.notes },
+  ];
   return (
     <section className="grid min-w-0 gap-space-5">
       <header className="grid gap-space-2">
@@ -138,19 +211,25 @@ export function VendorDetailView({
         <p className="text-body text-ink-muted">
           {vendor.category}
           {vendor.active ? '' : t(' · Inactive, cannot receive new quotes')}
+          {vendor.blacklisted ? ` · ${t('Blacklisted vendor')}` : ''}
         </p>
       </header>
+      {vendor.blacklisted ? (
+        <Banner tone="warning" title={t('Blacklisted vendor')}>
+          <p>
+            {t(
+              'New purchases and service-request assignments show a warning but are not blocked.',
+            )}
+          </p>
+          <p>{vendor.blacklist_reason}</p>
+        </Banner>
+      ) : null}
+      {registers ? (
+        <VendorSummaryStrip load={registers.summary} scoped />
+      ) : null}
       <Card title={t('Contact')}>
         <dl className="grid gap-space-2 text-body">
-          {(
-            [
-              ['Contact person', vendor.contact_person],
-              ['Phone', vendor.phone],
-              ['Email', vendor.email],
-              ['GSTIN', vendor.gstin],
-              ['Notes', vendor.notes],
-            ] as const
-          ).map(([label, value]) => (
+          {contactRows.map(({ label, value }) => (
             <div key={label} className="grid gap-space-1">
               <dt className="text-caption text-ink-muted">{t(label)}</dt>
               <dd className="break-words">{value ?? t('Not recorded')}</dd>
@@ -158,27 +237,32 @@ export function VendorDetailView({
           ))}
         </dl>
       </Card>
-      <Card
-        title={t('Ratings')}
-        description={ratingSummary(detail.rating_average, detail.rating_count)}
-      >
-        <div className="grid gap-space-4">
-          {detail.ratings.length > 0 ? (
-            <ul className="grid gap-space-2">
-              {detail.ratings.map((rating) => (
-                <li key={rating.id} className="text-body">
-                  {t('{count} of 5', { count: rating.stars })} ·{' '}
-                  {rating.mine
-                    ? t('You')
-                    : (rating.rater_name ?? t('A member'))}
-                  {rating.comment ? `: ${rating.comment}` : ''}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <RatingForm detail={detail} actions={actions} />
-        </div>
-      </Card>
+      <div id={VENDOR_REGISTER_ANCHORS.ratings} className="min-w-0">
+        <Card
+          title={t('Ratings')}
+          description={ratingSummary(
+            detail.rating_average,
+            detail.rating_count,
+          )}
+        >
+          <div className="grid gap-space-4">
+            {detail.ratings.length > 0 ? (
+              <ul className="grid gap-space-2">
+                {detail.ratings.map((rating) => (
+                  <li key={rating.id} className="text-body">
+                    {t('{count} of 5', { count: rating.stars })} ·{' '}
+                    {rating.mine
+                      ? t('You')
+                      : (rating.rater_name ?? t('A member'))}
+                    {rating.comment ? `: ${rating.comment}` : ''}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <RatingForm detail={detail} actions={actions} />
+          </div>
+        </Card>
+      </div>
       <Card
         title={t('Documents')}
         description={
@@ -253,10 +337,24 @@ export function VendorDetailView({
           <p className="text-body text-ink-muted">{t('No quotes yet.')}</p>
         )}
       </Card>
+      {registers ? (
+        <VendorRegisters
+          registers={registers}
+          vendorId={vendor.id}
+          actions={actions}
+        />
+      ) : null}
       {detail.can_manage ? (
         <>
           <Card title={t('Edit vendor')}>
             <VendorForm vendor={vendor} actions={actions} />
+          </Card>
+          <Card
+            title={t(
+              vendor.blacklisted ? 'Blacklist status' : 'Blacklist vendor',
+            )}
+          >
+            <BlacklistForm detail={detail} actions={actions} />
           </Card>
           <Card title={t(vendor.active ? 'Deactivate' : 'Reactivate')}>
             <VendorQuickAction

@@ -88,9 +88,16 @@ export const statusMap = {
   'notice.unread': { icon: '•', label: 'New', tone: 'info' },
   'notice.expired': { icon: '◷', label: 'Expired', tone: 'neutral' },
   'notice.withdrawn': { icon: '/', label: 'Withdrawn', tone: 'neutral' },
+  'amc.upcoming': { icon: '◷', label: 'Upcoming', tone: 'info' },
   'amc.active': { icon: '✓', label: 'Active', tone: 'success' },
-  'amc.expiring_soon': { icon: '◷', label: 'Expiring soon', tone: 'warning' },
+  'amc.due_soon': { icon: '◷', label: 'Due Soon', tone: 'warning' },
+  'amc.urgent': { icon: '!', label: 'Urgent', tone: 'danger' },
   'amc.expired': { icon: '!', label: 'Expired', tone: 'danger' },
+  'amc.service_overdue': {
+    icon: '!',
+    label: 'Service overdue',
+    tone: 'danger',
+  },
   'stock.low': { icon: '!', label: 'Low', tone: 'warning' },
   'tenancy.awaiting_consent': {
     icon: '◷',
@@ -174,6 +181,25 @@ export const statusMap = {
   'severity.error': { icon: '×', label: 'Error', tone: 'danger' },
   'severity.warning': { icon: '!', label: 'Warning', tone: 'warning' },
   'severity.info': { icon: 'i', label: 'Info', tone: 'info' },
+  'contract.terminated': { icon: '/', label: 'Terminated', tone: 'neutral' },
+  'work_order.issued': { icon: '•', label: 'Issued', tone: 'info' },
+  'work_order.in_progress': {
+    icon: '◐',
+    label: 'In progress',
+    tone: 'info',
+  },
+  'work_order.completed': { icon: '✓', label: 'Completed', tone: 'success' },
+  'work_order.cancelled': { icon: '/', label: 'Cancelled', tone: 'neutral' },
+  'vendor_bill.pending': { icon: '◷', label: 'Pending', tone: 'warning' },
+  'vendor_bill.partly_paid': {
+    icon: '◐',
+    label: 'Partly paid',
+    tone: 'warning',
+  },
+  'vendor_bill.paid': { icon: '✓', label: 'Paid', tone: 'success' },
+  'vendor_bill.cancelled': { icon: '/', label: 'Cancelled', tone: 'neutral' },
+  'vendor_bill.due_soon': { icon: '◷', label: 'Due Soon', tone: 'warning' },
+  'vendor_bill.overdue': { icon: '!', label: 'Overdue', tone: 'danger' },
 } as const satisfies Record<string, StatusDefinition>;
 
 export type ProductStatus = keyof typeof statusMap;

@@ -204,6 +204,16 @@ export const ANALYTICS_METRICS = [
     href: '/admin/amc',
   },
   {
+    key: 'amc.expiry_bands',
+    module: 'amc',
+    defaultOn: false,
+    money: false,
+    label: 'AMC renewal bands',
+    description:
+      "AMC contracts in the society's Urgent and Due Soon windows today.",
+    href: '/admin/amc',
+  },
+  {
     key: 'amc.visits',
     module: 'amc',
     defaultOn: false,

@@ -1,9 +1,12 @@
 // Verify AMC date ordering, exact cost parsing and versioned visit corrections.
 import { describe, expect, it } from 'vitest';
 import {
+  amcExpirySettingsInputSchema,
   amcContractInputSchema,
+  amcScheduleInputSchema,
   amcVisitInputSchema,
   amcSettingsSchema,
+  DEFAULT_AMC_SETTINGS,
 } from '../../src/core/amc/validation';
 const id = '9a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const contract = {
@@ -66,6 +69,54 @@ describe('AMC validation', () => {
       );
     expect(
       amcSettingsSchema.safeParse({ reminder_days: [60, 30, 7] }).success,
+    ).toBe(true);
+  });
+  it('accepts a blank service schedule and rejects out-of-range services per year', () => {
+    const schedule = {
+      contractId: id,
+      amcType: null,
+      assetCategoryId: null,
+      servicesPerYear: null,
+      expectedUpdatedAt: '2026-11-15T00:00:00Z',
+    };
+    expect(amcScheduleInputSchema.safeParse(schedule).success).toBe(true);
+    expect(
+      amcScheduleInputSchema.safeParse({
+        ...schedule,
+        amcType: 'comprehensive',
+        servicesPerYear: 12,
+      }).success,
+    ).toBe(true);
+    for (const servicesPerYear of [0, 13, 2.5])
+      expect(
+        amcScheduleInputSchema.safeParse({ ...schedule, servicesPerYear })
+          .success,
+      ).toBe(false);
+    expect(
+      amcScheduleInputSchema.safeParse({ ...schedule, amcType: 'premium' })
+        .success,
+    ).toBe(false);
+  });
+  it('requires a valid ordered pair for society-managed expiry windows', () => {
+    expect(DEFAULT_AMC_SETTINGS.due_soon_days).toBe(60);
+    expect(DEFAULT_AMC_SETTINGS.urgent_days).toBe(30);
+    expect(amcSettingsSchema.safeParse(DEFAULT_AMC_SETTINGS).success).toBe(
+      true,
+    );
+    expect(amcSettingsSchema.safeParse({ due_soon_days: 60 }).success).toBe(
+      false,
+    );
+    expect(
+      amcExpirySettingsInputSchema.safeParse({
+        dueSoonDays: 30,
+        urgentDays: 30,
+      }).success,
+    ).toBe(false);
+    expect(
+      amcExpirySettingsInputSchema.safeParse({
+        dueSoonDays: 60,
+        urgentDays: 30,
+      }).success,
     ).toBe(true);
   });
 });

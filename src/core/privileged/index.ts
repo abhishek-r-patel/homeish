@@ -55,6 +55,7 @@ export {
 export { runInventoryRemindersPrivileged } from './housekeeping';
 export type { TransactionalEmail } from '../notifications/email';
 export { runAmcRemindersPrivileged } from './amc';
+export { runVendorContractRemindersPrivileged } from './vendor';
 export {
   attestTenancyNocPrivileged,
   runTenancyRemindersPrivileged,

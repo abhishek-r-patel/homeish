@@ -236,7 +236,13 @@ export async function getServiceRequestDetail(requestId: string) {
     isAdmin && context.enabledModules.has('vendor')
       ? (await getVendorWorkspace()).vendors
           .filter((vendor) => vendor.active && vendor.phone)
-          .map(({ id, name, phone }) => ({ id, name, phone }))
+          .map(({ id, name, phone, blacklisted, blacklist_reason }) => ({
+            id,
+            name,
+            phone,
+            blacklisted,
+            blacklist_reason,
+          }))
       : null;
   return {
     ...detail,

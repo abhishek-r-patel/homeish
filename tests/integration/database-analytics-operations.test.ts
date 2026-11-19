@@ -707,6 +707,27 @@ describe.skipIf(!hasDatabase)('analytics operations metrics', () => {
         next_30_days: 1,
         next_60_days: 2,
       });
+      expect(metric('amc.expiry_bands').values).toEqual({
+        urgent: 1,
+        due_soon: 1,
+      });
+      // Custom windows move the bands; the fixed 30/60-day metric is unchanged.
+      await database.asSuperuser((client) =>
+        client.query(
+          `update public.module_configs
+           set settings = settings || '{"due_soon_days":100,"urgent_days":15}'::jsonb
+           where society_id = $1 and module_key = 'amc'`,
+          [a.id],
+        ),
+      );
+      const banded = await dashboard(database, a.users.admin, a.id);
+      expect(pickMetric(banded, 'amc.expiry_bands').values).toEqual({
+        urgent: 1,
+        due_soon: 2,
+      });
+      expect(pickMetric(banded, 'amc.expiring').values).toEqual(
+        metric('amc.expiring').values,
+      );
       expect(pointValues(metric('amc.visits'), p1)).toEqual({ completed: 2 });
       expect(pointValues(metric('amc.visits'), p2)).toEqual({ completed: 1 });
 

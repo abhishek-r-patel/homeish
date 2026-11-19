@@ -6,6 +6,18 @@ import type { ServerActionResult } from '@/core/actions/server-action';
 import { publicEnvironment } from '@/core/config/public-env';
 import {
   vendorActiveInputSchema,
+  vendorBillCancelInputSchema,
+  vendorBillInputSchema,
+  vendorBillPaymentLinkInputSchema,
+  vendorBillPaymentUnlinkInputSchema,
+  vendorContractInputSchema,
+  vendorContractRenewInputSchema,
+  vendorContractTerminateInputSchema,
+  vendorStaffDayCheckInputSchema,
+  vendorWorkOrderCreateInputSchema,
+  vendorWorkOrderStatusInputSchema,
+  vendorWorkOrderUpdateInputSchema,
+  vendorBlacklistInputSchema,
   vendorDocumentArchiveInputSchema,
   vendorDocumentInputSchema,
   vendorFileInputSchema,
@@ -22,6 +34,7 @@ import {
   vendorRequestSubmitInputSchema,
   vendorSettingsInputSchema,
   vendorUploadInputSchema,
+  type VendorContract,
   type VendorDetail,
   type VendorRequestDetail,
   type VendorWorkspace,
@@ -32,6 +45,7 @@ import {
   type VendorActions,
   type VendorRouteStateKind,
 } from '@/components/vendor/shared';
+import type { VendorRegisterLoads } from '@/components/vendor/registers';
 import { VendorDetailView } from '@/components/vendor/vendor-detail';
 import { VendorWorkspaceView } from '@/components/vendor/workspace';
 import { Banner } from '@/components/ui/feedback';
@@ -68,6 +82,7 @@ const scenarioSchema = z.enum([
   'rejected',
   'empty',
   'expense_off',
+  'register_error',
   ...ROUTE_STATES,
 ]);
 type Scenario = z.infer<typeof scenarioSchema>;
@@ -102,6 +117,11 @@ function workspace(scenario: Scenario, role: FixtureRole): VendorWorkspace {
             phone: '+91 98765 43210',
             email: 'anil@example.test',
             gstin: '27ABCDE1234F1Z5',
+            pan: role === 'admin' ? 'ABCDE1234F' : null,
+            payment_terms_days: 30,
+            onboarded_date: '2026-01-15',
+            blacklisted: false,
+            blacklist_reason: null,
             active: true,
             version: 2,
             rating_average: 4.5,
@@ -115,6 +135,11 @@ function workspace(scenario: Scenario, role: FixtureRole): VendorWorkspace {
             phone: null,
             email: null,
             gstin: null,
+            pan: null,
+            payment_terms_days: null,
+            onboarded_date: null,
+            blacklisted: false,
+            blacklist_reason: null,
             active: false,
             version: 1,
             rating_average: null,
@@ -179,6 +204,11 @@ function vendorDetail(role: FixtureRole): VendorDetail {
       phone: '+91 98765 43210',
       email: 'anil@example.test',
       gstin: '27ABCDE1234F1Z5',
+      pan: role === 'admin' ? 'ABCDE1234F' : null,
+      payment_terms_days: 30,
+      onboarded_date: '2026-01-15',
+      blacklisted: true,
+      blacklist_reason: 'Repeated missed appointments.',
       notes: 'Available on weekends. Carries spare pumps.',
       active: true,
       version: 2,
@@ -302,6 +332,9 @@ function requestDetail(
       id: quote.id,
       vendor_id: quote.vendor,
       vendor_name: quote.name,
+      blacklisted: quote.vendor === PAINTER,
+      blacklist_reason:
+        quote.vendor === PAINTER ? 'Repeated missed appointments.' : null,
       amount_paise: quote.amount,
       note: index === 0 ? 'Includes installation and one-year warranty.' : null,
       file_path:
@@ -323,9 +356,24 @@ function requestDetail(
           ],
     vendors: draft
       ? [
-          { id: PLUMBER, name: 'Shree Plumbing Works' },
-          { id: PAINTER, name: 'Colour Coat Services' },
-          { id: 'fad55fc3-0751-4b79-86c1-5b3e25942392', name: 'Green Gardens' },
+          {
+            id: PLUMBER,
+            name: 'Shree Plumbing Works',
+            blacklisted: false,
+            blacklist_reason: null,
+          },
+          {
+            id: PAINTER,
+            name: 'Colour Coat Services',
+            blacklisted: true,
+            blacklist_reason: 'Repeated missed appointments.',
+          },
+          {
+            id: 'fad55fc3-0751-4b79-86c1-5b3e25942392',
+            name: 'Green Gardens',
+            blacklisted: true,
+            blacklist_reason: 'Repeated missed appointments.',
+          },
         ]
       : [],
     can_edit: draft && (requester || admin),
@@ -340,6 +388,318 @@ function requestDetail(
         : null,
     is_requester: requester,
     approved_by_me: status === 'submitted' && admin,
+  };
+}
+
+const TODAY = '2026-11-20';
+const STAMP = '2026-11-01T05:00:00Z';
+const GUARD_CONTRACT = 'c1d55fc3-0751-4b79-86c1-5b3e25942392';
+const PUMP_CONTRACT = 'c2d55fc3-0751-4b79-86c1-5b3e25942392';
+const BILL = 'c3d55fc3-0751-4b79-86c1-5b3e25942392';
+const BILL_PAID = 'c4d55fc3-0751-4b79-86c1-5b3e25942392';
+
+function contract(
+  overrides: Partial<VendorContract> & Pick<VendorContract, 'id'>,
+): VendorContract {
+  return {
+    vendor_id: PLUMBER,
+    vendor_name: 'Shree Plumbing Works',
+    scope: 'Security staff, 4 guards',
+    start_date: '2026-04-01',
+    end_date: '2027-03-31',
+    annual_value_paise: 120_000_000,
+    payment_frequency: 'monthly',
+    auto_renew: false,
+    notice_days: 30,
+    notice_deadline: '2027-03-01',
+    document_path: filePath('c5d55fc3-0751-4b79-86c1-5b3e25942392'),
+    document_content_type: 'application/pdf',
+    document_size_bytes: 102_400,
+    default_sanctioned_days: 26,
+    deduction_per_day_paise: 100_000,
+    predecessor_id: null,
+    successor_id: null,
+    terminated_on: null,
+    termination_reason: null,
+    terminated_by_name: null,
+    terminated_at: null,
+    status: 'active',
+    version: 1,
+    created_at: STAMP,
+    created_by_name: 'Rahul Shah',
+    updated_at: STAMP,
+    updated_by_name: 'Rahul Shah',
+    ...overrides,
+  };
+}
+
+function registers(
+  scenario: Scenario,
+  role: FixtureRole,
+  scoped = false,
+): VendorRegisterLoads {
+  const canManage = role === 'admin';
+  const empty = scenario === 'empty';
+  const contracts = empty
+    ? []
+    : [
+        contract({ id: GUARD_CONTRACT }),
+        contract({
+          id: PUMP_CONTRACT,
+          scope: 'Pump maintenance visits',
+          start_date: '2025-12-01',
+          end_date: '2026-11-30',
+          annual_value_paise: 6_000_000,
+          payment_frequency: 'quarterly',
+          auto_renew: true,
+          notice_days: null,
+          notice_deadline: '2026-11-30',
+          document_path: null,
+          document_content_type: null,
+          document_size_bytes: null,
+          default_sanctioned_days: null,
+          deduction_per_day_paise: null,
+          status: 'urgent',
+        }),
+      ];
+  return {
+    summary: {
+      ok: true,
+      data: {
+        vendor_id: scoped ? PLUMBER : null,
+        active_vendors: scoped ? null : empty ? 0 : 1,
+        active_contract_value_paise: empty ? 0 : 126_000_000,
+        renewals_due: empty ? 0 : 2,
+        renewals_due_general: empty ? 0 : 1,
+        renewals_due_amc: empty ? 0 : 1,
+        rating_average: empty ? null : 4.5,
+        rating_count: empty ? 0 : 2,
+        open_work_orders: empty ? 0 : 1,
+        overdue_amc_services: empty ? 0 : 1,
+        bills_owed_paise: empty ? 0 : 3_000_000,
+        bills_owed_count: empty ? 0 : 1,
+      },
+    },
+    contracts:
+      scenario === 'register_error'
+        ? {
+            ok: false,
+            message: 'Could not load contracts. Refresh and retry.',
+            referenceId: 'ERR-C0A1B2C3D4',
+          }
+        : {
+            ok: true,
+            data: {
+              today: TODAY,
+              can_manage: canManage,
+              settings: { due_soon_days: 60, urgent_days: 15 },
+              contracts,
+              amc_contracts: empty
+                ? []
+                : [
+                    {
+                      id: 'c6d55fc3-0751-4b79-86c1-5b3e25942392',
+                      asset_label: 'Lift A',
+                      vendor_name: 'Volt Electricals',
+                      start_date: '2026-01-01',
+                      end_date: '2026-12-31',
+                      status: 'due_soon',
+                      successor_id: null,
+                    },
+                  ],
+            },
+          },
+    checks: {
+      ok: true,
+      data: {
+        can_manage: canManage,
+        checks: empty
+          ? []
+          : [
+              {
+                id: 'c7d55fc3-0751-4b79-86c1-5b3e25942392',
+                contract_id: GUARD_CONTRACT,
+                contract_scope: 'Security staff, 4 guards',
+                vendor_id: PLUMBER,
+                vendor_name: 'Shree Plumbing Works',
+                month: '2026-10-01',
+                sanctioned_days: 26,
+                actual_days: 24,
+                contracted_amount_paise: 10_000_000,
+                rate_paise: 100_000,
+                manual_deduction_paise: null,
+                manual_deduction_reason: null,
+                bill_raised_paise: 10_000_000,
+                shortfall_days: 2,
+                deduction_paise: 200_000,
+                payable_paise: 9_800_000,
+                variance_paise: 200_000,
+                flagged: true,
+                version: 1,
+                created_at: STAMP,
+                updated_at: STAMP,
+                updated_by_name: 'Rahul Shah',
+              },
+            ],
+      },
+    },
+    workOrders: {
+      ok: true,
+      data: {
+        today: TODAY,
+        can_manage: canManage,
+        work_orders: empty
+          ? []
+          : [
+              {
+                id: 'c8d55fc3-0751-4b79-86c1-5b3e25942392',
+                number: 'WO-2026-0001',
+                purchase_request_id: REQUEST,
+                request_title: 'Replace terrace water pump',
+                vendor_id: PLUMBER,
+                vendor_name: 'Shree Plumbing Works',
+                description: 'Replace terrace water pump',
+                value_paise: 4_200_000,
+                issued_on: '2026-11-05',
+                due_on: null,
+                completed_on: null,
+                status: 'issued',
+                cancel_reason: null,
+                cancelled_at: null,
+                cancelled_by_name: null,
+                days_open: 15,
+                delay_days: null,
+                version: 1,
+                created_at: STAMP,
+                created_by_name: 'Rahul Shah',
+                updated_at: STAMP,
+              },
+            ],
+        approved_requests: empty
+          ? []
+          : [
+              {
+                id: 'e2d55fc3-0751-4b79-86c1-5b3e25942392',
+                title: 'Repaint stairwell',
+                vendor_id: PLUMBER,
+                vendor_name: 'Shree Plumbing Works',
+                amount_paise: 1_500_000,
+              },
+            ],
+      },
+    },
+    bills: {
+      ok: true,
+      data: {
+        today: TODAY,
+        can_manage: canManage,
+        bills: empty
+          ? []
+          : [
+              {
+                id: BILL,
+                vendor_id: PLUMBER,
+                vendor_name: 'Shree Plumbing Works',
+                invoice_number: 'INV-1042',
+                invoice_date: '2026-10-15',
+                amount_paise: 5_000_000,
+                effective_terms_days: 30,
+                due_date: '2026-11-14',
+                paid_paise: 2_000_000,
+                outstanding_paise: 3_000_000,
+                payment_status: 'partly_paid',
+                due_state: 'overdue',
+                cancelled_at: null,
+                cancel_reason: null,
+                cancelled_by_name: null,
+                version: 2,
+                created_at: STAMP,
+                created_by_name: 'Rahul Shah',
+                updated_at: STAMP,
+                payments: [
+                  {
+                    id: 'c9d55fc3-0751-4b79-86c1-5b3e25942392',
+                    entry_id: 'cad55fc3-0751-4b79-86c1-5b3e25942392',
+                    amount_paise: 2_000_000,
+                    counting: true,
+                    unlinked_at: null,
+                    unlink_reason: null,
+                    unlinked_by_name: null,
+                    entry_date: '2026-11-02',
+                    payee: 'Shree Plumbing Works',
+                    reference: 'NEFT 4471',
+                    entry_amount_paise: 2_000_000,
+                    created_at: STAMP,
+                  },
+                  {
+                    id: 'cbd55fc3-0751-4b79-86c1-5b3e25942392',
+                    entry_id: 'ccd55fc3-0751-4b79-86c1-5b3e25942392',
+                    amount_paise: 500_000,
+                    counting: false,
+                    unlinked_at: '2026-11-03T05:00:00Z',
+                    unlink_reason: 'Linked to the wrong bill.',
+                    unlinked_by_name: 'Rahul Shah',
+                    entry_date: '2026-11-01',
+                    payee: 'Shree Plumbing Works',
+                    reference: null,
+                    entry_amount_paise: 500_000,
+                    created_at: STAMP,
+                  },
+                  {
+                    id: 'cdd55fc3-0751-4b79-86c1-5b3e25942392',
+                    entry_id: 'ced55fc3-0751-4b79-86c1-5b3e25942392',
+                    amount_paise: 700_000,
+                    counting: false,
+                    unlinked_at: null,
+                    unlink_reason: null,
+                    unlinked_by_name: null,
+                    entry_date: '2026-10-28',
+                    payee: 'Shree Plumbing Works',
+                    reference: null,
+                    entry_amount_paise: 700_000,
+                    created_at: STAMP,
+                  },
+                ],
+              },
+              {
+                id: BILL_PAID,
+                vendor_id: PLUMBER,
+                vendor_name: 'Shree Plumbing Works',
+                invoice_number: 'INV-1050',
+                invoice_date: '2026-11-18',
+                amount_paise: 1_200_000,
+                effective_terms_days: 30,
+                due_date: '2026-12-18',
+                paid_paise: 0,
+                outstanding_paise: 1_200_000,
+                payment_status: 'pending',
+                due_state: null,
+                cancelled_at: null,
+                cancel_reason: null,
+                cancelled_by_name: null,
+                version: 1,
+                created_at: STAMP,
+                created_by_name: 'Rahul Shah',
+                updated_at: STAMP,
+                payments: [],
+              },
+            ],
+        linkable_entries:
+          canManage && !empty
+            ? [
+                {
+                  id: 'cfd55fc3-0751-4b79-86c1-5b3e25942392',
+                  entry_date: '2026-11-19',
+                  amount_paise: 3_000_000,
+                  unlinked_paise: 3_000_000,
+                  payee: 'Shree Plumbing Works',
+                  reference: 'NEFT 4502',
+                  description: 'Pump repair balance',
+                },
+              ]
+            : [],
+      },
+    },
   };
 }
 
@@ -406,6 +766,10 @@ const ACTIONS: VendorActions = {
   saveSettings: stub(vendorSettingsInputSchema, 'Settings saved.'),
   saveVendor: stub(vendorInputSchema, 'Vendor saved.'),
   setActive: stub(vendorActiveInputSchema, 'Vendor updated.'),
+  setBlacklisted: stub(
+    vendorBlacklistInputSchema,
+    'Vendor blacklist status updated and recorded.',
+  ),
   addDocument: stub(vendorDocumentInputSchema, 'Document attached.'),
   archiveDocument: stub(vendorDocumentArchiveInputSchema, 'Document archived.'),
   saveRating: stub(vendorRatingInputSchema, 'Rating saved.'),
@@ -421,6 +785,32 @@ const ACTIONS: VendorActions = {
   retryExpense: stub(
     vendorRequestDecisionInputSchema,
     'Expense draft retried.',
+  ),
+  saveContract: stub(vendorContractInputSchema, 'Contract saved.'),
+  renewContract: stub(vendorContractRenewInputSchema, 'Renewal saved.'),
+  terminateContract: stub(
+    vendorContractTerminateInputSchema,
+    'Contract ended early.',
+  ),
+  saveStaffDayCheck: stub(
+    vendorStaffDayCheckInputSchema,
+    'Agency check saved. No bill or payment was created.',
+  ),
+  createWorkOrder: stub(vendorWorkOrderCreateInputSchema, 'Work order issued.'),
+  updateWorkOrder: stub(vendorWorkOrderUpdateInputSchema, 'Work order saved.'),
+  setWorkOrderStatus: stub(
+    vendorWorkOrderStatusInputSchema,
+    'Work order status updated.',
+  ),
+  saveBill: stub(vendorBillInputSchema, 'Bill saved.'),
+  cancelBill: stub(vendorBillCancelInputSchema, 'Bill cancelled.'),
+  linkBillPayment: stub(
+    vendorBillPaymentLinkInputSchema,
+    'Payment linked to the bill.',
+  ),
+  unlinkBillPayment: stub(
+    vendorBillPaymentUnlinkInputSchema,
+    'Payment unlinked.',
   ),
   uploadRequest: requestFiles,
 };
@@ -486,7 +876,11 @@ export default function VendorFixturePage() {
             referenceId={routeState === 'error' ? 'ERR-F1A2B3C4D5' : undefined}
           />
         ) : view === 'vendor' ? (
-          <VendorDetailView detail={vendorDetail(role)} actions={ACTIONS} />
+          <VendorDetailView
+            detail={vendorDetail(role)}
+            registers={registers(scenario, role, true)}
+            actions={ACTIONS}
+          />
         ) : view === 'request' ? (
           <PurchaseRequestView
             detail={requestDetail(scenario, role)}
@@ -495,6 +889,7 @@ export default function VendorFixturePage() {
         ) : (
           <VendorWorkspaceView
             workspace={workspace(scenario, role)}
+            registers={registers(scenario, role)}
             actions={ACTIONS}
           />
         )}

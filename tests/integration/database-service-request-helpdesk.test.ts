@@ -541,7 +541,7 @@ describe.skipIf(!hasDatabase)('database service request helpdesk', () => {
     );
   });
 
-  it('assigns an active vendor only when the vendor module is on', async () => {
+  it('allows an active blacklisted vendor assignment only when the vendor module is on', async () => {
     const request = await create(residentId, 'medium');
     const vendors = await superuser<{ id: string }>(
       `insert into public.vendors (
@@ -555,6 +555,19 @@ describe.skipIf(!hasDatabase)('database service request helpdesk', () => {
       [societyId, adminId, otherSocietyId],
     );
     const [active, inactive, noPhone, foreign] = vendors.map(({ id }) => id);
+    await superuser(
+      `update public.vendors
+       set blacklisted=true, blacklist_reason='Synthetic blacklist reason',
+           blacklisted_at=clock_timestamp(), blacklisted_by=$2
+       where id=$1`,
+      [active, adminId],
+    );
+    expect(
+      await superuser<{ blacklisted: boolean }>(
+        'select blacklisted from public.vendors where id=$1',
+        [active],
+      ),
+    ).toEqual([{ blacklisted: true }]);
     const assign = (vendorId: string) =>
       call<Row>(
         adminId,

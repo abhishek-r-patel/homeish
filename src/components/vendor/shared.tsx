@@ -17,19 +17,31 @@ import {
   approvePurchaseRequestAction,
   archiveVendorDocumentAction,
   cancelPurchaseRequestAction,
+  cancelVendorBillAction,
+  createVendorWorkOrderAction,
+  linkVendorBillPaymentAction,
   overrideQuoteRuleAction,
   prepareVendorDocumentUploadAction,
   prepareVendorQuoteUploadAction,
   rejectPurchaseRequestAction,
   removePurchaseQuoteAction,
+  renewVendorContractAction,
   retryPurchaseExpenseDraftAction,
   savePurchaseRequestAction,
   saveVendorAction,
+  saveVendorBillAction,
+  saveVendorContractAction,
   saveVendorRatingAction,
   saveVendorSettingsAction,
+  saveVendorStaffDayCheckAction,
+  setVendorBlacklistedAction,
   selectPurchaseQuoteAction,
   setVendorActiveAction,
+  setVendorWorkOrderStatusAction,
   submitPurchaseRequestAction,
+  terminateVendorContractAction,
+  unlinkVendorBillPaymentAction,
+  updateVendorWorkOrderAction,
   vendorFileLinkAction,
 } from '@/app/(admin)/admin/vendors/actions';
 import { Button } from '@/components/ui/button';
@@ -59,6 +71,7 @@ export type VendorActions = {
   saveSettings: ModuleFormAction;
   saveVendor: ModuleFormAction;
   setActive: ModuleFormAction;
+  setBlacklisted: ModuleFormAction;
   addDocument: ModuleFormAction;
   archiveDocument: ModuleFormAction;
   saveRating: ModuleFormAction;
@@ -72,6 +85,17 @@ export type VendorActions = {
   reject: ModuleFormAction;
   cancel: ModuleFormAction;
   retryExpense: ModuleFormAction;
+  saveContract: ModuleFormAction;
+  renewContract: ModuleFormAction;
+  terminateContract: ModuleFormAction;
+  saveStaffDayCheck: ModuleFormAction;
+  createWorkOrder: ModuleFormAction;
+  updateWorkOrder: ModuleFormAction;
+  setWorkOrderStatus: ModuleFormAction;
+  saveBill: ModuleFormAction;
+  cancelBill: ModuleFormAction;
+  linkBillPayment: ModuleFormAction;
+  unlinkBillPayment: ModuleFormAction;
   /** Lets fixtures replace the private storage upload request. */
   uploadRequest?: typeof fetch;
 };
@@ -83,6 +107,7 @@ export const VENDOR_ACTIONS: VendorActions = {
   saveSettings: saveVendorSettingsAction,
   saveVendor: saveVendorAction,
   setActive: setVendorActiveAction,
+  setBlacklisted: setVendorBlacklistedAction,
   addDocument: addVendorDocumentAction,
   archiveDocument: archiveVendorDocumentAction,
   saveRating: saveVendorRatingAction,
@@ -96,6 +121,17 @@ export const VENDOR_ACTIONS: VendorActions = {
   reject: rejectPurchaseRequestAction,
   cancel: cancelPurchaseRequestAction,
   retryExpense: retryPurchaseExpenseDraftAction,
+  saveContract: saveVendorContractAction,
+  renewContract: renewVendorContractAction,
+  terminateContract: terminateVendorContractAction,
+  saveStaffDayCheck: saveVendorStaffDayCheckAction,
+  createWorkOrder: createVendorWorkOrderAction,
+  updateWorkOrder: updateVendorWorkOrderAction,
+  setWorkOrderStatus: setVendorWorkOrderStatusAction,
+  saveBill: saveVendorBillAction,
+  cancelBill: cancelVendorBillAction,
+  linkBillPayment: linkVendorBillPaymentAction,
+  unlinkBillPayment: unlinkVendorBillPaymentAction,
 };
 
 export const VENDOR_BASE_HREF = '/admin/vendors';
