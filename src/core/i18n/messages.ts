@@ -2,6 +2,7 @@
 import { HI_ADMIN } from './catalogs/hi-admin';
 import { HI_AUTH } from './catalogs/hi-auth';
 import { HI_COMMON } from './catalogs/hi-common';
+import { HI_COMMUNICATION } from './catalogs/hi-communication';
 import { HI_COMPONENTS } from './catalogs/hi-components';
 import { HI_ENGAGEMENT } from './catalogs/hi-engagement';
 import { HI_GUARD } from './catalogs/hi-guard';
@@ -58,6 +59,7 @@ export const HINDI_MESSAGES: Readonly<Record<string, string>> = {
   ...HI_UI,
   ...HI_TOOLKIT,
   ...HI_HELP_LETTERS,
+  ...HI_COMMUNICATION,
 };
 
 export type MessageValues = Readonly<Record<string, string | number>>;

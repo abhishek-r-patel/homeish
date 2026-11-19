@@ -13,8 +13,34 @@ export const NOTICE_ATTACHMENT_CONTENT_TYPES = [
   'application/pdf',
 ] as const;
 
+export const NOTICE_PREPARED_BY_MAX = 80;
+export const NOTICE_DISPLAY_LOCATION_MAX = 120;
+export const NOTICE_NEXT_ACTION_MAX = 200;
+
+const isoDate = z.iso.date();
+
 export const noticeAudienceSchema = z.enum(['all', 'blocks', 'owners']);
 export type NoticeAudience = z.infer<typeof noticeAudienceSchema>;
+
+export const noticePlanningStatusSchema = z.enum([
+  'draft',
+  'scheduled',
+  'posted',
+  'removed',
+]);
+export type NoticePlanningStatus = z.infer<typeof noticePlanningStatusSchema>;
+
+export const noticePrioritySchema = z.enum(['high', 'medium', 'low']);
+export type NoticePriority = z.infer<typeof noticePrioritySchema>;
+
+export const noticePlanSchema = z.object({
+  prepared_by: z.string().nullable(),
+  display_location: z.string().nullable(),
+  priority: noticePrioritySchema.nullable(),
+  next_action: z.string().nullable(),
+  next_action_on: isoDate.nullable(),
+});
+export type NoticePlan = z.infer<typeof noticePlanSchema>;
 
 export const noticeSchema = z.object({
   id: uuid,
@@ -27,7 +53,11 @@ export const noticeSchema = z.object({
   audience: noticeAudienceSchema,
   pinned: z.boolean(),
   expires_at: timestamp.nullable(),
-  status: z.enum(['published', 'withdrawn']),
+  status: z.enum(['draft', 'scheduled', 'published', 'withdrawn']),
+  scheduled_for: isoDate.nullable(),
+  published_at: timestamp.nullable(),
+  planning_status: noticePlanningStatusSchema,
+  plan: noticePlanSchema.nullable(),
   edited_at: timestamp.nullable(),
   withdrawn_at: timestamp.nullable(),
   attachment_path: z.string().nullable(),
@@ -112,7 +142,72 @@ export const noticePinInputSchema = z
 
 export const noticeIdInputSchema = z.object({ noticeId: uuid }).strict();
 
-export const noticeViewSchema = z.enum(['current', 'archive']);
+/** Saves a draft (no posting day) or a scheduled notice; creating needs a client request id. */
+export const noticeDraftInputSchema = z
+  .object({
+    ...noticeContentShape,
+    pinned: z.boolean().default(false),
+    scheduledFor: isoDate.nullable().default(null),
+    noticeId: uuid.nullable().default(null),
+    expectedUpdatedAt: timestamp.nullable().default(null),
+    clientRequestId: uuid.nullable().default(null),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    refineAudience(input, context);
+    if (input.noticeId === null && input.clientRequestId === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['form'],
+        message: 'Reload the page and try again.',
+      });
+    }
+    if (input.noticeId !== null && input.expectedUpdatedAt === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['form'],
+        message: 'Reload the page and try again.',
+      });
+    }
+  });
+export type NoticeDraftInput = z.input<typeof noticeDraftInputSchema>;
+
+export const noticePublishInputSchema = z
+  .object({ noticeId: uuid, expectedUpdatedAt: timestamp })
+  .strict();
+
+function optionalText(max: number) {
+  return z
+    .string()
+    .trim()
+    .max(max, `Use at most ${max} characters.`)
+    .nullable()
+    .default(null)
+    .transform((value) => (value ? value : null));
+}
+
+export const noticePlanInputSchema = z
+  .object({
+    noticeId: uuid,
+    preparedBy: optionalText(NOTICE_PREPARED_BY_MAX),
+    displayLocation: optionalText(NOTICE_DISPLAY_LOCATION_MAX),
+    priority: noticePrioritySchema.nullable().default(null),
+    nextAction: optionalText(NOTICE_NEXT_ACTION_MAX),
+    nextActionOn: isoDate.nullable().default(null),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    if (input.nextActionOn !== null && input.nextAction === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['nextAction'],
+        message: 'Describe the next action for this date.',
+      });
+    }
+  });
+export type NoticePlanInput = z.input<typeof noticePlanInputSchema>;
+
+export const noticeViewSchema = z.enum(['current', 'archive', 'planned']);
 export type NoticeView = z.infer<typeof noticeViewSchema>;
 
 const UUID_PATTERN =

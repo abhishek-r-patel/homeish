@@ -102,6 +102,7 @@ describe('module registry', () => {
     expect(getRoleNavigation(['admin'], []).map(({ href }) => href)).toEqual([
       '/admin',
       '/admin/analytics',
+      '/admin/communication',
       '/admin/structure',
       '/admin/members',
       '/admin/settings',
@@ -111,6 +112,7 @@ describe('module registry', () => {
       '/admin/jobs',
       '/admin/action-plans',
       '/admin/letters',
+      '/admin/contact-log',
       '/help',
     ]);
     expect(
@@ -118,13 +120,22 @@ describe('module registry', () => {
     ).toEqual([
       '/admin',
       '/admin/analytics',
+      '/admin/communication',
       '/admin/guards',
       '/admin/society-profile',
       '/admin/adoption',
       '/admin/action-plans',
       '/admin/letters',
+      '/admin/contact-log',
       '/help',
     ]);
+    expect(hasPermission(['committee'], 'core', 'contact_log:manage')).toBe(
+      true,
+    );
+    expect(hasPermission(['resident'], 'core', 'contact_log:manage')).toBe(
+      false,
+    );
+    expect(hasPermission(['guard'], 'core', 'communication:read')).toBe(false);
     expect(hasPermission(['committee'], 'core', 'society_profile:manage')).toBe(
       false,
     );

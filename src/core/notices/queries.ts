@@ -75,7 +75,12 @@ export async function readNotices(
   const view = options.view ?? 'current';
   authorizeRequest(context, {
     moduleKey: 'notice',
-    permission: view === 'archive' ? 'notice:archive' : 'notice:list',
+    permission:
+      view === 'current'
+        ? 'notice:list'
+        : view === 'planned'
+          ? 'notice:create'
+          : 'notice:archive',
   });
   return noticeRpc(
     context,

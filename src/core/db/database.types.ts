@@ -5615,6 +5615,113 @@ export type Database = {
           },
         ];
       };
+      member_contact_logs: {
+        Row: {
+          channel: string;
+          client_request_id: string;
+          closed_at: string | null;
+          contact_on: string;
+          contact_type: string;
+          created_at: string;
+          created_by: string;
+          direction: string;
+          follow_up_on: string | null;
+          handled_by: string;
+          id: string;
+          service_request_id: string | null;
+          society_id: string;
+          status: string;
+          summary: string;
+          unit_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          channel: string;
+          client_request_id: string;
+          closed_at?: string | null;
+          contact_on: string;
+          contact_type: string;
+          created_at?: string;
+          created_by: string;
+          direction: string;
+          follow_up_on?: string | null;
+          handled_by: string;
+          id?: string;
+          service_request_id?: string | null;
+          society_id: string;
+          status?: string;
+          summary: string;
+          unit_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          channel?: string;
+          client_request_id?: string;
+          closed_at?: string | null;
+          contact_on?: string;
+          contact_type?: string;
+          created_at?: string;
+          created_by?: string;
+          direction?: string;
+          follow_up_on?: string | null;
+          handled_by?: string;
+          id?: string;
+          service_request_id?: string | null;
+          society_id?: string;
+          status?: string;
+          summary?: string;
+          unit_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'member_contact_logs_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'member_contact_logs_handled_by_fkey';
+            columns: ['handled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'member_contact_logs_request_same_society_fkey';
+            columns: ['society_id', 'service_request_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'member_contact_logs_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'member_contact_logs_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'member_contact_logs_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       memberships: {
         Row: {
           approved_by: string | null;
@@ -6163,6 +6270,65 @@ export type Database = {
           },
         ];
       };
+      notice_plans: {
+        Row: {
+          display_location: string | null;
+          next_action: string | null;
+          next_action_on: string | null;
+          notice_id: string;
+          prepared_by: string | null;
+          priority: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          display_location?: string | null;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notice_id: string;
+          prepared_by?: string | null;
+          priority?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          display_location?: string | null;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notice_id?: string;
+          prepared_by?: string | null;
+          priority?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notice_plans_notice_same_society_fkey';
+            columns: ['society_id', 'notice_id'];
+            isOneToOne: true;
+            referencedRelation: 'notices';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'notice_plans_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notice_plans_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       notice_reads: {
         Row: {
           notice_id: string;
@@ -6221,6 +6387,8 @@ export type Database = {
           expires_at: string | null;
           id: string;
           pinned: boolean;
+          published_at: string | null;
+          scheduled_for: string | null;
           society_id: string;
           status: string;
           title: string;
@@ -6243,6 +6411,8 @@ export type Database = {
           expires_at?: string | null;
           id?: string;
           pinned?: boolean;
+          published_at?: string | null;
+          scheduled_for?: string | null;
           society_id: string;
           status?: string;
           title: string;
@@ -6264,6 +6434,8 @@ export type Database = {
           expires_at?: string | null;
           id?: string;
           pinned?: boolean;
+          published_at?: string | null;
+          scheduled_for?: string | null;
           society_id?: string;
           status?: string;
           title?: string;
@@ -12419,6 +12591,14 @@ export type Database = {
         Args: { p_include_archived?: boolean; p_society_id: string };
         Returns: Json;
       };
+      communication_dashboard_get: {
+        Args: { p_month: string; p_society_id: string };
+        Returns: Json;
+      };
+      communication_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: Json;
+      };
       community_admin_groups: { Args: { p_society_id: string }; Returns: Json };
       community_admin_item_get: {
         Args: {
@@ -14283,6 +14463,21 @@ export type Database = {
         };
         Returns: Json;
       };
+      member_contact_log_save: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_log_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_values: Json;
+        };
+        Returns: Json;
+      };
+      member_contact_logs_get: {
+        Args: { p_society_id: string; p_status?: string };
+        Returns: Json;
+      };
       metering_admin_workspace: {
         Args: { p_society_id: string };
         Returns: Json;
@@ -14409,6 +14604,33 @@ export type Database = {
         };
         Returns: Json;
       };
+      notice_draft_publish: {
+        Args: {
+          p_expected_updated_at: string;
+          p_notice_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      notice_draft_save: {
+        Args: {
+          p_attachment: Json;
+          p_audience: string;
+          p_block_ids: string[];
+          p_body: string;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_expires_at: string;
+          p_notice_id: string;
+          p_pinned: boolean;
+          p_request_trace: string;
+          p_scheduled_for: string;
+          p_society_id: string;
+          p_title: string;
+        };
+        Returns: Json;
+      };
       notice_get: {
         Args: { p_notice_id: string; p_society_id: string };
         Returns: Json;
@@ -14425,6 +14647,27 @@ export type Database = {
       notice_mark_read: {
         Args: { p_notice_id: string; p_society_id: string };
         Returns: undefined;
+      };
+      notice_plan_save: {
+        Args: {
+          p_display_location: string;
+          p_next_action: string;
+          p_next_action_on: string;
+          p_notice_id: string;
+          p_prepared_by: string;
+          p_priority: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      notice_scheduled_publish_run: {
+        Args: {
+          p_request_trace: string;
+          p_society_id: string;
+          p_today: string;
+        };
+        Returns: number;
       };
       notice_set_pinned: {
         Args: {

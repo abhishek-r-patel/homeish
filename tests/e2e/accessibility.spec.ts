@@ -28,6 +28,7 @@ const screens = [
   '/fixtures/analytics',
   '/fixtures/event',
   '/fixtures/community',
+  '/fixtures/communication',
 ];
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];

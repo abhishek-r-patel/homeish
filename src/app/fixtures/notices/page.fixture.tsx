@@ -1,9 +1,10 @@
-// Exercise notice composing and the resident board with synthetic in-memory data.
+// Exercise notice composing, drafts, scheduling, planning details and the board with synthetic in-memory data.
 'use client';
 
 import { useState } from 'react';
 import { NoticeForm } from '@/components/notices/notice-form';
 import { NoticeListItem } from '@/components/notices/notice-list-item';
+import { NoticePlanForm } from '@/components/notices/plan-form';
 import type { NoticeFormAction } from '@/components/notices/action-form';
 import { Card } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
@@ -11,6 +12,8 @@ import { publicEnvironment } from '@/core/config/public-env';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import {
   noticeCreateInputSchema,
+  noticeDraftInputSchema,
+  noticePlanInputSchema,
   type Notice,
 } from '@/core/notices/validation';
 
@@ -33,6 +36,10 @@ const existingNotice: Notice = {
   pinned: false,
   expires_at: null,
   status: 'published',
+  scheduled_for: null,
+  published_at: '2026-11-10T09:00:00.000Z',
+  planning_status: 'posted',
+  plan: null,
   edited_at: null,
   withdrawn_at: null,
   attachment_path: null,
@@ -53,6 +60,70 @@ function failure(message: string): ServerActionResult<unknown> {
 export default function NoticesFixturePage() {
   const [notices, setNotices] = useState<Notice[]>([existingNotice]);
 
+  function saveDraft(input: unknown): ServerActionResult<unknown> {
+    const parsed = noticeDraftInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return failure(
+        parsed.error.issues[0]?.message ?? 'Check the notice details.',
+      );
+    }
+    const { data } = parsed;
+    const scheduled = data.scheduledFor !== null;
+    const notice: Notice = {
+      ...existingNotice,
+      id: crypto.randomUUID(),
+      created_at: '2026-11-11T09:00:00.000Z',
+      updated_at: '2026-11-11T09:00:00.000Z',
+      title: data.title,
+      body: data.body,
+      audience: data.audience,
+      blocks: blocks.filter(({ id }) => data.blockIds.includes(id)),
+      pinned: data.pinned,
+      expires_at: data.expiresAt,
+      status: scheduled ? 'scheduled' : 'draft',
+      planning_status: scheduled ? 'scheduled' : 'draft',
+      scheduled_for: data.scheduledFor,
+      published_at: null,
+      has_read: false,
+      read_count: null,
+    };
+    setNotices((current) => [...current, notice]);
+    return {
+      ok: true,
+      message: scheduled ? 'The notice was scheduled.' : 'The draft was saved.',
+      data: notice,
+    };
+  }
+
+  const planAction: NoticeFormAction = async (formData) => {
+    const parsed = noticePlanInputSchema.safeParse(
+      JSON.parse(String(formData.get('input') ?? 'null')),
+    );
+    if (!parsed.success) {
+      return failure(
+        parsed.error.issues[0]?.message ?? 'Check the planning details.',
+      );
+    }
+    const { data } = parsed;
+    setNotices((current) =>
+      current.map((notice) =>
+        notice.id === data.noticeId
+          ? {
+              ...notice,
+              plan: {
+                prepared_by: data.preparedBy,
+                display_location: data.displayLocation,
+                priority: data.priority,
+                next_action: data.nextAction,
+                next_action_on: data.nextActionOn,
+              },
+            }
+          : notice,
+      ),
+    );
+    return { ok: true, message: 'The planning details were saved.' };
+  };
+
   const createAction: NoticeFormAction = async (formData) => {
     let input: unknown;
     try {
@@ -60,6 +131,8 @@ export default function NoticesFixturePage() {
     } catch {
       return failure('The fixture notice was invalid.');
     }
+    if (typeof input === 'object' && input !== null && 'scheduledFor' in input)
+      return saveDraft(input);
     const parsed = noticeCreateInputSchema.safeParse(input);
     if (!parsed.success) {
       return failure(
@@ -72,6 +145,7 @@ export default function NoticesFixturePage() {
       id: '7a696d6f-774c-41d1-ae47-6254d4a8f4cf',
       created_at: '2026-11-11T09:00:00.000Z',
       updated_at: '2026-11-11T09:00:00.000Z',
+      published_at: '2026-11-11T09:00:00.000Z',
       title: data.title,
       body: data.body,
       audience: data.audience,
@@ -106,6 +180,13 @@ export default function NoticesFixturePage() {
       <h1 className="text-title font-semibold">Notice board</h1>
       <Card className="min-w-0" title="New notice">
         <NoticeForm action={createAction} blocks={blocks} onSaved={() => {}} />
+      </Card>
+      <Card className="min-w-0" title="Planning details">
+        <NoticePlanForm
+          action={planAction}
+          noticeId={existingNotice.id}
+          plan={null}
+        />
       </Card>
       <section
         aria-label="Current notices"

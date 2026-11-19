@@ -5,6 +5,9 @@ import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
 import {
   createNotice,
+  publishNoticeDraft,
+  saveNoticeDraft,
+  saveNoticePlan,
   setNoticePinned,
   updateNotice,
   withdrawNotice,
@@ -63,5 +66,35 @@ export async function withdrawNoticeAction(formData: FormData) {
     const result = await withdrawNotice(parseInput(formData), requestId);
     refreshNoticeViews(result.id);
     return { data: result, message: 'The notice was withdrawn.' };
+  });
+}
+
+export async function saveNoticeDraftAction(formData: FormData) {
+  return runServerAction('notice.draft_save', async (requestId) => {
+    const result = await saveNoticeDraft(parseInput(formData), requestId);
+    refreshNoticeViews(result.id);
+    return {
+      data: result,
+      message:
+        result.status === 'scheduled'
+          ? 'The notice was scheduled.'
+          : 'The draft was saved.',
+    };
+  });
+}
+
+export async function publishNoticeDraftAction(formData: FormData) {
+  return runServerAction('notice.draft_publish', async (requestId) => {
+    const result = await publishNoticeDraft(parseInput(formData), requestId);
+    refreshNoticeViews(result.id);
+    return { data: result, message: 'The notice was published.' };
+  });
+}
+
+export async function saveNoticePlanAction(formData: FormData) {
+  return runServerAction('notice.plan_save', async (requestId) => {
+    const result = await saveNoticePlan(parseInput(formData), requestId);
+    refreshNoticeViews(result.id);
+    return { data: result, message: 'The planning details were saved.' };
   });
 }

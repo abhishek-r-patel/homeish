@@ -49,7 +49,7 @@ export default async function ResidentNoticeDetailPage({
         <NoticeStatusChips notice={notice} />
         <p className="text-body text-ink-muted">
           {notice.author_name ?? t('Society office')} ·{' '}
-          {dateTime(notice.created_at, locale)}
+          {dateTime(notice.published_at ?? notice.created_at, locale)}
           {notice.edited_at
             ? ` · ${t('Edited {date}', {
                 date: dateTime(notice.edited_at, locale),

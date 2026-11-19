@@ -395,7 +395,9 @@ Routes: admins and committee keep `/admin/requests` (new **Report** and **Daily 
 | `notice.withdraw`  | A (any), C (own)               | Remove from the board                      | Kept in the archive; never deleted                                                                |
 | `notice.markRead`  | Anyone who can see the notice  | Record a read receipt                      | Called when the resident detail page opens; counts audience members only; clears the in-app alert |
 
-Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members use `/admin/notices` (Current and Archive tabs), `/admin/notices/new`, `/admin/notices/{noticeId}` and `/admin/notices/{noticeId}/edit`. Guards have no notice access.
+P53.1 adds drafts, scheduling and planning fields (Section 5.31); `notice.update` now edits published notices only.
+
+Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members use `/admin/notices` (Current, Planned and Archive tabs), `/admin/notices/new`, `/admin/notices/{noticeId}` and `/admin/notices/{noticeId}/edit`. Guards have no notice access.
 
 ### 5.10 Staff management (`staff`, P12)
 
@@ -869,6 +871,17 @@ Operations are Server Actions over the database contracts in DATABASE.md 9.22; n
 
 Routes are `/admin/society-profile` (society name, address, city, email and phone stay in their existing registered-details source), `/admin/adoption`, `/admin/action-plans`, `/admin/letters` and `/help`. Task owners outside admin/committee see their assigned tasks on the read-only `/action-plans` ("My tasks"); admins and committee opening `/action-plans` are sent to `/admin/action-plans`. A letter for a specific record is reached from that authorized source record; circulars, shutdown notices, event announcements and newsletters start from `/admin/letters`.
 
+### 5.31 Communication additions (P53; D-71 approved 2026-11-20)
+
+Operations are Server Actions over the database contracts in DATABASE.md 9.23.
+
+- Notice drafts and scheduling (`notice_draft_save` / `notice_draft_publish`; A any, C own) save a draft, or schedule it with a posting day (`scheduledFor`), with `clientRequestId` and `expectedUpdatedAt`. Publishing a draft or scheduled notice posts it immediately and notifies the audience as `notice.create` does. Drafts and scheduled notices are never shown to residents. The daily job publishes scheduled notices whose posting day has arrived (`notice_scheduled_publish_run`, service role); a scheduled notice whose expiry has already passed goes back to draft (`notice.schedule_expired`). Withdrawing a draft moves it to the archive.
+- Notice planning fields (`notice_plan_save`; A any, C own) store prepared-by, priority, display location, next action and next-action day for one notice. A next-action day requires next-action text. The `plan` object is returned only to admins and committee; residents never receive it. `notice.list` gains `view: planned` (drafts and scheduled) for A and C.
+- Contact log (`member_contact_log_save`, `member_contact_logs_get`; admin, committee; permission `contact_log:manage`) records one member contact with day, type, channel, optional unit/member/handler, linked request, summary, follow-up day and open/closed status; `expectedUpdatedAt` on edits. Any admin or committee member can edit any entry. Residents have no access. Closed entries are deleted three years after closing by the retention task.
+- Communication dashboard (`communication_dashboard_get`; admin, committee; permission `communication:read`) returns monthly figures computed from app records only: notices posted and removed plus notices currently planned; meetings scheduled; events published; SOS alerts raised (excluding cancelled ones); service requests received and resolved with average days to resolve; and contacts logged and closed plus open and overdue follow-ups now. Removed means withdrawn or expired. A section is null when its module is off for the society; the contact-log section is always present.
+
+Routes are `/admin/notices?tab=planned`, `/admin/contact-log` and `/admin/communication` (`?month=YYYY-MM`; a missing, invalid or future month falls back to the current month).
+
 ### 6.1 The daily job (`/api/jobs/daily`)
 
 Vercel Cron sends `GET`; `POST` remains supported for authenticated manual invocation. Both methods require the `CRON_SECRET` bearer token. A missing or incorrect secret returns `401`; the attempt is logged without recording the supplied token. The secret comparison is constant-time. Responses are `no-store` and use the standard JSON envelope; success returns `{ ok: true, data: { jobs: [{ job, succeeded, skipped, failed }] } }`. Only per-job counts are returned.
@@ -887,6 +900,7 @@ Runs once a day (the free scheduler tier allows only one run per day and may sta
 | Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60)                             |
 | Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)                                  |
 | Event reminders                        | `event.reminders`, after `meeting.action_reminders`: one reminder per published event starting tomorrow (society-local) to flats that answered Going, in-app plus push; capped at 2000 (P30, D-63) |
+| Scheduled notices                      | `notice.scheduled_publish`, after `event.reminders`: posts scheduled notices due on or before today with the normal in-app and push notification; an expired schedule returns to draft (P53)       |
 | Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                                              |
 | Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                                                      |
 | Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)                               |

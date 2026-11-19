@@ -17,6 +17,7 @@ import {
   runPollRetentionPrivileged,
   runMeetingActionRemindersPrivileged,
   runEventRemindersPrivileged,
+  runNoticeScheduledPublishPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -114,6 +115,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'event.reminders',
     run: async (societyId: string) => {
       await runEventRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'notice.scheduled_publish',
+    run: async (societyId: string, periodKey: string) => {
+      await runNoticeScheduledPublishPrivileged(societyId, periodKey);
     },
   },
   {

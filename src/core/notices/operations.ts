@@ -13,9 +13,12 @@ import { noticeRpc, readNotice, readNotices } from './queries';
 import {
   NOTICE_ATTACHMENT_CONTENT_TYPES,
   noticeCreateInputSchema,
+  noticeDraftInputSchema,
   noticeFileFolder,
   noticeIdInputSchema,
   noticePinInputSchema,
+  noticePlanInputSchema,
+  noticePublishInputSchema,
   noticeSchema,
   noticeUpdateInputSchema,
   noticeViewSchema,
@@ -90,7 +93,11 @@ async function verifiedAttachment(
 export async function getNoticeBoard(view: unknown = 'current') {
   const parsedView = parseInput(noticeViewSchema, view);
   const { context, societyId } = await getContext(
-    parsedView === 'archive' ? 'notice:archive' : 'notice:list',
+    parsedView === 'current'
+      ? 'notice:list'
+      : parsedView === 'planned'
+        ? 'notice:create'
+        : 'notice:archive',
   );
   const notices = await readNotices(context, societyId, {
     view: parsedView,
@@ -233,7 +240,16 @@ export async function updateNotice(
     noticeSchema,
   );
   const previousPath = current.attachment_path;
-  if (previousPath && previousPath !== saved.attachment_path) {
+  await removeReplacedAttachment(context, previousPath, saved.attachment_path);
+  return saved;
+}
+
+async function removeReplacedAttachment(
+  context: RequestContext,
+  previousPath: string | null,
+  savedPath: string | null,
+) {
+  if (previousPath && previousPath !== savedPath) {
     try {
       const { error } = await context.db.storage
         .from('notice-files')
@@ -243,7 +259,136 @@ export async function updateNotice(
       context.logger.warn('notice.attachment_cleanup_failed');
     }
   }
+}
+
+function requirePostingDay(scheduledFor: string | null) {
+  if (scheduledFor !== null && scheduledFor <= indiaToday()) {
+    throw new ValidationError({
+      scheduledFor: 'Choose a posting day after today.',
+    });
+  }
+}
+
+function indiaToday() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+/** Saves a draft, or a scheduled notice when a posting day is chosen; nobody is notified yet. */
+export async function saveNoticeDraft(
+  input: unknown,
+  requestId: string,
+): Promise<Notice> {
+  const { context, societyId } = await getContext(
+    'notice:create',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(noticeDraftInputSchema, input);
+  requirePostingDay(parsed.scheduledFor);
+  const current =
+    parsed.noticeId === null
+      ? null
+      : await readNotice(context, societyId, parsed.noticeId);
+  if (current && !current.can_manage) throw new AppError('FORBIDDEN');
+  const currentExpiry =
+    current?.expires_at == null ? null : Date.parse(current.expires_at);
+  const nextExpiry =
+    parsed.expiresAt === null ? null : Date.parse(parsed.expiresAt);
+  if (nextExpiry !== currentExpiry) requireFutureExpiry(parsed.expiresAt);
+  const attachment = await verifiedAttachment(
+    context,
+    societyId,
+    parsed.attachmentPath,
+    current?.attachment_path ?? null,
+  );
+  const saved = await noticeRpc(
+    context,
+    'notice_draft_save',
+    {
+      p_society_id: societyId,
+      p_notice_id: parsed.noticeId,
+      p_title: parsed.title,
+      p_body: parsed.body,
+      p_audience: parsed.audience,
+      p_block_ids: parsed.blockIds,
+      p_pinned: parsed.pinned,
+      p_expires_at: parsed.expiresAt,
+      p_attachment: attachment,
+      p_scheduled_for: parsed.scheduledFor,
+      p_expected_updated_at: parsed.expectedUpdatedAt,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: context.requestId,
+    },
+    noticeSchema,
+    { retryOnDuplicate: parsed.noticeId === null },
+  );
+  if (current) {
+    await removeReplacedAttachment(
+      context,
+      current.attachment_path,
+      saved.attachment_path,
+    );
+  }
   return saved;
+}
+
+/** Posts a draft or scheduled notice now with the normal notice notification. */
+export async function publishNoticeDraft(
+  input: unknown,
+  requestId: string,
+): Promise<Notice> {
+  const { context, societyId } = await getContext(
+    'notice:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(noticePublishInputSchema, input);
+  const notice = await noticeRpc(
+    context,
+    'notice_draft_publish',
+    {
+      p_society_id: societyId,
+      p_notice_id: parsed.noticeId,
+      p_expected_updated_at: parsed.expectedUpdatedAt,
+      p_request_trace: context.requestId,
+    },
+    noticeSchema,
+  );
+  await sendNotificationPushesForRequest(context.requestId);
+  return notice;
+}
+
+/** Saves the admin and committee planning fields kept beside a notice. */
+export async function saveNoticePlan(
+  input: unknown,
+  requestId: string,
+): Promise<Notice> {
+  const { context, societyId } = await getContext(
+    'notice:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(noticePlanInputSchema, input);
+  return noticeRpc(
+    context,
+    'notice_plan_save',
+    {
+      p_society_id: societyId,
+      p_notice_id: parsed.noticeId,
+      p_prepared_by: parsed.preparedBy,
+      p_display_location: parsed.displayLocation,
+      p_priority: parsed.priority,
+      p_next_action: parsed.nextAction,
+      p_next_action_on: parsed.nextActionOn,
+      p_request_trace: context.requestId,
+    },
+    noticeSchema,
+  );
 }
 
 export async function setNoticePinned(

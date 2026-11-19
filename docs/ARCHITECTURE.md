@@ -299,6 +299,14 @@ P30 adds `event.reminders` after `meeting.action_reminders`. Its privileged wrap
 calls the service-role-only `event_reminders_run`, which reminds Going flats once per event the day before it starts,
 then sends the matching push notifications for that request ID.
 
+P53 adds `notice.scheduled_publish` after `event.reminders`. Its privileged wrapper
+(`src/core/privileged/communication.ts`) calls the service-role-only `notice_scheduled_publish_run`, which posts
+scheduled notices due on or before the society-local day with the normal in-app notification (returning overdue
+schedules whose expiry has passed to draft), then sends the matching push notifications for that request ID. The
+global retention task also calls `communication_retention_run` to delete contact-log entries closed more than three
+years ago. The contact log and communication dashboard are core screens under `src/core/communication/` and
+`src/components/communication/`, reading and writing only through security-definer RPCs.
+
 ### 7.1 Access method
 
 - **Supabase client (PostgREST/RPC) with the user's session** for normal reads and writes, so RLS applies automatically.

@@ -134,6 +134,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Overview',
         },
         {
+          href: '/admin/communication',
+          label: 'Communication',
+          permission: 'communication:read',
+          section: 'Overview',
+        },
+        {
           href: '/admin/structure',
           label: 'Structure',
           permission: 'structure:manage',
@@ -188,6 +194,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Operations',
         },
         {
+          href: '/admin/contact-log',
+          label: 'Contact log',
+          permission: 'contact_log:manage',
+          section: 'Operations',
+        },
+        {
           href: '/help',
           label: 'Help',
           permission: 'help:read',
@@ -205,6 +217,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           href: '/admin/analytics',
           label: 'Analytics',
           permission: 'analytics:read',
+          section: 'Overview',
+        },
+        {
+          href: '/admin/communication',
+          label: 'Communication',
+          permission: 'communication:read',
           section: 'Overview',
         },
         {
@@ -235,6 +253,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           href: '/admin/letters',
           label: 'Letters',
           permission: 'letters:make',
+          section: 'Operations',
+        },
+        {
+          href: '/admin/contact-log',
+          label: 'Contact log',
+          permission: 'contact_log:manage',
           section: 'Operations',
         },
         {
@@ -345,6 +369,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       ],
       'help:read': ['admin', 'committee', 'guard', 'hk_supervisor', 'resident'],
       'letters:make': ['admin', 'committee'],
+      'contact_log:manage': ['admin', 'committee'],
+      'communication:read': ['admin', 'committee'],
     },
     settingsAccess: emptySettingsAccess,
     settingsSchema: emptySettingsSchema,
