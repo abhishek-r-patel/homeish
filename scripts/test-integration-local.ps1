@@ -1,3 +1,8 @@
+param(
+  [Parameter(ValueFromRemainingArguments = $true)]
+  [string[]] $VitestArgs
+)
+
 # Run database integration tests against a throwaway local PostgreSQL 17 server (no Docker needed).
 # Usage: npm run test:integration:local
 # Needs PostgreSQL server tools (initdb, pg_ctl, pg_isready). Set PG_BIN to their folder
@@ -40,7 +45,7 @@ try {
   if (-not $ready) { Write-Error 'The temporary PostgreSQL server did not start.' }
 
   $env:INTEGRATION_DATABASE_URL = "postgres://supabase_admin@127.0.0.1:$port/postgres"
-  npx vitest run --config vitest.integration.config.ts @args
+  npx vitest run --config vitest.integration.config.ts @VitestArgs
   $exitCode = $LASTEXITCODE
 }
 finally {
