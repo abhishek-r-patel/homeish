@@ -810,6 +810,14 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **Petty cash:** setup (admin) marks the cash account as petty cash and picks the custodian from active members; changing the custodian asks for the handover count. `/petty-cash` shows the book amount, **Record a count** (date, counted amount in rupees, note), counts with the difference as signed words ("₹120 short", "₹40 over") and custodian history. A non-admin custodian sees only this page, reached from a **Petty cash** link in their navigation (a tile on the guard home); admins and committee use the Accounts tabs, and committee members read without recording.
 - **Report:** the period report adds **Net surplus or deficit** per month and **Financial year to date (not a balance)**.
 
+### 12.19 Dues and arrears additions (P38; D-71 approved for P38.2–P38.4)
+
+- Existing admin Billing pages add **Payment plans**, **Recovery follow-ups** and **Collection efficiency**. Admins manage the records; committee members view them.
+- Payment plans show the selected bills and their remaining-balance snapshot, down-payment and equal monthly installment terms, and progress derived from confirmed allocations for payments dated on or after the plan date and confirmed after plan creation. Apply confirmed amounts to the down payment and then installments in order; the final installment absorbs paise rounding. A bill can belong to only one non-cancelled plan. Admins can edit terms and remarks, but must cancel a plan with a required reason to change its bill set; cancelled records remain visible and their bills can be replanned. A visible note says a plan is an estimate, has no in-app approval step, and does not change bills, fees, reminders, allocations or balances. Show the authoritative unit-ledger due separately.
+- Recovery actions use fixed action and outcome choices, with an optional active same-society admin assignee, next-action date and open/closed state. Follow-up status is derived from the next-action date. They are never presented as proof of legal service; the screen does not record legal notices or send messages.
+- The as-of report shows its date, confirmed payments allocated to bills due by then, and billed amount after approved waivers. Payments count only when both `paid_on` and `confirmed_at` are on or before the as-of date; advance or unallocated credit is excluded. The report is read-only and separate from the existing BIL-11/P27 collection metric.
+- Interest is not shown or calculated until separate accountant/legal review approves the rate and rules.
+
 ---
 
 ## 13. Iconography and Imagery

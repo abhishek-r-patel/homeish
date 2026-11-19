@@ -306,6 +306,9 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Reopen month': 'माह फिर से खोलें',
   'Report period': 'रिपोर्ट अवधि',
   Reports: 'रिपोर्ट',
+  'Payment plans': 'भुगतान योजनाएँ',
+  'Recovery follow-ups': 'रिकवरी फ़ॉलो-अप',
+  'Collection efficiency': 'वसूली की दक्षता',
   'Request administration sections': 'अनुरोध प्रबंधन अनुभाग',
   Requests: 'अनुरोध',
   'Requests remain pending until an administrator approves them.':

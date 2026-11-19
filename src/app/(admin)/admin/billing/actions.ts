@@ -5,11 +5,14 @@ import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
 import {
   addBillingFine,
+  cancelBillingPaymentPlan,
   confirmBillingPayment,
   exportBillingReport,
   generateBillingBills,
   recordBillingPayment,
   previewBillingBills,
+  saveBillingPaymentPlan,
+  saveBillingRecoveryAction,
   rejectBillingPayment,
   saveBillingCharge,
   updateBillingSettings,
@@ -174,6 +177,49 @@ export async function waiveBillingBillAction(formData: FormData) {
     return {
       data: result,
       message: cancel ? 'Bill cancelled.' : 'Waiver applied.',
+    };
+  });
+}
+
+export async function saveBillingPaymentPlanAction(formData: FormData) {
+  return runServerAction('billing.paymentPlan.save', async (requestId) => {
+    const result = await saveBillingPaymentPlan(
+      jsonValue(formData, 'input'),
+      requestId,
+    );
+    revalidatePath('/admin/billing');
+    return {
+      data: result,
+      message: value(formData, 'id')
+        ? 'Payment plan updated.'
+        : 'Payment plan created.',
+    };
+  });
+}
+
+export async function cancelBillingPaymentPlanAction(formData: FormData) {
+  return runServerAction('billing.paymentPlan.cancel', async (requestId) => {
+    const result = await cancelBillingPaymentPlan(
+      jsonValue(formData, 'input'),
+      requestId,
+    );
+    revalidatePath('/admin/billing');
+    return { data: result, message: 'Payment plan cancelled and retained.' };
+  });
+}
+
+export async function saveBillingRecoveryActionAction(formData: FormData) {
+  return runServerAction('billing.recoveryAction.save', async (requestId) => {
+    const result = await saveBillingRecoveryAction(
+      jsonValue(formData, 'input'),
+      requestId,
+    );
+    revalidatePath('/admin/billing');
+    return {
+      data: result,
+      message: value(formData, 'id')
+        ? 'Recovery action updated.'
+        : 'Recovery action saved.',
     };
   });
 }

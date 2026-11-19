@@ -17,11 +17,19 @@ import { billingRpc as rpc, readBillingPaymentDetails } from './queries';
 import {
   billingBillDetailsSchema,
   billingBillSchema,
+  billingCollectionEfficiencyInputSchema,
+  billingCollectionEfficiencySchema,
   billingDashboardInputSchema,
   billingDashboardSchema,
   billingFineInputSchema,
   billingGenerationResultSchema,
   billingLedgerEntrySchema,
+  billingPaymentPlanBillOptionSchema,
+  billingPaymentPlanCancelInputSchema,
+  billingPaymentPlanCancelResultSchema,
+  billingPaymentPlanInputSchema,
+  billingPaymentPlanSaveResultSchema,
+  billingPaymentPlanSchema,
   billingPaymentConfirmInputSchema,
   billingPaymentDetailsSchema,
   billingPaymentRecordInputSchema,
@@ -31,6 +39,9 @@ import {
   billingPreviewInputSchema,
   billingPreviewSchema,
   billingReceiptSchema,
+  billingRecoveryActionInputSchema,
+  billingRecoveryActionSaveResultSchema,
+  billingRecoveryActionsSchema,
   billingReportExportInputSchema,
   billingReportJobSchema,
   billingSettingsUpdateInputSchema,
@@ -662,6 +673,116 @@ export async function getBillingDashboard(input: unknown) {
     'billing_dashboard',
     { p_society_id: societyId, p_from: range.from, p_to: range.to },
     billingDashboardSchema,
+  );
+}
+
+export async function listBillingPaymentPlans() {
+  const { context, societyId } = await getContext('billing:charges:read');
+  return rpc(
+    context,
+    'billing_payment_plans_list',
+    { p_society_id: societyId },
+    z.array(billingPaymentPlanSchema),
+  );
+}
+
+export async function listBillingPaymentPlanBills() {
+  const { context, societyId } = await getContext(
+    'billing:charges:manage',
+    true,
+  );
+  return rpc(
+    context,
+    'billing_payment_plan_open_bills',
+    { p_society_id: societyId },
+    z.array(billingPaymentPlanBillOptionSchema),
+  );
+}
+
+export async function saveBillingPaymentPlan(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'billing:charges:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(billingPaymentPlanInputSchema, input);
+  return rpc(
+    context,
+    'billing_payment_plan_save',
+    {
+      p_society_id: societyId,
+      ...parsed,
+      p_request_id: context.requestId,
+    },
+    billingPaymentPlanSaveResultSchema,
+  );
+}
+
+export async function cancelBillingPaymentPlan(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'billing:charges:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(billingPaymentPlanCancelInputSchema, input);
+  return rpc(
+    context,
+    'billing_payment_plan_cancel',
+    {
+      p_society_id: societyId,
+      ...parsed,
+      p_request_id: context.requestId,
+    },
+    billingPaymentPlanCancelResultSchema,
+  );
+}
+
+export async function listBillingRecoveryActions() {
+  const { context, societyId } = await getContext('billing:charges:read');
+  return rpc(
+    context,
+    'billing_recovery_actions_list',
+    { p_society_id: societyId },
+    billingRecoveryActionsSchema,
+  );
+}
+
+export async function saveBillingRecoveryAction(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'billing:charges:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(billingRecoveryActionInputSchema, input);
+  return rpc(
+    context,
+    'billing_recovery_action_save',
+    {
+      p_society_id: societyId,
+      ...parsed,
+      p_request_id: context.requestId,
+    },
+    billingRecoveryActionSaveResultSchema,
+  );
+}
+
+export async function getBillingCollectionEfficiency(input: unknown) {
+  const { context, societyId } = await getContext('billing:charges:read');
+  const parsed = parseInput(billingCollectionEfficiencyInputSchema, input);
+  return rpc(
+    context,
+    'billing_collection_efficiency',
+    { p_society_id: societyId, ...parsed },
+    billingCollectionEfficiencySchema,
   );
 }
 

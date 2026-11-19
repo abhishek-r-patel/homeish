@@ -496,6 +496,13 @@ Routes: `/admin/expenses` (balances, approvals, record forms, cash and bank book
 
 Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 
+**P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest has no API or calculation until an accountant/legal review approves its rate, basis and late-fee interaction.
+
+- `billing.paymentPlan.list` (admin, committee) reads plans; `billing.paymentPlan.save` (admin) creates a tracker record from a unit, selected open bill IDs, down-payment amount, installment count, first due date and remarks, or updates terms and remarks on an existing plan. The database snapshots the selected bills' remaining balances when creating a plan. An open bill can belong to only one non-cancelled plan; saved bill links cannot be changed. Equal monthly installments start on the first due date, with the last installment absorbing paise rounding. Progress is derived only from confirmed allocations for payments dated on or after the plan date and confirmed after plan creation, applied to the down payment and then installments in order. Actual ledger due remains authoritative; no caller-entered paid totals are accepted.
+- `billing.paymentPlan.cancel` (admin) cancels a plan with a required reason, retains its record and releases its bills for a replacement plan. It does not change bills, payments or ledger entries.
+- `billing.recoveryAction.list` (admin, committee) reads internal recovery follow-ups; `.save` (admin) creates or updates them. Action type and outcome use closed choices; an optional assignee must be an active admin account in the same society. A record is not proof of legal service; no legal notice is recorded and no notification or external message is sent. Records follow financial-record retention.
+- `billing.collectionEfficiency` (admin, committee) returns a read-only as-of result. Numerator: confirmed payment amounts allocated to bills due by the as-of date, with both `paid_on` and `confirmed_at` on or before it; advance or unallocated credit is excluded. Denominator: original amounts of bills due by that date less approved waivers effective by then. Existing BIL-11/P27 calculations are unchanged.
+
 ---
 
 ### 5.16 Tenancy and moves (`tenancy`, P18; D-50)

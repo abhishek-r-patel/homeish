@@ -133,6 +133,26 @@ describe('billing queries', () => {
     },
   );
 
+  it('explains an attempt to reuse a bill in another active plan', async () => {
+    fetchMock.mockResolvedValue(
+      Response.json(
+        {
+          code: '23505',
+          message:
+            'duplicate key violates billing_payment_plan_bills_active_bill_key',
+        },
+        { status: 409 },
+      ),
+    );
+    await expect(
+      billingRpc(context, 'billing_payment_plan_save', {}, z.unknown()),
+    ).rejects.toMatchObject({
+      code: 'CONFLICT',
+      reason: 'invalid_state',
+      message: 'One or more selected bills already belong to an active plan.',
+    });
+  });
+
   it('does not propagate database payment identifiers or monetary values into unexpected errors', async () => {
     fetchMock.mockResolvedValue(
       Response.json(

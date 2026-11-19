@@ -1218,6 +1218,146 @@ export type Database = {
           },
         ];
       };
+      billing_payment_plan_bills: {
+        Row: {
+          bill_id: string;
+          created_at: string;
+          plan_id: string;
+          released_at: string | null;
+          snapshot_remaining_paise: number;
+          society_id: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          bill_id: string;
+          created_at?: string;
+          plan_id: string;
+          released_at?: string | null;
+          snapshot_remaining_paise: number;
+          society_id: string;
+          unit_id: string;
+        };
+        Update: {
+          bill_id?: string;
+          created_at?: string;
+          plan_id?: string;
+          released_at?: string | null;
+          snapshot_remaining_paise?: number;
+          society_id?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'billing_payment_plan_bills_bill_same_unit_fkey';
+            columns: ['society_id', 'bill_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_bills';
+            referencedColumns: ['society_id', 'id', 'unit_id'];
+          },
+          {
+            foreignKeyName: 'billing_payment_plan_bills_plan_same_unit_fkey';
+            columns: ['society_id', 'plan_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_payment_plans';
+            referencedColumns: ['society_id', 'id', 'unit_id'];
+          },
+        ];
+      };
+      billing_payment_plans: {
+        Row: {
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          created_at: string;
+          created_by: string;
+          down_payment_paise: number;
+          first_due_date: string;
+          id: string;
+          installment_count: number;
+          plan_date: string;
+          remarks: string | null;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          down_payment_paise: number;
+          first_due_date: string;
+          id?: string;
+          installment_count: number;
+          plan_date: string;
+          remarks?: string | null;
+          society_id: string;
+          status?: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          down_payment_paise?: number;
+          first_due_date?: string;
+          id?: string;
+          installment_count?: number;
+          plan_date?: string;
+          remarks?: string | null;
+          society_id?: string;
+          status?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'billing_payment_plans_cancelled_by_fkey';
+            columns: ['cancelled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'billing_payment_plans_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'billing_payment_plans_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'billing_payment_plans_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'billing_payment_plans_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       billing_payments: {
         Row: {
           amount_paise: number;
@@ -1344,6 +1484,94 @@ export type Database = {
             columns: ['society_id'];
             isOneToOne: false;
             referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      billing_recovery_actions: {
+        Row: {
+          action_date: string;
+          action_type: string;
+          assigned_admin_user_id: string | null;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          next_action_date: string;
+          outcome: string;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action_date: string;
+          action_type: string;
+          assigned_admin_user_id?: string | null;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          next_action_date: string;
+          outcome: string;
+          society_id: string;
+          status?: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by: string;
+        };
+        Update: {
+          action_date?: string;
+          action_type?: string;
+          assigned_admin_user_id?: string | null;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          next_action_date?: string;
+          outcome?: string;
+          society_id?: string;
+          status?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'billing_recovery_actions_assignee_membership_fkey';
+            columns: ['society_id', 'assigned_admin_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'user_id'];
+          },
+          {
+            foreignKeyName: 'billing_recovery_actions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'billing_recovery_actions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'billing_recovery_actions_unit_same_society_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'billing_recovery_actions_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -10883,6 +11111,10 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      billing_collection_efficiency: {
+        Args: { p_as_of_date: string; p_society_id: string };
+        Returns: Json;
+      };
       billing_dashboard: {
         Args: { p_from: string; p_society_id: string; p_to: string };
         Returns: Json;
@@ -10932,6 +11164,36 @@ export type Database = {
       };
       billing_payment_get: {
         Args: { p_payment_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      billing_payment_plan_cancel: {
+        Args: {
+          p_plan_id: string;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      billing_payment_plan_open_bills: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      billing_payment_plan_save: {
+        Args: {
+          p_bill_ids: string[];
+          p_down_payment_paise: number;
+          p_first_due_date: string;
+          p_installment_count: number;
+          p_plan_id: string;
+          p_remarks: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      billing_payment_plans_list: {
+        Args: { p_society_id: string };
         Returns: Json;
       };
       billing_payment_record: {
@@ -10984,6 +11246,25 @@ export type Database = {
       };
       billing_receipt_get: {
         Args: { p_payment_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      billing_recovery_action_save: {
+        Args: {
+          p_action_date: string;
+          p_action_id: string;
+          p_action_type: string;
+          p_assigned_admin_user_id: string;
+          p_next_action_date: string;
+          p_outcome: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_status: string;
+          p_unit_id: string;
+        };
+        Returns: Json;
+      };
+      billing_recovery_actions_list: {
+        Args: { p_society_id: string };
         Returns: Json;
       };
       billing_reminders_run: {
