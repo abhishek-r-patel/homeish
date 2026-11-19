@@ -790,6 +790,19 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - Request lists and details show an **Escalated to admins** or **Escalated to committee** chip (words, not colour alone) next to the overdue state, and the timeline shows the escalation entry. The requester never sees who was notified.
 - The admin **Categories** tab adds "Escalate to committee after (days)" (1–30, default 2) to each category and an **SLA escalation** card ("Send escalations by": **In-app** or **In-app + email**) explaining that recipients always get an in-app notification and residents see only that the request was escalated.
 
+### 12.16 Helpdesk additions (P49)
+
+- **Priority:** the create form offers Critical, High, Medium and Low as a radio group with a one-line hint each (Medium preselected). Lists and detail show the priority as a word chip; admins get **Change priority** with a required reason.
+- **Targets:** the admin **Categories** tab replaces "SLA hours" with four "days" inputs per category (empty means no target), and the **SLA escalation** card adds "Committee wait is set" **Per category** / **Per priority** with four day inputs when per priority is chosen.
+- **On Hold:** admins see **Put on hold** (reason required, shown to the requester) and **Release hold**. Held requests show an **On hold · N days** chip instead of the overdue state, and the requester sees the reason on the detail page and timeline.
+- **Feedback:** after closing, the rating form asks for Resolution quality, Response speed and Staff behaviour (1–5 each, optional as a set) and the overall rating. Admins see a follow-up control (Not needed/Needed/Done).
+- **Logging for a unit:** admins and housekeeping supervisors get **Log a request** with unit or common area and **How it arrived** (Walk-in, Phone, WhatsApp, Email, Helpdesk app, Daily rounds). The form has no photo upload. Supervisors stay on the form after saving because they cannot open request detail. The source shows on admin lists and detail only.
+- **Escalation responses:** escalated requests show an **Escalation response** card to admins (and committee for committee-level escalations) with status, note, responder and days to respond.
+- **Vendor picker:** when Vendors is enabled, the assign form adds **Choose a vendor** above the free-text name and phone fields. The blacklist warning follows P47.1.
+- **Report tab:** tables first, with simple bars as an addition, for resolution %, on-time %, average days by category, priority and month, open load per assignee, monthly volume with closing backlog and repeat issues. Committee members do not see unit-level repeats or written comments.
+- **Daily checks:** `/guard/rounds` and `/housekeeping/rounds` are phone-first lists of today's points with **OK** and **Issue** buttons (56px targets); Issue asks for a note and offers raising a new request, linking an open common-area request, or only recording the issue. Done points show who checked them and when. Admins manage points and see the OK rate under **Daily checks**.
+- Route states follow 9.3. The development fixtures `/fixtures/service-requests` and `/fixtures/service-requests-admin` cover the priority radio group and the new escalation settings with synthetic data; hold, feedback, report and daily-check states are covered by unit and database tests.
+
 ### 12.17 Accounts additions (P39)
 
 - **Cash and bank book:** when one account is selected, rows show the **Balance** after each entry; every row shows its **Voucher** (`RV/2026-27/12`). Reversals stay as their own rows. CSV and PDF exports include the voucher.

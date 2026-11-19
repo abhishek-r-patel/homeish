@@ -64,6 +64,15 @@ export const statusMap = {
   'request.rejected': { icon: '×', label: 'Rejected', tone: 'danger' },
   'request.reopened': { icon: '↻', label: 'Reopened', tone: 'warning' },
   'request.overdue': { icon: '!', label: 'Overdue', tone: 'danger' },
+  'request.on_hold': { icon: '‖', label: 'On hold', tone: 'neutral' },
+  'request.priority_critical': {
+    icon: '!',
+    label: 'Critical',
+    tone: 'danger',
+  },
+  'request.priority_high': { icon: '▲', label: 'High', tone: 'warning' },
+  'request.priority_medium': { icon: '•', label: 'Medium', tone: 'info' },
+  'request.priority_low': { icon: '▽', label: 'Low', tone: 'neutral' },
   'request.escalated_admin': {
     icon: '▲',
     label: 'Escalated to admins',
@@ -179,9 +188,10 @@ const toneClasses: Record<StatusTone, string> = {
 
 type StatusChipProps = {
   status: ProductStatus;
+  detail?: string;
 };
 
-export function StatusChip({ status }: StatusChipProps) {
+export function StatusChip({ status, detail }: StatusChipProps) {
   const { translate } = useUiTranslator();
   const { icon, label, tone } = statusMap[status];
   const statusArea = status.slice(0, status.indexOf('.'));
@@ -199,6 +209,7 @@ export function StatusChip({ status }: StatusChipProps) {
     >
       <span aria-hidden="true">{icon}</span>
       {translatedLabel}
+      {detail ? ` · ${detail}` : null}
     </span>
   );
 }

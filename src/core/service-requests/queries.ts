@@ -12,8 +12,13 @@ import {
   serviceRequestDashboardSchema,
   serviceRequestDetailSchema,
   serviceRequestEscalationSettingsSchema,
+  serviceRequestIntakeOptionsSchema,
+  serviceRequestReportSchema,
+  serviceRequestRoundsReportSchema,
+  serviceRequestRoundsTodaySchema,
   serviceRequestSummarySchema,
   serviceRequestSettingsSchema,
+  serviceRequestTargetSchema,
 } from './validation';
 
 const requestListSchema = z.array(serviceRequestSummarySchema);
@@ -48,6 +53,11 @@ export async function serviceRequestRpc<T>(
           ? 'stale_version'
           : (CONFLICT_REASONS.find((candidate) => candidate === hint) ??
             'invalid_state');
+      if (hint === 'duplicate_name') {
+        throw new ValidationError({
+          name: 'A check point with this name already exists.',
+        });
+      }
       throw new AppError('CONFLICT', {
         reason,
         message:
@@ -219,5 +229,87 @@ export async function readServiceRequestEscalationSettings(
     'request_escalation_settings_get',
     { p_society_id: societyId },
     serviceRequestEscalationSettingsSchema,
+  );
+}
+
+export async function readServiceRequestTargets(
+  context: RequestContext,
+  societyId: string,
+) {
+  requireSociety(context, societyId);
+  authorizeRequest(context, {
+    moduleKey: 'service_request',
+    permission: 'request:report',
+  });
+  return serviceRequestRpc(
+    context,
+    'request_category_targets_list',
+    { p_society_id: societyId },
+    z.array(serviceRequestTargetSchema),
+  );
+}
+
+export async function readServiceRequestReport(
+  context: RequestContext,
+  societyId: string,
+) {
+  requireSociety(context, societyId);
+  authorizeRequest(context, {
+    moduleKey: 'service_request',
+    permission: 'request:report',
+  });
+  return serviceRequestRpc(
+    context,
+    'request_report',
+    { p_society_id: societyId },
+    serviceRequestReportSchema,
+  );
+}
+
+export async function readServiceRequestRoundsToday(
+  context: RequestContext,
+  societyId: string,
+) {
+  requireSociety(context, societyId);
+  authorizeRequest(context, {
+    moduleKey: 'service_request',
+    permission: 'request:rounds',
+  });
+  return serviceRequestRpc(
+    context,
+    'request_rounds_today',
+    { p_society_id: societyId },
+    serviceRequestRoundsTodaySchema,
+  );
+}
+
+export async function readServiceRequestRoundsReport(
+  context: RequestContext,
+  societyId: string,
+  days = 30,
+) {
+  requireSociety(context, societyId);
+  authorizeRequest(context, {
+    moduleKey: 'service_request',
+    permission: 'request:report',
+  });
+  return serviceRequestRpc(
+    context,
+    'request_rounds_report',
+    { p_society_id: societyId, p_days: days },
+    serviceRequestRoundsReportSchema,
+  );
+}
+
+export async function readServiceRequestIntakeOptions(
+  context: RequestContext,
+  societyId: string,
+) {
+  requireSociety(context, societyId);
+  return serviceRequestRpc(
+    context,
+    'request_intake_options',
+    { p_society_id: societyId },
+    serviceRequestIntakeOptionsSchema,
   );
 }

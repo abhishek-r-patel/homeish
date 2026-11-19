@@ -7733,8 +7733,62 @@ export type Database = {
           },
         ];
       };
+      service_request_committee_waits: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          priority: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          wait_days: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          priority: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          wait_days?: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          priority?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          wait_days?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'service_request_committee_waits_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_committee_waits_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_committee_waits_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       service_request_escalation_settings: {
         Row: {
+          committee_wait_mode: string;
           created_at: string;
           created_by: string | null;
           delivery: string;
@@ -7744,6 +7798,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          committee_wait_mode?: string;
           created_at?: string;
           created_by?: string | null;
           delivery?: string;
@@ -7752,6 +7807,7 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          committee_wait_mode?: string;
           created_at?: string;
           created_by?: string | null;
           delivery?: string;
@@ -7793,6 +7849,10 @@ export type Database = {
           recipient_count: number;
           request_id: string;
           request_trace: string | null;
+          responded_at: string | null;
+          responded_by: string | null;
+          response_note: string | null;
+          response_status: string;
           society_id: string;
         };
         ComputedFields: never;
@@ -7805,6 +7865,10 @@ export type Database = {
           recipient_count: number;
           request_id: string;
           request_trace?: string | null;
+          responded_at?: string | null;
+          responded_by?: string | null;
+          response_note?: string | null;
+          response_status?: string;
           society_id: string;
         };
         Update: {
@@ -7816,6 +7880,10 @@ export type Database = {
           recipient_count?: number;
           request_id?: string;
           request_trace?: string | null;
+          responded_at?: string | null;
+          responded_by?: string | null;
+          response_note?: string | null;
+          response_status?: string;
           society_id?: string;
         };
         Relationships: [
@@ -7825,6 +7893,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'service_requests';
             referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'service_request_escalations_responded_by_fkey';
+            columns: ['responded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
           {
             foreignKeyName: 'service_request_escalations_society_id_fkey';
@@ -7894,6 +7969,200 @@ export type Database = {
           },
         ];
       };
+      service_request_inspection_points: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          location_note: string | null;
+          name: string;
+          society_id: string;
+          sort_order: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          location_note?: string | null;
+          name: string;
+          society_id: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          location_note?: string | null;
+          name?: string;
+          society_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'service_request_inspection_points_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_inspection_points_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_inspection_points_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      service_request_priority_targets: {
+        Row: {
+          category_id: string;
+          created_at: string;
+          created_by: string | null;
+          priority: string;
+          society_id: string;
+          target_days: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          category_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          priority: string;
+          society_id: string;
+          target_days: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          category_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          priority?: string;
+          society_id?: string;
+          target_days?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'service_request_priority_targets_category_same_society_fkey';
+            columns: ['society_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_request_categories';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'service_request_priority_targets_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_priority_targets_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_priority_targets_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      service_request_round_checks: {
+        Row: {
+          check_date: string;
+          checked_by: string;
+          client_request_id: string;
+          created_at: string;
+          id: string;
+          note: string | null;
+          point_id: string;
+          request_id: string | null;
+          result: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          check_date: string;
+          checked_by: string;
+          client_request_id: string;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          point_id: string;
+          request_id?: string | null;
+          result: string;
+          society_id: string;
+        };
+        Update: {
+          check_date?: string;
+          checked_by?: string;
+          client_request_id?: string;
+          created_at?: string;
+          id?: string;
+          note?: string | null;
+          point_id?: string;
+          request_id?: string | null;
+          result?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'service_request_round_checks_checked_by_fkey';
+            columns: ['checked_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_request_round_checks_point_same_society_fkey';
+            columns: ['society_id', 'point_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_request_inspection_points';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'service_request_round_checks_request_same_society_fkey';
+            columns: ['society_id', 'request_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'service_request_round_checks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       service_request_upvotes: {
         Row: {
           created_at: string;
@@ -7941,6 +8210,7 @@ export type Database = {
       service_requests: {
         Row: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -7949,11 +8219,19 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;
@@ -7966,6 +8244,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           assigned_membership_id?: string | null;
+          assigned_vendor_id?: string | null;
           assigned_vendor_name?: string | null;
           assigned_vendor_phone?: string | null;
           category_id: string;
@@ -7974,11 +8253,19 @@ export type Database = {
           created_at?: string;
           created_by: string;
           description: string;
+          feedback_follow_up?: string | null;
+          held_seconds?: number;
           id?: string;
+          intake_source?: string;
           location_type: string;
+          on_hold_reason?: string | null;
+          on_hold_since?: string | null;
           priority?: string;
           rating?: number | null;
+          rating_behaviour?: number | null;
           rating_comment?: string | null;
+          rating_quality?: number | null;
+          rating_speed?: number | null;
           reject_reason?: string | null;
           resolved_at?: string | null;
           sla_due_at?: string | null;
@@ -7990,6 +8277,7 @@ export type Database = {
         };
         Update: {
           assigned_membership_id?: string | null;
+          assigned_vendor_id?: string | null;
           assigned_vendor_name?: string | null;
           assigned_vendor_phone?: string | null;
           category_id?: string;
@@ -7998,11 +8286,19 @@ export type Database = {
           created_at?: string;
           created_by?: string;
           description?: string;
+          feedback_follow_up?: string | null;
+          held_seconds?: number;
           id?: string;
+          intake_source?: string;
           location_type?: string;
+          on_hold_reason?: string | null;
+          on_hold_since?: string | null;
           priority?: string;
           rating?: number | null;
+          rating_behaviour?: number | null;
           rating_comment?: string | null;
+          rating_quality?: number | null;
+          rating_speed?: number | null;
           reject_reason?: string | null;
           resolved_at?: string | null;
           sla_due_at?: string | null;
@@ -8054,6 +8350,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'service_requests_vendor_same_society_fkey';
+            columns: ['society_id', 'assigned_vendor_id'];
+            isOneToOne: false;
+            referencedRelation: 'vendors';
+            referencedColumns: ['society_id', 'id'];
           },
         ];
       };
@@ -13208,11 +13511,13 @@ export type Database = {
           p_request_id: string;
           p_request_trace: string;
           p_society_id: string;
+          p_vendor_id?: string;
           p_vendor_name: string;
           p_vendor_phone: string;
         };
         Returns: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -13221,11 +13526,19 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;
@@ -13305,6 +13618,22 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      request_category_targets_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      request_category_targets_save: {
+        Args: {
+          p_category_id: string;
+          p_critical: number;
+          p_high: number;
+          p_low: number;
+          p_medium: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       request_confirm_close: {
         Args: {
           p_request_id: string;
@@ -13313,6 +13642,7 @@ export type Database = {
         };
         Returns: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -13321,11 +13651,19 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;
@@ -13356,6 +13694,7 @@ export type Database = {
         };
         Returns: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -13364,11 +13703,72 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
+          reject_reason: string | null;
+          resolved_at: string | null;
+          sla_due_at: string | null;
+          society_id: string;
+          status: string;
+          unit_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'service_requests';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      request_create_for_unit: {
+        Args: {
+          p_attachments: Json;
+          p_category_id: string;
+          p_client_request_id: string;
+          p_description: string;
+          p_intake_source: string;
+          p_location_type: string;
+          p_priority: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: {
+          assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
+          assigned_vendor_name: string | null;
+          assigned_vendor_phone: string | null;
+          category_id: string;
+          client_request_id: string;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
+          id: string;
+          intake_source: string;
+          location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
+          priority: string;
+          rating: number | null;
+          rating_behaviour: number | null;
+          rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;
@@ -13386,6 +13786,17 @@ export type Database = {
         };
       };
       request_dashboard: { Args: { p_society_id: string }; Returns: Json };
+      request_escalation_respond: {
+        Args: {
+          p_level: string;
+          p_note: string;
+          p_request_id: string;
+          p_request_trace: string;
+          p_response_status: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       request_escalation_run: {
         Args: {
           p_request_trace: string;
@@ -13400,6 +13811,8 @@ export type Database = {
       };
       request_escalation_settings_save: {
         Args: {
+          p_committee_wait_mode?: string;
+          p_committee_waits?: Json;
           p_delivery: string;
           p_expected_updated_at: string;
           p_request_id: string;
@@ -13407,10 +13820,117 @@ export type Database = {
         };
         Returns: Json;
       };
+      request_feedback_follow_up_set: {
+        Args: {
+          p_follow_up: string;
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: {
+          assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
+          assigned_vendor_name: string | null;
+          assigned_vendor_phone: string | null;
+          category_id: string;
+          client_request_id: string;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
+          id: string;
+          intake_source: string;
+          location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
+          priority: string;
+          rating: number | null;
+          rating_behaviour: number | null;
+          rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
+          reject_reason: string | null;
+          resolved_at: string | null;
+          sla_due_at: string | null;
+          society_id: string;
+          status: string;
+          unit_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'service_requests';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       request_get: {
         Args: { p_request_id: string; p_society_id: string };
         Returns: Json;
       };
+      request_hold: {
+        Args: {
+          p_reason: string;
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: {
+          assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
+          assigned_vendor_name: string | null;
+          assigned_vendor_phone: string | null;
+          category_id: string;
+          client_request_id: string;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
+          id: string;
+          intake_source: string;
+          location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
+          priority: string;
+          rating: number | null;
+          rating_behaviour: number | null;
+          rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
+          reject_reason: string | null;
+          resolved_at: string | null;
+          sla_due_at: string | null;
+          society_id: string;
+          status: string;
+          unit_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'service_requests';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      request_inspection_point_save: {
+        Args: {
+          p_active: boolean;
+          p_location_note: string;
+          p_name: string;
+          p_point_id: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_sort_order: number;
+        };
+        Returns: Json;
+      };
+      request_intake_options: { Args: { p_society_id: string }; Returns: Json };
       request_list: {
         Args: {
           p_assignee_id?: string;
@@ -13426,16 +13946,17 @@ export type Database = {
         };
         Returns: Json;
       };
-      request_rate: {
+      request_priority_change: {
         Args: {
-          p_comment: string;
-          p_rating: number;
+          p_priority: string;
+          p_reason: string;
           p_request_id: string;
           p_request_trace: string;
           p_society_id: string;
         };
         Returns: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -13444,11 +13965,70 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
+          reject_reason: string | null;
+          resolved_at: string | null;
+          sla_due_at: string | null;
+          society_id: string;
+          status: string;
+          unit_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'service_requests';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      request_rate: {
+        Args: {
+          p_behaviour?: number;
+          p_comment: string;
+          p_quality?: number;
+          p_rating: number;
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_speed?: number;
+        };
+        Returns: {
+          assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
+          assigned_vendor_name: string | null;
+          assigned_vendor_phone: string | null;
+          category_id: string;
+          client_request_id: string;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
+          id: string;
+          intake_source: string;
+          location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
+          priority: string;
+          rating: number | null;
+          rating_behaviour: number | null;
+          rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;
@@ -13474,6 +14054,7 @@ export type Database = {
         };
         Returns: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -13482,11 +14063,65 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
+          reject_reason: string | null;
+          resolved_at: string | null;
+          sla_due_at: string | null;
+          society_id: string;
+          status: string;
+          unit_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'service_requests';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      request_release: {
+        Args: {
+          p_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: {
+          assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
+          assigned_vendor_name: string | null;
+          assigned_vendor_phone: string | null;
+          category_id: string;
+          client_request_id: string;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
+          id: string;
+          intake_source: string;
+          location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
+          priority: string;
+          rating: number | null;
+          rating_behaviour: number | null;
+          rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;
@@ -13512,6 +14147,7 @@ export type Database = {
         };
         Returns: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -13520,11 +14156,19 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;
@@ -13541,6 +14185,27 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      request_report: { Args: { p_society_id: string }; Returns: Json };
+      request_round_check_record: {
+        Args: {
+          p_action: string;
+          p_category_id: string;
+          p_client_request_id: string;
+          p_link_request_id: string;
+          p_note: string;
+          p_point_id: string;
+          p_priority: string;
+          p_request_trace: string;
+          p_result: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      request_rounds_report: {
+        Args: { p_days?: number; p_society_id: string };
+        Returns: Json;
+      };
+      request_rounds_today: { Args: { p_society_id: string }; Returns: Json };
       request_update_status: {
         Args: {
           p_request_id: string;
@@ -13550,6 +14215,7 @@ export type Database = {
         };
         Returns: {
           assigned_membership_id: string | null;
+          assigned_vendor_id: string | null;
           assigned_vendor_name: string | null;
           assigned_vendor_phone: string | null;
           category_id: string;
@@ -13558,11 +14224,19 @@ export type Database = {
           created_at: string;
           created_by: string;
           description: string;
+          feedback_follow_up: string | null;
+          held_seconds: number;
           id: string;
+          intake_source: string;
           location_type: string;
+          on_hold_reason: string | null;
+          on_hold_since: string | null;
           priority: string;
           rating: number | null;
+          rating_behaviour: number | null;
           rating_comment: string | null;
+          rating_quality: number | null;
+          rating_speed: number | null;
           reject_reason: string | null;
           resolved_at: string | null;
           sla_due_at: string | null;

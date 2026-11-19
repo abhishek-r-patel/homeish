@@ -229,7 +229,7 @@ Arrows only stack the groups for reading; they are not a build order (Section 2.
 | P46   | Election governance and gated official voting  | `meeting`, `poll`               | Not yet                            | 2 M, 1 L      | 7      | P19, P22, P23, P44; legal checks                                       | Toolkit-M07                   | ⬜ Planned only                                          |
 | P47   | Vendor, contract and AMC additions             | `vendor`, `amc`                 | Not yet; changes AMC-2, AMC-7      | 3 S, 5 M      | 13     | P14, P24, P16, P28                                                     | Toolkit-M14                   | ⬜ Planned only                                          |
 | P48   | Staff record additions                         | `staff`                         | Not yet                            | 2 S           | 2      | P12                                                                    | Toolkit-M15                   | 🟡 Built locally                                         |
-| P49   | Helpdesk additions                             | `service_request`               | Not yet; changes SRQ-1/3/5/6, D-59 | 4 S, 4 M      | 12     | P8, P32, P24                                                           | Toolkit-M16                   | ⬜ Planned only  |
+| P49   | Helpdesk additions                             | `service_request`               | Not yet; changes SRQ-1/3/5/6, D-59 | 4 S, 4 M      | 12     | P8, P32, P24                                                           | Toolkit-M16                   | 🟡 Built locally; P49.8 blacklist warning ⛔ until P47.1 |
 | P50   | Repairs and redevelopment                      | New optional module             | Not yet                            | 1 S, 5 M      | 11     | P40.9; P16, P24, P23                                                   | Toolkit-M17                   | ⬜ Planned only                                          |
 | P51   | Transfer and clearance                         | `tenancy`                       | Not yet; changes TEN-3, D-50       | 1 S, 2 M, 1 L | 8      | P18, `billing`, P23; P35.10–P35.12                                     | Toolkit-M18                   | ⬜ Planned only                                          |
 | P52   | Tenant, parking and facilities                 | `tenancy`, `parking`, `amenity` | Not yet                            | 2 S, 3 M      | 8      | P18, P20, P15, P14, P28, P16                                           | Toolkit-M19                   | ⬜ Planned only                                          |
@@ -2255,16 +2255,16 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Tasks:**
 
-| ID                      | Task                                                                            | Size | Depends on                                            | Sources                      | Status |
-| ----------------------- | ------------------------------------------------------------------------------- | ---- | ----------------------------------------------------- | ---------------------------- | ------ |
-| <a id="p49-1"></a>P49.1 | Replace Normal/Urgent with Critical/High/Medium/Low and set targets by priority | M    | SRQ-1/SRQ-6/D-59 change; mapping of existing requests | 181, 183                     | ⬜     |
-| <a id="p49-2"></a>P49.2 | Add On Hold with a reason that pauses the target clock and escalation           | M    | P49.1; SRQ-3/D-59 change; hold rules                  | 181, 190, 192                | ⬜     |
-| <a id="p49-3"></a>P49.3 | Read-only helpdesk performance report                                           | M    | P49.1–P49.2 definitions; no new P27 metric            | 182, 184, 185, 188, 190, 192 | ⬜     |
-| <a id="p49-4"></a>P49.4 | Record escalation responses and outcomes                                        | S    | P32                                                   | 189                          | ⬜     |
-| <a id="p49-5"></a>P49.5 | Detailed feedback scores and follow-up                                          | S    | SRQ-5 change; access                                  | 187                          | ⬜     |
-| <a id="p49-6"></a>P49.6 | Record how a request arrived                                                    | S    | Admin logging for a unit; no channel integration      | 181, 190, 192                | ⬜     |
-| <a id="p49-7"></a>P49.7 | Daily common-area check with issue-to-request link                              | M    | Recorder role; not P25 patrol or a D-20 cleaning log  | 191                          | ⬜     |
-| <a id="p49-8"></a>P49.8 | Pick an assigned vendor from the P24 vendor list                                | S    | P24 enabled; free text remains the fallback           | 181; M16→M14 link            | ⬜     |
+| ID                      | Task                                                                            | Size | Depends on                                            | Sources                      | Status                                             |
+| ----------------------- | ------------------------------------------------------------------------------- | ---- | ----------------------------------------------------- | ---------------------------- | -------------------------------------------------- |
+| <a id="p49-1"></a>P49.1 | Replace Normal/Urgent with Critical/High/Medium/Low and set targets by priority | M    | SRQ-1/SRQ-6/D-59 change; mapping of existing requests | 181, 183                     | 🟡                                                 |
+| <a id="p49-2"></a>P49.2 | Add On Hold with a reason that pauses the target clock and escalation           | M    | P49.1; SRQ-3/D-59 change; hold rules                  | 181, 190, 192                | 🟡                                                 |
+| <a id="p49-3"></a>P49.3 | Read-only helpdesk performance report                                           | M    | P49.1–P49.2 definitions; no new P27 metric            | 182, 184, 185, 188, 190, 192 | 🟡                                                 |
+| <a id="p49-4"></a>P49.4 | Record escalation responses and outcomes                                        | S    | P32                                                   | 189                          | 🟡                                                 |
+| <a id="p49-5"></a>P49.5 | Detailed feedback scores and follow-up                                          | S    | SRQ-5 change; access                                  | 187                          | 🟡                                                 |
+| <a id="p49-6"></a>P49.6 | Record how a request arrived                                                    | S    | Admin logging for a unit; no channel integration      | 181, 190, 192                | 🟡                                                 |
+| <a id="p49-7"></a>P49.7 | Daily common-area check with issue-to-request link                              | M    | Recorder role; not P25 patrol or a D-20 cleaning log  | 191                          | 🟡                                                 |
+| <a id="p49-8"></a>P49.8 | Pick an assigned vendor from the P24 vendor list                                | S    | P24 enabled; free text remains the fallback           | 181; M16→M14 link            | 🟡 Built locally; blacklist warning ⛔ until P47.1 |
 
 ### Acceptance by task
 
@@ -2277,15 +2277,15 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 - **P49.7 — daily common-area check (GAP-M16-07).** Society-defined inspection points, daily OK/Issue per point, OK rate and the points with most issues; an Issue can create or link a common-area request. Not QR patrol and not a cleaning schedule or area-cleaning log.
 - **P49.8 — vendor picking (GAP-M16-08).** When P24 is enabled, admins pick an active vendor (blacklisted vendors warned per P47.1); name/phone are copied to the request. Free-text entry remains when P24 is off; existing requests are unchanged. Residents still see only what the SRQ rules allow.
 
-**Database and API changes:** planned only. Forward-only migrations for priority/status/feedback/source/rounds, generated types and `request.*` changes are decided at kickoff after the owning contracts are approved.
+**Database and API changes:** migrations `20261124120000_service_request_helpdesk.sql` and `20261124130000_service_request_rounds.sql` (DATABASE.md §7.8), the `request.*` additions in API.md and contracts SRQ-10–SRQ-20 (D-70). The P47.1 blacklist warning in the vendor picker waits for P47, which adds the blacklisted status.
 
 **Tests to add when implementing:** priority targets and mapping of existing requests; hold pause/resume arithmetic and escalation suppression; report formulas; escalation response records; feedback validation; source labels; rounds-to-request link; vendor picker with P24 on/off; role access and society isolation; existing P8/P32 tests updated only where the approved contract changes.
 
 **Completion criteria:** each task closes its gates, updates and obtains approval for its owning contracts, and passes applicable Section 2.2 checks and its listed tests.
 
-**Build batch:** B1 — all tasks (Section 2.6 build batches).
+**Build batch:** B1 — all tasks (Section 2.6 build batches). Kickoff answers recorded 2026-11-19 and approved as PRD D-70 (SRQ-10–SRQ-20); existing societies keep the per-category committee wait and new societies start per priority.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live.
+**Status:** 🟡 P49.1–P49.8 implemented and tested locally on `feature-build-2`, except the P49.8 blacklist warning, which follows P47.1; generated database types are refreshed after the approved testdb push; owner UAT and release pending.
 
 ---
 

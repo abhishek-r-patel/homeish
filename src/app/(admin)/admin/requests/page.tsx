@@ -1,4 +1,4 @@
-// Administration workspace for service request triage and categories.
+// Administration workspace for request triage, logging, categories, reports and daily checks.
 import Link from 'next/link';
 import { z } from 'zod';
 import { Card, StatTile, StatusChip } from '@/components/ui/data-display';
@@ -7,7 +7,23 @@ import {
   ServiceRequestEscalationSettingsForm,
 } from '@/components/service-requests/category-manager';
 import {
+  INTAKE_SOURCE_LABELS,
+  ServiceRequestLogForm,
+} from '@/components/service-requests/log-form';
+import {
+  ServiceRequestReportView,
+  ServiceRequestRoundsReportView,
+} from '@/components/service-requests/report';
+import {
+  ServiceRequestInspectionPointManager,
+  ServiceRequestRoundsChecklist,
+} from '@/components/service-requests/rounds';
+import {
   getServiceRequestEscalationSettings,
+  getServiceRequestLogOptions,
+  getServiceRequestReportWorkspace,
+  getServiceRequestRoundsWorkspace,
+  getServiceRequestTargets,
   getServiceRequestWorkspace,
 } from '@/core/service-requests/operations';
 import { serviceRequestStatusSchema } from '@/core/service-requests/validation';
@@ -35,7 +51,13 @@ export default async function AdminRequestsPage({
   const t = (source: string) => translateMessage(locale, source);
   const params = await searchParams;
   const rawTab = single(params, 'tab');
-  const tab = rawTab === 'categories' ? rawTab : 'requests';
+  const tab =
+    rawTab === 'categories' ||
+    rawTab === 'log' ||
+    rawTab === 'report' ||
+    rawTab === 'rounds'
+      ? rawTab
+      : 'requests';
   const rawStatus = single(params, 'status');
   const status = serviceRequestStatusSchema.safeParse(rawStatus).success
     ? rawStatus
@@ -81,17 +103,26 @@ export default async function AdminRequestsPage({
               {t('Requests')}
             </Link>
           </li>
-          {workspace.canManage ? (
-            <li>
-              <Link
-                aria-current={tab === 'categories' ? 'page' : undefined}
-                className="inline-flex min-h-12 items-center text-body-strong underline-offset-4 hover:underline"
-                href="/admin/requests?tab=categories"
-              >
-                {t('Categories')}
-              </Link>
-            </li>
-          ) : null}
+          {(
+            [
+              ['log', 'Log a request', workspace.canManage],
+              ['report', 'Report', true],
+              ['rounds', 'Daily checks', workspace.canManage],
+              ['categories', 'Categories', workspace.canManage],
+            ] as const
+          )
+            .filter(([, , visible]) => visible)
+            .map(([key, label]) => (
+              <li key={key}>
+                <Link
+                  aria-current={tab === key ? 'page' : undefined}
+                  className="inline-flex min-h-12 items-center text-body-strong underline-offset-4 hover:underline"
+                  href={`/admin/requests?tab=${key}`}
+                >
+                  {t(label)}
+                </Link>
+              </li>
+            ))}
         </ul>
       </nav>
       {tab === 'categories' && workspace.canManage ? (
@@ -99,8 +130,53 @@ export default async function AdminRequestsPage({
           <ServiceRequestEscalationSettingsForm
             settings={await getServiceRequestEscalationSettings()}
           />
-          <ServiceRequestCategoryManager categories={workspace.categories} />
+          <ServiceRequestCategoryManager
+            categories={workspace.categories}
+            targets={await getServiceRequestTargets()}
+          />
         </div>
+      ) : tab === 'log' && workspace.canManage ? (
+        <Card className="min-w-0" title={t('Log a request')}>
+          <ServiceRequestLogForm {...await getServiceRequestLogOptions()} />
+        </Card>
+      ) : tab === 'report' ? (
+        await (async () => {
+          const { report, rounds } = await getServiceRequestReportWorkspace();
+          return (
+            <div className="grid min-w-0 gap-space-4">
+              <ServiceRequestReportView report={report} />
+              <ServiceRequestRoundsReportView rounds={rounds} />
+            </div>
+          );
+        })()
+      ) : tab === 'rounds' && workspace.canManage ? (
+        await (async () => {
+          const rounds = await getServiceRequestRoundsWorkspace();
+          return (
+            <div className="grid min-w-0 gap-space-4">
+              {rounds.summary ? (
+                <ServiceRequestRoundsReportView rounds={rounds.summary} />
+              ) : null}
+              <section className="grid min-w-0 gap-space-3">
+                <h2 className="text-heading font-semibold">
+                  {t("Today's checklist")}
+                </h2>
+                <ServiceRequestRoundsChecklist
+                  options={rounds.options}
+                  today={rounds.today}
+                />
+              </section>
+              <section className="grid min-w-0 gap-space-3">
+                <h2 className="text-heading font-semibold">
+                  {t('Check points')}
+                </h2>
+                <ServiceRequestInspectionPointManager
+                  points={rounds.today.points}
+                />
+              </section>
+            </div>
+          );
+        })()
       ) : (
         <>
           {workspace.dashboard ? (
@@ -256,7 +332,17 @@ export default async function AdminRequestsPage({
                       </span>
                       <span className="flex flex-wrap gap-space-2">
                         <StatusChip status={`request.${request.status}`} />
-                        {request.is_overdue ? (
+                        <StatusChip
+                          status={`request.priority_${request.priority}`}
+                        />
+                        {request.on_hold_since ? (
+                          <StatusChip
+                            detail={translateMessage(locale, '{count} days', {
+                              count: request.held_days ?? 0,
+                            })}
+                            status="request.on_hold"
+                          />
+                        ) : request.is_overdue ? (
                           <StatusChip status="request.overdue" />
                         ) : null}
                         {request.escalation_level !== 'none' ? (
@@ -276,6 +362,7 @@ export default async function AdminRequestsPage({
                         locale,
                         { day: '2-digit', month: '2-digit', year: 'numeric' },
                       )}
+                      {` · ${t(INTAKE_SOURCE_LABELS[request.intake_source])}`}
                       {' · '}
                       {t('Assigned to')}{' '}
                       {request.assignee_name ??

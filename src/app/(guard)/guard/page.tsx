@@ -28,7 +28,8 @@ export default async function GuardHomePage() {
     (item) =>
       item.moduleKey === 'visitor' ||
       item.moduleKey === 'delivery' ||
-      item.moduleKey === 'tenancy',
+      item.moduleKey === 'tenancy' ||
+      item.moduleKey === 'service_request',
   );
   const showPettyCash = await isPettyCashCustodian(context);
   return (

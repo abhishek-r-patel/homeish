@@ -452,6 +452,25 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       resident: [
         { href: '/requests', label: 'Requests', permission: 'request:list' },
       ],
+      hk_supervisor: [
+        {
+          href: '/housekeeping/requests/new',
+          label: 'Log a request',
+          permission: 'request:log',
+        },
+        {
+          href: '/housekeeping/rounds',
+          label: 'Daily checks',
+          permission: 'request:rounds',
+        },
+      ],
+      guard: [
+        {
+          href: '/guard/rounds',
+          label: 'Daily checks',
+          permission: 'request:rounds',
+        },
+      ],
     },
     permissions: {
       'request:list': ['admin', 'committee', 'resident'],
@@ -466,6 +485,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'request:comment': ['admin', 'committee', 'resident'],
       'request:assignees:list': ['admin'],
       'request:report': ['admin', 'committee'],
+      'request:log': ['admin', 'hk_supervisor'],
+      'request:hold': ['admin'],
+      'request:priority': ['admin'],
+      'request:rounds': ['admin', 'hk_supervisor', 'guard'],
+      'request:rounds:manage': ['admin'],
+      'request:escalation:respond': ['admin', 'committee'],
     },
     settingsAccess: { auto_close_days: 'developer' },
     settingsSchema: serviceRequestSettingsSchema,
@@ -1199,8 +1224,9 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'parking',
     'patrol',
     'metering',
+    'service_request',
   ],
-  hk_supervisor: ['core', 'housekeeping', 'staff'],
+  hk_supervisor: ['core', 'housekeeping', 'service_request', 'staff'],
   resident: [
     'core',
     'visitor',

@@ -94,7 +94,7 @@ describe.skipIf(!hasDatabase)('cross-society RPC isolation', () => {
           );
           const request = await client.query<{ id: string }>(
             `select (public.request_create(
-               $1, $2, 'common_area', null, 'Synthetic lift noise', 'normal',
+               $1, $2, 'common_area', null, 'Synthetic lift noise', 'medium',
                '[]'::jsonb, gen_random_uuid(), 'cross-society'
              )).id`,
             [fixture.societyB, category.rows[0]?.id],
@@ -184,7 +184,11 @@ describe.skipIf(!hasDatabase)('cross-society RPC isolation', () => {
         outcomes.filter(
           ({ name, code }) =>
             !refused.has(code) &&
-            !(name === 'visitor_blacklist_match' && code === 'FALSE'),
+            !(
+              (name === 'visitor_blacklist_match' ||
+                name === 'expense_petty_cash_custodian_check') &&
+              code === 'FALSE'
+            ),
         ),
         'society-scoped RPCs that did not refuse an outsider',
       ).toEqual([]);

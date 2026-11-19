@@ -459,19 +459,38 @@ describe.skipIf(!hasDatabase)('database service request escalation', () => {
     expect((await save(5)).committee_escalation_days).toBe(5);
     expect((await save(null)).committee_escalation_days).toBe(5);
     await save(1);
-
-    const requestId = await insertRequest(
-      societyId,
-      `now() - interval '5 minutes'`,
+    // Societies created after P49 start per priority; the later settings test needs no row.
+    await database.asSuperuser((client) =>
+      client.query(
+        `insert into public.service_request_escalation_settings (
+           society_id, committee_wait_mode
+         ) values ($1, 'per_category')`,
+        [societyId],
+      ),
     );
-    await run(societyId);
-    expect(await levels(requestId)).toHaveLength(1);
-    await backdateAdminStep(requestId, 1);
-    await run(societyId);
-    expect((await levels(requestId)).map(({ level }) => level)).toEqual([
-      'admin',
-      'committee',
-    ]);
+
+    try {
+      const requestId = await insertRequest(
+        societyId,
+        `now() - interval '5 minutes'`,
+      );
+      await run(societyId);
+      expect(await levels(requestId)).toHaveLength(1);
+      await backdateAdminStep(requestId, 1);
+      await run(societyId);
+      expect((await levels(requestId)).map(({ level }) => level)).toEqual([
+        'admin',
+        'committee',
+      ]);
+    } finally {
+      await database.asSuperuser((client) =>
+        client.query(
+          `delete from public.service_request_escalation_settings
+           where society_id = $1`,
+          [societyId],
+        ),
+      );
+    }
   });
 
   it('records one escalation per level when two runs overlap', async () => {

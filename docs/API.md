@@ -367,6 +367,22 @@ Residents use `/requests`, `/requests/new` and `/requests/{requestId}`. Admins a
 
 SLA escalation (P32): category create/update also accepts `committeeEscalationDays` (1–30, default 2). `request.list/get` return `escalationLevel` (`none`, `admin`, `committee`); the requester sees an "Escalated" timeline entry without recipient names. Admins change the delivery on the Categories tab with `saveServiceRequestEscalationSettingsAction`. The daily job's `service_request.escalate` task does the escalation (6.1).
 
+**Helpdesk additions (P49, D-70).** Database contract in DATABASE.md §7.8. New permissions: `request:log` (admin, `hk_supervisor`), `request:hold` and `request:priority` (admin), `request:rounds` (admin, `hk_supervisor`, guard), `request:rounds:manage` (admin) and `request:escalation:respond` (admin, committee). Supervisors and guards get navigation only for logging and daily checks.
+
+- `request.create` accepts `priority` `critical | high | medium | low`; responses never return `normal`/`urgent` again.
+- `request.categories.targets.save` (A): four `targetDays` values (1–365) per category, or none to clear; audited.
+- `request.changePriority` (A): new priority and reason; recalculates the due time and adds a timeline entry.
+- `request.hold` / `request.release` (A): hold needs a reason (1–500) that the requester sees; both notify the requester. Lists return `onHoldSince`, `onHoldReason` and `heldDays`.
+- `request.logForUnit` (A, supervisor): same payload as `request.create` plus `intakeSource`, without photos; `clientRequestId` makes retries safe. `request.intakeOptions` (A, supervisor, guard) returns the categories and open common-area requests used by the log form and daily checks.
+- `request.rate` accepts optional `quality`, `speed` and `behaviour` scores (all three or none) with the overall `rating`; `request.feedbackFollowUp.set` (A) records `needed` or `done`.
+- `request.escalation.respond` (A; C for committee-level escalations): `responseStatus` and an optional note; audited.
+- `request.assign` accepts `vendorId` when `vendor` is enabled; name and phone are copied from the vendor. Admin request detail lists active vendors that have a phone number. The blacklist warning waits for P47.1.
+- `request.escalationSettings.save` also takes `committeeWaitMode` (`per_category | per_priority`) and four per-priority waits (1–30).
+- `request.report` adds the SRQ-15 measures; unit-level repeats and written comments are returned only to admins.
+- `request.rounds.points.save` (A), `request.rounds.today` and `request.rounds.check` (A, supervisor, guard: `ok` or `issue` with a note, optionally creating or linking a common-area request) and `request.rounds.report` (A, C).
+
+Routes: admins and committee keep `/admin/requests` (new **Report** and **Daily checks** tabs). Housekeeping supervisors use `/housekeeping/requests/new` and `/housekeeping/rounds`; guards use `/guard/rounds`.
+
 ### 5.9 Notice board (`notice`, P11)
 
 | Operation          | Who                            | Purpose                                    | Notes                                                                                             |

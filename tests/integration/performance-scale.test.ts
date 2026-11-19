@@ -458,7 +458,7 @@ const SEED_SQL = [
      case when g % 5 = 0 then 'common_area' else 'unit' end,
      case when g % 5 = 0 then null else unit.id end,
      'Request ' || g || ': the kitchen tap is leaking.',
-     case when g % 10 = 0 then 'urgent' else 'normal' end,
+     case when g % 10 = 0 then 'high' else 'medium' end,
      v.status,
      case when v.status in ('assigned', 'in_progress', 'resolved', 'closed')
        then assignee.membership_id end,
