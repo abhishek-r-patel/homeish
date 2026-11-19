@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Product    | Homeish (PRD D-01 approved 2026-11-09)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Version    | 0.12 (M23 and M24 decisions recorded; toolkit review complete; planning only)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Version    | 0.14 (P35–P53 build batches and owner decisions added; planning only)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Date       | 2026-11-19 (first draft 2026-11-09)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | Depends on | [PRD.md](./PRD.md), [DESIGN.md](./DESIGN.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [AGENTS.md](./AGENTS.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Scope      | MVP: Core, Visitor, Delivery, Billing, Service Request (PRD D-02, approved). Post-MVP modules (P11–P15) and the approved expansion phases P16–P34 (PRD D-38) follow P10. Accepted M25 housing-toolkit additions are planned in P35, M03 unit/ownership additions in P36, M08 billing additions in P37, M09 dues additions in P38, M11 accounts additions in P39, M10 funds additions in P40, M12 financial-report additions in P41, M13 expense-control additions in P42, M01 command-center additions in P43, M04 registration/governing-document additions in P44, M06 agenda additions in P45, and M07 election-governance/gated official-voting additions in P46, M14 vendor/contract/AMC additions in P47, M15 non-pay staff-record additions in P48, M16 helpdesk additions in P49, M17 repairs/redevelopment additions in P50, M18 transfer/clearance additions in P51, M19 tenant/parking/facility additions in P52, and M23 communication additions in P53 and P35.13; M24 insurance/legal items were all rejected; M06's meeting-summary addition extends P43.5, and M20 audit/compliance additions extend P41/P43/P44. Budget management remains out of MVP. This does not authorize implementation or release. |
@@ -13,11 +13,23 @@
 - Phases are in build order. A phase starts only when its prerequisites are complete. Tasks inside a phase are small enough to implement, verify and review on their own.
 - Task IDs: `P<phase>.<task>` (e.g., `P5.4`). Sizes are relative effort, not time: **S** small, **M** medium, **L** large (split further if it grows).
 - Every phase uses the same sections: goal, prerequisites (with kickoff decisions from P11), task table, database and API changes, tests, completion criteria and status. Built phases (P11–P18) show no size. Phases planned in 6-hour blocks (Section 2.5) show the block each task belongs to (for example T1, D1). P23–P34 descriptions began as drafts from the PRD; their current status lines below show what was implemented, released or deferred. Any remaining work is revisited at the relevant phase kickoff.
-- **Status marks** (every task table and overview tables): ✅ delivered and released to `main`; 🟡 implemented and tested locally but not yet released, or work remains; ⬜ not done. These marks track delivery, not full phase completion: each phase's Status separately records remaining module-gate checks, owner UAT/manual acceptance and live enablement.
+- **Status marks** (every task table and overview tables), in the order work moves through them:
+  - ⬜ **Planned:** accepted, not started.
+  - 🔵 **In progress:** being built on a feature branch.
+  - 🟡 **Built locally:** implemented and tested locally; not pushed or released.
+  - 🟠 **On beta:** merged to `beta` with CI green; waiting for owner testing.
+  - ✅ **Released:** on `main`; any pending owner acceptance is noted beside the mark.
+  - 🏁 **Accepted:** released and signed off by the owner after testing.
+  - ⏸ **Deferred:** parked by an owner decision; may return later.
+  - ⛔ **Blocked:** cannot continue until a named decision, phase or external step happens.
+  - ❌ **Dropped:** decided not to build; the row stays for history.
+
+  A row with mixed parts shows the mark that best describes where it is now, with a short note naming any part still ⬜, ⏸ or ⛔ (for example `🟡 Built locally; P39.5 ⬜ in B4`). Each phase's Status line still records the detail: remaining module-gate checks, owner UAT/manual acceptance and live enablement.
+
 - Requirement IDs (e.g., `VIS-4`), screen IDs (e.g., `G-02`) and operation names (e.g., `visitor.decide`) come from the PRD, DESIGN and API documents.
 - **No code is described here.** Each task says _what_ to deliver and _how to know it is done_.
 - The agent follows [AGENTS.md](./AGENTS.md) for every task: inspect existing code first, smallest change, tests, documents updated in the same task, ask the owner when something is unclear.
-- No feature or technology is added to the plan without project documentation or an explicit owner decision. Accepted toolkit work is planned below; it does not replace the owning documents.
+- No feature or technology is added to the plan without project documentation or an explicit owner decision. Accepted toolkit work is planned below; it does not replace the owning documents. P35–P53 sizes (Section 1.2 and each task table) are proposals using the Section 2.5 rule, not approved estimates; they are confirmed or re-split at each slice's kickoff (Section 2.6).
 - **Toolkit planning:** accepted toolkit decisions are recorded in this plan for future work, not as changes already made to the app. Before implementing them, update and obtain any required approval for the owning PRD/DESIGN/DATABASE/API contracts. Existing guarantees remain in force until the corresponding replacement is approved and built.
 
 ---
@@ -43,19 +55,19 @@ flowchart TD
   P9 --> P10[P10 Hardening and pilot go-live]
 ```
 
-| Phase | Name                              | Delivers                                                                               | PRD release | Status |
-| ----- | --------------------------------- | -------------------------------------------------------------------------------------- | ----------- | ------ |
-| P0    | Project foundation                | Running skeleton, tooling, pipelines, development database (AD-13)                     | MVP-0       | ✅     |
-| P1    | Database, errors and logging base | Core tables, security helpers, error/audit logging, rate limits                        | MVP-0       | ✅     |
-| P2    | Design system and app shells      | Tokens, shared components, navigation shells                                           | MVP-0       | ✅     |
-| P3    | Sign-in and sessions              | Email-code login, sessions, developer MFA                                              | MVP-0       | ✅     |
-| P4    | Core platform                     | Developer console, structure, people, registration, guards, notifications, files, jobs | MVP-0       | ✅     |
-| P5    | Visitor                           | Visitor module                                                                         | MVP-1       | ✅     |
-| P6    | Delivery                          | Delivery module                                                                        | MVP-2       | ✅     |
-| P7    | Billing                           | Charges, bills, UPI payments, ledger, receipts, reports                                | MVP-3       | ✅     |
-| P8    | Service requests                  | Requests module                                                                        | MVP-4       | ✅     |
-| P9    | Operations                        | Daily job, retention, backup export, monitoring                                        | MVP         | 🟡     |
-| P10   | Hardening and pilot               | Security/accessibility/performance review, production setup, pilot                     | MVP         | 🟡     |
+| Phase | Name                              | Delivers                                                                               | PRD release | Status                                                                  |
+| ----- | --------------------------------- | -------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------- |
+| P0    | Project foundation                | Running skeleton, tooling, pipelines, development database (AD-13)                     | MVP-0       | ✅                                                                      |
+| P1    | Database, errors and logging base | Core tables, security helpers, error/audit logging, rate limits                        | MVP-0       | ✅                                                                      |
+| P2    | Design system and app shells      | Tokens, shared components, navigation shells                                           | MVP-0       | ✅                                                                      |
+| P3    | Sign-in and sessions              | Email-code login, sessions, developer MFA                                              | MVP-0       | ✅                                                                      |
+| P4    | Core platform                     | Developer console, structure, people, registration, guards, notifications, files, jobs | MVP-0       | ✅                                                                      |
+| P5    | Visitor                           | Visitor module                                                                         | MVP-1       | ✅                                                                      |
+| P6    | Delivery                          | Delivery module                                                                        | MVP-2       | ✅                                                                      |
+| P7    | Billing                           | Charges, bills, UPI payments, ledger, receipts, reports                                | MVP-3       | ✅                                                                      |
+| P8    | Service requests                  | Requests module                                                                        | MVP-4       | ✅                                                                      |
+| P9    | Operations                        | Daily job, retention, backup export, monitoring                                        | MVP         | ✅ Released; production backups ⏸                                       |
+| P10   | Hardening and pilot               | Security/accessibility/performance review, production setup, pilot                     | MVP         | ⛔ Waits for owner checks and the first society; P10.5, P10.8, P10.9 ⬜ |
 
 P5, P6, P7 and P8 depend only on P4, not on each other. They are listed in the PRD's order; the owner may re-order them.
 
@@ -147,195 +159,83 @@ Arrows are recommended build order; "after Pxx" inside a box marks a phase that 
 
 Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 11 blocks, with P28–P33 released and P34 deferred to the future (PRD D-65).
 
-### 1.2 Accepted housing-toolkit additions (P35)
-
-| Phase | Enhancement                                                                                                                                    | Source                    | Estimate                                         | Prerequisites                                                                  | Status          |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ | --------------- |
-| P35   | Society reference/setup, manual adoption, committee action plan, help, scoped letters, optional booking deposits and exit/owner-sale clearance | M25 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | Existing Core/module services; per-task review and policy gates below; not P34 | ⬜ Planned only |
-
-P35 is the first accepted toolkit batch, not approval of all other housing modules. Financial and clearance work waits for its named review gates; independent items need not wait for unrelated deferred work. P10 pilot/go-live gates and all existing release approvals remain unchanged.
-
-### 1.3 Accepted unit/ownership additions (P36)
-
-| Phase | Enhancement                                                                                                                                                          | Source                    | Estimate                                         | Prerequisites                                                                                          | Status          |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | --------------- |
-| P36   | Verified area profile, unit layout, tenancy summary, title/share records, allotments, agreement index, handover, document index, vacancy follow-up and Unit 360 view | M03 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | Existing Core structure and the M02/M04/M08/M10/M11/M18/M19 and P26 metering gates identified per task | ⬜ Planned only |
-
-P36 records all ten accepted M03 items. Acceptance is not a legal determination, money-posting approval, implementation authorization or permission to collect additional identity data. Resolve each named gate before its affected work; unrelated slices may proceed independently after their own kickoff decisions.
-
-### 1.4 Accepted billing additions (P37)
-
-| Phase | Enhancement                                                                                                                          | Source                    | Estimate                                         | Prerequisites                                                                                             | Status          |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | --------------- |
-| P37   | Optional percentage-of-Maintenance basis, occupancy eligibility, read-only area estimate and billing summaries; gated channel review | M08 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | Existing billing, unit/occupancy and ledger services; update owning contracts and close each task's gates | ⬜ Planned only |
-
-P37 records all seven accepted M08 decisions. The percentage method changes the D-12 billing contract and requires its approval before implementation. Preserve the selected parking, payment and delivery behavior; acceptance is planning only and does not authorize implementation, release or live use.
-
-### 1.5 Accepted dues additions (P38)
-
-| Phase | Enhancement                                                                                                       | Source                    | Estimate                                         | Prerequisites                                                                                                    | Status          |
-| ----- | ----------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------- |
-| P38   | Optional future-bill simple interest, payment-plan and recovery tracking, and a read-only as-of collection report | M09 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | Existing billing and unit-ledger services; settle each legal, financial, access and report-definition gate first | ⬜ Planned only |
-
-P38 records all six accepted M09 decisions. Daily interest is optional and future-bill-only; its rate, principal basis, effective rules and interaction with existing late fees remain implementation gates. Preserve the current defaulter rule and audited correction workflow. Acceptance is planning only and does not authorize implementation, financial changes, release or live use.
-
-### 1.6 Accepted accounts additions (P39)
-
-| Phase | Enhancement                                                                                                                         | Source                    | Estimate                                         | Prerequisites                                                                                  | Status          |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------- |
-| P39   | Cash/bank running balances, voucher register, bank reconciliation, linked petty-cash view, gated fixed deposits and net-flow report | M11 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | Existing P16 accounts/books/reports; M10 fund mapping and accounting review for fixed deposits | ⬜ Planned only |
-
-P39 records six accepted M11 decisions and two rejected conflicts. Keep D-39's simple-bookkeeping boundary and current cheque posting behavior. Reconciliation, petty-cash and fixed-deposit records must not create duplicate or automatic P16 postings. Acceptance is planning only and does not authorize implementation, financial changes, release or live use.
-
-### 1.7 Accepted funds additions (P40)
-
-| Phase | Enhancement                                                                                                                                     | Source                                              | Estimate                                         | Prerequisites                                                                                                                 | Status          |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| P40   | Fund allocations, contribution preview, corpus receipts, linked utilization, fund transfers, FD follow-up, interest details and repair forecast | M10 decisions; M13 GAP-M13-05 extension, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P16 source records; shared P39.5 fund map; P37.3; M02/M18 corpus authority; M06 resolution source; M17 repair-planning review | ⬜ Planned only |
-
-P40 records all nine accepted M10 decisions, including GAP-M10-04 Option B. Keep P16 as the source for actual cash/bank spending and receipts; fund balances are allocations, not duplicate assets. No estimate, tracker or transfer may create a bill, receipt, expense, renewal, levy or legal obligation without the named approval. Acceptance is planning only and does not authorize implementation, financial changes, release or live use.
-
-### 1.8 Accepted financial statements and reports additions (P41)
-
-| Phase | Enhancement                                                                                                                                               | Source                                              | Estimate                                         | Prerequisites                                                                                                                                              | Status          |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| P41   | Source-linked cash statements, conditional financial-position summary, budget comparisons, trends, audit appointment/query/report follow-up and AGM draft | M12 decisions; M20 GAP-M20-02 extension, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P16/P27 sources; separate approved budget source/scope for P41.3; legal-case-specific audit requirements; P39/P40; D-39 and accountant/auditor/legal gates | ⬜ Planned only |
-
-P41 records all eight accepted M12 decisions; M20 GAP-M20-02 extends P41.5's non-certifying audit tracking. Keep P16 as the source for actual cash and P27's approved live dashboard unchanged. GAP-M12-03 Option B is conditional: no formal balance sheet or work that conflicts with D-39, and no implementation until authoritative sources, rules and scope are approved. M13-01 keeps budget management out of MVP, so P41.3 remains blocked until a separate budget source and scope are explicitly approved; M13 does not create that source. M20 decisions do not close legal/auditor verification or AGM source gates. Acceptance is planning only and does not authorize implementation, financial changes, release or live use.
-
-### 1.9 Accepted expense-control additions (P42)
-
-| Phase | Enhancement                                                                                                   | Source                    | Estimate                                         | Prerequisites                                                                                                 | Status          |
-| ----- | ------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | --------------- |
-| P42   | Expense-category metadata, conditional budget alerts, vendor actual-spend reporting and cost-saving follow-up | M13 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P16/P24/P27 source boundaries; separate approved budget source/scope for alerts; access, audit and D-62 gates | ⬜ Planned only |
-
-P42 records five accepted M13 decisions; the M13-05 sanction-record extension is merged into P40.4. Keep budgets out of MVP, P16 as the source for actual cash/bank entries and P24's purchase approvals separate from P16 expense approvals. P42.2 remains blocked until a separate approved budget source, scope and alert rules exist. Acceptance is planning only and does not authorize implementation, financial changes, release or live use.
-
-### 1.10 Accepted command-center additions (P43)
-
-| Phase | Enhancement                                                                                                                                                   | Source                                            | Estimate                                         | Prerequisites                                                                                                        | Status          |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | --------------- |
-| P43   | Source-linked admin home, separate monthly collection report, gated billing details, factual compliance/calendar/filing links and committee/meeting summaries | M01 decisions; M06 and M20 extensions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P16/P23/P27; P38.4; other source links when available; per-task calculation, source, access, privacy and legal gates | ⬜ Planned only |
-
-P43 records all five accepted M01 decisions, including Option B for GAP-M01-02 and GAP-M01-03. M20 GAP-M20-01 extends P43.4's obligation/calendar and filing-evidence links; GAP-M20-05 A keeps facts only without risk ratings/scores, and GAP-M20-06 A reuses meeting/election evidence without a duplicate checklist. P27 remains aggregate-only and authoritative; calculation, source, access, privacy and legal gates remain open. Budgets stay out of MVP. Acceptance is planning only and does not authorize implementation, release or live use.
-
-### 1.11 Accepted registration and governing-document additions (P44)
-
-| Phase | Enhancement                                                                                                                                              | Source                                    | Estimate                                         | Prerequisites                                                                                                  | Status          |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------- |
-| P44   | Source-linked document validity/register maintenance, amendment records, private official correspondence/filing/notice cases, rules and gated checklists | M04 decisions; M20 extensions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P19/P14/P23; P35.2/P35.3; optional P43.4 links; jurisdiction, legal-source, reviewer, access and privacy gates | ⬜ Planned only |
-
-P44 records all seven accepted M04 decisions for planning. M20 GAP-M20-03 extends P44.2's register-maintenance evidence; GAP-M20-01/GAP-M20-04 extend the same private P44.5 log with filing/acknowledgement and official notice/hearing/response records. Tools 37 and 48 overlap P35/P43 and do not create duplicate profile or dashboard work. Model-bye-law comparison and formation guidance cannot proceed until their jurisdiction-specific authoritative sources and qualified review are confirmed. Keep all records source-linked and non-certifying; no penalty enforcement, sending or submission of filings is approved. Acceptance is planning only and does not authorize implementation, release or live use.
-
-### 1.12 Accepted meeting agenda additions (P45)
-
-| Phase | Enhancement                                                                                | Source                    | Estimate                                         | Prerequisites                                                                          | Status          |
-| ----- | ------------------------------------------------------------------------------------------ | ------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------- | --------------- |
-| P45   | Optional agenda-item timing and reusable templates; meeting-governance view added to P43.5 | M06 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P23 agenda records; P43.5 completeness, audience and role/access gates; template rules | ⬜ Planned only |
-
-P45.1 adds optional agenda durations, derived start/end times and reusable templates without changing P23's meeting records. GAP-M06-02 is merged into P43.5 to avoid a duplicate dashboard; the summary derives from P23 meeting, attendance/quorum, resolution, open-action and minutes-status records. Source completeness, audience and access still require kickoff approval. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.13 Accepted election-governance and gated official-voting additions (P46)
-
-| Phase | Enhancement                                                                                                                                     | Source                    | Estimate                                         | Prerequisites                                                                                                                                                           | Status          |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| P46   | Election schedule/notices/officers, sourced voter/candidate process, gated official in-app voting, outcomes/disputes and linked expense reports | M07 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | Separate Karnataka apartment/co-operative legal checks; current law/bye-laws and permitted voting method; deferred M02 decisions; P19/P22/P23/P44 and existing accounts | ⬜ Planned only |
-
-P46 records all three accepted M07 decisions. Compare Karnataka apartment associations and registered housing co-operatives separately; do not make a universal legal rule set. Official in-app voting and official result calculations remain blocked pending legal verification, qualified review and approval of dependent product contracts. P22 stays unchanged, and M02 membership/share work remains deferred until separately reconsidered. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.14 Accepted vendor, contract and AMC additions (P47)
-
-| Phase | Enhancement                                                                                                                                                                                         | Source                    | Estimate                                         | Prerequisites                                                                                                                            | Status          |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| P47   | Vendor details, general contract register, structured AMC schedule and toolkit expiry bands, agency staff-day checks, work orders, vendor bills owed (paid only via cash book) and a vendor summary | M14 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P14 AMC, P24 vendors, P16 expenses, P28 assets; PRD AMC-2/AMC-7, PRD vendor-payments exclusion and D-39 contract changes for P47.4/P47.7 | ⬜ Planned only |
-
-P47 records all eight accepted M14 decisions. GAP-M14-05 B changes AMC-2's status labels; GAP-M14-07 B narrows the "vendor payments" exclusion to allow a bills-owed register whose paid amounts come only from P16 cash-book entries; no payment execution, gateway or double-entry accounting is approved, and GAP-M11-04 A (D-39) stays. Tools 161/164 remain covered by P24/D-54. Tool 167 was reviewed with M24 and rejected (GAP-M24-01/02). Acceptance is planning only and does not authorize implementation or release.
-
-### 1.15 Accepted staff-record additions (P48)
-
-| Phase | Enhancement                                                       | Source                    | Estimate                                         | Prerequisites                                                | Status          |
-| ----- | ----------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ------------------------------------------------------------ | --------------- |
-| P48   | Non-pay employment details and admin-only staff performance notes | M15 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P12 staff; D-18 ID rule; access/retention approval for notes | ⬜ Planned only |
-
-P48 records GAP-M15-01 and GAP-M15-04. GAP-M15-02 A keeps P25's "every guard counts as on duty (no shift roster)"; GAP-M15-03 A keeps D-20 (housekeeping is stock only). GAP-M15-05 C places payroll in deferred/backlog for a possible future Pro version; D-19 stays in force. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.16 Accepted helpdesk additions (P49)
-
-| Phase | Enhancement                                                                                                                                                                                             | Source                    | Estimate                                         | Prerequisites                                                                                   | Status          |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------- | --------------- |
-| P49   | Four-level priority with priority-based targets, On Hold that pauses the clock, performance report, escalation responses, detailed feedback, intake source, daily common-area checks and vendor picking | M16 decisions, 2026-11-18 | Not estimated; split into safe blocks at kickoff | P8/P32 service requests; P24 vendors; PRD SRQ-1/3/5/6 and D-59 contract changes for P49.1/P49.2 | ⬜ Planned only |
-
-P49 records all eight accepted M16 decisions. GAP-M16-01 B and GAP-M16-02 B deliberately change approved request priority, SLA and lifecycle behavior; existing requests keep their recorded due times unless a kickoff-approved migration says otherwise. Tool 186 is covered. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.17 Accepted repairs and redevelopment additions (P50)
-
-| Phase | Enhancement                                                                                                                                | Source                    | Estimate                                         | Prerequisites                                                                                                            | Status          |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | --------------- |
-| P50   | Major repair projects and audits, quote comparison, funding scenarios, redevelopment proposals/consent and source-linked project summaries | M17 decisions, 2026-11-19 | Not estimated; split into safe blocks at kickoff | P40.9 forecast; P16/P40 funding sources; P24 vendors; P23 meetings; units/members; legal, spending and consent authority | ⬜ Planned only |
-
-P50 records all six accepted M17 cards. P40.9 remains the forecast/source for planning estimates; P50 must not add another expense ledger, approve works, issue a levy or imply legal compliance. Toolkit thresholds, weights, costs and scores are examples only. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.18 Accepted transfer, clearance and certificate additions (P51)
-
-| Phase | Enhancement                                                                                                                                 | Source                    | Estimate                                         | Prerequisites                                                                                                                                                      | Status          |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
-| P51   | Owner-transfer case tracking, case-scoped committee decisions, an agreed conditional-clearance path and separate issued-certificate history | M18 decisions, 2026-11-19 | Not estimated; split into safe blocks at kickoff | P18 tenancy; P16/Billing; P23; M02/M03 owner/member mapping; P35.10–12 coordination for clearance tasks only; legal, authority, approval and document-access gates | ⬜ Planned only |
-
-P51 records all four accepted M18 decisions. M18-03 B changes current D-50/P35.10–12 behavior: both tenant move-out and owner sale/transfer may use an agreed, admin-approved conditional handover for identified verified obligations; only verified money owed blocks, not other pending actions. With Billing off, the planned document says “Not checked / conditional,” never “no dues”; failed checks still block for retry. Update and approve TEN-3, D-50 and affected P35/PRD/API/DATABASE/DESIGN contracts before implementation. This does not pay, waive or delete debt or transfer legal title. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.19 Accepted tenant, parking and facilities additions (P52)
-
-| Phase | Enhancement                                                                                                                         | Source                    | Estimate                                         | Prerequisites                                                                     | Status          |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- | --------------- |
-| P52   | Limited tenant/verification details, parking condition and vehicle summaries, booking calendar and facilities-use/service reporting | M19 decisions, 2026-11-19 | Not estimated; split into safe blocks at kickoff | P18/P20/P15; Core units; P14/P28; access/retention; M11/P16 booking-deposit rules | ⬜ Planned only |
-
-P52 records five new accepted M19 cards. M19-03 is not reopened: M08-04-A and P20 D-52 continue to exclude parking/non-occupancy fees, and P15 amenity charges stay distinct. M19-05 covers a calendar/clash view only; P35.8 optional booking deposits remain off by default, with receipt, deductions, refunds, cancellation and accounting rules unresolved. No deposit workflow starts before M11/M19 and P16 contracts are approved. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.20 Accepted communication additions (P53)
-
-| Phase | Enhancement                                                                                                | Source                    | Estimate                                         | Prerequisites                                                                            | Status          |
-| ----- | ---------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- | --------------- |
-| P53   | Notice-planning fields, restricted member communication log and a separate derived communication dashboard | M23 decisions, 2026-11-19 | Not estimated; split into safe blocks at kickoff | P11 notices; P8/P32/P49 service requests; P21/P23/P30 sources; access/retention approval | ⬜ Planned only |
-
-P53 records three accepted M23 decisions; GAP-M23-03 extends P35.13 instead of adding a template library. GAP-M23-04 uses a modified Option B: a separate admin communication dashboard counted only from app records, with no manually typed monthly totals and no new P27 metric (D-62 unchanged). No sending channel is added; P37.5/D-06 stay as recorded. All nine M24 insurance/legal/dispute items were rejected because those matters are handled outside the app. Acceptance is planning only and does not authorize implementation or release.
-
-### 1.21 Task-level dependencies for accepted toolkit additions (P35–P53)
+### 1.2 Accepted toolkit additions (P35–P53)
 
 ```mermaid
-flowchart LR
-  P35[P35 Setup and clearance contracts]
-  P36[P36 Unit and ownership records]
-  P37[P37 Billing additions]
-  P38[P38 Dues and arrears]
-  P39[P39 Accounts and cash book]
-  P40[P40 Fund management]
-  P41[P41 Financial reports]
-  P42[P42 Expense control]
-  P43[P43 Command center]
-  P44[P44 Governing documents]
-  P45[P45 Meeting agenda]
-  P46[P46 Election governance]
-  P47[P47 Vendors and contracts]
-  P48[P48 Staff records]
-  P49[P49 Helpdesk]
-  P50[P50 Repairs and redevelopment]
-  P51[P51 Transfer and clearance]
-  P52[P52 Tenants and facilities]
-  P53[P53 Communication]
-
-  P35 -->|profile inputs| P44
-  P37 -->|estimate source| P40
-  P39 -->|shared fund map and deposit register| P40
-  P40 -->|approved measures| P41
-  P40 -->|sanction source| P42
-  P40 -->|repair forecast| P50
-  P43 -->|meeting-summary source| P45
-  P44 -->|governing-document source| P46
-  P35 -->|clearance contract work only| P51
-  P49 -->|definitions and source records| P53
+flowchart TD
+  subgraph G1[Setup and unit records]
+    direction TB
+    subgraph G1a[" "]
+      direction LR
+      P35[P35 Setup and clearance contracts] ~~~ P36[P36 Unit and ownership records]
+    end
+  end
+  subgraph G2[Billing, dues and accounts]
+    direction TB
+    subgraph G2a[" "]
+      direction LR
+      P37[P37 Billing additions] ~~~ P38[P38 Dues and arrears] ~~~ P39[P39 Accounts and cash book]
+    end
+    subgraph G2b[" "]
+      direction LR
+      P40[P40 Fund management<br/>after P37, P39] ~~~ P41[P41 Financial reports<br/>after P40] ~~~ P42[P42 Expense control<br/>after P40]
+    end
+    G2a ~~~ G2b
+  end
+  subgraph G3[Governance]
+    direction TB
+    subgraph G3a[" "]
+      direction LR
+      P43[P43 Command center] ~~~ P44[P44 Governing documents<br/>after P35]
+    end
+    subgraph G3b[" "]
+      direction LR
+      P45[P45 Meeting agenda<br/>after P43] ~~~ P46[P46 Election governance<br/>after P44]
+    end
+    G3a ~~~ G3b
+  end
+  subgraph G4[Operations and residents]
+    direction TB
+    subgraph G4a[" "]
+      direction LR
+      P47[P47 Vendors and contracts] ~~~ P48[P48 Staff records] ~~~ P49[P49 Helpdesk] ~~~ P50[P50 Repairs and redevelopment<br/>after P40]
+    end
+    subgraph G4b[" "]
+      direction LR
+      P51[P51 Transfer and clearance<br/>after P35] ~~~ P52[P52 Tenants and facilities] ~~~ P53[P53 Communication<br/>after P49]
+    end
+    G4a ~~~ G4b
+  end
+  G1 --> G2 --> G3 --> G4
+  classDef row fill:none,stroke:none
+  class G1a,G2a,G2b,G3a,G3b,G4a,G4b row
 ```
 
-Arrows show selected task-level prerequisites, not a phase schedule or a requirement to finish every task in one phase before starting another. The task tables below remain authoritative; omitted phases have no direct phase dependency shown here. P35.10 uses the M18 policy decisions recorded in P51 as planning input, not as a dependency on P51 implementation. P51.3/P51.4 clearance implementation coordinates with P35.10–P35.12 after the clearance contracts are approved. M23 template formats extend P35.13 but do not gate P53.1–P53.3.
+Arrows only stack the groups for reading; they are not a build order (Section 2.6). "after Pxx" inside a box marks a selected task-level prerequisite: P35 profile inputs for P44 and clearance-contract work for P51; P37's estimate source and P39's shared fund map and deposit register for P40; P40's approved measures for P41, sanction source for P42 and repair forecast for P50; P43's meeting-summary source for P45; P44's governing-document source for P46; and P49's definitions and source records for P53. It does not mean finishing every task in one phase before starting another. The phase task tables remain authoritative; phases without a mark have no direct phase dependency shown here. P35.10 uses the M18 policy decisions recorded in P51 as planning input, not as a dependency on P51 implementation. P51.3/P51.4 clearance implementation coordinates with P35.10–P35.12 after the clearance contracts are approved. M23 template formats extend P35.13 but do not gate P53.1–P53.3.
+
+| Phase | Module / enhancement                           | Key                             | PRD                                | Size          | Blocks | Builds on                                                              | Source                        | Status                                                   |
+| ----- | ---------------------------------------------- | ------------------------------- | ---------------------------------- | ------------- | ------ | ---------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------- |
+| P35   | Toolkit housing additions                      | Core; `amenity`, `tenancy`      | Not yet; changes D-50              | 2 S, 8 M, 3 L | 27     | Core registry, units, files; P51 clearance policy                      | Toolkit-M25                   | ⬜ Planned only                                          |
+| P36   | Unit and ownership records                     | Core                            | Not yet                            | 2 S, 7 M, 1 L | 19     | Core units/occupants; `tenancy`, `document`, `billing`, `parking`, P26 | Toolkit-M03                   | ⬜ Planned only                                          |
+| P37   | Billing additions                              | `billing`                       | Not yet; changes D-12, D-06        | 2 S, 2 M, 1 L | 9      | `billing` charges, bills and ledger; P35.1                             | Toolkit-M08                   | ⬜ Planned only                                          |
+| P38   | Dues and arrears                               | `billing`                       | Not yet                            | 3 M, 1 L      | 9      | `billing` due dates, payments and unit ledger                          | Toolkit-M09                   | ⬜ Planned only                                          |
+| P39   | Accounts and cash book                         | `expense`                       | Not yet                            | 3 S, 3 M      | 9      | P16 books and reports; P40 fund map                                    | Toolkit-M11                   | ⬜ Planned only |
+| P40   | Fund management                                | `expense`                       | Not yet                            | 2 S, 6 M, 1 L | 17     | P16; P39.5; P37.3; M17 review                                          | Toolkit-M10 + Toolkit-M13     | ⬜ Planned only                                          |
+| P41   | Financial statements and reports               | `expense`; Core analytics       | Not yet; re-check D-39             | 2 S, 5 M      | 12     | P16, P27; P39, P40; approved budget source                             | Toolkit-M12 + Toolkit-M20     | ⬜ Planned only                                          |
+| P42   | Expense control and reporting                  | `expense`                       | Not yet                            | 3 S, 1 M      | 5      | P16, P24, P27; approved budget source                                  | Toolkit-M13                   | ⬜ Planned only                                          |
+| P43   | Command center and governance summaries        | Core                            | Not yet                            | 2 S, 3 M      | 8      | P16, P23, P27; P38.4                                                   | Toolkit-M01 + Toolkit-M06/M20 | ⬜ Planned only                                          |
+| P44   | Registration, bye-laws and governing documents | `document`                      | Not yet                            | 5 S, 2 M      | 9      | P19, P14, P23; P35.2/P35.3                                             | Toolkit-M04 + Toolkit-M20     | ⬜ Planned only                                          |
+| P45   | Meeting agenda enhancements                    | `meeting`                       | Not yet                            | 1 M           | 2      | P23; P43.5                                                             | Toolkit-M06                   | ⬜ Planned only                                          |
+| P46   | Election governance and gated official voting  | `meeting`, `poll`               | Not yet                            | 2 M, 1 L      | 7      | P19, P22, P23, P44; legal checks                                       | Toolkit-M07                   | ⬜ Planned only                                          |
+| P47   | Vendor, contract and AMC additions             | `vendor`, `amc`                 | Not yet; changes AMC-2, AMC-7      | 3 S, 5 M      | 13     | P14, P24, P16, P28                                                     | Toolkit-M14                   | ⬜ Planned only                                          |
+| P48   | Staff record additions                         | `staff`                         | Not yet                            | 2 S           | 2      | P12                                                                    | Toolkit-M15                   | ⬜ Planned only |
+| P49   | Helpdesk additions                             | `service_request`               | Not yet; changes SRQ-1/3/5/6, D-59 | 4 S, 4 M      | 12     | P8, P32, P24                                                           | Toolkit-M16                   | ⬜ Planned only |
+| P50   | Repairs and redevelopment                      | New optional module             | Not yet                            | 1 S, 5 M      | 11     | P40.9; P16, P24, P23                                                   | Toolkit-M17                   | ⬜ Planned only                                          |
+| P51   | Transfer and clearance                         | `tenancy`                       | Not yet; changes TEN-3, D-50       | 1 S, 2 M, 1 L | 8      | P18, `billing`, P23; P35.10–P35.12                                     | Toolkit-M18                   | ⬜ Planned only                                          |
+| P52   | Tenant, parking and facilities                 | `tenancy`, `parking`, `amenity` | Not yet                            | 2 S, 3 M      | 8      | P18, P20, P15, P14, P28, P16                                           | Toolkit-M19                   | ⬜ Planned only                                          |
+| P53   | Communication additions                        | `notice`                        | Not yet                            | 1 S, 2 M      | 5      | P11, P8/P32/P49, P21, P23, P30                                         | Toolkit-M23                   | ⬜ Planned only                                          |
+
+Proposed totals: 110 tasks, about 192 blocks. Sizes and blocks are first estimates using the Section 2.5 rule (S ≈ 1, M ≈ 2, L ≈ 3 blocks per task); **Size** shows the mix of task sizes. They are not approved and are confirmed or re-split at each slice's kickoff. **Key** shows the existing module or Core area a phase extends; the only new module is P50's optional "Major repairs & redevelopment" module (owner decision 2026-11-19; key name set at P50 kickoff). The build order is in the Section 2.6 build batches. **PRD** “Not yet” means the PRD has no requirement for this work; listed IDs are existing PRD rules the phase would change or must re-check, and they must be updated and approved before implementation. Phase scope, planning notes, gates and task sizes are in each phase section. Acceptance is planning only and does not authorize implementation, release or live use (Section 2.6).
 
 ---
 
@@ -397,9 +297,63 @@ A module is **done** only when all of the following are true:
 - cut screens or polish if time runs short, never privacy, role checks or tests;
 - stay local: no commits, pushes, hosted migrations or live enablement without separate owner approval.
 
-Block counts per phase are in Section 1.1. Phases without a block plan are split into tasks at kickoff.
+Block counts per phase are in Section 1.1; P35–P53 proposed counts are in Section 1.2. Phases without a block plan are split into tasks at kickoff.
 
 Block codes in a phase's task table are the module's letter plus the block number, for example T1–T3 for Tenancy (P18), D1–D2 for Documents (P19), K1–K2 for parKing (P20) and S1–S2 for SOS (P21). They are for planning only; status lines describe the phase as a whole.
+
+### 2.6 Toolkit addition phases (P35–P53)
+
+- **What they are:** accepted toolkit-review decisions that extend existing modules and Core. They add no new module key, dependency or privileged-client expansion unless the owner approves one; the owner approved P50 as a new optional module on 2026-11-19, and a WhatsApp Business provider for P37.5 still needs its own approval (see Build batches below). Acceptance is planning only and does not authorize implementation, release or live use.
+- **Pattern:** each slice first closes its named kickoff gates, then updates the owning PRD/DESIGN/DATABASE/API contracts and obtains approval (the PRD has no requirements for these phases yet; Section 1.2 lists the existing PRD rules each phase would change). It then delivers forward-only, society-scoped migrations with row-level security, generated types and database tests; screens with all states; unit, integration, end-to-end and accessibility tests; and the Section 2.2 gate. New capabilities ship off where applicable, and existing data keeps its agreed meaning.
+- **Order:** work follows the build batches below. Task-level prerequisites in the Section 1.2 diagram and each task table still apply inside and across batches.
+- **Sizing:** task sizes are proposals using the Section 2.5 rule (S ≈ 1, M ≈ 2, L ≈ 3 blocks). Re-estimate and split at kickoff, especially blocked or legally gated tasks whose scope may change.
+- **Priority and release:** P10 pilot/go-live gates and all existing release approvals remain unchanged. Legal or statutory points are verified against the state co-operative act and the society's bye-laws before use.
+
+#### Build batches (owner decisions 2026-11-19)
+
+The owner approved this build order and these decisions on 2026-11-19. They are a plan for building, not approval to release or enable anything live. Each phase follows the Pattern above: its PRD, DESIGN, DATABASE and API changes are written and approved before coding starts.
+
+**How the work runs**
+
+- All work happens on one branch, `feature-build-2`. One worker writes code; up to two helpers may read, draft contract changes and review in parallel, but do not edit code.
+- Only the lead worker changes migrations, the module registry (`src/core/modules/index.ts`) and generated database types, one change at a time and in order.
+- Full checks run one at a time, because the local test database and Playwright use fixed ports.
+- Gather the current phase's foreseeable questions first and obtain the owner's approval for its contract changes before coding. Pause and ask if a new consequential decision appears during implementation.
+- Complete and verify the agreed phase scope before proposing local commits; do not make intermediate documentation or code commits. After committing with the owner's approval, wait for a separate go-ahead before starting the next phase. Pushes, `beta`/`main` merges and `homeish-testdb` changes happen only when the owner asks.
+- No P35–P53 capability is enabled for a live society until P10 pilot hardening is complete (Section 2.4).
+
+| Batch       | Order                      | Tasks                                                                   | Blocks |
+| ----------- | -------------------------- | ----------------------------------------------------------------------- | ------ |
+| B1          | P48 → P39 → P49            | P48; P39 except P39.5; P49                                              | 21     |
+| B2          | P47 → P38 → P35 core       | P47; P38; P35.1–P35.7 and P35.13                                        | 38     |
+| B3          | P37 → P53 → P36            | P37.1–P37.4; P53; P36 except P36.4, P36.5 and P36.7                     | 25     |
+| B4          | P40 with P39.5 → P43 → P44 | P40.1–P40.8 and P39.5; P43; P44 except P44.4 and P44.7                  | 32     |
+| B5          | P45 → P41 → clearance      | P45; P41 except P41.3; P35.10–P35.12 with P51                           | 26     |
+| B6          | P42 → P52 → P46            | P42 except P42.2; P52; P46 including P46.2 official voting              | 18     |
+| B7          | P50 and follow-ups         | P50; P40.9; P35.8–P35.9 deposits; P36.7; P41.3 and P42.2 budgets; P37.5 | 25     |
+| Pro version | Not scheduled              | P36.4, P36.5, P44.4, P44.7                                              | 7      |
+
+B1–B7 hold 185 blocks and the Pro version 7, matching the 192 proposed blocks in Section 1.2. Batches run in order, starting with B1; inside a batch, phases follow the order shown.
+
+**Owner decisions for the batches.** These become proposed PRD and contract changes in each batch's paperwork and still need that approval.
+
+- **P46.2 official voting (B6):** the app counts the votes and the returning officer declares the result; ballots are secret; the admin prepares the voter list, which is locked before voting opens. A society switches official voting on with an admin confirmation that its rules allow online voting; no proof is uploaded.
+- **P50 (B7):** a new optional module, "Major repairs & redevelopment" (key name set at kickoff). For P50.2 the committee sets the criteria and weights for each project, the app never picks the winner, and the admin may leave a project or quote out of scoring. P50.3 levies are what-if scenarios only and never create a bill. P50.4–P50.5 redevelopment records are visible only to admins and the committee; each member sees only their own consent status.
+- **P40.9 forecast (B7):** a 10-year forecast from admin-entered cost, repair cycle and inflation %, always shown as an estimate.
+- **Deposits, P35.8–P35.9 (B7):** deposits are paid outside the app, recorded by an admin and linked to the matching P16 accounts entry. A deposit is held money, not income; only the deducted part becomes income. Each deduction needs a reason and evidence, and the resident sees the breakdown. The existing P15 amenity usage fee stays a separate line on the same booking and keeps its current cancellation rule (full credit on any allowed cancellation); on cancellation the deposit is returned in full. Example: a clubhouse booking has a ₹5,000 deposit and a ₹1,500 usage fee; after the event ₹500 is deducted for damage, so ₹4,500 is refunded, ₹500 becomes income and the ₹1,500 fee is not refunded.
+- **P37.5 bill sharing (B7):** each society's admin chooses one of two modes: a free "Share on WhatsApp" button that sends a sign-in-protected link, or automatic sending through a WhatsApp Business provider. The provider is a new paid dependency that would see residents' phone numbers, so a named provider needs owner approval and PRD D-06 must change. The email-bill privacy review also goes ahead.
+- **Budgets, P41.3 and P42.2 (B7):** built in B7; the B7 paperwork defines the separate budget source and scope these tasks wait for. Budgets stay out of MVP.
+- **P36.7 handover (B7):** built in B7.
+- **Pro version:** P36.4, P36.5, P44.4 and P44.7 move to a possible future paid Pro version and are not scheduled.
+
+**Risks to close before live use**
+
+1. Official voting relies on an admin confirmation only, not checked proof that the society's rules allow online voting.
+2. Fixed-deposit rules (P39.5, P40.6–P40.7) follow the owner's answers instead of an accountant review; an accountant should check them before live use.
+3. P41.2 goes beyond PRD D-39; D-39 is updated in the B5 paperwork.
+4. A WhatsApp Business provider is a paid service with access to residents' phone numbers.
+5. Issued certificates and staff notes are kept until an admin deletes them; the app should record who deleted what and when.
+6. P38.1 interest: the app stores the rate and its bye-law reference; whether the rate is lawful remains the society's responsibility.
 
 ---
 
@@ -448,7 +402,7 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 
 ## P0.9 follow-up — Public homepage refresh
 
-**Status (2026-11-15): H1/H2 locally implemented and verified; owner approved the copy and three synthetic screenshots.** Real-device/manual acceptance, release, demo hosting and live activation remain pending. The owner requested inspiration from [Multi-School ERP](https://multischoolerp.com/) for Homeish's society-management homepage and confirmed the kickoff choices below. The reference observations, section hierarchy and product/brand/privacy guardrails are in PRD Section 4.0.1. This is a bounded follow-up to P0.9, not a new numbered phase or society module.
+**Status (2026-11-15): H1/H2 implemented, verified and released to `main` on 2026-11-15; owner approved the copy and three synthetic screenshots.** Real-device/manual acceptance, demo hosting and live activation remain pending. The owner requested inspiration from [Multi-School ERP](https://multischoolerp.com/) for Homeish's society-management homepage and confirmed the kickoff choices below. The reference observations, section hierarchy and product/brand/privacy guardrails are in PRD Section 4.0.1. This is a bounded follow-up to P0.9, not a new numbered phase or society module.
 
 **Scope:** the existing public marketing homepage only, with **Try demo** as its only marketing CTA. **Owner clarification 2026-11-15 (D-49):** the separate demo is not set up; set it up after product readiness and connect it then. Until a separately authorised rollout verifies it, show native disabled **Try demo** buttons with **Demo coming soon**, no demo URL and no inline substitute. Preserve D-34 host routing, society-address utility entry and synthetic-demo boundaries. No request-walkthrough/contact CTA, enquiry form, new society activation, authentication flow, backend module, lead-storage system, tracking service or pricing decision is included.
 
@@ -468,10 +422,10 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 
 **Tasks (2 blocks, Section 2.5):**
 
-| ID     | Block | Task                                                                                                                                                                                                                            | Status |
-| ------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| P0.9.1 | H1    | Inventory released vs. planned modules and the real demo destination; update DESIGN §18; new committee-first copy; hero with **Try demo**, delivered-module sections, resident benefits, separate labelled roadmap, FAQ refresh | 🟡     |
-| P0.9.2 | H2    | Synthetic product screenshots from fixture pages, screenshot gallery, disabled closing CTA, final polish; homepage acceptance checks above                                                                                      | 🟡     |
+| ID     | Block | Task                                                                                                                                                                                                                            | Status                                                 |
+| ------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| P0.9.1 | H1    | Inventory released vs. planned modules and the real demo destination; update DESIGN §18; new committee-first copy; hero with **Try demo**, delivered-module sections, resident benefits, separate labelled roadmap, FAQ refresh | ✅ Released 2026-11-15; real-device acceptance pending |
+| P0.9.2 | H2    | Synthetic product screenshots from fixture pages, screenshot gallery, disabled closing CTA, final polish; homepage acceptance checks above                                                                                      | ✅ Released 2026-11-15; real-device acceptance pending |
 
 **H1/H2 evidence (2026-11-15):** local engineering complete. The owner explicitly approved the final copy and three synthetic screenshots. `npm run check` passed (60 files, 447 unit tests); 14 focused browser/accessibility tests passed; the production build and 3 additional production-server smoke tests passed; `git diff --check` passed. Tests cover disabled demo actions, availability wording, actual screenshot decoding, utility/policy navigation, keyboard/skip link, native FAQs, reduced motion, axe and 320/390/768/1280px reflow, existing host boundaries and manual/15-minute browser-demo resets. No database changes were made, so database integration tests were not run for this refresh. Real-device TalkBack/VoiceOver, actual 200% zoom/enlarged text, low-end Android/iPhone Safari, release and live enablement remain pending.
 
@@ -881,14 +835,14 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 backups remain paused; production backup activation and Storage-file backup
 remain explicitly deferred as described below.
 
-| ID   | Task                                                                                                                                                                                                                                                        | Size | Status |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
-| P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired visitor entries, request auto-close); delivery overdue status is computed on read, not by a daily task. Verify run-key idempotency across the tasks        | M    | ✅     |
-| P9.2 | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                                                                                | L    | ✅     |
-| P9.3 | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                                                                             | M    | ✅     |
-| P9.4 | Google Drive encrypted database export and compatible restore drill verified for homeish-testdb; scheduled backups remain paused pending production safeguards. Weekly file copy is deferred for lack of an approved least-privilege credential             | M    | 🟡     |
-| P9.5 | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. The day cycle, idempotency, resident reminder, uptime outage/recovery email, and application-originated critical alert/email were verified | M    | ✅     |
-| P9.6 | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; guarded testdb workflow passed in GitHub Actions on 2026-11-12                                                                                                    | M    | ✅     |
+| ID   | Task                                                                                                                                                                                                                                                        | Size | Status                                              |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | --------------------------------------------------- |
+| P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired visitor entries, request auto-close); delivery overdue status is computed on read, not by a daily task. Verify run-key idempotency across the tasks        | M    | ✅                                                  |
+| P9.2 | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                                                                                | L    | ✅                                                  |
+| P9.3 | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                                                                             | M    | ✅                                                  |
+| P9.4 | Google Drive encrypted database export and compatible restore drill verified for homeish-testdb; scheduled backups remain paused pending production safeguards. Weekly file copy is deferred for lack of an approved least-privilege credential             | M    | ✅ testdb scope; production backups and file copy ⏸ |
+| P9.5 | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. The day cycle, idempotency, resident reminder, uptime outage/recovery email, and application-originated critical alert/email were verified | M    | ✅                                                  |
+| P9.6 | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; guarded testdb workflow passed in GitHub Actions on 2026-11-12                                                                                                    | M    | ✅                                                  |
 
 **Database changes:** retention/anonymise functions; no new tables. **API changes:** none beyond the daily route's task list.
 
@@ -929,17 +883,17 @@ DATABASE 15.2.
 
 **Prerequisites:** P9 complete; owner actions in 2.3; DEPLOYMENT.md and OPERATIONS.md finished; LOCAL_SETUP.md current.
 
-| ID    | Task                                                                                                                                                                                                                                                                                                                                                     | Size | Status |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
-| P10.1 | Security review: row-level security audit of every table, cross-society attack tests on every operation, header and cookie checks, secrets scan, dependency vulnerability scan, privileged-usage review                                                                                                                                                  | L    | ✅     |
-| P10.2 | Accessibility pass: manual keyboard, TalkBack, VoiceOver, 200% zoom, outdoor-brightness contrast check on a guard device; fix findings                                                                                                                                                                                                                   | L    | 🟡     |
-| P10.3 | Performance check with generated data at target scale (1,500 units, large visitor/log tables): list queries, bill generation, dashboards; add indexes only where measured slow                                                                                                                                                                           | M    | ✅     |
-| P10.4 | Failure drills: database unreachable, realtime down, email/push failure, scheduler missed, duplicate submissions, concurrent decisions; confirm the documented behavior                                                                                                                                                                                  | M    | ✅     |
-| P10.5 | Production setup: resume `homeish-live` (AD-14); paid plan with backups once the first society pays, with the own nightly off-site copy verified before the first society (AD-06 amended); Vercel plan per the owner's decision, your domain and sender verification, production secrets set, regions chosen (API APA-04), Sentry and uptime alerts live | M    | ⬜     |
-| P10.6 | Restore drill from the production-like backup; integrity checks pass                                                                                                                                                                                                                                                                                     | M    | 🟡     |
-| P10.7 | Seed a demo/test society (synthetic) and run the full UAT script per module with the owner                                                                                                                                                                                                                                                               | M    | 🟡     |
-| P10.8 | Go-live: create the pilot society, enable modules one at a time (visitor, delivery, billing, requests) as each passes UAT, onboard the admin, monitor errors daily                                                                                                                                                                                       | M    | ⬜     |
-| P10.9 | Pilot review against PRD success criteria (PRD 14.4) and a prioritised list of fixes and post-MVP items                                                                                                                                                                                                                                                  | S    | ⬜     |
+| ID    | Task                                                                                                                                                                                                                                                                                                                                                     | Size | Status                                                 |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------ |
+| P10.1 | Security review: row-level security audit of every table, cross-society attack tests on every operation, header and cookie checks, secrets scan, dependency vulnerability scan, privileged-usage review                                                                                                                                                  | L    | ✅                                                     |
+| P10.2 | Accessibility pass: manual keyboard, TalkBack, VoiceOver, 200% zoom, outdoor-brightness contrast check on a guard device; fix findings                                                                                                                                                                                                                   | L    | ⛔ Automated part ✅; waits for owner device checks    |
+| P10.3 | Performance check with generated data at target scale (1,500 units, large visitor/log tables): list queries, bill generation, dashboards; add indexes only where measured slow                                                                                                                                                                           | M    | ✅                                                     |
+| P10.4 | Failure drills: database unreachable, realtime down, email/push failure, scheduler missed, duplicate submissions, concurrent decisions; confirm the documented behavior                                                                                                                                                                                  | M    | ✅                                                     |
+| P10.5 | Production setup: resume `homeish-live` (AD-14); paid plan with backups once the first society pays, with the own nightly off-site copy verified before the first society (AD-06 amended); Vercel plan per the owner's decision, your domain and sender verification, production secrets set, regions chosen (API APA-04), Sentry and uptime alerts live | M    | ⬜                                                     |
+| P10.6 | Restore drill from the production-like backup; integrity checks pass                                                                                                                                                                                                                                                                                     | M    | ⛔ testdb drills ✅; production repeat waits for P10.5 |
+| P10.7 | Seed a demo/test society (synthetic) and run the full UAT script per module with the owner                                                                                                                                                                                                                                                               | M    | ⛔ Script ready; waits for owner UAT run on beta       |
+| P10.8 | Go-live: create the pilot society, enable modules one at a time (visitor, delivery, billing, requests) as each passes UAT, onboard the admin, monitor errors daily                                                                                                                                                                                       | M    | ⬜                                                     |
+| P10.9 | Pilot review against PRD success criteria (PRD 14.4) and a prioritised list of fixes and post-MVP items                                                                                                                                                                                                                                                  | S    | ⬜                                                     |
 
 **Tests/verification:** all earlier suites green on staging; manual checklists recorded; PRD success metrics collected.
 
@@ -1634,29 +1588,31 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** enrich the existing app with the accepted setup/help/working tools and the explicitly selected financial/clearance additions, without replacing working modules or treating workbook examples as requirements.
 
-**Prerequisites:** existing Core, module registry, units/memberships, files, role checks and current domain services. P34 is not a dependency. Build in independently verified slices; estimate and split into 6-hour blocks only after each slice's kickoff decisions are resolved.
+**Prerequisites:** existing Core, module registry, units/memberships, files, role checks and current domain services. P34 is not a dependency. Build in independently verified slices; estimate and split into 6-hour blocks only after each slice's kickoff decisions are resolved. **Proposed size:** about 27 blocks (2 S, 8 M, 3 L tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M25 Tools 289–300, reviewed at detail level; decisions accepted for planning on 2026-11-18 in the [Toolkit Review Decisions](#toolkit-review-decisions) register below. Tools 293/294 add no work: synthetic housing examples are already covered at feature level; credit examples are outside scope. Narrow Tool 85/98 and M18 follow-ups are evidence, not completed reviews of those modules.
+
+**Planning notes:** Scope — Society reference/setup, manual adoption, committee action plan, help, scoped letters, optional booking deposits and exit/owner-sale clearance. P35 is the first accepted toolkit batch, not approval of all other housing modules. Financial and clearance work waits for its named review gates; independent items need not wait for unrelated deferred work. P10 pilot/go-live gates and all existing release approvals remain unchanged.
 
 **Kickoff gates:** agree access, purpose and retention for new data; map the society-profile fields to existing authoritative sources before adding fields. Resolve deposit accounting/receipt/deduction/refund rules through M11/M19. For clearance, use the policy decisions recorded in P51, then resolve remaining unit/member/ownership mappings with M02/M03 and approve the affected requirements/contracts before changing current behavior. No affected implementation starts with unanswered policy questions.
 
 **Tasks:**
 
-| ID                        | Task                                                                                                       | Depends on                                                                                                                                                             | Toolkit sources                                        | Status |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------ |
-| <a id="p35-1"></a>P35.1   | Record unchanged finance, controlled-list and tenant-privacy rules in the implementation kickoff/contracts | Existing behavior; GAP-M25-03-A/04-A/08-A                                                                                                                              | 291, 292, 300 Template 10; 85/98 clarification         | ⬜     |
-| <a id="p35-2"></a>P35.2   | Society reference-profile mapping and permitted data/operations                                            | P35.1; field-purpose/access decisions                                                                                                                                  | 291                                                    | ⬜     |
-| <a id="p35-3"></a>P35.3   | Reference-profile and advisory setup-completeness screens/reports                                          | P35.2                                                                                                                                                                  | 291                                                    | ⬜     |
-| <a id="p35-4"></a>P35.4   | Manual capability-adoption register and progress summaries                                                 | Existing society/module data; agreed access                                                                                                                            | 289                                                    | ⬜     |
-| <a id="p35-5"></a>P35.5   | Standalone committee action-plan records and date/status rules                                             | Existing memberships and meeting-action patterns; agreed access                                                                                                        | 297                                                    | ⬜     |
-| <a id="p35-6"></a>P35.6   | Committee plan screens, weekly timeline and summaries                                                      | P35.5; P35.3 only for a setup-readiness link                                                                                                                           | 297                                                    | ⬜     |
-| <a id="p35-7"></a>P35.7   | Searchable app-specific help and getting-started content                                                   | Existing routes, role checks and language approach; future-feature topics wait for delivery                                                                            | 290, 295, 296, 298, 299                                | ⬜     |
-| <a id="p35-8"></a>P35.8   | Optional booking-deposit configuration, original-term snapshots and accounting contracts                   | P35.1; existing amenity/billing; M11/M19 decisions                                                                                                                     | 300 Template 11                                        | ⬜     |
-| <a id="p35-9"></a>P35.9   | Deposit receipt, deduction and refund records, authorized screens and reconciliation                       | P35.8; approved financial rules                                                                                                                                        | 300 Template 11                                        | ⬜     |
-| <a id="p35-10"></a>P35.10 | Update and approve clearance contracts using the M18 decisions recorded in P51                             | M18 decisions in P51 are planning input, not a P51 implementation dependency; M02/M03 ownership/member mapping; approve contracts before P35.11–P35.12 and P51.3–P51.4 | 300 Template 6 distinction; 207, 208, 209, 214         | ⬜     |
-| <a id="p35-11"></a>P35.11 | Clearance cases, settlement/handover evidence, scoped approvals and completion integration                 | P35.10; existing authoritative unit dues, Core occupancy/access and tenancy services                                                                                   | 207, 209, 214                                          | ⬜     |
-| <a id="p35-12"></a>P35.12 | Separately identified no-dues/conditional-clearance outputs and issue history                              | P35.11; approved legal wording, access and file policy                                                                                                                 | 208, 209, 214; 300 application/certificate distinction | ⬜     |
-| <a id="p35-13"></a>P35.13 | Supported correspondence formats using existing rendering/download patterns                                | Existing source records; P35.2 only for new letterhead fields; P35.9 for deposit-specific booking output; P35.12 owns clearance outputs                                | 300; M23 266–271, 273–275                              | ⬜     |
+| ID                        | Task                                                                                                       | Size | Depends on                                                                                                                                                             | Sources                                                | Status |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------ |
+| <a id="p35-1"></a>P35.1   | Record unchanged finance, controlled-list and tenant-privacy rules in the implementation kickoff/contracts | S    | Existing behavior; GAP-M25-03-A/04-A/08-A                                                                                                                              | 291, 292, 300 Template 10; 85/98 clarification         | ⬜     |
+| <a id="p35-2"></a>P35.2   | Society reference-profile mapping and permitted data/operations                                            | M    | P35.1; field-purpose/access decisions                                                                                                                                  | 291                                                    | ⬜     |
+| <a id="p35-3"></a>P35.3   | Reference-profile and advisory setup-completeness screens/reports                                          | M    | P35.2                                                                                                                                                                  | 291                                                    | ⬜     |
+| <a id="p35-4"></a>P35.4   | Manual capability-adoption register and progress summaries                                                 | M    | Existing society/module data; agreed access                                                                                                                            | 289                                                    | ⬜     |
+| <a id="p35-5"></a>P35.5   | Standalone committee action-plan records and date/status rules                                             | M    | Existing memberships and meeting-action patterns; agreed access                                                                                                        | 297                                                    | ⬜     |
+| <a id="p35-6"></a>P35.6   | Committee plan screens, weekly timeline and summaries                                                      | M    | P35.5; P35.3 only for a setup-readiness link                                                                                                                           | 297                                                    | ⬜     |
+| <a id="p35-7"></a>P35.7   | Searchable app-specific help and getting-started content                                                   | M    | Existing routes, role checks and language approach; future-feature topics wait for delivery                                                                            | 290, 295, 296, 298, 299                                | ⬜     |
+| <a id="p35-8"></a>P35.8   | Optional booking-deposit configuration, original-term snapshots and accounting contracts                   | M    | P35.1; existing amenity/billing; M11/M19 decisions                                                                                                                     | 300 Template 11                                        | ⬜     |
+| <a id="p35-9"></a>P35.9   | Deposit receipt, deduction and refund records, authorized screens and reconciliation                       | L    | P35.8; approved financial rules                                                                                                                                        | 300 Template 11                                        | ⬜     |
+| <a id="p35-10"></a>P35.10 | Update and approve clearance contracts using the M18 decisions recorded in P51                             | S    | M18 decisions in P51 are planning input, not a P51 implementation dependency; M02/M03 ownership/member mapping; approve contracts before P35.11–P35.12 and P51.3–P51.4 | 300 Template 6 distinction; 207, 208, 209, 214         | ⬜     |
+| <a id="p35-11"></a>P35.11 | Clearance cases, settlement/handover evidence, scoped approvals and completion integration                 | L    | P35.10; existing authoritative unit dues, Core occupancy/access and tenancy services                                                                                   | 207, 209, 214                                          | ⬜     |
+| <a id="p35-12"></a>P35.12 | Separately identified no-dues/conditional-clearance outputs and issue history                              | M    | P35.11; approved legal wording, access and file policy                                                                                                                 | 208, 209, 214; 300 application/certificate distinction | ⬜     |
+| <a id="p35-13"></a>P35.13 | Supported correspondence formats using existing rendering/download patterns                                | L    | Existing source records; P35.2 only for new letterhead fields; P35.9 for deposit-specific booking output; P35.12 owns clearance outputs                                | 300; M23 266–271, 273–275                              | ⬜     |
 
 **Acceptance by task:**
 
@@ -1680,7 +1636,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each delivered slice satisfies Section 2.2 and its approved acceptance criteria; owning documents match the implemented behavior; unresolved slice-specific gates are closed explicitly. New module capabilities ship dark/off as applicable; defaults and existing data retain their agreed meaning. Legal/statutory points: **verify against the state co-operative act / our bye-laws**. No live collection, rollout or financial action follows from plan acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not scheduled or estimated, not released, not owner-UAT-approved and not enabled live. M19 booking-deposit details remain open; M18 selected a conditional-clearance direction in P51, but legal and contract gates remain. Current app behavior is unchanged.
+**Build batch:** B2 — P35.1–P35.7 and P35.13; B5 — P35.10–P35.12 with P51; B7 — P35.8–P35.9 deposits, using the owner's deposit decisions in the Section 2.6 build batches.
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not scheduled, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. M19 booking-deposit details remain open; M18 selected a conditional-clearance direction in P51, but legal and contract gates remain. Current app behavior is unchanged.
 
 ---
 
@@ -1688,24 +1646,26 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** enrich Core unit records and provide linked property/occupancy views while keeping app access, occupancy, legal ownership, documents and financial records distinct.
 
-**Prerequisites:** Core blocks/units, memberships/occupants, existing Tenancy, Document Repository, Billing, Parking, P26 Metering and analytics. Accepted planning decisions on 2026-11-18; source tools 25–36. Review M02/M04/M08/M10/M11/M18/M19 decisions and the P26 meter-record contract where relevant before affected implementation. M25 P35 stays separate; coordinate its future exit/owner-sale conditional NOC but do not duplicate that workflow.
+**Prerequisites:** Core blocks/units, memberships/occupants, existing Tenancy, Document Repository, Billing, Parking, P26 Metering and analytics. Accepted planning decisions on 2026-11-18; source tools 25–36. Review M02/M04/M08/M10/M11/M18/M19 decisions and the P26 meter-record contract where relevant before affected implementation. M25 P35 stays separate; coordinate its future exit/owner-sale conditional NOC but do not duplicate that workflow. **Proposed size:** about 19 blocks (2 S, 7 M, 1 L tasks); not approved, confirm or re-split at kickoff.
 
 **Owner decision boundary:** all ten items are accepted for planning. GAP-M03-04 waits for M02/M18 title/member decisions; GAP-M03-05 waits for M10/M11 accounting decisions; GAP-M03-07 waits for M18/M19 workflow decisions and an approved handoff to existing P26 meter records. Tool examples are not law, mandatory checklists, area standards, authority to collect IDs or evidence that amounts were paid.
 
+**Planning notes:** Scope — Verified area profile, unit layout, tenancy summary, title/share records, allotments, agreement index, handover, document index, vacancy follow-up and Unit 360 view. P36 records all ten accepted M03 items. Acceptance is not a legal determination, money-posting approval, implementation authorization or permission to collect additional identity data. Resolve each named gate before its affected work; unrelated slices may proceed independently after their own kickoff decisions.
+
 **Tasks:**
 
-| ID                        | Task                                                                                   | Dependencies / kickoff gates                                                                 | Toolkit sources | Status |
-| ------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------------- | ------ |
-| <a id="p36-1"></a>P36.1   | Add a source-aware measured-area profile and verification history                      | Core units; M08/by-law decision before area changes affect any charge                        | 25, 28          | ⬜     |
-| <a id="p36-2"></a>P36.2   | Add a read-only wing/floor layout from the Core unit register                          | Confirm physical layout/position source and role visibility; no assumed tower geometry       | 26              | ⬜     |
-| <a id="p36-3"></a>P36.3   | Add a role-limited tenancy-status summary derived from Tenancy                         | Existing Tenancy/Directory data and approved projections; M19 may consolidate reports        | 27              | ⬜     |
-| <a id="p36-4"></a>P36.4   | Decide and, if approved at M02/M18 kickoff, add legal title-transfer/co-holder history | M02 legal membership and M18 transfer decisions; M04 bye-laws; authority and history policy  | 29, 30          | ⬜     |
-| <a id="p36-5"></a>P36.5   | Add allotment-letter lifecycle with audited links to approved accounting evidence      | M10 funds and M11 accounting/receipts; M02/M18 allotment authority                           | 31              | ⬜     |
-| <a id="p36-6"></a>P36.6   | Add restricted agreement-copy metadata linked to the existing repository               | Existing Document Repository; M04/M18 agreement categories and legal text                    | 32              | ⬜     |
-| <a id="p36-7"></a>P36.7   | Add a unit possession/handover event and checklist                                     | M18 transfer, M19 tenancy/facilities, P26 meter records; Core occupancy stays authoritative  | 33              | ⬜     |
-| <a id="p36-8"></a>P36.8   | Add a linked per-unit document availability/completeness index                         | M04/M18 approved categories; existing private-file audiences; no ID-proof collection         | 34              | ⬜     |
-| <a id="p36-9"></a>P36.9   | Add a private vacancy/locked-unit follow-up lifecycle                                  | Core unit/occupant records; M02 owner mapping; M08/M09 before money figures                  | 35              | ⬜     |
-| <a id="p36-10"></a>P36.10 | Add a live, read-only Unit 360 view from authorized enabled modules                    | Core; Billing/Parking/Documents only when enabled and permitted; existing analytics patterns | 36              | ⬜     |
+| ID                        | Task                                                                                   | Size | Depends on                                                                                   | Sources | Status |
+| ------------------------- | -------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------- | ------- | ------ |
+| <a id="p36-1"></a>P36.1   | Add a source-aware measured-area profile and verification history                      | M    | Core units; M08/by-law decision before area changes affect any charge                        | 25, 28  | ⬜     |
+| <a id="p36-2"></a>P36.2   | Add a read-only wing/floor layout from the Core unit register                          | M    | Confirm physical layout/position source and role visibility; no assumed tower geometry       | 26      | ⬜     |
+| <a id="p36-3"></a>P36.3   | Add a role-limited tenancy-status summary derived from Tenancy                         | S    | Existing Tenancy/Directory data and approved projections; M19 may consolidate reports        | 27      | ⬜     |
+| <a id="p36-4"></a>P36.4   | Decide and, if approved at M02/M18 kickoff, add legal title-transfer/co-holder history | L    | M02 legal membership and M18 transfer decisions; M04 bye-laws; authority and history policy  | 29, 30  | ⬜     |
+| <a id="p36-5"></a>P36.5   | Add allotment-letter lifecycle with audited links to approved accounting evidence      | M    | M10 funds and M11 accounting/receipts; M02/M18 allotment authority                           | 31      | ⬜     |
+| <a id="p36-6"></a>P36.6   | Add restricted agreement-copy metadata linked to the existing repository               | S    | Existing Document Repository; M04/M18 agreement categories and legal text                    | 32      | ⬜     |
+| <a id="p36-7"></a>P36.7   | Add a unit possession/handover event and checklist                                     | M    | M18 transfer, M19 tenancy/facilities, P26 meter records; Core occupancy stays authoritative  | 33      | ⬜     |
+| <a id="p36-8"></a>P36.8   | Add a linked per-unit document availability/completeness index                         | M    | M04/M18 approved categories; existing private-file audiences; no ID-proof collection         | 34      | ⬜     |
+| <a id="p36-9"></a>P36.9   | Add a private vacancy/locked-unit follow-up lifecycle                                  | M    | Core unit/occupant records; M02 owner mapping; M08/M09 before money figures                  | 35      | ⬜     |
+| <a id="p36-10"></a>P36.10 | Add a live, read-only Unit 360 view from authorized enabled modules                    | M    | Core; Billing/Parking/Documents only when enabled and permitted; existing analytics patterns | 36      | ⬜     |
 
 **Acceptance by task:**
 
@@ -1726,7 +1686,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each slice closes its named review gate, obtains any required owner approval, updates its owning PRD/DESIGN/DATABASE/API documents, passes Section 2.2 checks, and preserves existing role, module-toggle, privacy, retention and financial-history guarantees. Legal/statutory points: **verify against the state co-operative act / our bye-laws**. No live collection, legal determination or production enablement follows from acceptance of the plan.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P36.4 remains gated by M02/M18; P36.5 by M10/M11; P36.7 by M18/M19 decisions and the P26 meter-record handoff. Other unresolved per-slice privacy/access/legal decisions remain kickoff gates.
+**Build batch:** B3 — P36.1–P36.3, P36.6 and P36.8–P36.10; B7 — P36.7 handover. P36.4 and P36.5 move to a possible future Pro version and are not scheduled (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P36.4 remains gated by M02/M18; P36.5 by M10/M11; P36.7 by M18/M19 decisions and the P26 meter-record handoff. Other unresolved per-slice privacy/access/legal decisions remain kickoff gates.
 
 ---
 
@@ -1734,21 +1696,23 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Plan the accepted billing additions without changing existing bills, payment behavior, parking rules or delivery channels unless the required owner and contract approvals are completed.
 
-**Prerequisites:** Existing billing charge configuration, bill generation, unit/occupancy records, confirmed-payment and unit-ledger services, and billing reports. P37 slices may proceed independently after their own kickoff gates; no unrelated module review is an automatic dependency.
+**Prerequisites:** Existing billing charge configuration, bill generation, unit/occupancy records, confirmed-payment and unit-ledger services, and billing reports. P37 slices may proceed independently after their own kickoff gates; no unrelated module review is an automatic dependency. **Proposed size:** about 9 blocks (2 S, 2 M, 1 L tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M08 Tools 85–96, compared at detail level; all seven decisions accepted for planning on 2026-11-18 in the [Toolkit Review Decisions](#toolkit-review-decisions) register. Tools 86/87's primary bill-generation and printing workflows are already covered; this is not a claim of full workbook parity. No implementation is authorized.
+
+**Planning notes:** Scope — Optional percentage-of-Maintenance basis, occupancy eligibility, read-only area estimate and billing summaries; gated channel review. P37 records all seven accepted M08 decisions. The percentage method changes the D-12 billing contract and requires its approval before implementation. Preserve the selected parking, payment and delivery behavior; acceptance is planning only and does not authorize implementation, release or live use.
 
 **Kickoff gates:** Update and approve D-12 and the affected billing contracts before adding the percentage method. Establish an authoritative historical occupancy source for the first day of each billed month; preserve D-29's unit/current-owner liability. Keep parking fees and payment-clearing behavior unchanged. Derive summaries only from authoritative bills, confirmed payments and unit-ledger entries; do not exceed D-62's 2–3 analytics metrics per module. Keep bill email/WhatsApp blocked until purpose, channel, privacy, access and retention are approved; WhatsApp also requires a D-06 change. No affected implementation starts before its gates close.
 
 **Tasks:**
 
-| ID                      | Task                                                                                    | Dependencies / kickoff gates                                                                       | Toolkit sources | Status |
-| ----------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | ------ |
-| <a id="p37-1"></a>P37.1 | Add an optional percentage-of-Maintenance method per charge head                        | P35.1; D-12 and billing contracts approved before implementation; unambiguous same-unit/month base | 85              | ⬜     |
-| <a id="p37-2"></a>P37.2 | Add charge eligibility by occupancy at the first day of the billed month                | Authoritative effective-dated occupancy source; preserve D-29 unit/current-owner liability         | 85              | ⬜     |
-| <a id="p37-3"></a>P37.3 | Add a non-persistent area/flat charge estimate                                          | Existing calculation service; P37.1/P37.2 only for estimates using those rules                     | 88              | ⬜     |
-| <a id="p37-4"></a>P37.4 | Add read-only billing summaries from authoritative bills, payments and unit-ledger data | BIL-11/12 and ledger; D-62 review for any P27 metric                                               | 92, 93, 95, 96  | ⬜     |
-| <a id="p37-5"></a>P37.5 | Reassess bill email/WhatsApp only after purpose, channel and privacy approval           | D-06 decision; approved purpose, recipients, access and retention; no sending provider by default  | 94              | ⬜     |
+| ID                      | Task                                                                                    | Size | Depends on                                                                                         | Sources        | Status |
+| ----------------------- | --------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------- | -------------- | ------ |
+| <a id="p37-1"></a>P37.1 | Add an optional percentage-of-Maintenance method per charge head                        | M    | P35.1; D-12 and billing contracts approved before implementation; unambiguous same-unit/month base | 85             | ⬜     |
+| <a id="p37-2"></a>P37.2 | Add charge eligibility by occupancy at the first day of the billed month                | L    | Authoritative effective-dated occupancy source; preserve D-29 unit/current-owner liability         | 85             | ⬜     |
+| <a id="p37-3"></a>P37.3 | Add a non-persistent area/flat charge estimate                                          | S    | Existing calculation service; P37.1/P37.2 only for estimates using those rules                     | 88             | ⬜     |
+| <a id="p37-4"></a>P37.4 | Add read-only billing summaries from authoritative bills, payments and unit-ledger data | M    | BIL-11/12 and ledger; D-62 review for any P27 metric                                               | 92, 93, 95, 96 | ⬜     |
+| <a id="p37-5"></a>P37.5 | Reassess bill email/WhatsApp only after purpose, channel and privacy approval           | S    | D-06 decision; approved purpose, recipients, access and retention; no sending provider by default  | 94             | ⬜     |
 
 ### <a id="p37-current-behavior"></a>Current-behavior decisions
 
@@ -1770,7 +1734,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each implemented slice closes its kickoff gates, updates and obtains approval for its owning contracts, passes Section 2.2 and its listed tests, and preserves existing role, privacy, immutable-history and financial guarantees. No fee, payment, delivery or live-society action follows from plan acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P37.1 awaits D-12 and billing-contract approval; P37.2 awaits an authoritative historical occupancy source; P37.5 remains gated by D-06 and purpose/privacy decisions.
+**Build batch:** B3 — P37.1–P37.4; B7 — P37.5, with the admin choosing a free share link or a paid WhatsApp Business provider (provider and D-06 change need approval; Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P37.1 awaits D-12 and billing-contract approval; P37.2 awaits an authoritative historical occupancy source; P37.5 remains gated by D-06 and purpose/privacy decisions.
 
 ---
 
@@ -1778,20 +1744,22 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Plan optional dues-management features while preserving current late fees, defaulter reporting, audited corrections, payment records and analytics definitions unless a separate rule is approved.
 
-**Prerequisites:** Existing bill due dates, grace settings, confirmed-payment allocations, unit ledger, billing reports and role/permission patterns. Each P38 task needs its own kickoff gates; no unrelated module review is an automatic dependency.
+**Prerequisites:** Existing bill due dates, grace settings, confirmed-payment allocations, unit ledger, billing reports and role/permission patterns. Each P38 task needs its own kickoff gates; no unrelated module review is an automatic dependency. **Proposed size:** about 9 blocks (3 M, 1 L tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M09 Tools 97–108, compared at detail level; all six decisions accepted for planning on 2026-11-18 in the [Toolkit Review Decisions](#toolkit-review-decisions) register. Tools 97/99/107/108 are partly covered, Tools 101/102 overlap P35.13, and the M09-02/M09-05 choices preserve current behavior. No implementation is authorized.
+
+**Planning notes:** Scope — Optional future-bill simple interest, payment-plan and recovery tracking, and a read-only as-of collection report. P38 records all six accepted M09 decisions. Daily interest is optional and future-bill-only; its rate, principal basis, effective rules and interaction with existing late fees remain implementation gates. Preserve the current defaulter rule and audited correction workflow.
 
 **Kickoff gates:** For P38.1, approve the legal/bye-law basis, rate, principal, effective date, day-count, rounding, partial-payment and waiver rules, and decide whether interest may coexist with the current late fee. Until then, do not calculate or post interest. P38.2 must not alter bills, due dates, late fees, reminders, allocations or ledger balances; define who may approve an arrangement. P38.3 needs role/access and retention rules; D-06 remains unchanged, and a log is not proof of legal service. P38.4 must define partial-payment/waiver treatment, label the formula clearly and remain a report rather than a new P27 metric. Update and approve affected PRD/DATABASE/API contracts before implementation.
 
 **Tasks:**
 
-| ID                      | Task                                                  | Dependencies / kickoff gates                                                                            | Toolkit sources | Status |
-| ----------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------- | ------ |
-| <a id="p38-1"></a>P38.1 | Add optional simple annual interest for future bills  | Existing due dates/payments; legal and calculation rules; explicit late-fee coexistence decision        | 98              | ⬜     |
-| <a id="p38-2"></a>P38.2 | Add a payment-plan tracker linked to the unit ledger  | Confirmed-payment source; approved role and arrangement authority; no bill/ledger mutation              | 103             | ⬜     |
-| <a id="p38-3"></a>P38.3 | Add an internal recovery-action history and follow-up | Unit-ledger dues; role/access and retention rules; D-06 unchanged; no legal-service or sending workflow | 104             | ⬜     |
-| <a id="p38-4"></a>P38.4 | Add a read-only as-of collection-efficiency report    | Billing source records; approved partial-payment/waiver definition; no P27 metric change                | 106–108         | ⬜     |
+| ID                      | Task                                                  | Size | Depends on                                                                                              | Sources | Status |
+| ----------------------- | ----------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------- | ------- | ------ |
+| <a id="p38-1"></a>P38.1 | Add optional simple annual interest for future bills  | L    | Existing due dates/payments; legal and calculation rules; explicit late-fee coexistence decision        | 98      | ⬜     |
+| <a id="p38-2"></a>P38.2 | Add a payment-plan tracker linked to the unit ledger  | M    | Confirmed-payment source; approved role and arrangement authority; no bill/ledger mutation              | 103     | ⬜     |
+| <a id="p38-3"></a>P38.3 | Add an internal recovery-action history and follow-up | M    | Unit-ledger dues; role/access and retention rules; D-06 unchanged; no legal-service or sending workflow | 104     | ⬜     |
+| <a id="p38-4"></a>P38.4 | Add a read-only as-of collection-efficiency report    | M    | Billing source records; approved partial-payment/waiver definition; no P27 metric change                | 106–108 | ⬜     |
 
 ### <a id="p38-current-behavior"></a>Current-behavior decisions
 
@@ -1812,7 +1780,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each implemented slice closes its kickoff gates, updates and obtains approval for its owning contracts, passes Section 2.2 and its listed tests, and preserves existing role, privacy, immutable-history and financial guarantees. Plan acceptance does not authorize interest charges, debt restructuring, collections, notices or live-society use.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P38.1 remains blocked on rate, calculation, legal/bye-law and late-fee-interaction decisions; P38.2 on arrangement authority; P38.3 on role/access/retention; P38.4 on report calculation details.
+**Build batch:** B2 — all tasks (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P38.1 remains blocked on rate, calculation, legal/bye-law and late-fee-interaction decisions; P38.2 on arrangement authority; P38.3 on role/access/retention; P38.4 on report calculation details.
 
 ---
 
@@ -1820,22 +1790,24 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add the accepted M11 book-detail, reconciliation, petty-cash, fixed-deposit and reporting features without changing P16's simple-bookkeeping model or cheque-posting behavior.
 
-**Prerequisites:** Existing P16 accounts, opening balances, append-only entries, expense approvals/reversals, reports and permissions. P39.5 must use the single approved M10 fund map shared with P40.1 and receive accountant review. P39 does not include full double-entry accounting.
+**Prerequisites:** Existing P16 accounts, opening balances, append-only entries, expense approvals/reversals, reports and permissions. P39.5 must use the single approved M10 fund map shared with P40.1 and receive accountant review. P39 does not include full double-entry accounting. **Proposed size:** about 9 blocks (3 S, 3 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M11 Tools 121–132, compared at detail level; six decisions accepted for planning and two conflicts rejected on 2026-11-18 in the [Toolkit Review Decisions](#toolkit-review-decisions) register. Tools 121/122 and 131's core workflows are already present; the accepted additions are scoped below. No implementation is authorized.
+
+**Planning notes:** Scope — Cash/bank running balances, voucher register, bank reconciliation, linked petty-cash view, gated fixed deposits and net-flow report. P39 records six accepted M11 decisions and two rejected conflicts. Keep D-39's simple-bookkeeping boundary and current cheque posting behavior. Reconciliation, petty-cash and fixed-deposit records must not create duplicate or automatic P16 postings.
 
 **Kickoff gates:** Agree deterministic same-day ordering for running balances; voucher-number scope and historical-entry treatment; statement/reconciliation fields, permissions and correction path; petty-cash custodian and physical-count handling; P40.1's shared M10 fund map and accountant approval of fixed-deposit interest/tax/posting treatment; and labels/calculation for monthly net flow. Any actual bank charge, interest receipt or other adjustment must use P16's approved append-only entry/reversal operations. Update and approve affected PRD/DATABASE/API contracts before implementation.
 
 **Tasks:**
 
-| ID                      | Task                                                                           | Dependencies / kickoff gates                                                                   | Toolkit sources | Status |
-| ----------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------- | ------ |
-| <a id="p39-1"></a>P39.1 | Show a derived running balance for each cash/bank book entry and export        | P16 opening balances/entries; stable same-day order and reversal handling; no stored duplicate | 121, 122        | ⬜     |
-| <a id="p39-2"></a>P39.2 | Add a human-readable voucher number/register linked to existing P16 entries    | Agree numbering scope and historical-entry treatment; no duplicate posting or Journal/Contra   | 130             | ⬜     |
-| <a id="p39-3"></a>P39.3 | Add a manual bank-reconciliation register with aged reconciling items          | P16 bank entries; compare to statements; no automatic posting or book alteration               | 126             | ⬜     |
-| <a id="p39-4"></a>P39.4 | Add a petty-cash/imprest view linked to the existing cash book                 | P16 cash entries; approve custodian/access and physical-count handling; no second cash balance | 127             | ⬜     |
-| <a id="p39-5"></a>P39.5 | Add a fixed-deposit register linked to M10 funds                               | M10 fund mapping; accountant review of interest, tax and posting; no automatic P16 posting     | 129             | ⬜     |
-| <a id="p39-6"></a>P39.6 | Add monthly and cumulative net surplus/deficit to the existing accounts report | P16 posted entries; distinguish net flow from cash balance; no additional P27 metric           | 131, 132        | ⬜     |
+| ID                      | Task                                                                           | Size | Depends on                                                                                     | Sources  | Status |
+| ----------------------- | ------------------------------------------------------------------------------ | ---- | ---------------------------------------------------------------------------------------------- | -------- | ------ |
+| <a id="p39-1"></a>P39.1 | Show a derived running balance for each cash/bank book entry and export        | S    | P16 opening balances/entries; stable same-day order and reversal handling; no stored duplicate | 121, 122 | ⬜     |
+| <a id="p39-2"></a>P39.2 | Add a human-readable voucher number/register linked to existing P16 entries    | M    | Agree numbering scope and historical-entry treatment; no duplicate posting or Journal/Contra   | 130      | ⬜     |
+| <a id="p39-3"></a>P39.3 | Add a manual bank-reconciliation register with aged reconciling items          | M    | P16 bank entries; compare to statements; no automatic posting or book alteration               | 126      | ⬜     |
+| <a id="p39-4"></a>P39.4 | Add a petty-cash/imprest view linked to the existing cash book                 | S    | P16 cash entries; approve custodian/access and physical-count handling; no second cash balance | 127      | ⬜     |
+| <a id="p39-5"></a>P39.5 | Add a fixed-deposit register linked to M10 funds                               | M    | M10 fund mapping; accountant review of interest, tax and posting; no automatic P16 posting     | 129      | ⬜     |
+| <a id="p39-6"></a>P39.6 | Add monthly and cumulative net surplus/deficit to the existing accounts report | S    | P16 posted entries; distinguish net flow from cash balance; no additional P27 metric           | 131, 132 | ⬜     |
 
 ### <a id="p39-current-behavior"></a>Current-behavior decisions
 
@@ -1857,7 +1829,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each implemented slice closes its kickoff gates, updates and obtains approval for its owning contracts, passes Section 2.2 and its listed tests, and preserves P16's permissions, immutable history, single source of financial postings and simple-bookkeeping boundary. No financial or live-society action follows from plan acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P39.2 awaits numbering/history rules; P39.3 reconciliation and access rules; P39.4 custodian/count rules; P39.5 the shared P40.1 fund map and accountant/legal review; P39.6 final report labels and definition.
+**Build batch:** B1 — P39.1–P39.4 and P39.6; B4 — P39.5 with P40, following the owner's fixed-deposit answers pending an accountant check (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P39.2 awaits numbering/history rules; P39.3 reconciliation and access rules; P39.4 custodian/count rules; P39.5 the shared P40.1 fund map and accountant/legal review; P39.6 final report labels and definition.
 
 ---
 
@@ -1865,25 +1839,27 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add fund-level tracking and reports while keeping P16 as the only source of actual cash/bank entries and preserving D-39's simple-bookkeeping boundary.
 
-**Prerequisites:** Existing P16 accounts, append-only entries, expenses, receipts and permissions; P37.3's planned estimate; P39.5's fixed-deposit register using the same approved fund map as P40.1. P40.3 waits for M02/M18 fee and transfer authority; P40.9 waits for the M17 repairs review.
+**Prerequisites:** Existing P16 accounts, append-only entries, expenses, receipts and permissions; P37.3's planned estimate; P39.5's fixed-deposit register using the same approved fund map as P40.1. P40.3 waits for M02/M18 fee and transfer authority; P40.9 waits for the M17 repairs review. **Proposed size:** about 17 blocks (2 S, 6 M, 1 L tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M10 Tools 109–120, compared at detail level; all nine decisions accepted for planning on 2026-11-18. M13 GAP-M13-05 extends P40.4 with meeting/resolution and validity details. GAP-M10-04 uses Option B: sanctioned work is tracked separately, but actual spending is derived from linked P16 entries and existing P16 approvals remain unchanged. No implementation is authorized.
+
+**Planning notes:** Scope — Fund allocations, contribution preview, corpus receipts, linked utilization, fund transfers, FD follow-up, interest details and repair forecast. P40 records all nine accepted M10 decisions, including GAP-M10-04 Option B. Keep P16 as the source for actual cash/bank spending and receipts; fund balances are allocations, not duplicate assets. No estimate, tracker or transfer may create a bill, receipt, expense, renewal, levy or legal obligation without the named approval.
 
 **Kickoff gates:** Approve fund types/IDs, opening allocation, historical-entry mapping, whether entries can be split across funds, and how corrections/reversals affect allocations; approve per-fund rates, area basis, occupancy and tenant surcharge; verify corpus fees and event authority; define sanction/resolution links, meeting source, validity and lifecycle status; confirm allowed fund-transfer pairs and approvers; confirm FD contract calculations, interest/TDS recognition and renewal handling with an accountant; approve target/health definitions; and compare repair-planning scope with M17. Update and approve affected PRD/DATABASE/API contracts before implementation. All real receipts, expenses and reversals continue through P16.
 
 **Tasks:**
 
-| ID                      | Task                                                                                                     | Dependencies / kickoff gates                                                                                | Toolkit sources | Status |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------- | ------ |
-| <a id="p40-1"></a>P40.1 | Add fund allocation views linked to existing P16 entries                                                 | One approved fund map shared with P39.5; opening/historical mapping and split-allocation rules              | 109–111         | ⬜     |
-| <a id="p40-2"></a>P40.2 | Add a per-unit fund contribution breakdown to the planned bill estimate                                  | P37.3; approved rates, area, period, occupancy and tenant-surcharge authority; preview only                 | 113             | ⬜     |
-| <a id="p40-3"></a>P40.3 | Add an authorized corpus-obligation and receipt tracker                                                  | M02/M18 legal and fee authority; actual receipts linked to P16; no automatic bill, due or NOC block         | 112             | ⬜     |
-| <a id="p40-4"></a>P40.4 | Add a sanctioned-work register with meeting/resolution and validity details; derive utilization from P16 | GAP-M10-04 Option B; GAP-M13-05; P16 expense links/approvals; M06 resolution source; authority/access rules | 114, 150        | ⬜     |
-| <a id="p40-5"></a>P40.5 | Add paired allocation transfers between approved funds                                                   | P40.1; legal authority, allowed source/destination pairs, resolution and approval body                      | 116             | ⬜     |
-| <a id="p40-6"></a>P40.6 | Add FD maturity countdown and renewal follow-up to P39.5                                                 | P39.5; bank-confirmed terms; no automatic renewal or P16 posting                                            | 117             | ⬜     |
-| <a id="p40-7"></a>P40.7 | Add fund/source interest and TDS details linked to actual P16 income                                     | P40.1 and P39.5; accountant-approved gross/net/TDS and yield treatment                                      | 118             | ⬜     |
-| <a id="p40-8"></a>P40.8 | Add derived fund-balance and monthly-movement reports                                                    | P40.1, P40.4–P40.7; reconciled P16/FD sources and approved target definitions                               | 115, 120        | ⬜     |
-| <a id="p40-9"></a>P40.9 | Add a multi-year major-repair funding forecast                                                           | M17 review; P40.1/P40.8; approved planning assumptions; no levy or work approval                            | 119             | ⬜     |
+| ID                      | Task                                                                                                     | Size | Depends on                                                                                                  | Sources  | Status |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------- | -------- | ------ |
+| <a id="p40-1"></a>P40.1 | Add fund allocation views linked to existing P16 entries                                                 | L    | One approved fund map shared with P39.5; opening/historical mapping and split-allocation rules              | 109–111  | ⬜     |
+| <a id="p40-2"></a>P40.2 | Add a per-unit fund contribution breakdown to the planned bill estimate                                  | S    | P37.3; approved rates, area, period, occupancy and tenant-surcharge authority; preview only                 | 113      | ⬜     |
+| <a id="p40-3"></a>P40.3 | Add an authorized corpus-obligation and receipt tracker                                                  | M    | M02/M18 legal and fee authority; actual receipts linked to P16; no automatic bill, due or NOC block         | 112      | ⬜     |
+| <a id="p40-4"></a>P40.4 | Add a sanctioned-work register with meeting/resolution and validity details; derive utilization from P16 | M    | GAP-M10-04 Option B; GAP-M13-05; P16 expense links/approvals; M06 resolution source; authority/access rules | 114, 150 | ⬜     |
+| <a id="p40-5"></a>P40.5 | Add paired allocation transfers between approved funds                                                   | M    | P40.1; legal authority, allowed source/destination pairs, resolution and approval body                      | 116      | ⬜     |
+| <a id="p40-6"></a>P40.6 | Add FD maturity countdown and renewal follow-up to P39.5                                                 | S    | P39.5; bank-confirmed terms; no automatic renewal or P16 posting                                            | 117      | ⬜     |
+| <a id="p40-7"></a>P40.7 | Add fund/source interest and TDS details linked to actual P16 income                                     | M    | P40.1 and P39.5; accountant-approved gross/net/TDS and yield treatment                                      | 118      | ⬜     |
+| <a id="p40-8"></a>P40.8 | Add derived fund-balance and monthly-movement reports                                                    | M    | P40.1, P40.4–P40.7; reconciled P16/FD sources and approved target definitions                               | 115, 120 | ⬜     |
+| <a id="p40-9"></a>P40.9 | Add a multi-year major-repair funding forecast                                                           | M    | M17 review; P40.1/P40.8; approved planning assumptions; no levy or work approval                            | 119      | ⬜     |
 
 ### <a id="p40-current-behavior"></a>Current-behavior decision
 
@@ -1907,7 +1883,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its legal, financial, access and source-of-truth gates, updates and obtains approval for its owning contracts, passes Section 2.2 and listed tests, and preserves P16's permissions, immutable history and simple-bookkeeping boundary. No financial or live-society action follows from plan acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P40.1 awaits fund/opening/historical allocation rules; P40.2 rates and surcharge authority; P40.3 M02/M18 fee authority; P40.4 M06 resolution source, validity and access rules; P40.5 legal transfer rules; P40.6/P40.7 accountant and bank terms; P40.8 target definitions; P40.9 M17 scope and forecast assumptions.
+**Build batch:** B4 — P40.1–P40.8; B7 — P40.9 as a 10-year estimate from admin-entered cost, cycle and inflation % (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P40.1 awaits fund/opening/historical allocation rules; P40.2 rates and surcharge authority; P40.3 M02/M18 fee authority; P40.4 M06 resolution source, validity and access rules; P40.5 legal transfer rules; P40.6/P40.7 accountant and bank terms; P40.8 target definitions; P40.9 M17 scope and forecast assumptions.
 
 ---
 
@@ -1915,23 +1893,25 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add useful, read-only financial reports from approved records while preserving P16's cash-basis books, P27's approved dashboard and D-39's simple-bookkeeping boundary.
 
-**Prerequisites:** P16 posted entries, reports and permissions; P27/D-62 metric catalogue; P39.6 net-flow definition; P40 only for approved fund measures. M13-01 keeps budget management out of MVP; budget comparisons wait for a separate approved budget source and scope decision. M20 identifies the accepted audit-tracking scope, but applicable legal-case requirements and the appointed auditor's review remain gates; AGM content also waits for its relevant source-module reviews.
+**Prerequisites:** P16 posted entries, reports and permissions; P27/D-62 metric catalogue; P39.6 net-flow definition; P40 only for approved fund measures. M13-01 keeps budget management out of MVP; budget comparisons wait for a separate approved budget source and scope decision. M20 identifies the accepted audit-tracking scope, but applicable legal-case requirements and the appointed auditor's review remain gates; AGM content also waits for its relevant source-module reviews. **Proposed size:** about 12 blocks (2 S, 5 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M12 Tools 133–144, both editions; all eight decisions accepted for planning on 2026-11-18. GAP-M12-01 uses A+B additively: keep current reports and add P16-derived read-only views. GAP-M12-02 uses A: retain cash-basis reporting, with no accrual conversion. GAP-M12-03 uses B: only reconsider a limited financial-position summary after authoritative sources and rules exist; a formal balance sheet remains out of scope under D-39 unless separately approved. GAP-M12-08 uses A+B additively: keep P16/P27 and add only distinct, source-linked report figures. M20 GAP-M20-02 (Tools 230–233, both editions) was accepted on 2026-11-18 as an extension to P41.5. No implementation is authorized.
+
+**Planning notes:** Scope — Source-linked cash statements, conditional financial-position summary, budget comparisons, trends, audit appointment/query/report follow-up and AGM draft. P41 records all eight accepted M12 decisions; M20 GAP-M20-02 extends P41.5's non-certifying audit tracking. Keep P16 as the source for actual cash and P27's approved live dashboard unchanged. GAP-M12-03 Option B is conditional: no formal balance sheet or work that conflicts with D-39, and no implementation until authoritative sources, rules and scope are approved. M13-01 keeps budget management out of MVP, so P41.3 remains blocked until a separate budget source and scope are explicitly approved; M13 does not create that source. M20 decisions do not close legal/auditor verification or AGM source gates.
 
 **Kickoff gates:** Confirm the available P16 and related source fields; define report periods, head mapping, missing-history and zero/negative-base rules; do not start budget comparisons without a separately approved budget source and scope decision; agree any limited financial-position summary's exact meaning and confirm it does not cross D-39 (otherwise stop for explicit scope approval); obtain accountant/legal review where needed; confirm M20/auditor checklist requirements and M06/M17/M20 sources for the AGM draft. Update and approve any affected PRD/DESIGN/DATABASE/API contracts before implementation. Reports never create or change financial postings.
 
 **Tasks:**
 
-| ID                      | Task                                                                                           | Dependencies / kickoff gates                                                               | Toolkit sources                 | Status |
-| ----------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------- | ------ |
-| <a id="p41-1"></a>P41.1 | Add read-only cash statements and monthly head reports derived from P16                        | Preserve current P16/P27 reports; no duplicate ledger or manual actuals                    | 133, 138–139                    | ⬜     |
-| <a id="p41-2"></a>P41.2 | Reconsider a limited financial-position summary only after sources and rules are ready         | D-39 scope check; authoritative sources; accountant/legal and owner approval               | 135                             | ⬜     |
-| <a id="p41-3"></a>P41.3 | Add head-wise budget comparisons and monthly cash-flow schedules                               | Separate approved budget source and scope decision; P16 actuals; P39.6/P40 definitions     | 136–137, 141                    | ⬜     |
-| <a id="p41-4"></a>P41.4 | Add a derived multi-year income/expense comparison                                             | P16 history and stable head mapping; approved horizon and growth edge-case rules           | 140                             | ⬜     |
-| <a id="p41-5"></a>P41.5 | Extend the non-certifying audit checklist/tie-out with appointment, query and report follow-up | Verified legal-case/auditor requirements, roles/year/access/retention; P19/P16/P39 sources | M12 Tool 142; M20 Tools 230–233 | ⬜     |
-| <a id="p41-6"></a>P41.6 | Add a source-linked, non-statutory AGM report draft                                            | P27 privacy boundary; M06/M17/M20 sources; M13/P40 for any budget/fund measures            | 143                             | ⬜     |
-| <a id="p41-7"></a>P41.7 | Add distinct source-linked financial report figures                                            | Keep P16/P27; D-62 review; no duplicate metric, manual score, target or weight             | 144                             | ⬜     |
+| ID                      | Task                                                                                           | Size | Depends on                                                                                 | Sources                         | Status |
+| ----------------------- | ---------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------ | ------------------------------- | ------ |
+| <a id="p41-1"></a>P41.1 | Add read-only cash statements and monthly head reports derived from P16                        | M    | Preserve current P16/P27 reports; no duplicate ledger or manual actuals                    | 133, 138–139                    | ⬜     |
+| <a id="p41-2"></a>P41.2 | Reconsider a limited financial-position summary only after sources and rules are ready         | M    | D-39 scope check; authoritative sources; accountant/legal and owner approval               | 135                             | ⬜     |
+| <a id="p41-3"></a>P41.3 | Add head-wise budget comparisons and monthly cash-flow schedules                               | M    | Separate approved budget source and scope decision; P16 actuals; P39.6/P40 definitions     | 136–137, 141                    | ⬜     |
+| <a id="p41-4"></a>P41.4 | Add a derived multi-year income/expense comparison                                             | S    | P16 history and stable head mapping; approved horizon and growth edge-case rules           | 140                             | ⬜     |
+| <a id="p41-5"></a>P41.5 | Extend the non-certifying audit checklist/tie-out with appointment, query and report follow-up | M    | Verified legal-case/auditor requirements, roles/year/access/retention; P19/P16/P39 sources | M12 Tool 142; M20 Tools 230–233 | ⬜     |
+| <a id="p41-6"></a>P41.6 | Add a source-linked, non-statutory AGM report draft                                            | M    | P27 privacy boundary; M06/M17/M20 sources; M13/P40 for any budget/fund measures            | 143                             | ⬜     |
+| <a id="p41-7"></a>P41.7 | Add distinct source-linked financial report figures                                            | S    | Keep P16/P27; D-62 review; no duplicate metric, manual score, target or weight             | 144                             | ⬜     |
 
 ### <a id="p41-current-behavior"></a>Current-behavior decisions
 
@@ -1956,7 +1936,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its source, accounting, legal, privacy and approval gates; updates and obtains approval for its owning contracts; passes Section 2.2 and its listed tests; and preserves P16's cash-basis books, P27's approved catalogue and D-39. No financial or statutory action follows from plan acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P41.2 is conditional on authoritative sources, approved rules and a D-39 scope check; P41.3 is blocked pending a separate approved budget source and scope decision; P41.5 has an accepted M20 scope but still needs verified legal-case/auditor requirements, year, fields, access and retention; P41.6 waits for source and legal-content review; P41.7 waits for D-62 review.
+**Build batch:** B5 — P41.1–P41.2 and P41.4–P41.7 (D-39 updated in B5 paperwork); B7 — P41.3, with the budget source and scope defined in B7 paperwork (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P41.2 is conditional on authoritative sources, approved rules and a D-39 scope check; P41.3 is blocked pending a separate approved budget source and scope decision; P41.5 has an accepted M20 scope but still needs verified legal-case/auditor requirements, year, fields, access and retention; P41.6 waits for source and legal-content review; P41.7 waits for D-62 review.
 
 ---
 
@@ -1964,20 +1946,22 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add narrowly scoped category metadata, source-linked expense reporting and savings follow-up while preserving P16/P24 financial workflows and P27's catalogue. Budget management remains out of MVP.
 
-**Prerequisites:** P16 category management and posted expense entries; P24 vendor/purchase records; P27/D-62 metric catalogue; P40.4 for sanctioned-work references; M06 for meeting/resolution sources. P42.2 waits for a separate, explicitly approved budget source and scope decision.
+**Prerequisites:** P16 category management and posted expense entries; P24 vendor/purchase records; P27/D-62 metric catalogue; P40.4 for sanctioned-work references; M06 for meeting/resolution sources. P42.2 waits for a separate, explicitly approved budget source and scope decision. **Proposed size:** about 5 blocks (3 S, 1 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M13 Tools 145–156; five decisions accepted for planning and three conflicts rejected with Option A/current behavior confirmed on 2026-11-18. GAP-M13-05 extends P40.4 rather than creating a second sanction register. GAP-M13-03 is accepted but blocked: no budget builder or source is approved by this phase. No implementation is authorized.
+
+**Planning notes:** Scope — Expense-category metadata, conditional budget alerts, vendor actual-spend reporting and cost-saving follow-up. P42 records five accepted M13 decisions; the M13-05 sanction-record extension is merged into P40.4. Keep budgets out of MVP, P16 as the source for actual cash/bank entries and P24's purchase approvals separate from P16 expense approvals. P42.2 remains blocked until a separate approved budget source, scope and alert rules exist.
 
 **Kickoff gates:** Confirm category metadata values and visibility without changing category IDs, names or history; define reliable P16-to-P24 vendor matching and unmatched-payee handling; approve the evidence and access rules for realized savings; review any shared report figure under P27/D-62. P42.2 cannot start until a separate budget source, scope and alert/projection rules are approved. Update and approve affected PRD/DESIGN/DATABASE/API contracts before implementation. Keep all actual cash/bank entries in P16 and purchase approval in P24.
 
 **Tasks:**
 
-| ID                      | Task                                                                                       | Dependencies / kickoff gates                                                                     | Toolkit sources | Status |
-| ----------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ | --------------- | ------ |
-| <a id="p42-1"></a>P42.1 | Add descriptive metadata to existing expense categories                                    | P16 category rules; stable IDs/names/history; owner-approved visibility                          | 146             | ⬜     |
-| <a id="p42-2"></a>P42.2 | Add budget overrun alerts and year-end projections only after an approved budget source    | Separate scope/source approval; P16 posted actuals; P41.3; owner-approved alert/projection rules | 148             | ⬜     |
-| <a id="p42-3"></a>P42.3 | Add a read-only vendor-wise actual-spend report                                            | P16 posted expenses; reliable P24 vendor matching; P27/D-62 review for shared figures            | 151             | ⬜     |
-| <a id="p42-4"></a>P42.4 | Add a cost-saving initiative tracker with separate expected and evidenced realized savings | Owner-approved evidence, access and status rules; no accounting or budget changes                | 152             | ⬜     |
+| ID                      | Task                                                                                       | Size | Depends on                                                                                       | Sources | Status |
+| ----------------------- | ------------------------------------------------------------------------------------------ | ---- | ------------------------------------------------------------------------------------------------ | ------- | ------ |
+| <a id="p42-1"></a>P42.1 | Add descriptive metadata to existing expense categories                                    | S    | P16 category rules; stable IDs/names/history; owner-approved visibility                          | 146     | ⬜     |
+| <a id="p42-2"></a>P42.2 | Add budget overrun alerts and year-end projections only after an approved budget source    | M    | Separate scope/source approval; P16 posted actuals; P41.3; owner-approved alert/projection rules | 148     | ⬜     |
+| <a id="p42-3"></a>P42.3 | Add a read-only vendor-wise actual-spend report                                            | S    | P16 posted expenses; reliable P24 vendor matching; P27/D-62 review for shared figures            | 151     | ⬜     |
+| <a id="p42-4"></a>P42.4 | Add a cost-saving initiative tracker with separate expected and evidenced realized savings | S    | Owner-approved evidence, access and status rules; no accounting or budget changes                | 152     | ⬜     |
 
 ### <a id="p42-current-behavior"></a>Current-behavior decisions
 
@@ -1998,7 +1982,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its source, access, accounting and approval gates; updates and obtains approval for its owning contracts; passes Section 2.2 and its listed tests; and preserves P16 cash-basis posting, P24 purchase approval and P27 metric definitions. No financial or live-society action follows from plan acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P42.2 remains blocked pending a separate approved budget source, scope and alert/projection rules; P42.3 awaits reliable vendor matching; P42.4 awaits savings-evidence and access rules.
+**Build batch:** B6 — P42.1, P42.3 and P42.4; B7 — P42.2, after P41.3 (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P42.2 remains blocked pending a separate approved budget source, scope and alert/projection rules; P42.3 awaits reliable vendor matching; P42.4 awaits savings-evidence and access rules.
 
 ---
 
@@ -2006,21 +1992,23 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add a source-linked admin home and limited read-only reports while preserving existing financial definitions, access boundaries and legal safeguards.
 
-**Prerequisites:** P16 billing sources, P23 meeting sources, P27/D-62 and existing request/billing workspaces. P43.2 must not duplicate P38.4; P43.4's base register still needs verified legal-case-specific obligations, authority, dates and access/retention. Link P44.5 filing and approved P23/P46 evidence only when those source records are available; P44.5/P46 are not prerequisites for creating factual obligations. Missing evidence remains unavailable, not proof of completion. M06 identifies P43.5's meeting-source scope; source completeness, audience and role/access still require kickoff approval. Each task must close its calculation, privacy, access and source gates before implementation.
+**Prerequisites:** P16 billing sources, P23 meeting sources, P27/D-62 and existing request/billing workspaces. P43.2 must not duplicate P38.4; P43.4's base register still needs verified legal-case-specific obligations, authority, dates and access/retention. Link P44.5 filing and approved P23/P46 evidence only when those source records are available; P44.5/P46 are not prerequisites for creating factual obligations. Missing evidence remains unavailable, not proof of completion. M06 identifies P43.5's meeting-source scope; source completeness, audience and role/access still require kickoff approval. Each task must close its calculation, privacy, access and source gates before implementation. **Proposed size:** about 8 blocks (2 S, 3 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M01 Tools 1–12; all five merged decisions accepted for planning on 2026-11-18. GAP-M01-02 and GAP-M01-03 use Option B. M06 GAP-M06-02 was accepted on 2026-11-18 as an extension to P43.5. M20 GAP-M20-01, GAP-M20-05 A and GAP-M20-06 A were accepted on 2026-11-18 as extensions/boundaries to P43.4, not a second compliance module. No implementation is authorized.
+
+**Planning notes:** Scope — Source-linked admin home, separate monthly collection report, gated billing details, factual compliance/calendar/filing links and committee/meeting summaries. P43 records all five accepted M01 decisions, including Option B for GAP-M01-02 and GAP-M01-03. M20 GAP-M20-01 extends P43.4's obligation/calendar and filing-evidence links; GAP-M20-05 A keeps facts only without risk ratings/scores, and GAP-M20-06 A reuses meeting/election evidence without a duplicate checklist. P27 remains aggregate-only and authoritative; calculation, source, access, privacy and legal gates remain open. Budgets stay out of MVP.
 
 **Kickoff gates:** Confirm each home-page source and permission; approve the monthly ratio's period basis, partial-payment and waiver handling; approve the detail view's purpose, exact fields, access, audit and retention; verify compliance obligations and authority against M04/M20 and applicable advice; and confirm P43.5 source completeness, audience and role/access. Its M06 meeting sources are P23 meetings, attendance/quorum, resolutions, open actions and minutes status. Do not copy toolkit thresholds, sample dates or recovery actions. Update and approve any affected PRD/DESIGN/DATABASE/API contracts before implementation.
 
 **Tasks:**
 
-| ID                      | Task                                                                                                    | Dependencies / kickoff gates                                                                                          | Toolkit sources                        | Status |
-| ----------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------ |
-| <a id="p43-1"></a>P43.1 | Add a source-linked admin command-center landing page                                                   | P27/D-62; P23 and existing request/billing pages; preserve source permissions                                         | 1, 2, 7, 8                             | ⬜     |
-| <a id="p43-2"></a>P43.2 | Add a separate, read-only monthly `Collected ÷ Billed` report                                           | P16 sources; P27/D-62; P38.4 boundary; owner-approved period, partial-payment and waiver rules                        | 3                                      | ⬜     |
-| <a id="p43-3"></a>P43.3 | Add a purpose-limited admin-only billing detail view                                                    | BIL-11/BIL-12; approved purpose, exact fields, access, audit and retention                                            | 1, 10, 12                              | ⬜     |
-| <a id="p43-4"></a>P43.4 | Extend factual compliance obligations/calendar with filing and existing meeting/election evidence links | Verified obligations/authority/dates and access/retention; link P44.5/P23/P46 records when available; no risk scoring | M01 Tools 7, 9; M20 Tools 229, 234–236 | ⬜     |
-| <a id="p43-5"></a>P43.5 | Add derived committee activity and meeting-governance summaries                                         | M06 Tool 72; confirm source completeness, audience and role/access rules                                              | M01 Tool 11; M06 Tool 72               | ⬜     |
+| ID                      | Task                                                                                                    | Size | Depends on                                                                                                            | Sources                                | Status |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------ |
+| <a id="p43-1"></a>P43.1 | Add a source-linked admin command-center landing page                                                   | M    | P27/D-62; P23 and existing request/billing pages; preserve source permissions                                         | 1, 2, 7, 8                             | ⬜     |
+| <a id="p43-2"></a>P43.2 | Add a separate, read-only monthly `Collected ÷ Billed` report                                           | S    | P16 sources; P27/D-62; P38.4 boundary; owner-approved period, partial-payment and waiver rules                        | 3                                      | ⬜     |
+| <a id="p43-3"></a>P43.3 | Add a purpose-limited admin-only billing detail view                                                    | S    | BIL-11/BIL-12; approved purpose, exact fields, access, audit and retention                                            | 1, 10, 12                              | ⬜     |
+| <a id="p43-4"></a>P43.4 | Extend factual compliance obligations/calendar with filing and existing meeting/election evidence links | M    | Verified obligations/authority/dates and access/retention; link P44.5/P23/P46 records when available; no risk scoring | M01 Tools 7, 9; M20 Tools 229, 234–236 | ⬜     |
+| <a id="p43-5"></a>P43.5 | Add derived committee activity and meeting-governance summaries                                         | M    | M06 Tool 72; confirm source completeness, audience and role/access rules                                              | M01 Tool 11; M06 Tool 72               | ⬜     |
 
 ### Accepted-conflict choices
 
@@ -2043,7 +2031,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its calculation, source, legal, privacy and access gates; updates and obtains approval for its owning contracts; passes Section 2.2 and its listed tests; and preserves existing P27/BIL-11 behavior and the M13 budget exclusion. No financial or statutory action follows from plan acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P43.2 awaits calculation rules; P43.3 awaits field/access/audit/retention approval; P43.4 has an accepted M20 scope but remains blocked pending applicable obligations, authority/dates, source/access/retention and legal verification; P43.5 has an M06-confirmed source scope but still needs source-completeness, audience and role/access approval.
+**Build batch:** B4 — all tasks (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P43.2 awaits calculation rules; P43.3 awaits field/access/audit/retention approval; P43.4 has an accepted M20 scope but remains blocked pending applicable obligations, authority/dates, source/access/retention and legal verification; P43.5 has an M06-confirmed source scope but still needs source-completeness, audience and role/access approval.
 
 ---
 
@@ -2051,23 +2041,25 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add source-linked records for society certificates, governing documents/register maintenance, amendment milestones and private official correspondence/filing/notice cases, plus tightly gated reference checklists, without implying legal compliance or changing money/enforcement behavior.
 
-**Prerequisites:** P19 Document Repository, P14 AMC ownership, P23 meeting decisions and P35.2/P35.3 society-profile work. P43.4 supplies optional obligation links once those records exist; P44.5's base log does not require the compliance register, avoiding a circular prerequisite. M06/M20 decisions identify accepted scope, not verification of meeting authority or legal obligations. Existing P14 AMC records and P23 resolutions remain authoritative.
+**Prerequisites:** P19 Document Repository, P14 AMC ownership, P23 meeting decisions and P35.2/P35.3 society-profile work. P43.4 supplies optional obligation links once those records exist; P44.5's base log does not require the compliance register, avoiding a circular prerequisite. M06/M20 decisions identify accepted scope, not verification of meeting authority or legal obligations. Existing P14 AMC records and P23 resolutions remain authoritative. **Proposed size:** about 9 blocks (5 S, 2 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M04 Tools 37–48; all seven merged decisions accepted for planning on 2026-11-18. Tools 37 and 48 overlap accepted P35/P43 work and have no duplicate P44 task. M20 GAP-M20-01/GAP-M20-03/GAP-M20-04 were accepted on 2026-11-18 as extensions to P44.2/P44.5, not new parallel registers/logs. No implementation is authorized.
+
+**Planning notes:** Scope — Source-linked document validity/register maintenance, amendment records, private official correspondence/filing/notice cases, rules and gated checklists. P44 records all seven accepted M04 decisions for planning. M20 GAP-M20-03 extends P44.2's register-maintenance evidence; GAP-M20-01/GAP-M20-04 extend the same private P44.5 log with filing/acknowledgement and official notice/hearing/response records. Tools 37 and 48 overlap P35/P43 and do not create duplicate profile or dashboard work. Model-bye-law comparison and formation guidance cannot proceed until their jurisdiction-specific authoritative sources and qualified review are confirmed. Keep all records source-linked and non-certifying; no penalty enforcement, sending or submission of filings is approved.
 
 **Kickoff gates:** Confirm the purpose, exact fields, audience, access, audit and retention for each record; verify document dates and legal sources; preserve P19 permissions and versions; agree any affected PRD/DESIGN/DATABASE/API changes before implementation. P44.4 and P44.7 cannot proceed until the applicable jurisdiction, exact authoritative source/version and qualified review are confirmed. Do not copy unspecified toolkit values or formulas. No task creates legal authority, sends or files correspondence, claims compliance, or automatically creates, charges, waives or enforces a penalty.
 
 **Tasks:**
 
-| ID                      | Task                                                                                            | Dependencies / kickoff gates                                                                                             | Toolkit sources                     | Status |
-| ----------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ------ |
-| <a id="p44-1"></a>P44.1 | Add verified validity dates and reminders linked to P19 documents                               | P19; distinguish unknown expiry from confirmed perpetual validity; exclude P14 AMC                                       | 38, 45                              | ⬜     |
-| <a id="p44-2"></a>P44.2 | Extend the governing-document index with source-linked register-maintenance evidence            | P19 versions; approved applicability/register categories, fields, audience and access; no legal certification            | M04 Tools 39, 41, 46; M20 Tool 237  | ⬜     |
-| <a id="p44-3"></a>P44.3 | Track evidence-backed bye-law amendment milestones                                              | P19 evidence; P23 decisions; M06/M20 authority and legal-process gates                                                   | 40                                  | ⬜     |
-| <a id="p44-4"></a>P44.4 | Add a manual, non-certifying model bye-law comparison checklist                                 | Blocked pending jurisdiction, exact model/version and qualified review                                                   | 42                                  | ⬜     |
-| <a id="p44-5"></a>P44.5 | Extend the private admin-only log with official correspondence, filing and notice/hearing cases | P19; optional P43.4 link; approved authorities/dates/access/audit/retention; no sending, penalties or invented deadlines | M04 Tool 43; M20 Tools 234–235, 238 | ⬜     |
-| <a id="p44-6"></a>P44.6 | Add a source-linked register of approved house-rule text                                        | P23 approval evidence; no penalty amounts or financial/enforcement actions                                               | 44                                  | ⬜     |
-| <a id="p44-7"></a>P44.7 | Add an optional, state-specific society-formation checklist                                     | Blocked pending authoritative state-specific source and qualified review                                                 | 47                                  | ⬜     |
+| ID                      | Task                                                                                            | Size | Depends on                                                                                                               | Sources                             | Status |
+| ----------------------- | ----------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ------ |
+| <a id="p44-1"></a>P44.1 | Add verified validity dates and reminders linked to P19 documents                               | S    | P19; distinguish unknown expiry from confirmed perpetual validity; exclude P14 AMC                                       | 38, 45                              | ⬜     |
+| <a id="p44-2"></a>P44.2 | Extend the governing-document index with source-linked register-maintenance evidence            | M    | P19 versions; approved applicability/register categories, fields, audience and access; no legal certification            | M04 Tools 39, 41, 46; M20 Tool 237  | ⬜     |
+| <a id="p44-3"></a>P44.3 | Track evidence-backed bye-law amendment milestones                                              | S    | P19 evidence; P23 decisions; M06/M20 authority and legal-process gates                                                   | 40                                  | ⬜     |
+| <a id="p44-4"></a>P44.4 | Add a manual, non-certifying model bye-law comparison checklist                                 | S    | Blocked pending jurisdiction, exact model/version and qualified review                                                   | 42                                  | ⬜     |
+| <a id="p44-5"></a>P44.5 | Extend the private admin-only log with official correspondence, filing and notice/hearing cases | M    | P19; optional P43.4 link; approved authorities/dates/access/audit/retention; no sending, penalties or invented deadlines | M04 Tool 43; M20 Tools 234–235, 238 | ⬜     |
+| <a id="p44-6"></a>P44.6 | Add a source-linked register of approved house-rule text                                        | S    | P23 approval evidence; no penalty amounts or financial/enforcement actions                                               | 44                                  | ⬜     |
+| <a id="p44-7"></a>P44.7 | Add an optional, state-specific society-formation checklist                                     | S    | Blocked pending authoritative state-specific source and qualified review                                                 | 47                                  | ⬜     |
 
 ### Acceptance by task
 
@@ -2085,23 +2077,27 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its source, legal, access, privacy and retention gates; updates and obtains approval for its owning contracts; passes Section 2.2 and its listed tests; and preserves P14/P19/P23 authority and existing BIL-4 behavior. No feature claims statutory compliance or takes a financial/enforcement action.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. M20's register-maintenance and filing/notice-case scope is recorded, not legally verified or implemented. P44.4 and P44.7 remain blocked pending their jurisdiction-specific source and qualified review; all other tasks require their listed kickoff gates.
+**Build batch:** B4 — P44.1–P44.3, P44.5 and P44.6. P44.4 and P44.7 move to a possible future Pro version and are not scheduled (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. M20's register-maintenance and filing/notice-case scope is recorded, not legally verified or implemented. P44.4 and P44.7 remain blocked pending their jurisdiction-specific source and qualified review; all other tasks require their listed kickoff gates.
 
 # Phase P45 — Meeting Agenda Enhancements (M06 review)
 
 **Goal:** Add optional agenda time-boxing and reusable templates while preserving P23's meeting records and keeping advisory agenda content separate from statutory requirements.
 
-**Prerequisites:** P23 meeting and agenda records. The P43.5 summary extension uses existing P23 sources and remains subject to P43.5's completeness, audience and access gates.
+**Prerequisites:** P23 meeting and agenda records. The P43.5 summary extension uses existing P23 sources and remains subject to P43.5's completeness, audience and access gates. **Proposed size:** about 2 blocks (1 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M06 Tools 61–72; two merged decisions accepted for planning on 2026-11-18. GAP-M06-01 is P45.1; GAP-M06-02 extends P43.5. No implementation is authorized.
+
+**Planning notes:** Scope — Optional agenda-item timing and reusable templates; meeting-governance view added to P43.5. P45.1 adds optional agenda durations, derived start/end times and reusable templates without changing P23's meeting records. GAP-M06-02 is merged into P43.5 to avoid a duplicate dashboard; the summary derives from P23 meeting, attendance/quorum, resolution, open-action and minutes-status records. Source completeness, audience and access still require kickoff approval.
 
 **Kickoff gates:** Confirm optional-duration behavior, how missing durations affect derived times, template ownership/access and any affected PRD/DESIGN/DATABASE/API contracts. Preserve P23 agenda and minutes behavior. Do not use toolkit timing or templates as legal defaults.
 
 **Tasks:**
 
-| ID                      | Task                                                                                        | Dependencies / kickoff gates                                                 | Toolkit sources | Status |
-| ----------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------- | ------ |
-| <a id="p45-1"></a>P45.1 | Add optional agenda-item durations, derived start/end times and reusable standard templates | P23 agenda records; approve duration behavior, template ownership and access | 63              | ⬜     |
+| ID                      | Task                                                                                        | Size | Depends on                                                                   | Sources | Status |
+| ----------------------- | ------------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------- | ------- | ------ |
+| <a id="p45-1"></a>P45.1 | Add optional agenda-item durations, derived start/end times and reusable standard templates | M    | P23 agenda records; approve duration behavior, template ownership and access | 63      | ⬜     |
 
 ### Acceptance by task
 
@@ -2113,7 +2109,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** P45.1 closes its field, calculation, access and documentation gates; updates and obtains approval for its owning contracts; passes applicable Section 2.2 checks and its listed tests. No statutory timing or meeting-validity claim follows from the feature.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live.
+**Build batch:** B5 — all tasks (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live.
 
 ---
 
@@ -2121,19 +2119,21 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add source-linked election administration and follow-up, and plan a legally verified path to official in-app voting without presenting existing P22 polls as a statutory-election process.
 
-**Prerequisites:** P19 document evidence, P22/D-60 polls, P23 meeting records, M04/P44 governing documents and existing P16/P39 expense/accounting sources; use P42 links only within their approved scope. Assess Karnataka apartment associations and registered housing co-operatives separately. M02 legal membership/share work remains deferred; dependent election work cannot proceed until the relevant decisions are separately reconsidered and approved.
+**Prerequisites:** P19 document evidence, P22/D-60 polls, P23 meeting records, M04/P44 governing documents and existing P16/P39 expense/accounting sources; use P42 links only within their approved scope. Assess Karnataka apartment associations and registered housing co-operatives separately. M02 legal membership/share work remains deferred; dependent election work cannot proceed until the relevant decisions are separately reconsidered and approved. **Proposed size:** about 7 blocks (2 M, 1 L tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M07 Tools 73–84; all three merged decisions accepted for planning on 2026-11-18. The owner selected both Karnataka legal cases, compared separately, and future official in-app voting blocked pending legal verification. The preliminary [Karnataka source check](./toolkit-gap-review.md#karnataka-legal-source-check-preliminary) is research evidence, not proof of applicable law or permission to conduct online elections. No implementation is authorized.
+
+**Planning notes:** Scope — Election schedule/notices/officers, sourced voter/candidate process, gated official in-app voting, outcomes/disputes and linked expense reports. P46 records all three accepted M07 decisions. Compare Karnataka apartment associations and registered housing co-operatives separately; do not make a universal legal rule set. Official in-app voting and official result calculations remain blocked pending legal verification, qualified review and approval of dependent product contracts. P22 stays unchanged, and M02 membership/share work remains deferred until separately reconsidered.
 
 **Kickoff gates:** Confirm each society's applicable law, commencement/transition position, current registered governing documents/amendments and authoritative sources; obtain qualified local review of election authority and the permitted voting method. Publication of the Karnataka Apartment (Ownership and Management) Act, 2026 is not proof of its separately notified commencement. Samples and official explanatory extracts do not establish a current universal rule set. Approve voter/candidate definitions, seats/composition, nomination requirements, any dues/share effects, notice rules, outcome/dispute authority, exact fields, access, audit and retention before implementation. Explicitly review and approve any affected PRD/DESIGN/DATABASE/API contracts, including the P22 boundary. Do not copy toolkit dates, fees, categories or tie rules as law. Legal/statutory points: **verify against the state co-operative act / our bye-laws**, or the applicable Karnataka apartment/association framework.
 
 **Tasks:**
 
-| ID                      | Task                                                                                    | Dependencies / kickoff gates                                                                                                            | Toolkit sources                       | Status |
-| ----------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------ |
-| <a id="p46-1"></a>P46.1 | Add an election schedule, preparation, notice and officer tracker                       | P19/P23/P44; approved source, notice/officer authority, fields and access                                                               | 73, 77, 78, 81                        | ⬜     |
-| <a id="p46-2"></a>P46.2 | Plan sourced voter/candidate eligibility, nominations, seats and official in-app voting | Blocked pending applicable law/bye-laws, qualified review, permitted online voting/authority, M02 decisions and explicit P22/PRD review | 74–76; existing P22 ballot capability | ⬜     |
-| <a id="p46-3"></a>P46.3 | Add outcome evidence, restricted disputes and source-linked election/expense reports    | P46.2 for official result calculations; verified outcome/dispute authority; P19/P23 and existing P16/P39 accounts                       | 79–80, 82–84                          | ⬜     |
+| ID                      | Task                                                                                    | Size | Depends on                                                                                                                              | Sources                               | Status |
+| ----------------------- | --------------------------------------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------ |
+| <a id="p46-1"></a>P46.1 | Add an election schedule, preparation, notice and officer tracker                       | M    | P19/P23/P44; approved source, notice/officer authority, fields and access                                                               | 73, 77, 78, 81                        | ⬜     |
+| <a id="p46-2"></a>P46.2 | Plan sourced voter/candidate eligibility, nominations, seats and official in-app voting | L    | Blocked pending applicable law/bye-laws, qualified review, permitted online voting/authority, M02 decisions and explicit P22/PRD review | 74–76; existing P22 ballot capability | ⬜     |
+| <a id="p46-3"></a>P46.3 | Add outcome evidence, restricted disputes and source-linked election/expense reports    | M    | P46.2 for official result calculations; verified outcome/dispute authority; P19/P23 and existing P16/P39 accounts                       | 79–80, 82–84                          | ⬜     |
 
 ### Acceptance by task
 
@@ -2147,7 +2147,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its legal-source, authority, membership, access, privacy and retention gates; updates and obtains approval for its owning contracts; passes applicable Section 2.2 checks and its listed tests. Official voting/result execution remains unavailable until its legal verification is complete. No legal-compliance certification or live-society action follows from planning acceptance.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. P46.2 and P46.3's official result calculations are blocked pending legal verification and dependent approvals. Current registered bye-laws, the 2026 commencement/transition position and permission for official online voting have not been verified. M02 remains deferred/backlog; other P46 work requires its named kickoff gates.
+**Build batch:** B6 — all tasks, including P46.2 official voting under the owner's 2026-11-19 decisions: app count, returning-officer declaration, secret ballot, locked voter list and an admin confirmation in place of uploaded proof (accepted risk; Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P46.2 and P46.3's official result calculations are blocked pending legal verification and dependent approvals. Current registered bye-laws, the 2026 commencement/transition position and permission for official online voting have not been verified. M02 remains deferred/backlog; other P46 work requires its named kickoff gates.
 
 ---
 
@@ -2155,24 +2157,26 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Give admins fuller vendor records, one place for all service contracts, a computable AMC service schedule, monthly agency staff-day checks, tracked work orders and a clear view of vendor bills owed, without the app paying anyone.
 
-**Prerequisites:** P14 AMC, P24 vendors/purchase approvals, P16 expenses/cash book and P28 assets. Reuse P14's renewal-successor and reminder patterns; do not duplicate AMC contracts in the general register.
+**Prerequisites:** P14 AMC, P24 vendors/purchase approvals, P16 expenses/cash book and P28 assets. Reuse P14's renewal-successor and reminder patterns; do not duplicate AMC contracts in the general register. **Proposed size:** about 13 blocks (3 S, 5 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M14 Tools 157–168; eight merged decisions accepted for planning on 2026-11-18, with Option B for GAP-M14-05 and GAP-M14-07. Tools 161/164 are covered by P24/D-54; Tool 167 was reviewed with M24 and rejected (GAP-M24-01/02). No implementation is authorized.
+
+**Planning notes:** Scope — Vendor details, general contract register, structured AMC schedule and toolkit expiry bands, agency staff-day checks, work orders, vendor bills owed (paid only via cash book) and a vendor summary. P47 records all eight accepted M14 decisions. GAP-M14-05 B changes AMC-2's status labels; GAP-M14-07 B narrows the "vendor payments" exclusion to allow a bills-owed register whose paid amounts come only from P16 cash-book entries; no payment execution, gateway or double-entry accounting is approved, and GAP-M11-04 A (D-39) stays. Tools 161/164 remain covered by P24/D-54. Tool 167 was reviewed with M24 and rejected (GAP-M24-01/02).
 
 **Kickoff gates:** Update and approve PRD AMC-2 (new labels), the AMC-7 and PRD "vendor payments" exclusion (bills-owed register only) and the DATABASE/API/DESIGN contracts. Approve band windows and defaults (toolkit 30/90 days are examples), blacklist reason/audit rules, contract-register fields, man-day deduction rules per contract, work-order numbering and how a bill is matched to P16 entries (including partial payments). Committee/admin visibility follows D-54 unless changed. Legal/statutory points: **verify against the state co-operative act / our bye-laws**.
 
 **Tasks:**
 
-| ID                      | Task                                                                                                                                                            | Dependencies / kickoff gates                                                              | Toolkit sources | Status |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------- | ------ |
-| <a id="p47-1"></a>P47.1 | Add vendor PAN, payment terms (days), onboarded date and `Blacklisted` status                                                                                   | P24; blacklist reason/audit; keep history                                                 | 157             | ⬜     |
-| <a id="p47-2"></a>P47.2 | Add a general (non-AMC) vendor-contract register with expiry status and renewal reminders                                                                       | P47.1; reuse P14 patterns; no AMC duplication                                             | 158             | ⬜     |
-| <a id="p47-3"></a>P47.3 | Structure the AMC service schedule: AMC type, asset type, services per year, next service due, service overdue                                                  | P14, P28; handling of existing free-text `visit_frequency`                                | 159             | ⬜     |
-| <a id="p47-4"></a>P47.4 | Replace AMC expiry labels with toolkit-style bands (Upcoming, Active, Due Soon, Urgent, Expired) with action text                                               | P14; PRD AMC-2 change; approved windows; P27 metric review                                | 158, 160        | ⬜     |
-| <a id="p47-5"></a>P47.5 | Monthly agency staff-day check: sanctioned vs actual man-days, shortfall, contracted amount, deduction, payable, bill raised, variance, flag                    | P47.2; per-contract deduction rule; record only, no payment; not a D-20 cleaning schedule | 165, 166        | ⬜     |
-| <a id="p47-6"></a>P47.6 | Work-order register after P24 approval: number, description, issue/due/completion dates, value, status, delay, days open                                        | P24; the P35.13 printable letter reuses this record                                       | 162             | ⬜     |
-| <a id="p47-7"></a>P47.7 | Vendor bills-owed register: invoice number/date/amount, due date = invoice date + vendor terms, outstanding, Due Soon/Overdue; paid only via linked P16 entries | P47.1, P16; AMC-7/PRD exclusion change; matching rules; D-39 unchanged                    | 163             | ⬜     |
-| <a id="p47-8"></a>P47.8 | Vendor/contract summary on vendor screens from P47 records                                                                                                      | P47.1–P47.7; no new P27 metric (D-62)                                                     | 168             | ⬜     |
+| ID                      | Task                                                                                                                                                            | Size | Depends on                                                                                | Sources  | Status |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------- | -------- | ------ |
+| <a id="p47-1"></a>P47.1 | Add vendor PAN, payment terms (days), onboarded date and `Blacklisted` status                                                                                   | S    | P24; blacklist reason/audit; keep history                                                 | 157      | ⬜     |
+| <a id="p47-2"></a>P47.2 | Add a general (non-AMC) vendor-contract register with expiry status and renewal reminders                                                                       | M    | P47.1; reuse P14 patterns; no AMC duplication                                             | 158      | ⬜     |
+| <a id="p47-3"></a>P47.3 | Structure the AMC service schedule: AMC type, asset type, services per year, next service due, service overdue                                                  | M    | P14, P28; handling of existing free-text `visit_frequency`                                | 159      | ⬜     |
+| <a id="p47-4"></a>P47.4 | Replace AMC expiry labels with toolkit-style bands (Upcoming, Active, Due Soon, Urgent, Expired) with action text                                               | S    | P14; PRD AMC-2 change; approved windows; P27 metric review                                | 158, 160 | ⬜     |
+| <a id="p47-5"></a>P47.5 | Monthly agency staff-day check: sanctioned vs actual man-days, shortfall, contracted amount, deduction, payable, bill raised, variance, flag                    | M    | P47.2; per-contract deduction rule; record only, no payment; not a D-20 cleaning schedule | 165, 166 | ⬜     |
+| <a id="p47-6"></a>P47.6 | Work-order register after P24 approval: number, description, issue/due/completion dates, value, status, delay, days open                                        | M    | P24; the P35.13 printable letter reuses this record                                       | 162      | ⬜     |
+| <a id="p47-7"></a>P47.7 | Vendor bills-owed register: invoice number/date/amount, due date = invoice date + vendor terms, outstanding, Due Soon/Overdue; paid only via linked P16 entries | M    | P47.1, P16; AMC-7/PRD exclusion change; matching rules; D-39 unchanged                    | 163      | ⬜     |
+| <a id="p47-8"></a>P47.8 | Vendor/contract summary on vendor screens from P47 records                                                                                                      | S    | P47.1–P47.7; no new P27 metric (D-62)                                                     | 168      | ⬜     |
 
 ### Acceptance by task
 
@@ -2191,7 +2195,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its gates, updates and obtains approval for its owning contracts, and passes applicable Section 2.2 checks and its listed tests.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live.
+**Build batch:** B2 — all tasks (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live.
 
 ---
 
@@ -2199,18 +2205,20 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Fuller non-pay employment records and private, admin-only performance notes for society staff, keeping payroll out of scope.
 
-**Prerequisites:** P12 staff. D-18 (no full ID documents) and D-19 (no payroll) stay in force.
+**Prerequisites:** P12 staff. D-18 (no full ID documents) and D-19 (no payroll) stay in force. **Proposed size:** about 2 blocks (2 S tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M15 Tools 169–180; GAP-M15-01 and GAP-M15-04 accepted for planning on 2026-11-18. GAP-M15-02 A and GAP-M15-03 A keep current behavior; GAP-M15-05 C defers payroll to a possible future Pro version. Tool 180 is partly covered by the existing attendance-rate metric. No implementation is authorized.
+
+**Planning notes:** Scope — Non-pay employment details and admin-only staff performance notes. P48 records GAP-M15-01 and GAP-M15-04. GAP-M15-02 A keeps P25's "every guard counts as on duty (no shift roster)"; GAP-M15-03 A keeps D-20 (housekeeping is stock only). GAP-M15-05 C places payroll in deferred/backlog for a possible future Pro version; D-19 stays in force.
 
 **Kickoff gates:** Approve fields and which staff types they apply to (society staff only unless approved); performance-note readers, correction/audit and retention; PRD STF contract updates. Employment points: verify against applicable labour law / our bye-laws.
 
 **Tasks:**
 
-| ID                      | Task                                                                                                                     | Dependencies / kickoff gates    | Toolkit sources | Status |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------- | --------------- | ------ |
-| <a id="p48-1"></a>P48.1 | Add department, designation, employment type, joining date, weekly off, status `Active / On Notice / Left` and exit date | P12; no salary fields; D-18     | 169, 172        | ⬜     |
-| <a id="p48-2"></a>P48.2 | Add admin-only staff performance notes with follow-up                                                                    | P48.1; access, audit, retention | 179             | ⬜     |
+| ID                      | Task                                                                                                                     | Size | Depends on                      | Sources  | Status |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---- | ------------------------------- | -------- | ------ |
+| <a id="p48-1"></a>P48.1 | Add department, designation, employment type, joining date, weekly off, status `Active / On Notice / Left` and exit date | S    | P12; no salary fields; D-18     | 169, 172 | ⬜     |
+| <a id="p48-2"></a>P48.2 | Add admin-only staff performance notes with follow-up                                                                    | S    | P48.1; access, audit, retention | 179      | ⬜     |
 
 ### Acceptance by task
 
@@ -2223,7 +2231,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its gates, updates and obtains approval for its owning contracts, and passes applicable Section 2.2 checks and its listed tests.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live. Payroll is deferred/backlog with no planned work.
+**Build batch:** B1 — all tasks (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. Payroll is deferred/backlog with no planned work.
 
 ---
 
@@ -2231,24 +2241,26 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Priority-based response targets, a pausable On Hold state, better helpdesk reporting and feedback, escalation follow-up, off-app intake, daily common-area checks and vendor linking.
 
-**Prerequisites:** P8 service requests, P32 SLA escalation and P24 vendors (for P49.8).
+**Prerequisites:** P8 service requests, P32 SLA escalation and P24 vendors (for P49.8). **Proposed size:** about 12 blocks (4 S, 4 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M16 Tools 181–192; eight merged decisions accepted for planning on 2026-11-18, with Option B for GAP-M16-01 and GAP-M16-02. Tool 186 is covered. No implementation is authorized.
+
+**Planning notes:** Scope — Four-level priority with priority-based targets, On Hold that pauses the clock, performance report, escalation responses, detailed feedback, intake source, daily common-area checks and vendor picking. P49 records all eight accepted M16 decisions. GAP-M16-01 B and GAP-M16-02 B deliberately change approved request priority, SLA and lifecycle behavior; existing requests keep their recorded due times unless a kickoff-approved migration says otherwise. Tool 186 is covered.
 
 **Kickoff gates:** Update and approve PRD SRQ-1, SRQ-3, SRQ-5, SRQ-6, SRQ-9, D-59 and the DATABASE/API/DESIGN contracts. Decide who sets priority (resident, admin or both); the target per priority (toolkit days are examples) and whether category still affects the committee-escalation wait; how existing Normal/Urgent requests map, without recomputing their recorded due times; who may place/release On Hold, the required reason, resident notification and any maximum hold; who records daily checks; and access to feedback and performance data.
 
 **Tasks:**
 
-| ID                      | Task                                                                            | Dependencies / kickoff gates                          | Toolkit sources              | Status |
-| ----------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------- | ------ |
-| <a id="p49-1"></a>P49.1 | Replace Normal/Urgent with Critical/High/Medium/Low and set targets by priority | SRQ-1/SRQ-6/D-59 change; mapping of existing requests | 181, 183                     | ⬜     |
-| <a id="p49-2"></a>P49.2 | Add On Hold with a reason that pauses the target clock and escalation           | P49.1; SRQ-3/D-59 change; hold rules                  | 181, 190, 192                | ⬜     |
-| <a id="p49-3"></a>P49.3 | Read-only helpdesk performance report                                           | P49.1–P49.2 definitions; no new P27 metric            | 182, 184, 185, 188, 190, 192 | ⬜     |
-| <a id="p49-4"></a>P49.4 | Record escalation responses and outcomes                                        | P32                                                   | 189                          | ⬜     |
-| <a id="p49-5"></a>P49.5 | Detailed feedback scores and follow-up                                          | SRQ-5 change; access                                  | 187                          | ⬜     |
-| <a id="p49-6"></a>P49.6 | Record how a request arrived                                                    | Admin logging for a unit; no channel integration      | 181, 190, 192                | ⬜     |
-| <a id="p49-7"></a>P49.7 | Daily common-area check with issue-to-request link                              | Recorder role; not P25 patrol or a D-20 cleaning log  | 191                          | ⬜     |
-| <a id="p49-8"></a>P49.8 | Pick an assigned vendor from the P24 vendor list                                | P24 enabled; free text remains the fallback           | 181; M16→M14 link            | ⬜     |
+| ID                      | Task                                                                            | Size | Depends on                                            | Sources                      | Status |
+| ----------------------- | ------------------------------------------------------------------------------- | ---- | ----------------------------------------------------- | ---------------------------- | ------ |
+| <a id="p49-1"></a>P49.1 | Replace Normal/Urgent with Critical/High/Medium/Low and set targets by priority | M    | SRQ-1/SRQ-6/D-59 change; mapping of existing requests | 181, 183                     | ⬜     |
+| <a id="p49-2"></a>P49.2 | Add On Hold with a reason that pauses the target clock and escalation           | M    | P49.1; SRQ-3/D-59 change; hold rules                  | 181, 190, 192                | ⬜     |
+| <a id="p49-3"></a>P49.3 | Read-only helpdesk performance report                                           | M    | P49.1–P49.2 definitions; no new P27 metric            | 182, 184, 185, 188, 190, 192 | ⬜     |
+| <a id="p49-4"></a>P49.4 | Record escalation responses and outcomes                                        | S    | P32                                                   | 189                          | ⬜     |
+| <a id="p49-5"></a>P49.5 | Detailed feedback scores and follow-up                                          | S    | SRQ-5 change; access                                  | 187                          | ⬜     |
+| <a id="p49-6"></a>P49.6 | Record how a request arrived                                                    | S    | Admin logging for a unit; no channel integration      | 181, 190, 192                | ⬜     |
+| <a id="p49-7"></a>P49.7 | Daily common-area check with issue-to-request link                              | M    | Recorder role; not P25 patrol or a D-20 cleaning log  | 191                          | ⬜     |
+| <a id="p49-8"></a>P49.8 | Pick an assigned vendor from the P24 vendor list                                | S    | P24 enabled; free text remains the fallback           | 181; M16→M14 link            | ⬜     |
 
 ### Acceptance by task
 
@@ -2267,7 +2279,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its gates, updates and obtains approval for its owning contracts, and passes applicable Section 2.2 checks and its listed tests.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved and not enabled live.
+**Build batch:** B1 — all tasks (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live.
 
 ---
 
@@ -2275,22 +2289,24 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Plan source-linked major repair and redevelopment records without creating a second repair forecast, asset/service history, spending ledger, levy process or legal-compliance claim.
 
-**Prerequisites:** P40.9 repair forecast; P16 expense source; P40 funds; P24 vendors; P23 meetings/resolutions; Core units/members. Reuse P14/P28 asset/AMC records and existing sources rather than copies.
+**Prerequisites:** P40.9 repair forecast; P16 expense source; P40 funds; P24 vendors; P23 meetings/resolutions; Core units/members. Reuse P14/P28 asset/AMC records and existing sources rather than copies. **Proposed size:** about 11 blocks (1 S, 5 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M17 Tools 193–204; six merged cards accepted for planning on 2026-11-19. No implementation is authorized.
+
+**Planning notes:** Scope — Major repair projects and audits, quote comparison, funding scenarios, redevelopment proposals/consent and source-linked project summaries. P50 records all six accepted M17 cards. P40.9 remains the forecast/source for planning estimates; P50 must not add another expense ledger, approve works, issue a levy or imply legal compliance. Toolkit thresholds, weights, costs and scores are examples only.
 
 **Kickoff gates:** Agree the boundary with P40.9, P16/P40, P24/P28 and P23; approve roles and financial authority; define audit sources/cycles, tender comparison basis, redevelopment data visibility and consent evidence; confirm no levy or work approval is implied. Legal points: **verify against the state co-operative act / our bye-laws** and obtain qualified review.
 
 **Tasks:**
 
-| ID                      | Task                                                                                         | Dependencies / kickoff gates                                                   | Toolkit sources | Status |
-| ----------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------- | ------ |
-| <a id="p50-1"></a>P50.1 | Add major-repair project and structural-audit records with schedule, status, budget/progress | P40.9, P16/P40, P24/P28; authority, audit source and cycle                     | 193, 194, 197   | ⬜     |
-| <a id="p50-2"></a>P50.2 | Compare like-for-like contractor quotes and record a committee-guided scorecard              | P24/P50.1; approved criteria, weight and decision authority                    | 195, 196        | ⬜     |
-| <a id="p50-3"></a>P50.3 | Add repair funding-gap and optional unit-level levy scenarios                                | P40.1/P40.9; legal levy authority and allocation basis                         | 198, 199        | ⬜     |
-| <a id="p50-4"></a>P50.4 | Track redevelopment proposals, developer evidence and offer comparison                       | P23; source/verification and legal-review gates                                | 200, 201        | ⬜     |
-| <a id="p50-5"></a>P50.5 | Track restricted consent evidence and redevelopment milestones                               | P50.4; eligible membership/area, consent method, access and retention approval | 202, 203        | ⬜     |
-| <a id="p50-6"></a>P50.6 | Add a role-limited project summary from approved source records                              | P50.1–P50.5; P27/D-62; privacy and reconciliation                              | 204             | ⬜     |
+| ID                      | Task                                                                                         | Size | Depends on                                                                     | Sources       | Status |
+| ----------------------- | -------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------ | ------------- | ------ |
+| <a id="p50-1"></a>P50.1 | Add major-repair project and structural-audit records with schedule, status, budget/progress | M    | P40.9, P16/P40, P24/P28; authority, audit source and cycle                     | 193, 194, 197 | ⬜     |
+| <a id="p50-2"></a>P50.2 | Compare like-for-like contractor quotes and record a committee-guided scorecard              | M    | P24/P50.1; approved criteria, weight and decision authority                    | 195, 196      | ⬜     |
+| <a id="p50-3"></a>P50.3 | Add repair funding-gap and optional unit-level levy scenarios                                | M    | P40.1/P40.9; legal levy authority and allocation basis                         | 198, 199      | ⬜     |
+| <a id="p50-4"></a>P50.4 | Track redevelopment proposals, developer evidence and offer comparison                       | M    | P23; source/verification and legal-review gates                                | 200, 201      | ⬜     |
+| <a id="p50-5"></a>P50.5 | Track restricted consent evidence and redevelopment milestones                               | M    | P50.4; eligible membership/area, consent method, access and retention approval | 202, 203      | ⬜     |
+| <a id="p50-6"></a>P50.6 | Add a role-limited project summary from approved source records                              | S    | P50.1–P50.5; P27/D-62; privacy and reconciliation                              | 204           | ⬜     |
 
 ### Acceptance by task
 
@@ -2307,7 +2323,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its legal, financial, source and access gates; updates and obtains approval for its owning contracts; and passes applicable Section 2.2 checks and its listed tests.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved or enabled live. No legal thresholds, levy or spending approval is established.
+**Build batch:** B7 — all tasks, as the new optional module "Major repairs & redevelopment"; the committee sets scoring criteria, levies are what-if only and redevelopment records are limited to admins and committee (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved or enabled live. No legal thresholds, levy or spending approval is established.
 
 ---
 
@@ -2315,9 +2333,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Track owner transfers and related committee decisions, and define truthful conditional clearance without treating an NOC as legal title transfer.
 
-**Prerequisites:** P18 tenancy; Core ownership/member records; Billing/P16; P23 committee records; M02/M03 ownership/member mapping. P51.1/P51.2 case tracking can proceed after their own gates; P51.3/P51.4 coordinate with P35.10–P35.12 clearance work and must not start before the shared contracts are approved.
+**Prerequisites:** P18 tenancy; Core ownership/member records; Billing/P16; P23 committee records; M02/M03 ownership/member mapping. P51.1/P51.2 case tracking can proceed after their own gates; P51.3/P51.4 coordinate with P35.10–P35.12 clearance work and must not start before the shared contracts are approved. **Proposed size:** about 8 blocks (1 S, 2 M, 1 L tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M18 Tools 205–216; four merged decisions accepted for planning on 2026-11-19. No implementation is authorized.
+
+**Planning notes:** Scope — Owner-transfer case tracking, case-scoped committee decisions, an agreed conditional-clearance path and separate issued-certificate history. P51 records all four accepted M18 decisions. M18-03 B changes current D-50/P35.10–12 behavior: both tenant move-out and owner sale/transfer may use an agreed, admin-approved conditional handover for identified verified obligations; only verified money owed blocks, not other pending actions. With Billing off, the planned document says “Not checked / conditional,” never “no dues”; failed checks still block for retry. Update and approve TEN-3, D-50 and affected P35/PRD/API/DATABASE/DESIGN contracts before implementation. This does not pay, waive or delete debt or transfer legal title.
 
 **Owner policy recorded:** Both tenant move-out and owner sale/transfer are in scope. Outgoing and incoming parties agree; the unit owner also consents for tenant handover; society admin approves. Only verified money owed can block under the normal check; the selected conditional route may allow an identified obligation to remain outstanding when the parties agree and society admin approves, subject to the contracts finalized at kickoff. Other open checklist tasks do not block by themselves. Billing off produces “Not checked / conditional” paperwork for either case, never “no dues.” A failed check blocks for retry.
 
@@ -2325,12 +2345,12 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Tasks:**
 
-| ID                      | Task                                                                  | Dependencies / kickoff gates                                     | Toolkit sources | Status |
-| ----------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------- | ------ |
-| <a id="p51-1"></a>P51.1 | Track owner-transfer case stages and milestones separately from title | Core owner/member mapping; P18; case types and access            | 205, 213        | ⬜     |
-| <a id="p51-2"></a>P51.2 | Record case-scoped committee resolution, conditions and follow-up     | P23; approved authority/quorum and retention                     | 214             | ⬜     |
-| <a id="p51-3"></a>P51.3 | Replace the no-override clearance rule with approved conditional path | P35.10–P35.12; TEN-3/D-50 changes; Billing and authority gates   | 207–209         | ⬜     |
-| <a id="p51-4"></a>P51.4 | Keep distinct, immutable history for each actually issued document    | P51.3; approved number, signatory, wording, access and retention | 207–209         | ⬜     |
+| ID                      | Task                                                                  | Size | Depends on                                                       | Sources  | Status |
+| ----------------------- | --------------------------------------------------------------------- | ---- | ---------------------------------------------------------------- | -------- | ------ |
+| <a id="p51-1"></a>P51.1 | Track owner-transfer case stages and milestones separately from title | M    | Core owner/member mapping; P18; case types and access            | 205, 213 | ⬜     |
+| <a id="p51-2"></a>P51.2 | Record case-scoped committee resolution, conditions and follow-up     | S    | P23; approved authority/quorum and retention                     | 214      | ⬜     |
+| <a id="p51-3"></a>P51.3 | Replace the no-override clearance rule with approved conditional path | L    | P35.10–P35.12; TEN-3/D-50 changes; Billing and authority gates   | 207–209  | ⬜     |
+| <a id="p51-4"></a>P51.4 | Keep distinct, immutable history for each actually issued document    | M    | P51.3; approved number, signatory, wording, access and retention | 207–209  | ⬜     |
 
 ### Acceptance by task
 
@@ -2345,7 +2365,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes legal, authority, Billing, document and access gates; updates and obtains approval for its owning contracts; and passes applicable Section 2.2 checks and its listed tests.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved or enabled live. Legal wording/authority and affected contracts are not yet approved.
+**Build batch:** B5 — all tasks, with P35.10–P35.12 (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved or enabled live. Legal wording/authority and affected contracts are not yet approved.
 
 ---
 
@@ -2353,21 +2375,23 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Add only useful detail around existing tenancy, parking and amenity sources, without duplicating occupancy, adding parking fees or bypassing deposit accounting gates.
 
-**Prerequisites:** P18 tenancy, P20 parking, P15 amenity bookings, Core units, P17 Directory, P14 AMC, P28 assets and P16 accounts as relevant. Reuse earlier M08/M09/M11/M13 decisions; no duplicate records.
+**Prerequisites:** P18 tenancy, P20 parking, P15 amenity bookings, Core units, P17 Directory, P14 AMC, P28 assets and P16 accounts as relevant. Reuse earlier M08/M09/M11/M13 decisions; no duplicate records. **Proposed size:** about 8 blocks (2 S, 3 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M19 Tools 217–228; five new cards accepted for planning on 2026-11-19. Tool 225 is covered by Visitor. M19-03 parking/non-occupancy/facility charges are not reopened; settled M08-04-A/P20 D-52 stays. No implementation is authorized.
+
+**Planning notes:** Scope — Limited tenant/verification details, parking condition and vehicle summaries, booking calendar and facilities-use/service reporting. P52 records five new accepted M19 cards. M19-03 is not reopened: M08-04-A and P20 D-52 continue to exclude parking/non-occupancy fees, and P15 amenity charges stay distinct. M19-05 covers a calendar/clash view only; P35.8 optional booking deposits remain off by default, with receipt, deductions, refunds, cancellation and accounting rules unresolved. No deposit workflow starts before M11/M19 and P16 contracts are approved.
 
 **Kickoff gates:** Define field purpose, audience and retention for tenant, verification, vehicle and usage records. Keep police proof optional/off by default and collect no full ID documents. Preserve P15/P20 behavior. P35.8 optional deposits stay off by default; receipt, deduction, refund, cancellation, reconciliation and accounting rules need M11/M19 and P16 approval before a deposit workflow can start. Verify legal claims against applicable law/bye-laws.
 
 **Tasks:**
 
-| ID                      | Task                                                                      | Dependencies / kickoff gates                                     | Toolkit sources | Status |
-| ----------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------- | ------ |
-| <a id="p52-1"></a>P52.1 | Add approved tenant details and move checklist/progress linked to P18     | P18, Core/P36; fields, source and access                         | 217, 226        | ⬜     |
-| <a id="p52-2"></a>P52.2 | Add optional verification status and expanded agreement metadata          | P18; no ID copies; legal, source, access and retention           | 218, 219        | ⬜     |
-| <a id="p52-3"></a>P52.3 | Add parking condition/status and read-only vacancy/vehicle summaries      | P20/P17; purpose, access and retention; no fees                  | 221, 222        | ⬜     |
-| <a id="p52-4"></a>P52.4 | Add a distinct amenity calendar/clash view over P15 bookings              | P15; booking/payment rules unchanged; deposit rules remain gated | 223             | ⬜     |
-| <a id="p52-5"></a>P52.5 | Add amenity-use/issue records and source-linked facilities/service report | P15, P28, P14, P13 and P16; roles and source ownership           | 227, 228        | ⬜     |
+| ID                      | Task                                                                      | Size | Depends on                                                       | Sources  | Status |
+| ----------------------- | ------------------------------------------------------------------------- | ---- | ---------------------------------------------------------------- | -------- | ------ |
+| <a id="p52-1"></a>P52.1 | Add approved tenant details and move checklist/progress linked to P18     | M    | P18, Core/P36; fields, source and access                         | 217, 226 | ⬜     |
+| <a id="p52-2"></a>P52.2 | Add optional verification status and expanded agreement metadata          | S    | P18; no ID copies; legal, source, access and retention           | 218, 219 | ⬜     |
+| <a id="p52-3"></a>P52.3 | Add parking condition/status and read-only vacancy/vehicle summaries      | M    | P20/P17; purpose, access and retention; no fees                  | 221, 222 | ⬜     |
+| <a id="p52-4"></a>P52.4 | Add a distinct amenity calendar/clash view over P15 bookings              | S    | P15; booking/payment rules unchanged; deposit rules remain gated | 223      | ⬜     |
+| <a id="p52-5"></a>P52.5 | Add amenity-use/issue records and source-linked facilities/service report | M    | P15, P28, P14, P13 and P16; roles and source ownership           | 227, 228 | ⬜     |
 
 ### Acceptance by task
 
@@ -2383,7 +2407,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its privacy, source and accounting gates; updates and obtains approval for its owning contracts; and passes applicable Section 2.2 checks and its listed tests.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved or enabled live. Deposit accounting and legal/privacy details remain open.
+**Build batch:** B6 — all tasks; P35.8–P35.9 deposits follow in B7 (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved or enabled live. Deposit accounting and legal/privacy details remain open.
 
 ---
 
@@ -2391,19 +2417,21 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Goal:** Help admins plan notices, record member contacts that are not service requests and see communication activity, without duplicating P11 notices or P8/P49 service requests and without adding a sending channel.
 
-**Prerequisites:** P11 notice board; P8/P32 service requests and the P49 definitions where relevant; P21, P23 and P30 as read-only sources for the dashboard. Reuse existing notification, audit and module-registry patterns.
+**Prerequisites:** P11 notice board; P8/P32 service requests and the P49 definitions where relevant; P21, P23 and P30 as read-only sources for the dashboard. Reuse existing notification, audit and module-registry patterns. **Proposed size:** about 5 blocks (1 S, 2 M tasks); not approved, confirm or re-split at kickoff.
 
 **Source and approval:** M23 Tools 265, 272 and 276; three decisions accepted for planning on 2026-11-19, with GAP-M23-04 using a modified Option B (separate page, figures derived only from app records). Tools 266–271 and 273–275 extend [P35.13](#p35-13) under GAP-M23-03. No implementation is authorized.
+
+**Planning notes:** Scope — Notice-planning fields, restricted member communication log and a separate derived communication dashboard. P53 records three accepted M23 decisions; GAP-M23-03 extends P35.13 instead of adding a template library. GAP-M23-04 uses a modified Option B: a separate admin communication dashboard counted only from app records, with no manually typed monthly totals and no new P27 metric (D-62 unchanged). No sending channel is added; P37.5/D-06 stay as recorded. All nine M24 insurance/legal/dispute items were rejected because those matters are handled outside the app.
 
 **Kickoff gates:** Agree how new notice statuses map onto P11's existing publish/expiry/withdraw/archive lifecycle; approve the communication log's purpose, fields, audience, access, audit and retention; define each dashboard figure and its source. Do not collect message content beyond an approved summary. No WhatsApp, email or SMS sending; P37.5/D-06 stay unchanged. No new P27 metric (D-62 unchanged).
 
 **Tasks:**
 
-| ID                      | Task                                                                                                                             | Dependencies / kickoff gates                                                                     | Toolkit sources | Status |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | --------------- | ------ |
-| <a id="p53-1"></a>P53.1 | Add notice-planning fields: prepared by, physical display location, priority, draft/scheduled/posted/removed status, next action | P11; status mapping to the existing lifecycle; no duplicate audience/pin/expiry/archive          | 265             | ⬜     |
-| <a id="p53-2"></a>P53.2 | Add a restricted member communication log with follow-up dates and status                                                        | Purpose, fields, access, audit and retention approval; links to, not copies of, service requests | 272             | ⬜     |
-| <a id="p53-3"></a>P53.3 | Add a separate admin communication dashboard derived only from app records                                                       | P11/P23/P30/P21/P8/P49 sources; P53.2 when built; figure definitions; no P27 metric              | 276             | ⬜     |
+| ID                      | Task                                                                                                                             | Size | Depends on                                                                                       | Sources | Status |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------ | ------- | ------ |
+| <a id="p53-1"></a>P53.1 | Add notice-planning fields: prepared by, physical display location, priority, draft/scheduled/posted/removed status, next action | S    | P11; status mapping to the existing lifecycle; no duplicate audience/pin/expiry/archive          | 265     | ⬜     |
+| <a id="p53-2"></a>P53.2 | Add a restricted member communication log with follow-up dates and status                                                        | M    | Purpose, fields, access, audit and retention approval; links to, not copies of, service requests | 272     | ⬜     |
+| <a id="p53-3"></a>P53.3 | Add a separate admin communication dashboard derived only from app records                                                       | M    | P11/P23/P30/P21/P8/P49 sources; P53.2 when built; figure definitions; no P27 metric              | 276     | ⬜     |
 
 ### Acceptance by task
 
@@ -2417,7 +2445,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Completion criteria:** each task closes its lifecycle, privacy and figure-definition gates; updates and obtains approval for its owning contracts; and passes applicable Section 2.2 checks and its listed tests.
 
-**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, not estimated, not released, not owner-UAT-approved or enabled live.
+**Build batch:** B3 — all tasks (Section 2.6 build batches).
+
+**Status:** ⬜ Accepted for planning only, 2026-11-19. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved or enabled live.
 
 ---
 
