@@ -820,6 +820,15 @@ Migration `20261115130000_staff_module.sql`. All staff RPCs check the `staff` mo
 - `staff_settings_update` changes the audited `resident_approval_required` setting (default `true`). `staff_list` limits residents to their unit-linked domestic staff and hides a duplicate profile until its link is approved. `staff_gate_list` returns only name, photo, role, status and unit/day-block state; phone and ID details are omitted.
 - The database RPCs implement registration, settings, profile/link management, review, day blocks, gate entry/exit, monthly attendance, society shifts and retention. The daily retention job removes expired closed staff attendance.
 
+**P48 additions (D-68).** Migration `20261124100000_staff_employment_notes.sql`.
+
+- `staff_members` gains society-staff-only employment columns: `department` and `designation` (1–80, trimmed), `employment_type` (`permanent | contract | daily_wage | part_time`), `joining_date`, `weekly_off` (`monday`–`sunday`), `employment_status` (`active | on_notice | left`, default `active`) and `exit_date`. A check keeps the optional columns null for domestic staff, requires `exit_date` exactly when `left`, and requires `exit_date` on or after `joining_date`. There are no pay columns (D-19).
+- `staff_admin_save` is replaced with a version that takes seven optional trailing employment parameters (existing 13-argument callers keep working) and records them in its audit payload. `staff_list` returns the employment fields to admins only; committee members also get `employment_status`.
+- `staff_list` also lets committee members read society staff (not domestic staff), with photo and ID fields returned as null.
+- `left` is the STF-14 blocked state. Employment fields exist only for society staff, and the gate entry RPCs handle domestic staff only (whose status is always `active`), so no gate RPC changes. Admin and committee lists show Left with the blocked chip. Setting the employment status back to `active` removes it; the separate society-wide `status` is unchanged. If society staff ever gain gate entry, that flow must refuse `left` with the STF-7 warning.
+- `staff_performance_notes`: same-society FK to a society staff member (`ON DELETE RESTRICT`), `note_date`, `category` (`training_needed | warning | appraisal | appreciation | other`), optional `rating` 1–5, `note` 1–2,000, optional `action` ≤ 500 and `follow_up_date`, `status` `open | closed` (default `open`), actor/timestamps. Direct access is revoked.
+- `staff_note_list(society, staff)` returns notes to admins and committee members. `staff_note_save` (admin) creates a note or edits one the caller wrote; `staff_note_delete` (admin) removes any note. All three writes are audited with the note ID, staff ID, category, rating, status and dates, never the note, action text or the deleted content (STF-15). Residents, guards and the staff member have no path to notes.
+
 ### 9.3 Housekeeping inventory tables (P13)
 
 Migration `20261115140000_housekeeping_inventory.sql`. Both tables deny direct authenticated access; security-definer RPCs authorize the enabled module and writable society where required.

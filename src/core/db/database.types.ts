@@ -8283,11 +8283,17 @@ export type Database = {
         Row: {
           created_at: string;
           created_by: string;
+          department: string | null;
+          designation: string | null;
+          employment_status: string;
+          employment_type: string | null;
+          exit_date: string | null;
           full_name: string;
           id: string;
           id_last_four: string | null;
           id_type: string | null;
           job_role: string;
+          joining_date: string | null;
           phone: string;
           photo_path: string | null;
           police_verified: boolean;
@@ -8297,16 +8303,23 @@ export type Database = {
           status: string;
           updated_at: string;
           updated_by: string | null;
+          weekly_off: string | null;
         };
         ComputedFields: never;
         Insert: {
           created_at?: string;
           created_by?: string;
+          department?: string | null;
+          designation?: string | null;
+          employment_status?: string;
+          employment_type?: string | null;
+          exit_date?: string | null;
           full_name: string;
           id?: string;
           id_last_four?: string | null;
           id_type?: string | null;
           job_role: string;
+          joining_date?: string | null;
           phone: string;
           photo_path?: string | null;
           police_verified?: boolean;
@@ -8316,15 +8329,22 @@ export type Database = {
           status?: string;
           updated_at?: string;
           updated_by?: string | null;
+          weekly_off?: string | null;
         };
         Update: {
           created_at?: string;
           created_by?: string;
+          department?: string | null;
+          designation?: string | null;
+          employment_status?: string;
+          employment_type?: string | null;
+          exit_date?: string | null;
           full_name?: string;
           id?: string;
           id_last_four?: string | null;
           id_type?: string | null;
           job_role?: string;
+          joining_date?: string | null;
           phone?: string;
           photo_path?: string | null;
           police_verified?: boolean;
@@ -8334,6 +8354,7 @@ export type Database = {
           status?: string;
           updated_at?: string;
           updated_by?: string | null;
+          weekly_off?: string | null;
         };
         Relationships: [
           {
@@ -8352,6 +8373,87 @@ export type Database = {
           },
           {
             foreignKeyName: 'staff_members_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      staff_performance_notes: {
+        Row: {
+          action: string | null;
+          category: string;
+          created_at: string;
+          created_by: string;
+          follow_up_date: string | null;
+          id: string;
+          note: string;
+          note_date: string;
+          rating: number | null;
+          society_id: string;
+          staff_id: string;
+          status: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          action?: string | null;
+          category: string;
+          created_at?: string;
+          created_by?: string;
+          follow_up_date?: string | null;
+          id?: string;
+          note: string;
+          note_date: string;
+          rating?: number | null;
+          society_id: string;
+          staff_id: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          action?: string | null;
+          category?: string;
+          created_at?: string;
+          created_by?: string;
+          follow_up_date?: string | null;
+          id?: string;
+          note?: string;
+          note_date?: string;
+          rating?: number | null;
+          society_id?: string;
+          staff_id?: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'staff_performance_notes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_performance_notes_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'staff_performance_notes_staff_fkey';
+            columns: ['society_id', 'staff_id'];
+            isOneToOne: false;
+            referencedRelation: 'staff_members';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'staff_performance_notes_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -13259,10 +13361,16 @@ export type Database = {
       };
       staff_admin_save: {
         Args: {
+          p_department?: string;
+          p_designation?: string;
+          p_employment_status?: string;
+          p_employment_type?: string;
+          p_exit_date?: string;
           p_full_name: string;
           p_id_last_four: string;
           p_id_type: string;
           p_job_role: string;
+          p_joining_date?: string;
           p_phone: string;
           p_photo_path: string;
           p_police_verified: boolean;
@@ -13272,6 +13380,7 @@ export type Database = {
           p_staff_type: string;
           p_status: string;
           p_unit_ids: string[];
+          p_weekly_off?: string;
         };
         Returns: string;
       };
@@ -13303,6 +13412,31 @@ export type Database = {
         Returns: Json;
       };
       staff_list: { Args: { p_society_id: string }; Returns: Json };
+      staff_note_delete: {
+        Args: { p_note_id: string; p_request_id: string; p_society_id: string };
+        Returns: undefined;
+      };
+      staff_note_list: {
+        Args: { p_society_id: string; p_staff_id: string };
+        Returns: Json;
+      };
+      staff_note_save: {
+        Args: {
+          p_action: string;
+          p_category: string;
+          p_expected_updated_at: string;
+          p_follow_up_date: string;
+          p_note: string;
+          p_note_date: string;
+          p_note_id: string;
+          p_rating: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_staff_id: string;
+          p_status: string;
+        };
+        Returns: string;
+      };
       staff_resident_day_block: {
         Args: {
           p_request_id: string;

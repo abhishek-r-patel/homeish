@@ -397,6 +397,12 @@ Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members
 
 Residents use `/staff`; admins use `/admin/staff`; identified guards use `/guard/staff`. Each server action re-authorizes the caller and validates a strict payload before calling the database RPC.
 
+**Staff-record additions (P48, D-68).** Database contract in DATABASE.md §9.2. New permissions `staff:notes:read` (admin, committee) and `staff:notes:manage` (admin); committee navigation gains **Staff** at `/admin/staff`, showing society staff with notes and no write controls.
+
+- `staff.save` accepts `department`, `designation`, `employmentType`, `joiningDate`, `weeklyOff`, `employmentStatus` and `exitDate` for society staff only; they are rejected for domestic staff. `exitDate` is required with `left`.
+- `staff.notes.list` (A, C): notes for one society staff member, newest first.
+- `staff.notes.save` (A): create, or edit a note the caller wrote, with an `expectedUpdatedAt` check. `staff.notes.delete` (A) asks for confirmation in the UI. Audits exclude note text.
+
 ### 5.11 Housekeeping inventory (`housekeeping`, P13)
 
 Admins use `/admin/housekeeping`; supervisors use `/housekeeping`. Committee members can read the admin workspace and download reports but cannot write.

@@ -487,6 +487,13 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         },
       ],
       resident: [{ href: '/staff', label: 'Staff', permission: 'staff:list' }],
+      committee: [
+        {
+          href: '/admin/staff',
+          label: 'Staff',
+          permission: 'staff:notes:read',
+        },
+      ],
     },
     permissions: {
       'staff:list': ['admin', 'resident'],
@@ -497,6 +504,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'staff:attendance': ['admin', 'resident'],
       'staff:day_block': ['resident'],
       'staff:gate': ['guard'],
+      'staff:notes:read': ['admin', 'committee'],
+      'staff:notes:manage': ['admin'],
     },
     settingsAccess: emptySettingsAccess,
     settingsSchema: staffSettingsSchema,
@@ -1162,6 +1171,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'delivery',
     'notice',
     'housekeeping',
+    'staff',
     'amc',
     'amenity',
     'directory',

@@ -5,7 +5,10 @@ import {
   StaffAdminProfileForm,
   StaffApprovalForm,
   StaffApprovalSetting,
+  StaffEmploymentChips,
+  StaffNotesPanel,
 } from '@/components/staff/admin-controls';
+import { Banner } from '@/components/ui/feedback';
 import {
   getSocietyStaffAttendance,
   getStaffSettings,
@@ -40,11 +43,12 @@ function localDate(timeZone: string) {
 export default async function AdminStaffPage() {
   const locale = await getRequestLocale();
   const t = (source: string) => translateMessage(locale, source);
-  const [workspace, settings] = await Promise.all([
-    getStaffWorkspace(),
-    getStaffSettings(),
-  ]);
+  const workspace = await getStaffWorkspace();
   const today = localDate(workspace.timezone);
+  if (!workspace.canManage) {
+    return <CommitteeStaffView today={today} workspace={workspace} />;
+  }
+  const settings = await getStaffSettings();
   const [year, month] = today.split('-');
   const monthStart = `${year}-${month}-01`;
   const shifts = await getSocietyStaffAttendance(monthStart);
@@ -138,6 +142,7 @@ export default async function AdminStaffPage() {
                         : t('Domestic staff')}{' '}
                       · {staff.status}
                     </span>
+                    <StaffEmploymentChips staff={staff} />
                   </span>
                 </summary>
                 <div className="mt-space-4 grid gap-space-5">
@@ -146,13 +151,22 @@ export default async function AdminStaffPage() {
                     units={workspace.units}
                   />
                   {staff.staff_type === 'society' ? (
-                    <SocietyStaffShiftCard
-                      attendance={shifts.filter(
-                        ({ staff_id }) => staff_id === staff.id,
-                      )}
-                      staff={staff}
-                      today={today}
-                    />
+                    <>
+                      <SocietyStaffShiftCard
+                        attendance={shifts.filter(
+                          ({ staff_id }) => staff_id === staff.id,
+                        )}
+                        staff={staff}
+                        today={today}
+                      />
+                      <StaffNotesPanel
+                        canManage
+                        notes={workspace.notesByStaffId[staff.id] ?? []}
+                        staffId={staff.id}
+                        staffName={staff.full_name}
+                        today={today}
+                      />
+                    </>
                   ) : null}
                 </div>
               </details>
@@ -170,6 +184,63 @@ export default async function AdminStaffPage() {
           residentApprovalRequired={settings.residentApprovalRequired}
         />
       </Card>
+    </section>
+  );
+}
+
+async function CommitteeStaffView({
+  workspace,
+  today,
+}: {
+  workspace: Awaited<ReturnType<typeof getStaffWorkspace>>;
+  today: string;
+}) {
+  const locale = await getRequestLocale();
+  const t = (source: string) => translateMessage(locale, source);
+  const societyStaff = workspace.staff.filter(
+    ({ staff_type }) => staff_type === 'society',
+  );
+  return (
+    <section className="grid gap-space-5">
+      <header className="grid gap-space-2">
+        <h1 className="text-title font-semibold">{t('Society staff')}</h1>
+        <Banner title={t('View only')} tone="info">
+          {t('Committee members can read notes but cannot change them.')}
+        </Banner>
+      </header>
+      {societyStaff.length ? (
+        <div className="grid gap-space-4">
+          {societyStaff.map((staff) => (
+            <details
+              className="rounded-md border border-rule p-space-4"
+              key={staff.id}
+            >
+              <summary className="cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-focus">
+                <span className="inline-flex flex-wrap items-center gap-space-3">
+                  <Avatar name={staff.full_name} />
+                  <span className="text-caption text-ink-muted">
+                    {staff.job_role} · {staff.status}
+                  </span>
+                  <StaffEmploymentChips staff={staff} />
+                </span>
+              </summary>
+              <div className="mt-space-4">
+                <StaffNotesPanel
+                  canManage={false}
+                  notes={workspace.notesByStaffId[staff.id] ?? []}
+                  staffId={staff.id}
+                  staffName={staff.full_name}
+                  today={today}
+                />
+              </div>
+            </details>
+          ))}
+        </div>
+      ) : (
+        <p className="text-body text-ink-muted">
+          {t('No society staff have been added yet.')}
+        </p>
+      )}
     </section>
   );
 }

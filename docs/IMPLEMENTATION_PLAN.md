@@ -219,7 +219,7 @@ Arrows only stack the groups for reading; they are not a build order (Section 2.
 | P36   | Unit and ownership records                     | Core                            | Not yet                            | 2 S, 7 M, 1 L | 19     | Core units/occupants; `tenancy`, `document`, `billing`, `parking`, P26 | Toolkit-M03                   | ⬜ Planned only                                          |
 | P37   | Billing additions                              | `billing`                       | Not yet; changes D-12, D-06        | 2 S, 2 M, 1 L | 9      | `billing` charges, bills and ledger; P35.1                             | Toolkit-M08                   | ⬜ Planned only                                          |
 | P38   | Dues and arrears                               | `billing`                       | Not yet                            | 3 M, 1 L      | 9      | `billing` due dates, payments and unit ledger                          | Toolkit-M09                   | ⬜ Planned only                                          |
-| P39   | Accounts and cash book                         | `expense`                       | Not yet                            | 3 S, 3 M      | 9      | P16 books and reports; P40 fund map                                    | Toolkit-M11                   | ⬜ Planned only |
+| P39   | Accounts and cash book                         | `expense`                       | Not yet                            | 3 S, 3 M      | 9      | P16 books and reports; P40 fund map                                    | Toolkit-M11                   | ⬜ Planned only  |
 | P40   | Fund management                                | `expense`                       | Not yet                            | 2 S, 6 M, 1 L | 17     | P16; P39.5; P37.3; M17 review                                          | Toolkit-M10 + Toolkit-M13     | ⬜ Planned only                                          |
 | P41   | Financial statements and reports               | `expense`; Core analytics       | Not yet; re-check D-39             | 2 S, 5 M      | 12     | P16, P27; P39, P40; approved budget source                             | Toolkit-M12 + Toolkit-M20     | ⬜ Planned only                                          |
 | P42   | Expense control and reporting                  | `expense`                       | Not yet                            | 3 S, 1 M      | 5      | P16, P24, P27; approved budget source                                  | Toolkit-M13                   | ⬜ Planned only                                          |
@@ -228,8 +228,8 @@ Arrows only stack the groups for reading; they are not a build order (Section 2.
 | P45   | Meeting agenda enhancements                    | `meeting`                       | Not yet                            | 1 M           | 2      | P23; P43.5                                                             | Toolkit-M06                   | ⬜ Planned only                                          |
 | P46   | Election governance and gated official voting  | `meeting`, `poll`               | Not yet                            | 2 M, 1 L      | 7      | P19, P22, P23, P44; legal checks                                       | Toolkit-M07                   | ⬜ Planned only                                          |
 | P47   | Vendor, contract and AMC additions             | `vendor`, `amc`                 | Not yet; changes AMC-2, AMC-7      | 3 S, 5 M      | 13     | P14, P24, P16, P28                                                     | Toolkit-M14                   | ⬜ Planned only                                          |
-| P48   | Staff record additions                         | `staff`                         | Not yet                            | 2 S           | 2      | P12                                                                    | Toolkit-M15                   | ⬜ Planned only |
-| P49   | Helpdesk additions                             | `service_request`               | Not yet; changes SRQ-1/3/5/6, D-59 | 4 S, 4 M      | 12     | P8, P32, P24                                                           | Toolkit-M16                   | ⬜ Planned only |
+| P48   | Staff record additions                         | `staff`                         | Not yet                            | 2 S           | 2      | P12                                                                    | Toolkit-M15                   | 🟡 Built locally                                         |
+| P49   | Helpdesk additions                             | `service_request`               | Not yet; changes SRQ-1/3/5/6, D-59 | 4 S, 4 M      | 12     | P8, P32, P24                                                           | Toolkit-M16                   | ⬜ Planned only  |
 | P50   | Repairs and redevelopment                      | New optional module             | Not yet                            | 1 S, 5 M      | 11     | P40.9; P16, P24, P23                                                   | Toolkit-M17                   | ⬜ Planned only                                          |
 | P51   | Transfer and clearance                         | `tenancy`                       | Not yet; changes TEN-3, D-50       | 1 S, 2 M, 1 L | 8      | P18, `billing`, P23; P35.10–P35.12                                     | Toolkit-M18                   | ⬜ Planned only                                          |
 | P52   | Tenant, parking and facilities                 | `tenancy`, `parking`, `amenity` | Not yet                            | 2 S, 3 M      | 8      | P18, P20, P15, P14, P28, P16                                           | Toolkit-M19                   | ⬜ Planned only                                          |
@@ -2217,21 +2217,23 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 | ID                      | Task                                                                                                                     | Size | Depends on                      | Sources  | Status |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---- | ------------------------------- | -------- | ------ |
-| <a id="p48-1"></a>P48.1 | Add department, designation, employment type, joining date, weekly off, status `Active / On Notice / Left` and exit date | S    | P12; no salary fields; D-18     | 169, 172 | ⬜     |
-| <a id="p48-2"></a>P48.2 | Add admin-only staff performance notes with follow-up                                                                    | S    | P48.1; access, audit, retention | 179      | ⬜     |
+| <a id="p48-1"></a>P48.1 | Add department, designation, employment type, joining date, weekly off, status `Active / On Notice / Left` and exit date | S    | P12; no salary fields; D-18     | 169, 172 | 🟡     |
+| <a id="p48-2"></a>P48.2 | Add admin-only staff performance notes with follow-up                                                                    | S    | P48.1; access, audit, retention | 179      | 🟡     |
 
 ### Acceptance by task
 
 - **P48.1 — employment details (GAP-M15-01).** Employment type `Permanent, Contract, Daily Wage, Part-time`. "Left" with exit date is distinct from today's Active/Blocked entry status and does not change gate behavior unless approved. Attendance meanings are unchanged.
 - **P48.2 — performance notes (GAP-M15-04).** Date, category (approved list; toolkit examples Training Needed, Warning, Appraisal), rating 1–5, note, action, follow-up date, recorded by and Open/Closed. Visible only to approved admins; never to residents, guards or the staff member's linked units; audited; deleted per approved retention.
 
-**Database and API changes:** planned only; decided at kickoff.
+**Database and API changes:** migration `20261124100000_staff_employment_notes.sql` (DATABASE.md §9.2 P48 additions); permissions and committee navigation in API.md; contract STF-13–STF-15 (D-68).
 
-**Tests to add when implementing:** field validation, access denial for non-admins, audit and retention; existing P12 tests stay green.
+**Status:** 🟡 implemented and tested locally on `feature-build-2`; generated database types are refreshed after the approved testdb push; owner UAT and release pending.
+
+**Tests:** `tests/unit/staff-validation.test.ts` (employment rules, note version and rating), `tests/integration/database-staff.test.ts` (domestic rejection, committee/admin views, note access, stale and other-writer edits, audits without note text) and `tests/e2e/staff.spec.ts` (employment chips, Left save, notes add/delete, committee read-only view); existing P12 tests stay green.
 
 **Completion criteria:** each task closes its gates, updates and obtains approval for its owning contracts, and passes applicable Section 2.2 checks and its listed tests.
 
-**Build batch:** B1 — all tasks (Section 2.6 build batches).
+**Build batch:** B1 — all tasks (Section 2.6 build batches). Kickoff answers recorded 2026-11-19 and approved as PRD D-68 (STF-13–STF-15).
 
 **Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. Payroll is deferred/backlog with no planned work.
 

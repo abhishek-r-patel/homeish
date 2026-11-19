@@ -726,6 +726,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **R-06 My staff:** unit-linked staff, pending registration state, same-month entry/exit history and an explicitly confirmed unit-only block for today. Registration asks for a photo, name, phone, role and optional ID type/last four; it never asks for a full ID document.
 - **A-13 Staff:** add/edit staff, assign domestic staff to units, block profiles society-wide, review pending unit links (including duplicate matches), configure the default-on approval requirement and record or correct one society-staff shift status per date.
 - The guard screen is deliberately minimal: staff name, portrait, role and access warning only. Avoid showing contact or ID data in guard cards and action responses.
+- **Employment and notes (P48, D-68):** society-staff edit forms add an **Employment** fieldset (department, designation, type, joining date, weekly off, status; exit date appears and is required only for **Left**). Lists show **On notice** and **Left** as word chips; Left also shows the blocked state. A society-staff detail panel adds **Performance notes**, newest first, with category, rating as text ("4 out of 5"), follow-up date and Open/Closed. Admins add, edit their own and delete with confirmation; committee members see the same panels under a single page-level **View only** banner, with phone and job role but no photo or ID details. Domestic staff show no employment or notes controls.
 
 ### 12.8 Housekeeping inventory, AMC, amenities and tenancy (P13–P15, P18)
 
