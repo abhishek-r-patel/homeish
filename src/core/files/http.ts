@@ -13,7 +13,10 @@ import { logUnexpectedError } from '../logging/error-logger';
 import { buildRequestContext } from '../tenancy/request-context';
 import type { RequestContext } from '../tenancy/request-context';
 
-export async function readFileRequestBody(request: Request): Promise<unknown> {
+export async function readFileRequestBody(
+  request: Request,
+  maxBytes = 8_192,
+): Promise<unknown> {
   if (
     request.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() !==
     'application/json'
@@ -23,7 +26,7 @@ export async function readFileRequestBody(request: Request): Promise<unknown> {
   const declaredLength = request.headers.get('content-length');
   if (declaredLength !== null) {
     const size = Number(declaredLength);
-    if (!Number.isSafeInteger(size) || size < 0 || size > 8_192) {
+    if (!Number.isSafeInteger(size) || size < 0 || size > maxBytes) {
       throw new ValidationError({ body: 'The request body is too large.' });
     }
   }
@@ -36,7 +39,7 @@ export async function readFileRequestBody(request: Request): Promise<unknown> {
     const { done, value } = await reader.read();
     if (done) break;
     totalBytes += value.byteLength;
-    if (totalBytes > 8_192) {
+    if (totalBytes > maxBytes) {
       await reader.cancel();
       throw new ValidationError({ body: 'The request body is too large.' });
     }

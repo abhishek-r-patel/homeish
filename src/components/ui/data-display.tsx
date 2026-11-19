@@ -200,6 +200,18 @@ export const statusMap = {
   'vendor_bill.cancelled': { icon: '/', label: 'Cancelled', tone: 'neutral' },
   'vendor_bill.due_soon': { icon: '◷', label: 'Due Soon', tone: 'warning' },
   'vendor_bill.overdue': { icon: '!', label: 'Overdue', tone: 'danger' },
+  'action_task.done': { icon: '✓', label: 'Done', tone: 'success' },
+  'action_task.overdue': { icon: '!', label: 'Overdue', tone: 'danger' },
+  'action_task.upcoming': { icon: '◷', label: 'Upcoming', tone: 'neutral' },
+  'action_task.on_track': { icon: '→', label: 'On track', tone: 'info' },
+  'profile_field.filled': { icon: '✓', label: 'Filled', tone: 'success' },
+  'profile_field.missing': { icon: '!', label: 'Missing', tone: 'warning' },
+  'profile_field.optional': { icon: '•', label: 'Optional', tone: 'neutral' },
+  'profile_field.not_applicable': {
+    icon: '/',
+    label: 'Not applicable',
+    tone: 'neutral',
+  },
 } as const satisfies Record<string, StatusDefinition>;
 
 export type ProductStatus = keyof typeof statusMap;

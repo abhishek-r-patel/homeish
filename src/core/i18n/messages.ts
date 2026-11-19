@@ -5,9 +5,11 @@ import { HI_COMMON } from './catalogs/hi-common';
 import { HI_COMPONENTS } from './catalogs/hi-components';
 import { HI_ENGAGEMENT } from './catalogs/hi-engagement';
 import { HI_GUARD } from './catalogs/hi-guard';
+import { HI_HELP_LETTERS } from './catalogs/hi-help-letters';
 import { HI_MANAGEMENT } from './catalogs/hi-management';
 import { HI_OPERATIONS } from './catalogs/hi-operations';
 import { HI_RESIDENT } from './catalogs/hi-resident';
+import { HI_TOOLKIT } from './catalogs/hi-toolkit';
 import { HI_UI } from './catalogs/hi-ui';
 import { formatLocalizedDate, formatLocalizedNumber } from './format';
 
@@ -54,6 +56,8 @@ export const HINDI_MESSAGES: Readonly<Record<string, string>> = {
   ...HI_OPERATIONS,
   ...HI_GUARD,
   ...HI_UI,
+  ...HI_TOOLKIT,
+  ...HI_HELP_LETTERS,
 };
 
 export type MessageValues = Readonly<Record<string, string | number>>;

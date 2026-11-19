@@ -44,6 +44,7 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   meeting_action: '/meetings/actions',
   meeting_action_admin: '/admin/meetings/actions',
   community_admin: '/admin/community',
+  committee_action_plan: '/action-plans',
 };
 
 export function notificationPath(

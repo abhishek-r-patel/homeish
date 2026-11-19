@@ -1648,6 +1648,197 @@ export type Database = {
           },
         ];
       };
+      committee_action_plan_tasks: {
+        Row: {
+          category: string;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          end_day: number;
+          evidence_url: string | null;
+          id: string;
+          meeting_action_item_id: string | null;
+          notes: string | null;
+          owner_membership_id: string | null;
+          plan_id: string;
+          priority: string;
+          progress: number;
+          society_id: string;
+          start_day: number;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          category: string;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          end_day: number;
+          evidence_url?: string | null;
+          id?: string;
+          meeting_action_item_id?: string | null;
+          notes?: string | null;
+          owner_membership_id?: string | null;
+          plan_id: string;
+          priority: string;
+          progress?: number;
+          society_id: string;
+          start_day: number;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          category?: string;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          end_day?: number;
+          evidence_url?: string | null;
+          id?: string;
+          meeting_action_item_id?: string | null;
+          notes?: string | null;
+          owner_membership_id?: string | null;
+          plan_id?: string;
+          priority?: string;
+          progress?: number;
+          society_id?: string;
+          start_day?: number;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'committee_action_plan_tasks_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plan_tasks_meeting_action_same_society_fkey';
+            columns: ['society_id', 'meeting_action_item_id'];
+            isOneToOne: true;
+            referencedRelation: 'meeting_action_items';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plan_tasks_owner_same_society_fkey';
+            columns: ['society_id', 'owner_membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plan_tasks_plan_same_society_fkey';
+            columns: ['society_id', 'plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'committee_action_plans';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plan_tasks_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plan_tasks_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      committee_action_plans: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          society_id: string;
+          start_on: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          society_id: string;
+          start_on: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          society_id?: string;
+          start_on?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'committee_action_plans_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plans_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plans_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plans_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       community_group_members: {
         Row: {
           group_id: string;
@@ -4660,6 +4851,55 @@ export type Database = {
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      letter_generation_logs: {
+        Row: {
+          generated_at: string;
+          generated_by: string;
+          id: string;
+          letter_type: string;
+          request_id: string | null;
+          society_id: string;
+          source_id: string | null;
+          source_type: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          generated_at?: string;
+          generated_by: string;
+          id?: string;
+          letter_type: string;
+          request_id?: string | null;
+          society_id: string;
+          source_id?: string | null;
+          source_type?: string | null;
+        };
+        Update: {
+          generated_at?: string;
+          generated_by?: string;
+          id?: string;
+          letter_type?: string;
+          request_id?: string | null;
+          society_id?: string;
+          source_id?: string | null;
+          source_type?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'letter_generation_logs_generated_by_fkey';
+            columns: ['generated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'letter_generation_logs_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
             referencedColumns: ['id'];
           },
         ];
@@ -8692,6 +8932,237 @@ export type Database = {
           },
         ];
       };
+      society_capability_adoptions: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          module_key: string;
+          notes: string | null;
+          owner_membership_id: string | null;
+          priority: string;
+          review_on: string | null;
+          society_id: string;
+          status: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          module_key: string;
+          notes?: string | null;
+          owner_membership_id?: string | null;
+          priority?: string;
+          review_on?: string | null;
+          society_id: string;
+          status?: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          module_key?: string;
+          notes?: string | null;
+          owner_membership_id?: string | null;
+          priority?: string;
+          review_on?: string | null;
+          society_id?: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_capability_adoptions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_capability_adoptions_module_key_fkey';
+            columns: ['module_key'];
+            isOneToOne: false;
+            referencedRelation: 'modules';
+            referencedColumns: ['key'];
+          },
+          {
+            foreignKeyName: 'society_capability_adoptions_owner_same_society_fkey';
+            columns: ['society_id', 'owner_membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'society_capability_adoptions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_capability_adoptions_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      society_reference_profiles: {
+        Row: {
+          arrears_interest_reference: string | null;
+          auditor_category: string | null;
+          auditor_name: string | null;
+          bank_account_last4: string | null;
+          bank_name: string | null;
+          built_up_area_sq_ft: number | null;
+          bye_laws_adopted_on: string | null;
+          chairman_mobile: string | null;
+          chairman_name: string | null;
+          committee_size: number | null;
+          committee_term_months: number | null;
+          construction_year: number | null;
+          created_at: string;
+          created_by: string;
+          financial_year_start_month: number | null;
+          grace_period_reference: string | null;
+          ifsc: string | null;
+          last_agm_on: string | null;
+          last_election_on: string | null;
+          maintenance_rate_reference: string | null;
+          pan: string | null;
+          parking_count: number | null;
+          pin_code: string | null;
+          registration_authority: string | null;
+          registration_date: string | null;
+          registration_number: string | null;
+          secretary_mobile: string | null;
+          secretary_name: string | null;
+          sinking_fund_rate_reference: string | null;
+          society_id: string;
+          society_type: string | null;
+          state: string | null;
+          statutory_members_count: number | null;
+          treasurer_mobile: string | null;
+          treasurer_name: string | null;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+          wings_count: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          arrears_interest_reference?: string | null;
+          auditor_category?: string | null;
+          auditor_name?: string | null;
+          bank_account_last4?: string | null;
+          bank_name?: string | null;
+          built_up_area_sq_ft?: number | null;
+          bye_laws_adopted_on?: string | null;
+          chairman_mobile?: string | null;
+          chairman_name?: string | null;
+          committee_size?: number | null;
+          committee_term_months?: number | null;
+          construction_year?: number | null;
+          created_at?: string;
+          created_by: string;
+          financial_year_start_month?: number | null;
+          grace_period_reference?: string | null;
+          ifsc?: string | null;
+          last_agm_on?: string | null;
+          last_election_on?: string | null;
+          maintenance_rate_reference?: string | null;
+          pan?: string | null;
+          parking_count?: number | null;
+          pin_code?: string | null;
+          registration_authority?: string | null;
+          registration_date?: string | null;
+          registration_number?: string | null;
+          secretary_mobile?: string | null;
+          secretary_name?: string | null;
+          sinking_fund_rate_reference?: string | null;
+          society_id: string;
+          society_type?: string | null;
+          state?: string | null;
+          statutory_members_count?: number | null;
+          treasurer_mobile?: string | null;
+          treasurer_name?: string | null;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+          wings_count?: number | null;
+        };
+        Update: {
+          arrears_interest_reference?: string | null;
+          auditor_category?: string | null;
+          auditor_name?: string | null;
+          bank_account_last4?: string | null;
+          bank_name?: string | null;
+          built_up_area_sq_ft?: number | null;
+          bye_laws_adopted_on?: string | null;
+          chairman_mobile?: string | null;
+          chairman_name?: string | null;
+          committee_size?: number | null;
+          committee_term_months?: number | null;
+          construction_year?: number | null;
+          created_at?: string;
+          created_by?: string;
+          financial_year_start_month?: number | null;
+          grace_period_reference?: string | null;
+          ifsc?: string | null;
+          last_agm_on?: string | null;
+          last_election_on?: string | null;
+          maintenance_rate_reference?: string | null;
+          pan?: string | null;
+          parking_count?: number | null;
+          pin_code?: string | null;
+          registration_authority?: string | null;
+          registration_date?: string | null;
+          registration_number?: string | null;
+          secretary_mobile?: string | null;
+          secretary_name?: string | null;
+          sinking_fund_rate_reference?: string | null;
+          society_id?: string;
+          society_type?: string | null;
+          state?: string | null;
+          statutory_members_count?: number | null;
+          treasurer_mobile?: string | null;
+          treasurer_name?: string | null;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+          wings_count?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_reference_profiles_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_reference_profiles_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_reference_profiles_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       sos_alert_events: {
         Row: {
           action: string;
@@ -11889,6 +12360,65 @@ export type Database = {
         Returns: undefined;
       };
       claim_memberships: { Args: Record<PropertyKey, never>; Returns: number };
+      committee_action_plan_create_sample: {
+        Args: {
+          p_client_request_id: string;
+          p_name: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_start_on: string;
+        };
+        Returns: string;
+      };
+      committee_action_plan_save: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_name: string;
+          p_notes: string;
+          p_plan_id: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_start_on: string;
+        };
+        Returns: string;
+      };
+      committee_action_plan_set_archived: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_plan_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      committee_action_plan_task_save: {
+        Args: {
+          p_category: string;
+          p_client_request_id: string;
+          p_end_day: number;
+          p_evidence_url: string;
+          p_expected_version: number;
+          p_meeting_action_item_id: string;
+          p_notes: string;
+          p_owner_membership_id: string;
+          p_plan_id: string;
+          p_priority: string;
+          p_progress: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_start_day: number;
+          p_status: string;
+          p_task_id: string;
+          p_title: string;
+        };
+        Returns: string;
+      };
+      committee_action_plans_get: {
+        Args: { p_include_archived?: boolean; p_society_id: string };
+        Returns: Json;
+      };
       community_admin_groups: { Args: { p_society_id: string }; Returns: Json };
       community_admin_item_get: {
         Args: {
@@ -13473,6 +14003,20 @@ export type Database = {
           p_to: string;
         };
         Returns: Json;
+      };
+      letter_generation_logs_get: {
+        Args: { p_limit?: number; p_society_id: string };
+        Returns: Json;
+      };
+      letter_generation_record: {
+        Args: {
+          p_letter_type: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_source_id: string;
+          p_source_type: string;
+        };
+        Returns: string;
       };
       list_household_members: {
         Args: { p_unit_id: string };
@@ -15164,6 +15708,24 @@ export type Database = {
         };
         Returns: undefined;
       };
+      society_capability_adoption_save: {
+        Args: {
+          p_expected_version: number;
+          p_module_key: string;
+          p_notes: string;
+          p_owner_membership_id: string;
+          p_priority: string;
+          p_request_id: string;
+          p_review_on: string;
+          p_society_id: string;
+          p_status: string;
+        };
+        Returns: Json;
+      };
+      society_capability_adoptions_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
       society_host_lookup: {
         Args: { p_slug: string };
         Returns: {
@@ -15171,6 +15733,19 @@ export type Database = {
           name: string;
           status: string;
         }[];
+      };
+      society_reference_profile_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      society_reference_profile_save: {
+        Args: {
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_values: Json;
+        };
+        Returns: Json;
       };
       sos_acknowledge: {
         Args: {

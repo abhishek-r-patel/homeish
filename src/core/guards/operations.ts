@@ -196,11 +196,13 @@ export async function addGuard(formData: FormData, requestId: string) {
           : 'Shared gate guards do not use separate accounts.',
     });
   }
-  const addGuardRpc = context.db.rpc.bind(context.db) as unknown as (
-    name: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ error: { code?: string; message: string } | null }>;
-  const { error } = await addGuardRpc('admin_add_guard', {
+  const guardDb = context.db as unknown as {
+    rpc(
+      name: string,
+      args: Record<string, unknown>,
+    ): Promise<{ error: { code?: string; message: string } | null }>;
+  };
+  const { error } = await guardDb.rpc('admin_add_guard', {
     p_society_id: societyId,
     p_name: parsed.data.name,
     p_membership_id: parsed.data.membershipId,
