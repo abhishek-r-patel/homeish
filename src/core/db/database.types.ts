@@ -10502,6 +10502,113 @@ export type Database = {
           },
         ];
       };
+      unit_area_history: {
+        Row: {
+          built_up_sqft: number | null;
+          carpet_sqft: number | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          outdoor_sqft: number | null;
+          society_id: string;
+          source: string;
+          status: string;
+          unit_id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          built_up_sqft?: number | null;
+          carpet_sqft?: number | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          outdoor_sqft?: number | null;
+          society_id: string;
+          source: string;
+          status: string;
+          unit_id: string;
+          version: number;
+        };
+        Update: {
+          built_up_sqft?: number | null;
+          carpet_sqft?: number | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          outdoor_sqft?: number | null;
+          society_id?: string;
+          source?: string;
+          status?: string;
+          unit_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_area_history_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_area_history_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      unit_floor_positions: {
+        Row: {
+          block_id: string | null;
+          floor: number;
+          id: string;
+          map_column: number;
+          map_row: number;
+          society_id: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id?: string | null;
+          floor: number;
+          id?: string;
+          map_column: number;
+          map_row: number;
+          society_id: string;
+          unit_id: string;
+        };
+        Update: {
+          block_id?: string | null;
+          floor?: number;
+          id?: string;
+          map_column?: number;
+          map_row?: number;
+          society_id?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_floor_positions_society_id_block_id_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_floor_positions_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: true;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       unit_occupants: {
         Row: {
           billing_confirmed_move_in_on: string | null;
@@ -10590,6 +10697,77 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
+          },
+        ];
+      };
+      unit_vacancy_followups: {
+        Row: {
+          assigned_to: string;
+          client_request_id: string;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          follow_up_on: string;
+          id: string;
+          inspection_on: string | null;
+          kind: string;
+          society_id: string;
+          starts_on: string;
+          unit_id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          assigned_to: string;
+          client_request_id: string;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by: string;
+          follow_up_on: string;
+          id?: string;
+          inspection_on?: string | null;
+          kind: string;
+          society_id: string;
+          starts_on: string;
+          unit_id: string;
+          version?: number;
+        };
+        Update: {
+          assigned_to?: string;
+          client_request_id?: string;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          follow_up_on?: string;
+          id?: string;
+          inspection_on?: string | null;
+          kind?: string;
+          society_id?: string;
+          starts_on?: string;
+          unit_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_vacancy_followups_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_vacancy_followups_society_id_assigned_to_fkey';
+            columns: ['society_id', 'assigned_to'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_vacancy_followups_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
           },
         ];
       };
@@ -16560,6 +16738,25 @@ export type Database = {
       tenancy_workspace_get: {
         Args: { p_include_targets?: boolean; p_society_id: string };
         Returns: Json;
+      };
+      unit_records_get: {
+        Args: { p_society_id: string; p_unit_id: string };
+        Returns: Json;
+      };
+      unit_records_save: {
+        Args: {
+          p_client_request_id: string;
+          p_kind: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_unit_id: string;
+          p_values: Json;
+        };
+        Returns: boolean;
+      };
+      unit_vacancy_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: number;
       };
       user_erasure_complete: {
         Args: { p_actor_id: string; p_request_id: string; p_user_id: string };
