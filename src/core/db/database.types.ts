@@ -6286,6 +6286,90 @@ export type Database = {
           },
         ];
       };
+      notice_plan_proposals: {
+        Row: {
+          base_plan_updated_at: string | null;
+          client_request_id: string;
+          created_at: string;
+          display_location: string | null;
+          id: string;
+          next_action: string | null;
+          next_action_on: string | null;
+          notice_id: string;
+          prepared_by: string | null;
+          priority: string | null;
+          proposed_by: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          society_id: string;
+          status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          base_plan_updated_at?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          display_location?: string | null;
+          id?: string;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notice_id: string;
+          prepared_by?: string | null;
+          priority?: string | null;
+          proposed_by: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          society_id: string;
+          status?: string;
+        };
+        Update: {
+          base_plan_updated_at?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          display_location?: string | null;
+          id?: string;
+          next_action?: string | null;
+          next_action_on?: string | null;
+          notice_id?: string;
+          prepared_by?: string | null;
+          priority?: string | null;
+          proposed_by?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          society_id?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notice_plan_proposals_proposed_by_fkey';
+            columns: ['proposed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notice_plan_proposals_reviewed_by_fkey';
+            columns: ['reviewed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notice_plan_proposals_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notice_plan_proposals_society_id_notice_id_fkey';
+            columns: ['society_id', 'notice_id'];
+            isOneToOne: false;
+            referencedRelation: 'notices';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       notice_plans: {
         Row: {
           display_location: string | null;
@@ -6405,6 +6489,7 @@ export type Database = {
           pinned: boolean;
           published_at: string | null;
           scheduled_for: string | null;
+          scheduled_notified_at: string | null;
           society_id: string;
           status: string;
           title: string;
@@ -6429,6 +6514,7 @@ export type Database = {
           pinned?: boolean;
           published_at?: string | null;
           scheduled_for?: string | null;
+          scheduled_notified_at?: string | null;
           society_id: string;
           status?: string;
           title: string;
@@ -6452,6 +6538,7 @@ export type Database = {
           pinned?: boolean;
           published_at?: string | null;
           scheduled_for?: string | null;
+          scheduled_notified_at?: string | null;
           society_id?: string;
           status?: string;
           title?: string;
@@ -14650,6 +14737,7 @@ export type Database = {
           p_expires_at: string;
           p_notice_id: string;
           p_pinned: boolean;
+          p_post_mode: string;
           p_request_trace: string;
           p_scheduled_for: string;
           p_society_id: string;
@@ -14673,6 +14761,29 @@ export type Database = {
       notice_mark_read: {
         Args: { p_notice_id: string; p_society_id: string };
         Returns: undefined;
+      };
+      notice_plan_proposal_review: {
+        Args: {
+          p_accept: boolean;
+          p_proposal_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      notice_plan_proposal_save: {
+        Args: {
+          p_client_request_id: string;
+          p_notice_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_values: Json;
+        };
+        Returns: Json;
+      };
+      notice_plan_proposals_get: {
+        Args: { p_notice_id: string; p_society_id: string };
+        Returns: Json;
       };
       notice_plan_save: {
         Args: {

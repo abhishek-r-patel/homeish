@@ -95,7 +95,7 @@ export function NoticeListItem({
           {notice.author_name ?? t('Society office')} ·{' '}
           {notice.status === 'scheduled' && notice.scheduled_for
             ? t('Posts on {date}', {
-                date: noticeDay(notice.scheduled_for, locale),
+                date: noticeDateTime(notice.scheduled_for, locale),
               })
             : noticeDateTime(notice.published_at ?? notice.created_at, locale)}
           {manager ? ` · ${noticeAudienceLabel(notice, locale)}` : ''}

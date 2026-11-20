@@ -1,5 +1,39 @@
 // Hindi labels for notice planning, the member contact log and the communication dashboard.
 export const HI_COMMUNICATION: Readonly<Record<string, string>> = {
+  'Contact saved.': 'संपर्क सहेजा गया।',
+  'This contact log is read-only. Only admins can add or update entries.':
+    'यह संपर्क लॉग केवल पढ़ने के लिए है। केवल एडमिन प्रविष्टियां जोड़ या बदल सकते हैं।',
+  'Choose a posting date and time.': 'पोस्ट करने की तारीख और समय चुनें।',
+  'Choose Schedule to set a posting time.':
+    'पोस्ट करने का समय तय करने के लिए शेड्यूल चुनें।',
+  'Choose a future posting date and time.':
+    'पोस्ट करने के लिए भविष्य की तारीख और समय चुनें।',
+  'The notice expiry must be after it is posted.':
+    'सूचना की समाप्ति पोस्ट होने के बाद होनी चाहिए।',
+  'Schedule for a date and time': 'तारीख और समय के लिए तय करें',
+  'Posting time': 'पोस्ट करने का समय',
+  'The notice posts automatically at this India time when accessed. The daily job catches up and sends alerts, which may be delayed.':
+    'इस भारतीय समय के बाद देखे जाने पर सूचना अपने आप पोस्ट होती है। दैनिक प्रक्रिया बाकी पोस्ट करती है और अलर्ट भेजती है; अलर्ट में देरी हो सकती है।',
+  'Planning proposals': 'योजना के प्रस्ताव',
+  'Propose planning details': 'योजना की जानकारी प्रस्तावित करें',
+  'No planning proposals yet.': 'अभी योजना का कोई प्रस्ताव नहीं है।',
+  'An admin must accept your proposal before the official planning details change.':
+    'आधिकारिक योजना बदलने से पहले एडमिन को आपका प्रस्ताव स्वीकार करना होगा।',
+  'Planning proposal submitted. An admin must review it.':
+    'योजना का प्रस्ताव भेजा गया। एडमिन को इसकी समीक्षा करनी होगी।',
+  'Proposal accepted. The official planning details were updated.':
+    'प्रस्ताव स्वीकार किया गया। आधिकारिक योजना अपडेट की गई।',
+  'Proposal rejected. The official planning details are unchanged.':
+    'प्रस्ताव अस्वीकार किया गया। आधिकारिक योजना नहीं बदली है।',
+  'Accept proposal': 'प्रस्ताव स्वीकार करें',
+  'Reject proposal': 'प्रस्ताव अस्वीकार करें',
+  'Accept this proposal and replace the official planning details?':
+    'यह प्रस्ताव स्वीकार करके आधिकारिक योजना बदलें?',
+  'Reject this planning proposal?': 'यह योजना प्रस्ताव अस्वीकार करें?',
+  'Pending review': 'समीक्षा बाकी है',
+  Accepted: 'स्वीकार किया गया',
+  'The official planning details changed. Ask for a fresh proposal.':
+    'आधिकारिक योजना बदल गई है। नया प्रस्ताव मांगें।',
   'A monthly view of how the society reached members and how member contacts were handled.':
     'सोसाइटी ने सदस्यों तक कैसे जानकारी पहुंचाई और सदस्यों के संपर्क कैसे संभाले गए, इसका मासिक दृश्य।',
   'A short note of what was raised. Leave out private details.':

@@ -29,7 +29,9 @@ test('admin logs a contact, sees the overdue follow-up and closes it', async ({
   await page.getByLabel('Follow-up date').fill('2026-11-25');
   await page.getByRole('button', { name: 'Add contact' }).last().click();
 
-  // The form closes on save; the new entry in the list is the confirmation.
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Contact saved.' }),
+  ).toBeVisible();
   const added = page.getByRole('listitem', { name: 'Contact on 20 Nov 2026' });
   await expect(added).toContainText('B-204');
   await expect(added).toContainText('Follow-up');
@@ -40,6 +42,18 @@ test('admin logs a contact, sees the overdue follow-up and closes it', async ({
   await overdue.getByRole('button', { name: 'Save contact' }).click();
   await expect(overdue).toContainText('Closed');
   await expect(overdue).not.toContainText('Follow-up overdue');
+  await expect(overdue.getByLabel('Summary')).toHaveCount(0);
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Contact saved.' }),
+  ).toBeVisible();
+  await page.getByLabel('Fixture role').selectOption('committee');
+  await expect(page.getByRole('button', { name: 'Add contact' })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole('button', { name: 'Update', exact: true }),
+  ).toHaveCount(0);
+  await expect(overdue).toContainText('Lift makes a grinding noise');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 

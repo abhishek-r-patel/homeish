@@ -46,7 +46,9 @@ export async function noticeRpc<T>(
         reason,
         message:
           reason === 'stale_version'
-            ? 'This notice changed in another session. Refresh and retry.'
+            ? name === 'notice_plan_proposal_review'
+              ? 'The official planning details changed. Ask for a fresh proposal.'
+              : 'This notice changed in another session. Refresh and retry.'
             : 'This notice can no longer be changed.',
       });
     }

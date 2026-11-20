@@ -1,4 +1,4 @@
-// List member contact log entries with status filters and let admins and committee members add or update them.
+// List member contacts for admins/committee; admins alone add or update entries.
 'use client';
 import Link from 'next/link';
 import { useId, useState } from 'react';
@@ -53,6 +53,7 @@ export function ContactLogScreen({
 }) {
   const { translate: t } = useUiTranslator();
   const [adding, setAdding] = useState(false);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
       <header className="grid gap-space-2">
@@ -68,6 +69,14 @@ export function ContactLogScreen({
           'Only admins and committee members can see this log. Keep summaries short and leave out phone numbers, health details and other private information. Closed entries are deleted three years after they close.',
         )}
       </Banner>
+      {savedMessage ? <Banner tone="success">{t(savedMessage)}</Banner> : null}
+      {!view.can_manage ? (
+        <Banner tone="info">
+          {t(
+            'This contact log is read-only. Only admins can add or update entries.',
+          )}
+        </Banner>
+      ) : null}
       <nav
         aria-label={t('Contact log filter')}
         className="flex flex-wrap gap-space-2"
@@ -87,24 +96,27 @@ export function ContactLogScreen({
           </Link>
         ))}
       </nav>
-      {adding ? (
+      {view.can_manage && adding ? (
         <div className="grid gap-space-3 rounded-md border border-rule p-space-4">
           <h2 className="text-body-strong">{t('Add contact')}</h2>
           <ContactLogForm
             view={view}
             today={today}
             action={actions.saveLog}
-            onSaved={() => setAdding(false)}
+            onSaved={() => {
+              setSavedMessage('Contact saved.');
+              setAdding(false);
+            }}
           />
           <Button variant="secondary" onClick={() => setAdding(false)}>
             {t('Cancel')}
           </Button>
         </div>
-      ) : (
+      ) : view.can_manage ? (
         <div>
           <Button onClick={() => setAdding(true)}>{t('Add contact')}</Button>
         </div>
-      )}
+      ) : null}
       {view.logs.length === 0 ? (
         <EmptyState
           title={t('No contacts logged')}
@@ -125,6 +137,7 @@ export function ContactLogScreen({
               view={view}
               today={today}
               action={actions.saveLog}
+              onSaved={() => setSavedMessage('Contact saved.')}
             />
           ))}
         </ul>
@@ -143,11 +156,13 @@ function ContactLogRow({
   view,
   today,
   action,
+  onSaved,
 }: {
   entry: ContactLogEntry;
   view: ContactLogPage & { currentUserId: string };
   today: string;
   action: ModuleFormAction;
+  onSaved: () => void;
 }) {
   const { translate: t } = useUiTranslator();
   const dates = useToolkitDates();
@@ -214,26 +229,29 @@ function ContactLogRow({
           </div>
         ) : null}
       </dl>
-      {editing ? (
+      {view.can_manage && editing ? (
         <div className="grid gap-space-3">
           <ContactLogForm
             view={view}
             today={today}
             entry={entry}
             action={action}
-            onSaved={() => setEditing(false)}
+            onSaved={() => {
+              onSaved();
+              setEditing(false);
+            }}
           />
           <Button variant="secondary" onClick={() => setEditing(false)}>
             {t('Cancel')}
           </Button>
         </div>
-      ) : (
+      ) : view.can_manage ? (
         <div>
           <Button variant="secondary" onClick={() => setEditing(true)}>
             {t('Update')}
           </Button>
         </div>
-      )}
+      ) : null}
     </li>
   );
 }

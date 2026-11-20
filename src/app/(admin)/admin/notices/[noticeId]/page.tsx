@@ -10,7 +10,10 @@ import {
   noticeDateTime,
   noticeDay,
 } from '@/components/notices/notice-list-item';
-import { NoticePlanForm } from '@/components/notices/plan-form';
+import {
+  NoticePlanForm,
+  NoticePlanProposals,
+} from '@/components/notices/plan-form';
 import { getNoticeDetail } from '@/core/notices/operations';
 import type {
   NoticePlanningStatus,
@@ -47,7 +50,8 @@ export default async function AdminNoticeDetailPage({
     translateMessage(locale, source, values);
   const { noticeId } = await params;
   if (!z.uuid().safeParse(noticeId).success) notFound();
-  const { notice, attachmentUrl } = await getNoticeDetail(noticeId);
+  const { notice, attachmentUrl, canManagePlan, canProposePlan, proposals } =
+    await getNoticeDetail(noticeId);
 
   return (
     <section className="grid min-w-0 gap-space-5">
@@ -63,7 +67,7 @@ export default async function AdminNoticeDetailPage({
             ? `${t('Published')} ${noticeDateTime(notice.published_at, locale)}`
             : notice.status === 'scheduled' && notice.scheduled_for
               ? t('Posts on {date}', {
-                  date: noticeDay(notice.scheduled_for, locale),
+                  date: noticeDateTime(notice.scheduled_for, locale),
                 })
               : `${t('Created')} ${noticeDateTime(notice.created_at, locale)}`}
           {notice.edited_at
@@ -119,17 +123,18 @@ export default async function AdminNoticeDetailPage({
           ) : null}
         </div>
       </Card>
-      {notice.can_manage ? (
+      {canManagePlan ? (
         <>
           <Card className="min-w-0" title={t('Planning')}>
-            <NoticePlanForm noticeId={notice.id} plan={notice.plan} />
+            <NoticePlanForm
+              key={proposals
+                .filter(({ status }) => status === 'accepted')
+                .map(({ id }) => id)
+                .join(',')}
+              noticeId={notice.id}
+              plan={notice.plan}
+            />
           </Card>
-          <NoticeManageControls
-            noticeId={notice.id}
-            pinned={notice.pinned}
-            status={notice.status}
-            updatedAt={notice.updated_at}
-          />
         </>
       ) : (
         <>
@@ -163,10 +168,25 @@ export default async function AdminNoticeDetailPage({
               </dl>
             </Card>
           ) : null}
-          <p className="text-body text-ink-muted">
-            {t('Only the author or an administrator can change this notice.')}
-          </p>
         </>
+      )}
+      {canProposePlan ? (
+        <Card className="min-w-0" title={t('Propose planning details')}>
+          <NoticePlanForm noticeId={notice.id} plan={notice.plan} proposal />
+        </Card>
+      ) : null}
+      <NoticePlanProposals proposals={proposals} canReview={canManagePlan} />
+      {notice.can_manage ? (
+        <NoticeManageControls
+          noticeId={notice.id}
+          pinned={notice.pinned}
+          status={notice.status}
+          updatedAt={notice.updated_at}
+        />
+      ) : (
+        <p className="text-body text-ink-muted">
+          {t('Only the author or an administrator can change this notice.')}
+        </p>
       )}
     </section>
   );

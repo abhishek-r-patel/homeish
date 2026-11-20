@@ -7,6 +7,7 @@ import {
   noticeFileFolder,
   noticePlanInputSchema,
   noticeUpdateInputSchema,
+  validateNoticeSchedule,
 } from '../../src/core/notices/validation';
 import {
   contactLogSaveInputSchema,
@@ -117,12 +118,51 @@ describe('notice board', () => {
       noticeDraftInputSchema.parse({
         ...base,
         clientRequestId: folderId,
-        scheduledFor: '2026-12-01',
+        postMode: 'schedule',
+        scheduledFor: '2026-12-01T10:00:00+05:30',
       }).scheduledFor,
-    ).toBe('2026-12-01');
+    ).toBe('2026-12-01T10:00:00+05:30');
     expect(
       noticeDraftInputSchema.safeParse({ ...base, noticeId: folderId }).success,
     ).toBe(false);
+  });
+
+  it('rejects incomplete schedules, past times and expiry before posting', () => {
+    const base = {
+      title: 'AGM',
+      body: 'Agenda soon.',
+      audience: 'all',
+      clientRequestId: folderId,
+    };
+    expect(
+      noticeDraftInputSchema.safeParse({ ...base, postMode: 'schedule' })
+        .success,
+    ).toBe(false);
+    expect(
+      noticeDraftInputSchema.safeParse({
+        ...base,
+        scheduledFor: '2026-12-01T10:00:00+05:30',
+      }).success,
+    ).toBe(false);
+    const now = Date.parse('2026-12-01T09:00:00+05:30');
+    expect(() =>
+      validateNoticeSchedule('2026-12-01T10:00:00+05:30', null, now),
+    ).not.toThrow();
+    expect(() =>
+      validateNoticeSchedule('2026-12-01T09:00:00+05:30', null, now),
+    ).toThrow();
+    expect(() =>
+      validateNoticeSchedule(
+        '2026-12-01T10:00:00+05:30',
+        '2026-12-01T09:30:00+05:30',
+        now,
+      ),
+    ).toThrow();
+    expect(hasPermission(['committee'], 'notice', 'notice:plan')).toBe(false);
+    expect(hasPermission(['committee'], 'notice', 'notice:propose_plan')).toBe(
+      true,
+    );
+    expect(hasPermission(['admin'], 'notice', 'notice:plan')).toBe(true);
   });
 
   it('requires a next action when its date is set and blanks empty text', () => {

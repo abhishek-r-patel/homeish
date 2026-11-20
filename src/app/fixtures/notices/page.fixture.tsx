@@ -4,7 +4,10 @@
 import { useState } from 'react';
 import { NoticeForm } from '@/components/notices/notice-form';
 import { NoticeListItem } from '@/components/notices/notice-list-item';
-import { NoticePlanForm } from '@/components/notices/plan-form';
+import {
+  NoticePlanForm,
+  NoticePlanProposals,
+} from '@/components/notices/plan-form';
 import type { NoticeFormAction } from '@/components/notices/action-form';
 import { Card } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
@@ -14,7 +17,10 @@ import {
   noticeCreateInputSchema,
   noticeDraftInputSchema,
   noticePlanInputSchema,
+  noticePlanProposalInputSchema,
+  noticePlanReviewInputSchema,
   type Notice,
+  type NoticePlanProposal,
 } from '@/core/notices/validation';
 
 const societyId = '4a696d6f-774c-41d1-ae47-6254d4a8f4cf';
@@ -59,6 +65,10 @@ function failure(message: string): ServerActionResult<unknown> {
 
 export default function NoticesFixturePage() {
   const [notices, setNotices] = useState<Notice[]>([existingNotice]);
+  const [role, setRole] = useState<'admin' | 'committee'>('admin');
+  const [proposals, setProposals] = useState<NoticePlanProposal[]>([]);
+  const officialPlan =
+    notices.find((notice) => notice.id === existingNotice.id)?.plan ?? null;
 
   function saveDraft(input: unknown): ServerActionResult<unknown> {
     const parsed = noticeDraftInputSchema.safeParse(input);
@@ -96,6 +106,8 @@ export default function NoticesFixturePage() {
   }
 
   const planAction: NoticeFormAction = async (formData) => {
+    if (role !== 'admin')
+      return failure('Only admins can change official planning details.');
     const parsed = noticePlanInputSchema.safeParse(
       JSON.parse(String(formData.get('input') ?? 'null')),
     );
@@ -122,6 +134,64 @@ export default function NoticesFixturePage() {
       ),
     );
     return { ok: true, message: 'The planning details were saved.' };
+  };
+
+  const proposalAction: NoticeFormAction = async (formData) => {
+    const parsed = noticePlanProposalInputSchema.safeParse(
+      JSON.parse(String(formData.get('input'))),
+    );
+    if (!parsed.success) return failure(parsed.error.issues[0]!.message);
+    const { data } = parsed;
+    const proposal: NoticePlanProposal = {
+      id: crypto.randomUUID(),
+      notice_id: data.noticeId,
+      status: 'pending',
+      proposed_by_name: 'Committee member',
+      created_at: new Date().toISOString(),
+      reviewed_at: null,
+      prepared_by: data.preparedBy,
+      display_location: data.displayLocation,
+      priority: data.priority,
+      next_action: data.nextAction,
+      next_action_on: data.nextActionOn,
+    };
+    setProposals((rows) => [...rows, proposal]);
+    return {
+      ok: true,
+      message: 'Planning proposal submitted. An admin must review it.',
+      data: proposal,
+    };
+  };
+  const reviewAction: NoticeFormAction = async (formData) => {
+    if (role !== 'admin') return failure('Only admins can review proposals.');
+    const input = noticePlanReviewInputSchema.parse(
+      JSON.parse(String(formData.get('input'))),
+    );
+    const proposal = proposals.find((row) => row.id === input.proposalId);
+    if (!proposal) return failure('Proposal not found.');
+    setProposals((rows) =>
+      rows.map((row) =>
+        row.id === input.proposalId
+          ? {
+              ...row,
+              status: input.accept ? 'accepted' : 'rejected',
+              reviewed_at: new Date().toISOString(),
+            }
+          : row,
+      ),
+    );
+    if (input.accept)
+      setNotices((rows) =>
+        rows.map((notice) =>
+          notice.id === input.noticeId ? { ...notice, plan: proposal } : notice,
+        ),
+      );
+    return {
+      ok: true,
+      message: input.accept
+        ? 'Proposal accepted. The official planning details were updated.'
+        : 'Proposal rejected. The official planning details are unchanged.',
+    };
   };
 
   const createAction: NoticeFormAction = async (formData) => {
@@ -177,17 +247,54 @@ export default function NoticesFixturePage() {
         Development-only in-memory data. No notice is written to a database.
         Reload to reset.
       </Banner>
+      <label>
+        Fixture role
+        <select
+          value={role}
+          onChange={(event) =>
+            setRole(event.target.value === 'admin' ? 'admin' : 'committee')
+          }
+        >
+          <option value="admin">admin</option>
+          <option value="committee">committee</option>
+        </select>
+      </label>
       <h1 className="text-title font-semibold">Notice board</h1>
       <Card className="min-w-0" title="New notice">
         <NoticeForm action={createAction} blocks={blocks} onSaved={() => {}} />
       </Card>
-      <Card className="min-w-0" title="Planning details">
-        <NoticePlanForm
-          action={planAction}
-          noticeId={existingNotice.id}
-          plan={null}
-        />
-      </Card>
+      {role === 'admin' ? (
+        <Card className="min-w-0" title="Planning details">
+          <NoticePlanForm
+            key={proposals
+              .filter(({ status }) => status === 'accepted')
+              .map(({ id }) => id)
+              .join(',')}
+            action={planAction}
+            noticeId={existingNotice.id}
+            plan={officialPlan}
+          />
+        </Card>
+      ) : (
+        <Card className="min-w-0" title="Propose planning details">
+          <NoticePlanForm
+            key="committee"
+            action={proposalAction}
+            noticeId={existingNotice.id}
+            plan={officialPlan}
+            proposal
+          />
+        </Card>
+      )}
+      <section aria-label="Official planning details">
+        {officialPlan?.display_location ?? 'Not set'}
+      </section>
+      <NoticePlanProposals
+        key={role}
+        proposals={proposals}
+        canReview={role === 'admin'}
+        action={reviewAction}
+      />
       <section
         aria-label="Current notices"
         className="grid min-w-0 gap-space-3"

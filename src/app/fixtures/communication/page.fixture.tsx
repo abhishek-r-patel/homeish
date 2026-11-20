@@ -19,6 +19,7 @@ const unitId = 'b1d55fc3-0751-4b79-86c1-5b3e25942392';
 const requestId = 'c1d55fc3-0751-4b79-86c1-5b3e25942392';
 
 const options: Omit<ContactLogPage, 'logs'> = {
+  can_manage: true,
   handlers: [
     { id: adminId, name: 'Society office' },
     { id: committeeId, name: 'Committee member' },
@@ -66,8 +67,15 @@ function daysBetween(from: string, to: string) {
 }
 
 export default function CommunicationFixturePage() {
+  const [role, setRole] = useState<'admin' | 'committee'>('admin');
   const [logs, setLogs] = useState<ContactLogEntry[]>([overdueEntry]);
   const saveLog: ModuleFormAction = async (data) => {
+    if (role !== 'admin')
+      return {
+        ok: false,
+        code: 'FORBIDDEN',
+        message: 'Only admins can change the contact log.',
+      };
     const parsed = contactLogSaveInputSchema.safeParse(
       JSON.parse(String(data.get('input') ?? 'null')),
     );
@@ -115,8 +123,26 @@ export default function CommunicationFixturePage() {
       <Banner title="Synthetic communication fixture" tone="info">
         Development-only simulated actions. No database writes. Reload to reset.
       </Banner>
+      <label>
+        Fixture role
+        <select
+          value={role}
+          onChange={(event) =>
+            setRole(event.target.value === 'admin' ? 'admin' : 'committee')
+          }
+        >
+          <option value="admin">admin</option>
+          <option value="committee">committee</option>
+        </select>
+      </label>
       <ContactLogScreen
-        view={{ ...options, logs, currentUserId: adminId }}
+        key={role}
+        view={{
+          ...options,
+          logs,
+          currentUserId: adminId,
+          can_manage: role === 'admin',
+        }}
         filter="all"
         today={today}
         actions={{ saveLog }}

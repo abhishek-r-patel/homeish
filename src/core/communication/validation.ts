@@ -90,6 +90,7 @@ const optionSchema = z.object({ id: z.uuid(), label: z.string() });
 export type ContactLogOption = z.infer<typeof optionSchema>;
 
 export const contactLogPageSchema = z.object({
+  can_manage: z.boolean().default(false),
   logs: z.array(contactLogEntrySchema),
   handlers: z.array(z.object({ id: z.uuid(), name: z.string().nullable() })),
   units: z.array(optionSchema),

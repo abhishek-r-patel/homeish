@@ -121,23 +121,28 @@ test('manager saves a draft, schedules a notice and keeps planning details priva
   ).toBeVisible();
   await expect(items.last()).toContainText('Draft');
 
-  await page.getByLabel('Schedule for a day').check();
+  await page.getByLabel('Schedule for a date and time').check();
   await page.getByRole('button', { name: 'Schedule notice' }).click();
   const postingDay = page.getByRole('textbox', {
     name: 'Posting day (required)',
   });
-  expect(
-    await postingDay.evaluate(
-      (field: HTMLInputElement) => field.validity.valueMissing,
-    ),
-  ).toBe(true);
+
+  await expect(
+    page.getByText('Choose a posting date and time.').first(),
+  ).toBeVisible();
+  await expect(postingDay).toHaveAttribute('aria-invalid', 'true');
   await postingDay.fill('2030-01-15');
+  await page.getByLabel('Hour (required)', { exact: true }).selectOption('10');
+  await page
+    .getByLabel('Minute (required)', { exact: true })
+    .selectOption('30');
   await page.getByRole('button', { name: 'Schedule notice' }).click();
   await expect(
     page.getByText('The notice was scheduled.', { exact: true }),
   ).toBeVisible();
   await expect(items.last()).toContainText('Scheduled');
   await expect(items.last()).toContainText(/Posts on .*2030/);
+  await expect(items.last()).toContainText('10:30');
 
   const planning = page.getByRole('region', { name: 'Planning details' });
   await planning.getByLabel('Next action date (optional)').fill('2026-12-01');
@@ -158,4 +163,55 @@ test('manager saves a draft, schedules a notice and keeps planning details priva
   // The board in this fixture is the resident view, which never shows planning details.
   await expect(items.first()).not.toContainText('Lift lobby of Block A');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
+test('committee proposes planning details and an admin accepts them', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/notices');
+  await page.getByLabel('Fixture role').selectOption('committee');
+  await expect(
+    page.getByRole('button', { name: 'Save planning details' }),
+  ).toHaveCount(0);
+  const form = page.getByRole('region', {
+    name: 'Propose planning details',
+    exact: true,
+  });
+  await form
+    .getByLabel('Notice board location (optional)')
+    .fill('Garden board');
+  await form.getByRole('button', { name: 'Propose planning details' }).click();
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Planning proposal submitted.' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Official planning details' }),
+  ).toContainText('Not set');
+  await expect(
+    page.getByRole('button', { name: 'Accept proposal' }),
+  ).toHaveCount(0);
+  await page.getByLabel('Fixture role').selectOption('admin');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Accept proposal' }).click();
+  await expect(
+    page.getByRole('region', { name: 'Official planning details' }),
+  ).toContainText('Garden board');
+  await expect(
+    page
+      .getByRole('region', { name: 'Planning details', exact: true })
+      .getByLabel('Notice board location (optional)'),
+  ).toHaveValue('Garden board');
+  await expect(
+    page.getByRole('status').filter({
+      hasText: 'Proposal accepted. The official planning details were updated.',
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Planning proposals' }),
+  ).toContainText('Accepted');
+  await expect(
+    page.getByRole('button', { name: 'Accept proposal' }),
+  ).toHaveCount(0);
 });

@@ -7,6 +7,7 @@ import type { FormEvent, ReactNode } from 'react';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import { Button } from '@/components/ui/button';
 import { useUiTranslator } from '@/components/ui/language';
+import { ValidationError } from '@/core/errors';
 
 export type NoticeFormAction = (
   formData: FormData,
@@ -18,6 +19,7 @@ export function NoticeActionForm({
   className = 'grid min-w-0 grid-cols-1 gap-space-4',
   confirmMessage,
   input,
+  noValidate = false,
   onSuccess,
   refresh = true,
   submitLabel,
@@ -28,6 +30,7 @@ export function NoticeActionForm({
   className?: string;
   confirmMessage?: string;
   input: (formData: FormData) => unknown;
+  noValidate?: boolean;
   onSuccess?: (data: unknown) => void;
   refresh?: boolean;
   submitLabel: string;
@@ -51,8 +54,12 @@ export function NoticeActionForm({
     if (confirmMessage && !window.confirm(confirmMessage)) return;
     try {
       formData.set('input', JSON.stringify(input(formData)));
-    } catch {
-      setLocalError('The notice could not be prepared. Check the form.');
+    } catch (error) {
+      setLocalError(
+        error instanceof ValidationError
+          ? (Object.values(error.fieldErrors ?? {})[0] ?? error.message)
+          : 'The notice could not be prepared. Check the form.',
+      );
       return;
     }
     setLocalError(null);
@@ -73,7 +80,7 @@ export function NoticeActionForm({
   }
 
   return (
-    <form className={className} onSubmit={submit}>
+    <form className={className} onSubmit={submit} noValidate={noValidate}>
       {children}
       {localError ? (
         <p className="text-caption text-danger" role="alert">

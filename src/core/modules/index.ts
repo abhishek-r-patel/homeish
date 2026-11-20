@@ -196,7 +196,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         {
           href: '/admin/contact-log',
           label: 'Contact log',
-          permission: 'contact_log:manage',
+          permission: 'contact_log:read',
           section: 'Operations',
         },
         {
@@ -258,7 +258,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         {
           href: '/admin/contact-log',
           label: 'Contact log',
-          permission: 'contact_log:manage',
+          permission: 'contact_log:read',
           section: 'Operations',
         },
         {
@@ -370,7 +370,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       ],
       'help:read': ['admin', 'committee', 'guard', 'hk_supervisor', 'resident'],
       'letters:make': ['admin', 'committee'],
-      'contact_log:manage': ['admin', 'committee'],
+      'contact_log:read': ['admin', 'committee'],
+      'contact_log:manage': ['admin'],
       'communication:read': ['admin', 'committee'],
     },
     settingsAccess: emptySettingsAccess,
@@ -747,6 +748,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'notice:list': ['admin', 'committee', 'resident'],
       'notice:create': ['admin', 'committee'],
       'notice:manage': ['admin', 'committee'],
+      'notice:plan': ['admin'],
+      'notice:propose_plan': ['committee'],
       'notice:archive': ['admin', 'committee'],
     },
     settingsAccess: emptySettingsAccess,

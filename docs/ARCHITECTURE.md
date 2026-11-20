@@ -301,11 +301,14 @@ then sends the matching push notifications for that request ID.
 
 P53 adds `notice.scheduled_publish` after `event.reminders`. Its privileged wrapper
 (`src/core/privileged/communication.ts`) calls the service-role-only `notice_scheduled_publish_run`, which posts
-scheduled notices due on or before the society-local day with the normal in-app notification (returning overdue
-schedules whose expiry has passed to draft), then sends the matching push notifications for that request ID. The
+scheduled notices due on or before the current timestamp. Poll-style reconciliation on notice reads
+publishes due schedules without alerts; daily catch-up sends pending alerts once. Expired schedules retain their original times
+in the archive without alerts, and push delivery may be delayed until the daily job. The
 global retention task also calls `communication_retention_run` to delete contact-log entries closed more than three
 years ago. The contact log and communication dashboard are core screens under `src/core/communication/` and
-`src/components/communication/`, reading and writing only through security-definer RPCs.
+`src/components/communication/`, reading and writing only through security-definer RPCs. Contact writes and official
+notice-plan writes are admin-only. Committee members read the log and submit immutable notice-plan proposals for
+admin acceptance/rejection; acceptance checks the official baseline and copies fields atomically.
 
 ### 7.1 Access method
 

@@ -8,6 +8,8 @@ import {
   publishNoticeDraft,
   saveNoticeDraft,
   saveNoticePlan,
+  proposeNoticePlan,
+  reviewNoticePlan,
   setNoticePinned,
   updateNotice,
   withdrawNotice,
@@ -96,5 +98,30 @@ export async function saveNoticePlanAction(formData: FormData) {
     const result = await saveNoticePlan(parseInput(formData), requestId);
     refreshNoticeViews(result.id);
     return { data: result, message: 'The planning details were saved.' };
+  });
+}
+
+export async function proposeNoticePlanAction(formData: FormData) {
+  return runServerAction('notice.plan_propose', async (requestId) => {
+    const result = await proposeNoticePlan(parseInput(formData), requestId);
+    refreshNoticeViews(result.notice_id);
+    return {
+      data: result,
+      message: 'Planning proposal submitted. An admin must review it.',
+    };
+  });
+}
+
+export async function reviewNoticePlanAction(formData: FormData) {
+  return runServerAction('notice.plan_review', async (requestId) => {
+    const result = await reviewNoticePlan(parseInput(formData), requestId);
+    refreshNoticeViews(result.notice_id);
+    return {
+      data: result,
+      message:
+        result.status === 'accepted'
+          ? 'Proposal accepted. The official planning details were updated.'
+          : 'Proposal rejected. The official planning details are unchanged.',
+    };
   });
 }

@@ -2,6 +2,7 @@
 import 'server-only';
 import { callModuleRpc, parseModuleInput } from '../db/validated-rpc';
 import { getToolkitContext } from '../toolkit/operations';
+import { hasPermission } from '../permissions';
 import {
   communicationDashboardSchema,
   contactLogEntrySchema,
@@ -31,7 +32,7 @@ export function currentIndiaDate(now = new Date()) {
 }
 
 export async function getContactLogs(filter: ContactLogFilter) {
-  const { context, societyId } = await getToolkitContext('contact_log:manage');
+  const { context, societyId } = await getToolkitContext('contact_log:read');
   const page = await callModuleRpc(
     context,
     'member_contact_logs_get',
@@ -42,7 +43,13 @@ export async function getContactLogs(filter: ContactLogFilter) {
     contactLogPageSchema,
     'Could not load the contact log. Refresh and retry.',
   );
-  return { ...page, currentUserId: context.userId };
+  return {
+    ...page,
+    currentUserId: context.userId,
+    can_manage:
+      hasPermission(context.roles, 'core', 'contact_log:manage') &&
+      context.societyStatus !== 'suspended',
+  };
 }
 
 export async function saveContactLog(input: unknown, requestId: string) {

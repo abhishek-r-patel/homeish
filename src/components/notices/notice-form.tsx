@@ -9,9 +9,15 @@ import {
   saveNoticeDraftAction,
   updateNoticeAction,
 } from '@/app/(admin)/admin/notices/actions';
-import { DatePicker } from '@/components/ui/date-time-inputs';
+import {
+  DatePicker,
+  TimePicker,
+  type TimeParts,
+} from '@/components/ui/date-time-inputs';
 import type { Notice, NoticeAudience } from '@/core/notices/validation';
-import { addDays } from '@/core/toolkit/validation';
+import { localTimeToIso } from '@/lib/local-time';
+import { validateNoticeSchedule } from '@/core/notices/validation';
+import { ValidationError } from '@/core/errors';
 import { NoticeActionForm, type NoticeFormAction } from './action-form';
 import { NoticeAttachmentUpload } from './attachment-upload';
 
@@ -72,12 +78,31 @@ export function NoticeForm({
   );
   const selectedBlocks = new Set(notice?.blocks.map(({ id }) => id) ?? []);
   const today = IST_DATE.format(new Date());
-  const tomorrow = addDays(today, 1);
   const published = notice?.status === 'published';
   const [postMode, setPostMode] = useState<PostMode>(
     notice?.status === 'scheduled' ? 'schedule' : notice ? 'draft' : 'now',
   );
-  const [scheduledOn, setScheduledOn] = useState(notice?.scheduled_for ?? '');
+  const [scheduledOn, setScheduledOn] = useState(
+    noticeExpiryDate(notice?.scheduled_for ?? null),
+  );
+  const [scheduledTime, setScheduledTime] = useState<TimeParts>(() => {
+    if (!notice?.scheduled_for)
+      return { hour: '12', minute: '00', period: 'AM' };
+    const parts = new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
+    }).formatToParts(new Date(notice.scheduled_for));
+    const values = Object.fromEntries(
+      parts.map(({ type, value }) => [type, value]),
+    );
+    return {
+      hour: values.hour,
+      minute: values.minute,
+      period: values.dayPeriod === 'PM' ? 'PM' : 'AM',
+    };
+  });
   const [scheduleError, setScheduleError] = useState<string | undefined>();
   const planned = !published && postMode !== 'now';
   const submitLabel = published
@@ -90,6 +115,7 @@ export function NoticeForm({
 
   return (
     <NoticeActionForm
+      noValidate={postMode === 'schedule'}
       action={
         action ??
         (published
@@ -119,14 +145,25 @@ export function NoticeForm({
         }
         if (planned) {
           if (postMode === 'schedule' && !scheduledOn) {
-            setScheduleError(t('Choose the day to post the notice.'));
-            throw new Error('Missing posting day.');
+            setScheduleError(t('Choose a posting date and time.'));
+            throw new ValidationError({
+              scheduledFor: 'Choose a posting date and time.',
+            });
           }
           setScheduleError(undefined);
+          const scheduledFor =
+            postMode === 'schedule'
+              ? localTimeToIso(
+                  `${scheduledOn}T${String((Number(scheduledTime.hour) % 12) + (scheduledTime.period === 'PM' ? 12 : 0)).padStart(2, '0')}:${scheduledTime.minute}`,
+                  'Asia/Kolkata',
+                )
+              : null;
+          validateNoticeSchedule(scheduledFor, content.expiresAt);
           return {
             ...content,
             pinned: formData.get('pinned') === 'on',
-            scheduledFor: postMode === 'schedule' ? scheduledOn : null,
+            scheduledFor,
+            postMode,
             noticeId: notice?.id ?? null,
             expectedUpdatedAt: notice?.updated_at ?? null,
             clientRequestId: notice ? null : stableRequestId(),
@@ -270,7 +307,7 @@ export function NoticeForm({
             [
               ...(notice ? [] : ([['now', 'Publish now']] as const)),
               ['draft', 'Save as a draft'],
-              ['schedule', 'Schedule for a day'],
+              ['schedule', 'Schedule for a date and time'],
             ] as const
           ).map(([value, text]) => (
             <label
@@ -288,18 +325,28 @@ export function NoticeForm({
             </label>
           ))}
           {postMode === 'schedule' ? (
-            <DatePicker
-              error={scheduleError}
-              helpText={t(
-                'The notice is posted early that morning and everyone in the audience is notified.',
-              )}
-              id="notice-scheduled-for"
-              label={t('Posting day')}
-              min={tomorrow}
-              onChange={setScheduledOn}
-              required
-              value={scheduledOn}
-            />
+            <div className="grid gap-space-3">
+              <DatePicker
+                error={scheduleError}
+                helpText={t(
+                  'The notice posts automatically at this India time when accessed. The daily job catches up and sends alerts, which may be delayed.',
+                )}
+                id="notice-scheduled-for"
+                label={t('Posting day')}
+                min={today}
+                onChange={setScheduledOn}
+                required
+                value={scheduledOn}
+              />
+              <TimePicker
+                id="notice-scheduled-time"
+                label={t('Posting time')}
+                required
+                timeZone="Asia/Kolkata (IST)"
+                value={scheduledTime}
+                onChange={setScheduledTime}
+              />
+            </div>
           ) : null}
         </fieldset>
       )}

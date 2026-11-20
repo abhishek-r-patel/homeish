@@ -130,8 +130,10 @@ describe('module registry', () => {
       '/help',
     ]);
     expect(hasPermission(['committee'], 'core', 'contact_log:manage')).toBe(
-      true,
+      false,
     );
+    expect(hasPermission(['committee'], 'core', 'contact_log:read')).toBe(true);
+    expect(hasPermission(['admin'], 'core', 'contact_log:manage')).toBe(true);
     expect(hasPermission(['admin'], 'core', 'action_plan:delete_task')).toBe(
       true,
     );

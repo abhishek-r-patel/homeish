@@ -291,7 +291,7 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     modules: ['notice'],
     title: 'How do I publish a notice?',
     answer:
-      'Open Notices and create a new notice. Write it and publish it. Residents see it on their Notices screen.',
+      'Open Notices and create a new notice. Publish now, save a draft, or schedule a future date and time in India time. Due schedules post automatically when accessed, with daily catch-up; alerts may be delayed. Admins edit official planning details; committee members propose changes for admin review.',
     links: [{ href: '/admin/notices', label: 'Notices' }],
   },
   {

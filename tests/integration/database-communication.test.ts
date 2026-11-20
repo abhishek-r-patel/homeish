@@ -1,5 +1,6 @@
 // Verify P53 notice drafts, scheduling and planning fields, the contact log and the dashboard.
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   createTestDatabase,
   dbError,
@@ -176,6 +177,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
           noticeId?: string;
           title: string;
           scheduledFor?: string | null;
+          postMode?: 'draft' | 'schedule';
           expectedUpdatedAt?: string | null;
           clientRequestId?: string;
         },
@@ -184,7 +186,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
           user,
           `select public.notice_draft_save(
              $1, $2, $3, 'Synthetic notice body', 'all', ARRAY[]::uuid[], false,
-             null, null, $4::date, $5, $6, 'p53-draft'
+             null, null, $4::timestamptz, $5, $6, 'p53-draft', $7
            ) as result`,
           [
             fixture.societyId,
@@ -193,6 +195,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
             input.scheduledFor ?? null,
             input.expectedUpdatedAt ?? null,
             input.clientRequestId ?? crypto.randomUUID(),
+            input.postMode ?? (input.scheduledFor ? 'schedule' : 'draft'),
           ],
         );
       const list = (user: User, view: string) =>
@@ -252,7 +255,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
       );
       expect(residentSelect).toEqual([]);
 
-      // Posting days must be after today; P11 edits apply to posted notices only.
+      // A schedule requires a future instant; P11 edits apply to posted notices only.
       expect(
         (
           await dbError(
@@ -261,6 +264,16 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
               title: 'Diwali decorations',
               scheduledFor: fixture.today,
               expectedUpdatedAt: draft.updated_at,
+            }),
+          )
+        ).code,
+      ).toBe('22023');
+      expect(
+        (
+          await dbError(
+            saveDraft('committee', {
+              title: 'Incomplete schedule',
+              postMode: 'schedule',
             }),
           )
         ).code,
@@ -281,14 +294,16 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
       const scheduled = await saveDraft('committee', {
         noticeId: draft.id,
         title: 'Diwali decorations',
-        scheduledFor: fixture.tomorrow,
+        scheduledFor: `${fixture.tomorrow}T10:30:00+05:30`,
         expectedUpdatedAt: draft.updated_at,
       });
       expect(scheduled).toMatchObject({
         status: 'scheduled',
         planning_status: 'scheduled',
-        scheduled_for: fixture.tomorrow,
       });
+      expect(Date.parse(scheduled.scheduled_for!)).toBe(
+        Date.parse(`${fixture.tomorrow}T10:30:00+05:30`),
+      );
 
       // Committee members change only their own notices; admins can change any.
       const adminDraft = await saveDraft('admin', { title: 'Lift audit' });
@@ -306,7 +321,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
 
       // Planning fields are manager-only and never selectable directly.
       const planned = await rpc<NoticeJson>(
-        'committee',
+        'admin',
         `select public.notice_plan_save($1, $2, 'Secretary', 'Lobby board', 'high',
            'Print copies', $3::date, 'p53-plan') as result`,
         [fixture.societyId, draft.id, fixture.tomorrow],
@@ -318,6 +333,80 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
         next_action: 'Print copies',
         next_action_on: fixture.tomorrow,
       });
+      expect(
+        (
+          await dbError(
+            rpc(
+              'committee',
+              `select public.notice_plan_save($1, $2, 'Secretary', 'Lobby', 'high', null, null, 'deny') as result`,
+              [fixture.societyId, draft.id],
+            ),
+          )
+        ).code,
+      ).toBe('42501');
+
+      // Committee can propose on another author's notice; only admin review changes the official plan.
+      const propose = () =>
+        rpc<{ id: string; status: string }>(
+          'committee',
+          `select public.notice_plan_proposal_save($1, $2, '{"display_location":"Garden board","next_action":"Print copies"}', $3, 'proposal') as result`,
+          [fixture.societyId, adminDraft.id, crypto.randomUUID()],
+        );
+      const review = (id: string, accept: boolean, user: User = 'admin') =>
+        rpc<{ status: string }>(
+          user,
+          `select public.notice_plan_proposal_review($1, $2, $3, 'review') as result`,
+          [fixture.societyId, id, accept],
+        );
+      const official = () =>
+        rpc<NoticeJson>('admin', `select public.notice_get($1, $2) as result`, [
+          fixture.societyId,
+          adminDraft.id,
+        ]);
+      const rejected = await propose();
+      expect((await official()).plan).toBeNull();
+      expect((await dbError(review(rejected.id, true, 'committee'))).code).toBe(
+        '42501',
+      );
+      expect((await review(rejected.id, false)).status).toBe('rejected');
+      expect((await official()).plan).toBeNull();
+      const accepted = await propose();
+      expect((await review(accepted.id, true)).status).toBe('accepted');
+      expect((await review(accepted.id, true)).status).toBe('accepted');
+      expect((await dbError(review(accepted.id, false))).code).toBe('23505');
+      expect((await official()).plan).toMatchObject({
+        display_location: 'Garden board',
+      });
+      const staleProposal = await propose();
+      await rpc(
+        'admin',
+        `select public.notice_plan_save($1, $2, null, 'Lobby', null, null, null, 'changed') as result`,
+        [fixture.societyId, adminDraft.id],
+      );
+      expect((await dbError(review(staleProposal.id, true))).code).toBe(
+        '23505',
+      );
+      expect((await official()).plan).toMatchObject({
+        display_location: 'Lobby',
+      });
+      expect(
+        await rpc<unknown[]>(
+          'committee',
+          `select public.notice_plan_proposals_get($1, $2) as result`,
+          [fixture.societyId, adminDraft.id],
+        ),
+      ).toHaveLength(3);
+      expect(
+        (
+          await dbError(
+            rpc(
+              'owner',
+              `select public.notice_plan_proposals_get($1, $2) as result`,
+              [fixture.societyId, adminDraft.id],
+            ),
+          )
+        ).code,
+      ).toBe('42501');
       for (const user of ['committee', 'owner'] as const) {
         expect(
           (
@@ -333,16 +422,16 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
         (await list('admin', 'planned')).map(({ id }) => id).sort(),
       ).toEqual([draft.id, adminDraft.id].sort());
 
-      // Daily run posts due scheduled notices with the normal push; expired ones return to draft.
+      // Reads publish due schedules automatically; the daily job sends alerts once, never for expired schedules.
       const expiring = await saveDraft('admin', {
         title: 'Expired schedule',
-        scheduledFor: fixture.tomorrow,
+        scheduledFor: `${fixture.tomorrow}T10:30:00+05:30`,
       });
       await database.asSuperuser(async (client) => {
         await client.query(
-          `update public.notices set scheduled_for = $2::date
+          `update public.notices set scheduled_for = created_at + interval '0.5 milliseconds'
            where id = any($1::uuid[])`,
-          [[draft.id, expiring.id], fixture.today],
+          [[draft.id, expiring.id]],
         );
         await client.query(
           `update public.notices set expires_at = created_at + interval '1 millisecond'
@@ -350,6 +439,28 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
           [expiring.id],
         );
       });
+      expect((await list('owner', 'current')).map(({ id }) => id)).toEqual([
+        draft.id,
+      ]);
+      expect(await notificationCount(draft.id)).toBe(0);
+      const reconciled = await rpc<NoticeJson>(
+        'admin',
+        `select public.notice_get($1, $2) as result`,
+        [fixture.societyId, draft.id],
+      );
+      expect(reconciled.status).toBe('published');
+      expect(reconciled.published_at).toBe(reconciled.scheduled_for);
+      expect(
+        await database.asSuperuser(
+          async (client) =>
+            (
+              await client.query(
+                `select count(*)::int as count from public.audit_logs where action = 'notice.publish' and entity_id = $1`,
+                [draft.id],
+              )
+            ).rows[0]!.count,
+        ),
+      ).toBe(1);
       expect(
         (
           await dbError(
@@ -382,7 +493,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
       expect((await list('owner', 'current')).map(({ id }) => id)).toEqual([
         draft.id,
       ]);
-      const reverted = await database.asSuperuser(
+      const expired = await database.asSuperuser(
         async (client) =>
           (
             await client.query<{
@@ -394,7 +505,24 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
             )
           ).rows[0]!,
       );
-      expect(reverted).toEqual({ status: 'draft', scheduled_for: null });
+      expect(expired.status).toBe('published');
+      expect(expired.scheduled_for).not.toBeNull();
+      expect(await notificationCount(expiring.id)).toBe(0);
+      expect(
+        await database.asRole(
+          'service_role',
+          null,
+          async (client) =>
+            (
+              await client.query(
+                `select public.notice_scheduled_publish_run($1, $2::date, 'again') as result`,
+                [fixture.societyId, fixture.today],
+              )
+            ).rows[0]!.result,
+          { commit: true },
+        ),
+      ).toBe(0);
+      expect(await notificationCount(draft.id)).toBe(1);
 
       // Publish now, then withdraw: the notice moves to the archive as removed.
       const posted = await rpc<NoticeJson>(
@@ -413,9 +541,9 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
         [fixture.societyId, adminDraft.id],
       );
       expect(removed.planning_status).toBe('removed');
-      expect((await list('admin', 'archive')).map(({ id }) => id)).toEqual([
-        adminDraft.id,
-      ]);
+      expect(
+        (await list('admin', 'archive')).map(({ id }) => id).sort(),
+      ).toEqual([adminDraft.id, expiring.id].sort());
 
       // P53.2: contact log is admin/committee only, society-scoped and audited.
       const saveContact = (
@@ -446,7 +574,10 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
         status: 'follow_up',
         service_request_id: fixture.resolvedRequest,
       };
-      const contact = await saveContact('committee', contactValues);
+      expect(
+        (await dbError(saveContact('committee', contactValues))).code,
+      ).toBe('42501');
+      const contact = await saveContact('admin', contactValues);
       expect(contact).toMatchObject({
         status: 'follow_up',
         unit_label: 'A-101',
@@ -455,6 +586,26 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
         follow_up_overdue: false,
         closed_at: null,
       });
+      expect(
+        (
+          await rpc<{ logs: ContactJson[] }>(
+            'committee',
+            `select public.member_contact_logs_get($1) as result`,
+            [fixture.societyId],
+          )
+        ).logs.map(({ id }) => id),
+      ).toContain(contact.id);
+      expect(
+        (
+          await dbError(
+            saveContact(
+              'committee',
+              { ...contactValues, summary: 'Edited' },
+              { logId: contact.id, expectedUpdatedAt: contact.updated_at },
+            ),
+          )
+        ).code,
+      ).toBe('42501');
       for (const values of [
         { ...contactValues, unit_id: fixture.otherUnit },
         { ...contactValues, handled_by: fixture.users.owner },
@@ -553,7 +704,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
       );
       expect(dashboard).toMatchObject({
         month: fixture.today.slice(0, 7),
-        notices: { posted: 2, removed: 1, planned_now: 1 },
+        notices: { posted: 3, removed: 2, planned_now: 0 },
         meetings: null,
         events: null,
         sos: null,
@@ -590,6 +741,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
 
       // Retention deletes entries closed more than three years ago, and only those.
       await database.asSuperuser(async (client) => {
+        await client.query('set session_replication_role = replica');
         await client.query(
           `update public.member_contact_logs
            set closed_at = now() - interval '3 years 2 days'
@@ -618,6 +770,106 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
         ).rows.map(({ id }) => id),
       );
       expect(remaining).toEqual([open.id]);
+    } finally {
+      await database.drop();
+    }
+  });
+
+  it('does not resend already-published scheduled alerts when upgrading', async () => {
+    const database = await createTestDatabase({
+      throughMigration: '20261124190000',
+    });
+    try {
+      const fixture = await database.asSuperuser(async (client) => {
+        const admin = await newAuthUser(client, 'legacy-admin@example.test');
+        const resident = await newAuthUser(
+          client,
+          'legacy-resident@example.test',
+        );
+        await client.query(
+          `insert into public.profiles(id,email,full_name)
+          values($1,'legacy-admin@example.test','Legacy admin'),($2,'legacy-resident@example.test','Legacy resident')`,
+          [admin, resident],
+        );
+        const society = (
+          await client.query<{ id: string }>(
+            `insert into public.societies(name,created_by)
+          values('Legacy society',$1) returning id`,
+            [admin],
+          )
+        ).rows[0]!.id;
+        await client.query(
+          `insert into public.module_configs(society_id,module_key,enabled,settings)
+          values($1,'notice',true,'{}') on conflict(society_id,module_key) do update set enabled=true`,
+          [society],
+        );
+        await client.query(
+          `insert into public.memberships(society_id,user_id,roles,status)
+          values($1,$2,ARRAY['admin'],'active'),($1,$3,ARRAY['resident'],'active')`,
+          [society, admin, resident],
+        );
+        return { admin, society };
+      });
+      const id = await database.asRole(
+        'authenticated',
+        { sub: fixture.admin },
+        async (client) =>
+          (
+            await client.query<{ id: string }>(
+              `select public.notice_draft_save(
+          $1,null,'Legacy schedule','Synthetic body','all',ARRAY[]::uuid[],false,null,null,
+          (now() at time zone 'Asia/Kolkata')::date+1,null,gen_random_uuid(),'legacy-create')->>'id' as id`,
+              [fixture.society],
+            )
+          ).rows[0]!.id,
+        { commit: true },
+      );
+      await database.asSuperuser((client) =>
+        client.query(
+          `update public.notices
+        set scheduled_for=(now() at time zone 'Asia/Kolkata')::date where id=$1`,
+          [id],
+        ),
+      );
+      const run = () =>
+        database.asRole(
+          'service_role',
+          null,
+          async (client) =>
+            (
+              await client.query<{ result: number }>(
+                `select public.notice_scheduled_publish_run(
+          $1,(now() at time zone 'Asia/Kolkata')::date,'legacy-run') as result`,
+                [fixture.society],
+              )
+            ).rows[0]!.result,
+          { commit: true },
+        );
+      expect(await run()).toBe(1);
+      const count = () =>
+        database.asSuperuser(
+          async (client) =>
+            (
+              await client.query<{ count: number }>(
+                `select count(*)::int as count from public.notifications where entity_id=$1`,
+                [id],
+              )
+            ).rows[0]!.count,
+        );
+      expect(await count()).toBe(1);
+      await database.asDeployment((client) =>
+        client.query(
+          readFileSync(
+            new URL(
+              '../../supabase/migrations/20261124220000_notice_timed_scheduling.sql',
+              import.meta.url,
+            ),
+            'utf8',
+          ),
+        ),
+      );
+      expect(await run()).toBe(0);
+      expect(await count()).toBe(1);
     } finally {
       await database.drop();
     }

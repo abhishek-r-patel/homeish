@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { AppError, createRequestId, ValidationError } from '../errors';
 import { MAX_FILE_BYTES, verifyFileAttachment } from '../files/attachments';
 import { authorizeRequest } from '../permissions/authorize';
+import { hasPermission } from '../permissions';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import {
   buildRequestContext,
@@ -22,11 +23,21 @@ import {
   noticeSchema,
   noticeUpdateInputSchema,
   noticeViewSchema,
+  validateNoticeSchedule,
+  noticePlanProposalInputSchema,
+  noticePlanProposalSchema,
+  noticePlanProposalsSchema,
+  noticePlanReviewInputSchema,
   type Notice,
 } from './validation';
 
 type NoticePermission =
-  'notice:list' | 'notice:create' | 'notice:manage' | 'notice:archive';
+  | 'notice:list'
+  | 'notice:create'
+  | 'notice:manage'
+  | 'notice:archive'
+  | 'notice:plan'
+  | 'notice:propose_plan';
 
 async function getContext(
   permission: NoticePermission,
@@ -147,6 +158,20 @@ export async function getNoticeDetail(noticeId: string) {
     notice,
     attachmentUrl,
     canSeeAdminWorkspace: isManager(context),
+    canManagePlan:
+      hasPermission(context.roles, 'notice', 'notice:plan') &&
+      context.societyStatus !== 'suspended',
+    canProposePlan:
+      hasPermission(context.roles, 'notice', 'notice:propose_plan') &&
+      context.societyStatus !== 'suspended',
+    proposals: isManager(context)
+      ? await noticeRpc(
+          context,
+          'notice_plan_proposals_get',
+          { p_society_id: societyId, p_notice_id: id },
+          noticePlanProposalsSchema,
+        )
+      : [],
   };
 }
 
@@ -261,23 +286,6 @@ async function removeReplacedAttachment(
   }
 }
 
-function requirePostingDay(scheduledFor: string | null) {
-  if (scheduledFor !== null && scheduledFor <= indiaToday()) {
-    throw new ValidationError({
-      scheduledFor: 'Choose a posting day after today.',
-    });
-  }
-}
-
-function indiaToday() {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-}
-
 /** Saves a draft, or a scheduled notice when a posting day is chosen; nobody is notified yet. */
 export async function saveNoticeDraft(
   input: unknown,
@@ -289,7 +297,7 @@ export async function saveNoticeDraft(
     requestId,
   );
   const parsed = parseInput(noticeDraftInputSchema, input);
-  requirePostingDay(parsed.scheduledFor);
+  validateNoticeSchedule(parsed.scheduledFor, parsed.expiresAt);
   const current =
     parsed.noticeId === null
       ? null
@@ -320,6 +328,7 @@ export async function saveNoticeDraft(
       p_expires_at: parsed.expiresAt,
       p_attachment: attachment,
       p_scheduled_for: parsed.scheduledFor,
+      p_post_mode: parsed.postMode,
       p_expected_updated_at: parsed.expectedUpdatedAt,
       p_client_request_id: parsed.clientRequestId,
       p_request_trace: context.requestId,
@@ -363,13 +372,13 @@ export async function publishNoticeDraft(
   return notice;
 }
 
-/** Saves the admin and committee planning fields kept beside a notice. */
+/** Admins alone save the official planning fields. */
 export async function saveNoticePlan(
   input: unknown,
   requestId: string,
 ): Promise<Notice> {
   const { context, societyId } = await getContext(
-    'notice:manage',
+    'notice:plan',
     true,
     requestId,
   );
@@ -388,6 +397,54 @@ export async function saveNoticePlan(
       p_request_trace: context.requestId,
     },
     noticeSchema,
+  );
+}
+
+export async function proposeNoticePlan(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'notice:propose_plan',
+    true,
+    requestId,
+  );
+  const values = parseInput(noticePlanProposalInputSchema, input);
+  return noticeRpc(
+    context,
+    'notice_plan_proposal_save',
+    {
+      p_society_id: societyId,
+      p_notice_id: values.noticeId,
+      p_values: {
+        prepared_by: values.preparedBy,
+        display_location: values.displayLocation,
+        priority: values.priority,
+        next_action: values.nextAction,
+        next_action_on: values.nextActionOn,
+      },
+      p_client_request_id: values.clientRequestId,
+      p_request_trace: context.requestId,
+    },
+    noticePlanProposalSchema,
+    { retryOnDuplicate: true },
+  );
+}
+
+export async function reviewNoticePlan(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'notice:plan',
+    true,
+    requestId,
+  );
+  const values = parseInput(noticePlanReviewInputSchema, input);
+  return noticeRpc(
+    context,
+    'notice_plan_proposal_review',
+    {
+      p_society_id: societyId,
+      p_proposal_id: values.proposalId,
+      p_accept: values.accept,
+      p_request_trace: context.requestId,
+    },
+    noticePlanProposalSchema,
   );
 }
 

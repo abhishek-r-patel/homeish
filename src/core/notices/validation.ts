@@ -1,5 +1,6 @@
 // Shared notice board contracts for database results and form inputs.
 import { z } from 'zod';
+import { ValidationError } from '../errors';
 
 const uuid = z.uuid();
 const timestamp = z.iso.datetime({ offset: true });
@@ -42,6 +43,17 @@ export const noticePlanSchema = z.object({
 });
 export type NoticePlan = z.infer<typeof noticePlanSchema>;
 
+export const noticePlanProposalSchema = noticePlanSchema.extend({
+  id: uuid,
+  notice_id: uuid,
+  status: z.enum(['pending', 'accepted', 'rejected']),
+  proposed_by_name: z.string().nullable(),
+  created_at: timestamp,
+  reviewed_at: timestamp.nullable(),
+});
+export type NoticePlanProposal = z.infer<typeof noticePlanProposalSchema>;
+export const noticePlanProposalsSchema = z.array(noticePlanProposalSchema);
+
 export const noticeSchema = z.object({
   id: uuid,
   society_id: uuid,
@@ -54,7 +66,7 @@ export const noticeSchema = z.object({
   pinned: z.boolean(),
   expires_at: timestamp.nullable(),
   status: z.enum(['draft', 'scheduled', 'published', 'withdrawn']),
-  scheduled_for: isoDate.nullable(),
+  scheduled_for: timestamp.nullable(),
   published_at: timestamp.nullable(),
   planning_status: noticePlanningStatusSchema,
   plan: noticePlanSchema.nullable(),
@@ -142,12 +154,13 @@ export const noticePinInputSchema = z
 
 export const noticeIdInputSchema = z.object({ noticeId: uuid }).strict();
 
-/** Saves a draft (no posting day) or a scheduled notice; creating needs a client request id. */
+/** Explicit posting intent prevents an incomplete schedule from being saved as a draft. */
 export const noticeDraftInputSchema = z
   .object({
     ...noticeContentShape,
     pinned: z.boolean().default(false),
-    scheduledFor: isoDate.nullable().default(null),
+    postMode: z.enum(['draft', 'schedule']).default('draft'),
+    scheduledFor: timestamp.nullable().default(null),
     noticeId: uuid.nullable().default(null),
     expectedUpdatedAt: timestamp.nullable().default(null),
     clientRequestId: uuid.nullable().default(null),
@@ -155,6 +168,20 @@ export const noticeDraftInputSchema = z
   .strict()
   .superRefine((input, context) => {
     refineAudience(input, context);
+    if (input.postMode === 'schedule' && input.scheduledFor === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['scheduledFor'],
+        message: 'Choose a posting date and time.',
+      });
+    }
+    if (input.postMode === 'draft' && input.scheduledFor !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['scheduledFor'],
+        message: 'Choose Schedule to set a posting time.',
+      });
+    }
     if (input.noticeId === null && input.clientRequestId === null) {
       context.addIssue({
         code: 'custom',
@@ -171,6 +198,24 @@ export const noticeDraftInputSchema = z
     }
   });
 export type NoticeDraftInput = z.input<typeof noticeDraftInputSchema>;
+
+export function validateNoticeSchedule(
+  scheduledFor: string | null,
+  expiresAt: string | null,
+  now = Date.now(),
+) {
+  if (scheduledFor === null) return;
+  if (Date.parse(scheduledFor) <= now) {
+    throw new ValidationError({
+      scheduledFor: 'Choose a future posting date and time.',
+    });
+  }
+  if (expiresAt !== null && Date.parse(expiresAt) <= Date.parse(scheduledFor)) {
+    throw new ValidationError({
+      expiresAt: 'The notice expiry must be after it is posted.',
+    });
+  }
+}
 
 export const noticePublishInputSchema = z
   .object({ noticeId: uuid, expectedUpdatedAt: timestamp })
@@ -206,6 +251,17 @@ export const noticePlanInputSchema = z
     }
   });
 export type NoticePlanInput = z.input<typeof noticePlanInputSchema>;
+
+export const noticePlanProposalInputSchema = noticePlanInputSchema.safeExtend({
+  clientRequestId: uuid,
+});
+export const noticePlanReviewInputSchema = z
+  .object({
+    noticeId: uuid,
+    proposalId: uuid,
+    accept: z.boolean(),
+  })
+  .strict();
 
 export const noticeViewSchema = z.enum(['current', 'archive', 'planned']);
 export type NoticeView = z.infer<typeof noticeViewSchema>;

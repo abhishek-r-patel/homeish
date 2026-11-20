@@ -88,8 +88,8 @@ export const HI_HELP_LETTERS: Readonly<Record<string, string>> = {
   'Open Daily checks to record each round. If you find a problem, log a request so the office can follow it up.':
     'हर राउंड दर्ज करने के लिए दैनिक जाँच खोलें। कोई समस्या मिले तो अनुरोध दर्ज करें ताकि कार्यालय उस पर काम कर सके।',
   'How do I publish a notice?': 'मैं सूचना कैसे प्रकाशित करूँ?',
-  'Open Notices and create a new notice. Write it and publish it. Residents see it on their Notices screen.':
-    'सूचनाएँ खोलें और नई सूचना बनाएँ। उसे लिखें और प्रकाशित करें। निवासी उसे अपनी सूचनाएँ स्क्रीन पर देखते हैं।',
+  'Open Notices and create a new notice. Publish now, save a draft, or schedule a future date and time in India time. Due schedules post automatically when accessed, with daily catch-up; alerts may be delayed. Admins edit official planning details; committee members propose changes for admin review.':
+    'सूचनाएँ खोलें और नई सूचना बनाएँ। अभी प्रकाशित करें, ड्राफ़्ट सहेजें या भारतीय समय में भविष्य की तारीख और समय तय करें। तय समय के बाद देखे जाने पर सूचना अपने आप पोस्ट होती है; दैनिक प्रक्रिया बाकी काम करती है और अलर्ट में देरी हो सकती है। एडमिन आधिकारिक योजना बदलते हैं; समिति सदस्य एडमिन की समीक्षा के लिए बदलाव प्रस्तावित करते हैं।',
   'Notice Board': 'सूचना पट',
   'Where do I find society notices?': 'सोसाइटी की सूचनाएँ कहाँ मिलेंगी?',
   'Open Notices to read current notices from the society office.':
