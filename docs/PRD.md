@@ -160,7 +160,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 
 **Society & Structure**
 
-- `CORE-5` Developer creates a society with: name, address, city, contact, timezone, currency (default INR), logo.
+- `CORE-5` Developer creates a society with: name, address, city, contact, currency (default INR), logo. All societies use India Standard Time (`Asia/Kolkata`). Support for other timezones is deferred to a future Pro feature.
 - `CORE-6` Society structure: Society → Blocks/Towers (optional) → Units (flat/house number, floor, type, area sq ft optional).
 - `CORE-7` Admin can add/edit/deactivate blocks and units; bulk import units via CSV (MVP).
 
@@ -182,7 +182,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 **Society Settings (RWA Settings page, admin-editable)**
 
 - `CORE-16` **Gate login mode** (admin chooses): (1) **Individual guard accounts** — each guard has their own email and signs in with it (default); or (2) **Shared gate account** — one shared email for all guards, where each guard identifies themselves when they start a shift or log an entry, so each entry still records who handled it. The admin also chooses _how_ guards identify themselves: **pick their name** from the guard list, or enter a **personal PIN** (stored only as a hash, attempts rate-limited). **[D-30 — Approved 2026-11-09; A-31]**
-- `CORE-17` Other society profile values (name, address, contact, logo, timezone, and the society's custom label for "Unit") are editable by admin as listed in CORE-5. The custom label is 1–24 letters or spaces and defaults to "Unit". Module settings follow MOD-3 unless a module section says admin-editable (e.g., billing UPI details, BIL-15). Every change is audit-logged. **[DD-05 — Approved 2026-11-09]**
+- `CORE-17` Other society profile values (name, address, contact, logo, and the society's custom label for "Unit") are editable by admin as listed in CORE-5. Timezone is fixed to IST. The custom label is 1–24 letters or spaces and defaults to "Unit". Module settings follow MOD-3 unless a module section says admin-editable (e.g., billing UPI details, BIL-15). Every change is audit-logged. **[DD-05 — amended 2026-11-21]**
 - `CORE-18` Users may choose the Homeish font style (Nunito for body text and Quicksand for headings) or their device's default font. The preference is saved to their account and follows them across devices. **[DD-02 — amended 2026-11-20]**
 
 **Module Registry & Developer Config** (developer-only)
@@ -784,7 +784,7 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 | NFR-6  | Security           | OWASP Top 10 compliance; HTTPS only; role checks server-side; rate-limited OTP and login; encrypted secrets (payment keys); input validation; secure file uploads (type/size limit, scanned/validated).                                                                                                           |
 | NFR-7  | Privacy            | Collect minimum personal data; comply with India DPDP Act principles **[A-23]**: consent at sign-up, data export/deletion on request (admin-triggered via developer), privacy policy + terms.                                                                                                                     |
 | NFR-8  | Payments           | No card or bank credentials stored. The society UPI ID and payee name are the only payment identifiers stored and are treated as sensitive (change-audited, committee notified). Payments are confirmed only by an authorised admin; duplicate UTRs are blocked; amounts shown are always computed on the server. |
-| NFR-9  | Data integrity     | Financial and entry records are append-only/immutable; soft-delete elsewhere; timestamps stored in UTC and displayed in society timezone.                                                                                                                                                                         |
+| NFR-9  | Data integrity     | Financial and entry records are append-only/immutable; soft-delete elsewhere. Store exact instants and use IST for display and business dates.                                                                                                                                                                    |
 | NFR-10 | Backup/Recovery    | Daily automated backups, 30-day retention; RPO ≤ 24h, RTO ≤ 4h (MVP).                                                                                                                                                                                                                                             |
 | NFR-11 | Observability      | See `LOG-*`. Health check endpoint; uptime monitor.                                                                                                                                                                                                                                                               |
 | NFR-12 | Accessibility & UX | Large tap targets for guard UI; WCAG AA contrast; readable on low-end Android; works on 3G-class networks (lightweight pages).                                                                                                                                                                                    |
@@ -1088,7 +1088,7 @@ Integration rules:
 - Resident submits a UTR the admin cannot find in the statement: admin rejects with a reason; resident may resubmit. Same UTR submitted twice: blocked (`BIL-16`). Resident pays the wrong amount: admin confirms the actual amount received (partial/advance rules `BIL-8`, `BIL-9`) or rejects with a reason.
 - Module disabled mid-flow (e.g., visitor pending): pending items freeze; guard sees module-disabled; on re-enable they expire if past timeout.
 - Deleting a unit with history: blocked; deactivate only.
-- Time zones: all display in the society timezone.
+- Time zones: use IST for all displays and business dates, regardless of browser or server timezone. Preserve the exact instant of previously recorded timestamps. Other zones are a future Pro feature. **[Owner-approved 2026-11-21]**
 - Pre-approval code reuse: single-use by default; multi-use within window optional per invite (**[A-30]** MVP single-use only).
 
 ---

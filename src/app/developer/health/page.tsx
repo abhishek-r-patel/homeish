@@ -8,6 +8,7 @@ import {
 } from '@/core/developer/console';
 import type { Json } from '@/core/db/database.types';
 import type { ProductStatus } from '@/components/ui/data-display';
+import { formatLocalizedDateTime } from '@/core/i18n/format';
 
 export const metadata = {
   title: 'Platform Health | Developer Console | Homeish',
@@ -242,7 +243,10 @@ export default async function DeveloperHealthPage() {
             <p className="text-caption text-ink-muted">
               Last completed run:{' '}
               {dailyJobHealth.lastDailyRunAt
-                ? new Date(dailyJobHealth.lastDailyRunAt).toLocaleString()
+                ? formatLocalizedDateTime(
+                    new Date(dailyJobHealth.lastDailyRunAt),
+                    'en',
+                  )
                 : 'No completed run recorded'}
             </p>
             {dailyJobHealth.ageHours !== null && (

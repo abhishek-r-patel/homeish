@@ -1,5 +1,6 @@
 // Format visible numbers and dates without changing stored values or time zones.
 import type { Locale } from './locale';
+import { INDIA_TIME_ZONE } from '../../lib/india-time';
 
 function localeTag(locale: Locale): 'en-IN' | 'hi-IN' {
   return locale === 'hi' ? 'hi-IN' : 'en-IN';
@@ -52,6 +53,7 @@ export function formatLocalizedDate(
 ): string {
   return new Intl.DateTimeFormat(localeTag(locale), {
     ...options,
+    timeZone: options.timeZone ?? INDIA_TIME_ZONE,
     numberingSystem: 'latn',
   }).format(value);
 }
@@ -65,6 +67,7 @@ export function formatLocalizedTime(
     hour: 'numeric',
     minute: '2-digit',
     ...options,
+    timeZone: options.timeZone ?? INDIA_TIME_ZONE,
     hourCycle: 'h12',
     numberingSystem: 'latn',
   }).format(value);
@@ -80,6 +83,7 @@ export function formatLocalizedDateTime(
 ): string {
   return new Intl.DateTimeFormat(localeTag(locale), {
     ...options,
+    timeZone: options.timeZone ?? INDIA_TIME_ZONE,
     hourCycle: 'h12',
     numberingSystem: 'latn',
   }).format(value);

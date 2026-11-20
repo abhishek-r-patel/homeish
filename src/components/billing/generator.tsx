@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/data-display';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { Banner } from '@/components/ui/feedback';
 import { useUiTranslator } from '@/components/ui/language';
+import { todayInIndia } from '@/lib/india-time';
 import { billingDate, billingMoney, billingPeriod } from './presentation';
 import { ActionResult } from './action-state';
 
@@ -50,8 +51,7 @@ type GenerateAction = (data: FormData) => Promise<
 >;
 
 function currentPeriod(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  return `${todayInIndia().slice(0, 7)}-01`;
 }
 
 function GeneratorMessage({

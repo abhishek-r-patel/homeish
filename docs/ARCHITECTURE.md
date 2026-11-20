@@ -324,7 +324,7 @@ admin acceptance/rejection; acceptance checks the official baseline and copies f
 | Tenant key    | Every tenant table has `society_id` (not null, indexed, first column in composite indexes) (DAT-1)                                                   |
 | Identifiers   | UUID primary keys                                                                                                                                    |
 | Money         | `bigint` paise + currency code; no floats (DAT-2)                                                                                                    |
-| Time          | `timestamptz` stored in UTC; society timezone in `societies`; display conversion in the app (NFR-9)                                                  |
+| Time          | `timestamptz` preserves exact instants; society configuration is fixed to `Asia/Kolkata`. Business dates and display use IST (NFR-9).                |
 | Audit columns | `created_at/by`, `updated_at/by` on tenant tables (DAT-1)                                                                                            |
 | Deletion      | Soft delete/deactivate by default; **no delete** on ledger, payments, bills (published), visitor entries, audit logs (DAT-3, DAT-7)                  |
 | Enums         | Status columns use constrained text or enum types matching DESIGN.md Section 4.4 vocabulary                                                          |

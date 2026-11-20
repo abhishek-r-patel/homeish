@@ -1,7 +1,8 @@
 // Convert a datetime-local form value in the society time zone to an ISO instant.
-import { ValidationError } from '@/core/errors';
+import { ValidationError } from '../core/errors';
+import { INDIA_TIME_ZONE } from './india-time';
 
-export function localTimeToIso(value: string, timeZone: string) {
+export function localTimeToIso(value: string, timeZone = INDIA_TIME_ZONE) {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
   if (!match) throw new ValidationError({ time: 'Enter a valid local time.' });
   const [, yearText, monthText, dayText, hourText, minuteText] = match;

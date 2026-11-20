@@ -50,7 +50,7 @@ Homeish digitizes the paper visitor register, the notice board and the maintenan
 - Plain, short, active. Sentence case for headings and labels. Title Case only for primary button labels (e.g., "Pay Now", "Generate Bills").
 - Address the user directly ("Your dues", "Allow this visitor?").
 - No exclamation marks, no emoji, no humour in errors.
-- Dates: `Sat, 9 Nov 2026`. Times: `6:30 PM` (12-hour). Always society timezone; show the zone label only on deadlines/due dates when it differs from the viewer's device zone. **[DA-01]**
+- Dates: `Sat, 9 Nov 2026`. Times: `6:30 PM` (12-hour), always India Standard Time. If a zone label is needed, show **IST**, not the device timezone or a GMT offset. Date-only values keep their recorded calendar day. **[DA-01]**
 - Currency: `₹12,500.00` (Indian digit grouping `₹1,25,000.00`). Minor units never leak into UI (DAT-2).
 
 ---

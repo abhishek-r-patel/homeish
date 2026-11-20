@@ -82,16 +82,15 @@ export function formatTenancyTimestamp(
   timeZone: string,
   seconds = false,
 ) {
-  return new Intl.DateTimeFormat('en-IN', {
+  return `${new Intl.DateTimeFormat('en-IN', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     ...(seconds ? { second: '2-digit' as const } : {}),
-    timeZoneName: 'short',
     timeZone,
-  }).format(new Date(value));
+  }).format(new Date(value))} IST`;
 }
 
 export function formatTenancyBalance(value: string) {

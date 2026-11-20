@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { todayInIndia } from '../../lib/india-time';
 import { Button } from './button';
 import { SelectInput } from './select-input';
 import { TextInput } from './text-input';
@@ -108,7 +109,8 @@ export function DatePicker({
   }, [open, visibleMonth]);
 
   function showCalendar() {
-    const current = parseDate(value) ?? new Date();
+    const current = parseDate(value) ?? parseDate(todayInIndia());
+    if (!current) return;
     setVisibleMonth({ month: current.getMonth(), year: current.getFullYear() });
     setOpen((currentlyOpen) => !currentlyOpen);
   }

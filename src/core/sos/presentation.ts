@@ -114,12 +114,11 @@ export function formatSosTimestamp(
   timeZone?: string,
   locale: Locale = 'en',
 ) {
-  return formatLocalizedDateTime(new Date(value), locale, {
+  return `${formatLocalizedDateTime(new Date(value), locale, {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
-    timeZoneName: 'short',
     ...(timeZone ? { timeZone } : {}),
-  });
+  })} IST`;
 }

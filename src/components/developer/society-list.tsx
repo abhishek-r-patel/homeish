@@ -10,6 +10,7 @@ import type { ProductStatus } from '@/components/ui/data-display';
 import { EmptyState } from '@/components/ui/feedback';
 import { societyStatusSchema } from '@/core/developer/status';
 import type { getDeveloperSocieties } from '@/core/developer/console';
+import { INDIA_TIME_ZONE } from '@/lib/india-time';
 
 type SocietyList = Awaited<ReturnType<typeof getDeveloperSocieties>>;
 type SocietyListRow = SocietyList['societies'][number];
@@ -32,6 +33,7 @@ function statusChip(status: string): ProductStatus | undefined {
 function formatTime(value: string | null) {
   if (!value) return 'None';
   return new Intl.DateTimeFormat('en', {
+    timeZone: INDIA_TIME_ZONE,
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
