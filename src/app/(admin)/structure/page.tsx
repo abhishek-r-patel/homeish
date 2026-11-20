@@ -1,6 +1,7 @@
 // Manage active blocks and units for the current society.
 import { Card } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
+import { UnitLayout } from '@/components/structure/unit-layout';
 import {
   CreateBlockForm,
   CreateUnitForm,
@@ -46,6 +47,7 @@ export default async function StructurePage() {
           )}
         </p>
       </header>
+      <UnitLayout blocks={blocks} units={units} locale={locale} />
       <Card title={t('Add a block')}>
         <CreateBlockForm />
       </Card>

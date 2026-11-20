@@ -273,6 +273,8 @@ test('move-out blocks positive dues, retains failures for retry, and expires pri
   const origin = await open(page);
   await files(page, origin);
   await page.getByLabel('Fixture scenario').selectOption('move_out');
+  const details = page.getByRole('region', { name: 'Request details' });
+  await expect(details.getByText('No NOC available')).toBeVisible();
   await expect(
     page.getByText('Dues: Not checked', { exact: true }),
   ).toBeVisible();
@@ -321,6 +323,9 @@ test('move-out blocks positive dues, retains failures for retry, and expires pri
   await issue
     .getByRole('button', { name: 'Issue Move-out NOC', exact: true })
     .click();
+  await expect(
+    details.getByText('Available in private documents'),
+  ).toBeVisible();
   await page
     .getByRole('button', { name: 'View Move-out NOC', exact: true })
     .click();
@@ -349,6 +354,13 @@ test('police-proof opt-in is confirmed and gates owner consent without collectin
   await create(page);
   await attach(page);
   await page.getByLabel('Fixture role').selectOption('owner');
+  const details = page.getByRole('region', { name: 'Request details' });
+  await expect(details.getByText('Rental agreement expiry')).toBeVisible();
+  await expect(
+    details.getByText(
+      'Required for this request; no retained proof is available.',
+    ),
+  ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Give Owner Consent', exact: true }),
   ).toHaveCount(0);
@@ -356,6 +368,7 @@ test('police-proof opt-in is confirmed and gates owner consent without collectin
     page.getByLabel(/Aadhaar|government ID/, { exact: true }),
   ).toHaveCount(0);
   await attach(page, 'Police-verification proof');
+  await expect(details.getByText('Proof attached')).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Give Owner Consent', exact: true }),
   ).toBeVisible();
@@ -500,6 +513,8 @@ test('guard and committee schedules stay status-only through filtering and respo
       main.getByText('Synthetic Tenant', { exact: true }),
     ).toHaveCount(0);
     await expect(main.getByRole('link')).toHaveCount(0);
+    await expect(main.getByText('Rental agreement expiry')).toHaveCount(0);
+    await expect(main.getByText('Police-verification proof')).toHaveCount(0);
     await expect(
       main.getByRole('button', {
         name: /Create Move Request|View Rental agreement|Approve Schedule/,

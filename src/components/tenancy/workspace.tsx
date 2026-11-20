@@ -500,14 +500,53 @@ export function TenancyMoveView({
               })}
             </dd>
           </div>
-          {detail.agreement_expires_on ? (
+          {move.kind === 'move_in' ? (
+            <>
+              <div>
+                <dt className="text-caption text-ink-muted">
+                  {t('Rental agreement expiry')}
+                </dt>
+                <dd>
+                  {detail.agreement_expires_on
+                    ? date(detail.agreement_expires_on)
+                    : t('Not recorded')}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-caption text-ink-muted">
+                  {t('Police-verification proof')}
+                </dt>
+                <dd>
+                  {t(
+                    detail.documents.some(
+                      (document) => document.kind === 'police_verification',
+                    )
+                      ? 'Proof attached'
+                      : detail.police_verification_required
+                        ? 'Required for this request; no retained proof is available.'
+                        : 'Not required for this request',
+                  )}
+                </dd>
+              </div>
+            </>
+          ) : (
             <div>
               <dt className="text-caption text-ink-muted">
-                {t('Rental agreement expiry')}
+                {t('Move-out NOC')}
               </dt>
-              <dd>{date(detail.agreement_expires_on)}</dd>
+              <dd>
+                {t(
+                  noc
+                    ? 'Available in private documents'
+                    : detail.events.some(
+                          (event) => event.action === 'noc_issued',
+                        )
+                      ? 'Issued; file no longer available'
+                      : 'No NOC available',
+                )}
+              </dd>
             </div>
-          ) : null}
+          )}
           {detail.amenity_booking_id ? (
             <div>
               <dt className="text-caption text-ink-muted">{t('Amenity')}</dt>

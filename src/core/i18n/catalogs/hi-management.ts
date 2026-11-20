@@ -846,6 +846,13 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'Open {label} (private link, up to five minutes)':
     '{label} खोलें (निजी लिंक, अधिकतम पाँच मिनट)',
   'Owner consent': 'मालिक की सहमति',
+  'Proof attached': 'प्रमाण जोड़ा गया',
+  'Required for this request; no retained proof is available.':
+    'इस अनुरोध के लिए ज़रूरी है; कोई सहेजा हुआ प्रमाण उपलब्ध नहीं है।',
+  'Not required for this request': 'इस अनुरोध के लिए ज़रूरी नहीं है',
+  'Available in private documents': 'निजी दस्तावेज़ों में उपलब्ध है',
+  'Issued; file no longer available': 'जारी किया गया; फ़ाइल अब उपलब्ध नहीं है',
+  'No NOC available': 'कोई NOC उपलब्ध नहीं है',
   'Police-verification proof is not required by this society.':
     'इस सोसाइटी में पुलिस सत्यापन का प्रमाण ज़रूरी नहीं है।',
   'Positive dues block completion and NOC issue. There is no override.':

@@ -16,6 +16,19 @@ import {
   previewUnitsImport,
 } from '@/core/structure/units-csv';
 import { ValidationError } from '@/core/errors';
+import { saveUnitRecord } from '@/core/structure/unit-workspace';
+
+export async function saveUnitRecordAction(
+  unitId: string,
+  clientRequestId: string,
+  payload: unknown,
+) {
+  return runServerAction('structure.units.saveRecord', async (requestId) => {
+    await saveUnitRecord(unitId, clientRequestId, payload, requestId);
+    revalidatePath(`/structure/units/${unitId}`);
+    return 'Unit record saved.';
+  });
+}
 
 export async function createBlockAction(formData: FormData) {
   return runServerAction('structure.blocks.create', async () => {

@@ -265,6 +265,8 @@ Resident sub-types (owner, tenant, family) are **per unit**, so they live on `un
 
 Constraints: unique `(unit_id, membership_id)` among non-ended rows; **at most one active primary per unit** (partial unique on `unit_id` where `is_primary` and `status = 'active'`); a primary must be an owner or tenant. A person may occupy several units. Move-out sets `status = 'ended'` and `ended_at` (history preserved, CORE-10, PERM-3: tenants see only data from their tenancy period via `started_at`/`ended_at`).
 
+**P36 unit records:** `unit_area_history` is append-only and stores a version, source, nullable positive measurements in square feet, status (`pending`, `verified`, `remeasure`), actor and timestamp. `unit_vacancy_followups` allows one open row per unit, with a same-society admin assignee, start, optional inspection, next follow-up and closure dates. The daily service-role-only purge removes follow-ups whose closure day is more than 12 months old and audits counts. `unit_floor_positions` stores one explicit row/column pair per placed unit, unique per block and floor, including societies without blocks. A floor, block or active-status change invalidates a placement. All three tables are same-society, RLS-enabled, and inaccessible directly to API roles. Authorized admin RPCs enforce version checks, request retries and audit; no record alters Core occupancy or `units.area_sqft`.
+
 ### 3.10 `guard_roster` — who can be named as having handled a gate entry
 
 | Column        | Type        | Null | Notes                                                                                                                                                                            |
