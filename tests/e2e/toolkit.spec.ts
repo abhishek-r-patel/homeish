@@ -114,12 +114,44 @@ test('action plans show summaries, a weekly timeline and protect linked meeting 
   await form.getByLabel('End day').fill('30');
   await form.getByRole('button', { name: 'Add task' }).click();
   await expect(form).toHaveCount(0);
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Task saved.' }),
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'New plan' }).click();
   await page.getByRole('button', { name: 'Create from sample' }).click();
   await expect(
     page.getByRole('button', { name: 'Create from sample' }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Plan created.' }),
+  ).toBeVisible();
+});
+
+test('admin removes a task with a reason and confirmation; committee cannot remove it', async ({
+  page,
+}) => {
+  await openScreen(page, 'plans', 'committee');
+  await expect(
+    page.getByRole('button', { name: 'Remove task', exact: true }),
+  ).toHaveCount(0);
+  await page.getByLabel('Fixture role').selectOption('admin');
+  const task = page.getByRole('listitem', {
+    name: 'Check fire-safety equipment and emergency contacts',
+  });
+  await task.getByRole('button', { name: 'Remove task', exact: true }).click();
+  await task.getByLabel('Reason for removal').fill('Duplicate planning task');
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await task.getByRole('button', { name: 'Remove task', exact: true }).click();
+  await expect(task).toBeVisible();
+  page.once('dialog', (dialog) => dialog.accept());
+  await task.getByRole('button', { name: 'Remove task', exact: true }).click();
+  await expect(task).toHaveCount(0);
+  await expect(
+    page
+      .getByRole('status')
+      .filter({ hasText: 'Task removed. Its history is retained.' }),
+  ).toBeVisible();
 });
 
 test('my tasks is read-only and lists only the member’s own tasks', async ({

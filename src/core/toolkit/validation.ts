@@ -664,7 +664,7 @@ export const ACTION_TASK_STATUS_LABELS: Readonly<
   not_started: 'Not started',
   in_progress: 'In progress',
   done: 'Done',
-  blocked: 'Blocked',
+  blocked: 'Work held up',
 };
 
 export const ACTION_TIMELINES = [
@@ -716,6 +716,18 @@ export const actionPlanSampleInputSchema = z
     name: optionalText(ACTION_PLAN_NAME_MAX),
     startOn: optionalDate,
     clientRequestId: z.uuid(),
+  })
+  .strict();
+
+export const actionTaskDeleteInputSchema = z
+  .object({
+    taskId: z.uuid(),
+    expectedVersion: version,
+    reason: z
+      .string()
+      .trim()
+      .min(1, 'Enter a reason for removing this task.')
+      .max(300),
   })
   .strict();
 
@@ -824,6 +836,7 @@ export type ActionPlan = z.infer<typeof actionPlanSchema>;
 export const actionPlansSchema = z.object({
   today: z.iso.date(),
   can_manage: z.boolean(),
+  can_delete_tasks: z.boolean().default(false),
   plans: z.array(actionPlanSchema),
 });
 export type ActionPlansView = z.infer<typeof actionPlansSchema>;

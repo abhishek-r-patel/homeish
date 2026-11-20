@@ -360,6 +360,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'adoption:read': ['admin', 'committee'],
       'adoption:manage': ['admin'],
       'action_plan:manage': ['admin', 'committee'],
+      'action_plan:delete_task': ['admin'],
       'action_plan:own': [
         'admin',
         'committee',

@@ -1654,6 +1654,9 @@ export type Database = {
           client_request_id: string;
           created_at: string;
           created_by: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          deletion_reason: string | null;
           end_day: number;
           evidence_url: string | null;
           id: string;
@@ -1677,6 +1680,9 @@ export type Database = {
           client_request_id: string;
           created_at?: string;
           created_by: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          deletion_reason?: string | null;
           end_day: number;
           evidence_url?: string | null;
           id?: string;
@@ -1699,6 +1705,9 @@ export type Database = {
           client_request_id?: string;
           created_at?: string;
           created_by?: string;
+          deleted_at?: string | null;
+          deleted_by?: string | null;
+          deletion_reason?: string | null;
           end_day?: number;
           evidence_url?: string | null;
           id?: string;
@@ -1720,6 +1729,13 @@ export type Database = {
           {
             foreignKeyName: 'committee_action_plan_tasks_created_by_fkey';
             columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'committee_action_plan_tasks_deleted_by_fkey';
+            columns: ['deleted_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
@@ -12562,6 +12578,16 @@ export type Database = {
           p_plan_id: string;
           p_request_id: string;
           p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      committee_action_plan_task_delete: {
+        Args: {
+          p_expected_version: number;
+          p_reason: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_task_id: string;
         };
         Returns: undefined;
       };

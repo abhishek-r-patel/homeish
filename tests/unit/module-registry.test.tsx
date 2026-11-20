@@ -132,6 +132,12 @@ describe('module registry', () => {
     expect(hasPermission(['committee'], 'core', 'contact_log:manage')).toBe(
       true,
     );
+    expect(hasPermission(['admin'], 'core', 'action_plan:delete_task')).toBe(
+      true,
+    );
+    expect(
+      hasPermission(['committee'], 'core', 'action_plan:delete_task'),
+    ).toBe(false);
     expect(hasPermission(['resident'], 'core', 'contact_log:manage')).toBe(
       false,
     );

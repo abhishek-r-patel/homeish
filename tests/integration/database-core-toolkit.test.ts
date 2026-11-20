@@ -61,7 +61,7 @@ describe.skipIf(!hasDatabase)('database core toolkit (P35)', () => {
     );
 
   const getPlans = (role: Role) =>
-    rpc<{ can_manage: boolean; plans: Plan[] }>(
+    rpc<{ can_manage: boolean; can_delete_tasks: boolean; plans: Plan[] }>(
       role,
       'select public.committee_action_plans_get($1) as result',
       [societyId],
@@ -496,6 +496,7 @@ describe.skipIf(!hasDatabase)('database core toolkit (P35)', () => {
     expect(doneLinked.message).toContain('linked meeting action');
     const taskId = await saveTask('admin', planId, null, {
       meetingActionId: meetingActionId,
+      owner: memberships.owner,
       status: 'in_progress',
     });
     await database.asSuperuser(async (client) => {
@@ -512,6 +513,66 @@ describe.skipIf(!hasDatabase)('database core toolkit (P35)', () => {
       .tasks.find((row) => row.id === taskId)!;
     expect(task).toMatchObject({ status: 'done', progress: 100 });
     expect(task.meeting_action?.status).toBe('done');
+
+    const remove = (
+      role: Role,
+      version: number,
+      reason = 'Duplicate planning task',
+    ) =>
+      rpc(
+        role,
+        `select public.committee_action_plan_task_delete($1, $2, $3, $4, 'remove-task') as result`,
+        [societyId, taskId, version, reason],
+      );
+    expect((await getPlans('committee')).can_delete_tasks).toBe(false);
+    expect((await getPlans('admin')).can_delete_tasks).toBe(true);
+    expect((await dbError(remove('committee', task.version))).code).toBe(
+      '42501',
+    );
+    expect((await dbError(remove('foreignAdmin', task.version))).code).toBe(
+      '42501',
+    );
+    expect((await dbError(remove('admin', task.version, '   '))).code).toBe(
+      '22023',
+    );
+    expect((await dbError(remove('admin', task.version + 1))).code).toBe(
+      '40001',
+    );
+    await remove('admin', task.version);
+    await remove('admin', task.version);
+    expect(
+      (await getPlans('owner')).plans.some((plan) =>
+        plan.tasks.some((row) => row.id === taskId),
+      ),
+    ).toBe(false);
+    expect(
+      (await getPlans('admin')).plans.find((plan) => plan.id === planId)!.tasks,
+    ).toEqual([]);
+    expect(
+      (
+        await dbError(
+          saveTask('admin', planId, taskId, { version: task.version + 1 }),
+        )
+      ).message,
+    ).toContain('removed task');
+    const retained = await database.asSuperuser(
+      async (client) =>
+        (
+          await client.query(
+            `select task.deleted_by, task.deletion_reason, action.status as meeting_status,
+        (select count(*)::int from public.audit_logs where action = 'core.action_plan.task_remove' and entity_id = task.id::text) as audit_count
+       from public.committee_action_plan_tasks task
+       join public.meeting_action_items action on action.id = task.meeting_action_item_id where task.id = $1`,
+            [taskId],
+          )
+        ).rows[0]!,
+    );
+    expect(retained).toEqual({
+      deleted_by: users.admin,
+      deletion_reason: 'Duplicate planning task',
+      meeting_status: 'done',
+      audit_count: 1,
+    });
   });
 
   it('creates an editable sample plan and archives instead of deleting', async () => {

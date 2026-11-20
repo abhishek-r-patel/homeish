@@ -13,6 +13,7 @@ import { ToolkitRouteState } from '@/components/toolkit/shared';
 import { SocietyProfileScreen } from '@/components/toolkit/society-profile';
 import { Banner } from '@/components/ui/feedback';
 import { SelectInput } from '@/components/ui/select-input';
+import type { ModuleFormAction } from '@/components/ui/module-action-form';
 import {
   PROFILE_FIELDS,
   PROFILE_REQUIRED_KEYS,
@@ -20,6 +21,7 @@ import {
   actionPlanSampleInputSchema,
   actionPlanSaveInputSchema,
   actionTaskSaveInputSchema,
+  actionTaskDeleteInputSchema,
   addDays,
   capabilityAdoptionSaveInputSchema,
   societyProfileSaveInputSchema,
@@ -82,6 +84,10 @@ const PLAN_ACTIONS: ActionPlanActions = {
   setPlanArchived: stub(actionPlanArchiveInputSchema, 'Plan archived.'),
   createSamplePlan: stub(actionPlanSampleInputSchema, 'Sample plan created.'),
   saveTask: stub(actionTaskSaveInputSchema, 'Task saved.'),
+  deleteTask: stub(
+    actionTaskDeleteInputSchema,
+    'Task removed. Its history is retained.',
+  ),
 };
 
 function profile(role: FixtureRole, scenario: Scenario): SocietyProfileView {
@@ -282,7 +288,12 @@ const TASKS: ActionTask[] = [
 function plans(role: FixtureRole, scenario: Scenario): ActionPlansView {
   const manager = role !== 'resident';
   if (scenario === 'empty')
-    return { today: TODAY, can_manage: manager, plans: [] };
+    return {
+      today: TODAY,
+      can_manage: manager,
+      can_delete_tasks: role === 'admin',
+      plans: [],
+    };
   const own = (tasks: ActionTask[]) =>
     manager
       ? tasks
@@ -290,6 +301,7 @@ function plans(role: FixtureRole, scenario: Scenario): ActionPlansView {
   return {
     today: TODAY,
     can_manage: manager,
+    can_delete_tasks: role === 'admin',
     plans: [
       {
         id: PLAN,
@@ -341,6 +353,28 @@ export default function ToolkitFixturePage() {
   const [role, setRole] = useState<FixtureRole>('admin');
   const [screen, setScreen] = useState<FixtureScreen>('profile');
   const [scenario, setScenario] = useState<Scenario>('normal');
+  const [removedTaskIds, setRemovedTaskIds] = useState<string[]>([]);
+  const planView = plans(screen === 'my_tasks' ? 'resident' : role, scenario);
+  const visiblePlans = {
+    ...planView,
+    plans: planView.plans.map((plan) => ({
+      ...plan,
+      tasks: plan.tasks.filter((task) => !removedTaskIds.includes(task.id)),
+    })),
+  };
+  const deleteTask: ModuleFormAction = async (formData) => {
+    if (role !== 'admin')
+      return {
+        ok: false,
+        code: 'FORBIDDEN',
+        message: 'Only admins can remove tasks.',
+      };
+    const input = actionTaskDeleteInputSchema.parse(
+      JSON.parse(String(formData.get('input'))),
+    );
+    setRemovedTaskIds((ids) => [...ids, input.taskId]);
+    return { ok: true, message: 'Task removed. Its history is retained.' };
+  };
   const routeState =
     scenario === 'loading' || scenario === 'error' || scenario === 'denied'
       ? scenario
@@ -427,19 +461,16 @@ export default function ToolkitFixturePage() {
         ) : screen === 'plans' ? (
           <ActionPlansWorkspace
             key={`${role}-${scenario}`}
-            view={plans(role, scenario)}
+            view={visiblePlans}
             members={MEMBERS}
             meetingActions={MEETING_ACTIONS}
-            actions={PLAN_ACTIONS}
+            actions={{ ...PLAN_ACTIONS, deleteTask }}
             showArchived
             archivedHref="/fixtures/toolkit"
             activeHref="/fixtures/toolkit"
           />
         ) : (
-          <MyTasksView
-            key={`${role}-${scenario}`}
-            view={plans('resident', scenario)}
-          />
+          <MyTasksView key={`${role}-${scenario}`} view={visiblePlans} />
         )}
       </main>
     </>

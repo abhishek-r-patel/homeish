@@ -4,6 +4,7 @@ import {
   saveActionPlanAction,
   createSampleActionPlanAction,
   saveActionTaskAction,
+  deleteActionTaskAction,
   setActionPlanArchivedAction,
 } from '@/app/(admin)/admin/action-plans/actions';
 import { saveCapabilityAdoptionAction } from '@/app/(admin)/admin/adoption/actions';
@@ -127,6 +128,7 @@ export async function ActionPlansPage({
         setPlanArchived: setActionPlanArchivedAction,
         createSamplePlan: createSampleActionPlanAction,
         saveTask: saveActionTaskAction,
+        deleteTask: deleteActionTaskAction,
       }}
     />
   );

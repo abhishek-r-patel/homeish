@@ -1,5 +1,14 @@
 // Hindi labels for the society profile, adoption tracker and committee action plans.
 export const HI_TOOLKIT: Readonly<Record<string, string>> = {
+  'Responsible person': 'जिम्मेदार व्यक्ति',
+  'Work held up': 'काम रुका हुआ',
+  'Remove task': 'काम हटाएं',
+  'Reason for removal': 'हटाने का कारण',
+  'Enter a reason for removing this task.': 'इस काम को हटाने का कारण लिखें।',
+  'Task removed. Its history is retained.':
+    'काम हटाया गया। उसका इतिहास सुरक्षित है।',
+  'Remove this task? Its history is retained and any linked meeting action stays unchanged.':
+    'यह काम हटाएं? उसका इतिहास सुरक्षित रहेगा और जुड़ा हुआ बैठक का काम नहीं बदलेगा।',
   'Action plans': 'कार्य योजनाएं',
   'Add task': 'काम जोड़ें',
   'Add the first task to start tracking progress.':

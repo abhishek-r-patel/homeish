@@ -35,7 +35,7 @@ export function ModuleActionForm({
   submitLabel: string;
   idempotent?: boolean;
   confirmMessage?: string;
-  onSaved?: (data: unknown) => void;
+  onSaved?: (data: unknown, message?: string) => void;
   refresh?: boolean;
   submitDisabled?: boolean;
 }) {
@@ -85,7 +85,7 @@ export function ModuleActionForm({
         setResult(response);
         if (response.ok) {
           retryId.current = null;
-          onSaved?.(response.data);
+          onSaved?.(response.data, response.message);
           if (refresh) router.refresh();
         }
       } catch {

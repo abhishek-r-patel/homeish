@@ -17,6 +17,7 @@ import {
   actionPlanSaveInputSchema,
   actionPlansSchema,
   actionTaskSaveInputSchema,
+  actionTaskDeleteInputSchema,
   capabilityAdoptionResultSchema,
   capabilityAdoptionSaveInputSchema,
   capabilityAdoptionsSchema,
@@ -233,6 +234,28 @@ export async function saveActionPlan(input: unknown, requestId: string) {
     },
     z.uuid(),
     'Check the plan details and retry. Archived plans cannot be edited.',
+  );
+}
+
+export async function deleteActionTask(input: unknown, requestId: string) {
+  const values = parseModuleInput(actionTaskDeleteInputSchema, input);
+  const { context, societyId } = await getToolkitContext(
+    'action_plan:delete_task',
+    true,
+    requestId,
+  );
+  return callModuleRpc(
+    context,
+    'committee_action_plan_task_delete',
+    {
+      p_society_id: societyId,
+      p_task_id: values.taskId,
+      p_expected_version: values.expectedVersion,
+      p_reason: values.reason,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'Could not remove this task. Refresh and retry.',
   );
 }
 

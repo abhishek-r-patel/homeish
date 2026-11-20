@@ -1,4 +1,4 @@
-// Create, edit and archive committee action plans and their tasks through audited P35 operations.
+// Create, edit and archive plans, and retain task history when admins remove tasks.
 'use server';
 import {
   readModuleActionInput,
@@ -6,6 +6,7 @@ import {
 } from '@/core/actions/server-action';
 import {
   createSampleActionPlan,
+  deleteActionTask,
   saveActionPlan,
   saveActionTask,
   setActionPlanArchived,
@@ -46,5 +47,12 @@ export async function saveActionTaskAction(form: FormData) {
   return runServerAction(ROUTE, async (requestId) => {
     await saveActionTask(readModuleActionInput(form), requestId);
     return 'Task saved.';
+  });
+}
+
+export async function deleteActionTaskAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await deleteActionTask(readModuleActionInput(form), requestId);
+    return 'Task removed. Its history is retained.';
   });
 }

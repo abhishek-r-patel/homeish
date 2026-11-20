@@ -33,6 +33,7 @@ import {
   actionPlanSummary,
   actionPlanWeeks,
   actionTaskSaveInputSchema,
+  actionTaskDeleteInputSchema,
   type ActionPlan,
   type ActionPlansView,
   type ActionTask,
@@ -46,6 +47,7 @@ export type ActionPlanActions = {
   setPlanArchived: ModuleFormAction;
   createSamplePlan: ModuleFormAction;
   saveTask: ModuleFormAction;
+  deleteTask?: ModuleFormAction;
 };
 
 const VIEW_OPTIONS = [
@@ -86,6 +88,7 @@ export function ActionPlansWorkspace({
       null,
   );
   const [creating, setCreating] = useState(false);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const selected =
     view.plans.find((plan) => plan.id === selectedId) ?? view.plans[0] ?? null;
   return (
@@ -98,6 +101,7 @@ export function ActionPlansWorkspace({
           )}
         </p>
       </header>
+      {savedMessage ? <Banner tone="success">{t(savedMessage)}</Banner> : null}
       {!view.can_manage ? (
         <Banner tone="info">
           {t('Plans are read-only while the society cannot be changed.')}
@@ -123,8 +127,9 @@ export function ActionPlansWorkspace({
         <NewPlanForms
           today={view.today}
           actions={actions}
-          onCreated={(planId) => {
+          onCreated={(planId, message) => {
             setCreating(false);
+            setSavedMessage(message ?? 'Plan saved.');
             if (planId) setSelectedId(planId);
           }}
         />
@@ -159,6 +164,8 @@ export function ActionPlansWorkspace({
             plan={selected}
             today={view.today}
             canManage={view.can_manage}
+            canDeleteTasks={view.can_delete_tasks}
+            onSaved={setSavedMessage}
             members={members}
             meetingActions={meetingActions}
             actions={actions}
@@ -176,7 +183,7 @@ function NewPlanForms({
 }: {
   today: string;
   actions: ActionPlanActions;
-  onCreated: (planId: string | null) => void;
+  onCreated: (planId: string | null, message?: string) => void;
 }) {
   const { translate: t } = useUiTranslator();
   return (
@@ -186,7 +193,7 @@ function NewPlanForms({
           action={actions.savePlan}
           submitLabel={t('Create plan')}
           idempotent
-          onSaved={(data) => onCreated(savedPlanId(data))}
+          onSaved={(data, message) => onCreated(savedPlanId(data), message)}
           input={(form, clientRequestId) =>
             actionPlanSaveInputSchema.parse({
               planId: null,
@@ -231,7 +238,7 @@ function NewPlanForms({
           action={actions.createSamplePlan}
           submitLabel={t('Create from sample')}
           idempotent
-          onSaved={(data) => onCreated(savedPlanId(data))}
+          onSaved={(data, message) => onCreated(savedPlanId(data), message)}
           input={(form, clientRequestId) =>
             actionPlanSampleInputSchema.parse({
               name: String(form.get('name') ?? ''),
@@ -264,6 +271,8 @@ function PlanDetail({
   plan,
   today,
   canManage,
+  canDeleteTasks,
+  onSaved,
   members,
   meetingActions,
   actions,
@@ -271,6 +280,8 @@ function PlanDetail({
   plan: ActionPlan;
   today: string;
   canManage: boolean;
+  canDeleteTasks: boolean;
+  onSaved: (message: string) => void;
   members: readonly ToolkitMemberOption[];
   meetingActions: readonly MeetingActionOption[];
   actions: ActionPlanActions;
@@ -340,7 +351,10 @@ function PlanDetail({
           <ModuleActionForm
             action={actions.savePlan}
             submitLabel={t('Save plan')}
-            onSaved={() => setEditingPlan(false)}
+            onSaved={(_data, message) => {
+              onSaved(message ?? 'Plan saved.');
+              setEditingPlan(false);
+            }}
             input={(form) =>
               actionPlanSaveInputSchema.parse({
                 planId: plan.id,
@@ -415,7 +429,10 @@ function PlanDetail({
             members={members}
             meetingActions={meetingActions}
             action={actions.saveTask}
-            onSaved={() => setAddingTask(false)}
+            onSaved={() => {
+              onSaved('Task saved.');
+              setAddingTask(false);
+            }}
           />
         </Card>
       ) : null}
@@ -446,6 +463,10 @@ function PlanDetail({
               members={members}
               meetingActions={meetingActions}
               action={actions.saveTask}
+              deleteAction={
+                canDeleteTasks && editable ? actions.deleteTask : undefined
+              }
+              onSaved={onSaved}
             />
           ))}
         </ul>
@@ -498,16 +519,21 @@ function TaskItem({
   members,
   meetingActions,
   action,
+  deleteAction,
+  onSaved,
 }: {
   task: ActionTask;
   editable: boolean;
   members: readonly ToolkitMemberOption[];
   meetingActions: readonly MeetingActionOption[];
   action?: ModuleFormAction;
+  deleteAction?: ModuleFormAction;
+  onSaved?: (message: string) => void;
 }) {
   const { translate: t } = useUiTranslator();
   const dates = useToolkitDates();
   const [editing, setEditing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   return (
     <li
       className="grid min-w-0 gap-space-2 rounded-md border border-rule p-space-4"
@@ -527,7 +553,9 @@ function TaskItem({
           <dd>{t(PRIORITY_LABELS[task.priority])}</dd>
         </div>
         <div>
-          <dt className="text-caption text-ink-muted">{t('Owner')}</dt>
+          <dt className="text-caption text-ink-muted">
+            {t('Responsible person')}
+          </dt>
           <dd>{task.owner_name ?? t('Not assigned')}</dd>
         </div>
         <div>
@@ -598,7 +626,10 @@ function TaskItem({
               members={members}
               meetingActions={meetingActions}
               action={action}
-              onSaved={() => setEditing(false)}
+              onSaved={() => {
+                onSaved?.('Task saved.');
+                setEditing(false);
+              }}
             />
             <Button variant="secondary" onClick={() => setEditing(false)}>
               {t('Close')}
@@ -608,6 +639,45 @@ function TaskItem({
           <div>
             <Button variant="secondary" onClick={() => setEditing(true)}>
               {t('Edit task')}
+            </Button>
+          </div>
+        )
+      ) : null}
+      {deleteAction ? (
+        removing ? (
+          <ModuleActionForm
+            action={deleteAction}
+            submitLabel={t('Remove task')}
+            confirmMessage={t(
+              'Remove this task? Its history is retained and any linked meeting action stays unchanged.',
+            )}
+            onSaved={(_data, message) => {
+              onSaved?.(message ?? 'Task removed. Its history is retained.');
+              setRemoving(false);
+            }}
+            input={(form) =>
+              actionTaskDeleteInputSchema.parse({
+                taskId: task.id,
+                expectedVersion: task.version,
+                reason: String(form.get('reason') ?? ''),
+              })
+            }
+          >
+            <TextAreaInput
+              id={`remove-${task.id}`}
+              name="reason"
+              label={t('Reason for removal')}
+              required
+              maxLength={300}
+            />
+            <Button variant="secondary" onClick={() => setRemoving(false)}>
+              {t('Cancel')}
+            </Button>
+          </ModuleActionForm>
+        ) : (
+          <div>
+            <Button variant="secondary" onClick={() => setRemoving(true)}>
+              {t('Remove task')}
             </Button>
           </div>
         )
@@ -715,7 +785,7 @@ function TaskForm({
       <SelectInput
         id={`${id}-owner`}
         name="owner"
-        label={t('Owner')}
+        label={t('Responsible person')}
         helpText={t('Any active member. They are notified when assigned.')}
         defaultValue={task?.owner_membership_id ?? ''}
         options={[
