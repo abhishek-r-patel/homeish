@@ -306,7 +306,8 @@ module stays disabled; only `core` is on.
 
 **Prerequisites.** Migration `20261114090000_core_society_slugs.sql` must be
 applied to the target project. You need a developer account with an enrolled
-authenticator (sign in to the Developer Console once to enrol it), an
+authenticator (create it with `npm run developer:create`, DEPLOYMENT Section 3,
+then sign in to the Developer Console once to enrol it), an
 interactive terminal, and the society's name, street address, city and
 first-admin email.
 

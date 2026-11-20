@@ -108,8 +108,23 @@ remove files through Supabase Storage first. It needs `SUPABASE_DB_CA_CERT` set
 to the Supabase root certificate (LOCAL_SETUP Section 6). Run each hosted use
 only with the owner's approval, then check `npm run db:list`, `npm run
 integrity:check:testdb` and `npm run db:types:check`. After installation, the
-developer login is created in the Supabase dashboard and marked as developer by
-a direct database insert into `developers` (ARCHITECTURE 8.1).
+developer account is a Supabase login marked by a row in `developers`
+(ARCHITECTURE 8.1). For a laptop profile such as testdb, run `npm run
+developer:create -- --db testdb --email <email>` to preview, then add `--apply`:
+if the login does not exist, it asks for the password (typing hidden; needs an
+interactive terminal) and creates it with the email confirmed through the
+Supabase Auth admin API, then inserts the `developers` row. An existing login
+is only marked, and only if its email is confirmed and its profile is active.
+`npm run developer:delete` takes the same options and deletes the developer
+row, profile and login in one transaction (verified-authenticator sessions and
+notifications go with them). If other records reference the profile, such as
+audit history, it removes only the developer row and keeps the login. It also
+cleans up a profile left behind by a login deleted in the dashboard. Both use
+`SUPABASE_DB_URL`, `SUPABASE_DB_CA_CERT` (or `--ca-cert <file>`) and, for
+create, `SUPABASE_SERVICE_ROLE_KEY` from `.env.<profile>.local`; they refuse
+live and are safe to rerun. On live, create the login in the dashboard
+(Authentication > Users > Add user, auto-confirm on) and insert the row from
+the Supabase SQL editor.
 
 Later releases to an installed database use the normal table above and the
 expand/contract rule.
