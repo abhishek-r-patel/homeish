@@ -532,6 +532,65 @@ describe.skipIf(!hasDatabase)(
       expect(denied.code).toBe('42501');
     });
 
+    it('reconciles P37 summaries to the existing reports and excludes unconfirmed collections', async () => {
+      const readSummary = (role: Role) =>
+        as(
+          role,
+          (client) =>
+            one<{
+              collections_by_mode: { amount_paise: string }[];
+              block_totals: { outstanding_paise: string }[];
+              status_summary: { bill_count: number }[];
+              unapplied_credit_paise: string;
+            }>(
+              client,
+              `select public.billing_report_summary($1, $2, $3) as result`,
+              [societyId, period, today],
+            ),
+          false,
+        );
+      const dashboard = await as(
+        'committee',
+        (client) =>
+          one<{
+            received_paise: string;
+            outstanding_paise: string;
+          }>(client, `select public.billing_dashboard($1, $2, $3) as result`, [
+            societyId,
+            period,
+            today,
+          ]),
+        false,
+      );
+      const summary = await readSummary('committee');
+      expect(
+        summary.collections_by_mode
+          .reduce((total, row) => total + BigInt(row.amount_paise), BigInt(0))
+          .toString(),
+      ).toBe(dashboard.received_paise);
+      expect(
+        summary.block_totals
+          .reduce(
+            (total, row) => total + BigInt(row.outstanding_paise),
+            BigInt(0),
+          )
+          .toString(),
+      ).toBe(dashboard.outstanding_paise);
+      expect(
+        summary.status_summary.reduce(
+          (total, row) => total + row.bill_count,
+          0,
+        ),
+      ).toBeGreaterThan(0);
+      expect(summary.unapplied_credit_paise).toMatch(/^\d+$/);
+      await expect(readSummary('resident')).rejects.toMatchObject({
+        code: '42501',
+      });
+      await expect(readSummary('guard')).rejects.toMatchObject({
+        code: '42501',
+      });
+    });
+
     it('exports audited formula-ready report jobs', async () => {
       const exported = await as('committee', (client) =>
         one<{ job_id: string; row_count: number }>(

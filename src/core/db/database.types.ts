@@ -1018,11 +1018,14 @@ export type Database = {
         Row: {
           active: boolean;
           amount_paise: number | null;
+          base_charge_type_id: string | null;
           created_at: string;
           created_by: string;
+          eligibility: string;
           id: string;
           method: string;
           name: string;
+          percent_basis_points: number | null;
           society_id: string;
           updated_at: string;
           updated_by: string;
@@ -1031,11 +1034,14 @@ export type Database = {
         Insert: {
           active?: boolean;
           amount_paise?: number | null;
+          base_charge_type_id?: string | null;
           created_at?: string;
           created_by: string;
+          eligibility?: string;
           id?: string;
           method: string;
           name: string;
+          percent_basis_points?: number | null;
           society_id: string;
           updated_at?: string;
           updated_by: string;
@@ -1043,16 +1049,26 @@ export type Database = {
         Update: {
           active?: boolean;
           amount_paise?: number | null;
+          base_charge_type_id?: string | null;
           created_at?: string;
           created_by?: string;
+          eligibility?: string;
           id?: string;
           method?: string;
           name?: string;
+          percent_basis_points?: number | null;
           society_id?: string;
           updated_at?: string;
           updated_by?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'billing_charge_types_base_same_society_fkey';
+            columns: ['society_id', 'base_charge_type_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_charge_types';
+            referencedColumns: ['society_id', 'id'];
+          },
           {
             foreignKeyName: 'billing_charge_types_created_by_fkey';
             columns: ['created_by'];
@@ -10488,6 +10504,7 @@ export type Database = {
       };
       unit_occupants: {
         Row: {
+          billing_confirmed_move_in_on: string | null;
           created_at: string;
           created_by: string;
           ended_at: string | null;
@@ -10505,6 +10522,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          billing_confirmed_move_in_on?: string | null;
           created_at?: string;
           created_by?: string;
           ended_at?: string | null;
@@ -10521,6 +10539,7 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          billing_confirmed_move_in_on?: string | null;
           created_at?: string;
           created_by?: string;
           ended_at?: string | null;
@@ -12394,21 +12413,27 @@ export type Database = {
         Args: {
           p_active: boolean;
           p_amount_paise: number;
+          p_base_charge_type_id?: string;
+          p_eligibility?: string;
           p_expected_updated_at: string;
           p_id: string;
           p_method: string;
           p_name: string;
+          p_percent_basis_points?: number;
           p_request_id: string;
           p_society_id: string;
         };
         Returns: {
           active: boolean;
           amount_paise: number | null;
+          base_charge_type_id: string | null;
           created_at: string;
           created_by: string;
+          eligibility: string;
           id: string;
           method: string;
           name: string;
+          percent_basis_points: number | null;
           society_id: string;
           updated_at: string;
           updated_by: string;
@@ -12425,11 +12450,14 @@ export type Database = {
         Returns: {
           active: boolean;
           amount_paise: number | null;
+          base_charge_type_id: string | null;
           created_at: string;
           created_by: string;
+          eligibility: string;
           id: string;
           method: string;
           name: string;
+          percent_basis_points: number | null;
           society_id: string;
           updated_at: string;
           updated_by: string;
@@ -12445,8 +12473,26 @@ export type Database = {
         Args: { p_as_of_date: string; p_society_id: string };
         Returns: Json;
       };
+      billing_confirm_tenant_move_in: {
+        Args: {
+          p_move_in_on: string;
+          p_occupant_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
       billing_dashboard: {
         Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: Json;
+      };
+      billing_estimate: {
+        Args: {
+          p_area_sqft: number;
+          p_custom_amounts: Json;
+          p_occupancy: string;
+          p_society_id: string;
+        };
         Returns: Json;
       };
       billing_fine_add: {
@@ -12611,6 +12657,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      billing_report_summary: {
+        Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: Json;
+      };
       billing_resident_lists: { Args: { p_society_id: string }; Returns: Json };
       billing_resident_outstanding: {
         Args: { p_society_id: string };
@@ -12628,6 +12678,10 @@ export type Database = {
       };
       billing_stale_payments_run: {
         Args: { p_request_id: string; p_society_id: string; p_today: string };
+        Returns: Json;
+      };
+      billing_unconfirmed_tenant_moves: {
+        Args: { p_society_id: string; p_unit_id: string };
         Returns: Json;
       };
       change_member_roles: {

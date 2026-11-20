@@ -532,15 +532,20 @@ A **bill** (also used for fines and late fees) creates a **debit** on the unit's
 
 ### 6.2 `billing_charge_types`
 
-| Column       | Type    | Null | Notes                                                                                                     |
-| ------------ | ------- | ---- | --------------------------------------------------------------------------------------------------------- |
-| Std          |         |      |                                                                                                           |
-| name         | text    | no   | e.g., `Monthly Maintenance`. Unique `(society_id, name)`                                                  |
-| method       | text    | no   | `fixed`, `per_sqft`, `custom` (PRD D-12)                                                                  |
-| amount_paise | bigint  | yes  | `fixed`: amount per unit; `per_sqft`: rate per sq ft in paise; `custom`: null. Check: > 0 when not custom |
-| active       | boolean | no   | Default `true`                                                                                            |
+| Column               | Type    | Null | Notes                                                                         |
+| -------------------- | ------- | ---- | ----------------------------------------------------------------------------- |
+| Std                  |         |      |                                                                               |
+| name                 | text    | no   | e.g., `Monthly Maintenance`. Unique `(society_id, name)`                      |
+| method               | text    | no   | `fixed`, `per_sqft`, `custom`, `percent_of_charge` (PRD D-12)                 |
+| amount_paise         | bigint  | yes  | `fixed`: amount per unit; `per_sqft`: rate per sq ft in paise; otherwise null |
+| base_charge_type_id  | uuid    | yes  | Same-society non-percentage base, required only for percentage charges        |
+| percent_basis_points | integer | yes  | 1–10,000 for percentage charges; otherwise null                               |
+| eligibility          | text    | no   | `all` (default), `owner`, or `tenant`                                         |
+| active               | boolean | no   | Default `true`                                                                |
 
-P7A creates this table with minimal read grants and module-aware RLS for administrators and committee. `billing_charge_save` handles create/update/deactivate and its audit row in one transaction; direct API writes are denied. Updates require the last-read timestamp so stale editors cannot overwrite another administrator's change. Non-custom amounts must be positive safe-integer paise (at most `9007199254740991`); custom amounts must be null. Deactivation retains the row for bill history.
+P7A creates this table with minimal read grants and module-aware RLS for administrators and committee. `billing_charge_save` handles create/update/deactivate and its audit row in one transaction; direct API writes are denied. Updates require the last-read timestamp so stale editors cannot overwrite another administrator's change. Fixed and area amounts must be positive safe-integer paise (at most `9007199254740991`). Deactivation retains the row for bill history. A base referenced by an active percentage charge cannot be deactivated or converted to a percentage charge.
+
+P37 derives occupancy from historical active/ended unit-occupancy records, using a completed Tenancy move-in or an explicitly confirmed actual tenant move-in date (not the invitation date). Unknown tenant dates block affected occupancy-dependent calculations; ordinary `all` charges without an occupancy-dependent base do not require a snapshot. A manual confirmation is an audited admin write; it does not change Core access dates, published bills, or resident liability. Estimates and aggregate reports are read-only.
 
 ### 6.3 `billing_bills`
 
