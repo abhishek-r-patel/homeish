@@ -428,7 +428,8 @@ describe.skipIf(!hasDatabase)('database resident home', () => {
   it('does not expose unit data after occupancy ends', async () => {
     await database.asSuperuser((client) =>
       client.query(
-        `update public.unit_occupants set status = 'ended', ended_at = current_date
+        `update public.unit_occupants
+         set status = 'ended', ended_at = (now() at time zone 'Asia/Kolkata')::date
          where membership_id = $1`,
         [membershipId],
       ),

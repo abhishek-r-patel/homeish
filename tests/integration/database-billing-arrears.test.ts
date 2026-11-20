@@ -98,15 +98,15 @@ describe.skipIf(!hasDatabase)('database billing arrears trackers', () => {
       }
       societyId = (
         await client.query<{ id: string }>(
-          `insert into public.societies (name, created_by, timezone)
-           values ('Billing Arrears Society', $1, 'UTC') returning id`,
+          `insert into public.societies (name, created_by)
+           values ('Billing Arrears Society', $1) returning id`,
           [users.admin],
         )
       ).rows[0]!.id;
       foreignSocietyId = (
         await client.query<{ id: string }>(
-          `insert into public.societies (name, created_by, timezone)
-           values ('Other Billing Society', $1, 'UTC') returning id`,
+          `insert into public.societies (name, created_by)
+           values ('Other Billing Society', $1) returning id`,
           [users.foreignAdmin],
         )
       ).rows[0]!.id;
@@ -143,10 +143,10 @@ describe.skipIf(!hasDatabase)('database billing arrears trackers', () => {
         today: string;
         yesterday: string;
       }>(
-        `select to_char(date_trunc('month', current_date) - interval '2 months',
+        `with india as (select (now() at time zone 'Asia/Kolkata')::date as today)
+         select to_char(date_trunc('month', today::timestamp) - interval '2 months',
            'YYYY-MM-DD') as period,
-         to_char(current_date, 'YYYY-MM-DD') as today,
-         to_char(current_date - 1, 'YYYY-MM-DD') as yesterday`,
+         today::text as today, (today - 1)::text as yesterday from india`,
       );
       period = dates.rows[0]!.period;
       today = dates.rows[0]!.today;
