@@ -374,7 +374,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `SRQ-19` Daily common-area check: admins define inspection points; admins, housekeeping supervisors and guards mark each point OK or Issue once a day. An Issue can create or link a common-area request. Reports show the OK rate and the points with the most issues. This is not guard patrol (P25) or a cleaning schedule (D-20).
 - `SRQ-20` When `vendor` is enabled, admins can pick an active vendor as the assignee; the name and phone are copied to the request, and blacklisted vendors show a warning. Free text stays available, and existing requests are unchanged.
 
-**Pre-launch release choice (approved 2026-11-20).** Retire older beta and local builds for this upgrade rather than add temporary compatibility screens. The updated four-priority targets and both committee-wait modes remain; historical category target values are retained. The P47 and P53 behavior below is the supported behavior. See [DEPLOYMENT.md](./DEPLOYMENT.md#3-database-migrations) for the one-time rollout exception and its outstanding checks.
+**Pre-launch release choice (approved 2026-11-20).** Retire older beta and local builds rather than add temporary compatibility screens; the redesign starts from empty databases. The updated four-priority targets and both committee-wait modes remain. The P47 and P53 behavior below is the supported behavior. See [DEPLOYMENT.md](./DEPLOYMENT.md#3-database-migrations) for the fresh-start rollout.
 
 **User Stories**
 

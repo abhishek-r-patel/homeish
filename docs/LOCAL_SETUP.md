@@ -67,19 +67,23 @@ Each database has its own ignored settings file: `.env.testdb.local`, `.env.demo
 
 ## 6. Database commands
 
-**Current pre-launch upgrade:** Do not use `npm run db:push` for this batch;
-the installed CLI can commit part of it before failing. The rehearsal is
-local only, and hosted changes need separate approval and the checks in
+**Empty database (redesign fresh start):** `npm run db:push` cannot install
+every migration because the CLI does not wrap each one in a transaction. Use
+`node scripts/with-env.mjs testdb node scripts/db.mjs fresh-install
+--wipe-testdb` only with the owner's approval; it needs `SUPABASE_DB_CA_CERT`
+set to the Supabase root certificate (the repository variable
+`SUPABASE_TESTDB_CA_CERT`). See
 [DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations).
 
-| Command                                          | What it does                                                           |
-| ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `npm run db:new -- <module>_<short_description>` | Creates an empty, timestamped migration file in `supabase/migrations/` |
-| `npm run db:list`                                | Shows which migrations testdb has applied                              |
-| `npm run db:push`                                | Applies new migrations to testdb (add `-- --dry-run` to preview first) |
-| `npm run db:types`                               | Regenerates `src/core/db/database.types.ts` from testdb                |
-| `npm run db:types:check`                         | Fails if the generated types no longer match testdb                    |
-| `npm run check:migrations`                       | Checks migration file names (also part of `npm run check`)             |
+| Command                                                   | What it does                                                           |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `npm run db:new -- <module>_<short_description>`          | Creates an empty, timestamped migration file in `supabase/migrations/` |
+| `npm run db:list`                                         | Shows which migrations testdb has applied                              |
+| `npm run db:push`                                         | Applies new migrations to testdb (add `-- --dry-run` to preview first) |
+| `npm run env -- testdb node scripts/db.mjs fresh-install` | Installs all migrations on an empty testdb in one transaction          |
+| `npm run db:types`                                        | Regenerates `src/core/db/database.types.ts` from testdb                |
+| `npm run db:types:check`                                  | Fails if the generated types no longer match testdb                    |
+| `npm run check:migrations`                                | Checks migration file names (also part of `npm run check`)             |
 
 Database commands load `.env.testdb.local` and run against the address in it. To target the demo project once it is resumed: `npm run env -- demo node scripts/db.mjs push`. They refuse `homeish-live` and an unset password, and hide database addresses in their output.
 

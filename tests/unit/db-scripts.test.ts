@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { databasePoolOptions } from '../../scripts/integrity-check.mjs';
-import { testdbSessionUrl } from '../../scripts/prelaunch-upgrade.mjs';
+import { testdbSessionUrl } from '../../scripts/fresh-install.mjs';
 
 const scriptPath = (name: string) =>
   fileURLToPath(new URL(`../../scripts/${name}`, import.meta.url));
@@ -68,12 +68,6 @@ describe('db', () => {
     'postgresql://postgres.yhwadldjeyirkgbmoctb:secret-value@aws-0-ap-south-1.pooler.supabase.com:5432/postgres';
   const testdbUrl = (password: string) =>
     `postgresql://postgres.oqyagsabodaueghtrocv:${password}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`;
-  const prelaunchFlags = [
-    '--apply-testdb',
-    '--confirm-clients-paused',
-    '--confirm-backup-verified',
-    '--confirm-schema-verified',
-  ];
   const invalidTestdbUrl = (change: (url: URL) => void) => {
     const url = new URL(testdbUrl('synthetic-password'));
     change(url);
@@ -113,15 +107,18 @@ describe('db', () => {
     expect(result.stderr).toContain('set-db-password.ps1');
   });
 
-  it('requires explicit safety confirmations before a pre-launch apply', () => {
-    const result = run('db.mjs', ['prelaunch-upgrade', '--apply-testdb'], {
-      SUPABASE_DB_URL: testdbUrl('synthetic-password'),
-    });
+  it.each([['--apply'], ['--wipe-testdb', '--yes']])(
+    'rejects unknown fresh-install options %j before connecting',
+    (...args) => {
+      const result = run('db.mjs', ['fresh-install', ...args], {
+        SUPABASE_DB_URL: testdbUrl('synthetic-password'),
+      });
 
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain('all three safety confirmations');
-    expect(result.stderr + result.stdout).not.toContain('synthetic-password');
-  });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('fresh-install [--wipe-testdb]');
+      expect(result.stderr + result.stdout).not.toContain('synthetic-password');
+    },
+  );
 
   it.each([
     liveUrl,
@@ -137,8 +134,8 @@ describe('db', () => {
     invalidTestdbUrl((url) => {
       url.searchParams.set('host', 'outside.example');
     }),
-  ])('refuses an unsafe pre-launch target', (url) => {
-    const result = run('db.mjs', ['prelaunch-upgrade', ...prelaunchFlags], {
+  ])('refuses to wipe an unsafe target', (url) => {
+    const result = run('db.mjs', ['fresh-install', '--wipe-testdb'], {
       SUPABASE_DB_URL: url,
     });
 

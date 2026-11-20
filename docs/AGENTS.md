@@ -304,7 +304,7 @@ The personal instructions cover worktree safety, focused changes, approvals and 
 - Work on a branch named for the task (e.g., `module-visitor/approval-flow`), not directly on the main branch.
 - Follow the approval sequence and per-commit/full-release gates in [root AGENTS.md](../AGENTS.md#commit-and-release-workflow); do not duplicate or weaken that workflow here.
 - Commit messages follow [.vscode/settings.json](../.vscode/settings.json); put relevant plan, requirement or screen IDs (e.g., `P0.6`, `VIS-4`, `G-02`) in a bullet, not the subject.
-- Releases follow ARCHITECTURE 19: migrations before code, backward-compatible, modules shipped dark and enabled per society. The one-time pre-launch exception is in [DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations).
+- Releases follow ARCHITECTURE 19: migrations before code, backward-compatible, modules shipped dark and enabled per society. The redesign's fresh start (empty databases, no upgrade of older data) is in [DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations).
 
 ---
 

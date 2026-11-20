@@ -65,8 +65,8 @@ Rules that never change:
 Migrations live in `supabase/migrations`, are forward-only, and are never edited
 after they reach a hosted project (DATABASE Section 14).
 
-The table below is for normal releases. For the current pre-launch upgrade,
-follow the exception below instead; do not use `npm run db:push` for that batch.
+The table below is for normal releases to a database that already holds the
+schema. An empty database is set up with the fresh install below instead.
 
 | Step | testdb (beta)                                                            | homeish-live (production)                                      |
 | ---- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
@@ -81,46 +81,33 @@ the previous app build working (expand/contract): add tables, columns and new
 function parameters with defaults first; remove old ones only in a later
 release once no running build uses them.
 
-**One-time pre-launch exception (owner approved 2026-11-20; not executed).**
-The P35–P53 upgrade contains already-committed migrations that do not support
-the previous beta or older local builds. The owner chose to retire those builds,
-pause their use during the upgrade and accept that the previous build cannot be
-used for rollback afterwards. Retain existing data; do not reset or delete it.
-Keep beta and shared testdb clients paused until the database upgrade and
-matching app deployment are complete and verified. If either fails, keep them
-paused and repair forward; do not restart an old build against the new schema.
-Production remains on hold.
+**Fresh start for the redesign (owner approved).** The redesign replaces the
+existing app, so testdb and, at launch, homeish-live start empty instead of
+being upgraded. Testdb holds synthetic data only (AD-13); nothing on it is kept
+and no backup is taken. Older beta and local builds are retired; do not run them
+against the new schema.
 
-A disposable local test applied the 14 candidate migrations and their
-Supabase history together, preserved representative existing records and
-rolled the whole batch back after an injected failure. This is a local
-experiment, not a verified hosted procedure or an atomic app deployment.
-The approved read-only testdb history check matches the tested baseline through
-`20261123140000` and shows the same 14 candidate migrations pending. It does
-not verify the actual schema, data, permissions, backup or operating procedure;
-those still need checking before any hosted upgrade.
+`node scripts\db.mjs fresh-install` applies every migration and its Supabase
+migration history in **one transaction** on the profile's database: if any step
+fails, nothing changes. It refuses a database that is not empty (any app
+tables or functions, the `private` schema, storage buckets or policies, login
+accounts or migration history). The Supabase CLI push is not used for this
+because CLI 3.2.0 does not wrap each migration in a transaction, so the `LOCK
+TABLE` in `20261124110000_expense_vouchers_reconciliation.sql` fails.
 
-The installed Supabase CLI 3.2.0 `db:push` was also tested locally. It
-committed the first migration and then failed on the `LOCK TABLE` in
-`20261124110000_expense_vouchers_reconciliation.sql`, which requires an
-explicit transaction. Do not run that push against testdb for this upgrade or
-mark unapplied migrations as applied to work around it. Listing testdb's
-migration history is approved only after local verification; applying any
-hosted change still needs separate approval. This exception is limited to this
-upgrade; subsequent releases use the normal expand/contract rule.
+`--wipe-testdb` first empties testdb in the same transaction: it drops the app's
+tables, functions and `private` schema, storage policies and buckets, deletes
+every login account and the migration history, then installs. It accepts only
+the testdb session pooler (never live) and refuses if any stored file exists;
+remove files through Supabase Storage first. It needs `SUPABASE_DB_CA_CERT` set
+to the Supabase root certificate (LOCAL_SETUP Section 6). Run each hosted use
+only with the owner's approval, then check `npm run db:list`, `npm run
+integrity:check:testdb` and `npm run db:types:check`. After installation, the
+developer login is created in the Supabase dashboard and marked as developer by
+a direct database insert into `developers` (ARCHITECTURE 8.1).
 
-The one-time action `node scripts\db.mjs prelaunch-upgrade` runs a **local-only**
-rehearsal using the disposable PostgreSQL runner. It checks the exact migration
-files and CLI-produced history metadata, and tests rollback and data retention.
-It refuses a changed batch or a different CLI version. Its guarded write path
-is a prototype, not an approved or verified hosted procedure: it accepts only
-the testdb session pooler, locks and checks the migration history, and attempts
-the batch and history in one transaction. The required operator confirmations
-are attestations; the action does not pause clients, take or verify a backup,
-or verify schema drift, data or hosted permissions. Do not use the write path
-until those prerequisites and the rollout plan have been independently checked
-and the owner separately approves the hosted change. If a commit response is
-lost, keep clients paused and inspect the database before any retry.
+Later releases to an installed database use the normal table above and the
+expand/contract rule.
 
 ## 4. Rollback
 
@@ -132,8 +119,8 @@ lost, keep clients paused and inspect the database before any retry.
 | Secret leaked              | Rotate it (OPERATIONS "Rotate a secret"), redeploy, and check the audit and error logs                                                                                   |
 
 For normal expand/contract releases, rolling the app back one release is safe
-without touching the database. The pre-launch exception in Section 3 cannot
-roll back to an older build after the database upgrade.
+without touching the database. Builds from before the redesign fresh start
+(Section 3) cannot run against the new schema.
 
 ## 5. Secrets and configuration
 
@@ -196,8 +183,8 @@ Do these in order. Each needs the owner; nothing here is automated.
 - [ ] Resume `homeish-live` (PostgreSQL 17; confirm its region is India, and
       set the Vercel function region to match, API APA-04). Upgrade to the paid
       plan with daily backups once the first society pays.
-- [ ] Apply all migrations from the approved operator session; run
-      `npm run integrity:check`.
+- [ ] Install the empty database with `fresh-install` (Section 3) from the
+      approved operator session; run `npm run integrity:check`.
 - [ ] Configure Supabase Auth (Brevo SMTP sender, code settings, rate limits,
       site URL and redirect URLs for the production host).
 - [ ] Create the developer account and enrol its authenticator.

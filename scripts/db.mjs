@@ -130,23 +130,23 @@ switch (action) {
   case 'types':
     await generateTypes(rest.includes('--check'));
     break;
-  case 'prelaunch-upgrade': {
-    const { PrelaunchUpgradeError, runPrelaunchUpgrade } =
-      await import('./prelaunch-upgrade.mjs');
+  case 'fresh-install': {
+    const { FreshInstallError, runFreshInstall } =
+      await import('./fresh-install.mjs');
     try {
-      await runPrelaunchUpgrade(rest, targetDatabaseUrl);
+      await runFreshInstall(rest, targetDatabaseUrl);
     } catch (error) {
       fail(
-        error instanceof PrelaunchUpgradeError
+        error instanceof FreshInstallError
           ? error.message
-          : 'Pre-launch upgrade failed unexpectedly. Inspect database history before retrying.',
+          : 'Fresh install failed unexpectedly. Run npm run db:list before retrying.',
       );
     }
     break;
   }
   default:
     fail(
-      'Usage: node scripts/db.mjs <new|list|push|types|prelaunch-upgrade> [options]\n' +
+      'Usage: node scripts/db.mjs <new|list|push|types|fresh-install> [options]\n' +
         'Database commands run through a profile, e.g. npm run db:push.',
     );
 }
