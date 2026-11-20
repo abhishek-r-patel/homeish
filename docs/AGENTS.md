@@ -295,6 +295,12 @@ Update documents **in the same task** as the code, without being asked.
 - Keep the README current with real setup and run instructions once code exists.
 - Add the file's header comment, and list new files in the structure section of ARCHITECTURE when they introduce a new folder or module.
 
+### Future web-based guides
+
+- **Owner direction recorded 2026-11-20:** after the app is complete, create a web-based user guide and technical guide, similar to `arp-civic-pulse`. This records future intent, not approval to build the guides now.
+- When that work is requested, use [Diagram Design](https://github.com/cathrynlavery/diagram-design) with Homeish's colours and typography from DESIGN.md for clear, polished workflow and architecture diagrams. Keep diagrams accurate to the implemented app and pair them with plain-language explanations and accessible text descriptions.
+- The skill and optional `homeish` style profile are currently personal installations, not repository dependencies. Do not assume another developer has them; confirm availability and any installation or sharing changes before proceeding.
+
 ---
 
 ## 16 Git and Release Rules
