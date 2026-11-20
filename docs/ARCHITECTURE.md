@@ -840,8 +840,8 @@ flowchart LR
   PROD --> VERIFY[Health check + smoke + monitor errors]
 ```
 
-- **Migrations before code**: backward-compatible migrations (add before use, remove after) so the app can roll back independently of the database. Destructive changes are split across two releases.
-- **Rollback**: redeploy the previous app build; database rolled forward with a corrective migration (never edited in place). Backups are the last resort.
+- **Migrations before code**: backward-compatible migrations (add before use, remove after) so the app can roll back independently of the database. Destructive changes are split across two releases. The owner-approved one-time pre-launch exception is in [DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations).
+- **Rollback**: normally redeploy the previous app build; database rolled forward with a corrective migration (never edited in place). The pre-launch exception cannot use an older build after its database upgrade. Backups are the last resort.
 - **Feature release by module**: a new module ships dark (disabled for all societies), is enabled for a pilot society by the developer, then for others (PRD Section 14 release gating). The module toggle doubles as the feature flag; no separate flag service.
 - **Scheduled job**: platform cron calls the daily job endpoint with the secret header; failures log to `error_logs` and Sentry.
 - **Domain and TLS**: one parent product domain with configured website/demo/society hosts, managed certificates; beta on a separate project; developer console on a distinct path or subdomain with its own cookie scope. **[AA-03, D-34]** Scaffold hosting is approved on `homeish.vercel.app` and `beta-homeish.vercel.app`; nested domains and real society activation remain pending.

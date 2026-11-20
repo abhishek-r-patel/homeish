@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { databasePoolOptions } from '../../scripts/integrity-check.mjs';
+import { testdbSessionUrl } from '../../scripts/prelaunch-upgrade.mjs';
 
 const scriptPath = (name: string) =>
   fileURLToPath(new URL(`../../scripts/${name}`, import.meta.url));
@@ -66,6 +68,17 @@ describe('db', () => {
     'postgresql://postgres.yhwadldjeyirkgbmoctb:secret-value@aws-0-ap-south-1.pooler.supabase.com:5432/postgres';
   const testdbUrl = (password: string) =>
     `postgresql://postgres.oqyagsabodaueghtrocv:${password}@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`;
+  const prelaunchFlags = [
+    '--apply-testdb',
+    '--confirm-clients-paused',
+    '--confirm-backup-verified',
+    '--confirm-schema-verified',
+  ];
+  const invalidTestdbUrl = (change: (url: URL) => void) => {
+    const url = new URL(testdbUrl('synthetic-password'));
+    change(url);
+    return url.toString();
+  };
 
   it.each(['create_things', 'core', 'core_Bad', 'unknown_create_things'])(
     'rejects migration label %j before calling the CLI',
@@ -98,6 +111,51 @@ describe('db', () => {
     });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('set-db-password.ps1');
+  });
+
+  it('requires explicit safety confirmations before a pre-launch apply', () => {
+    const result = run('db.mjs', ['prelaunch-upgrade', '--apply-testdb'], {
+      SUPABASE_DB_URL: testdbUrl('synthetic-password'),
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('all three safety confirmations');
+    expect(result.stderr + result.stdout).not.toContain('synthetic-password');
+  });
+
+  it.each([
+    liveUrl,
+    invalidTestdbUrl((url) => {
+      url.username = 'postgres.otherproject';
+    }),
+    invalidTestdbUrl((url) => {
+      url.hostname = 'outside.example';
+    }),
+    invalidTestdbUrl((url) => {
+      url.port = '6543';
+    }),
+    invalidTestdbUrl((url) => {
+      url.searchParams.set('host', 'outside.example');
+    }),
+  ])('refuses an unsafe pre-launch target', (url) => {
+    const result = run('db.mjs', ['prelaunch-upgrade', ...prelaunchFlags], {
+      SUPABASE_DB_URL: url,
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toMatch(/homeish-live|testdb session pooler/);
+    expect(result.stderr + result.stdout).not.toContain('synthetic-password');
+    expect(result.stderr + result.stdout).not.toContain('secret-value');
+  });
+
+  it('keeps certificate verification for an accepted testdb target', () => {
+    const url = testdbSessionUrl(
+      `${testdbUrl('synthetic-password')}?sslmode=disable`,
+    );
+    const options = databasePoolOptions(url);
+
+    expect(options.ssl).toEqual({ rejectUnauthorized: true });
+    expect(options.connectionString).not.toContain('sslmode');
   });
 
   it('rejects an unknown action', () => {

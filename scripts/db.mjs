@@ -130,9 +130,23 @@ switch (action) {
   case 'types':
     await generateTypes(rest.includes('--check'));
     break;
+  case 'prelaunch-upgrade': {
+    const { PrelaunchUpgradeError, runPrelaunchUpgrade } =
+      await import('./prelaunch-upgrade.mjs');
+    try {
+      await runPrelaunchUpgrade(rest, targetDatabaseUrl);
+    } catch (error) {
+      fail(
+        error instanceof PrelaunchUpgradeError
+          ? error.message
+          : 'Pre-launch upgrade failed unexpectedly. Inspect database history before retrying.',
+      );
+    }
+    break;
+  }
   default:
     fail(
-      'Usage: node scripts/db.mjs <new|list|push|types> [options]\n' +
+      'Usage: node scripts/db.mjs <new|list|push|types|prelaunch-upgrade> [options]\n' +
         'Database commands run through a profile, e.g. npm run db:push.',
     );
 }

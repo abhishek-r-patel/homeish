@@ -10,6 +10,7 @@ scripts/vercel-ignore-build.mjs
 
 # Hosted-database access, society provisioning and encrypted backup tooling.
 scripts/db.mjs
+scripts/prelaunch-upgrade.mjs
 scripts/with-env.mjs
 scripts/set-db-password.ps1
 scripts/create-society.mjs

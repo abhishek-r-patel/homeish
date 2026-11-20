@@ -1599,11 +1599,15 @@ Only `visitor_entries`, `delivery_entries` and `notifications` are published to 
 | Before risky production migrations | Take a manual backup (Section 15) first                                                                                                                                                                                                               |
 | Module introduction                | A module's tables ship in its own migrations; the `modules` row already exists, so it can be shipped **disabled** and enabled for a pilot society by the developer                                                                                    |
 
+The owner-approved, one-time pre-launch exception to the compatibility rule is
+described in [DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations). It
+has not been executed; future releases retain the rule above.
+
 The disposable-PostgreSQL integration suite enforces these catalog rules in CI. Its explicit global-table allowlist is `profiles`, `developers`, `societies`, `modules`, `rate_limits` and `auth_code_challenges`; all other public tables must be society-scoped. Foreign-key indexes may be partial only when the predicate requires every indexed foreign-key column to be non-null. The append-only trigger check enumerates append-only tables and must be extended when one is added.
 
 Forward repair `20261124230000_core_foreign_key_index_coverage.sql` adds the expense statement-entry index on `(society_id, account_id, matched_entry_id)` and rebuilds the existing service-request vendor and round-check request indexes with explicit non-null predicates for every foreign-key column. Existing names and filtered row coverage are retained; data, constraints, uniqueness, RLS and grants are unchanged. The database-wide index check remains unchanged.
 
-Local verification (2026-11-20): all five schema checks and the full disposable database suite passed (`npm run test:integration:local`: 443 passed, 11 unchanged skips, zero failures). Types regenerated locally are unchanged. This is not a hosted migration or release approval.
+Local verification (2026-11-20): all five schema checks and the full disposable database suite passed (`npm run test:integration:local`: 445 passed, 11 unchanged skips, zero failures), including the pre-launch upgrade probe. Types regenerated locally are unchanged. This is not a hosted migration or release approval.
 
 Order of the first migrations: 1) extensions, schemas, shared triggers; 2) helper functions; 3) `profiles`, `developers`, `societies`, `modules`, `module_configs`; 4) structure and membership tables; 5) logs, jobs, notifications; 6) one migration group per module in the order Visitor → Delivery → Billing → Service Request.
 

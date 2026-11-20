@@ -31,11 +31,13 @@ try {
   & (Join-Path $bin 'initdb.exe') -D $data -U supabase_admin --auth=trust -E UTF8 --no-locale *> $null
   if ($LASTEXITCODE -ne 0) { Write-Error 'initdb failed.' }
 
-  # Start without waiting on the server's output handles, which stay open while it runs.
-  Start-Process -FilePath $pgCtl -WindowStyle Hidden -ArgumentList @(
+  # Wait for pg_ctl itself, not the long-running server process it starts.
+  $start = Start-Process -FilePath $pgCtl -WindowStyle Hidden -PassThru -ArgumentList @(
     '-D', "`"$data`"", '-l', "`"$data\server.log`"",
-    '-o', "`"-p $port -c listen_addresses=127.0.0.1`"", 'start'
-  ) | Out-Null
+    '-o', "`"-p $port -c listen_addresses=127.0.0.1`"", '-w', 'start'
+  )
+  $start.WaitForExit()
+  if ($start.ExitCode -ne 0) { Write-Error 'The temporary PostgreSQL server did not start.' }
   $ready = $false
   for ($i = 0; $i -lt 60 -and -not $ready; $i++) {
     Start-Sleep -Milliseconds 500

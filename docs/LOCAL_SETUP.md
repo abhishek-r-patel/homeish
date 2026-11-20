@@ -67,6 +67,11 @@ Each database has its own ignored settings file: `.env.testdb.local`, `.env.demo
 
 ## 6. Database commands
 
+**Current pre-launch upgrade:** Do not use `npm run db:push` for this batch;
+the installed CLI can commit part of it before failing. The rehearsal is
+local only, and hosted changes need separate approval and the checks in
+[DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations).
+
 | Command                                          | What it does                                                           |
 | ------------------------------------------------ | ---------------------------------------------------------------------- |
 | `npm run db:new -- <module>_<short_description>` | Creates an empty, timestamped migration file in `supabase/migrations/` |
@@ -91,14 +96,14 @@ $env:PG_BIN = 'C:\path\to\postgresql\bin'
 npm run test:integration:local
 ```
 
-The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then stops the server and deletes its files. Without a server, `npm run test:integration` skips these tests locally; in CI a missing server is an error. GitHub Actions runs the same tests against a `postgres:17` service container, so no database password is stored in GitHub.
+The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then stops the server and deletes its files. It stops if its own server cannot start, including when that port is already in use; it never substitutes an existing server. Without a server, `npm run test:integration` skips these tests locally; in CI a missing server is an error. GitHub Actions runs the same tests against a `postgres:17` service container, so no database password is stored in GitHub.
 
 ### Migration rules (DATABASE 14.1)
 
 - Name: `YYYYMMDDHHMMSS_<module>_<short_description>.sql`, where `<module>` is a module key (`core`, `visitor`, `delivery`, `billing`, `service_request`, `staff`, `housekeeping`, `amc`, `notice`, `amenity`). `db:new` adds the timestamp.
 - Forward-only: never edit a migration once it has run on testdb; fix forward with a new one.
 - One concern per file; a table ships with RLS enabled, its policies and grants in the same file.
-- After every schema change run `npm run db:push`, then `npm run db:types`, and commit the migration and the regenerated types together.
+- Regenerate types from the tested schema and commit them with the migration. For ordinary releases, apply to testdb only after approval and run `npm run db:types`; the current batch follows the exception above.
 - Roll-out order: testdb → demo → live; live only through approved CI.
 
 ### Email-code sign-in setup
