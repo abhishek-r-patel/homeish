@@ -359,6 +359,16 @@ describe('interface translations', () => {
     expect(formatLocalizedCurrency(12345678, 'hi')).toBe('₹1,23,456.78');
   });
 
+  it('formats large and negative paise exactly without floating-point rounding', () => {
+    expect(formatLocalizedCurrency(9007199254740991, 'en')).toBe(
+      '₹9,00,71,99,25,47,409.91',
+    );
+    expect(formatLocalizedCurrency('9007199255804991', 'hi')).toBe(
+      '₹9,00,71,99,25,58,049.91',
+    );
+    expect(formatLocalizedCurrency(-5, 'en')).toBe('-₹0.05');
+  });
+
   it('localizes month names and retains a 12-hour time in the requested zone', () => {
     const instant = new Date('2026-03-05T18:30:00.000Z');
     expect(

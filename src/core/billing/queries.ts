@@ -12,6 +12,14 @@ import { authorizeRequest } from '../permissions/authorize';
 import type { RequestContext } from '../tenancy/request-context';
 import { paymentDetailsSchema } from './validation';
 
+const residentOutstandingSchema = z.array(
+  z.object({
+    unit_id: z.uuid(),
+    outstanding_paise: z.string().regex(/^[1-9]\d*$/),
+    next_due_date: z.iso.date(),
+  }),
+);
+
 const BILLING_CONFLICT_MESSAGES: Partial<Record<ConflictReason, string>> = {
   duplicate_reference: 'This reference was already submitted.',
   not_unpaid: 'Only unpaid bills can be cancelled. Waive the balance instead.',
@@ -86,5 +94,21 @@ export async function readBillingPaymentDetails(
     'billing_payment_details_get',
     { p_society_id: societyId },
     paymentDetailsSchema.nullable(),
+  );
+}
+
+export async function readResidentOutstanding(context: RequestContext) {
+  authorizeRequest(context, {
+    moduleKey: 'billing',
+    permission: 'billing:bills:read',
+  });
+  if (!context.societyId || !context.roles.includes('resident')) {
+    throw new AppError('FORBIDDEN');
+  }
+  return billingRpc(
+    context,
+    'billing_resident_outstanding',
+    { p_society_id: context.societyId },
+    residentOutstandingSchema,
   );
 }

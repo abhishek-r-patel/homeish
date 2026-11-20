@@ -58,6 +58,13 @@ function Fixture() {
   const [formKey, setFormKey] = useState(0);
   const [receiptCount, setReceiptCount] = useState(0);
   const failSubmit = params.get('fail') === 'submit';
+  const balance = params.get('balance');
+  const outstandingPaise =
+    balance === 'max'
+      ? '9007199254740991'
+      : balance === 'over-max'
+        ? '9007199254740992'
+        : 250000;
 
   async function submitAction(
     formData: FormData,
@@ -193,7 +200,7 @@ function Fixture() {
           timezone="Asia/Kolkata"
           today={today}
           unitLabel="Flat"
-          units={[{ id: unitId, number: 'A-101', outstandingPaise: 250000 }]}
+          units={[{ id: unitId, number: 'A-101', outstandingPaise }]}
         />
       </section>
       <section aria-labelledby="fixture-admin" className="grid gap-space-4">

@@ -505,6 +505,10 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 - All five shells render with the correct navigation for a sample set of roles and module settings.
 - No raw colour values or arbitrary sizes exist in component code (automated check).
 
+**Option C follow-up, approved for implementation 2026-11-20:** replace the bundled Homeish fonts with Nunito and Quicksand, use the cool background and softer radius scale, and build resident home R-01 with household-scoped activity and accurate open-bill totals. The owner approved the two Fontsource font packages and chose household activity rather than a notification-only feed. This supersedes P2.1's original font choices without changing its historical completion record. Implementation, local verification and owner visual acceptance are separate; no hosted migration or release is approved by this decision.
+
+For visual review with a synthetic local configuration, start `npm run dev` and open `/fixtures/home`. The `state=empty`, `state=disabled`, `state=no-unit`, `state=suspended`, and `locale=hi` query options show additional states. This preview is development-only and contains no real household data.
+
 ---
 
 # Phase P3 — Sign-in and Sessions

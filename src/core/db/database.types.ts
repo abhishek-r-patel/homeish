@@ -12611,6 +12611,11 @@ export type Database = {
         };
         Returns: Json;
       };
+      billing_resident_lists: { Args: { p_society_id: string }; Returns: Json };
+      billing_resident_outstanding: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
       billing_settings_update: {
         Args: {
           p_due_day: string;
@@ -16059,6 +16064,7 @@ export type Database = {
           status: string;
         }[];
       };
+      resident_home_get: { Args: { p_society_id: string }; Returns: Json };
       rotate_society_join_code: {
         Args: { p_request_id: string; p_society_id: string };
         Returns: string;

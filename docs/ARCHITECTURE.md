@@ -216,7 +216,7 @@ The SOS alert banner (`src/components/sos/alert-banner.tsx`) is a client compone
 ### 5.4 Design-system implementation
 
 - Tokens (colour, type, spacing, radius, motion) defined once in the Tailwind theme per DESIGN.md Section 2–4. No raw hex or arbitrary values in components.
-- Manrope body text and Sora headings are bundled with the app by default; the signed-in user's `font_preference` may select the device-default font and follows the account across devices.
+- Nunito body text and Quicksand headings are bundled with the app by default; the signed-in user's `font_preference` may select the device-default font and follows the account across devices. The legacy `manrope_sora` value continues to select Homeish typography.
 - P33 resolves the signed-in account language from `profiles.language_preference` and uses a separate device cookie before sign-in. For signed-in society screens, Hindi is available only when both the developer-enabled `language` module and the society's `hindi_available` setting are on; both default off. Turning either off selects English without changing the saved preference. Typed English/Hindi catalogs are shared by server and client UI; missing Hindi keys fail explicitly. Developer, public marketing, historical content and stored notifications/documents/exports remain English. Bundle the approved Noto Sans Devanagari assets locally, with no runtime font request to another site.
 - `src/core/i18n/` owns the request-locale resolver, strict message catalogs, feedback translation and locale-aware display formatters. Client feedback is translated when rendered, including known validation and composed action messages; the server envelope and technical codes stay unchanged. Counts and rupee amounts retain their values, and already-formatted IST feedback dates are localized without a second time-zone conversion.
 - Society-facing route-group error boundaries reuse the root error reporter inside their existing language providers. The analytics dashboard renders authorized aggregate view models as a client component to follow language changes; analytics calculations and English PDF/CSV formatting remain server-side or pure shared logic.
@@ -411,6 +411,8 @@ Each privileged function takes an explicit society ID and re-checks it; none ret
 ## 9. Folder Structure
 
 Single repository, single Next.js app. The diagram describes the target module layout, not a second source tree to create. Current domain services remain under `src/core/<domain>/`, domain UI under `src/components/<domain>/`, and registration in `src/core/modules/index.ts` (see AGENTS.md Section 04).
+
+The Option C resident home uses `src/core/home/` for its authorised read, `src/components/home/` for its screen, and `src/app/(resident)/home/` for the route and loading state. Its development-only fixture lives under `src/app/fixtures/home/`; navigation continues to come from the existing module registry.
 
 P18 adds the following folders within that existing implementation:
 

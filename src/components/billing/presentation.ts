@@ -14,7 +14,7 @@ import type { Locale } from '../../core/i18n/locale';
 
 export function billingMoney(value: number | string, locale: Locale | null) {
   return locale === 'hi'
-    ? formatLocalizedCurrency(Number(value), locale)
+    ? formatLocalizedCurrency(value, locale)
     : formatRupees(value);
 }
 

@@ -3,17 +3,15 @@
 
 import { DataTable } from '@/components/ui/table-controls';
 import { StatusChip } from '@/components/ui/data-display';
-import { billDisplayStatus, formatRupees } from '@/core/billing/format';
-import {
-  formatLocalizedCurrency,
-  formatLocalizedDate,
-} from '@/core/i18n/format';
+import { billDisplayStatus } from '@/core/billing/format';
+import { formatLocalizedDate } from '@/core/i18n/format';
 import { useUiTranslator } from '@/components/ui/language';
 import type {
   BillingBill,
   BillingLedgerEntry,
   BillingPayment,
 } from '@/core/billing/validation';
+import { billingMoney as rupees } from './presentation';
 import { textLinkClass } from './styles';
 
 const KIND_LABELS = {
@@ -41,12 +39,6 @@ function billingPeriod(value: string, locale: 'en' | 'hi') {
     locale,
     { month: 'short', year: 'numeric', timeZone: 'UTC' },
   );
-}
-
-function rupees(paise: number | string, locale: 'en' | 'hi') {
-  return locale === 'hi'
-    ? formatLocalizedCurrency(Number(paise), locale)
-    : formatRupees(paise);
 }
 
 export function BillsTable({

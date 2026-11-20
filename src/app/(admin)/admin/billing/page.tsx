@@ -324,10 +324,7 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
             count: formatLocalizedNumber(dashboard.bill_count, locale),
           })}
           label={t('Billed')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.billed_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.billed_paise, locale)}
         />
         <StatTile
           context={
@@ -341,31 +338,19 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
                 })
           }
           label={t('Collected')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.collected_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.collected_paise, locale)}
         />
         <StatTile
           context={t('{amount} waived', {
-            amount: formatLocalizedCurrency(
-              Number(dashboard.waived_paise),
-              locale,
-            ),
+            amount: formatLocalizedCurrency(dashboard.waived_paise, locale),
           })}
           label={t('Outstanding')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.outstanding_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.outstanding_paise, locale)}
         />
         <StatTile
           context={t('Confirmed payments dated in period')}
           label={t('Received')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.received_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.received_paise, locale)}
         />
       </div>
       <Card
@@ -387,10 +372,7 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
                 </Link>
                 <span className="text-body tabular-nums">
                   {t('{amount} · {count} bills since {date}', {
-                    amount: formatLocalizedCurrency(
-                      Number(row.overdue_paise),
-                      locale,
-                    ),
+                    amount: formatLocalizedCurrency(row.overdue_paise, locale),
                     count: formatLocalizedNumber(
                       row.overdue_bill_count,
                       locale,

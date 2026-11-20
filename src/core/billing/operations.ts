@@ -13,7 +13,11 @@ import { authorizeRequest } from '../permissions/authorize';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { sendBillingReceiptEmailPrivileged } from '../privileged';
 import { buildRequestContext } from '../tenancy/request-context';
-import { billingRpc as rpc, readBillingPaymentDetails } from './queries';
+import {
+  billingRpc as rpc,
+  readBillingPaymentDetails,
+  readResidentOutstanding,
+} from './queries';
 import {
   billingBillDetailsSchema,
   billingBillSchema,
@@ -866,24 +870,16 @@ export async function getResidentBilling() {
     ).values(),
   ].sort((left, right) => left.number.localeCompare(right.number));
   const unitIds = new Set(units.map((unit) => unit.id));
-  const [bills, payments, ledgers, paymentDetails, society] = await Promise.all(
-    [
+  const [lists, ledgers, paymentDetails, society, outstanding] =
+    await Promise.all([
       rpc(
         context,
-        'billing_bills_list',
-        { p_society_id: societyId, p_limit: 100, p_offset: 0 },
-        z.array(billingBillSchema),
-      ),
-      rpc(
-        context,
-        'billing_payments_list',
-        {
-          p_society_id: societyId,
-          p_limit: 100,
-          p_offset: 0,
-          p_status: null,
-        },
-        z.array(billingPaymentSchema),
+        'billing_resident_lists',
+        { p_society_id: societyId },
+        z.object({
+          bills: z.array(billingBillSchema),
+          payments: z.array(billingPaymentSchema),
+        }),
       ),
       Promise.all(
         units.map(async (unit) => ({
@@ -902,8 +898,8 @@ export async function getResidentBilling() {
         .select('timezone, unit_label')
         .eq('id', societyId)
         .single(),
-    ],
-  );
+      readResidentOutstanding(context),
+    ]);
   if (society.error) {
     throw new Error('Society details could not be loaded.', {
       cause: society.error,
@@ -919,9 +915,10 @@ export async function getResidentBilling() {
   }
   return {
     units,
-    bills: bills.filter((bill) => unitIds.has(bill.unit_id)),
-    payments: payments.filter((payment) => unitIds.has(payment.unit_id)),
+    bills: lists.bills.filter((bill) => unitIds.has(bill.unit_id)),
+    payments: lists.payments.filter((payment) => unitIds.has(payment.unit_id)),
     ledgers,
+    outstanding,
     paymentDetails,
     qrUrl,
     timezone: society.data.timezone,

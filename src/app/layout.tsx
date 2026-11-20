@@ -2,8 +2,8 @@
 import type { Metadata } from 'next';
 import { unstable_rethrow } from 'next/navigation';
 import type { ReactNode } from 'react';
-import '@fontsource-variable/manrope';
-import '@fontsource-variable/sora';
+import '@fontsource-variable/nunito';
+import '@fontsource-variable/quicksand';
 import { createRequestId } from '@/core/errors';
 import { logUnexpectedError } from '@/core/logging/error-logger';
 import { getSavedFontPreference } from '@/core/members/operations';

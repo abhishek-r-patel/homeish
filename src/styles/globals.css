@@ -16,10 +16,10 @@
   --color-ink: #1b1f23;
   --color-ink-muted: #59606a;
   --color-ink-disabled: #8a9099;
-  --color-paper: #f6f4ef;
+  --color-paper: #f5f7fa;
   --color-surface: #ffffff;
-  --color-surface-sunken: #efece5;
-  --color-rule: #ddd8cc;
+  --color-surface-sunken: #edf1f6;
+  --color-rule: #d9e0e8;
   --color-rule-strong: #7a7f86;
   --color-brand: #1e4e8c;
   --color-brand-hover: #183f72;
@@ -35,13 +35,14 @@
   --color-info: #1e4e8c;
   --color-info-tint: #e6eef8;
   --color-neutral: #59606a;
-  --color-neutral-tint: #ece9e1;
+  --color-neutral-tint: #e9edf2;
   --color-dev-bar: #1b1f23;
   --color-dev-label: #ffd966;
 
-  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Nunito Variable', ui-sans-serif, system-ui, sans-serif;
   --font-heading:
-    'Sora Variable', 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+    'Quicksand Variable', 'Nunito Variable', ui-sans-serif, system-ui,
+    sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --text-display: 28px;
@@ -86,8 +87,8 @@
   --spacing-space-8: 64px;
 
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
 
   --container-content-narrow: 560px;
   --container-content-default: 960px;
@@ -110,11 +111,11 @@
 html[lang='hi']:not([data-font-preference='device_default']),
 html:not([data-font-preference='device_default']) [lang='hi'] {
   --font-sans:
-    'Noto Sans Devanagari', 'Manrope Variable', ui-sans-serif, system-ui,
+    'Noto Sans Devanagari', 'Nunito Variable', ui-sans-serif, system-ui,
     sans-serif;
   --font-heading:
-    'Noto Sans Devanagari', 'Sora Variable', 'Manrope Variable', ui-sans-serif,
-    system-ui, sans-serif;
+    'Noto Sans Devanagari', 'Quicksand Variable', 'Nunito Variable',
+    ui-sans-serif, system-ui, sans-serif;
   font-family: var(--font-sans);
 }
 

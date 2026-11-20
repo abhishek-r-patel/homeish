@@ -5,6 +5,7 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   'A unit approver can respond to this delivery.':
     'इस डिलीवरी का जवाब यूनिट का अनुमोदक दे सकता है।',
   'AMC asset': 'एएमसी संपत्ति',
+  'Action needed': 'आपकी कार्रवाई ज़रूरी है',
   Active: 'सक्रिय',
   'All statuses': 'सभी स्थितियाँ',
   Allow: 'अनुमति दें',
@@ -13,6 +14,8 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   'Amount due': 'देय राशि',
   'An active household membership is required to browse the directory. Contact your society administrator if you need help with your access.':
     'डायरेक्टरी देखने के लिए परिवार की सक्रिय सदस्यता ज़रूरी है। पहुँच में मदद के लिए अपनी सोसाइटी के प्रशासक से संपर्क करें।',
+  'An active resident membership is required to view this home. Contact your society administrator if you need help with your access.':
+    'यह होम पेज देखने के लिए निवासी की सक्रिय सदस्यता ज़रूरी है। पहुँच में मदद के लिए अपनी सोसाइटी के प्रशासक से संपर्क करें।',
   'Announcements from your society office and committee.':
     'आपके सोसाइटी कार्यालय और समिति की घोषणाएँ।',
   "Approvals close after the society's response timeout.":
@@ -31,6 +34,8 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
     'चुनें कि इस डिवाइस पर छोटे पुश अलर्ट मिल सकते हैं या नहीं।',
   Comments: 'टिप्पणियाँ',
   'Common area': 'साझा क्षेत्र',
+  'Connection lost. Home may be out of date until you reconnect.':
+    'कनेक्शन टूट गया है। दोबारा जुड़ने तक होम की जानकारी पुरानी हो सकती है।',
   'Could not load Community': 'कम्युनिटी लोड नहीं हो सकी',
   'Could not load events': 'कार्यक्रम लोड नहीं हो सके',
   'Could not load meetings': 'बैठकें लोड नहीं हो सकीं',
@@ -58,6 +63,7 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   'For example, Amazon': 'उदाहरण के लिए, Amazon',
   'Frequent visitors': 'नियमित आगंतुक',
   'Gate attendance · {month}': 'गेट पर उपस्थिति · {month}',
+  'Home access is not available': 'होम पेज की पहुँच उपलब्ध नहीं है',
   'Household access is restricted': 'परिवार की पहुँच सीमित है',
   'Household members': 'परिवार के सदस्य',
   Issue: 'समस्या',
@@ -65,6 +71,7 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   Ledger: 'बही-खाता',
   'Loading Community': 'कम्युनिटी लोड हो रही है',
   'Loading events': 'कार्यक्रम लोड हो रहे हैं',
+  'Loading home': 'होम पेज लोड हो रहा है',
   'Loading meetings': 'बैठकें लोड हो रही हैं',
   'Loading polls': 'मतदान लोड हो रहे हैं',
   'Loading resident directory': 'निवासी डायरेक्टरी लोड हो रही है',
@@ -83,6 +90,8 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   'New updates will appear here.': 'नए अपडेट यहाँ दिखाई देंगे।',
   'Next due {date}': 'अगली देय तिथि: {date}',
   'No AMC asset linked.': 'कोई एएमसी संपत्ति नहीं जोड़ी गई है।',
+  'No active unit linked': 'कोई सक्रिय यूनिट नहीं जुड़ी है',
+  'No activity yet': 'अभी कोई गतिविधि नहीं है',
   'No active units are available for your account.':
     'आपके खाते के लिए कोई सक्रिय यूनिट उपलब्ध नहीं है।',
   'No bills to show': 'दिखाने के लिए कोई बिल नहीं है',
@@ -133,6 +142,8 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   'Pre-approve {name}': '{name} को पहले से अनुमति दें',
   'Priority: {priority}': 'प्राथमिकता: {priority}',
   'QR code for the visitor entry code': 'आगंतुक प्रवेश कोड का QR कोड',
+  'Quick actions': 'जल्दी खोलें',
+  'Recent activity': 'हाल की गतिविधि',
   'Recent notifications': 'हाल की सूचनाएँ',
   'Register staff': 'कर्मचारी पंजीकृत करें',
   'Register staff for your unit, review gate attendance and block unit access for today when needed.':
@@ -184,6 +195,8 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
     'इस प्रोफ़ाइल को पूरी सोसाइटी में रोक दिया गया है।',
   'This society is suspended. Billing information is read-only.':
     'यह सोसाइटी निलंबित है। बिलिंग की जानकारी केवल देखी जा सकती है।',
+  'This society is suspended. Home information is read-only.':
+    'यह सोसाइटी निलंबित है। होम की जानकारी केवल देखी जा सकती है।',
   'This society is suspended. Payments cannot be submitted right now.':
     'यह सोसाइटी निलंबित है। अभी भुगतान नहीं भेजा जा सकता।',
   'This staff member is blocked from this unit for today.':
@@ -192,6 +205,7 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   Unit: 'यूनिट',
   'Unit {unit}': 'यूनिट {unit}',
   Updates: 'अपडेट',
+  'Updated {time}': 'पिछला अपडेट: {time}',
   'Updates for your account and household.': 'आपके खाते और परिवार के अपडेट।',
   'Valid from (society time)': 'इस समय से मान्य (सोसाइटी का समय)',
   'Valid until (society time)': 'इस समय तक मान्य (सोसाइटी का समय)',
@@ -199,6 +213,7 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   Cancelled: 'रद्द किया गया',
   'Vehicle number (optional)': 'वाहन नंबर (वैकल्पिक)',
   'View attachment': 'संलग्न फ़ाइल देखें',
+  'View Bills': 'बिल देखें',
   'View photo {number}': 'तस्वीर {number} देखें',
   'Visitor history': 'आगंतुकों का इतिहास',
   'Visitor name': 'आगंतुक का नाम',
@@ -217,6 +232,8 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
   "You're all caught up": 'आपने सभी सूचनाएँ देख ली हैं',
   'Your account has no active unit occupancy.':
     'आपके खाते में किसी सक्रिय यूनिट में निवास दर्ज नहीं है।',
+  'Your balance is too large for one payment. Enter a smaller amount.':
+    'आपका बकाया एक भुगतान के लिए बहुत अधिक है। कम राशि भरें।',
   'Your bills': 'आपके बिल',
   'Your payments': 'आपके भुगतान',
   'Your unit': 'आपकी यूनिट',
@@ -224,6 +241,13 @@ export const HI_RESIDENT: Readonly<Record<string, string>> = {
     '{amount} की सोसाइटी से पुष्टि बाकी है।',
   '{amount} submitted on {date} was rejected':
     '{amount} का {date} को भेजा गया भुगतान अस्वीकार किया गया',
+  '{count} delivery needs your response':
+    '{count} डिलीवरी के लिए आपका जवाब चाहिए',
+  '{count} deliveries need your response':
+    '{count} डिलीवरी के लिए आपका जवाब चाहिए',
+  '{count} visitor needs your response': '{count} आगंतुक के लिए आपका जवाब चाहिए',
+  '{count} visitors need your response': '{count} आगंतुकों के लिए आपका जवाब चाहिए',
   '{unit} ledger': '{unit} का बही-खाता',
+  '{unitLabel} {units}': '{unitLabel} {units}',
   '← Bills': '← बिल',
 };
