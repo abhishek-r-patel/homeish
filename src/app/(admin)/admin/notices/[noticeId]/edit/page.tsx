@@ -1,4 +1,4 @@
-// Edit a published notice without notifying residents again.
+// Edit a notice: published ones without notifying residents again, planned ones before posting.
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { z } from 'zod';

@@ -1,8 +1,9 @@
-// Authorize P16 expense workflows, verify receipts and shape books for display and export.
+// Authorize P16/P39 expense workflows, verify receipts and shape books for display and export.
 import 'server-only';
 import { z } from 'zod';
 import { AppError, createRequestId } from '../errors';
 import { callModuleRpc, parseModuleInput } from '../db/validated-rpc';
+import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { FILE_CONTENT_TYPES, verifyFileAttachment } from '../files/attachments';
 import { authorizeRequest } from '../permissions/authorize';
 import {
@@ -26,6 +27,13 @@ import {
   expenseSettingsInputSchema,
   expenseWorkspaceSchema,
   EXPENSE_STATUSES,
+  cashCountInputSchema,
+  pettyCashAssignInputSchema,
+  pettyCashViewSchema,
+  reconciliationSchema,
+  statementItemCancelInputSchema,
+  statementItemInputSchema,
+  statementItemMatchInputSchema,
 } from './validation';
 
 type Access = 'read' | 'manage' | 'approve';
@@ -379,4 +387,151 @@ export async function reopenExpenseMonth(input: unknown, requestId: string) {
     z.null(),
     'Give a reason to reopen the month.',
   );
+}
+
+export async function getReconciliation(accountId: string, page: number) {
+  const { context, societyId } = await expenseContext('read');
+  const account = parseModuleInput(z.uuid(), accountId);
+  return callModuleRpc(
+    context,
+    'expense_reconciliation_page',
+    {
+      p_society_id: societyId,
+      p_account_id: account,
+      p_limit: EXPENSE_PAGE_SIZE,
+      p_offset: pageOffset(page),
+    },
+    reconciliationSchema,
+    'Choose a bank account.',
+  );
+}
+
+export async function recordStatementItem(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(statementItemInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_statement_item_record',
+    {
+      p_society_id: societyId,
+      p_account_id: v.accountId,
+      p_statement_date: v.statementDate,
+      p_reference: v.reference,
+      p_party: v.party,
+      p_direction: v.direction,
+      p_amount_paise: v.amountRupees,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the statement item. It needs a bank account and a date that is not in the future.',
+  );
+}
+
+export async function matchStatementItem(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(statementItemMatchInputSchema, input);
+  await callModuleRpc(
+    context,
+    'expense_statement_item_match',
+    {
+      p_society_id: societyId,
+      p_item_id: v.itemId,
+      p_entry_id: v.entryId,
+      p_request_trace: requestId,
+    },
+    z.null(),
+    'Match an entry on the same account with the same amount and direction.',
+  );
+}
+
+export async function cancelStatementItem(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(statementItemCancelInputSchema, input);
+  await callModuleRpc(
+    context,
+    'expense_statement_item_cancel',
+    {
+      p_society_id: societyId,
+      p_item_id: v.itemId,
+      p_reason: v.reason,
+      p_request_trace: requestId,
+    },
+    z.null(),
+    'Give a reason for cancelling.',
+  );
+}
+
+export async function assignPettyCash(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(pettyCashAssignInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_petty_cash_assign',
+    {
+      p_society_id: societyId,
+      p_account_id: v.accountId,
+      p_custodian_user_id: v.custodianUserId,
+      p_handover_count_paise: v.handoverCountRupees,
+      p_handover_note: v.handoverNote,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose the active cash account and an active member. Changing the custodian needs the handover count.',
+  );
+}
+
+// Custody is per person in the database, so no role permission is checked here.
+async function pettyCashContext(write: boolean, requestId = createRequestId()) {
+  const context = await buildRequestContext(requestId);
+  authorizeRequest(context, { moduleKey: 'expense', write });
+  if (!context.societyId) throw new AppError('FORBIDDEN');
+  return { context, societyId: context.societyId };
+}
+
+export async function getPettyCash() {
+  const { context, societyId } = await pettyCashContext(false);
+  return callModuleRpc(
+    context,
+    'expense_petty_cash_view',
+    { p_society_id: societyId },
+    pettyCashViewSchema,
+    'Could not load petty cash.',
+  );
+}
+
+export async function recordCashCount(input: unknown, requestId: string) {
+  const { context, societyId } = await pettyCashContext(true, requestId);
+  const v = parseModuleInput(cashCountInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_cash_count_record',
+    {
+      p_society_id: societyId,
+      p_count_date: v.countDate,
+      p_counted_paise: v.countedRupees,
+      p_note: v.note,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the count. The date must be on or after the account opened and not in the future.',
+  );
+}
+
+// Navigation helper: never throws, so a shell can always render.
+export async function isPettyCashCustodian(context: RequestContext) {
+  if (!context.societyId || !context.enabledModules.has('expense'))
+    return false;
+  try {
+    const result = await invokeUntypedRpc<unknown>(
+      context.db,
+      'expense_petty_cash_custodian_check',
+      { p_society_id: context.societyId },
+    );
+    return result === true;
+  } catch {
+    return false;
+  }
 }

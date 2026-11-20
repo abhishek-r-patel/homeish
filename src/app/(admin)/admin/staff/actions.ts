@@ -4,9 +4,11 @@
 import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
 import {
+  deleteStaffNote,
   markSocietyStaffShift,
   reviewStaffRegistration,
   saveStaff,
+  saveStaffNote,
   updateStaffSettings,
 } from '@/core/staff/operations';
 
@@ -55,5 +57,21 @@ export async function markSocietyStaffShiftAction(formData: FormData) {
     await markSocietyStaffShift(parseInput(formData), requestId);
     revalidatePath('/admin/staff');
     return 'Society staff attendance saved.';
+  });
+}
+
+export async function saveStaffNoteAction(formData: FormData) {
+  return runServerAction('staff.notes.save', async (requestId) => {
+    await saveStaffNote(parseInput(formData), requestId);
+    revalidatePath('/admin/staff');
+    return 'Staff note saved.';
+  });
+}
+
+export async function deleteStaffNoteAction(formData: FormData) {
+  return runServerAction('staff.notes.delete', async (requestId) => {
+    await deleteStaffNote(parseInput(formData), requestId);
+    revalidatePath('/admin/staff');
+    return 'Staff note deleted.';
   });
 }

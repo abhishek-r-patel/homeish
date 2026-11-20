@@ -10,6 +10,7 @@ import {
   readGateStaff,
   readStaff,
   readStaffAttendance,
+  readStaffNotes,
   readStaffRegistrationSettings,
   readStaffShiftAttendance,
   readStaffTimezone,
@@ -24,6 +25,8 @@ import {
   staffCheckOutSchema,
   staffDayBlockSchema,
   staffMonthSchema,
+  staffNoteDeleteSchema,
+  staffNoteSaveSchema,
   staffRegistrationResultSchema,
   staffReviewSchema,
   staffSettingsSchema,
@@ -31,6 +34,7 @@ import {
   type StaffAttendance,
   type Staff,
   type StaffGateItem,
+  type StaffNote,
 } from './validation';
 
 type StaffPermission =
@@ -41,7 +45,9 @@ type StaffPermission =
   | 'staff:register'
   | 'staff:attendance'
   | 'staff:day_block'
-  | 'staff:gate';
+  | 'staff:gate'
+  | 'staff:notes:read'
+  | 'staff:notes:manage';
 
 async function getContext(
   permission: StaffPermission,
@@ -150,33 +156,56 @@ async function removeStaffPhoto(
 }
 
 export async function getStaffWorkspace() {
-  const { context, societyId } = await getContext('staff:list');
+  const requestId = createRequestId();
+  const context = await buildRequestContext(requestId);
+  const isAdmin = context.roles.includes('admin');
+  const isResident = context.roles.includes('resident');
+  // Committee members reach the directory only through the notes permission (D-68).
+  authorizeRequest(context, {
+    moduleKey: 'staff',
+    permission: isAdmin || isResident ? 'staff:list' : 'staff:notes:read',
+    write: false,
+  });
+  if (!context.societyId) throw new AppError('FORBIDDEN');
+  const societyId = context.societyId;
   const [staff, units, timezone] = await Promise.all([
     readStaff(context, societyId),
     readStaffUnits(context, societyId),
     readStaffTimezone(context, societyId),
   ]);
   const month = monthInTimezone(timezone);
-  const attendanceEntries: Array<[string, StaffAttendance[]]> =
-    context.roles.includes('resident')
-      ? await Promise.all(
-          staff
-            .filter(({ staff_type }) => staff_type === 'domestic')
-            .map(async ({ id }): Promise<[string, StaffAttendance[]]> => [
-              id,
-              await readStaffAttendance(context, societyId, id, month),
-            ]),
-        )
-      : [];
+  const attendanceEntries: Array<[string, StaffAttendance[]]> = isResident
+    ? await Promise.all(
+        staff
+          .filter(({ staff_type }) => staff_type === 'domestic')
+          .map(async ({ id }): Promise<[string, StaffAttendance[]]> => [
+            id,
+            await readStaffAttendance(context, societyId, id, month),
+          ]),
+      )
+    : [];
   const attendanceByStaffId = Object.fromEntries(attendanceEntries);
+  const canReadNotes = isAdmin || context.roles.includes('committee');
+  const noteEntries: Array<[string, StaffNote[]]> = canReadNotes
+    ? await Promise.all(
+        staff
+          .filter(({ staff_type }) => staff_type === 'society')
+          .map(async ({ id }): Promise<[string, StaffNote[]]> => [
+            id,
+            await readStaffNotes(context, societyId, id),
+          ]),
+      )
+    : [];
   return {
     societyId,
     staff: await signStaffPhotos(context, staff),
     units,
     attendanceByStaffId,
+    notesByStaffId: Object.fromEntries(noteEntries),
     month,
     timezone,
-    canManage: context.roles.includes('admin'),
+    canManage: isAdmin,
+    canReadNotes,
   };
 }
 
@@ -297,6 +326,13 @@ export async function saveStaff(input: unknown, requestId: string) {
       p_status: parsed.status,
       p_unit_ids: parsed.unitIds,
       p_request_id: context.requestId,
+      p_department: parsed.department,
+      p_designation: parsed.designation,
+      p_employment_type: parsed.employmentType,
+      p_joining_date: parsed.joiningDate,
+      p_weekly_off: parsed.weeklyOff,
+      p_employment_status: parsed.employmentStatus,
+      p_exit_date: parsed.exitDate,
     },
     z.uuid(),
     'Could not save staff details.',
@@ -305,6 +341,55 @@ export async function saveStaff(input: unknown, requestId: string) {
     await removeStaffPhoto(context, previous.photo_path);
   }
   return staffId;
+}
+
+export async function saveStaffNote(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'staff:notes:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(staffNoteSaveSchema, input);
+  return staffRpc(
+    context,
+    'staff_note_save',
+    {
+      p_society_id: societyId,
+      p_note_id: parsed.noteId,
+      p_staff_id: parsed.staffId,
+      p_note_date: parsed.noteDate,
+      p_category: parsed.category,
+      p_rating: parsed.rating,
+      p_note: parsed.note,
+      p_action: parsed.action,
+      p_follow_up_date: parsed.followUpDate,
+      p_status: parsed.status,
+      p_expected_updated_at: parsed.expectedUpdatedAt,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'Could not save the staff note.',
+  );
+}
+
+export async function deleteStaffNote(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'staff:notes:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(staffNoteDeleteSchema, input);
+  await staffRpc(
+    context,
+    'staff_note_delete',
+    {
+      p_society_id: societyId,
+      p_note_id: parsed.noteId,
+      p_request_id: context.requestId,
+    },
+    z.unknown(),
+    'Could not delete the staff note.',
+  );
 }
 
 export async function reviewStaffRegistration(

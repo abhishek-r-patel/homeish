@@ -39,16 +39,24 @@ export async function billingRpc<T>(
     if (code === '42501') throw new AppError('FORBIDDEN');
     if (code === 'P0002') throw new AppError('NOT_FOUND');
     if (code === '23505') {
+      const activePlanOverlap =
+        cause.success &&
+        cause.data?.message?.includes(
+          'billing_payment_plan_bills_active_bill_key',
+        );
       const reason =
         CONFLICT_REASONS.find((item) => item === hint) ??
-        (cause.data?.message?.includes(
+        (cause.success &&
+        cause.data?.message?.includes(
           'billing_payments_active_upi_reference_key',
         )
           ? 'duplicate_reference'
           : 'invalid_state');
       throw new AppError('CONFLICT', {
         reason,
-        message: BILLING_CONFLICT_MESSAGES[reason],
+        message: activePlanOverlap
+          ? 'One or more selected bills already belong to an active plan.'
+          : BILLING_CONFLICT_MESSAGES[reason],
       });
     }
     if (code === '22023' || code === '23514' || code === '23502') {

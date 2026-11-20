@@ -67,14 +67,23 @@ Each database has its own ignored settings file: `.env.testdb.local`, `.env.demo
 
 ## 6. Database commands
 
-| Command                                          | What it does                                                           |
-| ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `npm run db:new -- <module>_<short_description>` | Creates an empty, timestamped migration file in `supabase/migrations/` |
-| `npm run db:list`                                | Shows which migrations testdb has applied                              |
-| `npm run db:push`                                | Applies new migrations to testdb (add `-- --dry-run` to preview first) |
-| `npm run db:types`                               | Regenerates `src/core/db/database.types.ts` from testdb                |
-| `npm run db:types:check`                         | Fails if the generated types no longer match testdb                    |
-| `npm run check:migrations`                       | Checks migration file names (also part of `npm run check`)             |
+**Empty database (redesign fresh start):** `npm run db:push` cannot install
+every migration because the CLI does not wrap each one in a transaction. Use
+`node scripts/with-env.mjs testdb node scripts/db.mjs fresh-install
+--wipe-testdb` only with the owner's approval; it needs `SUPABASE_DB_CA_CERT`
+set to the Supabase root certificate (the repository variable
+`SUPABASE_TESTDB_CA_CERT`). See
+[DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations).
+
+| Command                                                   | What it does                                                           |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `npm run db:new -- <module>_<short_description>`          | Creates an empty, timestamped migration file in `supabase/migrations/` |
+| `npm run db:list`                                         | Shows which migrations testdb has applied                              |
+| `npm run db:push`                                         | Applies new migrations to testdb (add `-- --dry-run` to preview first) |
+| `npm run env -- testdb node scripts/db.mjs fresh-install` | Installs all migrations on an empty testdb, one transaction each       |
+| `npm run db:types`                                        | Regenerates `src/core/db/database.types.ts` from testdb                |
+| `npm run db:types:check`                                  | Fails if the generated types no longer match testdb                    |
+| `npm run check:migrations`                                | Checks migration file names (also part of `npm run check`)             |
 
 Database commands load `.env.testdb.local` and run against the address in it. To target the demo project once it is resumed: `npm run env -- demo node scripts/db.mjs push`. They refuse `homeish-live` and an unset password, and hide database addresses in their output.
 
@@ -91,14 +100,14 @@ $env:PG_BIN = 'C:\path\to\postgresql\bin'
 npm run test:integration:local
 ```
 
-The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then stops the server and deletes its files. Without a server, `npm run test:integration` skips these tests locally; in CI a missing server is an error. GitHub Actions runs the same tests against a `postgres:17` service container, so no database password is stored in GitHub.
+The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then stops the server and deletes its files. It stops if its own server cannot start, including when that port is already in use; it never substitutes an existing server. Without a server, `npm run test:integration` skips these tests locally; in CI a missing server is an error. GitHub Actions runs the same tests against a `postgres:17` service container, so no database password is stored in GitHub.
 
 ### Migration rules (DATABASE 14.1)
 
 - Name: `YYYYMMDDHHMMSS_<module>_<short_description>.sql`, where `<module>` is a module key (`core`, `visitor`, `delivery`, `billing`, `service_request`, `staff`, `housekeeping`, `amc`, `notice`, `amenity`). `db:new` adds the timestamp.
 - Forward-only: never edit a migration once it has run on testdb; fix forward with a new one.
 - One concern per file; a table ships with RLS enabled, its policies and grants in the same file.
-- After every schema change run `npm run db:push`, then `npm run db:types`, and commit the migration and the regenerated types together.
+- Regenerate types from the tested schema and commit them with the migration. For ordinary releases, apply to testdb only after approval and run `npm run db:types`; the current batch follows the exception above.
 - Roll-out order: testdb → demo → live; live only through approved CI.
 
 ### Email-code sign-in setup

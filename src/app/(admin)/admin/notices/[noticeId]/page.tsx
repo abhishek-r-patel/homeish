@@ -8,10 +8,32 @@ import {
   NoticeStatusChips,
   noticeAudienceLabel,
   noticeDateTime,
+  noticeDay,
 } from '@/components/notices/notice-list-item';
+import {
+  NoticePlanForm,
+  NoticePlanProposals,
+} from '@/components/notices/plan-form';
 import { getNoticeDetail } from '@/core/notices/operations';
+import type {
+  NoticePlanningStatus,
+  NoticePriority,
+} from '@/core/notices/validation';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+
+const PLANNING_STATUS_LABELS: Record<NoticePlanningStatus, string> = {
+  draft: 'Draft',
+  scheduled: 'Scheduled',
+  posted: 'Posted',
+  removed: 'Removed',
+};
+
+const PRIORITY_LABELS: Record<NoticePriority, string> = {
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+};
 
 export const metadata = {
   title: 'Notice | Homeish',
@@ -28,7 +50,8 @@ export default async function AdminNoticeDetailPage({
     translateMessage(locale, source, values);
   const { noticeId } = await params;
   if (!z.uuid().safeParse(noticeId).success) notFound();
-  const { notice, attachmentUrl } = await getNoticeDetail(noticeId);
+  const { notice, attachmentUrl, canManagePlan, canProposePlan, proposals } =
+    await getNoticeDetail(noticeId);
 
   return (
     <section className="grid min-w-0 gap-space-5">
@@ -39,8 +62,14 @@ export default async function AdminNoticeDetailPage({
         <h1 className="break-words text-title font-semibold">{notice.title}</h1>
         <NoticeStatusChips notice={notice} />
         <p className="text-body text-ink-muted">
-          {notice.author_name ?? t('Society office')} · {t('Published')}{' '}
-          {noticeDateTime(notice.created_at, locale)}
+          {notice.author_name ?? t('Society office')} ·{' '}
+          {notice.published_at
+            ? `${t('Published')} ${noticeDateTime(notice.published_at, locale)}`
+            : notice.status === 'scheduled' && notice.scheduled_for
+              ? t('Posts on {date}', {
+                  date: noticeDateTime(notice.scheduled_for, locale),
+                })
+              : `${t('Created')} ${noticeDateTime(notice.created_at, locale)}`}
           {notice.edited_at
             ? ` · ${t('Edited')} ${noticeDateTime(notice.edited_at, locale)}`
             : ''}
@@ -48,6 +77,10 @@ export default async function AdminNoticeDetailPage({
       </header>
       <Card className="min-w-0" title={t('Reach')}>
         <dl className="grid gap-space-2 text-body">
+          <div className="flex flex-wrap gap-space-2">
+            <dt className="text-body-strong">{t('Planning status:')}</dt>
+            <dd>{t(PLANNING_STATUS_LABELS[notice.planning_status])}</dd>
+          </div>
           <div className="flex flex-wrap gap-space-2">
             <dt className="text-body-strong">{t('Audience:')}</dt>
             <dd>{noticeAudienceLabel(notice, locale)}</dd>
@@ -90,11 +123,65 @@ export default async function AdminNoticeDetailPage({
           ) : null}
         </div>
       </Card>
+      {canManagePlan ? (
+        <>
+          <Card className="min-w-0" title={t('Planning')}>
+            <NoticePlanForm
+              key={proposals
+                .filter(({ status }) => status === 'accepted')
+                .map(({ id }) => id)
+                .join(',')}
+              noticeId={notice.id}
+              plan={notice.plan}
+            />
+          </Card>
+        </>
+      ) : (
+        <>
+          {notice.plan ? (
+            <Card className="min-w-0" title={t('Planning')}>
+              <dl className="grid gap-space-2 text-body">
+                {(
+                  [
+                    ['Prepared by:', notice.plan.prepared_by],
+                    ['Notice board location:', notice.plan.display_location],
+                    [
+                      'Priority:',
+                      notice.plan.priority
+                        ? t(PRIORITY_LABELS[notice.plan.priority])
+                        : null,
+                    ],
+                    ['Next action:', notice.plan.next_action],
+                    [
+                      'Next action date:',
+                      notice.plan.next_action_on
+                        ? noticeDay(notice.plan.next_action_on, locale)
+                        : null,
+                    ],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div className="flex flex-wrap gap-space-2" key={label}>
+                    <dt className="text-body-strong">{t(label)}</dt>
+                    <dd>{value ?? t('Not set')}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Card>
+          ) : null}
+        </>
+      )}
+      {canProposePlan ? (
+        <Card className="min-w-0" title={t('Propose planning details')}>
+          <NoticePlanForm noticeId={notice.id} plan={notice.plan} proposal />
+        </Card>
+      ) : null}
+      <NoticePlanProposals proposals={proposals} canReview={canManagePlan} />
       {notice.can_manage ? (
         <NoticeManageControls
           noticeId={notice.id}
           pinned={notice.pinned}
-          withdrawn={notice.status === 'withdrawn'}
+          status={notice.status}
+          updatedAt={notice.updated_at}
         />
       ) : (
         <p className="text-body text-ink-muted">

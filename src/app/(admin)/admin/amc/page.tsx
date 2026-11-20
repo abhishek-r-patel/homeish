@@ -1,6 +1,13 @@
 // Show administrator AMC management and committee read-only contract history.
-import { Card } from '@/components/ui/data-display';
-import { AmcContractForm, AmcVisitForm } from '@/components/amc/controls';
+import { Card, StatusChip } from '@/components/ui/data-display';
+import {
+  AmcContractForm,
+  AmcExpirySettingsForm,
+  AmcScheduleForm,
+  AmcVisitForm,
+} from '@/components/amc/controls';
+import { getAssetFormOptions } from '@/core/asset/operations';
+import { AppError } from '@/core/errors';
 import { getAmcWorkspace, filterAmcContracts } from '@/core/amc/operations';
 import {
   formatLocalizedCurrency,
@@ -29,6 +36,21 @@ export default async function AmcPage({
   const search = await searchParams;
   const w = await getAmcWorkspace();
   const contracts = filterAmcContracts(w.contracts, search);
+  let categories: { id: string; name: string; active: boolean }[] = [];
+  if (w.can_manage) {
+    try {
+      categories = (await getAssetFormOptions()).categories;
+    } catch (error) {
+      // Asset types are optional for the schedule; keep the page usable when assets are off.
+      if (!(error instanceof AppError)) throw error;
+    }
+  }
+  const amcTypeLabel = (value: (typeof contracts)[number]['amc_type']) =>
+    value === 'comprehensive'
+      ? t('Comprehensive')
+      : value === 'non_comprehensive'
+        ? t('Non-comprehensive')
+        : t('Not set');
   const query = new URLSearchParams(
     Object.entries(search).filter(
       (entry): entry is [string, string] => typeof entry[1] === 'string',
@@ -37,6 +59,24 @@ export default async function AmcPage({
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
       <h1 className="text-title font-semibold">{t('AMC contracts')}</h1>
+      <Card title={t('AMC expiry windows')}>
+        {w.can_manage ? (
+          <AmcExpirySettingsForm settings={w.settings} />
+        ) : (
+          <div className="grid gap-space-2">
+            <p>
+              {t('Due Soon: {days} days', {
+                days: w.settings.due_soon_days,
+              })}
+            </p>
+            <p>
+              {t('Urgent: {days} days', {
+                days: w.settings.urgent_days,
+              })}
+            </p>
+          </div>
+        )}
+      </Card>
       {!w.can_manage ? (
         <p>{t('Read-only committee access.')}</p>
       ) : (
@@ -54,8 +94,10 @@ export default async function AmcPage({
             className="min-h-12 min-w-0 rounded-md border border-rule px-space-3"
           >
             <option value="">{t('All statuses')}</option>
+            <option value="upcoming">{t('Upcoming')}</option>
             <option value="active">{t('Active')}</option>
-            <option value="expiring">{t('Expiring soon')}</option>
+            <option value="due_soon">{t('Due Soon')}</option>
+            <option value="urgent">{t('Urgent')}</option>
             <option value="expired">{t('Expired')}</option>
           </select>
           <label htmlFor="amc-asset">{t('Asset')}</label>
@@ -95,8 +137,9 @@ export default async function AmcPage({
       </Card>
       {contracts.length ? (
         contracts.map((c) => (
-          <Card key={c.id} title={`${c.asset_label} · ${c.status}`}>
+          <Card key={c.id} title={c.asset_label}>
             <div className="grid min-w-0 gap-space-3">
+              <StatusChip status={`amc.${c.status}`} />
               <p>
                 {c.vendor_name} · {c.vendor_contact}
               </p>
@@ -108,6 +151,26 @@ export default async function AmcPage({
                 {t('Payment terms:')} {c.payment_terms || t('Not specified')} ·{' '}
                 {t('Visits:')} {c.visit_frequency}
               </p>
+              <p>
+                {t('AMC type:')} {amcTypeLabel(c.amc_type)} · {t('Asset type:')}{' '}
+                {c.asset_category_name ?? t('Not set')} ·{' '}
+                {t('Services per year:')} {c.services_per_year ?? t('Not set')}
+              </p>
+              <div className="flex flex-wrap items-center gap-space-2">
+                <p>
+                  {t('Last visit:')}{' '}
+                  {c.last_visit_date
+                    ? formatDate(c.last_visit_date)
+                    : t('None yet')}{' '}
+                  · {t('Next service:')}{' '}
+                  {c.next_service_date
+                    ? formatDate(c.next_service_date)
+                    : t('Unscheduled')}
+                </p>
+                {c.service_overdue ? (
+                  <StatusChip status="amc.service_overdue" />
+                ) : null}
+              </div>
               {c.predecessor_id ? (
                 <p>
                   {t('Renewal of contract')} {c.predecessor_id}
@@ -137,6 +200,18 @@ export default async function AmcPage({
                     key={c.updated_at}
                     contract={c}
                     today={w.today}
+                  />
+                </details>
+              ) : null}
+              {w.can_manage ? (
+                <details>
+                  <summary className="cursor-pointer">
+                    {t('Edit service schedule')}
+                  </summary>
+                  <AmcScheduleForm
+                    key={c.updated_at}
+                    contract={c}
+                    categories={categories}
                   />
                 </details>
               ) : null}

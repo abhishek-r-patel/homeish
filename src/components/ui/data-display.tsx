@@ -64,6 +64,15 @@ export const statusMap = {
   'request.rejected': { icon: '×', label: 'Rejected', tone: 'danger' },
   'request.reopened': { icon: '↻', label: 'Reopened', tone: 'warning' },
   'request.overdue': { icon: '!', label: 'Overdue', tone: 'danger' },
+  'request.on_hold': { icon: '‖', label: 'On hold', tone: 'neutral' },
+  'request.priority_critical': {
+    icon: '!',
+    label: 'Critical',
+    tone: 'danger',
+  },
+  'request.priority_high': { icon: '▲', label: 'High', tone: 'warning' },
+  'request.priority_medium': { icon: '•', label: 'Medium', tone: 'info' },
+  'request.priority_low': { icon: '▽', label: 'Low', tone: 'neutral' },
   'request.escalated_admin': {
     icon: '▲',
     label: 'Escalated to admins',
@@ -79,9 +88,29 @@ export const statusMap = {
   'notice.unread': { icon: '•', label: 'New', tone: 'info' },
   'notice.expired': { icon: '◷', label: 'Expired', tone: 'neutral' },
   'notice.withdrawn': { icon: '/', label: 'Withdrawn', tone: 'neutral' },
+  'notice.draft': { icon: '✎', label: 'Draft', tone: 'neutral' },
+  'notice.scheduled': { icon: '◷', label: 'Scheduled', tone: 'info' },
+  'notice.priority_high': { icon: '▲', label: 'High', tone: 'warning' },
+  'notice.priority_medium': { icon: '•', label: 'Medium', tone: 'info' },
+  'notice.priority_low': { icon: '▽', label: 'Low', tone: 'neutral' },
+  'contact.open': { icon: '•', label: 'Open', tone: 'info' },
+  'contact.follow_up': { icon: '◷', label: 'Follow-up', tone: 'warning' },
+  'contact.closed': { icon: '✓', label: 'Closed', tone: 'neutral' },
+  'contact.follow_up_overdue': {
+    icon: '!',
+    label: 'Follow-up overdue',
+    tone: 'danger',
+  },
+  'amc.upcoming': { icon: '◷', label: 'Upcoming', tone: 'info' },
   'amc.active': { icon: '✓', label: 'Active', tone: 'success' },
-  'amc.expiring_soon': { icon: '◷', label: 'Expiring soon', tone: 'warning' },
+  'amc.due_soon': { icon: '◷', label: 'Due Soon', tone: 'warning' },
+  'amc.urgent': { icon: '!', label: 'Urgent', tone: 'danger' },
   'amc.expired': { icon: '!', label: 'Expired', tone: 'danger' },
+  'amc.service_overdue': {
+    icon: '!',
+    label: 'Service overdue',
+    tone: 'danger',
+  },
   'stock.low': { icon: '!', label: 'Low', tone: 'warning' },
   'tenancy.awaiting_consent': {
     icon: '◷',
@@ -165,6 +194,37 @@ export const statusMap = {
   'severity.error': { icon: '×', label: 'Error', tone: 'danger' },
   'severity.warning': { icon: '!', label: 'Warning', tone: 'warning' },
   'severity.info': { icon: 'i', label: 'Info', tone: 'info' },
+  'contract.terminated': { icon: '/', label: 'Terminated', tone: 'neutral' },
+  'work_order.issued': { icon: '•', label: 'Issued', tone: 'info' },
+  'work_order.in_progress': {
+    icon: '◐',
+    label: 'In progress',
+    tone: 'info',
+  },
+  'work_order.completed': { icon: '✓', label: 'Completed', tone: 'success' },
+  'work_order.cancelled': { icon: '/', label: 'Cancelled', tone: 'neutral' },
+  'vendor_bill.pending': { icon: '◷', label: 'Pending', tone: 'warning' },
+  'vendor_bill.partly_paid': {
+    icon: '◐',
+    label: 'Partly paid',
+    tone: 'warning',
+  },
+  'vendor_bill.paid': { icon: '✓', label: 'Paid', tone: 'success' },
+  'vendor_bill.cancelled': { icon: '/', label: 'Cancelled', tone: 'neutral' },
+  'vendor_bill.due_soon': { icon: '◷', label: 'Due Soon', tone: 'warning' },
+  'vendor_bill.overdue': { icon: '!', label: 'Overdue', tone: 'danger' },
+  'action_task.done': { icon: '✓', label: 'Done', tone: 'success' },
+  'action_task.overdue': { icon: '!', label: 'Overdue', tone: 'danger' },
+  'action_task.upcoming': { icon: '◷', label: 'Upcoming', tone: 'neutral' },
+  'action_task.on_track': { icon: '→', label: 'On track', tone: 'info' },
+  'profile_field.filled': { icon: '✓', label: 'Filled', tone: 'success' },
+  'profile_field.missing': { icon: '!', label: 'Missing', tone: 'warning' },
+  'profile_field.optional': { icon: '•', label: 'Optional', tone: 'neutral' },
+  'profile_field.not_applicable': {
+    icon: '/',
+    label: 'Not applicable',
+    tone: 'neutral',
+  },
 } as const satisfies Record<string, StatusDefinition>;
 
 export type ProductStatus = keyof typeof statusMap;
@@ -179,9 +239,10 @@ const toneClasses: Record<StatusTone, string> = {
 
 type StatusChipProps = {
   status: ProductStatus;
+  detail?: string;
 };
 
-export function StatusChip({ status }: StatusChipProps) {
+export function StatusChip({ status, detail }: StatusChipProps) {
   const { translate } = useUiTranslator();
   const { icon, label, tone } = statusMap[status];
   const statusArea = status.slice(0, status.indexOf('.'));
@@ -199,6 +260,7 @@ export function StatusChip({ status }: StatusChipProps) {
     >
       <span aria-hidden="true">{icon}</span>
       {translatedLabel}
+      {detail ? ` · ${detail}` : null}
     </span>
   );
 }

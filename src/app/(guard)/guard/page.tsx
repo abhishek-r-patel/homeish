@@ -4,6 +4,7 @@ import { getRoleNavigation } from '@/core/modules';
 import { AppError, createRequestId } from '@/core/errors';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { requireIdentifiedGuard } from '@/core/guards/operations';
+import { isPettyCashCustodian } from '@/core/expense/operations';
 import { Banner } from '@/components/ui/feedback';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage, type MessageValues } from '@/core/i18n/messages';
@@ -27,8 +28,10 @@ export default async function GuardHomePage() {
     (item) =>
       item.moduleKey === 'visitor' ||
       item.moduleKey === 'delivery' ||
-      item.moduleKey === 'tenancy',
+      item.moduleKey === 'tenancy' ||
+      item.moduleKey === 'service_request',
   );
+  const showPettyCash = await isPettyCashCustodian(context);
   return (
     <section className="grid gap-space-4">
       <header className="grid gap-space-2">
@@ -71,6 +74,14 @@ export default async function GuardHomePage() {
           )}
         </p>
       )}
+      {showPettyCash ? (
+        <Link
+          className="flex min-h-16 items-center rounded-md border border-rule bg-surface px-space-4 text-body-strong focus-visible:outline-2 focus-visible:outline-focus"
+          href="/petty-cash"
+        >
+          {t('Petty cash')}
+        </Link>
+      ) : null}
     </section>
   );
 }

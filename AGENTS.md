@@ -46,7 +46,9 @@ The personal guardrail also reads [.github/copilot-protected.txt](.github/copilo
 
 ## Commit and release workflow
 
-Never commit, push, merge or apply hosted Supabase migrations without the owner's explicit approval. When the owner explicitly asks to commit, push, or merge to `beta` or `main`:
+Never commit, push, merge or apply hosted Supabase migrations without the owner's explicit approval. The redesign is developed and checked on beta/testdb. Keep `main` on the existing app until the owner confirms the new design and its new phases are complete and separately approves promotion.
+
+When the owner explicitly asks to commit, push, or merge to `beta` or `main`:
 
 1. Split the uncommitted changes into small, self-contained commits grouped by concern (for example migrations with their database tests, core logic with its unit tests, UI, docs, tooling). Order them so every commit builds on its own: `npx tsc --noEmit` and `npm run test` must pass at each commit (verify in a temporary worktree).
 2. Write each message with the rules in `.vscode/settings.json` (`type (scope): summary` subject with a space before the scope, 2–6 imperative bullets, no `Co-authored-by` or other trailers, mixed-commit type precedence `feat > fix > perf > refactor > build > ci > test > docs > style > chore`).
@@ -54,5 +56,5 @@ Never commit, push, merge or apply hosted Supabase migrations without the owner'
 4. After confirmation, go one step at a time and only continue when the previous step is green:
    - commit to the feature branch, run the full local gate on its head (`npm run check`, `npm run test:integration:local`, `npm run build`, `npx playwright test`), push it, and confirm `origin/<feature-branch>` matches the local head before merging (feature-branch pushes do not trigger CI or CodeQL);
    - merge `--no-ff` into `beta` (fast-forward local `beta` to `origin/beta` first), push, and wait for CI (checks, database, e2e) and CodeQL to pass;
-   - merge `--no-ff` `beta` into `main` ("chore (release): merge verified beta into main"), push, and wait for CI and CodeQL to pass.
+   - only after the owner confirms the redesign and its new phases are complete and separately approves promotion, merge `--no-ff` `beta` into `main` ("chore (release): merge verified beta into main"), push, and wait for CI and CodeQL to pass.
 5. If any step fails, stop, report it and fix it on the feature branch with approval before continuing.

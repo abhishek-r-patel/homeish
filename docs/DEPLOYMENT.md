@@ -53,7 +53,10 @@ Rules that never change:
    the beta push (Section 3).
 4. **Production.** Merge verified `beta` into `main` with `--no-ff`
    (`chore(release): merge verified beta into main`) and push. Vercel builds
-   `homeish`. Production migrations are applied first (Section 3).
+   `homeish`. Production migrations are applied first (Section 3). For the
+   current redesign, keep `main` on the existing app until the owner confirms
+   the new design and its new phases are complete and separately approves
+   promotion from beta.
 5. Nothing is committed, pushed or merged, and no hosted migration is applied,
    without the owner's approval (AGENTS.md).
 
@@ -61,6 +64,9 @@ Rules that never change:
 
 Migrations live in `supabase/migrations`, are forward-only, and are never edited
 after they reach a hosted project (DATABASE Section 14).
+
+The table below is for normal releases to a database that already holds the
+schema. An empty database is set up with the fresh install below instead.
 
 | Step | testdb (beta)                                                            | homeish-live (production)                                      |
 | ---- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
@@ -75,6 +81,39 @@ the previous app build working (expand/contract): add tables, columns and new
 function parameters with defaults first; remove old ones only in a later
 release once no running build uses them.
 
+**Fresh start for the redesign (owner approved).** The redesign replaces the
+existing app, so testdb and, at launch, homeish-live start empty instead of
+being upgraded. Testdb holds synthetic data only (AD-13); nothing on it is kept
+and no backup is taken. Older beta and local builds are retired; do not run them
+against the new schema.
+
+`node scripts\db.mjs fresh-install` applies every migration on the profile's
+database, each in its own transaction together with its Supabase migration
+history row. It refuses a database that is not empty (any app tables or
+functions, the `private` schema, storage buckets or policies, login accounts or
+migration history). One transaction for the whole install is not possible:
+hosted servers cap the shared lock table (about 3,800 locks on testdb) and the
+full install exceeds it. If a migration fails, it is rolled back but earlier
+migrations stay; on testdb, rerun with `--wipe-testdb`; on an empty live
+database, reset it or repair forward. The Supabase CLI push is not used for
+this because CLI 3.2.0 does not wrap each migration in a transaction, so the
+`LOCK TABLE` in `20261124110000_expense_vouchers_reconciliation.sql` fails.
+
+`--wipe-testdb` first empties testdb in its own transaction: it drops the app's
+tables, functions and `private` schema, storage policies and buckets, deletes
+every login account and the migration history, then installs. If the wipe
+fails, nothing changes. It accepts only
+the testdb session pooler (never live) and refuses if any stored file exists;
+remove files through Supabase Storage first. It needs `SUPABASE_DB_CA_CERT` set
+to the Supabase root certificate (LOCAL_SETUP Section 6). Run each hosted use
+only with the owner's approval, then check `npm run db:list`, `npm run
+integrity:check:testdb` and `npm run db:types:check`. After installation, the
+developer login is created in the Supabase dashboard and marked as developer by
+a direct database insert into `developers` (ARCHITECTURE 8.1).
+
+Later releases to an installed database use the normal table above and the
+expand/contract rule.
+
 ## 4. Rollback
 
 | What went wrong            | Action                                                                                                                                                                   |
@@ -84,8 +123,9 @@ release once no running build uses them.
 | Migration damaged data     | Suspend affected societies (OPERATIONS "Suspend a society"), restore the backup into a **new** project, compare, and repair forward. Never restore over the live project |
 | Secret leaked              | Rotate it (OPERATIONS "Rotate a secret"), redeploy, and check the audit and error logs                                                                                   |
 
-Because migrations are expand/contract, rolling the app back one release is
-always safe without touching the database.
+For normal expand/contract releases, rolling the app back one release is safe
+without touching the database. Builds from before the redesign fresh start
+(Section 3) cannot run against the new schema.
 
 ## 5. Secrets and configuration
 
@@ -148,8 +188,8 @@ Do these in order. Each needs the owner; nothing here is automated.
 - [ ] Resume `homeish-live` (PostgreSQL 17; confirm its region is India, and
       set the Vercel function region to match, API APA-04). Upgrade to the paid
       plan with daily backups once the first society pays.
-- [ ] Apply all migrations from the approved operator session; run
-      `npm run integrity:check`.
+- [ ] Install the empty database with `fresh-install` (Section 3) from the
+      approved operator session; run `npm run integrity:check`.
 - [ ] Configure Supabase Auth (Brevo SMTP sender, code settings, rate limits,
       site URL and redirect URLs for the production host).
 - [ ] Create the developer account and enrol its authenticator.

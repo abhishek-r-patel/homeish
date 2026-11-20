@@ -8,6 +8,7 @@ import {
   staffAttendanceListSchema,
   staffGateListSchema,
   staffListSchema,
+  staffNoteListSchema,
   staffRegistrationResultSchema,
   staffShiftAttendanceListSchema,
   staffUnitSchema,
@@ -20,6 +21,12 @@ function raiseStaffRpcError(
   if (error?.code === '42501') throw new AppError('FORBIDDEN');
   if (error?.code === 'P0002') throw new AppError('NOT_FOUND');
   if (error?.code === '23505') {
+    if (error.hint === 'stale') {
+      throw new ConflictError(
+        'stale_version',
+        'This note changed since you opened it. Reload and try again.',
+      );
+    }
     throw new ConflictError('invalid_state', 'The staff record has changed.');
   }
   if (error?.code === '22023' || error?.code === '23514') {
@@ -61,6 +68,20 @@ export async function readStaff(context: RequestContext, societyId: string) {
     { p_society_id: societyId },
     staffListSchema,
     'Could not load staff.',
+  );
+}
+
+export async function readStaffNotes(
+  context: RequestContext,
+  societyId: string,
+  staffId: string,
+) {
+  return staffRpc(
+    context,
+    'staff_note_list',
+    { p_society_id: societyId, p_staff_id: staffId },
+    staffNoteListSchema,
+    'Could not load staff notes.',
   );
 }
 

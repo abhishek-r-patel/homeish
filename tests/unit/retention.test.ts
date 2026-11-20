@@ -68,7 +68,8 @@ describe('retention privileged task', () => {
         postsDeleted: 1,
         listingsDeleted: 0,
         repliesDeleted: 2,
-      });
+      })
+      .mockResolvedValueOnce({ contactLogsDeleted: 3 });
   });
 
   it('deduplicates and removes listed files before the database purge', async () => {
@@ -122,7 +123,40 @@ describe('retention privileged task', () => {
       'vendor_retention_files_list',
       'community_retention_files_list',
       'community_retention_run',
+      'communication_retention_run',
     ]);
+  });
+
+  it('rejects malformed contact log purge counts', async () => {
+    mocks.invokeUntypedRpc
+      .mockReset()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ staffAttendanceDeleted: 0 })
+      .mockResolvedValueOnce({
+        vehicles_deleted: 0,
+        emergency_contacts_deleted: 0,
+        preferences_deleted: 0,
+      })
+      .mockResolvedValueOnce({ documents_deleted: 0, preparations_cleared: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce({ photos_deleted: 0 })
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce({
+        postsDeleted: 0,
+        listingsDeleted: 0,
+        repliesDeleted: 0,
+      })
+      .mockResolvedValueOnce({ contactLogsDeleted: -1 });
+    await expect(runRetentionPrivileged('2026-11-20')).rejects.toThrow(
+      'Communication retention returned an invalid response.',
+    );
   });
 
   it('keeps community rows when their photo removal fails', async () => {

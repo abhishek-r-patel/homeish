@@ -204,7 +204,7 @@ describe.skipIf(!hasDatabase)('failure drills', () => {
     client
       .query<{ id: string }>(
         `select (public.request_create(
-           $1, $2, 'unit', $3, 'Drill leaking tap', 'normal', '[]'::jsonb,
+           $1, $2, 'unit', $3, 'Drill leaking tap', 'medium', '[]'::jsonb,
            $4::uuid, 'drill-request'
          )).id`,
         [

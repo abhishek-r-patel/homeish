@@ -195,7 +195,7 @@ describe.skipIf(!hasDatabase)('database service requests', () => {
         (
           await client.query<{ id: string; status: string }>(
             `select (public.request_create(
-              $1, $2, $3, $4, 'Synthetic leaking tap', 'normal', $5::jsonb,
+              $1, $2, $3, $4, 'Synthetic leaking tap', 'medium', $5::jsonb,
               $6::uuid, 'request-integration'
             )).*`,
             [
@@ -390,7 +390,7 @@ describe.skipIf(!hasDatabase)('database service requests', () => {
         (client) =>
           client.query(
             `select public.request_create(
-              $1, $2, 'unit', $3, 'Too many photos', 'normal',
+              $1, $2, 'unit', $3, 'Too many photos', 'medium',
               $4::jsonb, $5::uuid, 'request-integration'
             )`,
             [
@@ -648,7 +648,7 @@ describe.skipIf(!hasDatabase)('database service requests', () => {
         (client) =>
           client.query(
             `select public.request_create(
-              $1, $2, 'unit', $3, 'Blocked while suspended', 'normal',
+              $1, $2, 'unit', $3, 'Blocked while suspended', 'medium',
               '[]'::jsonb, $4::uuid, 'request-integration'
             )`,
             [societyId, categoryId, unitId, id()],
@@ -682,7 +682,7 @@ describe.skipIf(!hasDatabase)('database service requests', () => {
         (client) =>
           client.query(
             `select public.request_create(
-              $1, $2, 'unit', $3, 'Blocked while disabled', 'normal',
+              $1, $2, 'unit', $3, 'Blocked while disabled', 'medium',
               '[]'::jsonb, $4::uuid, 'request-integration'
             )`,
             [societyId, categoryId, unitId, id()],

@@ -70,6 +70,7 @@ export const rupeesSchema = z
   });
 
 const timestamp = z.iso.datetime({ offset: true });
+const paiseText = z.string().regex(/^\d+$/);
 export const chargeFormSchema = z
   .object({
     id: z.uuid().nullable(),
@@ -524,6 +525,201 @@ export const billingWaiveInputSchema = z
     };
   });
 
+const paymentPlanBillIdsSchema = z
+  .array(z.uuid())
+  .min(1)
+  .max(100)
+  .refine((ids) => new Set(ids).size === ids.length, {
+    message: 'Remove duplicate bills.',
+  });
+
+export const billingPaymentPlanInputSchema = z
+  .object({
+    id: z.uuid().nullable(),
+    billIds: paymentPlanBillIdsSchema,
+    downPaymentRupees: z.string().trim().max(32),
+    installmentCount: z
+      .string()
+      .regex(/^[1-9]\d{0,9}$/)
+      .transform(Number)
+      .pipe(z.number().int().max(2147483647)),
+    firstDueDate: z.iso.date(),
+    remarks: z.string().trim().max(500),
+  })
+  .strict()
+  .transform((input, context) => {
+    const downPayment = nonnegativeRupeesSchema.safeParse(
+      input.downPaymentRupees,
+    );
+    if (!downPayment.success) {
+      context.addIssue({
+        code: 'custom',
+        path: ['downPaymentRupees'],
+        message:
+          downPayment.error.issues[0]?.message ??
+          'Enter a valid down-payment amount.',
+      });
+      return z.NEVER;
+    }
+    return {
+      plan_id: input.id,
+      bill_ids: input.billIds,
+      down_payment_paise: downPayment.data,
+      installment_count: input.installmentCount,
+      first_due_date: input.firstDueDate,
+      remarks: input.remarks || null,
+    };
+  });
+
+export const billingPaymentPlanSchema = z.object({
+  id: z.uuid(),
+  unit_id: z.uuid(),
+  unit_number: z.string(),
+  plan_date: z.iso.date(),
+  down_payment_paise: z.number().int().nonnegative().max(MAX_MONEY_PAISE),
+  installment_count: z.number().int().positive(),
+  first_due_date: z.iso.date(),
+  remarks: z.string().nullable(),
+  status: z.enum(['active', 'cancelled']),
+  cancelled_at: timestamp.nullable(),
+  cancel_reason: z.string().nullable(),
+  created_at: timestamp,
+  total_paise: z.number().int().positive().max(MAX_MONEY_PAISE),
+  progress_paise: z.number().int().nonnegative().max(MAX_MONEY_PAISE),
+  down_payment_paid_paise: z.number().int().nonnegative().max(MAX_MONEY_PAISE),
+  installments_paid_paise: z.number().int().nonnegative().max(MAX_MONEY_PAISE),
+  installment_paise: z.number().int().nonnegative().max(MAX_MONEY_PAISE),
+  final_installment_paise: z.number().int().nonnegative().max(MAX_MONEY_PAISE),
+  bills: z.array(
+    z.object({
+      bill_id: z.uuid(),
+      title: z.string(),
+      due_date: z.iso.date(),
+      snapshot_remaining_paise: z
+        .number()
+        .int()
+        .positive()
+        .max(MAX_MONEY_PAISE),
+    }),
+  ),
+});
+
+export const billingPaymentPlanBillOptionSchema = z.object({
+  id: z.uuid(),
+  unit_id: z.uuid(),
+  unit_number: z.string(),
+  title: z.string(),
+  due_date: z.iso.date(),
+  outstanding_paise: z.number().int().positive().max(MAX_MONEY_PAISE),
+});
+
+export const billingPaymentPlanSaveResultSchema = z.object({
+  id: z.uuid(),
+});
+
+export const billingPaymentPlanCancelInputSchema = z
+  .object({
+    planId: z.uuid(),
+    reason: z.string().trim().min(2).max(500),
+  })
+  .strict()
+  .transform(({ planId, reason }) => ({
+    plan_id: planId,
+    reason,
+  }));
+
+export const billingPaymentPlanCancelResultSchema = z.object({
+  id: z.uuid(),
+  status: z.literal('cancelled'),
+});
+
+export const billingRecoveryActionInputSchema = z
+  .object({
+    id: z.uuid().nullable(),
+    unitId: z.uuid(),
+    actionDate: z.iso.date(),
+    actionType: z.enum([
+      'phone_call',
+      'in_person_discussion',
+      'meeting',
+      'other_internal',
+    ]),
+    outcome: z.enum([
+      'reached',
+      'no_response',
+      'follow_up_needed',
+      'resolved',
+      'other',
+    ]),
+    nextActionDate: z.iso.date(),
+    assignedAdminUserId: z.uuid().nullable(),
+    status: z.enum(['open', 'closed']),
+  })
+  .strict()
+  .transform((input) => ({
+    action_id: input.id,
+    unit_id: input.unitId,
+    action_date: input.actionDate,
+    action_type: input.actionType,
+    outcome: input.outcome,
+    next_action_date: input.nextActionDate,
+    assigned_admin_user_id: input.assignedAdminUserId,
+    status: input.status,
+  }));
+
+export const billingRecoveryActionSchema = z.object({
+  id: z.uuid(),
+  unit_id: z.uuid(),
+  unit_number: z.string(),
+  action_date: z.iso.date(),
+  action_type: z.enum([
+    'phone_call',
+    'in_person_discussion',
+    'meeting',
+    'other_internal',
+  ]),
+  outcome: z.enum([
+    'reached',
+    'no_response',
+    'follow_up_needed',
+    'resolved',
+    'other',
+  ]),
+  next_action_date: z.iso.date(),
+  assigned_admin_user_id: z.uuid().nullable(),
+  assigned_admin_name: z.string().nullable(),
+  status: z.enum(['open', 'closed']),
+  follow_up_state: z.enum(['closed', 'overdue', 'due_soon', 'scheduled']),
+  created_at: timestamp,
+});
+
+export const billingRecoveryAdminSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+});
+
+export const billingRecoveryActionsSchema = z.object({
+  actions: z.array(billingRecoveryActionSchema),
+  admins: z.array(billingRecoveryAdminSchema),
+});
+
+export const billingRecoveryActionSaveResultSchema = z.object({
+  id: z.uuid(),
+  status: z.enum(['open', 'closed']),
+});
+
+export const billingCollectionEfficiencyInputSchema = z
+  .object({ asOfDate: z.iso.date() })
+  .strict()
+  .transform(({ asOfDate }) => ({ as_of_date: asOfDate }));
+
+export const billingCollectionEfficiencySchema = z.object({
+  as_of_date: z.iso.date(),
+  collected_paise: paiseText,
+  billed_paise: paiseText,
+  collection_percent: z.number().min(0).max(100).nullable(),
+});
+
 const dateRangeSchema = z
   .object({ from: z.iso.date(), to: z.iso.date() })
   .strict()
@@ -551,8 +747,6 @@ export const billingReportExportInputSchema = z
     message: 'The start date must be on or before the end date.',
     path: ['to'],
   });
-
-const paiseText = z.string().regex(/^\d+$/);
 
 export const billingDashboardSchema = z.object({
   from: z.iso.date(),
@@ -638,6 +832,15 @@ export type BillingDashboard = z.infer<typeof billingDashboardSchema>;
 export type BillingReceipt = z.infer<typeof billingReceiptSchema>;
 export type BillingReport = (typeof BILLING_REPORTS)[number];
 export type ExportJob = z.infer<typeof exportJobSchema>;
+export type BillingPaymentPlan = z.infer<typeof billingPaymentPlanSchema>;
+export type BillingPaymentPlanBillOption = z.infer<
+  typeof billingPaymentPlanBillOptionSchema
+>;
+export type BillingRecoveryAction = z.infer<typeof billingRecoveryActionSchema>;
+export type BillingRecoveryAdmin = z.infer<typeof billingRecoveryAdminSchema>;
+export type BillingCollectionEfficiency = z.infer<
+  typeof billingCollectionEfficiencySchema
+>;
 
 export function calculatePerSqftPaise(
   ratePaise: number,

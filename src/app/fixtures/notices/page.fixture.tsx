@@ -1,9 +1,13 @@
-// Exercise notice composing and the resident board with synthetic in-memory data.
+// Exercise notice composing, drafts, scheduling, planning details and the board with synthetic in-memory data.
 'use client';
 
 import { useState } from 'react';
 import { NoticeForm } from '@/components/notices/notice-form';
 import { NoticeListItem } from '@/components/notices/notice-list-item';
+import {
+  NoticePlanForm,
+  NoticePlanProposals,
+} from '@/components/notices/plan-form';
 import type { NoticeFormAction } from '@/components/notices/action-form';
 import { Card } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
@@ -11,7 +15,12 @@ import { publicEnvironment } from '@/core/config/public-env';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import {
   noticeCreateInputSchema,
+  noticeDraftInputSchema,
+  noticePlanInputSchema,
+  noticePlanProposalInputSchema,
+  noticePlanReviewInputSchema,
   type Notice,
+  type NoticePlanProposal,
 } from '@/core/notices/validation';
 
 const societyId = '4a696d6f-774c-41d1-ae47-6254d4a8f4cf';
@@ -33,6 +42,10 @@ const existingNotice: Notice = {
   pinned: false,
   expires_at: null,
   status: 'published',
+  scheduled_for: null,
+  published_at: '2026-11-10T09:00:00.000Z',
+  planning_status: 'posted',
+  plan: null,
   edited_at: null,
   withdrawn_at: null,
   attachment_path: null,
@@ -52,6 +65,134 @@ function failure(message: string): ServerActionResult<unknown> {
 
 export default function NoticesFixturePage() {
   const [notices, setNotices] = useState<Notice[]>([existingNotice]);
+  const [role, setRole] = useState<'admin' | 'committee'>('admin');
+  const [proposals, setProposals] = useState<NoticePlanProposal[]>([]);
+  const officialPlan =
+    notices.find((notice) => notice.id === existingNotice.id)?.plan ?? null;
+
+  function saveDraft(input: unknown): ServerActionResult<unknown> {
+    const parsed = noticeDraftInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return failure(
+        parsed.error.issues[0]?.message ?? 'Check the notice details.',
+      );
+    }
+    const { data } = parsed;
+    const scheduled = data.scheduledFor !== null;
+    const notice: Notice = {
+      ...existingNotice,
+      id: crypto.randomUUID(),
+      created_at: '2026-11-11T09:00:00.000Z',
+      updated_at: '2026-11-11T09:00:00.000Z',
+      title: data.title,
+      body: data.body,
+      audience: data.audience,
+      blocks: blocks.filter(({ id }) => data.blockIds.includes(id)),
+      pinned: data.pinned,
+      expires_at: data.expiresAt,
+      status: scheduled ? 'scheduled' : 'draft',
+      planning_status: scheduled ? 'scheduled' : 'draft',
+      scheduled_for: data.scheduledFor,
+      published_at: null,
+      has_read: false,
+      read_count: null,
+    };
+    setNotices((current) => [...current, notice]);
+    return {
+      ok: true,
+      message: scheduled ? 'The notice was scheduled.' : 'The draft was saved.',
+      data: notice,
+    };
+  }
+
+  const planAction: NoticeFormAction = async (formData) => {
+    if (role !== 'admin')
+      return failure('Only admins can change official planning details.');
+    const parsed = noticePlanInputSchema.safeParse(
+      JSON.parse(String(formData.get('input') ?? 'null')),
+    );
+    if (!parsed.success) {
+      return failure(
+        parsed.error.issues[0]?.message ?? 'Check the planning details.',
+      );
+    }
+    const { data } = parsed;
+    setNotices((current) =>
+      current.map((notice) =>
+        notice.id === data.noticeId
+          ? {
+              ...notice,
+              plan: {
+                prepared_by: data.preparedBy,
+                display_location: data.displayLocation,
+                priority: data.priority,
+                next_action: data.nextAction,
+                next_action_on: data.nextActionOn,
+              },
+            }
+          : notice,
+      ),
+    );
+    return { ok: true, message: 'The planning details were saved.' };
+  };
+
+  const proposalAction: NoticeFormAction = async (formData) => {
+    const parsed = noticePlanProposalInputSchema.safeParse(
+      JSON.parse(String(formData.get('input'))),
+    );
+    if (!parsed.success) return failure(parsed.error.issues[0]!.message);
+    const { data } = parsed;
+    const proposal: NoticePlanProposal = {
+      id: crypto.randomUUID(),
+      notice_id: data.noticeId,
+      status: 'pending',
+      proposed_by_name: 'Committee member',
+      created_at: new Date().toISOString(),
+      reviewed_at: null,
+      prepared_by: data.preparedBy,
+      display_location: data.displayLocation,
+      priority: data.priority,
+      next_action: data.nextAction,
+      next_action_on: data.nextActionOn,
+    };
+    setProposals((rows) => [...rows, proposal]);
+    return {
+      ok: true,
+      message: 'Planning proposal submitted. An admin must review it.',
+      data: proposal,
+    };
+  };
+  const reviewAction: NoticeFormAction = async (formData) => {
+    if (role !== 'admin') return failure('Only admins can review proposals.');
+    const input = noticePlanReviewInputSchema.parse(
+      JSON.parse(String(formData.get('input'))),
+    );
+    const proposal = proposals.find((row) => row.id === input.proposalId);
+    if (!proposal) return failure('Proposal not found.');
+    setProposals((rows) =>
+      rows.map((row) =>
+        row.id === input.proposalId
+          ? {
+              ...row,
+              status: input.accept ? 'accepted' : 'rejected',
+              reviewed_at: new Date().toISOString(),
+            }
+          : row,
+      ),
+    );
+    if (input.accept)
+      setNotices((rows) =>
+        rows.map((notice) =>
+          notice.id === input.noticeId ? { ...notice, plan: proposal } : notice,
+        ),
+      );
+    return {
+      ok: true,
+      message: input.accept
+        ? 'Proposal accepted. The official planning details were updated.'
+        : 'Proposal rejected. The official planning details are unchanged.',
+    };
+  };
 
   const createAction: NoticeFormAction = async (formData) => {
     let input: unknown;
@@ -60,6 +201,8 @@ export default function NoticesFixturePage() {
     } catch {
       return failure('The fixture notice was invalid.');
     }
+    if (typeof input === 'object' && input !== null && 'scheduledFor' in input)
+      return saveDraft(input);
     const parsed = noticeCreateInputSchema.safeParse(input);
     if (!parsed.success) {
       return failure(
@@ -72,6 +215,7 @@ export default function NoticesFixturePage() {
       id: '7a696d6f-774c-41d1-ae47-6254d4a8f4cf',
       created_at: '2026-11-11T09:00:00.000Z',
       updated_at: '2026-11-11T09:00:00.000Z',
+      published_at: '2026-11-11T09:00:00.000Z',
       title: data.title,
       body: data.body,
       audience: data.audience,
@@ -103,10 +247,54 @@ export default function NoticesFixturePage() {
         Development-only in-memory data. No notice is written to a database.
         Reload to reset.
       </Banner>
+      <label>
+        Fixture role
+        <select
+          value={role}
+          onChange={(event) =>
+            setRole(event.target.value === 'admin' ? 'admin' : 'committee')
+          }
+        >
+          <option value="admin">admin</option>
+          <option value="committee">committee</option>
+        </select>
+      </label>
       <h1 className="text-title font-semibold">Notice board</h1>
       <Card className="min-w-0" title="New notice">
         <NoticeForm action={createAction} blocks={blocks} onSaved={() => {}} />
       </Card>
+      {role === 'admin' ? (
+        <Card className="min-w-0" title="Planning details">
+          <NoticePlanForm
+            key={proposals
+              .filter(({ status }) => status === 'accepted')
+              .map(({ id }) => id)
+              .join(',')}
+            action={planAction}
+            noticeId={existingNotice.id}
+            plan={officialPlan}
+          />
+        </Card>
+      ) : (
+        <Card className="min-w-0" title="Propose planning details">
+          <NoticePlanForm
+            key="committee"
+            action={proposalAction}
+            noticeId={existingNotice.id}
+            plan={officialPlan}
+            proposal
+          />
+        </Card>
+      )}
+      <section aria-label="Official planning details">
+        {officialPlan?.display_location ?? 'Not set'}
+      </section>
+      <NoticePlanProposals
+        key={role}
+        proposals={proposals}
+        canReview={role === 'admin'}
+        action={reviewAction}
+      />
       <section
         aria-label="Current notices"
         className="grid min-w-0 gap-space-3"

@@ -20,6 +20,7 @@ const ENTITY_PATHS: Readonly<Record<string, string>> = {
 const FIXED_PATHS: Readonly<Record<string, string>> = {
   amenity_booking: '/amenities',
   amc: '/admin/amc',
+  vendor_contract: '/admin/vendors',
   expense: '/admin/expenses',
   housekeeping: '/housekeeping',
   billing_payment: '/bills?tab=payments',
@@ -43,6 +44,7 @@ const FIXED_PATHS: Readonly<Record<string, string>> = {
   meeting_action: '/meetings/actions',
   meeting_action_admin: '/admin/meetings/actions',
   community_admin: '/admin/community',
+  committee_action_plan: '/action-plans',
 };
 
 export function notificationPath(

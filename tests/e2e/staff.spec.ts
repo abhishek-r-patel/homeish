@@ -98,6 +98,46 @@ test('resident, administrator and guard complete staff workflows accessibly', as
     .click();
   await expect(admin.getByText('Shift status: leave')).toBeVisible();
 
+  await expect(
+    admin.locator('span').filter({ hasText: /^On notice$/ }),
+  ).toBeVisible();
+  await admin.getByLabel('Employment status').selectOption('left');
+  await admin.getByLabel('Exit date').fill('2026-10-31');
+  await admin.getByRole('button', { name: 'Save staff details' }).click();
+  await expect(
+    admin.getByText('Employment saved: left 2026-10-31'),
+  ).toBeVisible();
+
+  await expect(
+    admin.locator('p').filter({ hasText: /^4 out of 5$/ }),
+  ).toBeVisible();
+  await admin.getByText('Add a note', { exact: true }).click();
+  await admin
+    .getByLabel('Note', { exact: true })
+    .last()
+    .fill('Needs ladder safety training.');
+  await admin.getByRole('button', { name: 'Add note' }).click();
+  await expect(
+    admin
+      .getByRole('listitem')
+      .filter({ hasText: 'Needs ladder safety training.' }),
+  ).toBeVisible();
+  page.once('dialog', (dialog) => void dialog.accept());
+  await admin
+    .getByRole('listitem')
+    .filter({ hasText: 'Fixed the lobby lights quickly.' })
+    .getByRole('button', { name: 'Delete note' })
+    .click();
+  await expect(admin.getByText('Fixed the lobby lights quickly.')).toHaveCount(
+    0,
+  );
+
+  const committee = page.getByRole('region', { name: 'Committee view' });
+  await expect(
+    committee.getByText('Fixed the lobby lights quickly.'),
+  ).toBeVisible();
+  await expect(committee.getByRole('button')).toHaveCount(0);
+
   const gate = page.getByRole('region', { name: 'Guard gate controls' });
   await gate
     .getByRole('button', { name: 'Check in Fixture Domestic Staff' })

@@ -299,6 +299,17 @@ P30 adds `event.reminders` after `meeting.action_reminders`. Its privileged wrap
 calls the service-role-only `event_reminders_run`, which reminds Going flats once per event the day before it starts,
 then sends the matching push notifications for that request ID.
 
+P53 adds `notice.scheduled_publish` after `event.reminders`. Its privileged wrapper
+(`src/core/privileged/communication.ts`) calls the service-role-only `notice_scheduled_publish_run`, which posts
+scheduled notices due on or before the current timestamp. Poll-style reconciliation on notice reads
+publishes due schedules without alerts; daily catch-up sends pending alerts once. Expired schedules retain their original times
+in the archive without alerts, and push delivery may be delayed until the daily job. The
+global retention task also calls `communication_retention_run` to delete contact-log entries closed more than three
+years ago. The contact log and communication dashboard are core screens under `src/core/communication/` and
+`src/components/communication/`, reading and writing only through security-definer RPCs. Contact writes and official
+notice-plan writes are admin-only. Committee members read the log and submit immutable notice-plan proposals for
+admin acceptance/rejection; acceptance checks the official baseline and copies fields atomically.
+
 ### 7.1 Access method
 
 - **Supabase client (PostgREST/RPC) with the user's session** for normal reads and writes, so RLS applies automatically.
@@ -829,8 +840,8 @@ flowchart LR
   PROD --> VERIFY[Health check + smoke + monitor errors]
 ```
 
-- **Migrations before code**: backward-compatible migrations (add before use, remove after) so the app can roll back independently of the database. Destructive changes are split across two releases.
-- **Rollback**: redeploy the previous app build; database rolled forward with a corrective migration (never edited in place). Backups are the last resort.
+- **Migrations before code**: backward-compatible migrations (add before use, remove after) so the app can roll back independently of the database. Destructive changes are split across two releases. The redesign starts from empty databases instead of upgrading older data ([DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations)).
+- **Rollback**: normally redeploy the previous app build; database rolled forward with a corrective migration (never edited in place). Builds from before the redesign fresh start cannot run against its schema. Backups are the last resort.
 - **Feature release by module**: a new module ships dark (disabled for all societies), is enabled for a pilot society by the developer, then for others (PRD Section 14 release gating). The module toggle doubles as the feature flag; no separate flag service.
 - **Scheduled job**: platform cron calls the daily job endpoint with the secret header; failures log to `error_logs` and Sentry.
 - **Domain and TLS**: one parent product domain with configured website/demo/society hosts, managed certificates; beta on a separate project; developer console on a distinct path or subdomain with its own cookie scope. **[AA-03, D-34]** Scaffold hosting is approved on `homeish.vercel.app` and `beta-homeish.vercel.app`; nested domains and real society activation remain pending.

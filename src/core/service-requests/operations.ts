@@ -2,6 +2,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { getRequestAmcLink } from '../amc/operations';
+import { getVendorWorkspace } from '../vendor/operations';
 import { AppError, createRequestId, ValidationError } from '../errors';
 import {
   FILE_CONTENT_TYPES,
@@ -16,8 +17,13 @@ import {
   readServiceRequestCategories,
   readServiceRequestDashboard,
   readServiceRequestEscalationSettings,
+  readServiceRequestIntakeOptions,
+  readServiceRequestReport,
+  readServiceRequestRoundsReport,
+  readServiceRequestRoundsToday,
   readServiceRequests,
   readServiceRequestSettings,
+  readServiceRequestTargets,
   serviceRequestRpc,
   type ServiceRequestListFilters,
 } from './queries';
@@ -28,13 +34,24 @@ import {
   serviceRequestCommentInputSchema,
   serviceRequestCreateInputSchema,
   serviceRequestDetailSchema,
+  serviceRequestEscalationRespondInputSchema,
   serviceRequestEscalationSettingsInputSchema,
   serviceRequestEscalationSettingsSchema,
+  serviceRequestEscalationStepSchema,
+  serviceRequestFollowUpInputSchema,
+  serviceRequestHoldInputSchema,
   serviceRequestIdInputSchema,
+  serviceRequestInspectionPointInputSchema,
+  serviceRequestInspectionPointSchema,
+  serviceRequestLogInputSchema,
+  serviceRequestPriorityChangeInputSchema,
   serviceRequestReasonInputSchema,
   serviceRequestRateInputSchema,
+  serviceRequestRoundCheckInputSchema,
+  serviceRequestRoundCheckSchema,
   serviceRequestSchema,
   serviceRequestStatusInputSchema,
+  serviceRequestTargetsInputSchema,
   serviceRequestUpvoteInputSchema,
   serviceRequestUpvoteSchema,
 } from './validation';
@@ -51,7 +68,13 @@ type RequestPermission =
   | 'request:comment'
   | 'request:assignees:list'
   | 'request:report'
-  | 'request:upvote';
+  | 'request:upvote'
+  | 'request:log'
+  | 'request:hold'
+  | 'request:priority'
+  | 'request:rounds'
+  | 'request:rounds:manage'
+  | 'request:escalation:respond';
 
 async function getContext(
   permission: RequestPermission,
@@ -208,12 +231,29 @@ export async function getServiceRequestDetail(requestId: string) {
     }
     canUpdate = assignment !== null;
   }
+  const isCommittee = context.roles.includes('committee');
+  const vendors =
+    isAdmin && context.enabledModules.has('vendor')
+      ? (await getVendorWorkspace()).vendors
+          .filter((vendor) => vendor.active && vendor.phone)
+          .map(({ id, name, phone, blacklisted, blacklist_reason }) => ({
+            id,
+            name,
+            phone,
+            blacklisted,
+            blacklist_reason,
+          }))
+      : null;
   return {
     ...detail,
     attachments,
+    vendors,
     amc: await getRequestAmcLink(context, societyId, requestId),
     capabilities: {
       canManage: isAdmin,
+      respondLevels: detail.escalations
+        .map(({ level }) => level)
+        .filter((level) => isAdmin || (isCommittee && level === 'committee')),
       canSeeAdminWorkspace: context.roles.some((role) =>
         ['admin', 'committee'].includes(role),
       ),
@@ -277,6 +317,8 @@ export async function saveServiceRequestEscalationSettings(
       p_delivery: settings.delivery,
       p_expected_updated_at: settings.expectedUpdatedAt,
       p_request_id: context.requestId,
+      p_committee_wait_mode: settings.committeeWaitMode ?? null,
+      p_committee_waits: settings.committeeWaits ?? null,
     },
     serviceRequestEscalationSettingsSchema,
   );
@@ -379,6 +421,7 @@ export async function assignServiceRequest(input: unknown, requestId: string) {
       p_vendor_phone: assignment.vendorPhone,
       p_note: assignment.note,
       p_request_trace: context.requestId,
+      p_vendor_id: assignment.vendorId ?? null,
     },
     serviceRequestSchema,
   );
@@ -485,6 +528,9 @@ export async function rateServiceRequest(input: unknown, requestId: string) {
       p_rating: parsed.rating,
       p_comment: parsed.comment,
       p_request_trace: context.requestId,
+      p_quality: parsed.quality ?? null,
+      p_speed: parsed.speed ?? null,
+      p_behaviour: parsed.behaviour ?? null,
     },
     serviceRequestSchema,
   );
@@ -534,6 +580,275 @@ export async function setServiceRequestUpvote(
       p_request_trace: context.requestId,
     },
     serviceRequestUpvoteSchema,
+  );
+}
+
+export async function getServiceRequestReportWorkspace() {
+  const { context, societyId } = await getContext('request:report');
+  const [report, rounds] = await Promise.all([
+    readServiceRequestReport(context, societyId),
+    readServiceRequestRoundsReport(context, societyId),
+  ]);
+  return { report, rounds };
+}
+
+export async function getServiceRequestTargets() {
+  const { context, societyId } = await getContext('request:report');
+  return readServiceRequestTargets(context, societyId);
+}
+
+export async function getServiceRequestRoundsWorkspace() {
+  const { context, societyId } = await getContext('request:rounds');
+  const canManage = context.roles.includes('admin');
+  const [today, options, summary] = await Promise.all([
+    readServiceRequestRoundsToday(context, societyId),
+    readServiceRequestIntakeOptions(context, societyId),
+    canManage ? readServiceRequestRoundsReport(context, societyId) : null,
+  ]);
+  return { today, options, summary, canManage };
+}
+
+export async function getServiceRequestLogOptions() {
+  const { context, societyId } = await getContext('request:log');
+  const [options, unitsResult] = await Promise.all([
+    readServiceRequestIntakeOptions(context, societyId),
+    context.db
+      .from('units')
+      .select('id, number')
+      .eq('society_id', societyId)
+      .eq('active', true)
+      .order('number'),
+  ]);
+  if (unitsResult.error) {
+    throw new Error('Could not load the society units.', {
+      cause: unitsResult.error,
+    });
+  }
+  return {
+    categories: options.categories,
+    units: unitsResult.data,
+  };
+}
+
+export async function logServiceRequest(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'request:log',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestLogInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_create_for_unit',
+    {
+      p_society_id: societyId,
+      p_category_id: parsed.categoryId,
+      p_location_type: parsed.locationType,
+      p_unit_id: parsed.unitId,
+      p_description: parsed.description,
+      p_priority: parsed.priority,
+      p_intake_source: parsed.intakeSource,
+      p_attachments: [],
+      p_client_request_id: parsed.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    serviceRequestSchema,
+    { retryOnDuplicate: true },
+  );
+}
+
+export async function changeServiceRequestPriority(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:priority',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestPriorityChangeInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_priority_change',
+    {
+      p_society_id: societyId,
+      p_request_id: parsed.requestId,
+      p_priority: parsed.priority,
+      p_reason: parsed.reason,
+      p_request_trace: context.requestId,
+    },
+    serviceRequestSchema,
+  );
+}
+
+export async function holdServiceRequest(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'request:hold',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestHoldInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_hold',
+    {
+      p_society_id: societyId,
+      p_request_id: parsed.requestId,
+      p_reason: parsed.reason,
+      p_request_trace: context.requestId,
+    },
+    serviceRequestSchema,
+  );
+}
+
+export async function releaseServiceRequest(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'request:hold',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestIdInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_release',
+    {
+      p_society_id: societyId,
+      p_request_id: parsed.requestId,
+      p_request_trace: context.requestId,
+    },
+    serviceRequestSchema,
+  );
+}
+
+export async function setServiceRequestFollowUp(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:hold',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestFollowUpInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_feedback_follow_up_set',
+    {
+      p_society_id: societyId,
+      p_request_id: parsed.requestId,
+      p_follow_up: parsed.followUp,
+      p_request_trace: context.requestId,
+    },
+    serviceRequestSchema,
+  );
+}
+
+export async function saveServiceRequestTargets(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:categories:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestTargetsInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_category_targets_save',
+    {
+      p_society_id: societyId,
+      p_category_id: parsed.categoryId,
+      p_critical: parsed.targets?.critical ?? null,
+      p_high: parsed.targets?.high ?? null,
+      p_medium: parsed.targets?.medium ?? null,
+      p_low: parsed.targets?.low ?? null,
+      p_request_id: context.requestId,
+    },
+    z.object({ category_id: z.uuid() }),
+  );
+}
+
+export async function respondToServiceRequestEscalation(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:escalation:respond',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestEscalationRespondInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_escalation_respond',
+    {
+      p_society_id: societyId,
+      p_request_id: parsed.requestId,
+      p_level: parsed.level,
+      p_response_status: parsed.responseStatus,
+      p_note: parsed.note,
+      p_request_trace: context.requestId,
+    },
+    serviceRequestEscalationStepSchema.pick({
+      level: true,
+      response_status: true,
+    }),
+  );
+}
+
+export async function saveServiceRequestInspectionPoint(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:rounds:manage',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestInspectionPointInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_inspection_point_save',
+    {
+      p_society_id: societyId,
+      p_point_id: parsed.id,
+      p_name: parsed.name,
+      p_location_note: parsed.locationNote,
+      p_sort_order: parsed.sortOrder,
+      p_active: parsed.active,
+      p_request_id: context.requestId,
+    },
+    serviceRequestInspectionPointSchema,
+  );
+}
+
+export async function recordServiceRequestRoundCheck(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'request:rounds',
+    true,
+    requestId,
+  );
+  const parsed = parseInput(serviceRequestRoundCheckInputSchema, input);
+  return serviceRequestRpc(
+    context,
+    'request_round_check_record',
+    {
+      p_society_id: societyId,
+      p_point_id: parsed.pointId,
+      p_result: parsed.result,
+      p_note: parsed.note,
+      p_action: parsed.action,
+      p_category_id: parsed.categoryId,
+      p_priority: parsed.priority,
+      p_link_request_id: parsed.linkRequestId,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: context.requestId,
+    },
+    serviceRequestRoundCheckSchema,
   );
 }
 

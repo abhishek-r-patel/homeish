@@ -14,6 +14,14 @@ export function noticeDateTime(value: string, locale: Locale = 'en') {
   });
 }
 
+/** Formats a calendar date (YYYY-MM-DD) such as a posting day. */
+export function noticeDay(value: string, locale: Locale = 'en') {
+  return formatLocalizedDateTime(new Date(`${value}T00:00:00+05:30`), locale, {
+    dateStyle: 'medium',
+    timeZone: 'Asia/Kolkata',
+  });
+}
+
 export function noticeAudienceLabel(notice: Notice, locale: Locale = 'en') {
   const t = (source: string) => translateMessage(locale, source);
   if (notice.audience === 'owners') return t('Owners');
@@ -34,6 +42,10 @@ export function NoticeStatusChips({
 }) {
   return (
     <span className="flex flex-wrap gap-space-1">
+      {notice.status === 'draft' ? <StatusChip status="notice.draft" /> : null}
+      {notice.status === 'scheduled' ? (
+        <StatusChip status="notice.scheduled" />
+      ) : null}
       {notice.status === 'withdrawn' ? (
         <StatusChip status="notice.withdrawn" />
       ) : null}
@@ -81,8 +93,15 @@ export function NoticeListItem({
         </span>
         <span className="text-caption text-ink-muted">
           {notice.author_name ?? t('Society office')} ·{' '}
-          {noticeDateTime(notice.created_at, locale)}
+          {notice.status === 'scheduled' && notice.scheduled_for
+            ? t('Posts on {date}', {
+                date: noticeDateTime(notice.scheduled_for, locale),
+              })
+            : noticeDateTime(notice.published_at ?? notice.created_at, locale)}
           {manager ? ` · ${noticeAudienceLabel(notice, locale)}` : ''}
+          {manager && notice.plan?.display_location
+            ? ` · ${notice.plan.display_location}`
+            : ''}
           {manager && notice.read_count !== null
             ? ` · ${t('Read by {count}', { count: notice.read_count })}`
             : ''}

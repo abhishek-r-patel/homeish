@@ -7,6 +7,8 @@ import {
   StaffApprovalForm,
   StaffApprovalSetting,
   SocietyStaffShiftForm,
+  StaffEmploymentChips,
+  StaffNotesPanel,
 } from '@/components/staff/admin-controls';
 import type { StaffFormAction } from '@/components/staff/action-form';
 import { GateStaffList } from '@/components/staff/gate-controls';
@@ -17,7 +19,7 @@ import type {
   GateStaffWorkspaceMember,
   StaffWorkspaceMember,
 } from '@/core/staff/operations';
-import type { StaffUnit } from '@/core/staff/validation';
+import type { StaffNote, StaffUnit } from '@/core/staff/validation';
 
 const societyId = '4a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const residentId = '8a696d6f-774c-41d1-ae47-6254d4a8f4cf';
@@ -25,6 +27,7 @@ const unitId = '9a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const staffId = '6a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const linkId = '7a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const attendanceId = '5a696d6f-774c-41d1-ae47-6254d4a8f4cf';
+const noteId = '3a696d6f-774c-41d1-ae47-6254d4a8f4cf';
 const today = new Date().toISOString().slice(0, 10);
 const units: StaffUnit[] = [{ id: unitId, label: 'A · A-101' }];
 
@@ -41,8 +44,31 @@ const societyStaff: StaffWorkspaceMember = {
   police_verified: false,
   status: 'active',
   created_by: residentId,
+  department: 'Maintenance',
+  designation: 'Electrician',
+  employment_type: 'permanent',
+  joining_date: '2024-04-01',
+  weekly_off: 'sunday',
+  employment_status: 'on_notice',
+  exit_date: null,
   unit_links: [],
   photoUrl: null,
+};
+
+const initialNote: StaffNote = {
+  id: noteId,
+  staff_id: staffId,
+  note_date: '2026-11-01',
+  category: 'appreciation',
+  rating: 4,
+  note: 'Fixed the lobby lights quickly.',
+  action: null,
+  follow_up_date: null,
+  status: 'closed',
+  recorded_by: 'Fixture Admin',
+  created_at: '2026-11-01T10:00:00.000000+00:00',
+  updated_at: '2026-11-01T10:00:00.000000+00:00',
+  can_edit: true,
 };
 
 function readInput(formData: FormData) {
@@ -66,6 +92,8 @@ export default function StaffFixturePage() {
   const [approved, setApproved] = useState(false);
   const [inside, setInside] = useState(false);
   const [shiftStatus, setShiftStatus] = useState('not recorded');
+  const [employment, setEmployment] = useState('not saved');
+  const [notes, setNotes] = useState<StaffNote[]>([initialNote]);
 
   const gateStaff: GateStaffWorkspaceMember = {
     id: staffId,
@@ -128,10 +156,41 @@ export default function StaffFixturePage() {
         className="grid gap-space-4"
       >
         <h2 className="text-heading font-semibold">Administrator management</h2>
+        <StaffEmploymentChips staff={societyStaff} />
         <StaffAdminProfileForm
-          action={fixtureAction('Staff profile saved.')}
+          action={fixtureAction('Staff profile saved.', (input) =>
+            setEmployment(
+              `${String(input.employmentStatus)} ${String(input.exitDate)}`,
+            ),
+          )}
           staff={societyStaff}
           units={units}
+        />
+        <p role="status">Employment saved: {employment}</p>
+        <StaffNotesPanel
+          canManage
+          deleteAction={fixtureAction('Staff note deleted.', (input) =>
+            setNotes((current) =>
+              current.filter(({ id }) => id !== input.noteId),
+            ),
+          )}
+          notes={notes}
+          saveAction={fixtureAction('Staff note saved.', (input) =>
+            setNotes((current) => [
+              {
+                ...initialNote,
+                id: crypto.randomUUID(),
+                note: String(input.note),
+                category: 'training_needed',
+                rating: null,
+                status: 'open',
+              },
+              ...current,
+            ]),
+          )}
+          staffId={staffId}
+          staffName={societyStaff.full_name}
+          today={today}
         />
         <StaffApprovalSetting
           action={fixtureAction('Approval setting saved.')}
@@ -146,6 +205,17 @@ export default function StaffFixturePage() {
           staffName={societyStaff.full_name}
         />
         <p role="status">Shift status: {shiftStatus}</p>
+      </section>
+
+      <section aria-label="Committee view" className="grid gap-space-4">
+        <h2 className="text-heading font-semibold">Committee view</h2>
+        <StaffNotesPanel
+          canManage={false}
+          notes={[{ ...initialNote, can_edit: false }]}
+          staffId={staffId}
+          staffName="Fixture Gardener"
+          today={today}
+        />
       </section>
 
       <section aria-label="Guard gate controls" className="grid gap-space-4">

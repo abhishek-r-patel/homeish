@@ -102,12 +102,53 @@ describe('module registry', () => {
     expect(getRoleNavigation(['admin'], []).map(({ href }) => href)).toEqual([
       '/admin',
       '/admin/analytics',
+      '/admin/communication',
       '/admin/structure',
       '/admin/members',
       '/admin/settings',
       '/admin/guards',
+      '/admin/society-profile',
+      '/admin/adoption',
       '/admin/jobs',
+      '/admin/action-plans',
+      '/admin/letters',
+      '/admin/contact-log',
+      '/help',
     ]);
+    expect(
+      getRoleNavigation(['committee'], []).map(({ href }) => href),
+    ).toEqual([
+      '/admin',
+      '/admin/analytics',
+      '/admin/communication',
+      '/admin/guards',
+      '/admin/society-profile',
+      '/admin/adoption',
+      '/admin/action-plans',
+      '/admin/letters',
+      '/admin/contact-log',
+      '/help',
+    ]);
+    expect(hasPermission(['committee'], 'core', 'contact_log:manage')).toBe(
+      false,
+    );
+    expect(hasPermission(['committee'], 'core', 'contact_log:read')).toBe(true);
+    expect(hasPermission(['admin'], 'core', 'contact_log:manage')).toBe(true);
+    expect(hasPermission(['admin'], 'core', 'action_plan:delete_task')).toBe(
+      true,
+    );
+    expect(
+      hasPermission(['committee'], 'core', 'action_plan:delete_task'),
+    ).toBe(false);
+    expect(hasPermission(['resident'], 'core', 'contact_log:manage')).toBe(
+      false,
+    );
+    expect(hasPermission(['guard'], 'core', 'communication:read')).toBe(false);
+    expect(hasPermission(['committee'], 'core', 'society_profile:manage')).toBe(
+      false,
+    );
+    expect(hasPermission(['committee'], 'core', 'adoption:manage')).toBe(false);
+    expect(hasPermission(['guard'], 'core', 'action_plan:manage')).toBe(false);
     expect(hasPermission(['admin'], 'core', 'membership:read')).toBe(true);
     expect(hasPermission(['committee'], 'core', 'membership:read')).toBe(true);
     expect(hasPermission(['resident'], 'core', 'membership:read')).toBe(false);
@@ -152,6 +193,8 @@ describe('module registry', () => {
     expect(nav.map(({ href }) => href)).toEqual([
       '/home',
       '/household',
+      '/action-plans',
+      '/help',
       '/visitors',
       '/bills',
     ]);
@@ -159,7 +202,7 @@ describe('module registry', () => {
       getRoleNavigation(['resident'], ['visitor'], permissionMaps).map(
         ({ href }) => href,
       ),
-    ).toEqual(['/home', '/household', '/visitors']);
+    ).toEqual(['/home', '/household', '/action-plans', '/help', '/visitors']);
   });
 
   it('exposes enabled directory routes for each permitted role', () => {

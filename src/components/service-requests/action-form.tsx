@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { ServerActionResult } from '@/core/actions/server-action';
-import { Button } from '@/components/ui/button';
+import { Button, type ButtonProps } from '@/components/ui/button';
 
 export type RequestFormAction = (
   formData: FormData,
@@ -14,6 +14,8 @@ export type RequestFormAction = (
 
 export function ServiceRequestActionForm({
   action,
+  buttonSize,
+  buttonVariant,
   children,
   className = 'grid min-w-0 grid-cols-1 gap-space-4',
   input,
@@ -22,6 +24,8 @@ export function ServiceRequestActionForm({
   submitLabel,
 }: {
   action: RequestFormAction;
+  buttonSize?: ButtonProps['size'];
+  buttonVariant?: ButtonProps['variant'];
   children: ReactNode;
   className?: string;
   input: (formData: FormData) => unknown;
@@ -98,7 +102,13 @@ export function ServiceRequestActionForm({
           ) : null}
         </div>
       ) : null}
-      <Button disabled={pending} loading={pending} type="submit">
+      <Button
+        disabled={pending}
+        loading={pending}
+        size={buttonSize}
+        type="submit"
+        variant={buttonVariant}
+      >
         {submitLabel}
       </Button>
       <span aria-live="polite" className="sr-only" role="status">

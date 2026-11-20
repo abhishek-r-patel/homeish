@@ -12,6 +12,18 @@ const VIEWS = [
     manageOnly: false,
   },
   {
+    key: 'reconciliation',
+    href: '/admin/expenses/reconciliation',
+    label: 'Reconciliation',
+    manageOnly: false,
+  },
+  {
+    key: 'petty-cash',
+    href: '/petty-cash',
+    label: 'Petty cash',
+    manageOnly: false,
+  },
+  {
     key: 'setup',
     href: '/admin/expenses/setup',
     label: 'Setup',

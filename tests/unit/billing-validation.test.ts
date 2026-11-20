@@ -9,6 +9,11 @@ import {
   billingPaymentRejectInputSchema,
   billingPaymentSubmitInputSchema,
   billingPaymentSchema,
+  billingPaymentPlanCancelInputSchema,
+  billingPaymentPlanInputSchema,
+  billingRecoveryActionInputSchema,
+  billingCollectionEfficiencyInputSchema,
+  billingCollectionEfficiencySchema,
   chargeFormSchema,
   DEFAULT_BILLING_SETTINGS,
   paymentDetailsInputSchema,
@@ -284,6 +289,7 @@ describe('billing fine and waiver validation', () => {
       reason: 'Parking violation',
       fine_date: '2026-11-05',
     });
+
     for (const amountRupees of ['', '0', '-1', 'abc']) {
       expect(
         billingFineInputSchema.safeParse({
@@ -335,6 +341,113 @@ describe('billing fine and waiver validation', () => {
         amountRupees: '',
         reason: ' ',
         cancel: true,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('billing arrears validation', () => {
+  const billId = '6c696d6f-774c-41d1-ae47-6254d4a8f4cf';
+  const planId = '7c696d6f-774c-41d1-ae47-6254d4a8f4cf';
+  const unitId = '5b696d6f-774c-41d1-ae47-6254d4a8f4cf';
+
+  it('converts plan terms to paise and rejects duplicate or unbalanced selections', () => {
+    expect(
+      billingPaymentPlanInputSchema.parse({
+        id: null,
+        billIds: [billId],
+        downPaymentRupees: '0',
+        installmentCount: '12',
+        firstDueDate: '2026-12-01',
+        remarks: '',
+      }),
+    ).toEqual({
+      plan_id: null,
+      bill_ids: [billId],
+      down_payment_paise: 0,
+      installment_count: 12,
+      first_due_date: '2026-12-01',
+      remarks: null,
+    });
+    expect(
+      billingPaymentPlanInputSchema.safeParse({
+        id: null,
+        billIds: [billId, billId],
+        downPaymentRupees: '0',
+        installmentCount: '12',
+        firstDueDate: '2026-12-01',
+        remarks: '',
+      }).success,
+    ).toBe(false);
+    expect(
+      billingPaymentPlanInputSchema.safeParse({
+        id: null,
+        billIds: [billId],
+        downPaymentRupees: '-1',
+        installmentCount: '12',
+        firstDueDate: '2026-12-01',
+        remarks: '',
+      }).success,
+    ).toBe(false);
+    expect(
+      billingPaymentPlanInputSchema.safeParse({
+        id: null,
+        billIds: [billId],
+        downPaymentRupees: '0',
+        installmentCount: '2147483648',
+        firstDueDate: '2026-12-01',
+        remarks: '',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('requires a reason to cancel and keeps recovery action choices closed', () => {
+    expect(
+      billingPaymentPlanCancelInputSchema.parse({
+        planId,
+        reason: 'Replacing selected bills',
+      }),
+    ).toEqual({ plan_id: planId, reason: 'Replacing selected bills' });
+    expect(
+      billingPaymentPlanCancelInputSchema.safeParse({
+        planId,
+        reason: ' ',
+      }).success,
+    ).toBe(false);
+    expect(
+      billingRecoveryActionInputSchema.safeParse({
+        id: null,
+        unitId,
+        actionDate: '2026-11-25',
+        actionType: 'legal_notice',
+        outcome: 'reached',
+        nextActionDate: '2026-12-01',
+        assignedAdminUserId: null,
+        status: 'open',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('validates the collection-efficiency cutoff and output shape', () => {
+    expect(
+      billingCollectionEfficiencyInputSchema.parse({
+        asOfDate: '2026-11-25',
+      }),
+    ).toEqual({ as_of_date: '2026-11-25' });
+    expect(
+      billingCollectionEfficiencySchema.safeParse({
+        as_of_date: '2026-11-25',
+        collected_paise: '0',
+        billed_paise: '100',
+        collection_percent: 0,
+      }).success,
+    ).toBe(true);
+    expect(
+      billingCollectionEfficiencySchema.safeParse({
+        as_of_date: '2026-11-25',
+        collected_paise: '100',
+        billed_paise: '100',
+        collection_percent: 101,
       }).success,
     ).toBe(false);
   });

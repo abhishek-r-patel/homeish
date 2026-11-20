@@ -1,5 +1,6 @@
 // Shared notice board contracts for database results and form inputs.
 import { z } from 'zod';
+import { ValidationError } from '../errors';
 
 const uuid = z.uuid();
 const timestamp = z.iso.datetime({ offset: true });
@@ -13,8 +14,45 @@ export const NOTICE_ATTACHMENT_CONTENT_TYPES = [
   'application/pdf',
 ] as const;
 
+export const NOTICE_PREPARED_BY_MAX = 80;
+export const NOTICE_DISPLAY_LOCATION_MAX = 120;
+export const NOTICE_NEXT_ACTION_MAX = 200;
+
+const isoDate = z.iso.date();
+
 export const noticeAudienceSchema = z.enum(['all', 'blocks', 'owners']);
 export type NoticeAudience = z.infer<typeof noticeAudienceSchema>;
+
+export const noticePlanningStatusSchema = z.enum([
+  'draft',
+  'scheduled',
+  'posted',
+  'removed',
+]);
+export type NoticePlanningStatus = z.infer<typeof noticePlanningStatusSchema>;
+
+export const noticePrioritySchema = z.enum(['high', 'medium', 'low']);
+export type NoticePriority = z.infer<typeof noticePrioritySchema>;
+
+export const noticePlanSchema = z.object({
+  prepared_by: z.string().nullable(),
+  display_location: z.string().nullable(),
+  priority: noticePrioritySchema.nullable(),
+  next_action: z.string().nullable(),
+  next_action_on: isoDate.nullable(),
+});
+export type NoticePlan = z.infer<typeof noticePlanSchema>;
+
+export const noticePlanProposalSchema = noticePlanSchema.extend({
+  id: uuid,
+  notice_id: uuid,
+  status: z.enum(['pending', 'accepted', 'rejected']),
+  proposed_by_name: z.string().nullable(),
+  created_at: timestamp,
+  reviewed_at: timestamp.nullable(),
+});
+export type NoticePlanProposal = z.infer<typeof noticePlanProposalSchema>;
+export const noticePlanProposalsSchema = z.array(noticePlanProposalSchema);
 
 export const noticeSchema = z.object({
   id: uuid,
@@ -27,7 +65,11 @@ export const noticeSchema = z.object({
   audience: noticeAudienceSchema,
   pinned: z.boolean(),
   expires_at: timestamp.nullable(),
-  status: z.enum(['published', 'withdrawn']),
+  status: z.enum(['draft', 'scheduled', 'published', 'withdrawn']),
+  scheduled_for: timestamp.nullable(),
+  published_at: timestamp.nullable(),
+  planning_status: noticePlanningStatusSchema,
+  plan: noticePlanSchema.nullable(),
   edited_at: timestamp.nullable(),
   withdrawn_at: timestamp.nullable(),
   attachment_path: z.string().nullable(),
@@ -112,7 +154,116 @@ export const noticePinInputSchema = z
 
 export const noticeIdInputSchema = z.object({ noticeId: uuid }).strict();
 
-export const noticeViewSchema = z.enum(['current', 'archive']);
+/** Explicit posting intent prevents an incomplete schedule from being saved as a draft. */
+export const noticeDraftInputSchema = z
+  .object({
+    ...noticeContentShape,
+    pinned: z.boolean().default(false),
+    postMode: z.enum(['draft', 'schedule']).default('draft'),
+    scheduledFor: timestamp.nullable().default(null),
+    noticeId: uuid.nullable().default(null),
+    expectedUpdatedAt: timestamp.nullable().default(null),
+    clientRequestId: uuid.nullable().default(null),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    refineAudience(input, context);
+    if (input.postMode === 'schedule' && input.scheduledFor === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['scheduledFor'],
+        message: 'Choose a posting date and time.',
+      });
+    }
+    if (input.postMode === 'draft' && input.scheduledFor !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['scheduledFor'],
+        message: 'Choose Schedule to set a posting time.',
+      });
+    }
+    if (input.noticeId === null && input.clientRequestId === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['form'],
+        message: 'Reload the page and try again.',
+      });
+    }
+    if (input.noticeId !== null && input.expectedUpdatedAt === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['form'],
+        message: 'Reload the page and try again.',
+      });
+    }
+  });
+export type NoticeDraftInput = z.input<typeof noticeDraftInputSchema>;
+
+export function validateNoticeSchedule(
+  scheduledFor: string | null,
+  expiresAt: string | null,
+  now = Date.now(),
+) {
+  if (scheduledFor === null) return;
+  if (Date.parse(scheduledFor) <= now) {
+    throw new ValidationError({
+      scheduledFor: 'Choose a future posting date and time.',
+    });
+  }
+  if (expiresAt !== null && Date.parse(expiresAt) <= Date.parse(scheduledFor)) {
+    throw new ValidationError({
+      expiresAt: 'The notice expiry must be after it is posted.',
+    });
+  }
+}
+
+export const noticePublishInputSchema = z
+  .object({ noticeId: uuid, expectedUpdatedAt: timestamp })
+  .strict();
+
+function optionalText(max: number) {
+  return z
+    .string()
+    .trim()
+    .max(max, `Use at most ${max} characters.`)
+    .nullable()
+    .default(null)
+    .transform((value) => (value ? value : null));
+}
+
+export const noticePlanInputSchema = z
+  .object({
+    noticeId: uuid,
+    preparedBy: optionalText(NOTICE_PREPARED_BY_MAX),
+    displayLocation: optionalText(NOTICE_DISPLAY_LOCATION_MAX),
+    priority: noticePrioritySchema.nullable().default(null),
+    nextAction: optionalText(NOTICE_NEXT_ACTION_MAX),
+    nextActionOn: isoDate.nullable().default(null),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    if (input.nextActionOn !== null && input.nextAction === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['nextAction'],
+        message: 'Describe the next action for this date.',
+      });
+    }
+  });
+export type NoticePlanInput = z.input<typeof noticePlanInputSchema>;
+
+export const noticePlanProposalInputSchema = noticePlanInputSchema.safeExtend({
+  clientRequestId: uuid,
+});
+export const noticePlanReviewInputSchema = z
+  .object({
+    noticeId: uuid,
+    proposalId: uuid,
+    accept: z.boolean(),
+  })
+  .strict();
+
+export const noticeViewSchema = z.enum(['current', 'archive', 'planned']);
 export type NoticeView = z.infer<typeof noticeViewSchema>;
 
 const UUID_PATTERN =

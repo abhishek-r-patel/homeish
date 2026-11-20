@@ -11,11 +11,13 @@ import {
   runVisitorExpirationPrivileged,
   runInventoryRemindersPrivileged,
   runAmcRemindersPrivileged,
+  runVendorContractRemindersPrivileged,
   runTenancyRemindersPrivileged,
   runPollReconcilePrivileged,
   runPollRetentionPrivileged,
   runMeetingActionRemindersPrivileged,
   runEventRemindersPrivileged,
+  runNoticeScheduledPublishPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -86,6 +88,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     },
   },
   {
+    name: 'vendor.contract_reminders',
+    run: async (societyId: string) => {
+      await runVendorContractRemindersPrivileged(societyId);
+    },
+  },
+  {
     name: 'tenancy.reminders',
     run: async (societyId: string) => {
       await runTenancyRemindersPrivileged(societyId);
@@ -107,6 +115,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'event.reminders',
     run: async (societyId: string) => {
       await runEventRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'notice.scheduled_publish',
+    run: async (societyId: string, periodKey: string) => {
+      await runNoticeScheduledPublishPrivileged(societyId, periodKey);
     },
   },
   {

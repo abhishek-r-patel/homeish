@@ -1,11 +1,18 @@
-// Verify notice contracts, attachment paths, permissions and notification links.
+// Verify notice and contact log contracts, attachment paths, permissions and notification links.
 import { describe, expect, it } from 'vitest';
 import { getRoleNavigation } from '../../src/core/modules';
 import {
   noticeCreateInputSchema,
+  noticeDraftInputSchema,
   noticeFileFolder,
+  noticePlanInputSchema,
   noticeUpdateInputSchema,
+  validateNoticeSchedule,
 } from '../../src/core/notices/validation';
+import {
+  contactLogSaveInputSchema,
+  parseDashboardMonth,
+} from '../../src/core/communication/validation';
 import { notificationPath } from '../../src/core/notifications/links';
 import { hasPermission } from '../../src/core/permissions';
 
@@ -102,5 +109,129 @@ describe('notice board', () => {
     expect(notificationPath('notice', folderId, () => true)).toBe(
       `/notices/${folderId}`,
     );
+  });
+
+  it('needs a retry id for new drafts and a version for edits', () => {
+    const base = { title: 'AGM', body: 'Agenda soon.', audience: 'all' };
+    expect(noticeDraftInputSchema.safeParse(base).success).toBe(false);
+    expect(
+      noticeDraftInputSchema.parse({
+        ...base,
+        clientRequestId: folderId,
+        postMode: 'schedule',
+        scheduledFor: '2026-12-01T10:00:00+05:30',
+      }).scheduledFor,
+    ).toBe('2026-12-01T10:00:00+05:30');
+    expect(
+      noticeDraftInputSchema.safeParse({ ...base, noticeId: folderId }).success,
+    ).toBe(false);
+  });
+
+  it('rejects incomplete schedules, past times and expiry before posting', () => {
+    const base = {
+      title: 'AGM',
+      body: 'Agenda soon.',
+      audience: 'all',
+      clientRequestId: folderId,
+    };
+    expect(
+      noticeDraftInputSchema.safeParse({ ...base, postMode: 'schedule' })
+        .success,
+    ).toBe(false);
+    expect(
+      noticeDraftInputSchema.safeParse({
+        ...base,
+        scheduledFor: '2026-12-01T10:00:00+05:30',
+      }).success,
+    ).toBe(false);
+    const now = Date.parse('2026-12-01T09:00:00+05:30');
+    expect(() =>
+      validateNoticeSchedule('2026-12-01T10:00:00+05:30', null, now),
+    ).not.toThrow();
+    expect(() =>
+      validateNoticeSchedule('2026-12-01T09:00:00+05:30', null, now),
+    ).toThrow();
+    expect(() =>
+      validateNoticeSchedule(
+        '2026-12-01T10:00:00+05:30',
+        '2026-12-01T09:30:00+05:30',
+        now,
+      ),
+    ).toThrow();
+    expect(hasPermission(['committee'], 'notice', 'notice:plan')).toBe(false);
+    expect(hasPermission(['committee'], 'notice', 'notice:propose_plan')).toBe(
+      true,
+    );
+    expect(hasPermission(['admin'], 'notice', 'notice:plan')).toBe(true);
+  });
+
+  it('requires a next action when its date is set and blanks empty text', () => {
+    expect(
+      noticePlanInputSchema.safeParse({
+        noticeId: folderId,
+        nextActionOn: '2026-12-01',
+      }).success,
+    ).toBe(false);
+    expect(
+      noticePlanInputSchema.parse({ noticeId: folderId, preparedBy: '  ' }),
+    ).toMatchObject({ preparedBy: null, priority: null });
+  });
+});
+
+describe('member contact log and communication dashboard', () => {
+  const entry = {
+    logId: null,
+    expectedUpdatedAt: null,
+    clientRequestId: folderId,
+    contactOn: '2026-11-18',
+    unitId: '',
+    contactType: 'complaint',
+    channel: 'phone',
+    direction: 'incoming',
+    summary: ' Lift noise at night. ',
+    handledBy: blockId,
+    followUpOn: '',
+    status: 'open',
+    serviceRequestId: '',
+  };
+
+  it('normalises blank pickers and trims the summary', () => {
+    expect(contactLogSaveInputSchema.parse(entry)).toMatchObject({
+      unitId: null,
+      followUpOn: null,
+      serviceRequestId: null,
+      summary: 'Lift noise at night.',
+    });
+  });
+
+  it('needs a follow-up date on or after the contact date for follow-ups', () => {
+    expect(
+      contactLogSaveInputSchema.safeParse({ ...entry, status: 'follow_up' })
+        .success,
+    ).toBe(false);
+    expect(
+      contactLogSaveInputSchema.safeParse({
+        ...entry,
+        status: 'follow_up',
+        followUpOn: '2026-11-17',
+      }).success,
+    ).toBe(false);
+    expect(
+      contactLogSaveInputSchema.safeParse({
+        ...entry,
+        status: 'follow_up',
+        followUpOn: '2026-11-18',
+      }).success,
+    ).toBe(true);
+    expect(
+      contactLogSaveInputSchema.safeParse({ ...entry, summary: '   ' }).success,
+    ).toBe(false);
+  });
+
+  it('falls back to the current month for invalid or future months', () => {
+    expect(parseDashboardMonth('2026-10', '2026-11')).toBe('2026-10');
+    expect(parseDashboardMonth('2026-12', '2026-11')).toBe('2026-11');
+    expect(parseDashboardMonth('2026-13', '2026-11')).toBe('2026-11');
+    expect(parseDashboardMonth(['2026-10'], '2026-11')).toBe('2026-11');
   });
 });

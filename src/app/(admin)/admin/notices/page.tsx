@@ -19,8 +19,18 @@ export default async function AdminNoticesPage({
   const locale = await getRequestLocale();
   const t = (source: string) => translateMessage(locale, source);
   const params = await searchParams;
-  const view = params.tab === 'archive' ? 'archive' : 'current';
+  const view =
+    params.tab === 'archive'
+      ? 'archive'
+      : params.tab === 'planned'
+        ? 'planned'
+        : 'current';
   const board = await getNoticeBoard(view);
+  const tabs = [
+    ['current', 'Current', '/admin/notices'],
+    ['planned', 'Planned', '/admin/notices?tab=planned'],
+    ['archive', 'Archive', '/admin/notices?tab=archive'],
+  ] as const;
 
   return (
     <section className="grid min-w-0 gap-space-5">
@@ -42,24 +52,17 @@ export default async function AdminNoticesPage({
       </header>
       <nav aria-label={t('Notice board sections')}>
         <ul className="flex gap-space-4 border-b border-rule">
-          <li>
-            <Link
-              aria-current={view === 'current' ? 'page' : undefined}
-              className="inline-flex min-h-12 items-center text-body-strong underline-offset-4 hover:underline"
-              href="/admin/notices"
-            >
-              {t('Current')}
-            </Link>
-          </li>
-          <li>
-            <Link
-              aria-current={view === 'archive' ? 'page' : undefined}
-              className="inline-flex min-h-12 items-center text-body-strong underline-offset-4 hover:underline"
-              href="/admin/notices?tab=archive"
-            >
-              {t('Archive')}
-            </Link>
-          </li>
+          {tabs.map(([key, label, href]) => (
+            <li key={key}>
+              <Link
+                aria-current={view === key ? 'page' : undefined}
+                className="inline-flex min-h-12 items-center text-body-strong underline-offset-4 hover:underline"
+                href={href}
+              >
+                {t(label)}
+              </Link>
+            </li>
+          ))}
         </ul>
       </nav>
       {board.notices.length === 0 ? (
@@ -67,10 +70,16 @@ export default async function AdminNoticesPage({
           description={
             view === 'archive'
               ? t('Expired and withdrawn notices will appear here.')
-              : t('Publish a notice to keep residents informed.')
+              : view === 'planned'
+                ? t('Drafts and scheduled notices will appear here.')
+                : t('Publish a notice to keep residents informed.')
           }
           title={
-            view === 'archive' ? t('No archived notices') : t('No notices yet')
+            view === 'archive'
+              ? t('No archived notices')
+              : view === 'planned'
+                ? t('No planned notices')
+                : t('No notices yet')
           }
         />
       ) : (

@@ -23,6 +23,8 @@ type SocietyShellProps = {
   onSocietyChange?: (societyId: string) => void;
   permissionMaps?: PermissionMaps;
   role: SocietyRole;
+  // Petty-cash custody is per person (P39), so it is not a role navigation item.
+  showPettyCash?: boolean;
   societies?: readonly SocietyOption[];
   unreadNotifications?: number;
 };
@@ -231,7 +233,7 @@ function NavigationIcon({ item }: { item: ShellNavigationItem }) {
 }
 
 function normalizeRoleNavigation(
-  items: readonly RoleNavigationItem[],
+  items: readonly Omit<RoleNavigationItem, 'permission'>[],
   role: SocietyRole,
   translate: Translate,
 ): ShellNavigationItem[] {
@@ -740,6 +742,7 @@ function SocietyShell({
   onSocietyChange,
   permissionMaps,
   role,
+  showPettyCash = false,
   societies = [],
   unreadNotifications,
 }: SocietyShellProps) {
@@ -752,7 +755,18 @@ function SocietyShell({
   const isStaff =
     role === 'admin' || role === 'committee' || role === 'hk_supervisor';
   const navigation = normalizeRoleNavigation(
-    getRoleNavigation([role], enabledModules, permissionMaps),
+    [
+      ...getRoleNavigation([role], enabledModules, permissionMaps),
+      ...(showPettyCash
+        ? [
+            {
+              href: '/petty-cash',
+              label: 'Petty cash',
+              moduleKey: 'expense' as const,
+            },
+          ]
+        : []),
+    ],
     role,
     translate,
   );

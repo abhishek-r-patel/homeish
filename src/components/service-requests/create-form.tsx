@@ -9,6 +9,7 @@ import {
   type RequestFormAction,
 } from './action-form';
 import { ServiceRequestPhotoUpload } from './photo-upload';
+import { ServiceRequestPriorityField } from './priority-field';
 import type { ServiceRequestCategory } from '@/core/service-requests/validation';
 
 type RequestUnit = { id: string; number: string; block: string | null };
@@ -163,21 +164,7 @@ export function ServiceRequestCreateForm({
           required
         />
       </label>
-      <label
-        className="grid min-w-0 gap-space-1 text-body-strong"
-        htmlFor="request-priority"
-      >
-        {t('Priority')}
-        <select
-          className={fieldClass}
-          defaultValue="normal"
-          id="request-priority"
-          name="priority"
-        >
-          <option value="normal">{t('Normal')}</option>
-          <option value="urgent">{t('Urgent')}</option>
-        </select>
-      </label>
+      <ServiceRequestPriorityField idPrefix="request-priority" />
       <input name="clientRequestId" type="hidden" value={requestId} />
       <ServiceRequestPhotoUpload
         getRequestId={ensureRequestId}

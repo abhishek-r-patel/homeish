@@ -7,6 +7,11 @@ import {
   RecordPaymentButton,
   ReportExportButtons,
 } from '@/components/billing/admin-panels';
+import {
+  CollectionEfficiencyPanel,
+  PaymentPlansPanel,
+  RecoveryActionsPanel,
+} from '@/components/billing/arrears';
 import { BillingSetup } from '@/components/billing/setup';
 import { primaryLinkClass, textLinkClass } from '@/components/billing/styles';
 import { BillsTable, PaymentsTable } from '@/components/billing/tables';
@@ -20,8 +25,12 @@ import {
 } from '@/core/i18n/format';
 import {
   getBillingAdminContext,
+  getBillingCollectionEfficiency,
   getBillingDashboard,
   getBillingSetup,
+  listBillingPaymentPlanBills,
+  listBillingPaymentPlans,
+  listBillingRecoveryActions,
   listBillingBills,
   listBillingPayments,
   listBillingUnits,
@@ -39,6 +48,9 @@ const TABS = [
   { id: 'payments', label: 'Payments' },
   { id: 'fines', label: 'Fines' },
   { id: 'reports', label: 'Reports' },
+  { id: 'payment-plans', label: 'Payment plans' },
+  { id: 'recovery', label: 'Recovery follow-ups' },
+  { id: 'collection-efficiency', label: 'Collection efficiency' },
   { id: 'charge-types', label: 'Charge Types' },
   { id: 'payment-settings', label: 'Payment Settings' },
 ] as const;
@@ -446,6 +458,37 @@ export default async function BillingPage({
     content = <FinesSection canManage={admin.canManage} today={today} />;
   } else if (tab === 'reports') {
     content = <ReportsSection from={from} to={to} />;
+  } else if (tab === 'payment-plans') {
+    const [plans, bills] = await Promise.all([
+      listBillingPaymentPlans(),
+      admin.canManage ? listBillingPaymentPlanBills() : Promise.resolve([]),
+    ]);
+    content = (
+      <PaymentPlansPanel
+        bills={bills}
+        canManage={admin.canManage}
+        plans={plans}
+        today={today}
+      />
+    );
+  } else if (tab === 'recovery') {
+    const [recovery, units] = await Promise.all([
+      listBillingRecoveryActions(),
+      admin.canManage ? listBillingUnits() : Promise.resolve([]),
+    ]);
+    content = (
+      <RecoveryActionsPanel
+        actions={recovery.actions}
+        admins={recovery.admins}
+        canManage={admin.canManage}
+        today={today}
+        units={units}
+      />
+    );
+  } else if (tab === 'collection-efficiency') {
+    const asOfDate = isoDate(single(params, 'asOfDate')) ?? today;
+    const report = await getBillingCollectionEfficiency({ asOfDate });
+    content = <CollectionEfficiencyPanel report={report} />;
   } else {
     const setup = await getBillingSetup();
     content = <BillingSetup {...setup} embedded />;

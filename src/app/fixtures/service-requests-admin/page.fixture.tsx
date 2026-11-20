@@ -41,6 +41,8 @@ export default function ServiceRequestsAdminFixturePage() {
   const [escalationSettings, setEscalationSettings] =
     useState<ServiceRequestEscalationSettings>({
       delivery: 'in_app',
+      committee_wait_mode: 'per_priority',
+      committee_waits: { critical: 1, high: 2, medium: 3, low: 5 },
       updated_at: null,
     });
 
@@ -53,10 +55,13 @@ export default function ServiceRequestsAdminFixturePage() {
     }
     const parsed = serviceRequestEscalationSettingsInputSchema.safeParse(input);
     if (!parsed.success) return failure('Choose how escalations are sent.');
-    setEscalationSettings({
+    setEscalationSettings((current) => ({
       delivery: parsed.data.delivery,
+      committee_wait_mode:
+        parsed.data.committeeWaitMode ?? current.committee_wait_mode,
+      committee_waits: parsed.data.committeeWaits ?? current.committee_waits,
       updated_at: '2026-11-10T10:00:00.000Z',
-    });
+    }));
     return { ok: true, message: 'The escalation settings were saved.' };
   };
 

@@ -26,6 +26,12 @@ import { AmountInput, TextAreaInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
 import { VENDOR_ACTIONS, VENDOR_BASE_HREF, type VendorActions } from './shared';
 import { useVendorPresentation } from './presentation';
+import {
+  VENDOR_REGISTER_ANCHORS,
+  VendorRegisters,
+  VendorSummaryStrip,
+  type VendorRegisterLoads,
+} from './registers';
 
 /** Reads a rupee field and returns paise, or explains the expected format. */
 export function readRupees(form: FormData, name: string, field: string) {
@@ -68,6 +74,12 @@ export function VendorForm({
           phone: text(form, 'phone'),
           email: text(form, 'email'),
           gstin: text(form, 'gstin'),
+          pan: text(form, 'pan'),
+          paymentTermsDays:
+            text(form, 'paymentTermsDays').trim() === ''
+              ? null
+              : Number(form.get('paymentTermsDays')),
+          onboardedDate: text(form, 'onboardedDate'),
           notes: text(form, 'notes'),
           expectedVersion: vendor?.version ?? null,
           clientRequestId,
@@ -129,6 +141,43 @@ export function VendorForm({
         defaultValue={vendor?.gstin ?? ''}
         autoComplete="off"
         className="uppercase"
+      />
+      <TextInput
+        id={`${id}-pan`}
+        name="pan"
+        label={t('PAN (optional)')}
+        helpText={t(
+          'Enter the 10-character Indian PAN. It is stored uppercase.',
+        )}
+        maxLength={10}
+        defaultValue={vendor?.pan ?? ''}
+        autoComplete="off"
+        className="uppercase"
+      />
+      <TextInput
+        id={`${id}-payment-terms`}
+        name="paymentTermsDays"
+        label={t('Payment terms in days (optional)')}
+        helpText={t(
+          'Use 0 for due immediately, or leave blank for the five-day bill default.',
+        )}
+        type="number"
+        min={0}
+        max={365}
+        step={1}
+        defaultValue={
+          vendor?.payment_terms_days === null ||
+          vendor?.payment_terms_days === undefined
+            ? ''
+            : String(vendor.payment_terms_days)
+        }
+      />
+      <TextInput
+        id={`${id}-onboarded-date`}
+        name="onboardedDate"
+        label={t('Onboarded date (optional)')}
+        type="date"
+        defaultValue={vendor?.onboarded_date ?? ''}
       />
       <TextAreaInput
         id={`${id}-notes`}
@@ -318,6 +367,11 @@ function VendorList({ workspace }: { workspace: VendorWorkspace }) {
             {vendor.contact_person ? ` · ${vendor.contact_person}` : ''}
             {vendor.phone ? ` · ${vendor.phone}` : ''}
           </p>
+          {vendor.blacklisted ? (
+            <p className="text-caption font-semibold text-warning">
+              {t('Blacklisted vendor')}
+            </p>
+          ) : null}
           <p className="text-caption">
             {rating(vendor.rating_average, vendor.rating_count)}
           </p>
@@ -380,9 +434,11 @@ function RequestList({ workspace }: { workspace: VendorWorkspace }) {
 
 export function VendorWorkspaceView({
   workspace,
+  registers,
   actions = VENDOR_ACTIONS,
 }: {
   workspace: VendorWorkspace;
+  registers?: VendorRegisterLoads;
   actions?: VendorActions;
 }) {
   const { t, money } = useVendorPresentation();
@@ -420,6 +476,7 @@ export function VendorWorkspaceView({
           )}
         </Banner>
       )}
+      {registers ? <VendorSummaryStrip load={registers.summary} /> : null}
       <Card
         title={t('Purchase requests')}
         description={t('Draft, submitted and decided requests, newest first.')}
@@ -433,9 +490,11 @@ export function VendorWorkspaceView({
           onSaved={(id) => router.push(`${VENDOR_BASE_HREF}/requests/${id}`)}
         />
       </Card>
-      <Card title={t('Vendors')}>
-        <VendorList workspace={workspace} />
-      </Card>
+      <div id={VENDOR_REGISTER_ANCHORS.vendors} className="min-w-0">
+        <Card title={t('Vendors')}>
+          <VendorList workspace={workspace} />
+        </Card>
+      </div>
       {workspace.can_manage ? (
         <>
           <Card title={t('Add a vendor')}>
@@ -452,6 +511,15 @@ export function VendorWorkspaceView({
             <SettingsForm workspace={workspace} actions={actions} />
           </Card>
         </>
+      ) : null}
+      {registers ? (
+        <VendorRegisters
+          registers={registers}
+          vendors={workspace.vendors
+            .filter((vendor) => vendor.active)
+            .map(({ id, name }) => ({ id, name }))}
+          actions={actions}
+        />
       ) : null}
     </section>
   );

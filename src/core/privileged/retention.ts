@@ -324,4 +324,18 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
   ) {
     throw new Error('Community retention returned an invalid response.');
   }
+
+  const communicationResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'communication_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (
+    !z
+      .object({ contactLogsDeleted: z.number().int().nonnegative() })
+      .strict()
+      .safeParse(communicationResult).success
+  ) {
+    throw new Error('Communication retention returned an invalid response.');
+  }
 }

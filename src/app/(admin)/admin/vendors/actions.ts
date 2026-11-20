@@ -11,17 +11,29 @@ import {
   approvePurchaseRequest,
   archiveVendorDocument,
   cancelPurchaseRequest,
+  cancelVendorBill,
+  createVendorWorkOrder,
+  linkVendorBillPayment,
   overrideQuoteRule,
   rejectPurchaseRequest,
   removePurchaseQuote,
+  renewVendorContract,
   retryPurchaseExpenseDraft,
   savePurchaseRequest,
   saveVendor,
+  saveVendorBill,
+  saveVendorContract,
   saveVendorRating,
   saveVendorSettings,
+  saveVendorStaffDayCheck,
+  setVendorBlacklisted,
   selectPurchaseQuote,
   setVendorActive,
+  setVendorWorkOrderStatus,
   submitPurchaseRequest,
+  terminateVendorContract,
+  unlinkVendorBillPayment,
+  updateVendorWorkOrder,
 } from '@/core/vendor/operations';
 import { VENDOR_EXPENSE_DRAFT_LABELS } from '@/core/vendor/presentation';
 
@@ -81,6 +93,13 @@ export async function setVendorActiveAction(form: FormData) {
   return runServerAction(ROUTE, async (requestId) => {
     await setVendorActive(readModuleActionInput(form), requestId);
     return 'Vendor updated. Inactive vendors cannot receive new quotes.';
+  });
+}
+
+export async function setVendorBlacklistedAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await setVendorBlacklisted(readModuleActionInput(form), requestId);
+    return 'Vendor blacklist status updated and recorded.';
   });
 }
 
@@ -184,5 +203,82 @@ export async function retryPurchaseExpenseDraftAction(form: FormData) {
       requestId,
     );
     return VENDOR_EXPENSE_DRAFT_LABELS[status];
+  });
+}
+
+export async function saveVendorContractAction(form: FormData) {
+  return runServerAction<string>(ROUTE, async (requestId) => ({
+    data: await saveVendorContract(readModuleActionInput(form), requestId),
+    message: 'Contract saved.',
+  }));
+}
+
+export async function renewVendorContractAction(form: FormData) {
+  return runServerAction<string>(ROUTE, async (requestId) => ({
+    data: await renewVendorContract(readModuleActionInput(form), requestId),
+    message: 'Renewal saved. The earlier contract is kept unchanged.',
+  }));
+}
+
+export async function terminateVendorContractAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await terminateVendorContract(readModuleActionInput(form), requestId);
+    return 'Contract ended early. The reason is recorded.';
+  });
+}
+
+export async function saveVendorStaffDayCheckAction(form: FormData) {
+  return runServerAction<string>(ROUTE, async (requestId) => ({
+    data: await saveVendorStaffDayCheck(readModuleActionInput(form), requestId),
+    message: 'Agency check saved. No bill or payment was created.',
+  }));
+}
+
+export async function createVendorWorkOrderAction(form: FormData) {
+  return runServerAction<string>(ROUTE, async (requestId) => ({
+    data: await createVendorWorkOrder(readModuleActionInput(form), requestId),
+    message: 'Work order issued.',
+  }));
+}
+
+export async function updateVendorWorkOrderAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await updateVendorWorkOrder(readModuleActionInput(form), requestId);
+    return 'Work order saved.';
+  });
+}
+
+export async function setVendorWorkOrderStatusAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await setVendorWorkOrderStatus(readModuleActionInput(form), requestId);
+    return 'Work order status updated.';
+  });
+}
+
+export async function saveVendorBillAction(form: FormData) {
+  return runServerAction<string>(ROUTE, async (requestId) => ({
+    data: await saveVendorBill(readModuleActionInput(form), requestId),
+    message: 'Bill saved.',
+  }));
+}
+
+export async function cancelVendorBillAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await cancelVendorBill(readModuleActionInput(form), requestId);
+    return 'Bill cancelled. The reason is recorded.';
+  });
+}
+
+export async function linkVendorBillPaymentAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await linkVendorBillPayment(readModuleActionInput(form), requestId);
+    return 'Payment linked to the bill.';
+  });
+}
+
+export async function unlinkVendorBillPaymentAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await unlinkVendorBillPayment(readModuleActionInput(form), requestId);
+    return 'Payment unlinked. It stays listed as not counted.';
   });
 }

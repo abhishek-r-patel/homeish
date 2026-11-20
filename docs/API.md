@@ -367,6 +367,22 @@ Residents use `/requests`, `/requests/new` and `/requests/{requestId}`. Admins a
 
 SLA escalation (P32): category create/update also accepts `committeeEscalationDays` (1–30, default 2). `request.list/get` return `escalationLevel` (`none`, `admin`, `committee`); the requester sees an "Escalated" timeline entry without recipient names. Admins change the delivery on the Categories tab with `saveServiceRequestEscalationSettingsAction`. The daily job's `service_request.escalate` task does the escalation (6.1).
 
+**Helpdesk additions (P49, D-70).** Database contract in DATABASE.md §7.8. New permissions: `request:log` (admin, `hk_supervisor`), `request:hold` and `request:priority` (admin), `request:rounds` (admin, `hk_supervisor`, guard), `request:rounds:manage` (admin) and `request:escalation:respond` (admin, committee). Supervisors and guards get navigation only for logging and daily checks.
+
+- `request.create` accepts `priority` `critical | high | medium | low`; responses never return `normal`/`urgent` again.
+- `request.categories.targets.save` (A): four `targetDays` values (1–365) per category, or none to clear; audited.
+- `request.changePriority` (A): new priority and reason; recalculates the due time and adds a timeline entry.
+- `request.hold` / `request.release` (A): hold needs a reason (1–500) that the requester sees; both notify the requester. Lists return `onHoldSince`, `onHoldReason` and `heldDays`.
+- `request.logForUnit` (A, supervisor): same payload as `request.create` plus `intakeSource`, without photos; `clientRequestId` makes retries safe. `request.intakeOptions` (A, supervisor, guard) returns the categories and open common-area requests used by the log form and daily checks.
+- `request.rate` accepts optional `quality`, `speed` and `behaviour` scores (all three or none) with the overall `rating`; `request.feedbackFollowUp.set` (A) records `needed` or `done`.
+- `request.escalation.respond` (A; C for committee-level escalations): `responseStatus` and an optional note; audited.
+- `request.assign` accepts `vendorId` when `vendor` is enabled; name and phone are copied from the vendor. Admin request detail lists active vendors that have a phone number. Blacklisted vendors show a warning and remain assignable.
+- `request.escalationSettings.save` also takes `committeeWaitMode` (`per_category | per_priority`) and four per-priority waits (1–30).
+- `request.report` adds the SRQ-15 measures; unit-level repeats and written comments are returned only to admins.
+- `request.rounds.points.save` (A), `request.rounds.today` and `request.rounds.check` (A, supervisor, guard: `ok` or `issue` with a note, optionally creating or linking a common-area request) and `request.rounds.report` (A, C).
+
+Routes: admins and committee keep `/admin/requests` (new **Report** and **Daily checks** tabs). Housekeeping supervisors use `/housekeeping/requests/new` and `/housekeeping/rounds`; guards use `/guard/rounds`.
+
 ### 5.9 Notice board (`notice`, P11)
 
 | Operation          | Who                            | Purpose                                    | Notes                                                                                             |
@@ -379,7 +395,9 @@ SLA escalation (P32): category create/update also accepts `committeeEscalationDa
 | `notice.withdraw`  | A (any), C (own)               | Remove from the board                      | Kept in the archive; never deleted                                                                |
 | `notice.markRead`  | Anyone who can see the notice  | Record a read receipt                      | Called when the resident detail page opens; counts audience members only; clears the in-app alert |
 
-Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members use `/admin/notices` (Current and Archive tabs), `/admin/notices/new`, `/admin/notices/{noticeId}` and `/admin/notices/{noticeId}/edit`. Guards have no notice access.
+P53.1 adds drafts, scheduling and planning fields (Section 5.31); `notice.update` now edits published notices only.
+
+Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members use `/admin/notices` (Current, Planned and Archive tabs), `/admin/notices/new`, `/admin/notices/{noticeId}` and `/admin/notices/{noticeId}/edit`. Guards have no notice access.
 
 ### 5.10 Staff management (`staff`, P12)
 
@@ -396,6 +414,12 @@ Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members
 | `staff.retention`                     | Service role only                                    | Remove closed gate attendance older than one year                      | Open attendance is retained; invoked by the daily retention job                                                                                 |
 
 Residents use `/staff`; admins use `/admin/staff`; identified guards use `/guard/staff`. Each server action re-authorizes the caller and validates a strict payload before calling the database RPC.
+
+**Staff-record additions (P48, D-68).** Database contract in DATABASE.md §9.2. New permissions `staff:notes:read` (admin, committee) and `staff:notes:manage` (admin); committee navigation gains **Staff** at `/admin/staff`, showing society staff with notes and no write controls.
+
+- `staff.save` accepts `department`, `designation`, `employmentType`, `joiningDate`, `weeklyOff`, `employmentStatus` and `exitDate` for society staff only; they are rejected for domestic staff. `exitDate` is required with `left`.
+- `staff.notes.list` (A, C): notes for one society staff member, newest first.
+- `staff.notes.save` (A): create, or edit a note the caller wrote, with an `expectedUpdatedAt` check. `staff.notes.delete` (A) asks for confirmation in the UI. Audits exclude note text.
 
 ### 5.11 Housekeeping inventory (`housekeeping`, P13)
 
@@ -463,6 +487,23 @@ Routes: `/admin/expenses` (balances, approvals, record forms, cash and bank book
 
 - `GET /api/expense/export?from=YYYY-MM-DD&to=YYYY-MM-DD&format=csv|pdf` downloads the formula-safe entry CSV or a summary PDF for admins and committee members.
 - `/api/files/upload-url` accepts the private `expense-files` bucket (JPEG/PNG/PDF, 5 MB maximum), admin only, under `{society}/{user}/expense/`.
+
+**Accounts additions (P39, D-69).** Database contract in DATABASE.md §9.7. None of these operations creates, changes or deletes a cash or bank entry.
+
+- `listExpenseEntries` returns `voucherNo` on every row and `runningBalancePaise` when filtered to one account. CSV and PDF exports include the voucher number.
+- `getReconciliation(account, page)` (admin, committee) returns statement items with `isOld` and unmatched book entries. `recordStatementItem`, `matchStatementItem` and `cancelStatementItem` (reason required) are admin-only. Recording is idempotent by `clientRequestId`; repeating a match to the same entry or a cancel with the same reason changes nothing, and any other change to a settled item is a conflict.
+- `assignPettyCash` (admin): marks the cash account and names the custodian; changing the custodian requires a `handoverCountPaise`.
+- `getPettyCash` (current custodian, admin, committee) and `recordCashCount` (current custodian, admin): the book amount, counts, differences and custodian history. The custodian check is per user in the database, not a role permission; a non-admin custodian sees only `/petty-cash`, and its navigation link (resident and housekeeping navigation, a tile on the guard home) appears only for that person. Admins and committee reach it from the Accounts tabs.
+- `getExpenseReport` adds monthly net and the cumulative net from the financial-year start.
+
+Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
+
+**P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest has no API or calculation until an accountant/legal review approves its rate, basis and late-fee interaction.
+
+- `billing.paymentPlan.list` (admin, committee) reads plans; `billing.paymentPlan.save` (admin) creates a tracker record from a unit, selected open bill IDs, down-payment amount, installment count, first due date and remarks, or updates terms and remarks on an existing plan. The database snapshots the selected bills' remaining balances when creating a plan. An open bill can belong to only one non-cancelled plan; saved bill links cannot be changed. Equal monthly installments start on the first due date, with the last installment absorbing paise rounding. Progress is derived only from confirmed allocations for payments dated on or after the plan date and confirmed after plan creation, applied to the down payment and then installments in order. Actual ledger due remains authoritative; no caller-entered paid totals are accepted.
+- `billing.paymentPlan.cancel` (admin) cancels a plan with a required reason, retains its record and releases its bills for a replacement plan. It does not change bills, payments or ledger entries.
+- `billing.recoveryAction.list` (admin, committee) reads internal recovery follow-ups; `.save` (admin) creates or updates them. Action type and outcome use closed choices; an optional assignee must be an active admin account in the same society. A record is not proof of legal service; no legal notice is recorded and no notification or external message is sent. Records follow financial-record retention.
+- `billing.collectionEfficiency` (admin, committee) returns a read-only as-of result. Numerator: confirmed payment amounts allocated to bills due by the as-of date, with both `paid_on` and `confirmed_at` on or before it; advance or unallocated credit is excluded. Denominator: original amounts of bills due by that date less approved waivers effective by then. Existing BIL-11/P27 calculations are unchanged.
 
 ---
 
@@ -591,6 +632,15 @@ Operations live in `src/core/vendor/` (`operations.ts`, `files.ts`); all Server 
 | `retryPurchaseExpenseDraftAction` / `vendor_expense_draft_retry`                       | Admin            | Approved requests whose draft was skipped; returns the new draft status and never creates a second expense.                                                                                             |
 
 Permissions: `vendor:list`, `vendor:request`, `vendor:approve` and `vendor:rate` (admin, committee) and `vendor:manage` (admin). All three settings are admin-editable. The page is `/admin/vendors` (admin and committee), with `/admin/vendors/[vendorId]` and `/admin/vendors/requests/[requestId]`. Writes use the `otherWritesUserMinute` limit; upload preparation also uses `fileUploadUserHourly`. Separation-of-duties refusals return `FORBIDDEN` with the database message; a locked or unmet rule returns `VALIDATION_FAILED`; a stale version returns `CONFLICT`. Notifications are in-app only, at most 50 per event, and link to `/admin/vendors/requests/{id}` (entity `vendor_purchase_request`).
+
+**P47 vendor additions (D-71 approved for Batch 2 implementation):** Extend the existing admin/committee vendor workspace with summary reads; PAN is returned only to admins. Admin-only writes manage blacklisting and vendor details, general contracts, AMC schedules, monthly agency staff-day checks, work orders, bills owed and settings. Committee may read all added views and retains the existing P24 purchase-request rights. Blacklisted vendors produce warnings, not write refusals. General contracts remain separate from P14 AMCs.
+
+- `setVendorBlacklistedAction` requires a reason and is audited; `saveVendorAction` accepts optional PAN in the standard 10-character Indian format (stored uppercase), payment terms from 0 to 365 days (0 means due immediately) and onboarded date. A blank payment-term value uses five days when a bill is created. New admin actions/reads cover `getVendorContracts` / `saveVendorContract`, `saveVendorAmcSchedule`, `getVendorStaffDays` / `recordVendorStaffDays`, `getVendorWorkOrders` / `saveVendorWorkOrder`, `getVendorBills` / `saveVendorBill`, and `getVendorSummary`. Committee can call reads only. Work-order numbering is generated per society/calendar year. At bill creation, use saved vendor payment terms or a five-day fallback and snapshot the effective term and due date. Return payment status (`Pending`, `Partly paid`, `Paid`) separately from the due-state warning (`Due Soon`, `Overdue`); a partly paid overdue bill returns both `Partly paid` and `Overdue`. Vendor-bill payments are linked to existing P16 outgoing cash-book entries; partial payments are allowed, and no operation marks a bill paid manually or initiates payment.
+- AMC schedule reads include structured type, asset type, services per year, derived next-service date and overdue state; with no logged visit, next service is unscheduled. Service intervals use `round(365 / services_per_year)` days from the latest visit. AMC and general-contract status use society-admin-editable windows (Due Soon default 60 days; Urgent default 30, always shorter), managed from `/admin/amc`; the existing `[60,30,7]` reminder schedule is unchanged. Vendor invoices are Due Soon during the seven calendar days through due date and Overdue the next day.
+- `saveAmcExpirySettingsAction` is admin-only and updates the society's `due_soon_days` and `urgent_days` through `amc_settings_update`. Validate both as positive day counts up to 365 and require Urgent to be shorter than Due Soon. The AMC workspace returns effective values so admins can edit them and committee members can see them.
+- On the existing `/admin/vendors` workspace, the added contracts, work orders, agency checks and bills views are read-only for committee. Writes require admin. Work-order and bill records link back to P24 requests, P14 AMC records and P16 entries without changing their history.
+- Phase rules (2026-11-19): contract writes cover save (with history), renew (linked successor) and terminate (date and reason); a service-role `vendor_contract_reminders_run` runs with the AMC reminder job. Staff-day checks are unique per contract and month, and an edit needs a reason. Work-order saves edit only description and the optional due date, and status changes only move forward (`issued` may go straight to `completed`). Bill-payment links accept unreversed money-out entries from posted expenses, may split an entry across bills, and are refused (`VALIDATION_FAILED`) above the bill's outstanding or the entry's unlinked amount. A reversed entry's link stops counting; `vendor_bill_payment_unlink` (admin, reason required) keeps the link in history and stops it counting. A duplicate invoice number for the same vendor returns `CONFLICT`. Bills can be edited only while no link counts and cancelled with a reason only when no link counts. Summary reads return society totals for the list and per-vendor figures for the vendor page.
+- P27 adds the `amc.expiry_bands` analytics metric (default off); `amc.expiring` is unchanged.
 
 ### 5.21 Guard patrol and incident log (`patrol`, P25; D-55)
 
@@ -809,6 +859,30 @@ Rules for all routes:
 - Inputs are validated (3.4); responses never contain stack traces; errors use the envelope (3.2) with the status codes in 3.5.
 - Binary responses carry `no-store` cache headers and a safe download name (no personal data in the file name).
 
+### 5.30 Core toolkit additions (P35; D-71 approved 2026-11-20)
+
+Operations are Server Actions over the database contracts in DATABASE.md 9.22; names below are the built ones.
+
+- Society profile (`society_reference_profile_get` / `society_reference_profile_save`; admin edit, committee read) returns name, address, city, contact email and contact phone from the existing society record and saves only the new reference fields to the one profile record per society. Committee output excludes society PAN, bank identifiers and office-bearer mobile numbers; absent values are returned empty (shown as "Not added"), never zero. The advisory setup checklist is derived on read and never blocks other operations.
+- Capability adoption (`society_capability_adoptions_get` / `society_capability_adoption_save`; admin edit, committee read) returns one row per module in the module registry and saves status/priority/owner/review-date/notes. It does not toggle modules or measure usage.
+- Action plans (`committee_action_plans_get`, `committee_action_plan_save`, `committee_action_plan_set_archived`, `committee_action_plan_task_save`, `committee_action_plan_create_sample`; admin, committee) create, update and archive named plans and their tasks, optionally starting from the editable sample plan. The task owner must be an active member of the same society; assigning an owner sends one in-app notification (link type `committee_action_plan`, opening `/action-plans`), and nothing sends overdue alerts. A task linked to a meeting action is completed from the meeting, not here. A task owner who is not an admin or committee member gets a read-only list of their own assigned tasks. Evidence references retain their existing file permissions.
+- Task removal (`committee_action_plan_task_delete(p_society_id, p_task_id, p_expected_version, p_reason, p_request_id)`; admin only, `action_plan:delete_task`) requires a reason of 1–300 trimmed characters and the current task version. Removal is retry-safe, retains task/history/audit, excludes the row from all normal reads and summaries, rejects later edits and never changes a linked meeting action. `committee_action_plans_get` adds `can_delete_tasks`; plan/task save success feedback survives closing the form.
+- Help reads app-shipped English/Hindi articles filtered by the caller's role and the society's enabled modules; Hindi is returned only when Hindi is available to the society (D-67). No society-managed personal notes or new search service.
+- Letters (`POST /api/letters` for the download, logged through `letter_generation_record`; recent downloads from `letter_generation_logs_get`; admin, committee) pre-fill one of the 11 P35.13 letter types from source records the caller may already read, accepts edited text and renders an English PDF with the existing PDF renderer. The PDF is not stored; each download writes one letter-log row (actor, letter type, source record, time). It never sends, publishes a payment, approves a recovery action or grants broader source access. Dues reminders and final notices use neutral factual wording with no penalties or legal threats.
+
+Routes are `/admin/society-profile` (society name, address, city, email and phone stay in their existing registered-details source), `/admin/adoption`, `/admin/action-plans`, `/admin/letters` and `/help`. Task owners outside admin/committee see their assigned tasks on the read-only `/action-plans` ("My tasks"); admins and committee opening `/action-plans` are sent to `/admin/action-plans`. A letter for a specific record is reached from that authorized source record; circulars, shutdown notices, event announcements and newsletters start from `/admin/letters`.
+
+### 5.31 Communication additions (P53; D-71 approved 2026-11-20)
+
+Operations are Server Actions over the database contracts in DATABASE.md 9.23.
+
+- Notice drafts and scheduling (`notice_draft_save` / `notice_draft_publish`; A any, C own) retain retry IDs and stale-edit checks. Draft input explicitly supplies `postMode: draft | schedule`; `scheduledFor` is a nullable timestamp, required only for Schedule. SQL keeps the original draft-save arguments but changes `p_scheduled_for` to `timestamptz` and adds required final `p_post_mode`. Schedule requires a future date/time in India time, including later today, and expiry after posting; an incomplete schedule returns validation feedback, never a draft. Due notices reconcile automatically on `notice_list`/`notice_get` and in `notice_scheduled_publish_run`; late expired notices are archived with their original publication/expiry times, without alerts. Read reconciliation does not send alerts; daily catch-up sends them once and delivery may be delayed. Withdrawn drafts remain in the archive.
+- Official notice planning (`notice_plan_save`; admin, `notice:plan`) and committee proposals (`notice:propose_plan`) retain resident privacy. `notice_plan_proposals_get(p_society_id, p_notice_id)` returns the latest 100 proposals to admins/committee only. `notice_plan_proposal_save(p_society_id, p_notice_id, p_values, p_client_request_id, p_request_trace)` submits immutable, retry-safe committee proposals on any notice. `notice_plan_proposal_review(p_society_id, p_proposal_id, p_accept, p_request_trace)` accepts/rejects as admin; acceptance copies fields atomically, refusing to overwrite an official plan changed since submission. Repeat same decisions are safe; opposite decisions conflict. Pending/rejected proposals never change official fields. `notice.list` includes `view: planned` for A and C.
+- Contact log (`member_contact_log_save`, admin, `contact_log:manage`; `member_contact_logs_get`, admin/committee, `contact_log:read`) retains audited writes, edit version checks and three-year closed-entry retention. Committee members have no write access. The service adds `can_manage` to gate forms; successful saves retain feedback outside the closed form.
+- Communication dashboard (`communication_dashboard_get`; admin, committee; permission `communication:read`) returns monthly figures computed from app records only: notices posted and removed plus notices currently planned; meetings scheduled; events published; SOS alerts raised (excluding cancelled ones); service requests received and resolved with average days to resolve; and contacts logged and closed plus open and overdue follow-ups now. Removed means withdrawn or expired. A section is null when its module is off for the society; the contact-log section is always present.
+
+Routes are `/admin/notices?tab=planned`, `/admin/contact-log` and `/admin/communication` (`?month=YYYY-MM`; a missing, invalid or future month falls back to the current month).
+
 ### 6.1 The daily job (`/api/jobs/daily`)
 
 Vercel Cron sends `GET`; `POST` remains supported for authenticated manual invocation. Both methods require the `CRON_SECRET` bearer token. A missing or incorrect secret returns `401`; the attempt is logged without recording the supplied token. The secret comparison is constant-time. Responses are `no-store` and use the standard JSON envelope; success returns `{ ok: true, data: { jobs: [{ job, succeeded, skipped, failed }] } }`. Only per-job counts are returned.
@@ -827,6 +901,7 @@ Runs once a day (the free scheduler tier allows only one run per day and may sta
 | Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60)                             |
 | Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)                                  |
 | Event reminders                        | `event.reminders`, after `meeting.action_reminders`: one reminder per published event starting tomorrow (society-local) to flats that answered Going, in-app plus push; capped at 2000 (P30, D-63) |
+| Scheduled notices                      | `notice.scheduled_publish`, after `event.reminders`: catches up due timestamps and delivers pending scheduled-notice alerts; already-expired notices are archived without alerts (P53)             |
 | Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                                              |
 | Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                                                      |
 | Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)                               |

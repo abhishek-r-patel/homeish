@@ -121,7 +121,7 @@ describe.skipIf(!hasDatabase)('database service request upvotes', () => {
           await asUser('resident', (query) =>
             query(
               `select (public.request_create(
-                 $1, $2, $3, $4, 'Synthetic lobby light', 'normal', '[]'::jsonb,
+                 $1, $2, $3, $4, 'Synthetic lobby light', 'medium', '[]'::jsonb,
                  $5::uuid, 'upvote-create'
                )).id`,
               [

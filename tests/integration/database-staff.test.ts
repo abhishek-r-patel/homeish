@@ -496,4 +496,278 @@ describe.skipIf(!hasDatabase)('database staff management', () => {
       await database.drop();
     }
   });
+
+  it('keeps employment details to society staff and notes private to admins and committee', async () => {
+    type NoteUser = 'admin' | 'admin2' | 'committee' | 'resident' | 'guard';
+    const database = await createTestDatabase();
+    try {
+      const fixture = await database.asSuperuser(async (client) => {
+        const users = {} as Record<NoteUser, string>;
+        for (const name of [
+          'admin',
+          'admin2',
+          'committee',
+          'resident',
+          'guard',
+        ] as const) {
+          users[name] = await newAuthUser(client, `notes-${name}@example.test`);
+          await client.query(
+            `insert into public.profiles (id, email, full_name)
+             values ($1, $2, $3)`,
+            [users[name], `notes-${name}@example.test`, `Notes ${name}`],
+          );
+        }
+        const societyId = (
+          await client.query<{ id: string }>(
+            `insert into public.societies (name, created_by)
+             values ('Notes Society', $1) returning id`,
+            [users.admin],
+          )
+        ).rows[0]!.id;
+        await client.query(
+          `insert into public.module_configs
+             (society_id, module_key, enabled, settings)
+           values ($1, 'core', true, '{}'::jsonb),
+                  ($1, 'staff', true, '{}'::jsonb)`,
+          [societyId],
+        );
+        await client.query(
+          `insert into public.memberships (society_id, user_id, roles, status)
+           values ($1, $2, ARRAY['admin']::text[], 'active'),
+                  ($1, $3, ARRAY['admin']::text[], 'active'),
+                  ($1, $4, ARRAY['committee']::text[], 'active'),
+                  ($1, $5, ARRAY['resident']::text[], 'active'),
+                  ($1, $6, ARRAY['guard']::text[], 'active')`,
+          [
+            societyId,
+            users.admin,
+            users.admin2,
+            users.committee,
+            users.resident,
+            users.guard,
+          ],
+        );
+        return { users, societyId };
+      });
+      const asUser = <T>(
+        user: NoteUser,
+        run: (
+          query: (
+            sql: string,
+            params: unknown[],
+          ) => Promise<{ rows: Record<string, unknown>[] }>,
+        ) => Promise<T>,
+      ) =>
+        database.asRole(
+          'authenticated',
+          { sub: fixture.users[user] },
+          (client) => run((sql, params) => client.query(sql, params)),
+          { commit: true },
+        );
+      const save = (
+        staffType: 'domestic' | 'society',
+        phone: string,
+        employment: unknown[] = [null, null, null, null, null, 'active', null],
+      ) =>
+        asUser(
+          'admin',
+          async (query) =>
+            (
+              await query(
+                `select public.staff_admin_save(
+                   $1, null, $2, 'Record staff', $3, $4, null, null, 'Electrician',
+                   false, 'active', ARRAY[]::uuid[], 'staff-employment',
+                   $5, $6, $7, $8::date, $9, $10, $11::date
+                 ) as id`,
+                [
+                  fixture.societyId,
+                  staffType,
+                  phone,
+                  `${fixture.societyId}/staff/${fixture.users.admin}/${crypto.randomUUID()}.jpg`,
+                  ...employment,
+                ],
+              )
+            ).rows[0]!.id as string,
+        );
+      const list = (user: NoteUser) =>
+        asUser(
+          user,
+          async (query) =>
+            (
+              await query(`select public.staff_list($1) as result`, [
+                fixture.societyId,
+              ])
+            ).rows[0]!.result as Record<string, unknown>[],
+        );
+
+      expect(
+        (
+          await dbError(
+            save('domestic', '+15550001001', [
+              'Kitchen',
+              null,
+              null,
+              null,
+              null,
+              'active',
+              null,
+            ]),
+          )
+        ).code,
+      ).toBe('22023');
+      expect(
+        (
+          await dbError(
+            save('society', '+15550001002', [
+              null,
+              null,
+              null,
+              null,
+              null,
+              'left',
+              null,
+            ]),
+          )
+        ).code,
+      ).toBe('22023');
+      const societyStaffId = await save('society', '+15550001003', [
+        'Maintenance',
+        'Electrician',
+        'permanent',
+        '2024-04-01',
+        'sunday',
+        'left',
+        '2026-10-31',
+      ]);
+      await save('domestic', '+15550001004');
+
+      const adminView = await list('admin');
+      expect(adminView).toHaveLength(2);
+      expect(adminView.find(({ id }) => id === societyStaffId)).toMatchObject({
+        department: 'Maintenance',
+        employment_status: 'left',
+        exit_date: '2026-10-31',
+      });
+      const committeeView = await list('committee');
+      expect(committeeView.map(({ id }) => id)).toEqual([societyStaffId]);
+      expect(committeeView[0]).toMatchObject({
+        employment_status: 'left',
+        department: null,
+        exit_date: null,
+        photo_path: null,
+        id_last_four: null,
+      });
+      expect((await dbError(list('guard'))).code).toBe('42501');
+
+      const saveNote = (
+        user: NoteUser,
+        noteId: string | null,
+        note: string,
+        expectedUpdatedAt: string | null = null,
+      ) =>
+        asUser(
+          user,
+          async (query) =>
+            (
+              await query(
+                `select public.staff_note_save(
+                   $1, $2, $3, '2026-11-01', 'warning', 2::smallint, $4,
+                   'Retrain on ladder safety', null, 'open', $5, 'staff-note'
+                 ) as id`,
+                [
+                  fixture.societyId,
+                  noteId,
+                  societyStaffId,
+                  note,
+                  expectedUpdatedAt,
+                ],
+              )
+            ).rows[0]!.id as string,
+        );
+      const listNotes = (user: NoteUser) =>
+        asUser(
+          user,
+          async (query) =>
+            (
+              await query(`select public.staff_note_list($1, $2) as result`, [
+                fixture.societyId,
+                societyStaffId,
+              ])
+            ).rows[0]!.result as {
+              id: string;
+              note: string;
+              updated_at: string;
+              can_edit: boolean;
+            }[],
+        );
+
+      const noteId = await saveNote('admin', null, 'Skipped the safety check.');
+      expect((await dbError(saveNote('committee', null, 'No'))).code).toBe(
+        '42501',
+      );
+      const committeeNotes = await listNotes('committee');
+      expect(committeeNotes).toHaveLength(1);
+      expect(committeeNotes[0]!.can_edit).toBe(false);
+      expect((await listNotes('admin'))[0]!.can_edit).toBe(true);
+      expect((await dbError(listNotes('resident'))).code).toBe('42501');
+      expect((await dbError(listNotes('guard'))).code).toBe('42501');
+
+      const current = (await listNotes('admin'))[0]!;
+      expect(
+        (
+          await dbError(
+            saveNote(
+              'admin2',
+              noteId,
+              'Edited by another admin',
+              current.updated_at,
+            ),
+          )
+        ).code,
+      ).toBe('42501');
+      await saveNote(
+        'admin',
+        noteId,
+        'Retrained and checked.',
+        current.updated_at,
+      );
+      expect(
+        (
+          await dbError(
+            saveNote('admin', noteId, 'Stale edit', current.updated_at),
+          )
+        ).code,
+      ).toBe('23505');
+      expect((await listNotes('committee'))[0]!.note).toBe(
+        'Retrained and checked.',
+      );
+
+      await asUser('admin2', (query) =>
+        query(`select public.staff_note_delete($1, $2, 'staff-note-delete')`, [
+          fixture.societyId,
+          noteId,
+        ]),
+      );
+      expect(await listNotes('admin')).toEqual([]);
+
+      const audits = await database.asSuperuser(async (client) =>
+        client.query<{ action: string; payload: string }>(
+          `select action, coalesce("before"::text, '') || coalesce("after"::text, '') as payload
+           from public.audit_logs
+           where society_id = $1 and entity_type = 'staff_performance_note'`,
+          [fixture.societyId],
+        ),
+      );
+      expect(audits.rows.map(({ action }) => action).sort()).toEqual([
+        'staff.note.create',
+        'staff.note.delete',
+        'staff.note.update',
+      ]);
+      for (const { payload } of audits.rows) {
+        expect(payload).not.toMatch(/safety check|Retrained|ladder/);
+      }
+    } finally {
+      await database.drop();
+    }
+  });
 });

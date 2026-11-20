@@ -38,8 +38,12 @@ function QuoteForm({
   const { t } = useVendorPresentation();
   const id = useId();
   const [path, setPath] = useState<string | null>(null);
+  const [selectedVendorId, setSelectedVendorId] = useState('');
   const quoted = new Set(detail.quotes.map((quote) => quote.vendor_id));
   const vendors = detail.vendors.filter((vendor) => !quoted.has(vendor.id));
+  const selectedVendor = vendors.find(
+    (vendor) => vendor.id === selectedVendorId,
+  );
   if (vendors.length === 0) {
     return (
       <p className="text-body text-ink-muted">
@@ -70,11 +74,24 @@ function QuoteForm({
         name="vendorId"
         label={t('Vendor')}
         required
+        onChange={(event) => setSelectedVendorId(event.currentTarget.value)}
         options={vendors.map((vendor) => ({
           value: vendor.id,
-          label: vendor.name,
+          label: vendor.blacklisted
+            ? `${vendor.name} · ${t('Blacklisted')}`
+            : vendor.name,
         }))}
       />
+      {selectedVendor?.blacklisted ? (
+        <Banner tone="warning" title={t('Blacklisted vendor')}>
+          <p>
+            {t(
+              'This quote can still be added, but review the blacklist reason before continuing.',
+            )}
+          </p>
+          <p>{selectedVendor.blacklist_reason}</p>
+        </Banner>
+      ) : null}
       <AmountInput
         id={`${id}-amount`}
         name="amount"
@@ -301,6 +318,16 @@ export function PurchaseRequestView({
                     {quote.vendor_name} · {money(quote.amount_paise)}
                     {quote.selected ? t(' · Selected') : ''}
                   </p>
+                  {quote.blacklisted ? (
+                    <Banner tone="warning" title={t('Blacklisted vendor')}>
+                      <p>
+                        {t(
+                          'This vendor was blacklisted. The quote remains unchanged.',
+                        )}
+                      </p>
+                      <p>{quote.blacklist_reason}</p>
+                    </Banner>
+                  ) : null}
                   {quote.note ? (
                     <p className="text-body">{quote.note}</p>
                   ) : null}

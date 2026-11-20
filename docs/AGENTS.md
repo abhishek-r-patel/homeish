@@ -60,6 +60,13 @@ Modules are built one at a time in this order, each shippable behind its module 
 
 This is not a greenfield scaffold. Inspect the current implementation and [root code map](../AGENTS.md#current-code-map) before adding files; do not recreate already implemented modules from the target architecture diagram.
 
+### 03.3 Phase workflow
+
+1. For the current phase, identify its agreed scope and blocked tasks. Gather the foreseeable owner decisions before building, with plain-language options, recommendations and examples; do not reopen approved decisions.
+2. Record approved decisions in the governing documents before coding. Do not make intermediate commits while gathering decisions or building the phase.
+3. Implement and verify the agreed phase scope. If a new consequential decision arises, pause and ask; report failed or unrun checks rather than calling the phase complete.
+4. Once the agreed work is complete, propose the local commits and wait for the owner's confirmation under the [commit workflow](../AGENTS.md#commit-and-release-workflow). Wait for a separate owner go-ahead before starting the next phase; ask for direction if the current phase is blocked or incomplete.
+
 ---
 
 ## 04 Project and Folder Structure
@@ -297,7 +304,7 @@ The personal instructions cover worktree safety, focused changes, approvals and 
 - Work on a branch named for the task (e.g., `module-visitor/approval-flow`), not directly on the main branch.
 - Follow the approval sequence and per-commit/full-release gates in [root AGENTS.md](../AGENTS.md#commit-and-release-workflow); do not duplicate or weaken that workflow here.
 - Commit messages follow [.vscode/settings.json](../.vscode/settings.json); put relevant plan, requirement or screen IDs (e.g., `P0.6`, `VIS-4`, `G-02`) in a bullet, not the subject.
-- Releases follow ARCHITECTURE 19: migrations before code, backward-compatible, modules shipped dark and enabled per society.
+- Releases follow ARCHITECTURE 19: migrations before code, backward-compatible, modules shipped dark and enabled per society. The redesign's fresh start (empty databases, no upgrade of older data) is in [DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations).
 
 ---
 

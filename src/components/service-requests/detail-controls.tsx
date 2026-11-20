@@ -13,6 +13,7 @@ import {
   updateServiceRequestStatusAction,
 } from '@/app/(resident)/requests/actions';
 import { Card } from '@/components/ui/data-display';
+import { Banner } from '@/components/ui/feedback';
 import { ServiceRequestActionForm } from './action-form';
 import type { ServiceRequestStatus } from '@/core/service-requests/validation';
 
@@ -21,6 +22,20 @@ type Assignee = {
   name: string | null;
   roles: string[];
 };
+
+type ListedVendor = {
+  id: string;
+  name: string;
+  phone: string | null;
+  blacklisted: boolean;
+  blacklist_reason: string | null;
+};
+
+const FEEDBACK_SCORES = [
+  { name: 'quality', label: 'Resolution quality' },
+  { name: 'speed', label: 'Response speed' },
+  { name: 'behaviour', label: 'Staff behaviour' },
+] as const;
 
 const fieldClass =
   'min-h-12 w-full min-w-0 rounded-md border border-rule-strong bg-surface px-space-3 text-body focus-visible:outline-2 focus-visible:outline-focus';
@@ -33,6 +48,7 @@ export function ServiceRequestDetailControls({
   requestId,
   status,
   rated,
+  vendors = null,
 }: {
   assignees: Assignee[];
   canManage: boolean;
@@ -41,9 +57,14 @@ export function ServiceRequestDetailControls({
   requestId: string;
   status: ServiceRequestStatus;
   rated: boolean;
+  vendors?: ListedVendor[] | null;
 }) {
   const { translate: t } = useUiTranslator();
   const [commentId, setCommentId] = useState('');
+  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const selectedVendor = vendors?.find(
+    (vendor) => vendor.id === selectedVendorId,
+  );
   function ensureCommentId() {
     if (commentId) return commentId;
     const id = crypto.randomUUID();
@@ -61,16 +82,19 @@ export function ServiceRequestDetailControls({
             action={assignServiceRequestAction}
             input={(formData) => {
               const membershipId = String(formData.get('membershipId') ?? '');
+              const vendorId = String(formData.get('vendorId') ?? '');
               const vendorName = String(
                 formData.get('vendorName') ?? '',
               ).trim();
               const vendorPhone = String(
                 formData.get('vendorPhone') ?? '',
               ).trim();
-              const isVendor = Boolean(vendorName || vendorPhone);
+              const isVendor = !vendorId && Boolean(vendorName || vendorPhone);
               return {
                 requestId,
-                membershipId: isVendor ? null : membershipId || null,
+                membershipId:
+                  vendorId || isVendor ? null : membershipId || null,
+                vendorId: vendorId || null,
                 vendorName: isVendor ? vendorName || null : null,
                 vendorPhone: isVendor ? vendorPhone || null : null,
                 note: String(formData.get('note') ?? '').trim() || null,
@@ -105,6 +129,42 @@ export function ServiceRequestDetailControls({
               <legend className="text-body-strong">
                 {t('Or assign to a vendor')}
               </legend>
+              {vendors ? (
+                <label
+                  className="grid gap-space-1"
+                  htmlFor="request-vendor-listed"
+                >
+                  {t('Choose a vendor')}
+                  <select
+                    className={fieldClass}
+                    defaultValue=""
+                    id="request-vendor-listed"
+                    name="vendorId"
+                    onChange={(event) =>
+                      setSelectedVendorId(event.currentTarget.value)
+                    }
+                  >
+                    <option value="">{t('No listed vendor')}</option>
+                    {vendors.map((vendor) => (
+                      <option key={vendor.id} value={vendor.id}>
+                        {vendor.name}
+                        {vendor.phone ? ` · ${vendor.phone}` : ''}
+                        {vendor.blacklisted ? ` · ${t('Blacklisted')}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              {selectedVendor?.blacklisted ? (
+                <Banner tone="warning" title={t('Blacklisted vendor')}>
+                  <p>
+                    {t(
+                      'This assignment can continue, but review the blacklist reason before saving.',
+                    )}
+                  </p>
+                  <p>{selectedVendor.blacklist_reason}</p>
+                </Banner>
+              ) : null}
               <label className="grid gap-space-1" htmlFor="request-vendor-name">
                 {t('Vendor name')}
                 <input
@@ -234,15 +294,54 @@ export function ServiceRequestDetailControls({
             <Card className="min-w-0" title={t('Rate the resolution')}>
               <ServiceRequestActionForm
                 action={rateServiceRequestAction}
-                input={(formData) => ({
-                  requestId,
-                  rating: Number(formData.get('rating')),
-                  comment: String(formData.get('comment') ?? '').trim() || null,
-                })}
+                input={(formData) => {
+                  const score = (name: string) => {
+                    const value = String(formData.get(name) ?? '');
+                    return value ? Number(value) : null;
+                  };
+                  return {
+                    requestId,
+                    rating: Number(formData.get('rating')),
+                    comment:
+                      String(formData.get('comment') ?? '').trim() || null,
+                    quality: score('quality'),
+                    speed: score('speed'),
+                    behaviour: score('behaviour'),
+                  };
+                }}
                 submitLabel={t('Submit rating')}
               >
+                <fieldset className="grid min-w-0 gap-space-3 border-0 p-0">
+                  <legend className="text-body-strong">
+                    {t('Details (optional; rate all three or none)')}
+                  </legend>
+                  {FEEDBACK_SCORES.map((score) => (
+                    <label
+                      className="grid gap-space-1"
+                      htmlFor={`request-rating-${score.name}`}
+                      key={score.name}
+                    >
+                      {t(score.label)}
+                      <select
+                        className={fieldClass}
+                        defaultValue=""
+                        id={`request-rating-${score.name}`}
+                        name={score.name}
+                      >
+                        <option value="">{t('Not rated')}</option>
+                        {[5, 4, 3, 2, 1].map((value) => (
+                          <option key={value} value={value}>
+                            {t(value === 1 ? '{count} star' : '{count} stars', {
+                              count: value,
+                            })}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ))}
+                </fieldset>
                 <label className="grid gap-space-1" htmlFor="request-rating">
-                  {t('Rating')}
+                  {t('Overall rating')}
                   <select
                     className={fieldClass}
                     defaultValue="5"

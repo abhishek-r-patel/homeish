@@ -127,6 +127,7 @@ TypeScript follows Microsoft's side-by-side setup for the 7.0 transition: `@type
 - [API](docs/API.md)
 - [Agent instructions](docs/AGENTS.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
+- [Toolkit gap review](docs/toolkit-gap-review.md) — supporting evidence; approved decisions remain in the implementation plan
 - [Local setup](docs/LOCAL_SETUP.md)
 - [Deployment](docs/DEPLOYMENT.md)
 - [Accessibility manual checklist](docs/ACCESSIBILITY_CHECKLIST.md)

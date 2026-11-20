@@ -3,9 +3,16 @@ import 'server-only';
 import { AppError } from '../../core/errors';
 import {
   getPurchaseRequestDetail,
+  getVendorBills,
+  getVendorContracts,
   getVendorDetail,
+  getVendorStaffDayChecks,
+  getVendorSummary,
+  getVendorWorkOrders,
   getVendorWorkspace,
+  type VendorRegisterScope,
 } from '../../core/vendor/operations';
+import type { RegisterLoad, VendorRegisterLoads } from './registers';
 import { PurchaseRequestView } from './request-detail';
 import { VENDOR_BASE_HREF, VendorRouteState } from './shared';
 import { VendorDetailView } from './vendor-detail';
@@ -38,6 +45,36 @@ function pageFailure(error: unknown, retryHref: string, returnHref: string) {
   );
 }
 
+async function loadRegister<T>(
+  read: () => Promise<T>,
+): Promise<RegisterLoad<T>> {
+  try {
+    return { ok: true, data: await read() };
+  } catch (error) {
+    if (!(error instanceof AppError) || error.code === 'INTERNAL_ERROR')
+      throw error;
+    return {
+      ok: false,
+      message: error.message,
+      referenceId: error.referenceId,
+    };
+  }
+}
+
+/** Reads every register in parallel; one failing view does not hide the others. */
+async function loadRegisters(
+  scope: VendorRegisterScope,
+): Promise<VendorRegisterLoads> {
+  const [summary, contracts, checks, workOrders, bills] = await Promise.all([
+    loadRegister(() => getVendorSummary(scope)),
+    loadRegister(() => getVendorContracts(scope)),
+    loadRegister(() => getVendorStaffDayChecks(scope)),
+    loadRegister(() => getVendorWorkOrders(scope)),
+    loadRegister(() => getVendorBills(scope)),
+  ]);
+  return { summary, contracts, checks, workOrders, bills };
+}
+
 export async function VendorIndexPage() {
   let workspace;
   try {
@@ -45,7 +82,8 @@ export async function VendorIndexPage() {
   } catch (error) {
     return pageFailure(error, VENDOR_BASE_HREF, '/');
   }
-  return <VendorWorkspaceView workspace={workspace} />;
+  const registers = await loadRegisters({});
+  return <VendorWorkspaceView workspace={workspace} registers={registers} />;
 }
 
 export async function VendorPage({
@@ -65,7 +103,8 @@ export async function VendorPage({
     }
     return pageFailure(error, `${VENDOR_BASE_HREF}/${vendorId}`, '/');
   }
-  return <VendorDetailView detail={detail} />;
+  const registers = await loadRegisters({ vendorId: detail.vendor.id });
+  return <VendorDetailView detail={detail} registers={registers} />;
 }
 
 export async function PurchaseRequestPage({

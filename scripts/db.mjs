@@ -130,9 +130,23 @@ switch (action) {
   case 'types':
     await generateTypes(rest.includes('--check'));
     break;
+  case 'fresh-install': {
+    const { FreshInstallError, runFreshInstall } =
+      await import('./fresh-install.mjs');
+    try {
+      await runFreshInstall(rest, targetDatabaseUrl);
+    } catch (error) {
+      fail(
+        error instanceof FreshInstallError
+          ? error.message
+          : 'Fresh install failed unexpectedly. Run npm run db:list before retrying.',
+      );
+    }
+    break;
+  }
   default:
     fail(
-      'Usage: node scripts/db.mjs <new|list|push|types> [options]\n' +
+      'Usage: node scripts/db.mjs <new|list|push|types|fresh-install> [options]\n' +
         'Database commands run through a profile, e.g. npm run db:push.',
     );
 }

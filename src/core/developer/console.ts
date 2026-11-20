@@ -245,11 +245,10 @@ export async function updateSocietyLogo(
     data: unknown;
     error: { code?: string; message: string } | null;
   };
-  const logoRpc = context.db.rpc.bind(context.db) as unknown as (
-    name: string,
-    args: Record<string, unknown>,
-  ) => Promise<LogoRpcResult>;
-  const result = await logoRpc('developer_update_society_logo', {
+  const logoDb = context.db as unknown as {
+    rpc(name: string, args: Record<string, unknown>): Promise<LogoRpcResult>;
+  };
+  const result = await logoDb.rpc('developer_update_society_logo', {
     p_society_id: societyId,
     p_logo_path: logoPath,
     p_request_id: context.requestId,

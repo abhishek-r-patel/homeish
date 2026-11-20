@@ -9,11 +9,17 @@ import {
 } from '@/components/ui/module-action-form';
 import { NoticeAttachmentUpload } from '@/components/notices/attachment-upload';
 import {
+  saveAmcExpirySettingsAction,
   saveAmcContractAction,
+  saveAmcScheduleAction,
   saveAmcVisitAction,
   linkAmcRequestAction,
 } from '@/app/(admin)/admin/amc/actions';
-import type { AmcContract, AmcVisit } from '@/core/amc/validation';
+import {
+  amcScheduleInputSchema,
+  type AmcContract,
+  type AmcVisit,
+} from '@/core/amc/validation';
 import { rupeesFromPaise } from '@/core/billing/validation';
 import { createComponentTranslator } from '@/core/i18n/catalogs/hi-components';
 import { formatLocalizedDate } from '@/core/i18n/format';
@@ -28,6 +34,53 @@ function useAmcCopy() {
       language?.translate ?? ((source) => source),
     ),
   };
+}
+
+export function AmcExpirySettingsForm({
+  settings,
+  action = saveAmcExpirySettingsAction,
+}: {
+  settings: { due_soon_days: number; urgent_days: number };
+  action?: ModuleFormAction;
+}) {
+  const { t } = useAmcCopy();
+  const id = useId();
+  return (
+    <ModuleActionForm
+      action={action}
+      submitLabel={t('Save settings')}
+      input={(data) => ({
+        dueSoonDays: Number(data.get('dueSoonDays')),
+        urgentDays: Number(data.get('urgentDays')),
+      })}
+    >
+      <TextInput
+        id={`${id}-due-soon`}
+        label={t('Due Soon window (days)')}
+        name="dueSoonDays"
+        type="number"
+        min={2}
+        max={365}
+        step={1}
+        required
+        defaultValue={settings.due_soon_days}
+      />
+      <TextInput
+        id={`${id}-urgent`}
+        label={t('Urgent window (days)')}
+        name="urgentDays"
+        type="number"
+        min={1}
+        max={364}
+        step={1}
+        required
+        defaultValue={settings.urgent_days}
+      />
+      <p className="text-caption text-ink-muted">
+        {t('Urgent must be shorter than Due Soon.')}
+      </p>
+    </ModuleActionForm>
+  );
 }
 
 export function AmcContractForm({
@@ -146,6 +199,82 @@ export function AmcContractForm({
           )}
         </p>
       ) : null}
+    </ModuleActionForm>
+  );
+}
+export function AmcScheduleForm({
+  contract,
+  categories,
+  action = saveAmcScheduleAction,
+}: {
+  contract: AmcContract;
+  categories: { id: string; name: string; active: boolean }[];
+  action?: ModuleFormAction;
+}) {
+  const { t } = useAmcCopy();
+  const id = useId();
+  const choices = categories.filter(
+    (category) => category.active || category.id === contract.asset_category_id,
+  );
+  return (
+    <ModuleActionForm
+      action={action}
+      submitLabel={t('Save service schedule')}
+      input={(data) => {
+        const services = String(data.get('servicesPerYear') ?? '').trim();
+        return amcScheduleInputSchema.parse({
+          contractId: contract.id,
+          amcType: data.get('amcType') || null,
+          assetCategoryId: data.get('assetCategoryId') || null,
+          servicesPerYear: services === '' ? null : Number(services),
+          expectedUpdatedAt: contract.updated_at,
+        });
+      }}
+    >
+      <label htmlFor={`${id}-type`} className="grid min-w-0 gap-space-2">
+        {t('AMC type')}
+        <select
+          id={`${id}-type`}
+          name="amcType"
+          defaultValue={contract.amc_type ?? ''}
+          className="min-h-12 w-full min-w-0 rounded-md border border-rule px-space-3"
+        >
+          <option value="">{t('Not set')}</option>
+          <option value="comprehensive">{t('Comprehensive')}</option>
+          <option value="non_comprehensive">{t('Non-comprehensive')}</option>
+        </select>
+      </label>
+      <label htmlFor={`${id}-category`} className="grid min-w-0 gap-space-2">
+        {t('Asset type')}
+        <select
+          id={`${id}-category`}
+          name="assetCategoryId"
+          defaultValue={contract.asset_category_id ?? ''}
+          className="min-h-12 w-full min-w-0 rounded-md border border-rule px-space-3"
+        >
+          <option value="">{t('Not set')}</option>
+          {choices.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <TextInput
+        id={`${id}-services`}
+        label={t('Services per year (optional)')}
+        name="servicesPerYear"
+        type="number"
+        min={1}
+        max={12}
+        step={1}
+        defaultValue={contract.services_per_year ?? ''}
+      />
+      <p className="text-caption text-ink-muted">
+        {t(
+          'The next service date is worked out from the last visit. Until the first visit it shows as Unscheduled.',
+        )}
+      </p>
     </ModuleActionForm>
   );
 }
