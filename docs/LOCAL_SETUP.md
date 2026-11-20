@@ -91,7 +91,7 @@ Database commands load `.env.testdb.local` and run against the address in it. To
 
 Database tests (migrations, RLS, SQL functions) are Vitest files in `tests/integration/`. They never use testdb, demo or live: they run against a throwaway PostgreSQL 17 server on this machine and refuse any other host. For each test file the harness (`tests/integration/support/database.ts`) creates a fresh database, adds a small stand-in for Supabase's `auth` schema and roles (`supabase-stub.sql`, `roles.sql`), applies every migration in order and drops the database afterwards. Database creation is serialized, so the integration config runs at most four test files at a time to keep queued files within the test timeout. Extend the stand-in only to mirror real Supabase behaviour a migration needs; sign-in itself is verified against testdb.
 
-Every test connection uses UTC, matching CI regardless of the machine's timezone. Fixtures for society-day rules must derive the society date; daily-job fixtures must use the Asia/Kolkata job date rather than the session's `current_date`.
+Every test connection uses UTC, matching CI regardless of the machine's timezone. Fixtures for society-day rules must derive the society date; daily-job fixtures must use the Asia/Kolkata job date rather than the session's `current_date`. For timestamp validation, include a time and UTC offset: a date-only value is interpreted as UTC midnight, which can still be in the future after the society's local day has started.
 
 Run them with the portable PostgreSQL server tools (no Docker). Set `PG_BIN` to its `bin` folder once per PowerShell window, or add that folder to `PATH`:
 

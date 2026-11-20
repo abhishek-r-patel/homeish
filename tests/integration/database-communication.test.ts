@@ -262,7 +262,7 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
             saveDraft('committee', {
               noticeId: draft.id,
               title: 'Diwali decorations',
-              scheduledFor: fixture.today,
+              scheduledFor: '2020-01-01T00:00:00Z',
               expectedUpdatedAt: draft.updated_at,
             }),
           )
