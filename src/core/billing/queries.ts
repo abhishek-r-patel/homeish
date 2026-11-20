@@ -39,6 +39,7 @@ export async function billingRpc<T>(
       .object({
         code: z.string().optional(),
         hint: z.string().nullish(),
+        details: z.string().nullish(),
         message: z.string().nullish(),
       })
       .safeParse(error instanceof Error ? error.cause : null);
@@ -68,6 +69,54 @@ export async function billingRpc<T>(
       });
     }
     if (code === '22023' || code === '23514' || code === '23502') {
+      if (hint === 'occupancy_period_not_started') {
+        throw new ValidationError({
+          form: 'Wait until the billed month begins to apply occupancy rules.',
+        });
+      }
+      if (hint === 'charge_base_invalid') {
+        throw new ValidationError({
+          baseChargeTypeId:
+            'Choose an active fixed, per-square-foot or custom charge as the base.',
+        });
+      }
+      if (hint === 'charge_base_in_use') {
+        throw new ValidationError({
+          baseChargeTypeId:
+            'Change the percentage charges that use this base first.',
+        });
+      }
+      if (
+        hint === 'tenant_move_in_unconfirmed' ||
+        hint === 'percent_base_missing' ||
+        hint === 'custom_amount_missing'
+      ) {
+        const detailText = cause.success ? cause.data.details : null;
+        let detail: unknown;
+        try {
+          detail = detailText ? JSON.parse(detailText) : null;
+        } catch {
+          detail = null;
+        }
+        const fields = z
+          .object({ unit: z.string(), charge: z.string().optional() })
+          .safeParse(detail);
+        if (fields.success) {
+          const { unit, charge } = fields.data;
+          if (hint === 'tenant_move_in_unconfirmed')
+            throw new ValidationError({
+              form: `Confirm the actual tenant move-in date for ${unit} before applying occupancy rules.`,
+            });
+          if (hint === 'percent_base_missing')
+            throw new ValidationError({
+              form: `No base charge is available for ${unit} this month. Include the base charge in the run.`,
+            });
+          if (charge)
+            throw new ValidationError({
+              form: `Enter the custom amount for ${charge} on ${unit}.`,
+            });
+        }
+      }
       throw new ValidationError({
         form: 'Check the billing details and try again.',
       });

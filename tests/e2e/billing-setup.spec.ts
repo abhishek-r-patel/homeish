@@ -44,6 +44,41 @@ test('billing setup fits phones and remains accessible through charge editing', 
   await expect(page.getByText('Inactive', { exact: true })).toBeVisible();
 });
 
+test('configure a tenant-only percentage charge from an active base', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto('/fixtures/billing');
+  const add = page.getByRole('button', {
+    name: 'Add Charge Type',
+    exact: true,
+  });
+  const save = page.getByRole('button', {
+    name: 'Create Charge Type',
+    exact: true,
+  });
+  await add.click();
+  await page.getByLabel('Charge name').fill('Maintenance');
+  await page.getByLabel('Amount per unit (INR)').fill('2500');
+  await save.click();
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await add.click();
+  await page.getByLabel('Charge name').fill('Tenant surcharge');
+  await page.getByLabel('Calculation method').selectOption('percent_of_charge');
+  await page.getByLabel('Apply to').selectOption('tenant');
+  await page.getByLabel('Base charge').selectOption({ label: 'Maintenance' });
+  await page.getByLabel('Percentage rate (%)').fill('12.5');
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await save.click();
+  const charge = page
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('heading', { name: 'Tenant surcharge' }) });
+  await expect(
+    charge.getByText('Percentage of Maintenance (12.50%)'),
+  ).toBeVisible();
+  await expect(charge.getByText('Tenant-occupied')).toBeVisible();
+});
+
 test('payment changes require confirmation and retain a visible success outcome', async ({
   page,
 }) => {

@@ -7,6 +7,8 @@ import {
   addBillingFine,
   cancelBillingPaymentPlan,
   confirmBillingPayment,
+  confirmTenantMoveIn,
+  estimateBilling,
   exportBillingReport,
   generateBillingBills,
   recordBillingPayment,
@@ -117,6 +119,9 @@ export async function saveBillingChargeAction(formData: FormData) {
         name: value(formData, 'name'),
         method: value(formData, 'method'),
         amountRupees: value(formData, 'amountRupees'),
+        eligibility: value(formData, 'eligibility') || 'all',
+        percentRate: value(formData, 'percentRate'),
+        baseChargeTypeId: value(formData, 'baseChargeTypeId') || null,
         active: value(formData, 'active') === 'true',
         expectedUpdatedAt: value(formData, 'expectedUpdatedAt') || null,
       },
@@ -141,6 +146,28 @@ export async function updateBillingPaymentDetailsAction(formData: FormData) {
     revalidatePath('/admin/billing');
     return { data: result.details, message: result.message };
   });
+}
+
+export async function estimateBillingAction(formData: FormData) {
+  return runServerAction('billing.estimate', async (requestId) => ({
+    data: await estimateBilling(jsonValue(formData, 'input'), requestId),
+  }));
+}
+
+export async function confirmTenantMoveInAction(formData: FormData) {
+  return runServerAction(
+    'billing.occupancy.confirmMoveIn',
+    async (requestId) => {
+      await confirmTenantMoveIn(
+        {
+          occupantId: value(formData, 'occupantId'),
+          moveInOn: value(formData, 'moveInOn'),
+        },
+        requestId,
+      );
+      return 'Actual move-in date confirmed for billing.';
+    },
+  );
 }
 
 export async function addBillingFineAction(formData: FormData) {

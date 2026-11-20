@@ -121,6 +121,36 @@ export function translateFeedbackMessage(
     return `${translateFeedbackMessage(locale, referenced[1]!)} ${translateMessage(locale, 'Reference: {id}', { id: referenced[2]! })}`;
   }
 
+  const tenantMove =
+    /^Confirm the actual tenant move-in date for (.+) before applying occupancy rules\.$/.exec(
+      source,
+    );
+  if (tenantMove)
+    return translateMessage(
+      locale,
+      'Confirm the actual tenant move-in date for {unit} before applying occupancy rules.',
+      { unit: tenantMove[1]! },
+    );
+  const missingBase =
+    /^No base charge is available for (.+) this month\. Include the base charge in the run\.$/.exec(
+      source,
+    );
+  if (missingBase)
+    return translateMessage(
+      locale,
+      'No base charge is available for {unit} this month. Include the base charge in the run.',
+      { unit: missingBase[1]! },
+    );
+  const missingCustom = /^Enter the custom amount for (.+) on (.+)\.$/.exec(
+    source,
+  );
+  if (missingCustom)
+    return translateMessage(
+      locale,
+      'Enter the custom amount for {charge} on {unit}.',
+      { charge: missingCustom[1]!, unit: missingCustom[2]! },
+    );
+
   const stringBound =
     /^Too (small|big): expected string to have (>=|<=)(\d+) characters$/.exec(
       source,
