@@ -87,17 +87,22 @@ being upgraded. Testdb holds synthetic data only (AD-13); nothing on it is kept
 and no backup is taken. Older beta and local builds are retired; do not run them
 against the new schema.
 
-`node scripts\db.mjs fresh-install` applies every migration and its Supabase
-migration history in **one transaction** on the profile's database: if any step
-fails, nothing changes. It refuses a database that is not empty (any app
-tables or functions, the `private` schema, storage buckets or policies, login
-accounts or migration history). The Supabase CLI push is not used for this
-because CLI 3.2.0 does not wrap each migration in a transaction, so the `LOCK
-TABLE` in `20261124110000_expense_vouchers_reconciliation.sql` fails.
+`node scripts\db.mjs fresh-install` applies every migration on the profile's
+database, each in its own transaction together with its Supabase migration
+history row. It refuses a database that is not empty (any app tables or
+functions, the `private` schema, storage buckets or policies, login accounts or
+migration history). One transaction for the whole install is not possible:
+hosted servers cap the shared lock table (about 3,800 locks on testdb) and the
+full install exceeds it. If a migration fails, it is rolled back but earlier
+migrations stay; on testdb, rerun with `--wipe-testdb`; on an empty live
+database, reset it or repair forward. The Supabase CLI push is not used for
+this because CLI 3.2.0 does not wrap each migration in a transaction, so the
+`LOCK TABLE` in `20261124110000_expense_vouchers_reconciliation.sql` fails.
 
-`--wipe-testdb` first empties testdb in the same transaction: it drops the app's
+`--wipe-testdb` first empties testdb in its own transaction: it drops the app's
 tables, functions and `private` schema, storage policies and buckets, deletes
-every login account and the migration history, then installs. It accepts only
+every login account and the migration history, then installs. If the wipe
+fails, nothing changes. It accepts only
 the testdb session pooler (never live) and refuses if any stored file exists;
 remove files through Supabase Storage first. It needs `SUPABASE_DB_CA_CERT` set
 to the Supabase root certificate (LOCAL_SETUP Section 6). Run each hosted use

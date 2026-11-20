@@ -1,4 +1,4 @@
-// Install every migration and its history into an empty database (optionally wiping testdb first) in one transaction.
+// Install every migration and its history into an empty database, optionally wiping testdb first.
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -227,40 +227,25 @@ async function assertEmpty(client) {
   }
 }
 
-export async function installFresh(client, migrations, { wipe }) {
+// Runs one step in its own transaction; `earlier` describes what already committed steps left behind.
+async function inTransaction(client, phase, earlier, work) {
   let started = false;
-  let phase = 'starting the transaction';
+  let committing = false;
   try {
     await client.query('BEGIN');
     started = true;
     await client.query("SET LOCAL lock_timeout = '10s'");
-    await client.query("SET LOCAL statement_timeout = '20min'");
-    if (wipe) {
-      phase = 'wiping testdb';
-      await client.query(WIPE_SQL);
-    }
-    phase = 'checking that the database is empty';
-    await assertEmpty(client);
-    await client.query(HISTORY_SQL);
-    for (const migration of migrations) {
-      phase = `applying ${migration.file}`;
-      await client.query(migration.sql);
-      // The CLI only compares versions; the whole file is kept as one statement for reference.
-      await client.query(
-        `INSERT INTO supabase_migrations.schema_migrations (version, name, statements)
-         VALUES ($1, $2, $3)`,
-        [migration.version, migration.name, [migration.sql]],
-      );
-    }
-    phase = 'committing';
+    await client.query("SET LOCAL statement_timeout = '10min'");
+    await work();
+    committing = true;
     const result = await client.query('COMMIT');
     if (result.command !== 'COMMIT') {
       throw new FreshInstallError('The database did not confirm COMMIT.');
     }
   } catch (error) {
-    if (phase === 'committing') {
+    if (committing) {
       throw new FreshInstallError(
-        'The commit outcome is unknown. Run npm run db:list before retrying.',
+        `The commit outcome of ${phase} is unknown. ${earlier} Run npm run db:list before retrying.`,
       );
     }
     const reason =
@@ -268,7 +253,7 @@ export async function installFresh(client, migrations, { wipe }) {
         ? error.message
         : `The install failed while ${phase}${databaseErrorCode(error)}.`;
     if (!started) {
-      throw new FreshInstallError(`${reason} Nothing was changed.`);
+      throw new FreshInstallError(`${reason} ${earlier}`);
     }
     try {
       const result = await client.query('ROLLBACK');
@@ -281,8 +266,45 @@ export async function installFresh(client, migrations, { wipe }) {
       );
     }
     throw new FreshInstallError(
-      `${reason} The transaction was rolled back; nothing was changed.`,
+      `${reason} This step was rolled back. ${earlier}`,
     );
+  }
+}
+
+// Hosted servers cap the shared lock table (about 3,800 locks on testdb), so the wipe and each
+// migration commit separately; a failure leaves earlier steps applied.
+export async function installFresh(client, migrations, { wipe }) {
+  const retry = wipe
+    ? 'Rerun with --wipe-testdb to start again.'
+    : 'Reset the database before retrying.';
+  await inTransaction(
+    client,
+    wipe ? 'wiping testdb' : 'checking that the database is empty',
+    'Nothing was changed.',
+    async () => {
+      if (wipe) await client.query(WIPE_SQL);
+      await assertEmpty(client);
+      await client.query(HISTORY_SQL);
+    },
+  );
+  let applied = 0;
+  for (const migration of migrations) {
+    const done = wipe ? 'testdb was wiped' : 'the database was empty';
+    await inTransaction(
+      client,
+      `applying ${migration.file}`,
+      `Earlier steps stay applied (${done}; ${applied} of ${migrations.length} migrations installed). ${retry}`,
+      async () => {
+        await client.query(migration.sql);
+        // The CLI only compares versions; the whole file is kept as one statement for reference.
+        await client.query(
+          `INSERT INTO supabase_migrations.schema_migrations (version, name, statements)
+           VALUES ($1, $2, $3)`,
+          [migration.version, migration.name, [migration.sql]],
+        );
+      },
+    );
+    applied += 1;
   }
 }
 
@@ -312,6 +334,6 @@ export async function runFreshInstall(args, getDatabaseUrl) {
     await pool.end();
   }
   console.log(
-    `${wipe ? 'Wiped testdb and installed' : 'Installed'} ${migrations.length} migrations in one transaction.`,
+    `${wipe ? 'Wiped testdb and installed' : 'Installed'} ${migrations.length} migrations.`,
   );
 }

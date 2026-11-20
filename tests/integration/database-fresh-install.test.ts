@@ -1,4 +1,4 @@
-// Verify the fresh install: it refuses non-empty databases, wipes testdb-like state and rolls back on failure.
+// Verify the fresh install: it refuses non-empty databases, wipes testdb-like state and recovers from a failed migration.
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -125,7 +125,7 @@ describe.skipIf(!hasDatabase)('database fresh install', () => {
     expect(result.stdout).not.toContain('Usage: vitest');
   });
 
-  it('wipes existing state and reproduces the migrated schema in one transaction', async () => {
+  it('wipes existing state and reproduces the migrated schema', async () => {
     const migrations = readMigrations(MIGRATIONS);
     const database = await createTestDatabase();
     let reference: TestDatabase | undefined;
@@ -138,7 +138,7 @@ describe.skipIf(!hasDatabase)('database fresh install', () => {
         database.asDeployment((client) =>
           installFresh(client, migrations, { wipe: false }),
         ),
-      ).rejects.toThrow(/not empty.*nothing was changed/);
+      ).rejects.toThrow(/not empty.*nothing was changed/i);
       expect(await counts(database)).toEqual(before);
 
       await database.asDeployment(async (client) => {
@@ -150,7 +150,7 @@ describe.skipIf(!hasDatabase)('database fresh install', () => {
         database.asDeployment((client) =>
           installFresh(client, migrations, { wipe: true }),
         ),
-      ).rejects.toThrow(/wiping testdb.*nothing was changed/);
+      ).rejects.toThrow(/wiping testdb.*nothing was changed/i);
       expect(await counts(database)).toEqual(before);
       await database.asDeployment((client) =>
         client.query('delete from storage.objects'),
@@ -165,12 +165,21 @@ describe.skipIf(!hasDatabase)('database fresh install', () => {
           sql: 'select 1 / 0;',
         },
       ];
+      // Each migration commits on its own, so a late failure keeps earlier ones and a wiped rerun recovers.
       await expect(
         database.asDeployment((client) =>
           installFresh(client, failing, { wipe: true }),
         ),
-      ).rejects.toThrow(/core_injected_failure.*nothing was changed/);
-      expect(await counts(database)).toEqual(before);
+      ).rejects.toThrow(
+        new RegExp(
+          `core_injected_failure.*rolled back.*${migrations.length} of ${failing.length}.*--wipe-testdb`,
+        ),
+      );
+      expect(await counts(database)).toEqual({
+        users: '0',
+        societies: '0',
+        history: String(migrations.length),
+      });
 
       await database.asDeployment((client) =>
         installFresh(client, migrations, { wipe: true }),

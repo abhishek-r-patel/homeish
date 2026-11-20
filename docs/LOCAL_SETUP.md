@@ -80,7 +80,7 @@ set to the Supabase root certificate (the repository variable
 | `npm run db:new -- <module>_<short_description>`          | Creates an empty, timestamped migration file in `supabase/migrations/` |
 | `npm run db:list`                                         | Shows which migrations testdb has applied                              |
 | `npm run db:push`                                         | Applies new migrations to testdb (add `-- --dry-run` to preview first) |
-| `npm run env -- testdb node scripts/db.mjs fresh-install` | Installs all migrations on an empty testdb in one transaction          |
+| `npm run env -- testdb node scripts/db.mjs fresh-install` | Installs all migrations on an empty testdb, one transaction each       |
 | `npm run db:types`                                        | Regenerates `src/core/db/database.types.ts` from testdb                |
 | `npm run db:types:check`                                  | Fails if the generated types no longer match testdb                    |
 | `npm run check:migrations`                                | Checks migration file names (also part of `npm run check`)             |

@@ -1599,7 +1599,7 @@ Only `visitor_entries`, `delivery_entries` and `notifications` are published to 
 | Before risky production migrations | Take a manual backup (Section 15) first                                                                                                                                                                                                               |
 | Module introduction                | A module's tables ship in its own migrations; the `modules` row already exists, so it can be shipped **disabled** and enabled for a pilot society by the developer                                                                                    |
 
-The redesign's fresh start (empty databases installed in one transaction, no
+The redesign's fresh start (empty databases installed migration by migration, no
 upgrade of older data) is described in
 [DEPLOYMENT Section 3](./DEPLOYMENT.md#3-database-migrations); later releases
 follow the rule above.
