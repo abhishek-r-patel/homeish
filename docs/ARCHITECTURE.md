@@ -312,6 +312,7 @@ admin acceptance/rejection; acceptance checks the official baseline and copies f
 
 ### 7.1 Access method
 
+- **P39.5/P40 (D-73, D-74):** The approved local scope is implemented in the existing Accounts domain. Fund/register reads and mutations use caller-session RPCs; cap/balance-sensitive writes take the existing per-society books lock and transactional cap checks. Funds reference authoritative P16 entries rather than a second ledger. P39.7 uses paired own-account book entries and deposit accounts, but report/analytics flow excludes transfer legs. The FD register adds terms only and never adds to Accounts totals. Billing, corpus, sanctioned-work and correction links keep source caps under the same lock. No new module, external service or privileged-client expansion is used; P40.9 remains outside this scope.
 - **Supabase client (PostgREST/RPC) with the user's session** for normal reads and writes, so RLS applies automatically.
 - **SQL functions (RPC)** for any operation that spans tables, needs locking, or enforces an invariant (decision on a visitor, bill generation, payment application, module toggle, role change).
 - **No ORM in MVP**. Types come from generated database types; SQL lives in versioned migrations. **[AD-03]** An ORM adds a second source of truth for the schema and bypasses RLS patterns; revisit only if query code becomes unmanageable.
