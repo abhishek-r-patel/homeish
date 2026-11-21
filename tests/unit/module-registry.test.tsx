@@ -343,8 +343,7 @@ describe('module registry', () => {
 });
 
 describe('in-app links', () => {
-  // The admin dashboard (A-01) is planned but not built yet.
-  const KNOWN_UNBUILT = new Set(['/admin']);
+  const KNOWN_UNBUILT = new Set<string>();
 
   function appRoutes() {
     const appDir = join(__dirname, '../../src/app');

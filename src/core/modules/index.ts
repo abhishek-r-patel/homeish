@@ -296,12 +296,6 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       ],
       hk_supervisor: [
         {
-          href: '/admin',
-          label: 'Dashboard',
-          permission: 'dashboard:read',
-          section: 'Overview',
-        },
-        {
           href: '/action-plans',
           label: 'My tasks',
           permission: 'action_plan:own',
@@ -358,7 +352,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'household:manage': ['resident'],
       'audit:read': ['admin', 'committee'],
       'home:read': ['guard', 'resident'],
-      'dashboard:read': ['admin', 'committee', 'hk_supervisor'],
+      'dashboard:read': ['admin', 'committee'],
       'analytics:read': ['admin', 'committee'],
       'analytics:manage': ['admin'],
       'analytics:export': ['admin'],
