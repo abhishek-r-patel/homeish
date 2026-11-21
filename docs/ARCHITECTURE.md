@@ -412,7 +412,7 @@ Each privileged function takes an explicit society ID and re-checks it; none ret
 
 Single repository, single Next.js app. The diagram describes the target module layout, not a second source tree to create. Current domain services remain under `src/core/<domain>/`, domain UI under `src/components/<domain>/`, and registration in `src/core/modules/index.ts` (see AGENTS.md Section 04).
 
-The Option C resident home uses `src/core/home/` for its authorised read, `src/components/home/` for its screen, and `src/app/(resident)/home/` for the route and loading state. Its development-only fixture lives under `src/app/fixtures/home/`; navigation continues to come from the existing module registry.
+The Option C resident home uses `src/core/home/` for its authorised read, `src/components/home/` for its screen, and `src/app/(resident)/home/` for the route and loading state. Its development-only fixture lives under `src/app/fixtures/home/`; navigation continues to come from the existing module registry. The P43.1 admin home follows the same split: `src/core/home/admin-*.ts`, `src/components/home/admin-home.tsx`, `src/app/(admin)/admin/page.tsx` and the `src/app/fixtures/admin-home/` fixture.
 
 P18 adds the following folders within that existing implementation:
 

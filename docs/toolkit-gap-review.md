@@ -2796,7 +2796,7 @@ The recommendations below are the reviewer's suggestions; the owner's final deci
 - **Tool 8 — covered:** The request administration page and P27 already show open/overdue and category/SLA summaries.
 - **Tools 10 and 12 — partial overlap:** BIL-11/BIL-12 already provide unit-based top-defaulter and dues/collection reports. The workbook's names, phone details, months-overdue estimate and suggested actions are addressed separately in GAP-M01-03; do not duplicate them as a second data source.
 - **Tool 7 — partial:** P23 has scheduled meetings and action items; statutory deadline tracking is not found and is addressed in GAP-M01-04.
-- **Tool 1 — partial:** P27 already supplies live aggregate metrics, but there is no `/admin` command-center landing page. Any new page is GAP-M01-01 and must not introduce a second metric store.
+- **Tool 1 — partial:** P27 already supplies live aggregate metrics, but there was no `/admin` command-center landing page. Any new page is GAP-M01-01 and must not introduce a second metric store. P43.1 now provides `/admin`, reading each value from its owning module rule.
 
 ### M01 documentation verification
 
