@@ -21,6 +21,72 @@ import {
   rupeesFromPaise,
   rupeesSchema,
 } from '../../src/core/billing/validation';
+import {
+  billingDuesFollowUpCsv,
+  billingMonthlyCollectionTotals,
+  billingMonthlyCollectionCsv,
+} from '../../src/core/billing/collection-validation';
+
+function monthRow(month: string, net: string, collected: string) {
+  return {
+    month,
+    bill_count: 1,
+    billed_paise: net,
+    waived_paise: '0',
+    net_billed_paise: net,
+    collected_paise: collected,
+    collection_percent: null,
+  };
+}
+
+describe('P43 monthly collection and dues follow-up', () => {
+  it('works the total percentage out from the summed paise, rounding half up', () => {
+    // 2 of 3 rupees collected over two months is 66.666…%, shown as 66.7.
+    const totals = billingMonthlyCollectionTotals([
+      monthRow('2026-01-01', '100', '100'),
+      monthRow('2026-02-01', '200', '100'),
+    ]);
+    expect(totals).toMatchObject({
+      net_billed_paise: '300',
+      collected_paise: '200',
+      collection_percent: 66.7,
+    });
+    expect(
+      billingMonthlyCollectionTotals([monthRow('2026-01-01', '0', '0')])
+        .collection_percent,
+    ).toBeNull();
+  });
+
+  it('adds a total row to the monthly CSV with rupees and a blank percent when nothing is billed', () => {
+    const csv = billingMonthlyCollectionCsv([monthRow('2026-01-01', '0', '0')]);
+    const lines = csv.trim().split(/\r?\n/);
+    expect(lines.at(-2)).toBe('2026-01,1,0.00,0.00,0.00,0.00,');
+    expect(lines.at(-1)).toBe('Total,1,0.00,0.00,0.00,0.00,');
+  });
+
+  it('neutralises spreadsheet formulas in follow-up contact cells', () => {
+    const csv = billingDuesFollowUpCsv([
+      {
+        unit_id: '00000000-0000-4000-8000-000000000001',
+        unit_number: 'A-101',
+        name: '=HYPERLINK("x")',
+        relationship: 'owner',
+        phone: '+919800000000',
+        email: null,
+        outstanding_paise: '150050',
+        oldest_due_date: '2026-01-10',
+        months_overdue: 2,
+        last_payment_on: null,
+        last_payment_paise: null,
+        awaiting_confirmation: true,
+      },
+    ]);
+    expect(csv).toContain(`'=HYPERLINK`);
+    expect(csv).toContain(`'+919800000000`);
+    expect(csv).toContain('1500.50');
+    expect(csv.trim().endsWith(',Yes')).toBe(true);
+  });
+});
 
 describe('billing money and setup validation', () => {
   it.each([

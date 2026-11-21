@@ -682,4 +682,39 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Meeting scheduled': 'बैठक तय हुई',
   'Meeting held': 'बैठक हुई',
   'New registration': 'नया पंजीकरण',
+  'Only administrators can see the dues follow-up list.':
+    'बकाया फ़ॉलो-अप सूची केवल प्रशासक देख सकते हैं।',
+  'Bills are grouped by bill month. Collected counts confirmed payments applied to those bills, so earlier months rise as late payments arrive.':
+    'बिल, बिल के महीने के हिसाब से जोड़े गए हैं। प्राप्त राशि में उन बिलों पर लगाए गए पुष्ट भुगतान गिने जाते हैं, इसलिए देर से भुगतान आने पर पिछले महीनों के आंकड़े बढ़ते हैं।',
+  'Monthly collection': 'मासिक वसूली',
+  'Net billed': 'शुद्ध बिल राशि',
+  'Confirmed payments applied to these bills': 'इन बिलों पर लगाए गए पुष्ट भुगतान',
+  'Collected ÷ net billed': 'प्राप्त ÷ शुद्ध बिल राशि',
+  'Collected %': 'प्राप्त %',
+  'Bill month': 'बिल का महीना',
+  '{collected} of {billed} · {percent}': '{billed} में से {collected} · {percent}',
+  'Download monthly collection CSV': 'मासिक वसूली CSV डाउनलोड करें',
+  'Exports are recorded in the audit log.': 'एक्सपोर्ट ऑडिट लॉग में दर्ज होते हैं।',
+  'Purpose: dues follow-up by the admin. Contact details are shown only to administrators and every view and download is recorded in the audit log. Nothing is sent from this page.':
+    'उद्देश्य: प्रशासक द्वारा बकाया फ़ॉलो-अप। संपर्क विवरण केवल प्रशासकों को दिखते हैं और हर बार देखना और डाउनलोड करना ऑडिट लॉग में दर्ज होता है। इस पेज से कोई संदेश नहीं भेजा जाता।',
+  'Dues follow-up': 'बकाया फ़ॉलो-अप',
+  'Every unit is fully paid as of {date}.':
+    '{date} तक हर यूनिट का पूरा भुगतान हो चुका है।',
+  'No unpaid dues': 'कोई बकाया नहीं',
+  '{count} units with unpaid dues as of {date}, largest first.':
+    '{date} तक बकाया वाली {count} यूनिट, सबसे बड़ी राशि पहले।',
+  'Oldest due': 'सबसे पुराना बकाया',
+  '{count} month overdue': '{count} महीना देर',
+  '{count} months overdue': '{count} महीने देर',
+  'Last payment': 'पिछला भुगतान',
+  'Download follow-up list CSV': 'फ़ॉलो-अप सूची CSV डाउनलोड करें',
+  'The file contains names, phone numbers and email addresses. Keep it private, use it only to follow up dues and delete it when you are done. The download is recorded in the audit log.':
+    'इस फ़ाइल में नाम, फ़ोन नंबर और ईमेल पते हैं। इसे निजी रखें, केवल बकाया फ़ॉलो-अप के लिए उपयोग करें और काम पूरा होने पर हटा दें। यह डाउनलोड ऑडिट लॉग में दर्ज होता है।',
+  'Download contact details?': 'संपर्क विवरण डाउनलोड करें?',
+  'No active owner or tenant': 'कोई सक्रिय मालिक या किरायेदार नहीं',
+  'No confirmed payment': 'कोई पुष्ट भुगतान नहीं',
+  'A payment is awaiting confirmation': 'एक भुगतान पुष्टि की प्रतीक्षा में है',
+  'Last 6 months': 'पिछले 6 महीने',
+  'Last 12 months': 'पिछले 12 महीने',
+  'This financial year': 'यह वित्त वर्ष',
 };

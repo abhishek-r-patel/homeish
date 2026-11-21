@@ -1047,6 +1047,16 @@ export async function getBillingAdminContext() {
     canManage:
       !suspended &&
       hasPermission(context.roles, 'billing', 'billing:bills:manage'),
+    canExportMonthlyCollection: hasPermission(
+      context.roles,
+      'billing',
+      'billing:monthly_report:export',
+    ),
+    canFollowUpDues: hasPermission(
+      context.roles,
+      'billing',
+      'billing:dues_follow_up:read',
+    ),
     suspended,
     timezone: society.data.timezone,
     unitLabel: society.data.unit_label,

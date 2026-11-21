@@ -560,6 +560,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
         'resident',
       ],
       'billing:payment_details:manage': ['admin'],
+      'billing:monthly_report:export': ['admin'],
+      'billing:dues_follow_up:read': ['admin'],
     },
     settingsAccess: {
       due_day_of_month: 'admin',

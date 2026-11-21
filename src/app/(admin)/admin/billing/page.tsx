@@ -13,12 +13,25 @@ import {
   RecoveryActionsPanel,
 } from '@/components/billing/arrears';
 import { BillingSetup } from '@/components/billing/setup';
+import {
+  DuesFollowUpPanel,
+  MonthlyCollectionPanel,
+} from '@/components/billing/collection-reports';
 import { BillingEstimatePanel } from '@/components/billing/estimate';
 import { primaryLinkClass, textLinkClass } from '@/components/billing/styles';
 import { BillsTable, PaymentsTable } from '@/components/billing/tables';
 import { Card, StatTile } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
+import {
+  readReportPeriod,
+  REPORT_PERIODS,
+  type ReportPeriod,
+} from '@/core/analytics/report-period';
 import { todayInTimeZone } from '@/core/billing/format';
+import {
+  getBillingDuesFollowUp,
+  getBillingMonthlyCollection,
+} from '@/core/billing/collection-operations';
 import {
   formatLocalizedCurrency,
   formatLocalizedDate,
@@ -55,6 +68,7 @@ const TABS = [
   { id: 'payment-plans', label: 'Payment plans' },
   { id: 'recovery', label: 'Recovery follow-ups' },
   { id: 'collection-efficiency', label: 'Collection efficiency' },
+  { id: 'dues-follow-up', label: 'Dues follow-up', adminOnly: true },
   { id: 'charge-types', label: 'Charge Types' },
   { id: 'payment-settings', label: 'Payment Settings' },
 ] as const;
@@ -269,7 +283,19 @@ async function FinesSection({
   );
 }
 
-async function ReportsSection({ from, to }: { from: string; to: string }) {
+async function ReportsSection({
+  canExport,
+  from,
+  period,
+  timezone,
+  to,
+}: {
+  canExport: boolean;
+  from: string;
+  period: ReportPeriod;
+  timezone: string;
+  to: string;
+}) {
   const locale = await getRequestLocale();
   const t = (source: string, values?: Record<string, string | number>) =>
     translateMessage(locale, source, values);
@@ -279,10 +305,17 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
       locale,
       { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' },
     );
-  const [dashboard, summary] = await Promise.all([
+  const [dashboard, summary, monthly] = await Promise.all([
     getBillingDashboard({ from, to }),
     getBillingReportSummary({ from, to }),
+    getBillingMonthlyCollection(period, timezone),
   ]);
+  const periodHrefs = Object.fromEntries(
+    REPORT_PERIODS.map((item) => [
+      item,
+      `/admin/billing?${new URLSearchParams({ tab: 'reports', from, to, period: item })}`,
+    ]),
+  ) as Record<ReportPeriod, string>;
   const money = (paise: string) => formatLocalizedCurrency(paise, locale);
   return (
     <div className="grid gap-space-5">
@@ -298,6 +331,7 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
           method="get"
         >
           <input name="tab" type="hidden" value="reports" />
+          <input name="period" type="hidden" value={period} />
           <label className="grid gap-space-1 text-body-strong">
             {t('From')}
             <input
@@ -502,6 +536,11 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
         value={money(summary.unapplied_credit_paise)}
         context={t('As of {date}', { date: formatDate(summary.credit_as_of) })}
       />
+      <MonthlyCollectionPanel
+        canExport={canExport}
+        periodHrefs={periodHrefs}
+        report={monthly}
+      />
       <Card
         description={t(
           'Exports are recorded in the audit log. CSV files open in spreadsheet apps.',
@@ -554,7 +593,23 @@ export default async function BillingPage({
   } else if (tab === 'fines') {
     content = <FinesSection canManage={admin.canManage} today={today} />;
   } else if (tab === 'reports') {
-    content = <ReportsSection from={from} to={to} />;
+    content = (
+      <ReportsSection
+        canExport={admin.canExportMonthlyCollection}
+        from={from}
+        period={readReportPeriod(single(params, 'period'))}
+        timezone={admin.timezone}
+        to={to}
+      />
+    );
+  } else if (tab === 'dues-follow-up') {
+    content = admin.canFollowUpDues ? (
+      <DuesFollowUpPanel report={await getBillingDuesFollowUp()} />
+    ) : (
+      <Banner tone="warning" title={t('You do not have access to this page')}>
+        {t('Only administrators can see the dues follow-up list.')}
+      </Banner>
+    );
   } else if (tab === 'estimate') {
     content = (
       <BillingEstimatePanel charges={await listBillingEstimateCharges()} />
@@ -619,7 +674,12 @@ export default async function BillingPage({
       ) : null}
       <nav aria-label={t('Billing sections')} className="overflow-x-auto">
         <ul className="flex min-w-max gap-space-1 border-b border-rule">
-          {TABS.map((item) => {
+          {TABS.filter(
+            (item) =>
+              !('adminOnly' in item) ||
+              admin.canFollowUpDues ||
+              item.id === tab,
+          ).map((item) => {
             const active = item.id === tab;
             return (
               <li key={item.id}>
