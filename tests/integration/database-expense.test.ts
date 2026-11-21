@@ -139,6 +139,19 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
           'expenses',
           'expense_book_entries',
           'expense_month_locks',
+          'expense_funds',
+          'expense_fund_openings',
+          'expense_fund_opening_allocations',
+          'expense_fund_mappings',
+          'expense_fund_entry_allocations',
+          'expense_fixed_deposits',
+          'expense_fund_interest_records',
+          'expense_fund_transfer_rules',
+          'expense_fund_transfers',
+          'expense_fund_corpus_records',
+          'expense_fund_receipt_links',
+          'expense_fund_works',
+          'expense_fund_work_links',
         ]) {
           expect(
             await dbError(
@@ -158,6 +171,1288 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
       }
     } finally {
       await database.drop();
+    }
+  });
+
+  it('sets up and activates society funds from a closed, non-negative Accounts opening', async () => {
+    const db = await createTestDatabase();
+    try {
+      const fixture = await db.asSuperuser(async (client) => {
+        const users = new Map<string, string>();
+        const roles: Record<string, string[]> = {
+          admin: ['admin'],
+          committee: ['committee'],
+          resident: ['resident'],
+        };
+        for (const [key, allowed] of Object.entries(roles)) {
+          const userId = await newAuthUser(client, `fund-${key}@example.test`);
+          await client.query(
+            'insert into public.profiles(id,email,full_name) values($1,$2,$3)',
+            [userId, `fund-${key}@example.test`, `Fund ${key}`],
+          );
+          users.set(key, userId);
+          void allowed;
+        }
+        const societies = await client.query<{ id: string }>(
+          "insert into public.societies(name,created_by) values('Fund Society A',$1),('Fund Society B',$1) returning id",
+          [users.get('admin')],
+        );
+        const societyA = societies.rows[0]!.id;
+        const societyB = societies.rows[1]!.id;
+        for (const [key, allowed] of Object.entries(roles)) {
+          await client.query(
+            "insert into public.memberships(society_id,user_id,roles,status) values($1,$2,$3,'active')",
+            [societyA, users.get(key), allowed],
+          );
+        }
+        await client.query(
+          "insert into public.memberships(society_id,user_id,roles,status) values($1,$2,array['admin']::text[],'active')",
+          [societyB, users.get('admin')],
+        );
+        await client.query(
+          `insert into public.module_configs(society_id,module_key,enabled,settings)
+           values($1,'core',true,'{}'),($1,'expense',true,'{}'),
+                  ($2,'core',true,'{}'),($2,'expense',true,'{}')`,
+          [societyA, societyB],
+        );
+        const accountA = (
+          await client.query<{ id: string }>(
+            `insert into public.expense_accounts(
+               society_id,name,account_type,opening_balance_paise,opening_on,created_by
+             ) values($1,'Fund bank','bank',100000,$2,$3) returning id`,
+            [
+              societyA,
+              (
+                await client.query<{ previous_month: string }>(
+                  `select (date_trunc('month', private.housekeeping_local_date($1))
+                    - interval '1 month')::date::text as previous_month`,
+                  [societyA],
+                )
+              ).rows[0]!.previous_month,
+              users.get('admin'),
+            ],
+          )
+        ).rows[0]!.id;
+        const dates = (
+          await client.query<{
+            today: string;
+            month_start: string;
+            previous_month: string;
+          }>(
+            `select private.housekeeping_local_date($1)::text as today,
+              date_trunc('month', private.housekeeping_local_date($1))::date::text as month_start,
+              (date_trunc('month', private.housekeeping_local_date($1))
+                - interval '1 month')::date::text as previous_month`,
+            [societyA],
+          )
+        ).rows[0]!;
+        const accountB = (
+          await client.query<{ id: string }>(
+            `insert into public.expense_accounts(
+               society_id,name,account_type,opening_balance_paise,opening_on,created_by
+             ) values($1,'Overdrawn bank','bank',-10000,$2,$3) returning id`,
+            [societyB, dates.previous_month, users.get('admin')],
+          )
+        ).rows[0]!.id;
+        const unitA = (
+          await client.query<{ id: string }>(
+            "insert into public.units(society_id,number,created_by) values($1,'F-101',$2) returning id",
+            [societyA, users.get('admin')],
+          )
+        ).rows[0]!.id;
+        return {
+          users,
+          societyA,
+          societyB,
+          accountA,
+          accountB,
+          unitA,
+          ...dates,
+        };
+      });
+      const as = <T>(
+        key: string,
+        query: Parameters<typeof db.asSuperuser<T>>[0],
+        commit = true,
+      ) =>
+        db.asRole('authenticated', { sub: fixture.users.get(key)! }, query, {
+          commit,
+        });
+      const call = async <T = unknown>(
+        key: string,
+        sql: string,
+        params: unknown[] = [],
+      ) =>
+        (
+          await as(key, (client) =>
+            client.query<{ result: T }>(`select ${sql} as result`, params),
+          )
+        ).rows[0]!.result;
+      const code = async (promise: Promise<unknown>) =>
+        (await dbError(promise)).code;
+      const saveFund = (
+        key: string,
+        society: string,
+        name: string,
+        fundId: string | null = null,
+        active = true,
+        updatedAt: string | null = null,
+      ) =>
+        call<string>(
+          key,
+          "public.expense_fund_save($1,$2,$3,$4,$5,'fund-test')",
+          [society, fundId, name, active, updatedAt],
+        );
+      const activate = (
+        key: string,
+        society: string,
+        cutover: string,
+        allocations: { fund_id: string; amount_paise: number }[],
+        acknowledged: boolean,
+        requestId = crypto.randomUUID(),
+      ) =>
+        call<string>(
+          key,
+          "public.expense_funds_activate($1,$2,$3::jsonb,$4,$5,'fund-test')",
+          [
+            society,
+            cutover,
+            JSON.stringify(allocations),
+            acknowledged,
+            requestId,
+          ],
+        );
+
+      const reserve = await saveFund('admin', fixture.societyA, 'Reserve fund');
+      const operationsFund = await saveFund(
+        'admin',
+        fixture.societyA,
+        'Operations fund',
+      );
+      const billingCharges = await db.asSuperuser(async (client) => {
+        const result = await client.query<{ id: string; name: string }>(
+          `insert into public.billing_charge_types(
+             society_id,name,method,amount_paise,active,created_by,updated_by
+           ) values($1,'Maintenance','fixed',6001,true,$2,$2),
+                    ($1,'Repairs','fixed',3999,true,$2,$2)
+           returning id,name`,
+          [fixture.societyA, fixture.users.get('admin')],
+        );
+        return result.rows;
+      });
+      await call(
+        'admin',
+        "public.expense_fund_mapping_save($1,'billing_charge',$2,null,$3,null,'fund-test')",
+        [fixture.societyA, billingCharges[0]!.id, reserve],
+      );
+      await call(
+        'admin',
+        "public.expense_fund_mapping_save($1,'billing_charge',$2,null,$3,null,'fund-test')",
+        [fixture.societyA, billingCharges[1]!.id, operationsFund],
+      );
+      const billingBreakdown = await call<{
+        months: number;
+        funds: { fund_id: string | null; preview_paise: string }[];
+      }>(
+        'admin',
+        'public.expense_billing_estimate_breakdown($1,$2::jsonb,12)',
+        [
+          fixture.societyA,
+          JSON.stringify([
+            { charge_type_id: billingCharges[0]!.id, amount_paise: 6001 },
+            { charge_type_id: billingCharges[1]!.id, amount_paise: 3999 },
+          ]),
+        ],
+      );
+      expect(billingBreakdown.months).toBe(12);
+      expect(
+        Object.fromEntries(
+          billingBreakdown.funds.map(({ fund_id, preview_paise }) => [
+            fund_id,
+            preview_paise,
+          ]),
+        ),
+      ).toEqual({
+        [reserve]: '72012',
+        [operationsFund]: '47988',
+      });
+      const otherFund = await saveFund(
+        'admin',
+        fixture.societyB,
+        'Other reserve',
+      );
+      expect(await saveFund('admin', fixture.societyA, 'Reserve fund')).toBe(
+        reserve,
+      );
+      expect(
+        await code(saveFund('committee', fixture.societyA, 'Committee fund')),
+      ).toBe('42501');
+      for (const role of ['anon', 'authenticated', 'service_role'] as const) {
+        for (const table of [
+          'expense_funds',
+          'expense_fund_openings',
+          'expense_fund_opening_allocations',
+        ]) {
+          expect(
+            await dbError(
+              db.asRole(role, { sub: fixture.users.get('admin') }, (client) =>
+                client.query(`select * from public.${table}`),
+              ),
+            ),
+          ).toMatchObject({ code: '42501' });
+        }
+      }
+      expect(
+        await code(
+          call('resident', 'public.expense_funds_workspace($1,null)', [
+            fixture.societyA,
+          ]),
+        ),
+      ).toBe('42501');
+      const readable = await call<{
+        can_manage: boolean;
+        funds: { id: string }[];
+      }>('committee', 'public.expense_funds_workspace($1,null)', [
+        fixture.societyA,
+      ]);
+      expect(readable).toMatchObject({
+        can_manage: false,
+      });
+      expect(readable.funds.some(({ id }) => id === reserve)).toBe(true);
+
+      await call(
+        'admin',
+        "public.expense_income_record($1,$2,$3,'donation','Synthetic member',5000,null,null,$4,'fund-test')",
+        [
+          fixture.societyA,
+          fixture.accountA,
+          fixture.previous_month,
+          crypto.randomUUID(),
+        ],
+      );
+      const beforeClose = await call<{
+        eligible_cutovers: string[];
+        preview: null;
+      }>('admin', 'public.expense_funds_workspace($1,$2)', [
+        fixture.societyA,
+        fixture.month_start,
+      ]);
+      expect(beforeClose).toMatchObject({
+        eligible_cutovers: [],
+        preview: null,
+      });
+      expect(
+        await code(
+          activate(
+            'admin',
+            fixture.societyA,
+            fixture.month_start,
+            [{ fund_id: reserve, amount_paise: 40000 }],
+            true,
+          ),
+        ),
+      ).toBe('23514');
+      await call('admin', "public.expense_month_close($1,$2,'fund-test')", [
+        fixture.societyA,
+        fixture.previous_month,
+      ]);
+      const preview = await call<{
+        preview: {
+          accounts_total_paise: number;
+          previous_month_closed: boolean;
+        };
+      }>('admin', 'public.expense_funds_workspace($1,$2)', [
+        fixture.societyA,
+        fixture.month_start,
+      ]);
+      expect(preview.preview).toEqual({
+        cutover_on: fixture.month_start,
+        as_of: new Date(
+          new Date(`${fixture.month_start}T00:00:00Z`).getTime() - 86_400_000,
+        )
+          .toISOString()
+          .slice(0, 10),
+        accounts_total_paise: 105000,
+        previous_month_closed: true,
+      });
+      expect(
+        await code(
+          activate(
+            'admin',
+            fixture.societyA,
+            `${fixture.month_start.slice(0, 8)}02`,
+            [{ fund_id: reserve, amount_paise: 40000 }],
+            true,
+          ),
+        ),
+      ).toBe('22023');
+      expect(
+        await code(
+          activate(
+            'admin',
+            fixture.societyA,
+            fixture.month_start,
+            [{ fund_id: reserve, amount_paise: 40000 }],
+            false,
+          ),
+        ),
+      ).toBe('22023');
+      expect(
+        await code(
+          activate(
+            'admin',
+            fixture.societyA,
+            fixture.month_start,
+            [{ fund_id: otherFund, amount_paise: 0 }],
+            true,
+          ),
+        ),
+      ).toBe('22023');
+      expect(
+        await code(
+          activate(
+            'admin',
+            fixture.societyA,
+            fixture.month_start,
+            [{ fund_id: reserve, amount_paise: 105001 }],
+            true,
+          ),
+        ),
+      ).toBe('23514');
+
+      const activationRequest = crypto.randomUUID();
+      const allocations = [{ fund_id: reserve, amount_paise: 40000 }];
+      const activated = await Promise.all([
+        activate(
+          'admin',
+          fixture.societyA,
+          fixture.month_start,
+          allocations,
+          true,
+          activationRequest,
+        ),
+        activate(
+          'admin',
+          fixture.societyA,
+          fixture.month_start,
+          allocations,
+          true,
+          activationRequest,
+        ),
+      ]);
+      expect(activated[0]).toBe(activated[1]);
+      expect(
+        await activate(
+          'admin',
+          fixture.societyA,
+          fixture.month_start,
+          allocations,
+          true,
+          activationRequest,
+        ),
+      ).toBe(activated[0]);
+      const incomeEntry = await call<string>(
+        'admin',
+        "public.expense_income_record($1,$2,$3,'donation','Synthetic member',10000,null,null,$4,'fund-test')",
+        [
+          fixture.societyA,
+          fixture.accountA,
+          fixture.month_start,
+          crypto.randomUUID(),
+        ],
+      );
+      const opening = await call<{
+        opening: {
+          accounts_total_paise: number;
+          allocated_total_paise: number;
+          unallocated_paise: number;
+        };
+      }>('admin', 'public.expense_funds_workspace($1,null)', [
+        fixture.societyA,
+      ]);
+      expect(opening.opening).toMatchObject({
+        accounts_total_paise: 105000,
+        allocated_total_paise: 40000,
+        unallocated_paise: 65000,
+      });
+      await call(
+        'admin',
+        "public.expense_fund_mapping_save($1,'income_kind',null,'donation',$2,null,'fund-test')",
+        [fixture.societyA, reserve],
+      );
+      const unconfirmed = await call<{
+        balances: { fund_id: string; balance_paise: number }[];
+        unallocated_paise: number;
+        entries: {
+          entry_id: string;
+          suggested_fund_id: string | null;
+          allocations: unknown[];
+        }[];
+      }>('admin', 'public.expense_funds_activity($1,50,0)', [fixture.societyA]);
+      expect(unconfirmed.unallocated_paise).toBe(75000);
+      expect(
+        unconfirmed.balances.find(({ fund_id }) => fund_id === reserve),
+      ).toMatchObject({ balance_paise: 40000 });
+      expect(
+        unconfirmed.entries.find(({ entry_id }) => entry_id === incomeEntry),
+      ).toMatchObject({ suggested_fund_id: reserve, allocations: [] });
+      const confirmationItems = [
+        {
+          entry_id: incomeEntry,
+          allocations: [
+            { fund_id: reserve, amount_paise: 6000 },
+            { fund_id: null, amount_paise: 4000 },
+          ],
+        },
+      ];
+      const allocationResult = await call<{
+        confirmed_count: number;
+        skipped: unknown[];
+      }>(
+        'admin',
+        "public.expense_fund_allocations_confirm($1,$2::jsonb,$3,'fund-test')",
+        [
+          fixture.societyA,
+          JSON.stringify([
+            {
+              entry_id: incomeEntry,
+              allocations: [{ fund_id: reserve, amount_paise: 9000 }],
+            },
+          ]),
+          crypto.randomUUID(),
+        ],
+      ).then(
+        (value) => value,
+        (error) => {
+          expect((error as { code?: string }).code).toBe('23514');
+          return null;
+        },
+      );
+      expect(allocationResult).toBeNull();
+      const allocationRows = await db.asSuperuser((client) =>
+        client.query(
+          'select count(*)::integer as count from public.expense_fund_entry_allocations where entry_id=$1',
+          [incomeEntry],
+        ),
+      );
+      expect(allocationRows.rows[0]!.count).toBe(0);
+      const allocationRequest = crypto.randomUUID();
+      const confirmed = await call<{
+        confirmed_count: number;
+        skipped: unknown[];
+      }>(
+        'admin',
+        "public.expense_fund_allocations_confirm($1,$2::jsonb,$3,'fund-test')",
+        [
+          fixture.societyA,
+          JSON.stringify(confirmationItems),
+          allocationRequest,
+        ],
+      );
+      expect(confirmed).toEqual({ confirmed_count: 1, skipped: [] });
+      expect(
+        await call(
+          'admin',
+          "public.expense_fund_allocations_confirm($1,$2::jsonb,$3,'fund-test')",
+          [
+            fixture.societyA,
+            JSON.stringify(confirmationItems),
+            allocationRequest,
+          ],
+        ),
+      ).toEqual(confirmed);
+      const allocated = await call<{
+        balances: { fund_id: string; balance_paise: number }[];
+        unallocated_paise: number;
+      }>('admin', 'public.expense_funds_activity($1,50,0)', [fixture.societyA]);
+      expect(
+        allocated.balances.find(({ fund_id }) => fund_id === reserve),
+      ).toMatchObject({ balance_paise: 46000 });
+      expect(allocated.unallocated_paise).toBe(69000);
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_allocations_confirm($1,$2::jsonb,$3,'fund-test')",
+            [
+              fixture.societyA,
+              JSON.stringify(confirmationItems),
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23505');
+      const reversedIncome = await call<string>(
+        'admin',
+        "public.expense_entry_reverse($1,$2,$3,'Allocation test reversal',$4,'fund-test')",
+        [fixture.societyA, incomeEntry, fixture.today, crypto.randomUUID()],
+      );
+      const reversalActivity = await call<{
+        entries: {
+          entry_id: string;
+          allocations: { fund_id: string | null; amount_paise: number }[];
+        }[];
+        balances: { fund_id: string; balance_paise: number }[];
+        unallocated_paise: number;
+      }>('admin', 'public.expense_funds_activity($1,50,0)', [fixture.societyA]);
+      expect(
+        reversalActivity.entries.find(
+          ({ entry_id }) => entry_id === reversedIncome,
+        )?.allocations,
+      ).toEqual([
+        { fund_id: reserve, amount_paise: 6000, fund_name: 'Reserve fund' },
+        { fund_id: null, amount_paise: 4000, fund_name: null },
+      ]);
+      expect(reversalActivity.unallocated_paise).toBe(65000);
+      expect(
+        reversalActivity.balances.find(({ fund_id }) => fund_id === reserve),
+      ).toMatchObject({ balance_paise: 40000 });
+      const correctionRequest = crypto.randomUUID();
+      const correctionItems = [
+        { fund_id: reserve, amount_paise: 3000 },
+        { fund_id: null, amount_paise: 7000 },
+      ];
+      const correctionVersion = await call<string>(
+        'admin',
+        "public.expense_fund_allocation_correct($1,$2,$3::jsonb,'Reclassified donation',$4,'fund-test')",
+        [
+          fixture.societyA,
+          incomeEntry,
+          JSON.stringify(correctionItems),
+          correctionRequest,
+        ],
+      );
+      expect(
+        await call(
+          'admin',
+          "public.expense_fund_allocation_correct($1,$2,$3::jsonb,'Reclassified donation',$4,'fund-test')",
+          [
+            fixture.societyA,
+            incomeEntry,
+            JSON.stringify(correctionItems),
+            correctionRequest,
+          ],
+        ),
+      ).toBe(correctionVersion);
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_allocation_correct($1,$2,$3::jsonb,'Wrong target',$4,'fund-test')",
+            [
+              fixture.societyA,
+              reversedIncome,
+              JSON.stringify(correctionItems),
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('22023');
+      const correctedActivity = await call<{
+        entries: {
+          entry_id: string;
+          allocations: { fund_id: string | null; amount_paise: number }[];
+        }[];
+      }>('admin', 'public.expense_funds_activity($1,50,0)', [fixture.societyA]);
+      expect(
+        correctedActivity.entries.find(
+          ({ entry_id }) => entry_id === reversedIncome,
+        )?.allocations,
+      ).toEqual([
+        { fund_id: reserve, amount_paise: 3000, fund_name: 'Reserve fund' },
+        { fund_id: null, amount_paise: 7000, fund_name: null },
+      ]);
+
+      const closedEntry = await call<string>(
+        'admin',
+        "public.expense_income_record($1,$2,$3,'donation','Synthetic member',2000,null,null,$4,'fund-test')",
+        [
+          fixture.societyA,
+          fixture.accountA,
+          fixture.today,
+          crypto.randomUUID(),
+        ],
+      );
+      await db.asSuperuser((client) =>
+        client.query(
+          `insert into public.expense_month_locks(society_id,month,locked_by)
+           values($1,$2,$3)`,
+          [fixture.societyA, fixture.month_start, fixture.users.get('admin')],
+        ),
+      );
+      const skipped = await call<{
+        confirmed_count: number;
+        skipped: unknown[];
+      }>(
+        'admin',
+        "public.expense_fund_allocations_confirm($1,$2::jsonb,$3,'fund-test')",
+        [
+          fixture.societyA,
+          JSON.stringify([
+            {
+              entry_id: closedEntry,
+              allocations: [{ fund_id: reserve, amount_paise: 2000 }],
+            },
+          ]),
+          crypto.randomUUID(),
+        ],
+      );
+      expect(skipped).toEqual({
+        confirmed_count: 0,
+        skipped: [
+          { entry_id: closedEntry, voucher: null, reason: 'month_closed' },
+        ],
+      });
+      await call(
+        'admin',
+        "public.expense_month_reopen($1,$2,'P40 test completed','fund-test')",
+        [fixture.societyA, fixture.month_start],
+      ).then(
+        () => undefined,
+        () => undefined,
+      );
+      await call(
+        'admin',
+        "public.expense_month_reopen($1,$2,'Review opening','fund-test')",
+        [fixture.societyA, fixture.previous_month],
+      );
+      await call(
+        'admin',
+        "public.expense_income_record($1,$2,$3,'donation','Backdated member',1000,null,null,$4,'fund-test')",
+        [
+          fixture.societyA,
+          fixture.accountA,
+          fixture.previous_month,
+          crypto.randomUUID(),
+        ],
+      );
+      const openingNeedsReview = await call<{
+        opening: {
+          review_required: boolean;
+          review_reasons: string[];
+          current_accounts_total_paise: number;
+        };
+      }>('admin', 'public.expense_funds_workspace($1,null)', [
+        fixture.societyA,
+      ]);
+      expect(openingNeedsReview.opening).toMatchObject({
+        review_required: true,
+        current_accounts_total_paise: 106000,
+      });
+      expect(openingNeedsReview.opening.review_reasons).toEqual(
+        expect.arrayContaining([
+          'previous_month_reopened',
+          'accounts_total_changed',
+          'backdated_entry_added',
+        ]),
+      );
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_opening_correct($1,$2::jsonb,'Reconfirm corrected opening',$3,'fund-test')",
+            [
+              fixture.societyA,
+              JSON.stringify([{ fund_id: reserve, amount_paise: 40000 }]),
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23514');
+      await call('admin', "public.expense_month_close($1,$2,'fund-test')", [
+        fixture.societyA,
+        fixture.previous_month,
+      ]);
+      const openingCorrection = crypto.randomUUID();
+      const openingCorrectionVersion = await call<string>(
+        'admin',
+        "public.expense_fund_opening_correct($1,$2::jsonb,'Reconfirm corrected opening',$3,'fund-test')",
+        [
+          fixture.societyA,
+          JSON.stringify([{ fund_id: reserve, amount_paise: 40000 }]),
+          openingCorrection,
+        ],
+      );
+      expect(
+        await call(
+          'admin',
+          "public.expense_fund_opening_correct($1,$2::jsonb,'Reconfirm corrected opening',$3,'fund-test')",
+          [
+            fixture.societyA,
+            JSON.stringify([{ fund_id: reserve, amount_paise: 40000 }]),
+            openingCorrection,
+          ],
+        ),
+      ).toBe(openingCorrectionVersion);
+      const reviewedOpening = await call<{
+        opening: {
+          accounts_total_paise: number;
+          review_required: boolean;
+          review_reasons: string[];
+        };
+      }>('admin', 'public.expense_funds_workspace($1,null)', [
+        fixture.societyA,
+      ]);
+      expect(reviewedOpening.opening).toMatchObject({
+        accounts_total_paise: 106000,
+        review_required: false,
+        review_reasons: [],
+      });
+      const fundRule = await call<string>(
+        'admin',
+        "public.expense_fund_transfer_rule_save($1,null,$2,$3,true,null,'fund-test')",
+        [fixture.societyA, reserve, operationsFund],
+      );
+      expect(fundRule).toBeTruthy();
+      expect(
+        await code(
+          call(
+            'committee',
+            "public.expense_fund_transfer_rule_save($1,null,$2,$3,true,null,'fund-test')",
+            [fixture.societyA, reserve, operationsFund],
+          ),
+        ),
+      ).toBe('42501');
+      const fundTransferItems = [
+        fixture.societyA,
+        reserve,
+        operationsFund,
+        fixture.today,
+      ];
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_transfer_record($1,$2,$3,$4,50000,'Move reserve','Resolution-1',$5,'fund-test')",
+            [...fundTransferItems, crypto.randomUUID()],
+          ),
+        ),
+      ).toBe('23514');
+      const fundTransferRequest = crypto.randomUUID();
+      const fundTransfer = await call<string>(
+        'admin',
+        "public.expense_fund_transfer_record($1,$2,$3,$4,10000,'Move reserve','Resolution-1',$5,'fund-test')",
+        [...fundTransferItems, fundTransferRequest],
+      );
+      expect(
+        await call(
+          'admin',
+          "public.expense_fund_transfer_record($1,$2,$3,$4,10000,'Move reserve','Resolution-1',$5,'fund-test')",
+          [...fundTransferItems, fundTransferRequest],
+        ),
+      ).toBe(fundTransfer);
+      const transferBalances = await call<{
+        balances: { fund_id: string; balance_paise: number }[];
+      }>('admin', 'public.expense_funds_activity_transfers($1,50,0)', [
+        fixture.societyA,
+      ]);
+      expect(
+        transferBalances.balances.find(({ fund_id }) => fund_id === reserve),
+      ).toMatchObject({ balance_paise: 30000 });
+      expect(
+        transferBalances.balances.find(
+          ({ fund_id }) => fund_id === operationsFund,
+        ),
+      ).toMatchObject({ balance_paise: 10000 });
+      const fundReverseRequest = crypto.randomUUID();
+      const fundReversal = await call<string>(
+        'admin',
+        "public.expense_fund_transfer_reverse($1,$2,$3,'Reference mistake',$4,'fund-test')",
+        [fixture.societyA, fundTransfer, fixture.today, fundReverseRequest],
+      );
+      expect(fundReversal).not.toBe(fundTransfer);
+      expect(
+        await call(
+          'admin',
+          "public.expense_fund_transfer_reverse($1,$2,$3,'Reference mistake',$4,'fund-test')",
+          [fixture.societyA, fundTransfer, fixture.today, fundReverseRequest],
+        ),
+      ).toBe(fundReversal);
+      const billingCollection = await db.asSuperuser(async (client) => {
+        const bill = (
+          await client.query<{ id: string }>(
+            `insert into public.billing_bills(
+               society_id,unit_id,title,period_start,due_date,total_paise,
+               paid_paise,created_by
+             ) values($1,$2,'November dues',$3,$4,10000,5003,$5)
+             returning id`,
+            [
+              fixture.societyA,
+              fixture.unitA,
+              fixture.month_start,
+              fixture.today,
+              fixture.users.get('admin'),
+            ],
+          )
+        ).rows[0]!.id;
+        await client.query(
+          `insert into public.billing_bill_lines(
+             society_id,bill_id,unit_id,period_start,charge_type_id,
+             description,amount_paise,created_by
+           ) values($1,$2,$3,$4,$5,'Maintenance',6001,$7),
+                    ($1,$2,$3,$4,$6,'Repairs',3999,$7)`,
+          [
+            fixture.societyA,
+            bill,
+            fixture.unitA,
+            fixture.month_start,
+            billingCharges[0]!.id,
+            billingCharges[1]!.id,
+            fixture.users.get('admin'),
+          ],
+        );
+        const payment = (
+          await client.query<{ id: string }>(
+            `insert into public.billing_payments(
+               society_id,unit_id,amount_paise,mode,source,paid_on,status,
+               submitted_by,confirmed_by,confirmed_at,receipt_no,
+               client_request_id,created_by
+             ) values($1,$2,5003,'cash','admin_recorded',$3,'confirmed',
+               $4,$4,now(),'R-2026-000777',$5,$4) returning id`,
+            [
+              fixture.societyA,
+              fixture.unitA,
+              fixture.today,
+              fixture.users.get('admin'),
+              crypto.randomUUID(),
+            ],
+          )
+        ).rows[0]!.id;
+        await client.query(
+          `insert into public.billing_payment_allocations(
+             society_id,payment_id,bill_id,unit_id,amount_paise
+           ) values($1,$2,$3,$4,5003)`,
+          [fixture.societyA, payment, bill, fixture.unitA],
+        );
+        const entry = (
+          await client.query<{ id: string }>(
+            `insert into public.expense_book_entries(
+               society_id,account_id,entry_date,direction,amount_paise,
+               source,billing_payment_id,counterparty,created_by
+             ) values($1,$2,$3,'in',5003,'billing_payment',$4,
+               'F-101', $5) returning id`,
+            [
+              fixture.societyA,
+              fixture.accountA,
+              fixture.today,
+              payment,
+              fixture.users.get('admin'),
+            ],
+          )
+        ).rows[0]!.id;
+        return { entry };
+      });
+      const billingSuggestions = await call<
+        {
+          entry_id: string;
+          allocations: {
+            fund_id: string | null;
+            amount_paise: number;
+          }[];
+        }[]
+      >('admin', 'public.expense_billing_collection_suggestions($1,200)', [
+        fixture.societyA,
+      ]);
+      const billingAllocation = billingSuggestions.find(
+        ({ entry_id }) => entry_id === billingCollection.entry,
+      );
+      expect(
+        Object.fromEntries(
+          billingAllocation!.allocations.map(({ fund_id, amount_paise }) => [
+            fund_id ?? 'unallocated',
+            amount_paise,
+          ]),
+        ),
+      ).toEqual({
+        [operationsFund]: 2000,
+        [reserve]: 3002,
+        unallocated: 1,
+      });
+      await call(
+        'admin',
+        "public.expense_fund_allocations_confirm($1,$2::jsonb,$3,'fund-test')",
+        [
+          fixture.societyA,
+          JSON.stringify([
+            {
+              entry_id: billingCollection.entry,
+              allocations: billingAllocation!.allocations.map(
+                ({ fund_id, amount_paise }) => ({
+                  fund_id,
+                  amount_paise,
+                }),
+              ),
+            },
+          ]),
+          crypto.randomUUID(),
+        ],
+      );
+      const corpusRecord = await call<string>(
+        'admin',
+        `public.expense_fund_corpus_save(
+          $1,null,$2,$3,'Membership corpus event',$4,10000,0,null,
+          'Resolution-3',null,'fund-test'
+        )`,
+        [fixture.societyA, fixture.unitA, reserve, fixture.today],
+      );
+      const corpusReceiptRequest = crypto.randomUUID();
+      await call(
+        'admin',
+        "public.expense_fund_receipt_link($1,$2,$3,3000,$4,'fund-test')",
+        [
+          fixture.societyA,
+          corpusRecord,
+          billingCollection.entry,
+          corpusReceiptRequest,
+        ],
+      );
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_receipt_link($1,$2,$3,3,$4,'fund-test')",
+            [
+              fixture.societyA,
+              corpusRecord,
+              billingCollection.entry,
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23514');
+      await call(
+        'admin',
+        "public.expense_fund_receipt_link($1,$2,$3,2,$4,'fund-test')",
+        [
+          fixture.societyA,
+          corpusRecord,
+          billingCollection.entry,
+          crypto.randomUUID(),
+        ],
+      );
+      const corpusList = await call<{
+        records: {
+          id: string;
+          linked_receipts_paise: number;
+          remaining_paise: number;
+        }[];
+      }>('committee', 'public.expense_fund_corpus_list($1)', [
+        fixture.societyA,
+      ]);
+      expect(
+        corpusList.records.find(({ id }) => id === corpusRecord),
+      ).toMatchObject({
+        linked_receipts_paise: 3002,
+        remaining_paise: 6998,
+      });
+      const corpusVersion = (
+        await db.asSuperuser((client) =>
+          client.query<{ updated_at: string }>(
+            'select updated_at::text from public.expense_fund_corpus_records where id=$1',
+            [corpusRecord],
+          ),
+        )
+      ).rows[0]!.updated_at;
+      expect(
+        await code(
+          call(
+            'admin',
+            `public.expense_fund_corpus_save(
+              $1,$2,$3,$4,'Membership corpus event',$5,3000,0,null,
+              'Resolution-3',$6,'fund-test'
+            )`,
+            [
+              fixture.societyA,
+              corpusRecord,
+              fixture.unitA,
+              reserve,
+              fixture.today,
+              corpusVersion,
+            ],
+          ),
+        ),
+      ).toBe('23514');
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_allocation_correct($1,$2,$3::jsonb,'Move linked receipt',$4,'fund-test')",
+            [
+              fixture.societyA,
+              billingCollection.entry,
+              JSON.stringify([
+                {
+                  fund_id: operationsFund,
+                  amount_paise: 5002,
+                },
+                { fund_id: null, amount_paise: 1 },
+              ]),
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23514');
+      const workCategory = await call<{
+        categories: { id: string; name: string }[];
+      }>('admin', 'public.expense_workspace($1)', [fixture.societyA]);
+      const repairsCategory = workCategory.categories.find(
+        ({ name }) => name === 'Repairs',
+      )!.id;
+      const workExpense = await call<{ id: string }>(
+        'admin',
+        `public.expense_record(
+          $1,$2,$3,$4,'Lift vendor',5000,'bank',null,null,null,$5,'fund-test'
+        )`,
+        [
+          fixture.societyA,
+          fixture.accountA,
+          repairsCategory,
+          fixture.today,
+          crypto.randomUUID(),
+        ],
+      );
+      const workExpenseEntry = (
+        await db.asSuperuser((client) =>
+          client.query<{ id: string }>(
+            'select id from public.expense_book_entries where expense_id=$1',
+            [workExpense.id],
+          ),
+        )
+      ).rows[0]!.id;
+      await call(
+        'admin',
+        "public.expense_fund_allocations_confirm($1,$2::jsonb,$3,'fund-test')",
+        [
+          fixture.societyA,
+          JSON.stringify([
+            {
+              entry_id: workExpenseEntry,
+              allocations: [{ fund_id: reserve, amount_paise: 5000 }],
+            },
+          ]),
+          crypto.randomUUID(),
+        ],
+      );
+      const resolutionId = await db.asSuperuser(async (client) => {
+        await client.query(
+          `insert into public.module_configs(society_id,module_key,enabled,settings)
+           values($1,'meeting',true,'{}')`,
+          [fixture.societyA],
+        );
+        const meeting = (
+          await client.query<{ id: string }>(
+            `insert into public.meetings(
+               society_id,meeting_type,status,title,client_request_id,created_by
+             ) values($1,'committee','draft','Repair sanction','work-meeting',$2)
+             returning id`,
+            [fixture.societyA, fixture.users.get('admin')],
+          )
+        ).rows[0]!.id;
+        const resolution = (
+          await client.query<{ id: string }>(
+            `insert into public.meeting_resolutions(
+               society_id,meeting_id,position,title,outcome,created_by,updated_by
+             ) values($1,$2,1,'Approve lift repair','passed',$3,$3)
+             returning id`,
+            [fixture.societyA, meeting, fixture.users.get('admin')],
+          )
+        ).rows[0]!.id;
+        return resolution;
+      });
+      const sanctionedWork = await call<string>(
+        'admin',
+        `public.expense_fund_work_save(
+          $1,null,$2,'Lift repair',20000,$3,null,$4,null,null,'fund-test'
+        )`,
+        [fixture.societyA, reserve, fixture.today, resolutionId],
+      );
+      const workLink = await call<string>(
+        'admin',
+        "public.expense_fund_work_link($1,$2,$3,5000,$4,'fund-test')",
+        [
+          fixture.societyA,
+          sanctionedWork,
+          workExpenseEntry,
+          crypto.randomUUID(),
+        ],
+      );
+      expect(workLink).toBeTruthy();
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_work_link($1,$2,$3,1,$4,'fund-test')",
+            [
+              fixture.societyA,
+              sanctionedWork,
+              workExpenseEntry,
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23514');
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_allocation_correct($1,$2,$3::jsonb,'Move linked expense',$4,'fund-test')",
+            [
+              fixture.societyA,
+              workExpenseEntry,
+              JSON.stringify([{ fund_id: operationsFund, amount_paise: 5000 }]),
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23514');
+      const works = await call<{
+        works: {
+          id: string;
+          utilized_paise: number;
+          authority_status: string;
+        }[];
+      }>('committee', 'public.expense_fund_works_list($1)', [fixture.societyA]);
+      expect(works.works.find(({ id }) => id === sanctionedWork)).toMatchObject(
+        { utilized_paise: 5000, authority_status: 'current' },
+      );
+      await db.asSuperuser((client) =>
+        client.query(
+          `update public.meeting_resolutions
+           set outcome='deferred',version=version+1,updated_by=$2
+           where id=$1`,
+          [resolutionId, fixture.users.get('admin')],
+        ),
+      );
+      const changedWorks = await call<{
+        works: { id: string; authority_status: string }[];
+      }>('admin', 'public.expense_fund_works_list($1)', [fixture.societyA]);
+      expect(
+        changedWorks.works.find(({ id }) => id === sanctionedWork),
+      ).toMatchObject({ authority_status: 'changed' });
+      const fundReport = await call<{
+        accounts_total_paise: number;
+        named_funds_total_paise: number;
+        unallocated_paise: number;
+        funds: { months: unknown[] }[];
+      }>('admin', 'public.expense_fund_report($1,$2,$3)', [
+        fixture.societyA,
+        fixture.previous_month,
+        fixture.today,
+      ]);
+      expect(
+        fundReport.named_funds_total_paise + fundReport.unallocated_paise,
+      ).toBe(fundReport.accounts_total_paise);
+      expect(fundReport.funds.every(({ months }) => months.length > 0)).toBe(
+        true,
+      );
+      expect(
+        await dbError(
+          db.asSuperuser((client) =>
+            client.query(
+              'update public.expense_fund_openings set accounts_total_paise=0',
+            ),
+          ),
+        ),
+      ).toMatchObject({ code: '55000' });
+      expect(
+        await dbError(
+          db.asSuperuser((client) =>
+            client.query(
+              'update public.expense_fund_entry_allocations set amount_paise=1',
+            ),
+          ),
+        ),
+      ).toMatchObject({ code: '55000' });
+      expect(
+        await dbError(
+          db.asSuperuser((client) =>
+            client.query('delete from public.expense_fund_opening_allocations'),
+          ),
+        ),
+      ).toMatchObject({ code: '55000' });
+
+      const savedFund = await call<{
+        funds: { id: string; updated_at: string }[];
+      }>('admin', 'public.expense_funds_workspace($1,null)', [
+        fixture.societyA,
+      ]);
+      const fundVersion = savedFund.funds.find(
+        ({ id }) => id === reserve,
+      )!.updated_at;
+      await saveFund(
+        'admin',
+        fixture.societyA,
+        'Reserve fund',
+        reserve,
+        false,
+        fundVersion,
+      );
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_fund_transfer_record($1,$2,$3,$4,100,'Inactive pair','Resolution-1',$5,'fund-test')",
+            [
+              fixture.societyA,
+              reserve,
+              operationsFund,
+              fixture.today,
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23514');
+      await call('admin', "public.expense_month_close($1,$2,'fund-test')", [
+        fixture.societyB,
+        fixture.previous_month,
+      ]);
+      expect(
+        await code(
+          activate(
+            'admin',
+            fixture.societyB,
+            fixture.month_start,
+            [{ fund_id: otherFund, amount_paise: 0 }],
+            true,
+          ),
+        ),
+      ).toBe('23514');
+      await db.asSuperuser(async (client) => {
+        await client.query(
+          `insert into public.expense_accounts(
+             society_id,name,account_type,opening_balance_paise,opening_on,created_by
+           ) values($1,'Large bank 1','bank',9007199254740991,$2,$3),
+                    ($1,'Large bank 2','bank',9007199254740991,$2,$3)`,
+          [
+            fixture.societyB,
+            fixture.previous_month,
+            fixture.users.get('admin'),
+          ],
+        );
+      });
+      expect(
+        await code(
+          call('admin', 'public.expense_funds_workspace($1,$2)', [
+            fixture.societyB,
+            fixture.month_start,
+          ]),
+        ),
+      ).toBe('22023');
+      await db.asSuperuser((client) =>
+        client.query(
+          "update public.module_configs set enabled=false where society_id=$1 and module_key='expense'",
+          [fixture.societyA],
+        ),
+      );
+      expect(
+        await code(
+          call('admin', 'public.expense_funds_workspace($1,null)', [
+            fixture.societyA,
+          ]),
+        ),
+      ).toBe('42501');
+    } finally {
+      await db.drop();
     }
   });
 
@@ -598,6 +1893,261 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
         [society, fixture.previous_month, fixture.today],
       );
       expect(page.total).toBe(6);
+      const deposit = await saveAccount(
+        'admin',
+        'Fixed deposit account',
+        'deposit',
+        20000,
+      );
+      const fixedDepositFund = await call<string>(
+        'admin',
+        "public.expense_fund_save($1,null,'Fixed deposit fund',true,null,'expense-test')",
+        [society],
+      );
+      const fixedDeposit = await call<string>(
+        'admin',
+        `public.expense_fixed_deposit_save(
+          $1,null,null,$2,$3,'Synthetic bank','FD-PRIVATE',25000,7.25,
+          $4,$5,27000,null,'expense-test'
+        )`,
+        [
+          society,
+          fixedDepositFund,
+          deposit,
+          fixture.previous_month,
+          fixture.today,
+        ],
+      );
+      const committeeDeposits = await call<{
+        deposits: {
+          id: string;
+          reference: string | null;
+          reconciliation_status: string;
+          days_to_maturity: number;
+          maturity_follow_up: boolean;
+        }[];
+      }>('committee', 'public.expense_fixed_deposits_list($1)', [society]);
+      expect(
+        committeeDeposits.deposits.find(({ id }) => id === fixedDeposit),
+      ).toMatchObject({
+        reference: null,
+        reconciliation_status: 'difference',
+        days_to_maturity: 0,
+        maturity_follow_up: true,
+      });
+      expect(await code(record('admin', deposit, 1000, 'bank'))).toBe('23514');
+      expect(
+        await code(
+          call(
+            'admin',
+            "public.expense_income_record($1,$2,$3,'donation','Synthetic bank',1000,null,null,$4,'expense-test')",
+            [society, deposit, fixture.today, crypto.randomUUID()],
+          ),
+        ),
+      ).toBe('23514');
+      const transferRequest = crypto.randomUUID();
+      const transferPair = await call<string>(
+        'admin',
+        "public.expense_transfer_record($1,$2,$3,$4,$5,'FD-1','Place fixed deposit',$6,'expense-test')",
+        [society, bank, deposit, fixture.today, 5000, transferRequest],
+      );
+      expect(
+        await call(
+          'admin',
+          "public.expense_transfer_record($1,$2,$3,$4,$5,'FD-1','Place fixed deposit',$6,'expense-test')",
+          [society, bank, deposit, fixture.today, 5000, transferRequest],
+        ),
+      ).toBe(transferPair);
+      const transferReport = await call<{
+        income_paise: number;
+        expense_paise: number;
+        balances: { account: string; balance_paise: number }[];
+      }>('admin', 'public.expense_report($1,$2,$3)', [
+        society,
+        fixture.previous_month,
+        fixture.today,
+      ]);
+      expect(transferReport).toMatchObject({
+        income_paise: 35000,
+        expense_paise: 61000,
+      });
+      expect(
+        Object.fromEntries(
+          transferReport.balances.map(({ account, balance_paise }) => [
+            account,
+            balance_paise,
+          ]),
+        ),
+      ).toMatchObject({
+        'Main bank': -30000,
+        'Fixed deposit account': 25000,
+      });
+      const matchedDeposits = await call<{
+        deposits: {
+          id: string;
+          reconciliation_status: string;
+          account_balance_paise: number;
+        }[];
+      }>('admin', 'public.expense_fixed_deposits_list($1)', [society]);
+      expect(
+        matchedDeposits.deposits.find(({ id }) => id === fixedDeposit),
+      ).toMatchObject({
+        reconciliation_status: 'matched',
+        account_balance_paise: 25000,
+      });
+      const analyticsAfterTransfer = await db.asSuperuser((client) =>
+        client.query<{ result: unknown }>(
+          'select private.analytics_metric_expense_income_vs_expense($1,$2,$3) as result',
+          [society, fixture.previous_month, fixture.today],
+        ),
+      );
+      const reversedTransferRequest = crypto.randomUUID();
+      expect(
+        await call(
+          'admin',
+          "public.expense_transfer_reverse($1,$2,$3,'Deposit cancelled',$4,'expense-test')",
+          [society, transferPair, fixture.today, reversedTransferRequest],
+        ),
+      ).toBe(transferPair);
+      expect(
+        await call(
+          'admin',
+          "public.expense_transfer_reverse($1,$2,$3,'Deposit cancelled',$4,'expense-test')",
+          [society, transferPair, fixture.today, reversedTransferRequest],
+        ),
+      ).toBe(transferPair);
+      const transferredRows = await call<{
+        rows: {
+          source: string;
+          transfer_pair_id: string | null;
+          transfer_account_name: string | null;
+        }[];
+      }>('admin', 'public.expense_entries_page($1,$2,$3,null,50,0)', [
+        society,
+        fixture.today,
+        fixture.today,
+      ]);
+      expect(
+        transferredRows.rows.filter(
+          ({ transfer_pair_id }) => transfer_pair_id === transferPair,
+        ),
+      ).toHaveLength(4);
+      const finalReport = await call<{
+        income_paise: number;
+        expense_paise: number;
+        balances: { account: string; balance_paise: number }[];
+      }>('admin', 'public.expense_report($1,$2,$3)', [
+        society,
+        fixture.previous_month,
+        fixture.today,
+      ]);
+      expect(finalReport).toMatchObject({
+        income_paise: 35000,
+        expense_paise: 61000,
+      });
+      expect(
+        Object.fromEntries(
+          finalReport.balances.map(({ account, balance_paise }) => [
+            account,
+            balance_paise,
+          ]),
+        ),
+      ).toMatchObject({
+        'Main bank': -25000,
+        'Fixed deposit account': 20000,
+      });
+      const analyticsAfterReversal = await db.asSuperuser((client) =>
+        client.query<{ result: unknown }>(
+          'select private.analytics_metric_expense_income_vs_expense($1,$2,$3) as result',
+          [society, fixture.previous_month, fixture.today],
+        ),
+      );
+      expect(analyticsAfterReversal.rows[0]!.result).toEqual(
+        analyticsAfterTransfer.rows[0]!.result,
+      );
+      const nextMaturity = new Date(
+        new Date(`${fixture.today}T00:00:00Z`).getTime() + 365 * 86_400_000,
+      )
+        .toISOString()
+        .slice(0, 10);
+      const renewal = await call<string>(
+        'admin',
+        `public.expense_fixed_deposit_save(
+          $1,null,$2,$3,$4,'Synthetic bank','FD-RENEWED',null,null,
+          $5,$6,null,null,'expense-test'
+        )`,
+        [
+          society,
+          fixedDeposit,
+          fixedDepositFund,
+          deposit,
+          fixture.today,
+          nextMaturity,
+        ],
+      );
+      expect(renewal).not.toBe(fixedDeposit);
+      const maturityList = await call<{
+        deposits: {
+          id: string;
+          maturity_follow_up: boolean;
+        }[];
+      }>('admin', 'public.expense_fixed_deposits_list($1)', [society]);
+      expect(
+        maturityList.deposits.find(({ id }) => id === fixedDeposit),
+      ).toMatchObject({ maturity_follow_up: false });
+      expect(
+        maturityList.deposits.find(({ id }) => id === renewal),
+      ).toMatchObject({ maturity_follow_up: false });
+      const interestIncome = await call<string>(
+        'admin',
+        "public.expense_income_record($1,$2,$3,'interest','Synthetic bank',4000,'INT-1',null,$4,'expense-test')",
+        [society, bank, fixture.today, crypto.randomUUID()],
+      );
+      const interestRecord = await call<string>(
+        'admin',
+        `public.expense_fund_interest_save(
+          $1,null,$2,$3,$4,'Quarterly FD interest',$5,$6,
+          5000,1000,4000,25000,'Bank certificate',null,'expense-test'
+        )`,
+        [
+          society,
+          fixedDepositFund,
+          fixedDeposit,
+          interestIncome,
+          fixture.previous_month,
+          fixture.today,
+        ],
+      );
+      const interest = await call<{
+        records: {
+          id: string;
+          net_interest_paise: number;
+          credit_difference_paise: number;
+          annualised_yield_percent: number;
+        }[];
+      }>('committee', 'public.expense_fund_interest_list($1)', [society]);
+      expect(
+        interest.records.find(({ id }) => id === interestRecord),
+      ).toMatchObject({
+        net_interest_paise: 4000,
+        credit_difference_paise: 0,
+      });
+      expect(
+        interest.records.find(({ id }) => id === interestRecord)
+          ?.annualised_yield_percent,
+      ).toBeGreaterThan(0);
+      expect(
+        await code(
+          call(
+            'admin',
+            `public.expense_fund_interest_save(
+              $1,null,$2,null,null,'Invalid TDS',$3,$4,
+              1000,2000,null,null,null,null,'expense-test'
+            )`,
+            [society, fixedDepositFund, fixture.previous_month, fixture.today],
+          ),
+        ),
+      ).toBe('22023');
     } finally {
       await db.drop();
     }

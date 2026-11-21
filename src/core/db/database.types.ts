@@ -3906,6 +3906,8 @@ export type Database = {
           reverses_entry_id: string | null;
           society_id: string;
           source: string;
+          transfer_pair_id: string | null;
+          transfer_request_id: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -3927,6 +3929,8 @@ export type Database = {
           reverses_entry_id?: string | null;
           society_id: string;
           source: string;
+          transfer_pair_id?: string | null;
+          transfer_request_id?: string | null;
         };
         Update: {
           account_id?: string;
@@ -3947,6 +3951,8 @@ export type Database = {
           reverses_entry_id?: string | null;
           society_id?: string;
           source?: string;
+          transfer_pair_id?: string | null;
+          transfer_request_id?: string | null;
         };
         Relationships: [
           {
@@ -4114,6 +4120,1018 @@ export type Database = {
           },
           {
             foreignKeyName: 'expense_categories_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fixed_deposits: {
+        Row: {
+          account_id: string | null;
+          bank_name: string;
+          created_at: string;
+          created_by: string;
+          deposit_on: string;
+          fund_id: string;
+          id: string;
+          maturity_on: string;
+          maturity_value_paise: number | null;
+          predecessor_id: string | null;
+          principal_paise: number | null;
+          quoted_rate: number | null;
+          reference: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id?: string | null;
+          bank_name: string;
+          created_at?: string;
+          created_by: string;
+          deposit_on: string;
+          fund_id: string;
+          id?: string;
+          maturity_on: string;
+          maturity_value_paise?: number | null;
+          predecessor_id?: string | null;
+          principal_paise?: number | null;
+          quoted_rate?: number | null;
+          reference?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          account_id?: string | null;
+          bank_name?: string;
+          created_at?: string;
+          created_by?: string;
+          deposit_on?: string;
+          fund_id?: string;
+          id?: string;
+          maturity_on?: string;
+          maturity_value_paise?: number | null;
+          predecessor_id?: string | null;
+          principal_paise?: number | null;
+          quoted_rate?: number | null;
+          reference?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fixed_deposits_account_fkey';
+            columns: ['society_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_accounts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fixed_deposits_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fixed_deposits_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fixed_deposits_predecessor_fkey';
+            columns: ['society_id', 'predecessor_id'];
+            isOneToOne: true;
+            referencedRelation: 'expense_fixed_deposits';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fixed_deposits_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fixed_deposits_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fund_corpus_records: {
+        Row: {
+          concession_paise: number;
+          concession_reason: string | null;
+          created_at: string;
+          created_by: string;
+          decision_reference: string;
+          event_description: string;
+          event_on: string;
+          fund_id: string;
+          id: string;
+          reported_amount_paise: number;
+          society_id: string;
+          unit_id: string;
+          unit_label_snapshot: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          concession_paise?: number;
+          concession_reason?: string | null;
+          created_at?: string;
+          created_by: string;
+          decision_reference: string;
+          event_description: string;
+          event_on: string;
+          fund_id: string;
+          id?: string;
+          reported_amount_paise: number;
+          society_id: string;
+          unit_id: string;
+          unit_label_snapshot: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          concession_paise?: number;
+          concession_reason?: string | null;
+          created_at?: string;
+          created_by?: string;
+          decision_reference?: string;
+          event_description?: string;
+          event_on?: string;
+          fund_id?: string;
+          id?: string;
+          reported_amount_paise?: number;
+          society_id?: string;
+          unit_id?: string;
+          unit_label_snapshot?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_corpus_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_corpus_records_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_corpus_records_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_corpus_records_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_corpus_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_fund_entry_allocations: {
+        Row: {
+          allocation_version_id: string;
+          amount_paise: number;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          entry_id: string;
+          fund_id: string | null;
+          id: string;
+          reason: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          allocation_version_id: string;
+          amount_paise: number;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          entry_id: string;
+          fund_id?: string | null;
+          id?: string;
+          reason?: string | null;
+          society_id: string;
+        };
+        Update: {
+          allocation_version_id?: string;
+          amount_paise?: number;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          entry_id?: string;
+          fund_id?: string | null;
+          id?: string;
+          reason?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_entry_allocations_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_entry_allocations_entry_fkey';
+            columns: ['society_id', 'entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_book_entries';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_entry_allocations_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_entry_allocations_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fund_interest_records: {
+        Row: {
+          actual_credit_paise: number | null;
+          average_balance_paise: number | null;
+          created_at: string;
+          created_by: string;
+          fixed_deposit_id: string | null;
+          fund_id: string;
+          gross_interest_paise: number | null;
+          id: string;
+          income_entry_id: string | null;
+          note: string | null;
+          period_from: string;
+          period_to: string;
+          society_id: string;
+          source_label: string;
+          tax_withheld_paise: number | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          actual_credit_paise?: number | null;
+          average_balance_paise?: number | null;
+          created_at?: string;
+          created_by: string;
+          fixed_deposit_id?: string | null;
+          fund_id: string;
+          gross_interest_paise?: number | null;
+          id?: string;
+          income_entry_id?: string | null;
+          note?: string | null;
+          period_from: string;
+          period_to: string;
+          society_id: string;
+          source_label: string;
+          tax_withheld_paise?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          actual_credit_paise?: number | null;
+          average_balance_paise?: number | null;
+          created_at?: string;
+          created_by?: string;
+          fixed_deposit_id?: string | null;
+          fund_id?: string;
+          gross_interest_paise?: number | null;
+          id?: string;
+          income_entry_id?: string | null;
+          note?: string | null;
+          period_from?: string;
+          period_to?: string;
+          society_id?: string;
+          source_label?: string;
+          tax_withheld_paise?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_interest_deposit_fkey';
+            columns: ['society_id', 'fixed_deposit_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_fixed_deposits';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_interest_entry_fkey';
+            columns: ['society_id', 'income_entry_id'];
+            isOneToOne: true;
+            referencedRelation: 'expense_book_entries';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_interest_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_interest_records_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_interest_records_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_interest_records_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fund_mappings: {
+        Row: {
+          billing_charge_type_id: string | null;
+          created_at: string;
+          created_by: string;
+          expense_category_id: string | null;
+          fund_id: string;
+          id: string;
+          income_kind: string | null;
+          society_id: string;
+          source_kind: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          billing_charge_type_id?: string | null;
+          created_at?: string;
+          created_by: string;
+          expense_category_id?: string | null;
+          fund_id: string;
+          id?: string;
+          income_kind?: string | null;
+          society_id: string;
+          source_kind: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          billing_charge_type_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          expense_category_id?: string | null;
+          fund_id?: string;
+          id?: string;
+          income_kind?: string | null;
+          society_id?: string;
+          source_kind?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_mappings_billing_charge_fkey';
+            columns: ['society_id', 'billing_charge_type_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_charge_types';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_mappings_category_fkey';
+            columns: ['society_id', 'expense_category_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_categories';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_mappings_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_mappings_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_mappings_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_mappings_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fund_opening_allocations: {
+        Row: {
+          accounts_total_paise: number;
+          allocation_version_id: string;
+          amount_paise: number;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          fund_id: string;
+          id: string;
+          opening_id: string;
+          reason: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accounts_total_paise: number;
+          allocation_version_id?: string;
+          amount_paise: number;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          fund_id: string;
+          id?: string;
+          opening_id: string;
+          reason?: string | null;
+          society_id: string;
+        };
+        Update: {
+          accounts_total_paise?: number;
+          allocation_version_id?: string;
+          amount_paise?: number;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          fund_id?: string;
+          id?: string;
+          opening_id?: string;
+          reason?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_opening_allocations_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_opening_allocations_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_opening_allocations_opening_fkey';
+            columns: ['society_id', 'opening_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_fund_openings';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_opening_allocations_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fund_openings: {
+        Row: {
+          accounts_total_paise: number;
+          activated_at: string;
+          activated_by: string;
+          allocated_total_paise: number;
+          client_request_id: string;
+          cutover_on: string;
+          id: string;
+          society_id: string;
+          warning_acknowledged_text: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accounts_total_paise: number;
+          activated_at?: string;
+          activated_by: string;
+          allocated_total_paise: number;
+          client_request_id: string;
+          cutover_on: string;
+          id?: string;
+          society_id: string;
+          warning_acknowledged_text: string;
+        };
+        Update: {
+          accounts_total_paise?: number;
+          activated_at?: string;
+          activated_by?: string;
+          allocated_total_paise?: number;
+          client_request_id?: string;
+          cutover_on?: string;
+          id?: string;
+          society_id?: string;
+          warning_acknowledged_text?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_openings_activated_by_fkey';
+            columns: ['activated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_openings_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fund_receipt_links: {
+        Row: {
+          amount_paise: number;
+          client_request_id: string;
+          corpus_record_id: string;
+          created_at: string;
+          created_by: string;
+          entry_id: string;
+          id: string;
+          reason: string | null;
+          reverses_link_id: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_paise: number;
+          client_request_id: string;
+          corpus_record_id: string;
+          created_at?: string;
+          created_by: string;
+          entry_id: string;
+          id?: string;
+          reason?: string | null;
+          reverses_link_id?: string | null;
+          society_id: string;
+        };
+        Update: {
+          amount_paise?: number;
+          client_request_id?: string;
+          corpus_record_id?: string;
+          created_at?: string;
+          created_by?: string;
+          entry_id?: string;
+          id?: string;
+          reason?: string | null;
+          reverses_link_id?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_receipt_corpus_fkey';
+            columns: ['society_id', 'corpus_record_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_fund_corpus_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_receipt_entry_fkey';
+            columns: ['society_id', 'entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_book_entries';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_receipt_links_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_receipt_links_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_receipt_reverses_fkey';
+            columns: ['society_id', 'reverses_link_id'];
+            isOneToOne: true;
+            referencedRelation: 'expense_fund_receipt_links';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_fund_transfer_rules: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string;
+          from_fund_id: string;
+          id: string;
+          society_id: string;
+          to_fund_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by: string;
+          from_fund_id: string;
+          id?: string;
+          society_id: string;
+          to_fund_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string;
+          from_fund_id?: string;
+          id?: string;
+          society_id?: string;
+          to_fund_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_transfer_rules_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfer_rules_from_fkey';
+            columns: ['society_id', 'from_fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfer_rules_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfer_rules_to_fkey';
+            columns: ['society_id', 'to_fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfer_rules_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_fund_transfers: {
+        Row: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          decision_reference: string;
+          from_fund_id: string;
+          id: string;
+          reason: string;
+          reverses_transfer_id: string | null;
+          society_id: string;
+          to_fund_id: string;
+          transfer_on: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          decision_reference: string;
+          from_fund_id: string;
+          id?: string;
+          reason: string;
+          reverses_transfer_id?: string | null;
+          society_id: string;
+          to_fund_id: string;
+          transfer_on: string;
+        };
+        Update: {
+          amount_paise?: number;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          decision_reference?: string;
+          from_fund_id?: string;
+          id?: string;
+          reason?: string;
+          reverses_transfer_id?: string | null;
+          society_id?: string;
+          to_fund_id?: string;
+          transfer_on?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_transfers_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfers_from_fkey';
+            columns: ['society_id', 'from_fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfers_reverses_fkey';
+            columns: ['society_id', 'reverses_transfer_id'];
+            isOneToOne: true;
+            referencedRelation: 'expense_fund_transfers';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfers_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_transfers_to_fkey';
+            columns: ['society_id', 'to_fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_fund_work_links: {
+        Row: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          entry_id: string;
+          id: string;
+          society_id: string;
+          work_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          entry_id: string;
+          id?: string;
+          society_id: string;
+          work_id: string;
+        };
+        Update: {
+          amount_paise?: number;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          entry_id?: string;
+          id?: string;
+          society_id?: string;
+          work_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_work_links_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_work_links_entry_fkey';
+            columns: ['society_id', 'entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_book_entries';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_work_links_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_work_links_work_fkey';
+            columns: ['society_id', 'work_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_fund_works';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_fund_works: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          external_reference: string | null;
+          fund_id: string;
+          id: string;
+          meeting_resolution_id: string | null;
+          resolution_outcome_snapshot: string | null;
+          resolution_title_snapshot: string | null;
+          resolution_version_snapshot: number | null;
+          sanctioned_amount_paise: number;
+          sanctioned_on: string;
+          society_id: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          valid_until: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          external_reference?: string | null;
+          fund_id: string;
+          id?: string;
+          meeting_resolution_id?: string | null;
+          resolution_outcome_snapshot?: string | null;
+          resolution_title_snapshot?: string | null;
+          resolution_version_snapshot?: number | null;
+          sanctioned_amount_paise: number;
+          sanctioned_on: string;
+          society_id: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          valid_until?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          external_reference?: string | null;
+          fund_id?: string;
+          id?: string;
+          meeting_resolution_id?: string | null;
+          resolution_outcome_snapshot?: string | null;
+          resolution_title_snapshot?: string | null;
+          resolution_version_snapshot?: number | null;
+          sanctioned_amount_paise?: number;
+          sanctioned_on?: string;
+          society_id?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          valid_until?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_fund_works_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_works_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_works_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_fund_works_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_funds: {
+        Row: {
+          active: boolean;
+          created_at: string;
+          created_by: string;
+          id: string;
+          name: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          name: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          name?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_funds_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_funds_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_funds_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -14271,6 +15289,14 @@ export type Database = {
         };
         Returns: string;
       };
+      expense_billing_collection_suggestions: {
+        Args: { p_limit: number; p_society_id: string };
+        Returns: Json;
+      };
+      expense_billing_estimate_breakdown: {
+        Args: { p_lines: Json; p_months: number; p_society_id: string };
+        Returns: Json;
+      };
       expense_cash_count_record: {
         Args: {
           p_client_request_id: string;
@@ -14332,6 +15358,241 @@ export type Database = {
           p_society_id: string;
           p_status: string;
         };
+        Returns: Json;
+      };
+      expense_fixed_deposit_save: {
+        Args: {
+          p_account_id: string;
+          p_bank_name: string;
+          p_deposit_id: string;
+          p_deposit_on: string;
+          p_expected_updated_at: string;
+          p_fund_id: string;
+          p_maturity_on: string;
+          p_maturity_value_paise: number;
+          p_predecessor_id: string;
+          p_principal_paise: number;
+          p_quoted_rate: number;
+          p_reference: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_fixed_deposits_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      expense_fund_allocation_correct: {
+        Args: {
+          p_allocations: Json;
+          p_client_request_id: string;
+          p_entry_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_allocations_confirm: {
+        Args: {
+          p_client_request_id: string;
+          p_items: Json;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      expense_fund_billing_mappings_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      expense_fund_corpus_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      expense_fund_corpus_save: {
+        Args: {
+          p_concession_paise: number;
+          p_concession_reason: string;
+          p_decision_reference: string;
+          p_event_description: string;
+          p_event_on: string;
+          p_expected_updated_at: string;
+          p_fund_id: string;
+          p_record_id: string;
+          p_reported_amount_paise: number;
+          p_request_trace: string;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_interest_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      expense_fund_interest_save: {
+        Args: {
+          p_actual_credit_paise: number;
+          p_average_balance_paise: number;
+          p_expected_updated_at: string;
+          p_fixed_deposit_id: string;
+          p_fund_id: string;
+          p_gross_interest_paise: number;
+          p_income_entry_id: string;
+          p_note: string;
+          p_period_from: string;
+          p_period_to: string;
+          p_record_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_source_label: string;
+          p_tax_withheld_paise: number;
+        };
+        Returns: string;
+      };
+      expense_fund_mapping_save: {
+        Args: {
+          p_expected_updated_at: string;
+          p_fund_id: string;
+          p_income_kind: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_source_id: string;
+          p_source_kind: string;
+        };
+        Returns: string;
+      };
+      expense_fund_opening_correct: {
+        Args: {
+          p_allocations: Json;
+          p_client_request_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_receipt_link: {
+        Args: {
+          p_amount_paise: number;
+          p_client_request_id: string;
+          p_corpus_record_id: string;
+          p_entry_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_report: {
+        Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: Json;
+      };
+      expense_fund_save: {
+        Args: {
+          p_active: boolean;
+          p_expected_updated_at: string;
+          p_fund_id: string;
+          p_name: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_transfer_record: {
+        Args: {
+          p_amount_paise: number;
+          p_client_request_id: string;
+          p_decision_reference: string;
+          p_from_fund_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_to_fund_id: string;
+          p_transfer_on: string;
+        };
+        Returns: string;
+      };
+      expense_fund_transfer_reverse: {
+        Args: {
+          p_client_request_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_reverse_on: string;
+          p_society_id: string;
+          p_transfer_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_transfer_rule_save: {
+        Args: {
+          p_active: boolean;
+          p_expected_updated_at: string;
+          p_from_fund_id: string;
+          p_request_trace: string;
+          p_rule_id: string;
+          p_society_id: string;
+          p_to_fund_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_transfers_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      expense_fund_work_link: {
+        Args: {
+          p_amount_paise: number;
+          p_client_request_id: string;
+          p_entry_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_work_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_work_save: {
+        Args: {
+          p_expected_updated_at: string;
+          p_external_reference: string;
+          p_fund_id: string;
+          p_meeting_resolution_id: string;
+          p_request_trace: string;
+          p_sanctioned_amount_paise: number;
+          p_sanctioned_on: string;
+          p_society_id: string;
+          p_title: string;
+          p_valid_until: string;
+          p_work_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_works_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      expense_funds_activate: {
+        Args: {
+          p_acknowledged: boolean;
+          p_allocations: Json;
+          p_client_request_id: string;
+          p_cutover_on: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_funds_activity: {
+        Args: { p_limit: number; p_offset: number; p_society_id: string };
+        Returns: Json;
+      };
+      expense_funds_activity_transfers: {
+        Args: { p_limit: number; p_offset: number; p_society_id: string };
+        Returns: Json;
+      };
+      expense_funds_workspace: {
+        Args: { p_cutover_on: string; p_society_id: string };
         Returns: Json;
       };
       expense_income_record: {
@@ -14455,6 +15716,31 @@ export type Database = {
           p_request_trace: string;
           p_society_id: string;
           p_statement_date: string;
+        };
+        Returns: string;
+      };
+      expense_transfer_record: {
+        Args: {
+          p_amount_paise: number;
+          p_client_request_id: string;
+          p_from_account_id: string;
+          p_note: string;
+          p_reference: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_to_account_id: string;
+          p_transfer_on: string;
+        };
+        Returns: string;
+      };
+      expense_transfer_reverse: {
+        Args: {
+          p_client_request_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_reverse_on: string;
+          p_society_id: string;
+          p_transfer_pair_id: string;
         };
         Returns: string;
       };
