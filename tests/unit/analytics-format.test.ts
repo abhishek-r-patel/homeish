@@ -10,12 +10,45 @@ import {
   seriesUnit,
 } from '../../src/core/analytics/format';
 import {
+  readReportPeriod,
+  reportPeriodRange,
+} from '../../src/core/analytics/report-period';
+import {
   analyticsExportInputSchema,
   analyticsSettingsInputSchema,
   parseAnalyticsDashboard,
   parseAnalyticsExportInput,
   readAnalyticsRange,
 } from '../../src/core/analytics/validation';
+
+describe('P43 report periods', () => {
+  it('counts back whole months including the current one', () => {
+    expect(reportPeriodRange('6m', '2026-03-15')).toEqual({
+      from: '2025-10-01',
+      toMonth: '2026-03-01',
+      to: '2026-03-31',
+    });
+    expect(reportPeriodRange('12m', '2024-02-29')).toEqual({
+      from: '2023-03-01',
+      toMonth: '2024-02-01',
+      to: '2024-02-29',
+    });
+  });
+
+  it.each([
+    ['2026-03-31', '2025-04-01', '2026-03-31'],
+    ['2026-04-01', '2026-04-01', '2027-03-31'],
+  ])('starts the financial year in April (%s)', (today, from, to) => {
+    expect(reportPeriodRange('fy', today)).toMatchObject({ from, to });
+  });
+
+  it('falls back to 12 months for unknown values', () => {
+    expect(readReportPeriod('fy')).toBe('fy');
+    expect(readReportPeriod(['6m', 'fy'])).toBe('6m');
+    expect(readReportPeriod('24m')).toBe('12m');
+    expect(readReportPeriod(undefined)).toBe('12m');
+  });
+});
 
 describe('analytics formatting', () => {
   it('formats money in whole rupees with Indian grouping', () => {

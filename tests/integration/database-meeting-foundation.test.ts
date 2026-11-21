@@ -122,7 +122,7 @@ describe.skipIf(!hasDatabase)('meeting database foundation', () => {
       ),
     );
 
-    expect(functions.rows).toHaveLength(29);
+    expect(functions.rows).toHaveLength(30);
     for (const fn of functions.rows) {
       expect(fn).toMatchObject({
         society_first: true,

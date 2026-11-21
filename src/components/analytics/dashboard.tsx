@@ -40,6 +40,7 @@ export type AnalyticsDashboardViewProps = {
   basePath: string;
   settingsHref: string;
   exportPath?: string;
+  headlines?: ReactNode;
 };
 
 function rangeHref(
@@ -446,6 +447,7 @@ export function AnalyticsDashboardView({
   basePath,
   settingsHref,
   exportPath = '/api/analytics/export',
+  headlines,
 }: AnalyticsDashboardViewProps) {
   const { locale, translate: t } = useUiTranslator();
   return (
@@ -507,6 +509,7 @@ export function AnalyticsDashboardView({
           </p>
         ) : null}
       </header>
+      {headlines}
       {dashboard.metrics.length === 0 ? (
         <EmptyState
           title={t('No analytics selected')}

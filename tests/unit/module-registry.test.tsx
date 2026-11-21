@@ -40,6 +40,18 @@ describe('module registry', () => {
     expect(hasPermission(['committee'], 'amc', 'amc:list')).toBe(true);
     expect(hasPermission(['committee'], 'amc', 'amc:manage')).toBe(false);
     expect(hasPermission(['resident'], 'amc', 'amc:list')).toBe(false);
+    expect(
+      hasPermission(['committee'], 'billing', 'billing:charges:read'),
+    ).toBe(true);
+    expect(
+      hasPermission(['committee'], 'billing', 'billing:monthly_report:export'),
+    ).toBe(false);
+    expect(
+      hasPermission(['committee'], 'billing', 'billing:dues_follow_up:read'),
+    ).toBe(false);
+    expect(
+      hasPermission(['admin'], 'billing', 'billing:dues_follow_up:read'),
+    ).toBe(true);
     expect(hasPermission(['committee'], 'amenity', 'amenity:list')).toBe(true);
     expect(hasPermission(['committee'], 'amenity', 'amenity:book')).toBe(false);
     expect(hasPermission(['resident'], 'amenity', 'amenity:book')).toBe(true);
@@ -343,8 +355,7 @@ describe('module registry', () => {
 });
 
 describe('in-app links', () => {
-  // The admin dashboard (A-01) is planned but not built yet.
-  const KNOWN_UNBUILT = new Set(['/admin']);
+  const KNOWN_UNBUILT = new Set<string>();
 
   function appRoutes() {
     const appDir = join(__dirname, '../../src/app');

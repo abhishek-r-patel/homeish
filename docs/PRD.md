@@ -331,6 +331,11 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `BIL-23` Admins and committee can estimate recurring charges from an area, an occupancy scenario and optional custom amounts. Use active society rules, show any exclusions, label the total as an estimate and save nothing.
 - `BIL-24` Billing Reports adds confirmed collections by payment mode, aggregate wing totals, bill-status summaries and current unapplied advance credit. Use authoritative billing data and keep pending and rejected payments out of confirmed totals. Admins and committee can view the summaries and use the existing Billing report export permissions. Do not change P27 metrics or add identities or unit balances to these summaries.
 
+**P43 billing reports (owner decisions 2026-11-21):**
+
+- `BIL-25` Billing Reports adds a read-only **Monthly collection** report for admins and committee members over the last 6 months, the last 12 months or the current financial year (April–March). Each bill month shows billed (regular, fine and late-fee bills for that month; cancelled bills excluded), waived, net billed, collected (confirmed payments allocated to those bills, whenever they arrive) and the collection percentage = collected ÷ net billed, never above 100% and shown as "—" when nothing was billed. It is separate from the BIL-21 as-of report and does not change BIL-11 or P27. Only admins can download it as CSV; every download is audited.
+- `BIL-26` Admins (not committee members) have a **Dues follow-up** list for following up unpaid dues: every unit with an unpaid amount, largest first, with the primary active owner or tenant's name, phone and email, outstanding amount, oldest unpaid due date, months overdue, last confirmed payment and whether a payment awaits confirmation. It is built live and nothing is stored; each opening and each CSV download is audited with its purpose. The download asks for confirmation first because it contains contact details. The app sends no message from this list.
+
 **Out of MVP**: expense/accounting books, vendor payments, tax return filing, GST invoices beyond a simple tax field, budget management.
 
 **Module settings**: due day of month, grace days, late fee rule, reminder schedule, pending-confirmation alert days, and **society UPI details (admin-editable and audited, BIL-15)**.
@@ -601,6 +606,8 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 **P23 owner decisions (D-61, approved 2026-11-16):** meeting types are AGM, SGM and committee meeting. By default AGM and SGM invite every active unit and a committee meeting invites the committee members; the admin can change the invitees of a meeting while it is still upcoming — whole society, chosen blocks, chosen floors or chosen units (unit meetings), or chosen committee members (committee meetings). Notice periods are society settings (defaults: AGM 14 days, SGM 7 days, committee 3 days); a shorter notice shows a warning only and does not block or need a reason. Quorum is a society setting shown as an indicator that never blocks: a percentage of invited units present for AGM and SGM (default 33%) and a percentage of invited committee members present for committee meetings (default 50%). Attendance is recorded per unit (per member for committee meetings): the admin marks it, and a unit may attend by proxy, recorded by the admin with the proxy's name and counted toward quorum. During a meeting the admin can open and close self check-in; while it is open, any active owner or tenant occupant (not family members) of an invited unit can mark the unit present once, and the admin can correct or undo any mark. The admin records each resolution's outcome (passed, failed or deferred, with optional for, against and abstain counts); when `poll` is enabled the admin can also create a pre-filled draft poll from a resolution or link an existing poll, and the completed poll's result is shown with the resolution. Admins and committee members can draft minutes; the admin can edit any draft, including one written by the committee, and only the admin publishes. Published AGM and SGM minutes are visible to residents of invited units; committee-meeting minutes are visible to admins and committee members only. When `document` is enabled, publishing also saves a PDF of the minutes in the document repository with the same visibility. Action items have an owner and a due date; a society setting decides whether owners can be any active society member (default) or only admins and committee members. Owners get a notification when assigned and one daily reminder while an item is overdue. Notifications are in-app plus push, to invitees when a meeting is scheduled, rescheduled or cancelled and when minutes are published. Meetings, attendance, resolutions and minutes are kept permanently as society records.
 
+- `MTG-5` (P43.5, owner decision 2026-11-21) Admins and committee members see a read-only **Meeting summary** for the last 6 months, the last 12 months or the current financial year: meetings scheduled, held and cancelled; quorum met; average attendance; resolutions by outcome; action items open, overdue and done; held meetings whose minutes are not yet published; and each person's open and overdue action items with the next due date. It is factual only — no score or ranking. A headline tile also appears on Analytics.
+
 #### 5.10.9 Vendors & Purchase Approvals (`vendor`) — P4-3
 
 - `VEN-1` Vendor directory with category, contact, GST number (optional), documents and a rating from admin/committee.
@@ -840,6 +847,8 @@ Legend: **C**reate, **R**ead, **U**pdate, **D**elete/cancel, **A**pprove, `own` 
 | Billing: change society UPI details (audited, committee notified)  | –            | U               | R                                                                                | –              | –             | R (view only)  | R (view only)  | R (view only)       |
 | Billing: dashboards/reports                                        | –            | R               | R                                                                                | –              | –             | –              | –              | –                   |
 | Billing P38: payment plans, recovery actions and as-of report      | –            | CRUD            | R                                                                                | –              | –             | –              | –              | –                   |
+| Billing P43: monthly collection report / CSV download              | –            | R / download    | R                                                                                | –              | –             | –              | –              | –                   |
+| Billing P43: dues follow-up list with contacts (audited)           | –            | R / download    | –                                                                                | –              | –             | –              | –              | –                   |
 | Vendor/contract additions (P47)                                    | –            | CRUD            | R                                                                                | –              | –             | –              | –              | –                   |
 | Society reference profile (P35)                                    | –            | CRUD            | R (ordinary fields only)                                                         | –              | –             | –              | –              | –                   |
 | Capability adoption register (P35)                                 | –            | CRUD            | R                                                                                | –              | –             | –              | –              | –                   |
@@ -924,24 +933,24 @@ The web portal remains the complete product for every role. The Android app is n
 
 ### 9.4 Admin / Committee
 
-| ID   | Screen                                                                                                                              |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| A-01 | Admin dashboard (today's visitors, open requests, collection summary — only enabled modules)                                        |
-| A-02 | Blocks & units management (+ CSV import)                                                                                            |
-| A-03 | Residents list, invite, approvals                                                                                                   |
-| A-04 | Guards & staff accounts                                                                                                             |
-| A-05 | Visitor log (filters), blacklist                                                                                                    |
-| A-06 | Delivery log, uncollected parcels                                                                                                   |
-| A-07 | Billing: charge types, bill generation + preview, bills list, ledger per unit, record payment, fines, late fee config view, reports |
-| A-08 | Service requests list/detail/assign, categories                                                                                     |
-| A-09 | Staff registry & attendance (P2)                                                                                                    |
-| A-10 | Housekeeping items, stock in/out, low stock (P2)                                                                                    |
-| A-11 | AMC list/detail/visit log (P2)                                                                                                      |
-| A-12 | Notices (P2), Amenity (P2)                                                                                                          |
-| A-13 | Vendors and contracts: vendor details, general contracts, AMC schedule, agency staff-day checks, work orders and bills owed (P47)   |
-| A-14 | Dues additions: payment-plan tracker, internal recovery follow-ups and as-of collection report (P38)                                |
-| A-15 | Society reference profile, capability-adoption tracker and committee action plans (P35)                                             |
-| A-16 | Searchable app help and authorized correspondence preview/download (P35)                                                            |
+| ID   | Screen                                                                                                                                                                                                       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A-01 | Admin/committee dashboard (today's counts, items needing attention, society activity, admin actions — only enabled modules)                                                                                  |
+| A-02 | Blocks & units management (+ CSV import)                                                                                                                                                                     |
+| A-03 | Residents list, invite, approvals                                                                                                                                                                            |
+| A-04 | Guards & staff accounts                                                                                                                                                                                      |
+| A-05 | Visitor log (filters), blacklist                                                                                                                                                                             |
+| A-06 | Delivery log, uncollected parcels                                                                                                                                                                            |
+| A-07 | Billing: charge types, bill generation + preview, bills list, ledger per unit, record payment, fines, late fee config view, reports (incl. monthly collection, P43.2) and dues follow-up (admin only, P43.3) |
+| A-08 | Service requests list/detail/assign, categories                                                                                                                                                              |
+| A-09 | Staff registry & attendance (P2)                                                                                                                                                                             |
+| A-10 | Housekeeping items, stock in/out, low stock (P2)                                                                                                                                                             |
+| A-11 | AMC list/detail/visit log (P2)                                                                                                                                                                               |
+| A-12 | Notices (P2), Amenity (P2)                                                                                                                                                                                   |
+| A-13 | Vendors and contracts: vendor details, general contracts, AMC schedule, agency staff-day checks, work orders and bills owed (P47)                                                                            |
+| A-14 | Dues additions: payment-plan tracker, internal recovery follow-ups and as-of collection report (P38)                                                                                                         |
+| A-15 | Society reference profile, capability-adoption tracker and committee action plans (P35)                                                                                                                      |
+| A-16 | Searchable app help and authorized correspondence preview/download (P35)                                                                                                                                     |
 
 ### 9.5 Guard
 
