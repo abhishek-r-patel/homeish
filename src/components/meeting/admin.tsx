@@ -158,6 +158,9 @@ export function MeetingAdminListView({
         <Link className={MEETING_LINK_CLASS} href="/admin/meetings/actions">
           {t('My action items')}
         </Link>
+        <Link className={MEETING_LINK_CLASS} href="/admin/meetings/summary">
+          {t('Meeting summary')}
+        </Link>
         <Link className={MEETING_LINK_CLASS} href="/admin/meetings/settings">
           {t('Meeting settings')}
         </Link>

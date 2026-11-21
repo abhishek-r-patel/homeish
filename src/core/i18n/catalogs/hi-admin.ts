@@ -714,7 +714,31 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'No active owner or tenant': 'कोई सक्रिय मालिक या किरायेदार नहीं',
   'No confirmed payment': 'कोई पुष्ट भुगतान नहीं',
   'A payment is awaiting confirmation': 'एक भुगतान पुष्टि की प्रतीक्षा में है',
+  'Meeting summary': 'बैठक सारांश',
+  '{open} open action items · {overdue} overdue':
+    '{open} खुले कार्य बिंदु · {overdue} समय-सीमा पार',
+  'Meetings held in the last 12 months': 'पिछले 12 महीनों में हुई बैठकें',
+  '← Meetings': '← बैठकें',
+  'Meetings from {from} to {to}. Action items show their current state.':
+    '{from} से {to} तक की बैठकें। कार्य बिंदु अपनी मौजूदा स्थिति दिखाते हैं।',
+  '{scheduled} scheduled · {cancelled} cancelled':
+    '{scheduled} तय · {cancelled} रद्द',
+  'Held meetings with a quorum rule: {count}': 'कोरम नियम वाली हुई बैठकें: {count}',
+  'Average across held meetings': 'हुई बैठकों का औसत',
+  'Held meetings without published minutes': 'बिना प्रकाशित कार्यवृत्त वाली हुई बैठकें',
+  'Minutes not published': 'कार्यवृत्त प्रकाशित नहीं',
+  'Open action items from these meetings, grouped by the person responsible and sorted by next due date. This is a follow-up list, not a ranking.':
+    'इन बैठकों के खुले कार्य बिंदु, ज़िम्मेदार व्यक्ति के अनुसार समूहित और अगली नियत तारीख़ से क्रमबद्ध। यह फ़ॉलो-अप सूची है, रैंकिंग नहीं।',
+  'Open action items by person': 'व्यक्ति के अनुसार खुले कार्य बिंदु',
+  'Every action item from these meetings is done.':
+    'इन बैठकों का हर कार्य बिंदु पूरा हो चुका है।',
+  'No open action items': 'कोई खुला कार्य बिंदु नहीं',
+  Person: 'व्यक्ति',
+  'Next due': 'अगली नियत तारीख़',
+  '{open} open · {overdue} overdue · next due {date}':
+    '{open} खुले · {overdue} समय-सीमा पार · अगली नियत तारीख़ {date}',
   'Last 6 months': 'पिछले 6 महीने',
   'Last 12 months': 'पिछले 12 महीने',
   'This financial year': 'यह वित्त वर्ष',
+  'Outcome not recorded': 'परिणाम दर्ज नहीं',
 };
