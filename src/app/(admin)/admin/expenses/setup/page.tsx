@@ -45,7 +45,7 @@ export default async function ExpenseSetupPage() {
         />
       </Card>
       <Card
-        title={t('Cash and bank accounts')}
+        title={t('Cash, bank and deposit accounts')}
         description={t(
           'Opening balances are fixed once an account has entries.',
         )}

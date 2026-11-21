@@ -16,7 +16,14 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   Account: 'खाता',
   'Accounts reports': 'खातों की रिपोर्ट',
   'Accounts setup': 'खातों का सेटअप',
+  'Accounts total': 'खातों का कुल शेष',
+  'Accounts total at the end of {date}': '{date} के अंत में खातों का कुल शेष',
+  'Accounts total is negative': 'खातों का कुल शेष ऋणात्मक है',
   Active: 'सक्रिय',
+  'Activate fund tracking': 'निधि ट्रैकिंग सक्रिय करें',
+  'Add a fund': 'निधि जोड़ें',
+  'Add an active fund': 'सक्रिय निधि जोड़ें',
+  'Add fund': 'निधि जोड़ें',
   'Add a block': 'ब्लॉक जोड़ें',
   'Add a unit': 'यूनिट जोड़ें',
   'Add account': 'खाता जोड़ें',
@@ -25,6 +32,7 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Add fine': 'जुर्माना जोड़ें',
   'Add number': 'नंबर जोड़ें',
   'Add staff': 'कर्मचारी जोड़ें',
+  'an administrator': 'प्रशासक',
   "Add the society's accounts and opening balances":
     'सोसाइटी के खाते और शुरुआती शेष जोड़ें',
   All: 'सभी',
@@ -32,6 +40,11 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'All categories': 'सभी श्रेणियाँ',
   'All payments': 'सभी भुगतान',
   'All statuses': 'सभी स्थितियाँ',
+  'Allocated to funds': 'निधियों में आवंटित',
+  'Allocated: {allocated}. Unallocated: {unallocated}.':
+    'आवंटित: {allocated}। आवंटित नहीं: {unallocated}।',
+  'Allocate the existing Accounts total into named funds without moving or creating money.':
+    'नाम वाली निधियों में मौजूदा खातों का कुल शेष आवंटित करें; इससे रकम न बनती है और न ही स्थानांतरित होती है।',
   'Allow guard approval overrides': 'सुरक्षा कर्मी को मंज़ूरी का अपवाद देने दें',
   'Allow residents to request leaving deliveries at the gate':
     'निवासियों को गेट पर डिलीवरी छोड़ने का अनुरोध करने दें',
@@ -65,6 +78,9 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
     'बिल नियत तिथि से और वसूली भुगतान तिथि से गिनी जाती है।',
   Cash: 'नकद',
   'Cash and bank accounts': 'नकद और बैंक खाते',
+  'Cash, bank and deposit accounts': 'नकद, बैंक और जमा खाते',
+  'Deposit accounts accept interest income only.':
+    'जमा खाते केवल ब्याज आय स्वीकार करते हैं।',
   'Cash and bank book': 'नकद और बैंक खाता बही',
   'Cash and bank book pages': 'नकद और बैंक खाता बही के पृष्ठ',
   Categories: 'श्रेणियाँ',
@@ -75,21 +91,287 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
     'पुष्टि करने से पहले प्रत्येक UPI संदर्भ का सोसाइटी बैंक स्टेटमेंट से मिलान करें।',
   'Check each UPI reference against the society bank statement before confirming. Payments waiting {days} days or more are flagged.':
     'पुष्टि करने से पहले प्रत्येक UPI संदर्भ का सोसाइटी बैंक स्टेटमेंट से मिलान करें। {days} दिन या उससे अधिक समय से लंबित भुगतान चिह्नित किए जाते हैं।',
+  'Check opening total': 'शुरुआती कुल जाँचें',
   'Check if visitor stays longer than threshold':
     'आगंतुक के निर्धारित समय से अधिक ठहरने की जाँच करें',
   'Check the job address.': 'जॉब का पता जाँचें।',
   'Checked out': 'बाहर गए',
   'Choose a valid page and row count.': 'मान्य पृष्ठ और पंक्तियों की संख्या चुनें।',
+  'Choose a cutover after a closed month. The opening uses every Accounts balance at the end of the previous day.':
+    'बंद किए हुए महीने के बाद कट-ओवर चुनें। शुरुआत में पिछले दिन के अंत तक हर खाते का शेष लिया जाता है।',
+  'Close a month first': 'पहले महीना बंद करें',
   Closed: 'बंद',
   'Closing balances': 'अंतिम शेष',
   Collected: 'प्राप्त की गई',
   'Committee access: review the books and approve large expenses recorded by others.':
     'समिति की पहुँच: खाते देखें और दूसरों द्वारा दर्ज बड़े खर्चों को मंज़ूरी दें।',
+  'Committee members can review fund records but cannot change them.':
+    'समिति के सदस्य निधि रिकॉर्ड देख सकते हैं, लेकिन बदल नहीं सकते।',
   'Confirmed payments dated in period': 'इस अवधि में तारीख वाले पुष्ट भुगतान',
   'Confirmed payments include a downloadable receipt.':
     'पुष्टि किए गए भुगतानों के साथ डाउनलोड करने योग्य रसीद मिलती है।',
+  'Deactivate a fund instead of deleting it after the fund has been used.':
+    'निधि उपयोग होने के बाद उसे मिटाने के बजाय निष्क्रिय करें।',
   contracts: 'अनुबंध',
   'Correct visit': 'दौरे का विवरण सुधारें',
+  'Enter a valid amount for every fund.': 'हर निधि के लिए मान्य राशि भरें।',
+  'Follow applicable society rules and obtain professional review where needed before relying on these records.':
+    'इन रिकॉर्ड पर भरोसा करने से पहले लागू सोसाइटी नियमों का पालन करें और जहाँ आवश्यक हो पेशेवर समीक्षा लें।',
+  'Fund name': 'निधि का नाम',
+  'Fund names': 'निधियों के नाम',
+  'Fund openings cannot exceed the Accounts total.':
+    'निधियों का शुरुआती आवंटन खातों के कुल शेष से अधिक नहीं हो सकता।',
+  'Fund tracking active': 'निधि ट्रैकिंग सक्रिय',
+  'Fund tracking allocates the existing Accounts total for reference. It does not move cash, create a bill or prove financial, legal or statutory authority.':
+    'निधि ट्रैकिंग केवल संदर्भ के लिए मौजूदा खातों का कुल शेष आवंटित करती है। यह नकद नहीं भेजती, बिल नहीं बनाती और वित्तीय, कानूनी या वैधानिक अधिकार साबित नहीं करती।',
+  Funds: 'निधियाँ',
+  'Fund balances': 'निधि शेष',
+  'Fund allocation pages': 'निधि आवंटन पृष्ठ',
+  'Fund allocations: {allocated}. Unallocated: {unallocated}.':
+    'निधि आवंटन: {allocated}। आवंटित नहीं: {unallocated}।',
+  'Balances are derived from the opening and confirmed Accounts entries.':
+    'शेष शुरुआती आवंटन और पुष्टि की गई खाता प्रविष्टियों से निकाला जाता है।',
+  'Opening {amount}': 'शुरुआत {amount}',
+  'Unconfirmed entries and new account openings stay here until an admin confirms their fund.':
+    'प्रशासक निधि की पुष्टि करे तब तक बिना पुष्टि वाली प्रविष्टियाँ और नए खाते यहाँ रहते हैं।',
+  'Suggested fund mappings': 'सुझाए गए निधि मानचित्र',
+  'A mapping suggests a full entry split. It is not applied until an admin confirms the entry.':
+    'मानचित्र पूरी प्रविष्टि का विभाजन सुझाता है। प्रशासक पुष्टि करे तभी वह लागू होता है।',
+  'No suggested fund': 'कोई सुझाई निधि नहीं',
+  'No active expense categories.': 'कोई सक्रिय खर्च श्रेणी नहीं है।',
+  'Income types': 'आय के प्रकार',
+  'Confirm suggested splits': 'सुझाए विभाजन की पुष्टि करें',
+  'Selected entries are confirmed together. Closed-month entries are never confirmed.':
+    'चुनी गई प्रविष्टियाँ साथ पुष्टि होती हैं। बंद महीने की प्रविष्टियाँ पुष्टि नहीं होतीं।',
+  'Accounts entries and fund allocations': 'खाता प्रविष्टियाँ और निधि आवंटन',
+  'Each confirmed split equals the original Accounts entry, including Unallocated.':
+    'हर पुष्टि किया विभाजन मूल खाता प्रविष्टि के बराबर होता है, जिसमें आवंटित नहीं भी शामिल है।',
+  'Month closed; reopen it before changing allocations.':
+    'महीना बंद है; आवंटन बदलने से पहले उसे फिर खोलें।',
+  'Review suggested allocation': 'सुझाया आवंटन देखें',
+  'Set fund allocation': 'निधि आवंटन तय करें',
+  'Not confirmed; currently Unallocated.': 'पुष्टि नहीं हुई; अभी आवंटित नहीं है।',
+  'No Accounts entries are available for allocation yet.':
+    'आवंटन के लिए अभी कोई खाता प्रविष्टि नहीं है।',
+  'Save suggestion': 'सुझाव सहेजें',
+  'Suggestions are not saved to an entry until an admin confirms them.':
+    'प्रशासक पुष्टि करे तब तक सुझाव प्रविष्टि में सहेजा नहीं जाता।',
+  'Confirm allocation': 'आवंटन की पुष्टि करें',
+  'Allocations cannot exceed the entry amount.':
+    'आवंटन प्रविष्टि की राशि से अधिक नहीं हो सकता।',
+  'Confirm selected suggestions': 'चुने सुझावों की पुष्टि करें',
+  'Opening needs review': 'शुरुआती आवंटन की समीक्षा आवश्यक है',
+  'An Accounts change happened before the cutover. Review the new total and re-confirm the opening before relying on fund figures.':
+    'कट-ओवर से पहले खातों में बदलाव हुआ है। निधि आँकड़ों पर भरोसा करने से पहले नया कुल देखें और शुरुआती आवंटन फिर पुष्टि करें।',
+  'The previous month was reopened.': 'पिछला महीना फिर खोला गया।',
+  'The Accounts opening total changed.': 'खातों का शुरुआती कुल बदल गया।',
+  'A backdated Accounts entry was added.':
+    'पुरानी तारीख की खाता प्रविष्टि जोड़ी गई।',
+  'An account opening date or balance changed.':
+    'किसी खाते की शुरुआती तारीख या शेष बदला।',
+  'Review and re-confirm opening': 'शुरुआत देखें और फिर पुष्टि करें',
+  'Correct opening allocations': 'शुरुआती आवंटन सुधारें',
+  'Current Accounts total at the cutover: {amount}':
+    'कट-ओवर पर मौजूदा खातों का कुल: {amount}',
+  'This reversal follows the original allocation.':
+    'यह उलट प्रविष्टि मूल आवंटन का पालन करती है।',
+  'Correct allocation': 'आवंटन सुधारें',
+  'Re-confirm opening': 'शुरुआती आवंटन फिर पुष्टि करें',
+  'Opening allocations: {allocated}. Unallocated: {unallocated}.':
+    'शुरुआती आवंटन: {allocated}। आवंटित नहीं: {unallocated}।',
+  'Opening allocations cannot exceed the Accounts total.':
+    'शुरुआती आवंटन खातों के कुल से अधिक नहीं हो सकता।',
+  'Save correction': 'सुधार सहेजें',
+  Deposit: 'जमा',
+  'Fixed-deposit account': 'सावधि-जमा खाता',
+  'Transfer between accounts': 'खातों के बीच अंतरण',
+  'Moves money between this society’s own Accounts and is never income or expense.':
+    'यह धन को सोसाइटी के अपने खातों के बीच ले जाता है; यह कभी आय या खर्च नहीं है।',
+  'Transferred to {account}': '{account} में अंतरण किया',
+  'Transferred from {account}': '{account} से अंतरण किया',
+  'Record transfer': 'अंतरण दर्ज करें',
+  'Transfer date': 'अंतरण तारीख',
+  'From account': 'किस खाते से',
+  'To account': 'किस खाते में',
+  'Reverse both transfer entries': 'अंतरण की दोनों प्रविष्टियाँ उलटें',
+  'Fixed deposits': 'सावधि जमा',
+  'Store bank-confirmed terms. These register figures never add to Accounts totals.':
+    'बैंक-पुष्ट शर्तें रखें। ये रजिस्टर आँकड़े खातों के कुल में नहीं जुड़ते।',
+  'Maturity follow-up': 'परिपक्वता अनुवर्ती कार्रवाई',
+  'Past maturity by {days} days': 'परिपक्वता से {days} दिन बीत गए',
+  'Matures today': 'आज परिपक्व होगी',
+  'Matures in {days} days': '{days} दिन में परिपक्व होगी',
+  'No fixed deposit needs maturity follow-up in the next 30 days.':
+    'अगले 30 दिन में किसी सावधि जमा पर कार्रवाई नहीं चाहिए।',
+  'Matures {date}': '{date} को परिपक्व',
+  'Confirmed principal unavailable': 'पुष्ट मूलधन उपलब्ध नहीं',
+  'Rate unavailable': 'दर उपलब्ध नहीं',
+  'Not reconciled: choose a deposit account': 'मिलान नहीं: जमा खाता चुनें',
+  'Principal unknown: comparison unavailable': 'मूलधन अज्ञात: तुलना उपलब्ध नहीं',
+  'Matched to the linked Accounts deposit balance':
+    'जुड़े खाता-जमा शेष से मेल खाता है',
+  'Difference from the linked Accounts deposit balance':
+    'जुड़े खाता-जमा शेष से अंतर है',
+  '{account} balance: {amount}': '{account} शेष: {amount}',
+  'Deposit account': 'जमा खाता',
+  'Edit fixed deposit': 'सावधि जमा संपादित करें',
+  'Record renewal': 'नवीनीकरण दर्ज करें',
+  'No fixed deposits recorded.': 'कोई सावधि जमा दर्ज नहीं है।',
+  'Add fixed deposit': 'सावधि जमा जोड़ें',
+  'Save fixed deposit': 'सावधि जमा सहेजें',
+  Fund: 'निधि',
+  'Not reconciled yet': 'अभी मिलान नहीं हुआ',
+  'The Accounts deposit account holds the real money; register figures are never added to Accounts totals.':
+    'खातों का जमा खाता वास्तविक धन रखता है; रजिस्टर आँकड़े खातों के कुल में नहीं जुड़ते।',
+  'Bank reference (admin only)': 'बैंक संदर्भ (केवल प्रशासक)',
+  'Confirmed principal, if known': 'पुष्ट मूलधन, यदि ज्ञात हो',
+  'Quoted annual rate %, if known': 'उद्धृत वार्षिक दर %, यदि ज्ञात हो',
+  'Use the bank-provided quoted rate, not an estimate.':
+    'बैंक की उद्धृत दर उपयोग करें, अनुमान नहीं।',
+  'Deposit date': 'जमा तारीख',
+  'Maturity date': 'परिपक्वता तारीख',
+  'Quoted maturity value, if known': 'उद्धृत परिपक्वता मूल्य, यदि ज्ञात हो',
+  'Interest and TDS': 'ब्याज और टीडीएस',
+  'Bank figures are recorded separately from Accounts interest. Nothing is posted automatically.':
+    'बैंक के आँकड़े खाता ब्याज से अलग दर्ज होते हैं। कुछ भी अपने-आप पोस्ट नहीं होता।',
+  Gross: 'कुल',
+  Unknown: 'अज्ञात',
+  TDS: 'टीडीएस',
+  Net: 'शुद्ध',
+  'Link Accounts interest to compare the actual credit. Missing data is not zero.':
+    'वास्तविक जमा की तुलना के लिए खाता ब्याज लिंक करें। अनुपलब्ध आँकड़ा शून्य नहीं है।',
+  'Accounts credit difference: {amount}': 'खाता-जमा अंतर: {amount}',
+  'Annualised yield unavailable from the known inputs.':
+    'ज्ञात आँकड़ों से वार्षिक अनुमानित प्रतिफल उपलब्ध नहीं।',
+  'Estimated annualised yield: {percent}%': 'अनुमानित वार्षिक प्रतिफल: {percent}%',
+  'Edit interest record': 'ब्याज रिकॉर्ड संपादित करें',
+  'No interest or TDS records yet.': 'अभी कोई ब्याज या टीडीएस रिकॉर्ड नहीं है।',
+  'Add interest record': 'ब्याज रिकॉर्ड जोड़ें',
+  'Save interest record': 'ब्याज रिकॉर्ड सहेजें',
+  'Source fixed deposit, if any': 'स्रोत सावधि जमा, यदि हो',
+  'Other interest source': 'अन्य ब्याज स्रोत',
+  'Interest source': 'ब्याज स्रोत',
+  'Period start': 'अवधि आरंभ',
+  'Period end': 'अवधि अंत',
+  'Bank-reported gross interest': 'बैंक-रिपोर्ट कुल ब्याज',
+  'Tax withheld, TDS': 'काटा गया कर, टीडीएस',
+  'Bank-reported actual credit': 'बैंक-रिपोर्ट वास्तविक जमा',
+  'Bank-provided average balance': 'बैंक-दिया औसत शेष',
+  'Leave blank when the bank did not provide it.':
+    'बैंक ने नहीं दिया हो तो खाली छोड़ें।',
+  'Linked Accounts interest income': 'जुड़ी खाता ब्याज आय',
+  'Not linked yet': 'अभी लिंक नहीं',
+  'Transfers between funds': 'निधियों के बीच अंतरण',
+  'These transfers move allocation only. They never move bank money, create a bill or establish authority.':
+    'ये अंतरण केवल आवंटन बदलते हैं। ये बैंक धन नहीं भेजते, बिल नहीं बनाते और अधिकार स्थापित नहीं करते।',
+  'Edit transfer pair': 'अंतरण जोड़ी संपादित करें',
+  'No fund transfer pairs configured yet.': 'अभी कोई निधि अंतरण जोड़ी तय नहीं है।',
+  'Add transfer pair': 'अंतरण जोड़ी जोड़ें',
+  'Record fund allocation transfer': 'निधि आवंटन अंतरण दर्ज करें',
+  'Reasoned reversal of an earlier allocation transfer.':
+    'पहले के आवंटन अंतरण का कारण सहित उलट।',
+  'Reverse allocation transfer': 'आवंटन अंतरण उलटें',
+  'Save transfer pair': 'अंतरण जोड़ी सहेजें',
+  'Source fund': 'स्रोत निधि',
+  'Target fund': 'लक्ष्य निधि',
+  'Active pair': 'सक्रिय जोड़ी',
+  'Transfer allocation': 'आवंटन अंतरण करें',
+  'Fund pair': 'निधि जोड़ी',
+  'Decision reference': 'निर्णय संदर्भ',
+  'Corpus tracker': 'कॉर्पस ट्रैकर',
+  'A manual tracker only. It does not create a bill, establish legal debt, give unit credit or block an NOC.':
+    'यह केवल हाथ से बनाया ट्रैकर है। यह बिल, कानूनी देनदारी, यूनिट क्रेडिट या एनओसी रोक नहीं बनाता।',
+  'Linked receipts': 'जुड़ी रसीदें',
+  'Remaining tracker': 'ट्रैकर शेष',
+  'Concession {amount}: {reason}': 'छूट {amount}: {reason}',
+  'Edit corpus record': 'कॉर्पस रिकॉर्ड संपादित करें',
+  'Link Accounts receipt': 'खाता रसीद लिंक करें',
+  'No corpus records yet.': 'अभी कोई कॉर्पस रिकॉर्ड नहीं है।',
+  'Add corpus record': 'कॉर्पस रिकॉर्ड जोड़ें',
+  'Save corpus record': 'कॉर्पस रिकॉर्ड सहेजें',
+  'Corpus event description': 'कॉर्पस घटना विवरण',
+  'Event date': 'घटना तारीख',
+  'Reported amount': 'दर्ज राशि',
+  Concession: 'छूट',
+  'Concession reason': 'छूट का कारण',
+  'Link receipt': 'रसीद लिंक करें',
+  'Accounts receipt': 'खाता रसीद',
+  'A missing link is not proof that no payment was made.':
+    'लिंक न होना यह प्रमाण नहीं कि भुगतान नहीं हुआ।',
+  'Sanctioned work': 'स्वीकृत कार्य',
+  'Actual utilization comes only from linked posted Accounts expenses. This register does not approve or post work.':
+    'वास्तविक उपयोग केवल जुड़ी पोस्ट हुई खाता खर्च प्रविष्टियों से आता है। यह रजिस्टर कार्य मंज़ूर या पोस्ट नहीं करता।',
+  'Authority reference unavailable': 'प्राधिकरण संदर्भ उपलब्ध नहीं',
+  'Utilized {amount}': 'उपयोग {amount}',
+  'The meeting resolution changed after this work was linked.':
+    'यह कार्य लिंक होने के बाद बैठक प्रस्ताव बदला।',
+  'The meeting module is unavailable; the linked source cannot be checked.':
+    'बैठक मॉड्यूल उपलब्ध नहीं है; जुड़ा स्रोत जाँचा नहीं जा सकता।',
+  'The linked meeting resolution is no longer available.':
+    'जुड़ा बैठक प्रस्ताव अब उपलब्ध नहीं है।',
+  'Validity ended. This warning does not block Accounts.':
+    'वैधता समाप्त हुई। यह चेतावनी खातों को नहीं रोकती।',
+  'Linked utilization exceeds the sanctioned amount.':
+    'जुड़ा उपयोग स्वीकृत राशि से अधिक है।',
+  'Edit sanctioned work': 'स्वीकृत कार्य संपादित करें',
+  'Link Accounts expense': 'खाता खर्च लिंक करें',
+  'No sanctioned work recorded yet.': 'अभी कोई स्वीकृत कार्य दर्ज नहीं है।',
+  'Add sanctioned work': 'स्वीकृत कार्य जोड़ें',
+  'Save sanctioned work': 'स्वीकृत कार्य सहेजें',
+  'Sanctioned amount': 'स्वीकृत राशि',
+  'Sanctioned on': 'स्वीकृति तारीख',
+  'Valid until, optional': 'तक मान्य, वैकल्पिक',
+  'Authority source': 'प्राधिकरण स्रोत',
+  'Passed Homeish resolution': 'पास हुआ Homeish प्रस्ताव',
+  'External decision reference': 'बाहरी निर्णय संदर्भ',
+  'Homeish resolution': 'Homeish प्रस्ताव',
+  'No resolution': 'कोई प्रस्ताव नहीं',
+  'A reference records the decision; it does not itself prove authority.':
+    'संदर्भ निर्णय दर्ज करता है; वह अपने-आप अधिकार सिद्ध नहीं करता।',
+  'Accounts expense': 'खाता खर्च',
+  'Partial fund report': 'आंशिक निधि रिपोर्ट',
+  'Available P16 and fixed-deposit data only. Reconciliation targets and health labels are not included.':
+    'केवल उपलब्ध P16 और सावधि-जमा आँकड़े। मिलान लक्ष्य और स्वास्थ्य लेबल शामिल नहीं हैं।',
+  'Show fund report': 'निधि रिपोर्ट दिखाएँ',
+  'Named funds': 'नाम वाली निधियाँ',
+  'Some fixed-deposit data is unknown': 'कुछ सावधि-जमा आँकड़े अज्ञात हैं',
+  'Missing figures stay unknown; they are not reported as zero.':
+    'अनुपलब्ध आँकड़े अज्ञात रहते हैं; उन्हें शून्य नहीं बताया जाता।',
+  'Entry in': 'प्रविष्टि अंदर',
+  'Entry out': 'प्रविष्टि बाहर',
+  'Transfer net': 'शुद्ध अंतरण',
+  'Balance at report end': 'रिपोर्ट अंत पर शेष',
+  'Unreconciled deposits': 'बिना मिलान जमा',
+  'Account balance unknown': 'खाता शेष अज्ञात',
+  'Confirmed principal unknown': 'पुष्ट मूलधन अज्ञात',
+  'Billing charges': 'बिलिंग शुल्क',
+  'No active Billing charges.': 'कोई सक्रिय बिलिंग शुल्क नहीं है।',
+  'Preview months': 'अनुमान महीनों के लिए',
+  'Fund breakdown': 'निधि विभाजन',
+  'Preview assumes rates and occupancy stay unchanged for {months} months.':
+    'अनुमान मानता है कि {months} महीनों तक दरें और अधिभोग बिना बदलाव रहेंगे।',
+  'Manual fund tracking': 'हाथ से निधि ट्रैकिंग',
+  'Name at least one active fund before activation.':
+    'सक्रिय करने से पहले कम-से-कम एक सक्रिय निधि का नाम दें।',
+  'Name society funds and set the Accounts opening allocations.':
+    'सोसाइटी निधियों के नाम दें और खातों का शुरुआती आवंटन तय करें।',
+  'No funds have been named yet.': 'अभी किसी निधि का नाम नहीं दिया गया है।',
+  'Open fund management': 'निधि प्रबंधन खोलें',
+  'Reconcile the Accounts balances before activating fund tracking. Normal Accounts posting remains available.':
+    'निधि ट्रैकिंग सक्रिय करने से पहले खातों के शेष का मिलान करें। सामान्य खाता प्रविष्टियाँ उपलब्ध रहती हैं।',
+  'Review society funds and their Accounts opening allocations.':
+    'सोसाइटी निधियों और उनके खातों के शुरुआती आवंटन देखें।',
+  'Review the society settings available to committee members.':
+    'समिति के सदस्यों को उपलब्ध सोसाइटी सेटिंग देखें।',
+  'Save fund': 'निधि सहेजें',
+  'Society funds': 'सोसाइटी निधियाँ',
+  'The month before the cutover must be closed in the Accounts reports.':
+    'कट-ओवर से पहले वाला महीना खातों की रिपोर्ट में बंद होना चाहिए।',
+  'The opening remains a snapshot of Accounts. Later changes will be reviewed in the next fund activity slice.':
+    'शुरुआती आवंटन खातों का स्नैपशॉट रहता है। बाद के बदलाव अगले निधि कार्य में जाँचे जाएँगे।',
+  Unallocated: 'आवंटित नहीं',
+  'Warning acknowledged by {name} on {date}.':
+    '{date} को {name} ने चेतावनी स्वीकार की।',
   'Could not load analytics': 'एनालिटिक्स लोड नहीं हो सका',
   'Could not load Community administration': 'समुदाय प्रबंधन लोड नहीं हो सका',
   'Could not load events': 'कार्यक्रम लोड नहीं हो सके',
@@ -99,6 +381,7 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   CSV: 'CSV',
   Current: 'वर्तमान',
   'Current structure': 'वर्तमान संरचना',
+  Cutover: 'कट-ओवर',
   'Unit layout': 'यूनिट की मंज़िलवार सूची',
   'No active units': 'कोई सक्रिय यूनिट नहीं है',
   'Floor not recorded': 'मंज़िल दर्ज नहीं है',

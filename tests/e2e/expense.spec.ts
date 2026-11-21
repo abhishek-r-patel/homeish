@@ -121,3 +121,108 @@ test('book entries carry vouchers, statement items match or cancel and petty cas
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   }
 });
+
+test('fund opening requires acknowledgement and stays within the Accounts total', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.goto('/fixtures/expense');
+  const funds = page.getByRole('region', { name: 'Funds' });
+  await funds.getByLabel('Fund name').fill('Major repairs');
+  await funds.getByRole('button', { name: 'Add fund' }).click();
+  const activate = funds.getByRole('button', {
+    name: 'Activate fund tracking',
+  });
+  await expect(activate).toBeDisabled();
+  await funds.getByLabel('Major repairs').fill('100000.01');
+  const acknowledgement = funds.getByRole('checkbox', {
+    name: /Fund tracking allocates the existing Accounts total/,
+  });
+  await acknowledgement.locator('..').click();
+  await expect(acknowledgement).toBeChecked();
+  await expect(activate).toBeDisabled();
+  await funds.getByLabel('Major repairs').fill('40000');
+  await expect(activate).toBeEnabled();
+  await activate.click();
+  await expect(funds).toContainText('Fund tracking is active.');
+  const suggestion = funds.getByRole('checkbox', { name: /RV\// });
+  await suggestion.locator('..').click();
+  await expect(suggestion).toBeChecked();
+  await funds
+    .getByRole('button', { name: 'Confirm selected suggestions' })
+    .click();
+  await expect(funds).toContainText('Confirmed allocation: Major repairs');
+  const allocationCorrection = funds.getByRole('region', {
+    name: 'Allocation correction',
+  });
+  await allocationCorrection.getByLabel('Major repairs').fill('30000');
+  await allocationCorrection
+    .getByLabel('Reason')
+    .fill('Bank reconciliation corrected');
+  await allocationCorrection
+    .getByRole('button', { name: 'Save correction' })
+    .click();
+  await expect(allocationCorrection.getByRole('status')).toContainText(
+    'Fund allocation corrected.',
+  );
+  await funds.getByRole('button', { name: 'Simulate opening review' }).click();
+  const openingReview = funds.getByRole('region', { name: 'Opening review' });
+  await expect(openingReview).toContainText('Opening needs review');
+  await openingReview.getByLabel('Major repairs').fill('45000');
+  await openingReview.getByLabel('Reason').fill('Opening reviewed after entry');
+  await openingReview
+    .getByRole('button', { name: 'Re-confirm opening' })
+    .click();
+  await expect(openingReview).toHaveCount(0);
+
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+});
+
+test('own-account transfers pair and reverse without becoming income or expense', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/expense');
+  const setup = page.getByRole('region', { name: 'Add account' });
+  await setup.getByLabel('Account name').fill('Main bank');
+  await setup.getByLabel('Opening balance').fill('100000');
+  await setup.getByRole('button', { name: 'Add account' }).click();
+  await setup.getByLabel('Account name').fill('Fixed deposit');
+  await setup.getByLabel('Account type').selectOption('deposit');
+  await setup.getByLabel('Opening balance').fill('0');
+  await setup.getByRole('button', { name: 'Add account' }).click();
+
+  const transfer = page.getByRole('region', { name: 'Transfer' });
+  await transfer
+    .getByLabel('From account')
+    .selectOption({ label: 'Main bank (Bank)' });
+  await transfer
+    .getByLabel('To account')
+    .selectOption({ label: 'Fixed deposit (Deposit)' });
+  await transfer.getByLabel('Amount', { exact: false }).fill('25000');
+  await transfer.getByRole('button', { name: 'Record transfer' }).click();
+  await expect(transfer).toContainText('Main bank to Fixed deposit');
+
+  const balances = page.getByRole('region', { name: 'Balances' });
+  await expect(balances).toContainText('Main bank balance: Rs. 75000.00');
+  await expect(balances).toContainText('Fixed deposit balance: Rs. 25000.00');
+  await transfer.getByLabel('Reason').fill('Deposit cancelled');
+  await transfer
+    .getByRole('button', { name: 'Reverse both transfer entries' })
+    .click();
+  await expect(balances).toContainText('Main bank balance: Rs. 100000.00');
+  await expect(balances).toContainText('Fixed deposit balance: Rs. 0.00');
+
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+});

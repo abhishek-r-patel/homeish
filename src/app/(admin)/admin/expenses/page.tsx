@@ -6,6 +6,8 @@ import {
   ExpenseIncomeForm,
   ExpenseRecordForm,
   ExpenseReverseForm,
+  ExpenseTransferForm,
+  ExpenseTransferReverseForm,
 } from '@/components/expense/controls';
 import { ExpenseNav, ExpensePager } from '@/components/expense/nav';
 import {
@@ -127,7 +129,11 @@ export default async function ExpensesPage({
               label={`${a.name}${a.active ? '' : ` (${t('inactive')})`}`}
               value={formatSignedCurrency(a.balance_paise)}
               context={
-                a.account_type === 'cash' ? t('Cash') : t('Bank account')
+                a.account_type === 'cash'
+                  ? t('Cash')
+                  : a.account_type === 'deposit'
+                    ? t('Fixed-deposit account')
+                    : t('Bank account')
               }
             />
           ))}
@@ -206,7 +212,7 @@ export default async function ExpensesPage({
       </Card>
 
       {w.can_manage && w.accounts.some((a) => a.active) ? (
-        <div className="grid min-w-0 gap-space-5 medium:grid-cols-2">
+        <div className="grid min-w-0 gap-space-5 medium:grid-cols-3">
           <Card title={t('Record expense')}>
             <ExpenseRecordForm
               accounts={w.accounts}
@@ -217,6 +223,14 @@ export default async function ExpensesPage({
           </Card>
           <Card title={t('Record other income')}>
             <ExpenseIncomeForm accounts={w.accounts} today={w.today} />
+          </Card>
+          <Card
+            title={t('Transfer between accounts')}
+            description={t(
+              'Moves money between this society’s own Accounts and is never income or expense.',
+            )}
+          >
+            <ExpenseTransferForm accounts={w.accounts} today={w.today} />
           </Card>
         </div>
       ) : null}
@@ -309,6 +323,16 @@ export default async function ExpensesPage({
               {e.description ? (
                 <p className="text-caption text-ink-muted">{e.description}</p>
               ) : null}
+              {e.source === 'transfer' && e.transfer_account_name ? (
+                <p className="text-caption text-ink-muted">
+                  {t(
+                    e.direction === 'out'
+                      ? 'Transferred to {account}'
+                      : 'Transferred from {account}',
+                    { account: e.transfer_account_name },
+                  )}
+                </p>
+              ) : null}
               {e.reversed_by_entry_id ? (
                 <p className="text-caption text-ink-muted">{t('Reversed.')}</p>
               ) : null}
@@ -330,6 +354,21 @@ export default async function ExpensesPage({
                     {t('Reverse entry')}
                   </summary>
                   <ExpenseReverseForm entryId={e.id} today={w.today} />
+                </details>
+              ) : null}
+              {w.can_manage &&
+              e.source === 'transfer' &&
+              e.direction === 'out' &&
+              e.transfer_pair_id &&
+              !e.reversed_by_entry_id ? (
+                <details>
+                  <summary className="cursor-pointer">
+                    {t('Reverse both transfer entries')}
+                  </summary>
+                  <ExpenseTransferReverseForm
+                    transferPairId={e.transfer_pair_id}
+                    today={w.today}
+                  />
                 </details>
               ) : null}
             </li>

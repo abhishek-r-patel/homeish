@@ -7,7 +7,16 @@ import {
   ExpenseDecisionForm,
   ExpenseRecordForm,
   ExpenseReverseForm,
+  ExpenseTransferForm,
+  ExpenseTransferReverseForm,
 } from '@/components/expense/controls';
+import {
+  ExpenseFundAllocationCorrectionForm,
+  ExpenseFundActivationForm,
+  ExpenseFundBulkSuggestionsForm,
+  ExpenseFundForm,
+  ExpenseFundOpeningCorrectionForm,
+} from '@/components/expense/funds';
 import {
   CashCountForm,
   PettyCashAssignForm,
@@ -23,14 +32,23 @@ import {
   DEFAULT_EXPENSE_APPROVAL_THRESHOLD_PAISE,
   expenseAccountInputSchema,
   expenseDecisionInputSchema,
+  expenseFundActivationInputSchema,
+  expenseFundAllocationCorrectionInputSchema,
+  expenseFundAllocationInputSchema,
+  expenseFundInputSchema,
+  expenseFundOpeningCorrectionInputSchema,
   expenseRecordInputSchema,
   expenseReverseInputSchema,
+  expenseTransferInputSchema,
+  expenseTransferReverseInputSchema,
   pettyCashAssignInputSchema,
   statementItemCancelInputSchema,
   statementItemInputSchema,
   statementItemMatchInputSchema,
   type ExpenseAccount,
   type ExpenseCategory,
+  type ExpenseFund,
+  type ExpenseFundActivityEntry,
 } from '@/core/expense/validation';
 import { formatSignedRupees } from '@/core/expense/documents';
 
@@ -97,6 +115,17 @@ export default function ExpenseFixturePage() {
   const [items, setItems] = useState<StatementItem[]>([]);
   const [custodianId, setCustodianId] = useState<string | null>(null);
   const [counts, setCounts] = useState<CashCount[]>([]);
+  const [funds, setFunds] = useState<ExpenseFund[]>([]);
+  const [fundsActive, setFundsActive] = useState(false);
+  const [fundEntries, setFundEntries] = useState<ExpenseFundActivityEntry[]>(
+    [],
+  );
+  const [fundOpeningAllocations, setFundOpeningAllocations] = useState<
+    { fund_id: string; amount_paise: number }[]
+  >([]);
+  const [fundReviewRequired, setFundReviewRequired] = useState(false);
+  const [transferPairId, setTransferPairId] = useState<string | null>(null);
+  const [transferLabel, setTransferLabel] = useState<string | null>(null);
   const voucher = (entry: Entry) => {
     const receipt = entry.signedPaise > 0;
     const sequence = entries
@@ -131,6 +160,110 @@ export default function ExpenseFixturePage() {
       },
     ]);
     return { ok: true, message: 'Account saved.' };
+  };
+  const saveFund: ModuleFormAction = async (data) => {
+    const parsed = expenseFundInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    const v = parsed.data;
+    setFunds((rows) => [
+      ...rows,
+      {
+        id: crypto.randomUUID(),
+        name: v.name,
+        active: v.active,
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+    return { ok: true, message: 'Fund saved.' };
+  };
+  const activateFunds: ModuleFormAction = async (data) => {
+    const parsed = expenseFundActivationInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    const allocated = parsed.data.allocations.reduce(
+      (total, allocation) => total + allocation.amountRupees,
+      0,
+    );
+    if (allocated > 10_000_000)
+      return failure('Fund openings cannot exceed the Accounts total.');
+    setFundOpeningAllocations(
+      parsed.data.allocations.map((allocation) => ({
+        fund_id: allocation.fundId,
+        amount_paise: allocation.amountRupees,
+      })),
+    );
+    setFundsActive(true);
+    setFundEntries([
+      {
+        entry_id: '00000000-0000-4000-8000-000000000031',
+        entry_date: today,
+        direction: 'in',
+        amount_paise: 4_000_000,
+        counterparty: 'Synthetic member',
+        source: 'income',
+        category_name: null,
+        income_kind: 'donation',
+        voucher_no: `RV/${yearLabel}/1`,
+        month_closed: false,
+        allocations: [],
+        suggested_fund_id: funds[0]?.id ?? null,
+      },
+    ]);
+    return { ok: true, message: 'Fund tracking activated.' };
+  };
+  const confirmFundSuggestions: ModuleFormAction = async (data) => {
+    const parsed = expenseFundAllocationInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    setFundEntries((rows) =>
+      rows.map((entry) =>
+        parsed.data.items.some((item) => item.entryId === entry.entry_id)
+          ? {
+              ...entry,
+              allocations: parsed.data.items
+                .find((item) => item.entryId === entry.entry_id)!
+                .allocations.map((allocation) => ({
+                  fund_id: allocation.fundId,
+                  fund_name:
+                    funds.find((fund) => fund.id === allocation.fundId)?.name ??
+                    null,
+                  amount_paise: allocation.amountRupees,
+                })),
+            }
+          : entry,
+      ),
+    );
+    return { ok: true, message: 'Confirmed 1 allocation.' };
+  };
+  const correctFundAllocation: ModuleFormAction = async (data) => {
+    const parsed = expenseFundAllocationCorrectionInputSchema.safeParse(
+      input(data),
+    );
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    setFundEntries((rows) =>
+      rows.map((entry) => ({
+        ...entry,
+        allocations: parsed.data.allocations.map((allocation) => ({
+          fund_id: allocation.fundId,
+          fund_name:
+            funds.find((fund) => fund.id === allocation.fundId)?.name ?? null,
+          amount_paise: allocation.amountRupees,
+        })),
+      })),
+    );
+    return { ok: true, message: 'Fund allocation corrected.' };
+  };
+  const correctFundOpening: ModuleFormAction = async (data) => {
+    const parsed = expenseFundOpeningCorrectionInputSchema.safeParse(
+      input(data),
+    );
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    setFundOpeningAllocations(
+      parsed.data.allocations.map((allocation) => ({
+        fund_id: allocation.fundId,
+        amount_paise: allocation.amountRupees,
+      })),
+    );
+    setFundReviewRequired(false);
+    return { ok: true, message: 'Fund opening corrected and re-confirmed.' };
   };
   const record: ModuleFormAction = async (data) => {
     const parsed = expenseRecordInputSchema.safeParse(input(data));
@@ -203,6 +336,59 @@ export default function ExpenseFixturePage() {
       },
     ]);
     return { ok: true, message: 'Reversal recorded.' };
+  };
+  const recordTransfer: ModuleFormAction = async (data) => {
+    const parsed = expenseTransferInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    const from = accounts.find(
+      (account) => account.id === parsed.data.fromAccountId,
+    );
+    const to = accounts.find(
+      (account) => account.id === parsed.data.toAccountId,
+    );
+    if (!from || !to) return failure('Choose two active Accounts.');
+    const pairId = crypto.randomUUID();
+    setTransferPairId(pairId);
+    setTransferLabel(`${from.name} to ${to.name}`);
+    setEntries((rows) => [
+      ...rows,
+      {
+        id: crypto.randomUUID(),
+        accountId: from.id,
+        label: `Transfer to ${to.name}`,
+        signedPaise: -parsed.data.amountRupees,
+        reversed: false,
+      },
+      {
+        id: crypto.randomUUID(),
+        accountId: to.id,
+        label: `Transfer from ${from.name}`,
+        signedPaise: parsed.data.amountRupees,
+        reversed: false,
+      },
+    ]);
+    return { ok: true, message: 'Transfer recorded between the two accounts.' };
+  };
+  const reverseTransfer: ModuleFormAction = async (data) => {
+    const parsed = expenseTransferReverseInputSchema.safeParse(input(data));
+    if (!parsed.success) return failure(parsed.error.issues[0].message);
+    const transferEntries = entries.filter((entry) =>
+      entry.label.startsWith('Transfer '),
+    );
+    setEntries((rows) => [
+      ...rows.map((entry) =>
+        transferEntries.includes(entry) ? { ...entry, reversed: true } : entry,
+      ),
+      ...transferEntries.map((entry) => ({
+        ...entry,
+        id: crypto.randomUUID(),
+        label: `Reversal of ${entry.label}`,
+        signedPaise: -entry.signedPaise,
+        reversed: true,
+      })),
+    ]);
+    setTransferPairId(null);
+    return { ok: true, message: 'Both transfer entries reversed.' };
   };
 
   const recordItem: ModuleFormAction = async (data) => {
@@ -303,6 +489,28 @@ export default function ExpenseFixturePage() {
           </p>
         ))}
       </section>
+      {accounts.length >= 2 ? (
+        <section aria-label="Transfer" className="grid min-w-0 gap-space-3">
+          <h2 className="text-heading font-semibold">
+            Transfer between accounts
+          </h2>
+          <ExpenseTransferForm
+            accounts={accounts}
+            today={today}
+            action={recordTransfer}
+          />
+          {transferPairId ? (
+            <>
+              <p>Transfer: {transferLabel}</p>
+              <ExpenseTransferReverseForm
+                transferPairId={transferPairId}
+                today={today}
+                action={reverseTransfer}
+              />
+            </>
+          ) : null}
+        </section>
+      ) : null}
       {accounts.length ? (
         <section
           aria-label="Record expense"
@@ -423,6 +631,73 @@ export default function ExpenseFixturePage() {
             </li>
           ))}
         </ul>
+      </section>
+      <section aria-label="Funds" className="grid min-w-0 gap-space-3">
+        <h2 className="text-heading font-semibold">Funds</h2>
+        <ExpenseFundForm action={saveFund} />
+        {funds.map((fund) => (
+          <p key={fund.id}>{fund.name}</p>
+        ))}
+        {funds.length ? (
+          fundsActive ? (
+            <>
+              <p>Fund tracking is active.</p>
+              {fundEntries.some((entry) => entry.allocations.length === 0) ? (
+                <ExpenseFundBulkSuggestionsForm
+                  entries={fundEntries}
+                  action={confirmFundSuggestions}
+                />
+              ) : (
+                fundEntries.map((entry) => (
+                  <section
+                    key={entry.entry_id}
+                    aria-label="Allocation correction"
+                    className="grid gap-space-3"
+                  >
+                    <p>
+                      Confirmed allocation: {entry.allocations[0]?.fund_name}
+                    </p>
+                    <ExpenseFundAllocationCorrectionForm
+                      entry={entry}
+                      funds={funds}
+                      action={correctFundAllocation}
+                    />
+                  </section>
+                ))
+              )}
+              <button
+                type="button"
+                className="min-h-12 rounded-md border border-rule-strong"
+                onClick={() => setFundReviewRequired(true)}
+              >
+                Simulate opening review
+              </button>
+              {fundReviewRequired ? (
+                <section
+                  aria-label="Opening review"
+                  className="grid gap-space-3"
+                >
+                  <Banner title="Opening needs review" tone="danger">
+                    A synthetic backdated change changed the Accounts total.
+                  </Banner>
+                  <ExpenseFundOpeningCorrectionForm
+                    funds={funds}
+                    accountsTotalPaise={10_000_000}
+                    currentAllocations={fundOpeningAllocations}
+                    action={correctFundOpening}
+                  />
+                </section>
+              ) : null}
+            </>
+          ) : (
+            <ExpenseFundActivationForm
+              action={activateFunds}
+              funds={funds}
+              cutoverOn={`${today.slice(0, 8)}01`}
+              accountsTotalPaise={10_000_000}
+            />
+          )
+        ) : null}
       </section>
     </main>
   );

@@ -1,4 +1,5 @@
 // Configure self-registration for the active society.
+import Link from 'next/link';
 import { Card } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
 import { JoinCodeControls } from '@/components/society/join-code-controls';
@@ -25,13 +26,14 @@ export default async function SocietySettingsPage() {
   const locale =
     context.languagePreference === 'hi' && context.isHindiEnabled ? 'hi' : 'en';
   const t = (source: string) => translateMessage(locale, source);
+  const canViewFunds = context.enabledModules.has('expense') && canViewLanguage;
   const [registrationSettings, languageSettings] = await Promise.all([
     canManage ? getJoinCodeSettings(context) : Promise.resolve(null),
     context.enabledModules.has('language')
       ? getHindiAvailability(context)
       : Promise.resolve(null),
   ]);
-  if (!canManage && !languageSettings) {
+  if (!canManage && !languageSettings && !canViewFunds) {
     return (
       <ErrorPanel
         message={t(
@@ -46,13 +48,21 @@ export default async function SocietySettingsPage() {
     <section className="grid gap-space-5">
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">
-          {t(canManage ? 'Society settings' : 'Language settings')}
+          {t(
+            canManage
+              ? 'Society settings'
+              : languageSettings
+                ? 'Language settings'
+                : 'Society settings',
+          )}
         </h1>
         <p className="text-body text-ink-muted">
           {t(
             canManage
               ? 'Manage society registration and language availability.'
-              : 'View the languages available to members of this society.',
+              : languageSettings
+                ? 'View the languages available to members of this society.'
+                : 'Review the society settings available to committee members.',
           )}
         </p>
       </header>
@@ -94,6 +104,20 @@ export default async function SocietySettingsPage() {
               initialVersion={languageSettings.version}
             />
           </div>
+        </Card>
+      ) : null}
+      {canViewFunds ? (
+        <Card
+          description={t(
+            canManage
+              ? 'Name society funds and set the Accounts opening allocations.'
+              : 'Review society funds and their Accounts opening allocations.',
+          )}
+          title={t('Society funds')}
+        >
+          <Link className="text-brand underline" href="/admin/expenses/funds">
+            {t('Open fund management')}
+          </Link>
         </Card>
       ) : null}
     </section>

@@ -24,6 +24,7 @@ export function BillingEstimatePanel({ charges }: { charges: ChargeType[] }) {
       input: JSON.stringify({
         areaSqft: data.get('areaSqft'),
         occupancy: data.get('occupancy'),
+        months: Number(data.get('months') ?? 1),
         customAmounts: custom.flatMap((charge) => {
           const amountRupees = data.get(charge.id);
           return typeof amountRupees === 'string' && amountRupees.trim()
@@ -56,6 +57,22 @@ export function BillingEstimatePanel({ charges }: { charges: ChargeType[] }) {
               maxLength={9}
               required
             />
+            <label className="grid gap-space-1 text-body-strong">
+              {t('Preview months')}
+              <select
+                className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+                name="months"
+                defaultValue="1"
+              >
+                {Array.from({ length: 12 }, (_, index) => index + 1).map(
+                  (months) => (
+                    <option key={months} value={months}>
+                      {months}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
             <label className="grid gap-space-1 text-body-strong">
               {t('Occupancy')}
               <select
@@ -109,6 +126,28 @@ export function BillingEstimatePanel({ charges }: { charges: ChargeType[] }) {
                 </li>
               ))}
             </ul>
+            {result.fund_breakdown.length ? (
+              <div className="grid gap-space-2">
+                <h3 className="text-body-strong">{t('Fund breakdown')}</h3>
+                <p className="text-caption text-ink-muted">
+                  {t(
+                    'Preview assumes rates and occupancy stay unchanged for {months} months.',
+                    { months: result.months },
+                  )}
+                </p>
+                <ul className="grid gap-space-2">
+                  {result.fund_breakdown.map((fund) => (
+                    <li
+                      key={fund.fund_id ?? 'unallocated'}
+                      className="flex flex-wrap justify-between gap-space-2"
+                    >
+                      <span>{fund.fund_name ?? t('Unallocated')}</span>
+                      <span>{billingMoney(fund.preview_paise, locale)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {result.skipped.length ? (
               <div>
                 <h3 className="text-body-strong">{t('Omitted charges')}</h3>
