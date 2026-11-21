@@ -53,6 +53,22 @@ test('lists units with unpaid dues and asks before downloading contact details',
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toHaveCount(0);
 
+  await page.route('**/api/billing/dues-follow-up', (route) =>
+    route.fulfill({
+      body: 'Unit\r\nA-101\r\n',
+      headers: {
+        'content-disposition': 'attachment; filename="dues-follow-up.csv"',
+        'content-type': 'text/csv; charset=utf-8',
+      },
+    }),
+  );
+  await page
+    .getByRole('button', { name: 'Download follow-up list CSV' })
+    .click();
+  const download = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Download CSV' }).click();
+  expect((await download).suggestedFilename()).toBe('dues-follow-up.csv');
+
   await page.goto('/fixtures/admin-reports?view=follow-up&state=empty');
   await expect(page.getByText('No unpaid dues')).toBeVisible();
   await expect(

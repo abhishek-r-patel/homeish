@@ -250,7 +250,9 @@ export function DuesFollowUpPanel({ report }: { report: BillingDuesFollowUp }) {
         id="dues-follow-up-export"
         onConfirm={() => {
           setConfirming(false);
-          window.location.assign('/api/billing/dues-follow-up');
+          const link = document.createElement('a');
+          link.href = '/api/billing/dues-follow-up';
+          link.click();
         }}
         onOpenChange={setConfirming}
         open={confirming}
