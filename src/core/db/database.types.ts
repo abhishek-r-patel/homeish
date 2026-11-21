@@ -12313,6 +12313,11 @@ export type Database = {
         };
         Returns: string;
       };
+      admin_home_admin_actions: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      admin_home_get: { Args: { p_society_id: string }; Returns: Json };
       admin_set_guard_pin: {
         Args: {
           p_guard_id: string;
@@ -12703,6 +12708,10 @@ export type Database = {
         Args: { p_from: string; p_society_id: string; p_to: string };
         Returns: Json;
       };
+      billing_dues_follow_up: {
+        Args: { p_purpose: string; p_request_id: string; p_society_id: string };
+        Returns: Json;
+      };
       billing_estimate: {
         Args: {
           p_area_sqft: number;
@@ -12730,6 +12739,23 @@ export type Database = {
       billing_ledger_get: {
         Args: { p_society_id: string; p_unit_id: string };
         Returns: Json;
+      };
+      billing_monthly_collection: {
+        Args: {
+          p_from_month: string;
+          p_society_id: string;
+          p_to_month: string;
+        };
+        Returns: Json;
+      };
+      billing_monthly_collection_export_record: {
+        Args: {
+          p_from_month: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_to_month: string;
+        };
+        Returns: undefined;
       };
       billing_payment_confirm: {
         Args: {
@@ -14749,6 +14775,10 @@ export type Database = {
           p_request_id: string;
           p_society_id: string;
         };
+        Returns: Json;
+      };
+      meeting_governance_summary: {
+        Args: { p_from: string; p_society_id: string; p_to: string };
         Returns: Json;
       };
       meeting_invitee_options: {
