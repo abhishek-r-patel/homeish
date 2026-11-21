@@ -17,6 +17,40 @@ import {
 } from '@/core/structure/units-csv';
 import { ValidationError } from '@/core/errors';
 import { saveUnitRecord } from '@/core/structure/unit-workspace';
+import {
+  placeBuildingUnit,
+  saveBuildingLayout,
+} from '@/core/structure/building-layout-operations';
+
+export async function saveBuildingLayoutAction(
+  blockId: string | null,
+  clientRequestId: string,
+  payload: unknown,
+) {
+  return runServerAction('structure.layout.save', async (requestId) => {
+    const id = await saveBuildingLayout(
+      blockId,
+      clientRequestId,
+      payload,
+      requestId,
+    );
+    revalidatePath('/admin/structure');
+    return { message: 'Building layout saved.', data: id };
+  });
+}
+
+export async function placeBuildingUnitAction(
+  unitId: string,
+  clientRequestId: string,
+  payload: unknown,
+) {
+  return runServerAction('structure.layout.place', async (requestId) => {
+    await placeBuildingUnit(unitId, clientRequestId, payload, requestId);
+    revalidatePath(`/admin/structure/units/${unitId}`);
+    revalidatePath('/admin/structure');
+    return 'Unit placement saved.';
+  });
+}
 
 export async function saveUnitRecordAction(
   unitId: string,
@@ -25,7 +59,7 @@ export async function saveUnitRecordAction(
 ) {
   return runServerAction('structure.units.saveRecord', async (requestId) => {
     await saveUnitRecord(unitId, clientRequestId, payload, requestId);
-    revalidatePath(`/structure/units/${unitId}`);
+    revalidatePath(`/admin/structure/units/${unitId}`);
     return 'Unit record saved.';
   });
 }

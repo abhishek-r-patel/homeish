@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { UnitRecordPanels } from '@/components/structure/unit-record-panels';
+import { UnitPlacement } from '@/components/structure/unit-placement';
 import { Card } from '@/components/ui/data-display';
 import { Banner, ErrorPanel } from '@/components/ui/feedback';
 import { AppError } from '@/core/errors';
@@ -20,16 +21,22 @@ export const metadata = {
 
 export default async function UnitWorkspacePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ unitId: string }>;
+  searchParams: Promise<{ building?: string | string[] }>;
 }) {
   const { unitId } = await params;
+  const { building } = await searchParams;
   const locale = await getRequestLocale();
   const t = (source: string, values?: Record<string, string | number>) =>
     translateMessage(locale, source, values);
   let workspace: Awaited<ReturnType<typeof getUnitWorkspace>>;
   try {
-    workspace = await getUnitWorkspace(unitId);
+    workspace = await getUnitWorkspace(
+      unitId,
+      typeof building === 'string' ? building : undefined,
+    );
   } catch (error) {
     if (error instanceof AppError) {
       if (error.code === 'NOT_FOUND') notFound();
@@ -64,7 +71,7 @@ export default async function UnitWorkspacePage({
   return (
     <section className="grid gap-space-5 [overflow-wrap:anywhere]">
       <header className="grid gap-space-1">
-        <Link className={linkStyle} href="/structure">
+        <Link className={linkStyle} href="/admin/structure">
           {t('Society Structure')}
         </Link>
         <h1 className="text-title font-semibold">
@@ -171,6 +178,15 @@ export default async function UnitWorkspacePage({
           </>
         )}
       </Card>
+      {records.placement || workspace.layout.buildings.length ? (
+        <UnitPlacement
+          key={workspace.layout.selected ?? 'none'}
+          unitId={unit.id}
+          placement={records.placement}
+          layout={workspace.layout}
+          canWrite={canWrite}
+        />
+      ) : null}
       <UnitRecordPanels unit={unit} records={records} canWrite={canWrite} />
     </section>
   );

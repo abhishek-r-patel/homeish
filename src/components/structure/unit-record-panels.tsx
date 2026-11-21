@@ -1,7 +1,6 @@
-// Edit measured areas, vacancy follow-ups and explicitly recorded floor positions.
+// Edit a unit's measured areas and vacancy follow-ups.
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   useRef,
@@ -10,7 +9,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from 'react';
-import { saveUnitRecordAction } from '@/app/(admin)/structure/actions';
+import { saveUnitRecordAction } from '@/app/(admin)/admin/structure/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
@@ -137,20 +136,6 @@ export function UnitRecordPanels({
     });
   const latest = records.areas[0];
   const open = records.followups.find(({ closed_at }) => closed_at === null);
-  const ownPosition = records.floor_units.find(({ id }) => id === unit.id);
-  const mapped = records.floor_units.filter(
-    (item) => item.row !== null && item.column !== null,
-  );
-  const unmapped = records.floor_units.filter((item) => item.row === null);
-  const columnCount = Math.max(1, ...mapped.map((item) => item.column ?? 1));
-  const positionLink = (item: UnitRecords['floor_units'][number]) => (
-    <Link
-      className="inline-flex min-h-10 items-center text-brand underline [overflow-wrap:anywhere]"
-      href={`/structure/units/${item.id}`}
-    >
-      {item.number}
-    </Link>
-  );
   return (
     <>
       <Card
@@ -230,24 +215,26 @@ export function UnitRecordPanels({
                 maxLength={120}
                 required
               />
-              <TextInput
-                id="unit-area-carpet"
-                label={t(areaLabels.carpet_sqft)}
-                name="carpet"
-                inputMode="decimal"
-              />
-              <TextInput
-                id="unit-area-built-up"
-                label={t(areaLabels.built_up_sqft)}
-                name="builtUp"
-                inputMode="decimal"
-              />
-              <TextInput
-                id="unit-area-outdoor"
-                label={t(areaLabels.outdoor_sqft)}
-                name="outdoor"
-                inputMode="decimal"
-              />
+              <div className="grid max-w-[44rem] grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] items-end gap-space-3">
+                <TextInput
+                  id="unit-area-carpet"
+                  label={t(areaLabels.carpet_sqft)}
+                  name="carpet"
+                  inputMode="decimal"
+                />
+                <TextInput
+                  id="unit-area-built-up"
+                  label={t(areaLabels.built_up_sqft)}
+                  name="builtUp"
+                  inputMode="decimal"
+                />
+                <TextInput
+                  id="unit-area-outdoor"
+                  label={t(areaLabels.outdoor_sqft)}
+                  name="outdoor"
+                  inputMode="decimal"
+                />
+              </div>
             </EditForm>
           ) : null}
         </div>
@@ -354,108 +341,6 @@ export function UnitRecordPanels({
             />
           ) : null}
         </div>
-      </Card>
-      <Card
-        title={t('Floor schematic')}
-        description={t(
-          'Positions are entered by an admin. This map is not to scale.',
-        )}
-      >
-        {!ownPosition ? (
-          <p>
-            {t(
-              'An active unit with a recorded floor is needed to show the schematic.',
-            )}
-          </p>
-        ) : (
-          <div className="grid gap-space-4">
-            {mapped.length ? (
-              <div className="overflow-x-auto rounded-md border border-rule p-space-2">
-                <div
-                  className="grid gap-space-1"
-                  style={{
-                    gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
-                  }}
-                >
-                  {mapped.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-sm border border-rule p-space-1 text-center text-caption"
-                      style={{
-                        gridRow: item.row ?? undefined,
-                        gridColumn: item.column ?? undefined,
-                      }}
-                    >
-                      {positionLink(item)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p>{t('No unit positions have been recorded on this floor.')}</p>
-            )}
-            {mapped.length ? (
-              <div>
-                <h3 className="text-subheading">{t('Recorded positions')}</h3>
-                <ul>
-                  {mapped.map((item) => (
-                    <li key={item.id}>
-                      {positionLink(item)} ·{' '}
-                      {t('Row {row}, column {column}', {
-                        row: number(item.row ?? 0),
-                        column: number(item.column ?? 0),
-                      })}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {unmapped.length ? (
-              <div>
-                <h3 className="text-subheading">{t('Unplaced units')}</h3>
-                <ul className="flex flex-wrap gap-space-3">
-                  {unmapped.map((item) => (
-                    <li key={item.id}>{positionLink(item)}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {canWrite ? (
-              <EditForm
-                unitId={unit.id}
-                fields={{
-                  action: 'position',
-                  floorVersion: records.floor_version,
-                }}
-                label="Save Unit Position"
-              >
-                <p className="text-caption text-ink-muted">
-                  {t(
-                    'Use rows and columns 1 to 12. Clear both fields to remove the position.',
-                  )}
-                </p>
-                <TextInput
-                  id="unit-map-row"
-                  name="row"
-                  label={t('Map row')}
-                  type="number"
-                  min={1}
-                  max={12}
-                  defaultValue={ownPosition.row ?? ''}
-                />
-                <TextInput
-                  id="unit-map-column"
-                  name="column"
-                  label={t('Map column')}
-                  type="number"
-                  min={1}
-                  max={12}
-                  defaultValue={ownPosition.column ?? ''}
-                />
-              </EditForm>
-            ) : null}
-          </div>
-        )}
       </Card>
     </>
   );

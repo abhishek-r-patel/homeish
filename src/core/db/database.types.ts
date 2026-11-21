@@ -1664,6 +1664,91 @@ export type Database = {
           },
         ];
       };
+      building_floors: {
+        Row: {
+          block_id: string;
+          id: string;
+          label: string | null;
+          level: number;
+          society_id: string;
+          whole: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id: string;
+          id?: string;
+          label?: string | null;
+          level: number;
+          society_id: string;
+          whole?: boolean;
+        };
+        Update: {
+          block_id?: string;
+          id?: string;
+          label?: string | null;
+          level?: number;
+          society_id?: string;
+          whole?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'building_floors_society_id_block_id_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      building_spaces: {
+        Row: {
+          duplex: boolean;
+          floor_id: string;
+          id: string;
+          kind: string;
+          name: string | null;
+          position: number;
+          society_id: string;
+          unit_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          duplex?: boolean;
+          floor_id: string;
+          id?: string;
+          kind: string;
+          name?: string | null;
+          position: number;
+          society_id: string;
+          unit_id?: string | null;
+        };
+        Update: {
+          duplex?: boolean;
+          floor_id?: string;
+          id?: string;
+          kind?: string;
+          name?: string | null;
+          position?: number;
+          society_id?: string;
+          unit_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'building_spaces_society_id_floor_id_fkey';
+            columns: ['society_id', 'floor_id'];
+            isOneToOne: false;
+            referencedRelation: 'building_floors';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'building_spaces_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: true;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       committee_action_plan_tasks: {
         Row: {
           category: string;
@@ -10563,52 +10648,6 @@ export type Database = {
           },
         ];
       };
-      unit_floor_positions: {
-        Row: {
-          block_id: string | null;
-          floor: number;
-          id: string;
-          map_column: number;
-          map_row: number;
-          society_id: string;
-          unit_id: string;
-        };
-        ComputedFields: never;
-        Insert: {
-          block_id?: string | null;
-          floor: number;
-          id?: string;
-          map_column: number;
-          map_row: number;
-          society_id: string;
-          unit_id: string;
-        };
-        Update: {
-          block_id?: string | null;
-          floor?: number;
-          id?: string;
-          map_column?: number;
-          map_row?: number;
-          society_id?: string;
-          unit_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'unit_floor_positions_society_id_block_id_fkey';
-            columns: ['society_id', 'block_id'];
-            isOneToOne: false;
-            referencedRelation: 'blocks';
-            referencedColumns: ['society_id', 'id'];
-          },
-          {
-            foreignKeyName: 'unit_floor_positions_society_id_unit_id_fkey';
-            columns: ['society_id', 'unit_id'];
-            isOneToOne: true;
-            referencedRelation: 'units';
-            referencedColumns: ['society_id', 'id'];
-          },
-        ];
-      };
       unit_occupants: {
         Row: {
           billing_confirmed_move_in_on: string | null;
@@ -12861,6 +12900,32 @@ export type Database = {
       billing_unconfirmed_tenant_moves: {
         Args: { p_society_id: string; p_unit_id: string };
         Returns: Json;
+      };
+      building_layout_get: {
+        Args: { p_block_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      building_layout_save: {
+        Args: {
+          p_block_id: string;
+          p_client_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_values: Json;
+        };
+        Returns: string;
+      };
+      building_unit_place: {
+        Args: {
+          p_block_id: string;
+          p_client_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_space_id: string;
+          p_unit_id: string;
+          p_version: string;
+        };
+        Returns: boolean;
       };
       change_member_roles: {
         Args: {

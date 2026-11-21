@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react';
 import {
   approveRegistrationAction,
   rejectRegistrationAction,
-} from '@/app/(admin)/members/actions';
+} from '@/app/(admin)/admin/members/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { SocietyMember } from '@/core/members/operations';
 import { Button } from '@/components/ui/button';

@@ -69,10 +69,9 @@ describe.skipIf(!hasDatabase)('database unit records', () => {
               await client.query<{
                 result: {
                   today: string;
-                  floor_version: string;
                   areas: { status: string }[];
                   followups: { id: string; version: number }[];
-                  floor_units: { id: string; row: number | null }[];
+                  placement: { level: number; position: number } | null;
                 };
               }>('select public.unit_records_get($1,$2) as result', [
                 scope,
@@ -156,44 +155,191 @@ describe.skipIf(!hasDatabase)('database unit records', () => {
       expect(retained.rows).toEqual([{ removed: 1 }]);
       expect((await read(admin)).followups).toHaveLength(1);
 
-      const floorVersion = (await read(admin)).floor_version;
-      await save('position', { floorVersion, row: 1, column: 2 });
+      type Layout = {
+        buildings: { id: string; name: string }[];
+        selected: string | null;
+        version: string | null;
+        floors: {
+          level: number;
+          spaces: {
+            id: string;
+            kind: string;
+            unit: { id: string; number: string } | null;
+          }[];
+        }[];
+      };
+      const layout = (user: string, block: string | null = null) =>
+        database.asRole(
+          'authenticated',
+          { sub: user },
+          async (client) =>
+            (
+              await client.query<{ result: Layout }>(
+                'select public.building_layout_get($1,$2) as result',
+                [society, block],
+              )
+            ).rows[0]!.result,
+        );
+      const saveLayout = (
+        user: string,
+        block: string | null,
+        values: object,
+        key = randomUUID(),
+      ) =>
+        database.asRole(
+          'authenticated',
+          { sub: user },
+          async (client) =>
+            (
+              await client.query<{ id: string }>(
+                "select public.building_layout_save($1,$2,$3,$4,'p36-layout') as id",
+                [society, block, JSON.stringify(values), key],
+              )
+            ).rows[0]!.id,
+          { commit: true },
+        );
+      const place = (
+        target: string,
+        block: string,
+        space: string | null,
+        version: string | null,
+      ) =>
+        database.asRole(
+          'authenticated',
+          { sub: admin },
+          (client) =>
+            client.query(
+              "select public.building_unit_place($1,$2,$3,$4,$5,$6,'p36-place')",
+              [society, target, block, space, version, randomUUID()],
+            ),
+          { commit: true },
+        );
+      const spot = (id: string | null = null, kind = 'unit') => ({
+        id,
+        kind,
+        name: null,
+        duplex: false,
+      });
+      const tower = {
+        name: 'Tower A',
+        version: null,
+        floors: [
+          { level: 1, label: null, whole: false, spaces: [spot(), spot()] },
+          {
+            level: 0,
+            label: null,
+            whole: true,
+            spaces: [{ ...spot(null, 'parking'), name: 'Stilt parking' }],
+          },
+        ],
+      };
+
+      expect((await layout(committee)).buildings).toEqual([]);
+      expect((await dbError(saveLayout(committee, null, tower))).code).toBe(
+        '42501',
+      );
+      for (const invalid of [
+        {
+          ...tower,
+          floors: [{ ...tower.floors[0], level: 2 }, tower.floors[1]],
+        },
+        { ...tower, floors: [tower.floors[0]] },
+        {
+          ...tower,
+          floors: [
+            tower.floors[0],
+            {
+              ...tower.floors[1],
+              whole: false,
+              spaces: [{ ...spot(), duplex: true }],
+            },
+          ],
+        },
+      ]) {
+        expect((await dbError(saveLayout(admin, null, invalid))).code).toBe(
+          '22023',
+        );
+      }
+      const createKey = randomUUID();
+      const block = await saveLayout(admin, null, tower, createKey);
+      expect(await saveLayout(admin, null, tower, createKey)).toBe(block);
+      const created = await layout(committee);
+      expect(created.selected).toBe(block);
+      expect(created.floors.map(({ level }) => level)).toEqual([1, 0]);
+      const [first, second] = created.floors[0]!.spaces;
+
+      await place(unit, block, first!.id, created.version);
       expect(
         (
           await dbError(
-            save(
-              'position',
-              { floorVersion, row: 2, column: 1 },
-              randomUUID(),
-              otherUnit,
-            ),
+            place(otherUnit, block, first!.id, (await layout(admin)).version),
           )
         ).code,
       ).toBe('40001');
-      const currentVersion = (await read(admin)).floor_version;
+      expect((await read(admin)).placement).toMatchObject({
+        level: 1,
+        position: 1,
+      });
+      const placed = await layout(admin);
+      expect(placed.floors[0]!.spaces[0]!.unit?.id).toBe(unit);
       expect(
         (
           await dbError(
-            save(
-              'position',
-              { floorVersion: currentVersion, row: 1, column: 2 },
-              randomUUID(),
-              otherUnit,
+            saveLayout(admin, block, { ...tower, version: created.version }),
+          )
+        ).code,
+      ).toBe('40001');
+      const keep = (spaces: object[]) => ({
+        ...tower,
+        version: placed.version,
+        floors: [{ ...tower.floors[0], spaces }, tower.floors[1]],
+      });
+      expect(
+        (await dbError(saveLayout(admin, block, keep([spot(second!.id)]))))
+          .code,
+      ).toBe('22023');
+      expect(
+        (
+          await dbError(
+            saveLayout(
+              admin,
+              block,
+              keep([
+                { ...spot(first!.id, 'shop'), name: 'Shop' },
+                spot(second!.id),
+              ]),
             ),
           )
         ).code,
-      ).toBe('23505');
-      await database.asSuperuser(async (client) => {
-        await client.query('update public.units set floor = 2 where id=$1', [
-          unit,
-        ]);
-        await client.query('update public.units set floor = 1 where id=$1', [
-          unit,
-        ]);
-      });
+      ).toBe('22023');
+      await saveLayout(admin, block, keep([spot(second!.id), spot(first!.id)]));
+      const reordered = await layout(admin);
+      expect(reordered.floors[0]!.spaces[1]!.unit?.id).toBe(unit);
       expect(
-        (await read(admin)).floor_units.find(({ id }) => id === unit)?.row,
-      ).toBeNull();
+        (
+          await dbError(
+            database.asRole('authenticated', { sub: admin }, (client) =>
+              client.query(
+                'update public.blocks set active = false where id=$1',
+                [block],
+              ),
+            ),
+          )
+        ).code,
+      ).toBe('23514');
+      const unitRow = await database.asSuperuser((client) =>
+        client.query('select block_id, floor from public.units where id=$1', [
+          unit,
+        ]),
+      );
+      expect(unitRow.rows).toEqual([{ block_id: block, floor: 1 }]);
+      await database.asSuperuser((client) =>
+        client.query('update public.units set floor = 2 where id=$1', [unit]),
+      );
+      expect((await read(admin)).placement).toBeNull();
+      expect(
+        (await layout(admin)).floors[0]!.spaces.every(({ unit }) => !unit),
+      ).toBe(true);
     } finally {
       await database.drop();
     }

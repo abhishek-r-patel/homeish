@@ -1,6 +1,7 @@
 // Accessible forms and confirmations for Core Platform structure.
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FormEvent } from 'react';
@@ -13,7 +14,7 @@ import {
   setUnitActiveAction,
   updateBlockAction,
   updateUnitAction,
-} from '@/app/(admin)/structure/actions';
+} from '@/app/(admin)/admin/structure/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { getStructure } from '@/core/structure/operations';
 import type {
@@ -623,7 +624,12 @@ export function StructureRows({
                 <span className="grid">
                   <span className="text-body-strong">
                     {blockNames.get(unit.block_id ?? '') ?? t('No block')} ·{' '}
-                    {unit.number}
+                    <Link
+                      className="text-brand underline"
+                      href={`/admin/structure/units/${unit.id}`}
+                    >
+                      {unit.number}
+                    </Link>
                   </span>
                   <span className="text-caption text-ink-muted">
                     {[

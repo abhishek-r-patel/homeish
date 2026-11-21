@@ -9,6 +9,7 @@ import { getParkingAdminWorkspace } from '../parking/operations';
 import { authorizeRequest } from '../permissions/authorize';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
+import { loadBuildingLayout } from './building-layout-operations';
 import { unitRecordEdit, unitRecordsSchema } from './unit-records';
 
 async function optionalSource<T>(load: () => Promise<T>) {
@@ -25,7 +26,7 @@ async function optionalSource<T>(load: () => Promise<T>) {
   }
 }
 
-export async function getUnitWorkspace(input: unknown) {
+export async function getUnitWorkspace(input: unknown, building?: unknown) {
   const context = await buildRequestContext(createRequestId());
   authorizeRequest(context, {
     moduleKey: 'core',
@@ -97,6 +98,10 @@ export async function getUnitWorkspace(input: unknown) {
       cause: block?.error ?? occupants.error,
     });
   }
+  const layout = await loadBuildingLayout(
+    { ...context, societyId },
+    building ?? records.placement?.block_id ?? blockId,
+  );
 
   return {
     unit: unit.data,
@@ -114,6 +119,7 @@ export async function getUnitWorkspace(input: unknown) {
     parking,
     documents,
     records,
+    layout,
     canWrite:
       context.societyStatus === 'active' || context.societyStatus === 'trial',
   };

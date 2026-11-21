@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react';
 import {
   disableJoinCodeAction,
   rotateJoinCodeAction,
-} from '@/app/(admin)/settings/actions';
+} from '@/app/(admin)/admin/settings/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/dialog';

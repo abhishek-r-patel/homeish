@@ -97,7 +97,7 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     title: 'How do I add blocks and units?',
     answer:
       'Open Structure to add blocks, floors and units. Add units before adding members so each member can be linked to a flat.',
-    links: [{ href: '/structure', label: 'Structure' }],
+    links: [{ href: '/admin/structure', label: 'Structure' }],
   },
   {
     id: 'admin-members',
@@ -108,7 +108,7 @@ export const HELP_ARTICLES: readonly HelpArticle[] = [
     title: 'How do I add members to the society?',
     answer:
       'Open Members to add people to the society and see their roles and flats.',
-    links: [{ href: '/members', label: 'Members' }],
+    links: [{ href: '/admin/members', label: 'Members' }],
   },
   {
     id: 'admin-analytics',
@@ -411,9 +411,9 @@ export const GETTING_STARTED_PATHS: Readonly<
       stage: 'setup',
       text: 'Check society settings, add blocks and units, then add members.',
       links: [
-        { href: '/settings', label: 'Settings', module: 'core' },
-        { href: '/structure', label: 'Structure', module: 'core' },
-        { href: '/members', label: 'Members', module: 'core' },
+        { href: '/admin/settings', label: 'Settings', module: 'core' },
+        { href: '/admin/structure', label: 'Structure', module: 'core' },
+        { href: '/admin/members', label: 'Members', module: 'core' },
       ],
     },
     {

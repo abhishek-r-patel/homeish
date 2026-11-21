@@ -14,10 +14,6 @@ const amount = z.preprocess(
 );
 const vacancyKind = z.enum(['vacant', 'locked']);
 const reviewStatus = z.enum(['verified', 'remeasure']);
-const position = z.preprocess(
-  (value) => (value === '' ? null : value),
-  z.coerce.number().int().min(1).max(12).nullable(),
-);
 const nullableId = z.preprocess(
   (value) => (value === '' ? null : value),
   id.nullable(),
@@ -53,14 +49,6 @@ export const unitRecordEdit = z
       })
       .strict(),
     z.object({ action: z.literal('close'), version, id }).strict(),
-    z
-      .object({
-        action: z.literal('position'),
-        floorVersion: z.string().regex(/^[a-f0-9]{32}$/),
-        row: position,
-        column: position,
-      })
-      .strict(),
   ])
   .superRefine((edit, ctx) => {
     if (
@@ -72,14 +60,6 @@ export const unitRecordEdit = z
       ctx.addIssue({
         code: 'custom',
         message: 'Enter at least one measured area.',
-      });
-    if (
-      edit.action === 'position' &&
-      (edit.row === null) !== (edit.column === null)
-    )
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Enter both map coordinates, or clear both.',
       });
     if (
       edit.action === 'vacancy' &&
@@ -96,15 +76,16 @@ export const unitRecordsSchema = z
   .object({
     today: day,
     timezone: z.string().min(1),
-    floor_version: z.string(),
-    floor_units: z.array(
-      z.object({
-        id,
-        number: z.string(),
-        row: z.number().int().nullable(),
-        column: z.number().int().nullable(),
-      }),
-    ),
+    placement: z
+      .object({
+        block_id: id,
+        block: z.string(),
+        level: z.number().int(),
+        label: z.string().nullable(),
+        position: z.number().int(),
+        duplex: z.boolean(),
+      })
+      .nullable(),
     admins: z.array(z.object({ id, name: z.string().nullable() })),
     areas: z.array(
       z.object({
