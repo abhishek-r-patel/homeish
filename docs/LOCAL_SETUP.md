@@ -100,7 +100,7 @@ $env:PG_BIN = 'C:\path\to\postgresql\bin'
 npm run test:integration:local
 ```
 
-The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then stops the server and deletes its files. It stops if its own server cannot start, including when that port is already in use; it never substitutes an existing server. Without a server, `npm run test:integration` skips these tests locally; in CI a missing server is an error. GitHub Actions runs the same tests against a `postgres:17` service container, so no database password is stored in GitHub.
+The script creates a temporary server on `127.0.0.1:54329`, runs the tests, then stops the server and deletes its files. It prints numbered steps, then one line per finished test file with a counter, elapsed time and a rough time-left estimate (shown after the first four files), and ends with the total time. CI prints the same per-file lines. It stops if its own server cannot start, including when that port is already in use; it never substitutes an existing server. Without a server, `npm run test:integration` skips these tests locally; in CI a missing server is an error. GitHub Actions runs the same tests against a `postgres:17` service container, so no database password is stored in GitHub.
 
 ### Migration rules (DATABASE 14.1)
 
