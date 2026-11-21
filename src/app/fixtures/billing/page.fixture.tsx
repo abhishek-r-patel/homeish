@@ -52,6 +52,9 @@ function Fixture() {
             name: formData.get('name'),
             method: formData.get('method'),
             amountRupees: formData.get('amountRupees'),
+            eligibility: formData.get('eligibility'),
+            percentRate: formData.get('percentRate') ?? '',
+            baseChargeTypeId: formData.get('baseChargeTypeId') || null,
             active: formData.get('active') === 'true',
             expectedUpdatedAt: formData.get('expectedUpdatedAt') || null,
           });
@@ -61,6 +64,9 @@ function Fixture() {
             name: parsed.name,
             method: parsed.method,
             amount_paise: parsed.amountPaise,
+            eligibility: parsed.eligibility,
+            percent_basis_points: parsed.percentBasisPoints,
+            base_charge_type_id: parsed.baseChargeTypeId,
             active: parsed.active,
             updated_at: new Date().toISOString(),
           };

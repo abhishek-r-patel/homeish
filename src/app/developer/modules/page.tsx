@@ -10,6 +10,7 @@ import {
 } from '@/components/developer/console-controls';
 import { Card, StatusChip } from '@/components/ui/data-display';
 import { EmptyState, ErrorPanel } from '@/components/ui/feedback';
+import { INDIA_TIME_ZONE } from '@/lib/india-time';
 
 export const metadata = {
   title: 'Modules | Developer Console | Homeish',
@@ -163,6 +164,7 @@ export default async function DeveloperModulesPage({
                         ? `Last changed by ${module.updatedByName}${
                             module.updatedAt
                               ? ` on ${new Intl.DateTimeFormat('en', {
+                                  timeZone: INDIA_TIME_ZONE,
                                   dateStyle: 'medium',
                                   timeStyle: 'short',
                                 }).format(new Date(module.updatedAt))}`

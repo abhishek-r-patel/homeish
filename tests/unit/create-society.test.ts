@@ -61,6 +61,7 @@ describe('create-society input', () => {
     [['--admin-email', 'not-an-email'], '--admin-email'],
     [['--contact-phone', '12345'], '--contact-phone'],
     [['--timezone', 'Mars/Base'], '--timezone'],
+    [['--timezone', 'America/New_York'], '--timezone'],
     [['--currency', 'inr'], '--currency'],
     [['--unit-label', 'Flat 1'], '--unit-label'],
     [['--society-id', 'abc'], '--society-id'],

@@ -338,4 +338,12 @@ export async function runRetentionPrivileged(today: string): Promise<void> {
   ) {
     throw new Error('Communication retention returned an invalid response.');
   }
+  const vacancyResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'unit_vacancy_retention_run',
+    { p_today: today, p_request_trace: createRequestId() },
+  );
+  if (!z.number().int().nonnegative().safeParse(vacancyResult).success) {
+    throw new Error('Vacancy retention returned an invalid response.');
+  }
 }

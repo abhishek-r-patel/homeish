@@ -8,6 +8,7 @@ const screens = [
   '/developer/login',
   '/privacy',
   '/fixtures/foundation',
+  '/fixtures/home',
   '/fixtures/billing',
   '/fixtures/billing?tab=payment-settings',
   '/fixtures/billing-payments',

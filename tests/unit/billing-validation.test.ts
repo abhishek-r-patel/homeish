@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   billingSettingsSchema,
+  billingEstimateInputSchema,
   billingFineInputSchema,
   billingWaiveInputSchema,
   billingPaymentConfirmInputSchema,
@@ -89,6 +90,53 @@ describe('billing money and setup validation', () => {
     ).toBe(false);
     expect(
       chargeFormSchema.safeParse({ ...form, societyId: 'untrusted' }).success,
+    ).toBe(false);
+  });
+
+  it('requires a separate base and accepts only exact rates up to 100 percent', () => {
+    const form = {
+      id: null,
+      name: 'Surcharge',
+      method: 'percent_of_charge',
+      amountRupees: '',
+      active: true,
+      expectedUpdatedAt: null,
+      eligibility: 'tenant',
+      baseChargeTypeId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+      percentRate: '12.34',
+    };
+    expect(chargeFormSchema.parse(form)).toMatchObject({
+      amountPaise: null,
+      percentBasisPoints: 1234,
+      eligibility: 'tenant',
+    });
+    for (const percentRate of ['0', '100.01', '0.001']) {
+      expect(chargeFormSchema.safeParse({ ...form, percentRate }).success).toBe(
+        false,
+      );
+    }
+    expect(
+      chargeFormSchema.safeParse({ ...form, id: form.baseChargeTypeId })
+        .success,
+    ).toBe(false);
+  });
+
+  it('validates the estimate scenario without taking a real unit ID', () => {
+    const input = {
+      areaSqft: '1250.25',
+      occupancy: 'vacant',
+      customAmounts: [],
+    };
+    expect(billingEstimateInputSchema.parse(input)).toMatchObject({
+      areaSqft: 1250.25,
+      occupancy: 'vacant',
+    });
+    expect(
+      billingEstimateInputSchema.safeParse({ ...input, areaSqft: '0' }).success,
+    ).toBe(false);
+    expect(
+      billingEstimateInputSchema.safeParse({ ...input, unitId: 'unexpected' })
+        .success,
     ).toBe(false);
   });
 

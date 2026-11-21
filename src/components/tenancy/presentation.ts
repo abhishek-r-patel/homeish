@@ -30,15 +30,14 @@ export function useTenancyPresentation() {
         : formatTenancyDate(value),
     time: (value: string, timeZone: string) =>
       locale === 'hi'
-        ? formatLocalizedDateTime(new Date(value), locale, {
+        ? `${formatLocalizedDateTime(new Date(value), locale, {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            timeZoneName: 'short',
             timeZone,
-          })
+          })} IST`
         : formatTenancyTimestamp(value, timeZone),
     balance: (value: string) => {
       if (locale !== 'hi') return formatTenancyBalance(value);

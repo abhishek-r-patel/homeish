@@ -15,9 +15,12 @@ import { ANALYTICS_METRICS } from '../../src/core/analytics/catalogue';
 import {
   formatLocalizedCurrency,
   formatLocalizedDate,
+  formatLocalizedDateTime,
   formatLocalizedNumber,
   formatLocalizedTime,
 } from '../../src/core/i18n/format';
+import { todayInIndia } from '../../src/lib/india-time';
+import { localTimeToIso } from '../../src/lib/local-time';
 
 function localizedSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -82,6 +85,21 @@ function literalMessagesIn(source: ts.SourceFile): string[] {
 }
 
 describe('interface translations', () => {
+  it('uses the India calendar day and clock at midnight without moving the instant', () => {
+    const before = new Date('2026-01-31T18:29:59Z');
+    const midnight = new Date('2026-01-31T18:30:00Z');
+    expect(todayInIndia(before)).toBe('2026-01-31');
+    expect(todayInIndia(midnight)).toBe('2026-02-01');
+    expect(formatLocalizedDateTime(midnight, 'en')).toMatch(
+      /1 Feb 2026.*12:00 am/i,
+    );
+    expect(
+      formatLocalizedTime(midnight, 'en', { timeZone: undefined }),
+    ).toMatch(/12:00 am/i);
+    expect(localTimeToIso('2026-02-01T00:00', 'Asia/Kolkata')).toBe(
+      midnight.toISOString(),
+    );
+  });
   it('provides non-empty Hindi messages for the current common catalog', () => {
     expect(Object.keys(HINDI_MESSAGES).length).toBeGreaterThan(0);
     expect(Object.values(HINDI_MESSAGES).every(Boolean)).toBe(true);
@@ -357,6 +375,16 @@ describe('interface translations', () => {
   it('uses Latin digits and Indian grouping for Hindi numbers and rupees', () => {
     expect(formatLocalizedNumber(123456, 'hi')).toBe('1,23,456');
     expect(formatLocalizedCurrency(12345678, 'hi')).toBe('₹1,23,456.78');
+  });
+
+  it('formats large and negative paise exactly without floating-point rounding', () => {
+    expect(formatLocalizedCurrency(9007199254740991, 'en')).toBe(
+      '₹9,00,71,99,25,47,409.91',
+    );
+    expect(formatLocalizedCurrency('9007199255804991', 'hi')).toBe(
+      '₹9,00,71,99,25,58,049.91',
+    );
+    expect(formatLocalizedCurrency(-5, 'en')).toBe('-₹0.05');
   });
 
   it('localizes month names and retains a 12-hour time in the requested zone', () => {

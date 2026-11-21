@@ -8,7 +8,15 @@
 | Depends on | [PRD.md](./PRD.md), [DESIGN.md](./DESIGN.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [AGENTS.md](./AGENTS.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Scope      | MVP: Core, Visitor, Delivery, Billing, Service Request (PRD D-02, approved). Post-MVP modules (P11–P15) and the approved expansion phases P16–P34 (PRD D-38) follow P10. Accepted M25 housing-toolkit additions are planned in P35, M03 unit/ownership additions in P36, M08 billing additions in P37, M09 dues additions in P38, M11 accounts additions in P39, M10 funds additions in P40, M12 financial-report additions in P41, M13 expense-control additions in P42, M01 command-center additions in P43, M04 registration/governing-document additions in P44, M06 agenda additions in P45, and M07 election-governance/gated official-voting additions in P46, M14 vendor/contract/AMC additions in P47, M15 non-pay staff-record additions in P48, M16 helpdesk additions in P49, M17 repairs/redevelopment additions in P50, M18 transfer/clearance additions in P51, M19 tenant/parking/facility additions in P52, and M23 communication additions in P53 and P35.13; M24 insurance/legal items were all rejected; M06's meeting-summary addition extends P43.5, and M20 audit/compliance additions extend P41/P43/P44. Budget management remains out of MVP. This does not authorize implementation or release. |
 
-**How to read this plan**
+## Quick navigation
+
+- **Phase overviews:** [MVP (P0–P10)](#overview-mvp) · [Post-MVP and expansion (P11–P34)](#overview-expansion) · [Toolkit additions (P35–P53)](#overview-toolkit)
+- **Planning and delivery:** [How to read this plan](#how-to-read-this-plan) · [Rules that apply to every phase](#2-rules-that-apply-to-every-phase) · [Build batches](#build-batches) · [Current next steps](#current-next-steps)
+- **Reference:** [Future Android app](#future-android-app) · [Documents to write](#documents-to-write-alongside-the-build) · [Assumptions and decisions](#plan-decisions) · [Toolkit review decisions](#toolkit-review-decisions)
+
+Click a phase ID in an overview table to open its details. Click a task ID on an exception line to jump to that task. Use **Back to phase overview** to return to the relevant overview.
+
+## How to read this plan
 
 - Phases are in build order. A phase starts only when its prerequisites are complete. Tasks inside a phase are small enough to implement, verify and review on their own.
 - Task IDs: `P<phase>.<task>` (e.g., `P5.4`). Sizes are relative effort, not time: **S** small, **M** medium, **L** large (split further if it grows).
@@ -16,7 +24,8 @@
 - **Status marks** (every task table and overview tables), in the order work moves through them:
   - ⬜ **Planned:** accepted, not started.
   - 🔵 **In progress:** being built on a feature branch.
-  - 🟡 **Built locally:** implemented and tested locally; not pushed or released.
+  - 🟡 **Built locally:** implemented; local verification is not yet recorded for the full agreed scope.
+  - 🟡 **Verified locally:** the agreed scope passed local checks; does not imply owner sign-off or release.
   - 🟠 **On beta:** merged to `beta` with CI green; waiting for owner testing.
   - ✅ **Released:** on `main`; any pending owner acceptance is noted beside the mark.
   - 🏁 **Accepted:** released and signed off by the owner after testing.
@@ -24,7 +33,13 @@
   - ⛔ **Blocked:** cannot continue until a named decision, phase or external step happens.
   - ❌ **Dropped:** decided not to build; the row stays for history.
 
-  A row with mixed parts shows the mark that best describes where it is now, with a short note naming any part still ⬜, ⏸ or ⛔ (for example `🟡 Built locally; P39.5 ⬜ in B4`). Each phase's Status line still records the detail: remaining module-gate checks, owner UAT/manual acceptance and live enablement.
+- **Overview task exceptions:** the first line in each overview status cell is the main phase status. Each exception appears on its own line underneath:
+  - 🚧 **Blocked:** waiting for a prerequisite, even if a future batch is listed.
+  - 💤 **Deferred:** set aside, including unscheduled Pro work.
+  - 📝 **Planned:** no batch or phase is listed for the task.
+  - 📅 **Scheduled:** assigned to another batch or phase.
+
+  A blocked task does not make the whole phase **Blocked** if other work can proceed. See the linked phase or task for reasons, verification evidence, owner sign-off and release details.
 
 - Requirement IDs (e.g., `VIS-4`), screen IDs (e.g., `G-02`) and operation names (e.g., `visitor.decide`) come from the PRD, DESIGN and API documents.
 - **No code is described here.** Each task says _what_ to deliver and _how to know it is done_.
@@ -33,6 +48,8 @@
 - **Toolkit planning:** accepted toolkit decisions are recorded in this plan for future work, not as changes already made to the app. Before implementing them, update and obtain any required approval for the owning PRD/DESIGN/DATABASE/API contracts. Existing guarantees remain in force until the corresponding replacement is approved and built.
 
 ---
+
+<a id="overview-mvp"></a>
 
 ## 1. Plan at a Glance
 
@@ -55,21 +72,23 @@ flowchart TD
   P9 --> P10[P10 Hardening and pilot go-live]
 ```
 
-| Phase | Name                              | Delivers                                                                               | PRD release | Status                                                                  |
-| ----- | --------------------------------- | -------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------- |
-| P0    | Project foundation                | Running skeleton, tooling, pipelines, development database (AD-13)                     | MVP-0       | ✅                                                                      |
-| P1    | Database, errors and logging base | Core tables, security helpers, error/audit logging, rate limits                        | MVP-0       | ✅                                                                      |
-| P2    | Design system and app shells      | Tokens, shared components, navigation shells                                           | MVP-0       | ✅                                                                      |
-| P3    | Sign-in and sessions              | Email-code login, sessions, developer MFA                                              | MVP-0       | ✅                                                                      |
-| P4    | Core platform                     | Developer console, structure, people, registration, guards, notifications, files, jobs | MVP-0       | ✅                                                                      |
-| P5    | Visitor                           | Visitor module                                                                         | MVP-1       | ✅                                                                      |
-| P6    | Delivery                          | Delivery module                                                                        | MVP-2       | ✅                                                                      |
-| P7    | Billing                           | Charges, bills, UPI payments, ledger, receipts, reports                                | MVP-3       | ✅                                                                      |
-| P8    | Service requests                  | Requests module                                                                        | MVP-4       | ✅                                                                      |
-| P9    | Operations                        | Daily job, retention, backup export, monitoring                                        | MVP         | ✅ Released; production backups ⏸                                       |
-| P10   | Hardening and pilot               | Security/accessibility/performance review, production setup, pilot                     | MVP         | ⛔ Waits for owner checks and the first society; P10.5, P10.8, P10.9 ⬜ |
+| Phase       | Name                              | Delivers                                                                               | PRD release | Status                                                                    |
+| ----------- | --------------------------------- | -------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------- |
+| [P0](#p0)   | Project foundation                | Running skeleton, tooling, pipelines, development database (AD-13)                     | MVP-0       | ✅ Released                                                               |
+| [P1](#p1)   | Database, errors and logging base | Core tables, security helpers, error/audit logging, rate limits                        | MVP-0       | ✅ Released                                                               |
+| [P2](#p2)   | Design system and app shells      | Tokens, shared components, navigation shells                                           | MVP-0       | ✅ Released                                                               |
+| [P3](#p3)   | Sign-in and sessions              | Email-code login, sessions, developer MFA                                              | MVP-0       | ✅ Released                                                               |
+| [P4](#p4)   | Core platform                     | Developer console, structure, people, registration, guards, notifications, files, jobs | MVP-0       | ✅ Released                                                               |
+| [P5](#p5)   | Visitor                           | Visitor module                                                                         | MVP-1       | ✅ Released                                                               |
+| [P6](#p6)   | Delivery                          | Delivery module                                                                        | MVP-2       | ✅ Released                                                               |
+| [P7](#p7)   | Billing                           | Charges, bills, UPI payments, ledger, receipts, reports                                | MVP-3       | ✅ Released                                                               |
+| [P8](#p8)   | Service requests                  | Requests module                                                                        | MVP-4       | ✅ Released                                                               |
+| [P9](#p9)   | Operations                        | Daily job, retention, backup export, monitoring                                        | MVP         | ✅ Released<br>💤 Deferred: [production backups](#p9-4)                   |
+| [P10](#p10) | Hardening and pilot               | Security/accessibility/performance review, production setup, pilot                     | MVP         | ⛔ Blocked<br>📝 Planned: [P10.5](#p10-5)/[P10.8](#p10-8)/[P10.9](#p10-9) |
 
 P5, P6, P7 and P8 depend only on P4, not on each other. They are listed in the PRD's order; the owner may re-order them.
+
+<a id="overview-expansion"></a>
 
 ### 1.1 Post-MVP and expansion phases (P11–P34)
 
@@ -130,34 +149,36 @@ flowchart TD
 
 Arrows are recommended build order; "after Pxx" inside a box marks a phase that builds on another phase. At runtime every module works on its own; links to other optional modules activate only when those are enabled (PRD A-36). Blocks are 6-hour work blocks (Section 2.5).
 
-| Phase | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status                                |
-| ----- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | ------------------------------------- |
-| P11   | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅                                    |
-| P12   | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅                                    |
-| P13   | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅                                    |
-| P14   | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅                                    |
-| P15   | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅                                    |
-| P16   | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅                                    |
-| P17   | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅                                    |
-| P18   | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅                                    |
-| P19   | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅                                    |
-| P20   | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅                                    |
-| P21   | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅                                    |
-| P22   | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ✅                                    |
-| P23   | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ✅                                    |
-| P24   | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅                                    |
-| P25   | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅                                    |
-| P26   | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅                                    |
-| P27   | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅                                    |
-| P28   | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅                                    |
-| P29   | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ✅                                    |
-| P30   | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ✅                                    |
-| P31   | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅                                    |
-| P32   | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅                                    |
-| P33   | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ✅ Released; owner acceptance pending |
-| P34   | Multi-society overview            | Core              | 5.10.13, P5-7 | —    | —      | Existing admin/committee memberships        | ⏸ Deferred                            |
+| Phase       | Module / enhancement              | Key               | PRD           | Size | Blocks | Builds on                                   | Status      |
+| ----------- | --------------------------------- | ----------------- | ------------- | ---- | ------ | ------------------------------------------- | ----------- |
+| [P11](#p11) | Notice board                      | `notice`          | §5.8, D-21    | —    | —      | Core                                        | ✅ Released |
+| [P12](#p12) | Staff                             | `staff`           | §5.5, P2-1    | —    | —      | Core                                        | ✅ Released |
+| [P13](#p13) | Housekeeping inventory            | `housekeeping`    | §5.6, P2-2    | —    | —      | Core                                        | ✅ Released |
+| [P14](#p14) | AMC                               | `amc`             | §5.7, P2-3    | —    | —      | Core                                        | ✅ Released |
+| [P15](#p15) | Amenity booking                   | `amenity`         | §5.9, D-22    | —    | —      | Core; `billing` for paid amenities          | ✅ Released |
+| [P16](#p16) | Society expenses & accounts       | `expense`         | 5.10.1, P3-1  | L    | —      | Core; reads `billing` payments when enabled | ✅ Released |
+| [P17](#p17) | Resident & vehicle directory      | `directory`       | 5.10.2, P3-2  | M    | —      | Core unit occupants                         | ✅ Released |
+| [P18](#p18) | Move-in / move-out & tenancy      | `tenancy`         | 5.10.3, P3-3  | L    | 3      | Core occupants, files; `billing` dues check | ✅ Released |
+| [P19](#p19) | Document repository               | `document`        | 5.10.4, P3-4  | M    | 2      | Core files                                  | ✅ Released |
+| [P20](#p20) | Parking management                | `parking`         | 5.10.5, P3-5  | M    | 2      | `directory` vehicles; `visitor` passes      | ✅ Released |
+| [P21](#p21) | Emergency & SOS                   | `sos`             | 5.10.6, P3-6  | M    | 2      | Core notifications and Realtime             | ✅ Released |
+| [P22](#p22) | Polls & voting (Civic Pulse port) | `poll`            | 5.10.7, P4-1  | L    | 3      | Core units/occupants                        | ✅ Released |
+| [P23](#p23) | Meetings & AGM                    | `meeting`         | 5.10.8, P4-2  | M    | 2      | `poll` resolutions; `document` minutes      | ✅ Released |
+| [P24](#p24) | Vendors & purchase approvals      | `vendor`          | 5.10.9, P4-3  | M    | 2      | `expense` drafts                            | ✅ Released |
+| [P25](#p25) | Guard patrol & incident log       | `patrol`          | 5.10.10, P4-4 | M    | 2      | Core guards and gate settings               | ✅ Released |
+| [P26](#p26) | Utility metering                  | `metering`        | 5.10.11, P4-5 | M    | 2      | `billing` charges                           | ✅ Released |
+| [P27](#p27) | Committee analytics dashboard     | Core              | 5.10.12, P4-6 | M    | 2      | Read models of enabled modules              | ✅ Released |
+| [P28](#p28) | Asset register                    | `asset`           | 5.10.13, P5-1 | S    | 1      | `amc` contracts                             | ✅ Released |
+| [P29](#p29) | Resident community & marketplace  | `community`       | 5.10.13, P5-2 | L    | 3      | Core files, notifications                   | ✅ Released |
+| [P30](#p30) | Events & RSVPs                    | `event`           | 5.10.13, P5-3 | M    | 2      | `billing` contributions                     | ✅ Released |
+| [P31](#p31) | Home-services directory           | `home_services`   | 5.10.13, P5-4 | S    | 1      | Core                                        | ✅ Released |
+| [P32](#p32) | Service-request SLA escalation    | `service_request` | 5.10.13, P5-5 | S    | 1      | `service_request`, daily runner             | ✅ Released |
+| [P33](#p33) | Multi-language (Hindi first)      | Core              | 5.10.13, P5-6 | L    | 3+     | All screens                                 | ✅ Released |
+| [P34](#p34) | Multi-society overview            | Core              | 5.10.13, P5-7 | —    | —      | Existing admin/committee memberships        | ⏸ Deferred  |
 
 Block totals: P3 wave (P18–P21) 9 planned, all four phases released to beta and main; P4 wave (P22–P27) 13 blocks, all six phases released to beta and main; P5 wave about 11 blocks, with P28–P33 released and P34 deferred to the future (PRD D-65).
+
+<a id="overview-toolkit"></a>
 
 ### 1.2 Accepted toolkit additions (P35–P53)
 
@@ -213,27 +234,27 @@ flowchart TD
 
 Arrows only stack the groups for reading; they are not a build order (Section 2.6). "after Pxx" inside a box marks a selected task-level prerequisite: P35 profile inputs for P44 and clearance-contract work for P51; P37's estimate source and P39's shared fund map and deposit register for P40; P40's approved measures for P41, sanction source for P42 and repair forecast for P50; P43's meeting-summary source for P45; P44's governing-document source for P46; and P49's definitions and source records for P53. It does not mean finishing every task in one phase before starting another. The phase task tables remain authoritative; phases without a mark have no direct phase dependency shown here. P35.10 uses the M18 policy decisions recorded in P51 as planning input, not as a dependency on P51 implementation. P51.3/P51.4 clearance implementation coordinates with P35.10–P35.12 after the clearance contracts are approved. M23 template formats extend P35.13 but do not gate P53.1–P53.3.
 
-| Phase | Module / enhancement                           | Key                             | PRD                                     | Size          | Blocks | Builds on                                                              | Source                        | Status                                                     |
-| ----- | ---------------------------------------------- | ------------------------------- | --------------------------------------- | ------------- | ------ | ---------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------- |
-| P35   | Toolkit housing additions                      | Core; `amenity`, `tenancy`      | D-71 core approved; changes D-50        | 2 S, 8 M, 3 L | 27     | Core registry, units, files; P51 clearance policy                      | Toolkit-M25                   | 🟡 Core built locally; P35.8–P35.12 planned                |
-| P36   | Unit and ownership records                     | Core                            | Not yet                                 | 2 S, 7 M, 1 L | 19     | Core units/occupants; `tenancy`, `document`, `billing`, `parking`, P26 | Toolkit-M03                   | ⬜ Planned only                                            |
-| P37   | Billing additions                              | `billing`                       | Not yet; changes D-12, D-06             | 2 S, 2 M, 1 L | 9      | `billing` charges, bills and ledger; P35.1                             | Toolkit-M08                   | ⬜ Planned only                                            |
-| P38   | Dues and arrears                               | `billing`                       | D-71 approved for P38.2–P38.4           | 3 M, 1 L      | 9      | `billing` due dates, payments and unit ledger                          | Toolkit-M09                   | 🟡 P38.2–P38.4 built locally; P38.1 ⛔ blocked             |
-| P39   | Accounts and cash book                         | `expense`                       | Not yet                                 | 3 S, 3 M      | 9      | P16 books and reports; P40 fund map                                    | Toolkit-M11                   | 🟡 Built locally; P39.5 ⬜ in B4                           |
-| P40   | Fund management                                | `expense`                       | Not yet                                 | 2 S, 6 M, 1 L | 17     | P16; P39.5; P37.3; M17 review                                          | Toolkit-M10 + Toolkit-M13     | ⬜ Planned only                                            |
-| P41   | Financial statements and reports               | `expense`; Core analytics       | Not yet; re-check D-39                  | 2 S, 5 M      | 12     | P16, P27; P39, P40; approved budget source                             | Toolkit-M12 + Toolkit-M20     | ⬜ Planned only                                            |
-| P42   | Expense control and reporting                  | `expense`                       | Not yet                                 | 3 S, 1 M      | 5      | P16, P24, P27; approved budget source                                  | Toolkit-M13                   | ⬜ Planned only                                            |
-| P43   | Command center and governance summaries        | Core                            | Not yet                                 | 2 S, 3 M      | 8      | P16, P23, P27; P38.4                                                   | Toolkit-M01 + Toolkit-M06/M20 | ⬜ Planned only                                            |
-| P44   | Registration, bye-laws and governing documents | `document`                      | Not yet                                 | 5 S, 2 M      | 9      | P19, P14, P23; P35.2/P35.3                                             | Toolkit-M04 + Toolkit-M20     | ⬜ Planned only                                            |
-| P45   | Meeting agenda enhancements                    | `meeting`                       | Not yet                                 | 1 M           | 2      | P23; P43.5                                                             | Toolkit-M06                   | ⬜ Planned only                                            |
-| P46   | Election governance and gated official voting  | `meeting`, `poll`               | Not yet                                 | 2 M, 1 L      | 7      | P19, P22, P23, P44; legal checks                                       | Toolkit-M07                   | ⬜ Planned only                                            |
-| P47   | Vendor, contract and AMC additions             | `vendor`, `amc`                 | D-71 approved; changes AMC-2, AMC-7     | 3 S, 5 M      | 13     | P14, P24, P16, P28                                                     | Toolkit-M14                   | 🟡 Built locally                                           |
-| P48   | Staff record additions                         | `staff`                         | Not yet                                 | 2 S           | 2      | P12                                                                    | Toolkit-M15                   | 🟡 Built locally                                           |
-| P49   | Helpdesk additions                             | `service_request`               | Not yet; changes SRQ-1/3/5/6, D-59      | 4 S, 4 M      | 12     | P8, P32, P24                                                           | Toolkit-M16                   | 🟡 Built locally; P49.8 blacklist warning added with P47.1 |
-| P50   | Repairs and redevelopment                      | New optional module             | Not yet                                 | 1 S, 5 M      | 11     | P40.9; P16, P24, P23                                                   | Toolkit-M17                   | ⬜ Planned only                                            |
-| P51   | Transfer and clearance                         | `tenancy`                       | Not yet; changes TEN-3, D-50            | 1 S, 2 M, 1 L | 8      | P18, `billing`, P23; P35.10–P35.12                                     | Toolkit-M18                   | ⬜ Planned only                                            |
-| P52   | Tenant, parking and facilities                 | `tenancy`, `parking`, `amenity` | Not yet                                 | 2 S, 3 M      | 8      | P18, P20, P15, P14, P28, P16                                           | Toolkit-M19                   | ⬜ Planned only                                            |
-| P53   | Communication additions                        | `notice`                        | D-71 approved; adds NTC-4/5, CORE-27/28 | 1 S, 2 M      | 5      | P11, P8/P32/P49, P21, P23, P30                                         | Toolkit-M23                   | 🟡 Built locally                                           |
+| Phase       | Module / enhancement                           | Key                             | PRD                                     | Size          | Blocks | Builds on                                                              | Source                        | Status                                                                                                                                                                 |
+| ----------- | ---------------------------------------------- | ------------------------------- | --------------------------------------- | ------------- | ------ | ---------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [P35](#p35) | Toolkit housing additions                      | Core; `amenity`, `tenancy`      | D-71 core approved; changes D-50        | 2 S, 8 M, 3 L | 27     | Core registry, units, files; P51 clearance policy                      | Toolkit-M25                   | 🟡 Verified locally<br>📅 Scheduled: [P35.10](#p35-10)–[12](#p35-12) ([B5](#batch-b5) with [P51](#p51))<br>📅 Scheduled: [P35.8](#p35-8)–[9](#p35-9) ([B7](#batch-b7)) |
+| [P36](#p36) | Unit and ownership records                     | Core                            | CORE-29–31, TEN-6                       | 2 S, 7 M, 1 L | 19     | Core units/occupants; `tenancy`, `document`, `billing`, `parking`, P26 | Toolkit-M03                   | 🟡 Verified locally<br>💤 Deferred: [P36.6](#p36-6)/[8](#p36-8)<br>📅 Scheduled: [P36.7](#p36-7) ([B7](#batch-b7))<br>💤 Deferred: [P36.4](#p36-4)/[5](#p36-5) (Pro)   |
+| [P37](#p37) | Billing additions                              | `billing`                       | D-12, D-72 approved; D-06 gated         | 2 S, 2 M, 1 L | 9      | `billing` charges, bills and ledger; P35.1                             | Toolkit-M08                   | 🟡 Verified locally<br>🚧 Blocked: [P37.5](#p37-5) (Planned for [B7](#batch-b7))                                                                                       |
+| [P38](#p38) | Dues and arrears                               | `billing`                       | D-71 approved for P38.2–P38.4           | 3 M, 1 L      | 9      | `billing` due dates, payments and unit ledger                          | Toolkit-M09                   | 🟡 Verified locally<br>🚧 Blocked: [P38.1](#p38-1)                                                                                                                     |
+| [P39](#p39) | Accounts and cash book                         | `expense`                       | Not yet                                 | 3 S, 3 M      | 9      | P16 books and reports; P40 fund map                                    | Toolkit-M11                   | 🟡 Verified locally<br>📅 Scheduled: [P39.5](#p39-5) ([B4](#batch-b4) with [P40](#p40))                                                                                |
+| [P40](#p40) | Fund management                                | `expense`                       | Not yet                                 | 2 S, 6 M, 1 L | 17     | P16; P39.5; P37.3; M17 review                                          | Toolkit-M10 + Toolkit-M13     | ⬜ Planned<br>🚧 Blocked: [P40.3](#p40-3)<br>📅 Scheduled: [P40.9](#p40-9) ([B7](#batch-b7))                                                                           |
+| [P41](#p41) | Financial statements and reports               | `expense`; Core analytics       | Not yet; re-check D-39                  | 2 S, 5 M      | 12     | P16, P27; P39, P40; approved budget source                             | Toolkit-M12 + Toolkit-M20     | ⬜ Planned<br>🚧 Blocked: [P41.3](#p41-3) (Planned for [B7](#batch-b7))                                                                                                |
+| [P42](#p42) | Expense control and reporting                  | `expense`                       | Not yet                                 | 3 S, 1 M      | 5      | P16, P24, P27; approved budget source                                  | Toolkit-M13                   | ⬜ Planned<br>🚧 Blocked: [P42.2](#p42-2) (Planned for [B7](#batch-b7))                                                                                                |
+| [P43](#p43) | Command center and governance summaries        | Core                            | Not yet                                 | 2 S, 3 M      | 8      | P16, P23, P27; P38.4                                                   | Toolkit-M01 + Toolkit-M06/M20 | ⬜ Planned<br>🚧 Blocked: [P43.4](#p43-4)                                                                                                                              |
+| [P44](#p44) | Registration, bye-laws and governing documents | `document`                      | Not yet                                 | 5 S, 2 M      | 9      | P19, P14, P23; P35.2/P35.3                                             | Toolkit-M04 + Toolkit-M20     | ⬜ Planned<br>💤 Deferred: [P44.4](#p44-4)/[P44.7](#p44-7) (Pro)                                                                                                       |
+| [P45](#p45) | Meeting agenda enhancements                    | `meeting`                       | Not yet                                 | 1 M           | 2      | P23; P43.5                                                             | Toolkit-M06                   | ⬜ Planned                                                                                                                                                             |
+| [P46](#p46) | Election governance and gated official voting  | `meeting`, `poll`               | Not yet                                 | 2 M, 1 L      | 7      | P19, P22, P23, P44; legal checks                                       | Toolkit-M07                   | ⬜ Planned<br>🚧 Blocked: [P46.2](#p46-2) and [P46.3](#p46-3) official results                                                                                         |
+| [P47](#p47) | Vendor, contract and AMC additions             | `vendor`, `amc`                 | D-71 approved; changes AMC-2, AMC-7     | 3 S, 5 M      | 13     | P14, P24, P16, P28                                                     | Toolkit-M14                   | 🟡 Verified locally                                                                                                                                                    |
+| [P48](#p48) | Staff record additions                         | `staff`                         | Not yet                                 | 2 S           | 2      | P12                                                                    | Toolkit-M15                   | 🟡 Verified locally                                                                                                                                                    |
+| [P49](#p49) | Helpdesk additions                             | `service_request`               | Not yet; changes SRQ-1/3/5/6, D-59      | 4 S, 4 M      | 12     | P8, P32, P24                                                           | Toolkit-M16                   | 🟡 Built locally                                                                                                                                                       |
+| [P50](#p50) | Repairs and redevelopment                      | New optional module             | Not yet                                 | 1 S, 5 M      | 11     | P40.9; P16, P24, P23                                                   | Toolkit-M17                   | ⬜ Planned                                                                                                                                                             |
+| [P51](#p51) | Transfer and clearance                         | `tenancy`                       | Not yet; changes TEN-3, D-50            | 1 S, 2 M, 1 L | 8      | P18, `billing`, P23; P35.10–P35.12                                     | Toolkit-M18                   | ⬜ Planned<br>📅 Scheduled: [P51.3](#p51-3)/[P51.4](#p51-4) (with [P35.10](#p35-10)–[P35.12](#p35-12))                                                                 |
+| [P52](#p52) | Tenant, parking and facilities                 | `tenancy`, `parking`, `amenity` | Not yet                                 | 2 S, 3 M      | 8      | P18, P20, P15, P14, P28, P16                                           | Toolkit-M19                   | ⬜ Planned                                                                                                                                                             |
+| [P53](#p53) | Communication additions                        | `notice`                        | D-71 approved; adds NTC-4/5, CORE-27/28 | 1 S, 2 M      | 5      | P11, P8/P32/P49, P21, P23, P30                                         | Toolkit-M23                   | 🟡 Verified locally                                                                                                                                                    |
 
 Proposed totals: 110 tasks, about 192 blocks. Sizes and blocks are first estimates using the Section 2.5 rule (S ≈ 1, M ≈ 2, L ≈ 3 blocks per task); **Size** shows the mix of task sizes. They are not approved and are confirmed or re-split at each slice's kickoff. **Key** shows the existing module or Core area a phase extends; the only new module is P50's optional "Major repairs & redevelopment" module (owner decision 2026-11-19; key name set at P50 kickoff). The build order is in the Section 2.6 build batches. **PRD** “Not yet” means the PRD has no requirement for this work; listed IDs are existing PRD rules the phase would change or must re-check, and they must be updated and approved before implementation. Phase scope, planning notes, gates and task sizes are in each phase section. Acceptance is planning only and does not authorize implementation, release or live use (Section 2.6).
 
@@ -309,6 +330,8 @@ Block codes in a phase's task table are the module's letter plus the block numbe
 - **Sizing:** task sizes are proposals using the Section 2.5 rule (S ≈ 1, M ≈ 2, L ≈ 3 blocks). Re-estimate and split at kickoff, especially blocked or legally gated tasks whose scope may change.
 - **Priority and release:** P10 pilot/go-live gates and all existing release approvals remain unchanged. Legal or statutory points are verified against the state co-operative act and the society's bye-laws before use.
 
+<a id="build-batches"></a>
+
 #### Build batches (owner decisions 2026-11-19)
 
 The owner approved this build order and these decisions on 2026-11-19. They are a plan for building, not approval to release or enable anything live. Each phase follows the Pattern above: its PRD, DESIGN, DATABASE and API changes are written and approved before coding starts.
@@ -322,16 +345,16 @@ The owner approved this build order and these decisions on 2026-11-19. They are 
 - Complete and verify the agreed phase scope before proposing local commits; do not make intermediate documentation or code commits. After committing with the owner's approval, wait for a separate go-ahead before starting the next phase. Pushes, `beta`/`main` merges and `homeish-testdb` changes happen only when the owner asks.
 - No P35–P53 capability is enabled for a live society until P10 pilot hardening is complete (Section 2.4).
 
-| Batch       | Order                      | Tasks                                                                   | Blocks |
-| ----------- | -------------------------- | ----------------------------------------------------------------------- | ------ |
-| B1          | P48 → P39 → P49            | P48; P39 except P39.5; P49                                              | 21     |
-| B2          | P47 → P38 → P35 core       | P47; P38.2–P38.4 (P38.1 blocked); P35.1–P35.7 and P35.13                | 38     |
-| B3          | P37 → P53 → P36            | P37.1–P37.4; P53; P36 except P36.4, P36.5 and P36.7                     | 25     |
-| B4          | P40 with P39.5 → P43 → P44 | P40.1–P40.8 and P39.5; P43; P44 except P44.4 and P44.7                  | 32     |
-| B5          | P45 → P41 → clearance      | P45; P41 except P41.3; P35.10–P35.12 with P51                           | 26     |
-| B6          | P42 → P52 → P46            | P42 except P42.2; P52; P46 including P46.2 official voting              | 18     |
-| B7          | P50 and follow-ups         | P50; P40.9; P35.8–P35.9 deposits; P36.7; P41.3 and P42.2 budgets; P37.5 | 25     |
-| Pro version | Not scheduled              | P36.4, P36.5, P44.4, P44.7                                              | 7      |
+| Batch                   | Order                                                        | Tasks                                                                   | Blocks |
+| ----------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------- | ------ |
+| <a id="batch-b1"></a>B1 | [P48](#p48) → [P39](#p39) → [P49](#p49)                      | P48; P39 except P39.5; P49                                              | 21     |
+| <a id="batch-b2"></a>B2 | [P47](#p47) → [P38](#p38) → [P35](#p35) core                 | P47; P38.2–P38.4 (P38.1 blocked); P35.1–P35.7 and P35.13                | 38     |
+| <a id="batch-b3"></a>B3 | [P37](#p37) → [P53](#p53) → [P36](#p36)                      | P37.1–P37.4; P53; P36 except P36.4, P36.5 and P36.7                     | 25     |
+| <a id="batch-b4"></a>B4 | [P40](#p40) with [P39.5](#p39-5) → [P43](#p43) → [P44](#p44) | P40.1–P40.8 and P39.5; P43; P44 except P44.4 and P44.7                  | 32     |
+| <a id="batch-b5"></a>B5 | [P45](#p45) → [P41](#p41) → clearance                        | P45; P41 except P41.3; P35.10–P35.12 with P51                           | 26     |
+| <a id="batch-b6"></a>B6 | [P42](#p42) → [P52](#p52) → [P46](#p46)                      | P42 except P42.2; P52; P46 including P46.2 official voting              | 18     |
+| <a id="batch-b7"></a>B7 | [P50](#p50) and follow-ups                                   | P50; P40.9; P35.8–P35.9 deposits; P36.7; P41.3 and P42.2 budgets; P37.5 | 25     |
+| Pro version             | Not scheduled                                                | P36.4, P36.5, P44.4, P44.7                                              | 7      |
 
 B1–B7 hold 185 blocks and the Pro version 7, matching the 192 proposed blocks in Section 1.2. Batches run in order, starting with B1; inside a batch, phases follow the order shown.
 
@@ -357,7 +380,11 @@ B1–B7 hold 185 blocks and the Pro version 7, matching the 192 proposed blocks 
 
 ---
 
+<a id="p0"></a>
+
 # Phase P0 — Project Foundation
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** an empty-but-correct project that builds, lints, tests and deploys to a preview, with the development database running and the rules in AGENTS.md enforced by tooling.
 
@@ -433,7 +460,11 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 
 ---
 
+<a id="p1"></a>
+
 # Phase P1 — Database, Errors and Logging Base
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** the database foundation and the error/logging backbone every later feature relies on.
 
@@ -474,7 +505,11 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 
 ---
 
+<a id="p2"></a>
+
 # Phase P2 — Design System and App Shells
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** the shared look, components and navigation frames so every later screen is built from the same parts (DESIGN Sections 2–6, 9, 14).
 
@@ -505,9 +540,17 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 - All five shells render with the correct navigation for a sample set of roles and module settings.
 - No raw colour values or arbitrary sizes exist in component code (automated check).
 
+**Option C follow-up, approved for implementation 2026-11-20:** replace the bundled Homeish fonts with Nunito and Quicksand, use the cool background and softer radius scale, and build resident home R-01 with household-scoped activity and accurate open-bill totals. The owner approved the two Fontsource font packages and chose household activity rather than a notification-only feed. This supersedes P2.1's original font choices without changing its historical completion record. Implementation, local verification and owner visual acceptance are separate; no hosted migration or release is approved by this decision.
+
+For visual review with a synthetic local configuration, start `npm run dev` and open `/fixtures/home`. The `state=empty`, `state=disabled`, `state=no-unit`, `state=suspended`, and `locale=hi` query options show additional states. This preview is development-only and contains no real household data.
+
 ---
 
+<a id="p3"></a>
+
 # Phase P3 — Sign-in and Sessions
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** people can sign in with an emailed code, stay signed in, switch societies; developers sign in separately with a second factor.
 
@@ -545,7 +588,11 @@ P0.9 local implementation includes public marketing, exact-host routing, an illu
 
 ---
 
+<a id="p4"></a>
+
 # Phase P4 — Core Platform
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** everything the modules stand on: the developer console, society structure, people and roles, registration, guards, notifications, files, jobs and the daily-job runner. Built as sub-phases that each end working and tested.
 
@@ -661,7 +708,11 @@ _Done when:_ the route runs an empty task list safely and idempotently on stagin
 
 ---
 
+<a id="p5"></a>
+
 # Phase P5 — Visitor Module (`visitor`)
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** guards log visitors, residents approve from their phone, pre-approved codes work, and the gate has a reliable audit trail (PRD 5.1, VIS-1 to VIS-10).
 
@@ -693,7 +744,11 @@ _Done when:_ the route runs an empty task list safely and idempotently on stagin
 
 ---
 
+<a id="p6"></a>
+
 # Phase P6 — Delivery Module (`delivery`)
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** guards log deliveries; residents choose allow, leave at gate or deny; parcels left at the gate are tracked until collected (PRD 5.2, DEL-1 to DEL-7).
 
@@ -717,7 +772,11 @@ _Done when:_ the route runs an empty task list safely and idempotently on stagin
 
 ---
 
+<a id="p7"></a>
+
 # Phase P7 — Billing Module (`billing`)
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** societies bill residents, residents pay the society's UPI directly and submit the reference, admins confirm, and everyone sees an exact, append-only statement (PRD 5.3, BIL-1 to BIL-17).
 
@@ -800,7 +859,11 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 
 ---
 
+<a id="p8"></a>
+
 # Phase P8 — Service Requests Module (`service_request`)
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** residents raise requests, admins assign and track them against SLA, residents confirm and rate (PRD 5.4, SRQ-1 to SRQ-9).
 
@@ -825,7 +888,11 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 
 ---
 
+<a id="p9"></a>
+
 # Phase P9 — Operations: Daily Job, Retention, Backups, Monitoring
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** the unattended parts run reliably and the developer can see when they do not.
 
@@ -835,14 +902,14 @@ Tests cover the module gate's required set: unit tests (money, CSV, PDFs, valida
 backups remain paused; production backup activation and Storage-file backup
 remain explicitly deferred as described below.
 
-| ID   | Task                                                                                                                                                                                                                                                        | Size | Status                                              |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | --------------------------------------------------- |
-| P9.1 | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired visitor entries, request auto-close); delivery overdue status is computed on read, not by a daily task. Verify run-key idempotency across the tasks        | M    | ✅                                                  |
-| P9.2 | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                                                                                | L    | ✅                                                  |
-| P9.3 | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                                                                             | M    | ✅                                                  |
-| P9.4 | Google Drive encrypted database export and compatible restore drill verified for homeish-testdb; scheduled backups remain paused pending production safeguards. Weekly file copy is deferred for lack of an approved least-privilege credential             | M    | ✅ testdb scope; production backups and file copy ⏸ |
-| P9.5 | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. The day cycle, idempotency, resident reminder, uptime outage/recovery email, and application-originated critical alert/email were verified | M    | ✅                                                  |
-| P9.6 | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; guarded testdb workflow passed in GitHub Actions on 2026-11-12                                                                                                    | M    | ✅                                                  |
+| ID                    | Task                                                                                                                                                                                                                                                        | Size | Status                                              |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | --------------------------------------------------- |
+| P9.1                  | Register every module's daily tasks in the runner (late fees, reminders, stale payments, expired visitor entries, request auto-close); delivery overdue status is computed on read, not by a daily task. Verify run-key idempotency across the tasks        | M    | ✅                                                  |
+| P9.2                  | Retention and anonymisation task per DATABASE 11.3 (visitor/delivery anonymise, pre-approvals, requests, notifications, logs, jobs, rate-limit counters, orphan file report)                                                                                | L    | ✅                                                  |
+| P9.3                  | Developer-run user erasure: delete Auth identity, retain an anonymized profile tombstone, revoke access, preserve historical content, and audit                                                                                                             | M    | ✅                                                  |
+| <a id="p9-4"></a>P9.4 | Google Drive encrypted database export and compatible restore drill verified for homeish-testdb; scheduled backups remain paused pending production safeguards. Weekly file copy is deferred for lack of an approved least-privilege credential             | M    | ✅ testdb scope; production backups and file copy ⏸ |
+| P9.5                  | Health and developer surfaces expose daily-job freshness; uptime, Sentry, and email-quota alerts are configured. The day cycle, idempotency, resident reminder, uptime outage/recovery email, and application-originated critical alert/email were verified | M    | ✅                                                  |
+| P9.6                  | Read-only integrity suite, deliberate-corruption tests, and monthly workflow implemented; guarded testdb workflow passed in GitHub Actions on 2026-11-12                                                                                                    | M    | ✅                                                  |
 
 **Database changes:** retention/anonymise functions; no new tables. **API changes:** none beyond the daily route's task list.
 
@@ -877,23 +944,27 @@ DATABASE 15.2.
 
 ---
 
+<a id="p10"></a>
+
 # Phase P10 — Hardening and Pilot Go-Live
+
+[Back to phase overview](#overview-mvp)
 
 **Goal:** prove the MVP is safe, accessible, fast enough and operable, then enable it for one pilot society.
 
 **Prerequisites:** P9 complete; owner actions in 2.3; DEPLOYMENT.md and OPERATIONS.md finished; LOCAL_SETUP.md current.
 
-| ID    | Task                                                                                                                                                                                                                                                                                                                                                     | Size | Status                                                 |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------ |
-| P10.1 | Security review: row-level security audit of every table, cross-society attack tests on every operation, header and cookie checks, secrets scan, dependency vulnerability scan, privileged-usage review                                                                                                                                                  | L    | ✅                                                     |
-| P10.2 | Accessibility pass: manual keyboard, TalkBack, VoiceOver, 200% zoom, outdoor-brightness contrast check on a guard device; fix findings                                                                                                                                                                                                                   | L    | ⛔ Automated part ✅; waits for owner device checks    |
-| P10.3 | Performance check with generated data at target scale (1,500 units, large visitor/log tables): list queries, bill generation, dashboards; add indexes only where measured slow                                                                                                                                                                           | M    | ✅                                                     |
-| P10.4 | Failure drills: database unreachable, realtime down, email/push failure, scheduler missed, duplicate submissions, concurrent decisions; confirm the documented behavior                                                                                                                                                                                  | M    | ✅                                                     |
-| P10.5 | Production setup: resume `homeish-live` (AD-14); paid plan with backups once the first society pays, with the own nightly off-site copy verified before the first society (AD-06 amended); Vercel plan per the owner's decision, your domain and sender verification, production secrets set, regions chosen (API APA-04), Sentry and uptime alerts live | M    | ⬜                                                     |
-| P10.6 | Restore drill from the production-like backup; integrity checks pass                                                                                                                                                                                                                                                                                     | M    | ⛔ testdb drills ✅; production repeat waits for P10.5 |
-| P10.7 | Seed a demo/test society (synthetic) and run the full UAT script per module with the owner                                                                                                                                                                                                                                                               | M    | ⛔ Script ready; waits for owner UAT run on beta       |
-| P10.8 | Go-live: create the pilot society, enable modules one at a time (visitor, delivery, billing, requests) as each passes UAT, onboard the admin, monitor errors daily                                                                                                                                                                                       | M    | ⬜                                                     |
-| P10.9 | Pilot review against PRD success criteria (PRD 14.4) and a prioritised list of fixes and post-MVP items                                                                                                                                                                                                                                                  | S    | ⬜                                                     |
+| ID                      | Task                                                                                                                                                                                                                                                                                                                                                     | Size | Status                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------ |
+| P10.1                   | Security review: row-level security audit of every table, cross-society attack tests on every operation, header and cookie checks, secrets scan, dependency vulnerability scan, privileged-usage review                                                                                                                                                  | L    | ✅                                                     |
+| P10.2                   | Accessibility pass: manual keyboard, TalkBack, VoiceOver, 200% zoom, outdoor-brightness contrast check on a guard device; fix findings                                                                                                                                                                                                                   | L    | ⛔ Automated part ✅; waits for owner device checks    |
+| P10.3                   | Performance check with generated data at target scale (1,500 units, large visitor/log tables): list queries, bill generation, dashboards; add indexes only where measured slow                                                                                                                                                                           | M    | ✅                                                     |
+| P10.4                   | Failure drills: database unreachable, realtime down, email/push failure, scheduler missed, duplicate submissions, concurrent decisions; confirm the documented behavior                                                                                                                                                                                  | M    | ✅                                                     |
+| <a id="p10-5"></a>P10.5 | Production setup: resume `homeish-live` (AD-14); paid plan with backups once the first society pays, with the own nightly off-site copy verified before the first society (AD-06 amended); Vercel plan per the owner's decision, your domain and sender verification, production secrets set, regions chosen (API APA-04), Sentry and uptime alerts live | M    | ⬜                                                     |
+| P10.6                   | Restore drill from the production-like backup; integrity checks pass                                                                                                                                                                                                                                                                                     | M    | ⛔ testdb drills ✅; production repeat waits for P10.5 |
+| P10.7                   | Seed a demo/test society (synthetic) and run the full UAT script per module with the owner                                                                                                                                                                                                                                                               | M    | ⛔ Script ready; waits for owner UAT run on beta       |
+| <a id="p10-8"></a>P10.8 | Go-live: create the pilot society, enable modules one at a time (visitor, delivery, billing, requests) as each passes UAT, onboard the admin, monitor errors daily                                                                                                                                                                                       | M    | ⬜                                                     |
+| <a id="p10-9"></a>P10.9 | Pilot review against PRD success criteria (PRD 14.4) and a prioritised list of fixes and post-MVP items                                                                                                                                                                                                                                                  | S    | ⬜                                                     |
 
 **Tests/verification:** all earlier suites green on staging; manual checklists recorded; PRD success metrics collected.
 
@@ -923,7 +994,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p11"></a>
+
 # Phase P11 — Notice Board (`notice`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** admins and committee publish notices to chosen audiences; residents read them with pinned notices first; authors see aggregate read counts (PRD 5.8, D-21, NTC-1 to NTC-3).
 
@@ -946,7 +1021,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p12"></a>
+
 # Phase P12 — Staff Management (`staff`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** residents register domestic staff, guards record explicit entry and exit, admins manage society staff and shift attendance (PRD 5.5, P2-1, STF-1 to STF-12).
 
@@ -969,7 +1048,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p13"></a>
+
 # Phase P13 — Housekeeping Inventory (`housekeeping`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** supervisors and admins track cleaning and consumable stock, get low-stock alerts and report usage (PRD 5.6, P2-2, HKP-1 to HKP-7).
 
@@ -991,7 +1074,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p14"></a>
+
 # Phase P14 — AMC Management (`amc`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** admins track annual maintenance contracts, visits and renewals so contracts do not lapse (PRD 5.7, P2-3, AMC-1 to AMC-7).
 
@@ -1013,7 +1100,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p15"></a>
+
 # Phase P15 — Amenity Booking (`amenity`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** admins define amenities and slots; residents book and cancel; paid bookings post to the unit ledger (PRD 5.9, D-22, AMN-1 to AMN-3).
 
@@ -1037,7 +1128,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p16"></a>
+
 # Phase P16 — Society Expenses and Accounts (`expense`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** simple society bookkeeping — expenses, receipts, cash and bank books, billing income and reports — without double-entry accounting (PRD 5.10.1, P3-1, D-39, EXP-1 to EXP-6).
 
@@ -1065,7 +1160,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p17"></a>
+
 # Phase P17 — Resident and Vehicle Directory (`directory`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** residents manage household vehicles and emergency contacts with privacy controls; admins verify; committee reviews read-only; guards identify resident vehicles without seeing phones (PRD 5.10.2, P3-2, DIR-1 to DIR-6).
 
@@ -1092,7 +1191,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p18"></a>
+
 # Phase P18 — Tenancy: Move-in and Move-out (`tenancy`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** residents and admins run move-in and move-out requests with owner consent, private proofs, a dues check, a NOC and Core occupancy changes on actual completion (PRD 5.10.3, P3-3, TEN-1 to TEN-5).
 
@@ -1121,7 +1224,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p19"></a>
+
 # Phase P19 — Document Repository (`document`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** admins publish society documents to the right audience with versions and audited access; residents download documents issued to their unit (PRD 5.10.4, P3-4, DOC-1 to DOC-4).
 
@@ -1145,7 +1252,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p20"></a>
+
 # Phase P20 — Parking Management (`parking`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** admins allocate parking slots with a fair waitlist; residents issue visitor passes; anyone can report wrong parking (PRD 5.10.5, P3-5, PRK-1 to PRK-4).
 
@@ -1170,7 +1281,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p21"></a>
+
 # Phase P21 — Emergency and SOS (`sos`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** a resident raises an SOS in one confirmed tap and on-duty responders see a persistent alert until it is acknowledged and closed (PRD 5.10.6, P3-6, SOS-1 to SOS-5). Delivered through in-app notifications and Realtime only (D-41).
 
@@ -1194,7 +1309,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p22"></a>
+
 # Phase P22 — Polls and Voting (`poll`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** a native Homeish voting module ported from the Civic Pulse design: PUBLIC polls and PRIVATE elections with one vote per unit and zero duplicate, partial or late ballots (PRD 5.10.7, P4-1, D-40, D-42, POL-1 to POL-6).
 
@@ -1232,7 +1351,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p23"></a>
+
 # Phase P23 — Meetings and AGM (`meeting`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** admins schedule meetings with agenda and notice-period checks, record unit attendance and quorum, link resolutions to votes and publish minutes (PRD 5.10.8, P4-2, MTG-1 to MTG-4).
 
@@ -1259,7 +1382,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p24"></a>
+
 # Phase P24 — Vendors and Purchase Approvals (`vendor`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** a society vendor directory and quote-based purchase approvals that feed expenses (PRD 5.10.9, P4-3, VEN-1 to VEN-4).
 
@@ -1293,7 +1420,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p25"></a>
+
 # Phase P25 — Guard Patrol and Incident Log (`patrol`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** guards complete checkpoint rounds, report incidents and hand over shifts; admins see missed checkpoints and serious incidents (PRD 5.10.10, P4-4, PAT-1 to PAT-4).
 
@@ -1326,7 +1457,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p26"></a>
+
 # Phase P26 — Utility Metering (`metering`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** societies record meter readings and bill consumption through the existing bills (PRD 5.10.11, P4-5, MTR-1 to MTR-4).
 
@@ -1359,7 +1494,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p27"></a>
+
 # Phase P27 — Committee Analytics Dashboard (Core)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** one aggregate dashboard for admin and committee covering only enabled modules (PRD 5.10.12, P4-6, ANL-1 to ANL-2).
 
@@ -1381,7 +1520,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p28"></a>
+
 # Phase P28 — Asset Register (`asset`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** a register of common assets with warranty details, AMC links and maintenance history (PRD 5.10.13, P5-1).
 
@@ -1408,7 +1551,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p29"></a>
+
 # Phase P29 — Resident Community and Marketplace (`community`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** moderated discussion groups and buy/sell/give-away and lost-and-found listings, with no payments (PRD 5.10.13, P5-2).
 
@@ -1436,7 +1583,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p30"></a>
+
 # Phase P30 — Events and RSVPs (`event`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** event announcements with RSVPs and optional contributions billed through the existing bills (PRD 5.10.13, P5-3).
 
@@ -1463,7 +1614,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p31"></a>
+
 # Phase P31 — Home-Services Directory (`home_services`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** a society-curated list of local service providers with resident ratings; no provider logins or bookings (PRD 5.10.13, P5-4).
 
@@ -1490,7 +1645,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p32"></a>
+
 # Phase P32 — Service-Request SLA Escalation (`service_request`)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** service requests past their SLA escalate to the next level (admin → committee, PRD D-59) at configurable intervals (PRD 5.10.13, P5-5).
 
@@ -1517,7 +1676,11 @@ DATABASE 15.2.
 
 ---
 
+<a id="p33"></a>
+
 # Phase P33 — Multi-language (Core)
+
+[Back to phase overview](#overview-expansion)
 
 **Goal:** English/Hindi for all society-facing screens, chosen by each user (PRD 5.10.13, P5-6, D-66). Hindi is available to signed-in society users only when the developer enables the Language Support module and an admin allows Hindi for that society (D-67). Regional languages require a later decision; user content is never translated.
 
@@ -1576,7 +1739,11 @@ The profile and availability migrations, locally regenerated types, account/devi
 
 ---
 
+<a id="p34"></a>
+
 # Phase P34 — Multi-society Overview (Deferred)
+
+[Back to phase overview](#overview-expansion)
 
 **Status:** ⏸ deferred to the future on 2026-11-17 (PRD D-65). The owner is not sure it is needed. Not planned, not estimated, no tasks. The number stays reserved so earlier references still make sense.
 
@@ -1584,7 +1751,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p35"></a>
+
 # Phase P35 — Toolkit Housing Additions (M25 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** enrich the existing app with the accepted setup/help/working tools and the explicitly selected financial/clearance additions, without replacing working modules or treating workbook examples as requirements.
 
@@ -1644,7 +1815,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p36"></a>
+
 # Phase P36 — Unit and Ownership Records (M03 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** enrich Core unit records and provide linked property/occupancy views while keeping app access, occupancy, legal ownership, documents and financial records distinct.
 
@@ -1652,22 +1827,24 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Owner decision boundary:** all ten items are accepted for planning. GAP-M03-04 waits for M02/M18 title/member decisions; GAP-M03-05 waits for M10/M11 accounting decisions; GAP-M03-07 waits for M18/M19 workflow decisions and an approved handoff to existing P26 meter records. Tool examples are not law, mandatory checklists, area standards, authority to collect IDs or evidence that amounts were paid.
 
+**Local build approved:** start with the grouped register and private Tenancy summaries, then build the admin-only Unit 360 workspace with measured-area history and private vacancy follow-up before the building layout. The layout uses admin-drawn floors and spots, explicit unit placement from Unit 360, stale-edit protection and no inferred geometry. Defer P36.6/P36.8 pending approved categories and checklist; existing document access remains unchanged.
+
 **Planning notes:** Scope — Verified area profile, unit layout, tenancy summary, title/share records, allotments, agreement index, handover, document index, vacancy follow-up and Unit 360 view. P36 records all ten accepted M03 items. Acceptance is not a legal determination, money-posting approval, implementation authorization or permission to collect additional identity data. Resolve each named gate before its affected work; unrelated slices may proceed independently after their own kickoff decisions.
 
 **Tasks:**
 
-| ID                        | Task                                                                                   | Size | Depends on                                                                                   | Sources | Status |
-| ------------------------- | -------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------- | ------- | ------ |
-| <a id="p36-1"></a>P36.1   | Add a source-aware measured-area profile and verification history                      | M    | Core units; M08/by-law decision before area changes affect any charge                        | 25, 28  | ⬜     |
-| <a id="p36-2"></a>P36.2   | Add a read-only wing/floor layout from the Core unit register                          | M    | Confirm physical layout/position source and role visibility; no assumed tower geometry       | 26      | ⬜     |
-| <a id="p36-3"></a>P36.3   | Add a role-limited tenancy-status summary derived from Tenancy                         | S    | Existing Tenancy/Directory data and approved projections; M19 may consolidate reports        | 27      | ⬜     |
-| <a id="p36-4"></a>P36.4   | Decide and, if approved at M02/M18 kickoff, add legal title-transfer/co-holder history | L    | M02 legal membership and M18 transfer decisions; M04 bye-laws; authority and history policy  | 29, 30  | ⬜     |
-| <a id="p36-5"></a>P36.5   | Add allotment-letter lifecycle with audited links to approved accounting evidence      | M    | M10 funds and M11 accounting/receipts; M02/M18 allotment authority                           | 31      | ⬜     |
-| <a id="p36-6"></a>P36.6   | Add restricted agreement-copy metadata linked to the existing repository               | S    | Existing Document Repository; M04/M18 agreement categories and legal text                    | 32      | ⬜     |
-| <a id="p36-7"></a>P36.7   | Add a unit possession/handover event and checklist                                     | M    | M18 transfer, M19 tenancy/facilities, P26 meter records; Core occupancy stays authoritative  | 33      | ⬜     |
-| <a id="p36-8"></a>P36.8   | Add a linked per-unit document availability/completeness index                         | M    | M04/M18 approved categories; existing private-file audiences; no ID-proof collection         | 34      | ⬜     |
-| <a id="p36-9"></a>P36.9   | Add a private vacancy/locked-unit follow-up lifecycle                                  | M    | Core unit/occupant records; M02 owner mapping; M08/M09 before money figures                  | 35      | ⬜     |
-| <a id="p36-10"></a>P36.10 | Add a live, read-only Unit 360 view from authorized enabled modules                    | M    | Core; Billing/Parking/Documents only when enabled and permitted; existing analytics patterns | 36      | ⬜     |
+| ID                        | Task                                                                                   | Size | Depends on                                                                                   | Sources | Status        |
+| ------------------------- | -------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------- | ------- | ------------- |
+| <a id="p36-1"></a>P36.1   | Add a source-aware measured-area profile and verification history                      | M    | Core units; M08/by-law decision before area changes affect any charge                        | 25, 28  | Built locally |
+| <a id="p36-2"></a>P36.2   | Add the admin-drawn building layout and Unit 360 placement                             | M    | Core unit register and explicit admin-entered positions; no assumed tower geometry           | 26      | Built locally |
+| <a id="p36-3"></a>P36.3   | Add a role-limited tenancy-status summary derived from Tenancy                         | S    | Existing Tenancy/Directory data and approved projections; M19 may consolidate reports        | 27      | Built locally |
+| <a id="p36-4"></a>P36.4   | Decide and, if approved at M02/M18 kickoff, add legal title-transfer/co-holder history | L    | M02 legal membership and M18 transfer decisions; M04 bye-laws; authority and history policy  | 29, 30  | ⬜            |
+| <a id="p36-5"></a>P36.5   | Add allotment-letter lifecycle with audited links to approved accounting evidence      | M    | M10 funds and M11 accounting/receipts; M02/M18 allotment authority                           | 31      | ⬜            |
+| <a id="p36-6"></a>P36.6   | Add restricted agreement-copy metadata linked to the existing repository               | S    | Existing Document Repository; M04/M18 agreement categories and legal text                    | 32      | ⬜            |
+| <a id="p36-7"></a>P36.7   | Add a unit possession/handover event and checklist                                     | M    | M18 transfer, M19 tenancy/facilities, P26 meter records; Core occupancy stays authoritative  | 33      | ⬜            |
+| <a id="p36-8"></a>P36.8   | Add a linked per-unit document availability/completeness index                         | M    | M04/M18 approved categories; existing private-file audiences; no ID-proof collection         | 34      | ⬜            |
+| <a id="p36-9"></a>P36.9   | Add a private vacancy/locked-unit follow-up lifecycle                                  | M    | Core unit/occupant records; M02 owner mapping; M08/M09 before money figures                  | 35      | Built locally |
+| <a id="p36-10"></a>P36.10 | Add a live, read-only Unit 360 view from authorized enabled modules                    | M    | Core; Billing/Parking/Documents only when enabled and permitted; existing analytics patterns | 36      | Built locally |
 
 **Acceptance by task:**
 
@@ -1682,39 +1859,45 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 - **P36.9 — vacancy lifecycle (GAP-M03-09).** Track only approved minimal vacancy/locked dates, status, assigned follow-up, inspection date and next follow-up, with narrowly scoped access and retention. Treat sample reasons/contact fields as optional and do not collect extra owner details by default. A unit without an occupant is not automatically vacant/locked; vacancy does not deactivate the unit, stop billing, imply absence of an owner or calculate “maintenance at risk.” No sensitive dispute/owner-tracing details appear in guard, resident, committee or public views absent an approved purpose.
 - **P36.10 — Unit 360 (GAP-M03-10).** Build a live read-only view from normalized unit, current occupancy and the enabled/authorized Billing, Parking and Document sources. No copied master row or manually entered amount/status. If a module is disabled, show unavailable/not checked, not zero or cleared. Default person-level details to authorized admin; committee receives only its existing aggregate/specific permissions; no cross-unit resident lookup. Test that linked source access rules are preserved.
 
-**Database and API changes:** planned only. Reuse existing Core and module boundaries; do not add a competing member/title source until P36.4's kickoff outcome. Any future schema work is a forward-only migration with same-society keys, row-level security, minimal grants, generated types, audit/history behavior and database tests. New operations/pages follow the existing contracts. No ID collection, new dependency or live financial integration is approved by this plan.
+**Database and API changes:** The approved scope uses migration `20261125110000_core_p36_unit_records.sql`, generated database types and the Unit 360 operations documented in [API.md](./API.md). Building layouts use migration `20261126090000_core_building_layout.sql` (`building_floors`, `building_spaces`; it drops the pilot `unit_floor_positions`). Measured-area history, vacancy follow-ups and layout placements extend existing Core unit records; they do not create a competing member or title source. No ID collection, new dependency or live financial integration is approved by this plan.
 
-**Tests to add when implementing:** targeted area source/verification and unchanged-billing regressions; layouts with no block/irregular/unknown positions; tenancy summary role projections and disabled/optional proof; title/co-holder audit/access/history; allotment receipt reconciliation and no payment-shaped manual entry; agreement file audience preservation; handover idempotency and no automatic access/dues effect; document-index unknown/missing distinctions and no ID fields; vacancy vs inactive/occupant/charge boundaries; Unit 360 role/module combinations and live authoritative amounts. Add local database isolation/append-only/concurrency tests and phone/desktop accessible journeys for changed screens. These new tests have not been implemented or run.
+**Local verification (2026-11-21):** The synthetic one-floor schematic pilot passed. On `feature-build-2` at `f09783c`, `npm run check` passed (883 unit tests), the disposable PostgreSQL suite passed (462 passed, 11 skipped), the production build passed, and Playwright passed (222 tests). Deferred and future slices still need their own acceptance tests when implemented.
 
 **Completion criteria:** each slice closes its named review gate, obtains any required owner approval, updates its owning PRD/DESIGN/DATABASE/API documents, passes Section 2.2 checks, and preserves existing role, module-toggle, privacy, retention and financial-history guarantees. Legal/statutory points: **verify against the state co-operative act / our bye-laws**. No live collection, legal determination or production enablement follows from acceptance of the plan.
 
+**Owner walkthrough follow-up — building layout designer, built locally:** The owner approved the synthetic designer (2026-11-26) in place of the earlier settings and 3×3 grid idea. Society Structure shows one building at a time as a front view (roof, floors, Ground, basements). Admins add floors, basements and spots with **+** buttons inside the drawing and open a popup by selecting a floor name or box. Spots can be unit, parking, amenity, shop, service room or gap; a floor can be one whole-floor use; units can be duplexes; a floor's layout can be copied to a range. **Add building** creates a block. Units are placed from Unit 360, which also sets their block and floor; a later block or floor change removes the placement. Committee members see the layout read-only. Nothing generates units. The older Unit layout card and **Arrange floor** schematic are removed.
+
 **Build batch:** B3 — P36.1–P36.3, P36.6 and P36.8–P36.10; B7 — P36.7 handover. P36.4 and P36.5 move to a possible future Pro version and are not scheduled (Section 2.6 build batches).
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P36.4 remains gated by M02/M18; P36.5 by M10/M11; P36.7 by M18/M19 decisions and the P26 meter-record handoff. Other unresolved per-slice privacy/access/legal decisions remain kickoff gates.
+**Status:** 🟡 Original approved scope verified and committed locally (`db00566`, `2a645a2`): P36.1 measured-area history, P36.2 grouped register and schematic, P36.3 private move summaries, P36.9 vacancy follow-ups with retention, and P36.10 Unit 360. The local walkthrough follow-up adds compact measurement fields and the building layout designer (migration `20261126090000`), plus moving the Structure, Members, Guards, Settings and Jobs screens under `/admin`. The owner signed off the synthetic designer and Unit 360 placement on 2026-11-21; the local gate passed (`npm run check`, disposable PostgreSQL suite, production build, Playwright). Not yet committed; hosted testdb migration, type regeneration and a real-data walkthrough on testdb are pending approval. No release or hosted migration. P36.6/P36.8 stay deferred pending approved categories and checklist; P36.4/P36.5 remain unscheduled Pro items and P36.7 remains in B7.
 
 ---
 
+<a id="p37"></a>
+
 # Phase P37 — Billing Additions (M08 review)
 
-**Goal:** Plan the accepted billing additions without changing existing bills, payment behavior, parking rules or delivery channels unless the required owner and contract approvals are completed.
+[Back to phase overview](#overview-toolkit)
+
+**Goal:** Add the approved charge methods, occupancy rules, estimator and billing summaries without changing published bills, payments, parking or delivery channels.
 
 **Prerequisites:** Existing billing charge configuration, bill generation, unit/occupancy records, confirmed-payment and unit-ledger services, and billing reports. P37 slices may proceed independently after their own kickoff gates; no unrelated module review is an automatic dependency. **Proposed size:** about 9 blocks (2 S, 2 M, 1 L tasks); not approved, confirm or re-split at kickoff.
 
-**Source and approval:** M08 Tools 85–96, compared at detail level; all seven decisions accepted for planning on 2026-11-18 in the [Toolkit Review Decisions](#toolkit-review-decisions) register. Tools 86/87's primary bill-generation and printing workflows are already covered; this is not a claim of full workbook parity. No implementation is authorized.
+**Source and approval:** Toolkit-M08, Tools 85–96; see the [Toolkit Review Decisions](#toolkit-review-decisions). The owner approved local implementation of P37.1–P37.4 on 2026-11-20. P37.5 still requires separate approval. Tools 86/87's primary bill-generation and printing workflows are already covered, not full workbook parity.
 
-**Planning notes:** Scope — Optional percentage-of-Maintenance basis, occupancy eligibility, read-only area estimate and billing summaries; gated channel review. P37 records all seven accepted M08 decisions. The percentage method changes the D-12 billing contract and requires its approval before implementation. Preserve the selected parking, payment and delivery behavior; acceptance is planning only and does not authorize implementation, release or live use.
+**Planning notes:** The D-12 update and BIL-22–BIL-24 cover the four approved tasks. Keep the existing parking, payment and delivery behavior. Implementation approval does not authorize release or live use.
 
 **Kickoff gates:** Update and approve D-12 and the affected billing contracts before adding the percentage method. Establish an authoritative historical occupancy source for the first day of each billed month; preserve D-29's unit/current-owner liability. Keep parking fees and payment-clearing behavior unchanged. Derive summaries only from authoritative bills, confirmed payments and unit-ledger entries; do not exceed D-62's 2–3 analytics metrics per module. Keep bill email/WhatsApp blocked until purpose, channel, privacy, access and retention are approved; WhatsApp also requires a D-06 change. No affected implementation starts before its gates close.
 
 **Tasks:**
 
-| ID                      | Task                                                                                    | Size | Depends on                                                                                         | Sources        | Status |
-| ----------------------- | --------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------- | -------------- | ------ |
-| <a id="p37-1"></a>P37.1 | Add an optional percentage-of-Maintenance method per charge head                        | M    | P35.1; D-12 and billing contracts approved before implementation; unambiguous same-unit/month base | 85             | ⬜     |
-| <a id="p37-2"></a>P37.2 | Add charge eligibility by occupancy at the first day of the billed month                | L    | Authoritative effective-dated occupancy source; preserve D-29 unit/current-owner liability         | 85             | ⬜     |
-| <a id="p37-3"></a>P37.3 | Add a non-persistent area/flat charge estimate                                          | S    | Existing calculation service; P37.1/P37.2 only for estimates using those rules                     | 88             | ⬜     |
-| <a id="p37-4"></a>P37.4 | Add read-only billing summaries from authoritative bills, payments and unit-ledger data | M    | BIL-11/12 and ledger; D-62 review for any P27 metric                                               | 92, 93, 95, 96 | ⬜     |
-| <a id="p37-5"></a>P37.5 | Reassess bill email/WhatsApp only after purpose, channel and privacy approval           | S    | D-06 decision; approved purpose, recipients, access and retention; no sending provider by default  | 94             | ⬜     |
+| ID                      | Task                                                                                    | Size | Depends on                                                                                         | Sources        | Status                      |
+| ----------------------- | --------------------------------------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------- | -------------- | --------------------------- |
+| <a id="p37-1"></a>P37.1 | Add an optional percentage-of-Maintenance method per charge head                        | M    | P35.1; D-12 and billing contracts approved before implementation; unambiguous same-unit/month base | 85             | 🟡 Built and tested locally |
+| <a id="p37-2"></a>P37.2 | Add charge eligibility by occupancy at the first day of the billed month                | L    | Authoritative effective-dated occupancy source; preserve D-29 unit/current-owner liability         | 85             | 🟡 Built and tested locally |
+| <a id="p37-3"></a>P37.3 | Add a non-persistent area/flat charge estimate                                          | S    | Existing calculation service; P37.1/P37.2 only for estimates using those rules                     | 88             | 🟡 Built and tested locally |
+| <a id="p37-4"></a>P37.4 | Add read-only billing summaries from authoritative bills, payments and unit-ledger data | M    | BIL-11/12 and ledger; D-62 review for any P27 metric                                               | 92, 93, 95, 96 | 🟡 Built and tested locally |
+| <a id="p37-5"></a>P37.5 | Reassess bill email/WhatsApp only after purpose, channel and privacy approval           | S    | D-06 decision; approved purpose, recipients, access and retention; no sending provider by default  | 94             | ⛔ Blocked                  |
 
 ### <a id="p37-current-behavior"></a>Current-behavior decisions
 
@@ -1730,19 +1913,23 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 - **P37.4 — read-only summaries (GAP-M08-06).** Add only missing billing-report detail: confirmed collections by supported payment mode, aggregate wing totals, bill-status summaries and unapplied unit credit derived from the authoritative ledger. Keep pending/rejected submissions out of confirmed totals. Do not create editable balance fields, duplicate BIL-11/12, or expose names, phone numbers or unit-level balances in analytics. Add no P27 metric unless an existing metric is replaced after owner review under D-62.
 - **P37.5 — gated delivery-channel review (GAP-M08-07).** No delivery ledger or channel change is made now. Reconsider bill email/WhatsApp only after separate approval of purpose, channel, recipients, access and retention; WhatsApp additionally needs an explicit D-06 change. Do not add a sending provider or claim delivery based on a notification attempt.
 
-**Database and API changes:** planned only. At kickoff, determine whether approved charge/occupancy/reporting contracts require a forward-only migration, generated types or API changes; include same-society constraints, row-level security and database tests as required. Do not alter published bill/payment history, duplicate ledger balances or introduce a delivery ledger under this plan.
+**Database and API changes:** A forward-only migration adds charge-rule fields, audited tenant move-in confirmation and read-only estimate and report operations. Regenerate types and verify permissions, same-society constraints and unchanged published history before release.
 
-**Tests to add when implementing:** percentage calculation uses the same unit/month base, is independent of row ordering, rounds per existing rules and preserves the three current methods and published bills; occupancy uses the period-start snapshot, includes vacant units for `All` and preserves D-29; area estimates make no writes; summaries reconcile to confirmed payments and ledger credit while excluding pending/rejected submissions; role access and D-62 limits hold; parking, payment and delivery behavior remain unchanged unless separately approved. These tests are planned only and have not been implemented or run.
+**Verification required:** Check percentage base resolution, rounding and immutable published bills; effective period-start occupancy, confirmed dates and unchanged unit liability; no-write estimates; reports reconciled against confirmed payments and advance credit; role restrictions and no new P27 metric. Keep parking, payment and delivery behavior unchanged.
 
 **Completion criteria:** each implemented slice closes its kickoff gates, updates and obtains approval for its owning contracts, passes Section 2.2 and its listed tests, and preserves existing role, privacy, immutable-history and financial guarantees. No fee, payment, delivery or live-society action follows from plan acceptance.
 
 **Build batch:** B3 — P37.1–P37.4; B7 — P37.5, with the admin choosing a free share link or a paid WhatsApp Business provider (provider and D-06 change need approval; Section 2.6 build batches).
 
-**Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. P37.1 awaits D-12 and billing-contract approval; P37.2 awaits an authoritative historical occupancy source; P37.5 remains gated by D-06 and purpose/privacy decisions.
+**Status:** 🟡 P37.1–P37.4 built and tested locally under the approval of 2026-11-20 (PRD BIL-1 and BIL-22–BIL-24). The local check, production build, full browser suite and disposable database suite passed. Not released or owner-UAT-approved. P37.5 remains gated by D-06 and purpose/privacy decisions.
 
 ---
 
+<a id="p38"></a>
+
 # Phase P38 — Dues and Arrears (M09 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add approved dues-management trackers and a read-only collection report while preserving current late fees, defaulter reporting, audited corrections, payment records and analytics definitions.
 
@@ -1788,7 +1975,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p39"></a>
+
 # Phase P39 — Accounts & Cash Book (M11 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add the accepted M11 book-detail, reconciliation, petty-cash, fixed-deposit and reporting features without changing P16's simple-bookkeeping model or cheque-posting behavior.
 
@@ -1823,6 +2014,9 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 - **P39.3 — bank reconciliation (GAP-M11-05).** Record statement/reconciling-item details, including date, reference, party, item type and amount; derive the effect, days outstanding and ageing flag. Keep the statement comparison separate from P16 entries. A discrepancy is not a posted income/expense; actual adjustments use the existing audited P16 operations.
 - **P39.4 — petty cash (GAP-M11-06).** Link the custodian/imprest view to existing P16 cash entries and derive its book amount from them. Show any physical cash count separately from the book balance. Do not add a second editable cash balance, change expense approval thresholds or duplicate a posting.
 - **P39.5 — fixed deposits (GAP-M11-07).** Link bank, fund and deposit receipt number with principal, rate, tenure, deposit/maturity dates, maturity value, accrued interest and status to the single M10 fund map shared with P40.1. Label computed maturity/accrual figures as estimates until confirmed. Do not automatically post principal, accrued interest or proceeds; actual receipts follow P16's approved entry path. Verify terms, tax and accounting treatment with an accountant and applicable bye-laws.
+
+  **Bank-confirmed entry:** Add a Fixed Deposits section in the society admin panel. Society admins enter the bank, linked society fund, deposit receipt reference, principal, quoted rate, deposit and maturity dates, and maturity value as stated by their bank. If the bank has not confirmed a figure, leave it unknown rather than assuming zero or estimating it. P40.6 can derive the countdown from the entered maturity date. This is manual record-keeping, not a bank connection, renewal or posting workflow. Any calculation of accrual or recognition of interest, TDS or proceeds stays subject to accountant review.
+
 - **P39.6 — monthly/cumulative report (GAP-M11-08).** Derive monthly net and cumulative net flow from posted P16 entries; retain existing financial-year defaults and report definitions. Label net flow distinctly from available cash/account balances. Do not add a P27 metric or a manually keyed summary.
 
 **Database and API changes:** P39.1–P39.4 and P39.6 use migration `20261124110000_expense_vouchers_reconciliation.sql` (DATABASE.md §9.7 P39 additions), the reconciliation and petty-cash operations in API.md and contracts EXP-7–EXP-11 (D-69). P39.5 stays planned for B4 with P40; no migration or API exists for it yet. No P39 record posts or changes a book entry.
@@ -1839,7 +2033,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p40"></a>
+
 # Phase P40 — Fund Management (M10 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add fund-level tracking and reports while keeping P16 as the only source of actual cash/bank entries and preserving D-39's simple-bookkeeping boundary.
 
@@ -1848,6 +2046,8 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 **Source and approval:** M10 Tools 109–120, compared at detail level; all nine decisions accepted for planning on 2026-11-18. M13 GAP-M13-05 extends P40.4 with meeting/resolution and validity details. GAP-M10-04 uses Option B: sanctioned work is tracked separately, but actual spending is derived from linked P16 entries and existing P16 approvals remain unchanged. No implementation is authorized.
 
 **Planning notes:** Scope — Fund allocations, contribution preview, corpus receipts, linked utilization, fund transfers, FD follow-up, interest details and repair forecast. P40 records all nine accepted M10 decisions, including GAP-M10-04 Option B. Keep P16 as the source for actual cash/bank spending and receipts; fund balances are allocations, not duplicate assets. No estimate, tracker or transfer may create a bill, receipt, expense, renewal, levy or legal obligation without the named approval.
+
+**First build slice (owner direction):** Start with P40.1. Society admins configure their own fund list in society admin settings. Use an approved cutover date and opening allocation; keep older entries unallocated until reviewed without counting them again in the opening balance. Allow multiple fund allocations only when they total the source entry exactly, and use the same split for its reversal. Add the P39.5 admin entry section and P40.6 countdown after the fund map is in place; keep calculated interest and accounting treatment gated.
 
 **Kickoff gates:** Approve fund types/IDs, opening allocation, historical-entry mapping, whether entries can be split across funds, and how corrections/reversals affect allocations; approve per-fund rates, area basis, occupancy and tenant surcharge; verify corpus fees and event authority; define sanction/resolution links, meeting source, validity and lifecycle status; confirm allowed fund-transfer pairs and approvers; confirm FD contract calculations, interest/TDS recognition and renewal handling with an accountant; approve target/health definitions; and compare repair-planning scope with M17. Update and approve affected PRD/DATABASE/API contracts before implementation. All real receipts, expenses and reversals continue through P16.
 
@@ -1893,7 +2093,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p41"></a>
+
 # Phase P41 — Financial Statements and Reports (M12 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add useful, read-only financial reports from approved records while preserving P16's cash-basis books, P27's approved dashboard and D-39's simple-bookkeeping boundary.
 
@@ -1946,7 +2150,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p42"></a>
+
 # Phase P42 — Expense Control and Reporting Additions (M13 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add narrowly scoped category metadata, source-linked expense reporting and savings follow-up while preserving P16/P24 financial workflows and P27's catalogue. Budget management remains out of MVP.
 
@@ -1992,7 +2200,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p43"></a>
+
 # Phase P43 — Command Center and Governance Summaries (M01 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add a source-linked admin home and limited read-only reports while preserving existing financial definitions, access boundaries and legal safeguards.
 
@@ -2041,7 +2253,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p44"></a>
+
 # Phase P44 — Registration, Bye-laws & Governing Documents (M04 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add source-linked records for society certificates, governing documents/register maintenance, amendment milestones and private official correspondence/filing/notice cases, plus tightly gated reference checklists, without implying legal compliance or changing money/enforcement behavior.
 
@@ -2085,7 +2301,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 **Status:** ⬜ Accepted for planning only, 2026-11-18. Not implemented, not tested as new functionality, sized only as a proposal, not released, not owner-UAT-approved and not enabled live. M20's register-maintenance and filing/notice-case scope is recorded, not legally verified or implemented. P44.4 and P44.7 remain blocked pending their jurisdiction-specific source and qualified review; all other tasks require their listed kickoff gates.
 
+<a id="p45"></a>
+
 # Phase P45 — Meeting Agenda Enhancements (M06 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add optional agenda time-boxing and reusable templates while preserving P23's meeting records and keeping advisory agenda content separate from statutory requirements.
 
@@ -2119,7 +2339,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p46"></a>
+
 # Phase P46 — Election Governance and Gated Official Voting (M07 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add source-linked election administration and follow-up, and plan a legally verified path to official in-app voting without presenting existing P22 polls as a statutory-election process.
 
@@ -2157,7 +2381,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p47"></a>
+
 # Phase P47 — Vendor, Contract and AMC Additions (M14 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Give admins fuller vendor records, one place for all service contracts, a computable AMC service schedule, monthly agency staff-day checks, tracked work orders and a clear view of vendor bills owed, without the app paying anyone.
 
@@ -2207,7 +2435,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p48"></a>
+
 # Phase P48 — Staff Record Additions (M15 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Fuller non-pay employment records and private, admin-only performance notes for society staff, keeping payroll out of scope.
 
@@ -2245,7 +2477,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p49"></a>
+
 # Phase P49 — Helpdesk Additions (M16 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Priority-based response targets, a pausable On Hold state, better helpdesk reporting and feedback, escalation follow-up, off-app intake, daily common-area checks and vendor linking.
 
@@ -2293,7 +2529,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p50"></a>
+
 # Phase P50 — Repairs and Redevelopment (M17 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Plan source-linked major repair and redevelopment records without creating a second repair forecast, asset/service history, spending ledger, levy process or legal-compliance claim.
 
@@ -2337,7 +2577,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p51"></a>
+
 # Phase P51 — Transfer and Clearance Additions (M18 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Track owner transfers and related committee decisions, and define truthful conditional clearance without treating an NOC as legal title transfer.
 
@@ -2379,7 +2623,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p52"></a>
+
 # Phase P52 — Tenant, Parking and Facilities Additions (M19 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Add only useful detail around existing tenancy, parking and amenity sources, without duplicating occupancy, adding parking fees or bypassing deposit accounting gates.
 
@@ -2421,7 +2669,11 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 
 ---
 
+<a id="p53"></a>
+
 # Phase P53 — Communication Additions (M23 review)
+
+[Back to phase overview](#overview-toolkit)
 
 **Goal:** Help admins plan notices, record member contacts that are not service requests and see communication activity, without duplicating P11 notices or P8/P49 service requests and without adding a sending channel.
 
@@ -2468,6 +2720,8 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 **Status:** 🟡 Built locally. P53.1–P53.3 are implemented and tested locally on `feature-build-2`. Owner UAT and release are pending.
 
 ---
+
+<a id="future-android-app"></a>
 
 # Future — Android App for Residents and Guards (reference only)
 
@@ -2523,6 +2777,8 @@ The scope options (existing-admin overview, outside operator accounts, read-only
 | OPERATIONS.md    | P9.5          | Runbooks: find an error by reference ID, restore a backup, rotate a secret, suspend a society, disable a module  |
 
 ---
+
+<a id="plan-decisions"></a>
 
 # Assumptions and Decisions (Plan)
 

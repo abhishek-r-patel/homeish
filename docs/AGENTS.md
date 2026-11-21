@@ -295,6 +295,12 @@ Update documents **in the same task** as the code, without being asked.
 - Keep the README current with real setup and run instructions once code exists.
 - Add the file's header comment, and list new files in the structure section of ARCHITECTURE when they introduce a new folder or module.
 
+### Future web-based guides
+
+- **Owner direction recorded 2026-11-20:** after the app is complete, create a web-based user guide and technical guide, similar to `arp-civic-pulse`. This records future intent, not approval to build the guides now.
+- When that work is requested, use [Diagram Design](https://github.com/cathrynlavery/diagram-design) with Homeish's colours and typography from DESIGN.md for clear, polished workflow and architecture diagrams. Keep diagrams accurate to the implemented app and pair them with plain-language explanations and accessible text descriptions.
+- The skill and optional `homeish` style profile are currently personal installations, not repository dependencies. Do not assume another developer has them; confirm availability and any installation or sharing changes before proceeding.
+
 ---
 
 ## 16 Git and Release Rules
@@ -313,6 +319,7 @@ The personal instructions cover worktree safety, focused changes, approvals and 
 Windows and PowerShell practices come from the owner's personal Copilot instructions. Project additions:
 
 - Use the manifest scripts and [local setup guide](./LOCAL_SETUP.md), including the disposable PostgreSQL runner for database tests. Plain `npm run test:integration` may skip locally without a configured server; skipped tests are not a pass.
+- RepoWise is optional and uses the separate committed snapshot in [local setup](./LOCAL_SETUP.md#7-optional-repowise). Its results can be stale and omit uncommitted work; verify them against the actual working tree and tests. Do not index the working tree, enable model or network features, or remove code solely on its findings without owner approval.
 - The personal guardrail reads [.github/copilot-protected.txt](../.github/copilot-protected.txt). It asks before edits to deployment/CI configuration, hosted-database and backup tooling, or `src/core/privileged/`. Secret files, generated files, lockfiles and committed migrations already have shared protection.
 - This list requests edit confirmation in Copilot; it does not guard every shell command, replace code review/CI or authorize hosted operations. The managed gitleaks pre-commit hook is installed locally, not committed with the app.
 

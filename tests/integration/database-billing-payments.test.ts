@@ -264,120 +264,68 @@ describe.skipIf(!hasDatabase)('database billing payments', () => {
     ).toBe('42501');
   });
 
-  it.each([
-    {
-      sessionTimeZone: 'Etc/GMT+12',
-      societyTimeZone: 'Etc/GMT-14',
-      sessionPosition: 'behind',
-    },
-    {
-      sessionTimeZone: 'Etc/GMT-14',
-      societyTimeZone: 'Etc/GMT+12',
-      sessionPosition: 'ahead',
-    },
-  ])(
-    'uses society-local payment dates when the database date is $sessionPosition',
-    async ({ sessionTimeZone, societyTimeZone, sessionPosition }) => {
-      const originalTimeZone = await database.asSuperuser(async (client) => {
-        const result = await client.query<{ timezone: string }>(
-          'select timezone from public.societies where id=$1',
-          [societyId],
-        );
-        await client.query(
-          'update public.societies set timezone=$2 where id=$1',
-          [societyId, societyTimeZone],
-        );
-        return result.rows[0]!.timezone;
-      });
-      try {
-        const paymentAs = (role: 'admin' | 'resident', daysAhead: number) =>
-          database.asRole(
-            'authenticated',
-            { sub: users[role] },
-            async (client) => {
-              await client.query("select set_config('TimeZone',$1,true)", [
-                sessionTimeZone,
-              ]);
-              const dates = (
-                await client.query<{ today: string; session_today: string }>(
-                  `select (now() at time zone $1)::date::text as today,
+  it('uses the India payment date even when the database session has a different date', async () => {
+    // The two offsets are 26 hours apart, so at least one never shares today's IST date.
+    const setDifferentSessionDate = `select set_config('TimeZone',
+          case when (now() at time zone 'Etc/GMT+12')::date <>
+                    (now() at time zone 'Asia/Kolkata')::date
+               then 'Etc/GMT+12' else 'Etc/GMT-14' end, true)`;
+    const paymentAs = (role: 'admin' | 'resident', daysAhead: number) =>
+      database.asRole('authenticated', { sub: users[role] }, async (client) => {
+        await client.query(setDifferentSessionDate);
+        const dates = (
+          await client.query<{ today: string; session_today: string }>(
+            `select (now() at time zone 'Asia/Kolkata')::date::text as today,
                      current_date::text as session_today`,
-                  [societyTimeZone],
-                )
-              ).rows[0]!;
-              const payment = (
-                await client.query<{
-                  payment: { paid_on: string; status: string };
-                }>(
-                  role === 'admin'
-                    ? `select public.billing_payment_record(
+          )
+        ).rows[0]!;
+        const payment = (
+          await client.query<{
+            payment: { paid_on: string; status: string };
+          }>(
+            role === 'admin'
+              ? `select public.billing_payment_record(
                         $1,$2,100,'cash',null,$3::date+$4::integer,$5,'billing-time-zone'
                       ) as payment`
-                    : `select public.billing_payment_submit(
+              : `select public.billing_payment_submit(
                         $1,$2,100,'TZPAYMENT1234',$3::date+$4::integer,
                         null,$5,'billing-time-zone'
                       ) as payment`,
-                  [
-                    societyId,
-                    unitId,
-                    dates.today,
-                    daysAhead,
-                    crypto.randomUUID(),
-                  ],
-                )
-              ).rows[0]!.payment;
-              return { ...dates, payment };
-            },
-          );
-        for (const role of ['admin', 'resident'] as const) {
-          const result = await paymentAs(role, 0);
-          expect(result.session_today < result.today).toBe(
-            sessionPosition === 'behind',
-          );
-          expect(result.payment).toMatchObject({
-            paid_on: result.today,
-            status: role === 'admin' ? 'confirmed' : 'awaiting_confirmation',
-          });
-          expect(await dbError(paymentAs(role, 1))).toMatchObject({
-            code: '22023',
-          });
-        }
-        expect(
-          await dbError(
-            database.asSuperuser(async (client) => {
-              await client.query('begin');
-              try {
-                await client.query("select set_config('TimeZone',$1,true)", [
-                  sessionTimeZone,
-                ]);
-                return await client.query(
-                  `insert into public.billing_payments(
+            [societyId, unitId, dates.today, daysAhead, crypto.randomUUID()],
+          )
+        ).rows[0]!.payment;
+        return { ...dates, payment };
+      });
+    for (const role of ['admin', 'resident'] as const) {
+      const result = await paymentAs(role, 0);
+      expect(result.session_today).not.toBe(result.today);
+      expect(result.payment).toMatchObject({
+        paid_on: result.today,
+        status: role === 'admin' ? 'confirmed' : 'awaiting_confirmation',
+      });
+      expect(await dbError(paymentAs(role, 1))).toMatchObject({
+        code: '22023',
+      });
+    }
+    expect(
+      await dbError(
+        database.asSuperuser(async (client) => {
+          await client.query('begin');
+          try {
+            await client.query(setDifferentSessionDate);
+            return await client.query(
+              `insert into public.billing_payments(
                     society_id,unit_id,amount_paise,mode,source,reference,paid_on,
                     status,submitted_by,client_request_id,created_by
                   ) values($1,$2,100,'upi','resident_submitted','TZFUTURE1234',
-                    (now() at time zone $4)::date+1,'awaiting_confirmation',$3,$5,$3)`,
-                  [
-                    societyId,
-                    unitId,
-                    users.resident,
-                    societyTimeZone,
-                    crypto.randomUUID(),
-                  ],
-                );
-              } finally {
-                await client.query('rollback');
-              }
-            }),
-          ),
-        ).toMatchObject({ code: '23514' });
-      } finally {
-        await database.asSuperuser((client) =>
-          client.query('update public.societies set timezone=$2 where id=$1', [
-            societyId,
-            originalTimeZone,
-          ]),
-        );
-      }
-    },
-  );
+                    (now() at time zone 'Asia/Kolkata')::date+1,'awaiting_confirmation',$3,$4,$3)`,
+              [societyId, unitId, users.resident, crypto.randomUUID()],
+            );
+          } finally {
+            await client.query('rollback');
+          }
+        }),
+      ),
+    ).toMatchObject({ code: '23514' });
+  });
 });

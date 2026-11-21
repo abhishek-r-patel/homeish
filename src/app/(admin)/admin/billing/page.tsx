@@ -13,6 +13,7 @@ import {
   RecoveryActionsPanel,
 } from '@/components/billing/arrears';
 import { BillingSetup } from '@/components/billing/setup';
+import { BillingEstimatePanel } from '@/components/billing/estimate';
 import { primaryLinkClass, textLinkClass } from '@/components/billing/styles';
 import { BillsTable, PaymentsTable } from '@/components/billing/tables';
 import { Card, StatTile } from '@/components/ui/data-display';
@@ -27,6 +28,8 @@ import {
   getBillingAdminContext,
   getBillingCollectionEfficiency,
   getBillingDashboard,
+  getBillingReportSummary,
+  listBillingEstimateCharges,
   getBillingSetup,
   listBillingPaymentPlanBills,
   listBillingPaymentPlans,
@@ -48,6 +51,7 @@ const TABS = [
   { id: 'payments', label: 'Payments' },
   { id: 'fines', label: 'Fines' },
   { id: 'reports', label: 'Reports' },
+  { id: 'estimate', label: 'Estimate' },
   { id: 'payment-plans', label: 'Payment plans' },
   { id: 'recovery', label: 'Recovery follow-ups' },
   { id: 'collection-efficiency', label: 'Collection efficiency' },
@@ -275,7 +279,11 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
       locale,
       { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' },
     );
-  const dashboard = await getBillingDashboard({ from, to });
+  const [dashboard, summary] = await Promise.all([
+    getBillingDashboard({ from, to }),
+    getBillingReportSummary({ from, to }),
+  ]);
+  const money = (paise: string) => formatLocalizedCurrency(paise, locale);
   return (
     <div className="grid gap-space-5">
       <Card
@@ -324,10 +332,7 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
             count: formatLocalizedNumber(dashboard.bill_count, locale),
           })}
           label={t('Billed')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.billed_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.billed_paise, locale)}
         />
         <StatTile
           context={
@@ -341,31 +346,19 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
                 })
           }
           label={t('Collected')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.collected_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.collected_paise, locale)}
         />
         <StatTile
           context={t('{amount} waived', {
-            amount: formatLocalizedCurrency(
-              Number(dashboard.waived_paise),
-              locale,
-            ),
+            amount: formatLocalizedCurrency(dashboard.waived_paise, locale),
           })}
           label={t('Outstanding')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.outstanding_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.outstanding_paise, locale)}
         />
         <StatTile
           context={t('Confirmed payments dated in period')}
           label={t('Received')}
-          value={formatLocalizedCurrency(
-            Number(dashboard.received_paise),
-            locale,
-          )}
+          value={formatLocalizedCurrency(dashboard.received_paise, locale)}
         />
       </div>
       <Card
@@ -387,10 +380,7 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
                 </Link>
                 <span className="text-body tabular-nums">
                   {t('{amount} · {count} bills since {date}', {
-                    amount: formatLocalizedCurrency(
-                      Number(row.overdue_paise),
-                      locale,
-                    ),
+                    amount: formatLocalizedCurrency(row.overdue_paise, locale),
                     count: formatLocalizedNumber(
                       row.overdue_bill_count,
                       locale,
@@ -405,6 +395,113 @@ async function ReportsSection({ from, to }: { from: string; to: string }) {
           <p className="text-body text-ink-muted">{t('No overdue units.')}</p>
         )}
       </Card>
+      <Card
+        title={t('Collections by payment mode')}
+        description={t('Confirmed payments dated in period')}
+      >
+        <dl className="grid gap-space-2">
+          {summary.collections_by_mode.map((row) => (
+            <div
+              className="flex flex-wrap justify-between gap-space-2 border-b border-rule py-space-2"
+              key={row.mode}
+            >
+              <dt>
+                {t(
+                  {
+                    upi: 'UPI',
+                    cash: 'Cash',
+                    cheque: 'Cheque',
+                    bank_transfer: 'Bank transfer',
+                  }[row.mode],
+                )}
+              </dt>
+              <dd>
+                {money(row.amount_paise)} ·{' '}
+                {t('{count} payments', {
+                  count: formatLocalizedNumber(row.payment_count, locale),
+                })}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
+      <Card
+        title={t('Wing totals')}
+        description={t('Bills for the selected months, with current balances.')}
+      >
+        {!summary.block_totals.length ? (
+          <p>{t('No bills in period')}</p>
+        ) : (
+          <ul className="grid gap-space-2">
+            {summary.block_totals.map((row) => (
+              <li
+                className="border-b border-rule py-space-2"
+                key={row.block_id ?? 'unassigned'}
+              >
+                <h3 className="text-body-strong">
+                  {row.block_name ?? t('No wing assigned')}
+                </h3>
+                <dl className="flex flex-wrap gap-space-3">
+                  <div>
+                    <dt>{t('Billed')}</dt>
+                    <dd>{money(row.billed_paise)}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('Collected')}</dt>
+                    <dd>{money(row.collected_paise)}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('Outstanding')}</dt>
+                    <dd>{money(row.outstanding_paise)}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+      <Card
+        title={t('Bill status summary')}
+        description={t('Bills for the selected months, with current balances.')}
+      >
+        <ul className="grid gap-space-2">
+          {summary.status_summary.map((row) => (
+            <li className="border-b border-rule py-space-2" key={row.status}>
+              <h3 className="text-body-strong">
+                {t(
+                  {
+                    due: 'Due',
+                    partially_paid: 'Partly paid',
+                    overdue: 'Overdue',
+                    paid: 'Paid',
+                    waived: 'Waived',
+                    cancelled: 'Cancelled',
+                  }[row.status],
+                )}
+              </h3>
+              <dl className="flex flex-wrap gap-space-3">
+                <div>
+                  <dt>{t('Bills')}</dt>
+                  <dd>{formatLocalizedNumber(row.bill_count, locale)}</dd>
+                </div>
+                <div>
+                  <dt>{t('Billed')}</dt>
+                  <dd>{money(row.total_paise)}</dd>
+                </div>
+                <div>
+                  <dt>{t('Outstanding')}</dt>
+                  <dd>{money(row.outstanding_paise)}</dd>
+                </div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </Card>
+      <StatTile
+        label={t('Unapplied advance credit')}
+        value={money(summary.unapplied_credit_paise)}
+        context={t('As of {date}', { date: formatDate(summary.credit_as_of) })}
+      />
       <Card
         description={t(
           'Exports are recorded in the audit log. CSV files open in spreadsheet apps.',
@@ -458,6 +555,10 @@ export default async function BillingPage({
     content = <FinesSection canManage={admin.canManage} today={today} />;
   } else if (tab === 'reports') {
     content = <ReportsSection from={from} to={to} />;
+  } else if (tab === 'estimate') {
+    content = (
+      <BillingEstimatePanel charges={await listBillingEstimateCharges()} />
+    );
   } else if (tab === 'payment-plans') {
     const [plans, bills] = await Promise.all([
       listBillingPaymentPlans(),

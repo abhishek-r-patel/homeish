@@ -226,6 +226,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Overview',
         },
         {
+          href: '/admin/structure',
+          label: 'Building layout',
+          permission: 'structure:layout:read',
+          section: 'Society',
+        },
+        {
           href: '/admin/guards',
           label: 'Gate & Guards',
           permission: 'guards:read',
@@ -339,6 +345,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'society:read': ['admin', 'committee', 'guard'],
       'structure:read': ['admin', 'committee', 'guard', 'resident'],
       'structure:manage': ['admin'],
+      'structure:layout:read': ['admin', 'committee'],
       'jobs:read': ['admin'],
       'membership:read': ['admin', 'committee'],
       'membership:manage': ['admin'],

@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "repowise": {
+      "type": "stdio",
+      "command": "${HOMEISH_REPOWISE_EXECUTABLE}",
+      "args": [
+        "mcp",
+        "${HOMEISH_REPOWISE_SNAPSHOT}",
+        "--no-workspace",
+        "--tools",
+        "standard,-get_answer,-get_change_risk"
+      ],
+      "env": {
+        "USERPROFILE": "${HOMEISH_REPOWISE_PROFILE}",
+        "HOME": "${HOMEISH_REPOWISE_PROFILE}",
+        "XDG_CONFIG_HOME": "${HOMEISH_REPOWISE_PROFILE}",
+        "COPILOT_HOME": "${HOMEISH_REPOWISE_PROFILE}",
+        "REPOWISE_CONFIG_DIR": "${HOMEISH_REPOWISE_PROFILE}",
+        "REPOWISE_OFFLINE": "1",
+        "REPOWISE_TELEMETRY_DISABLED": "1",
+        "REPOWISE_PROVIDER": "mock",
+        "REPOWISE_EMBEDDER": "mock",
+        "REPOWISE_DB_URL": "",
+        "REPOWISE_PLUGINS": "",
+        "DO_NOT_TRACK": "1",
+        "HF_HUB_OFFLINE": "1",
+        "HF_HUB_DISABLE_TELEMETRY": "1",
+        "TRANSFORMERS_OFFLINE": "1",
+        "PYTHONNOUSERSITE": "1"
+      },
+      "tools": [
+        "search_codebase",
+        "get_context",
+        "get_symbol",
+        "get_risk",
+        "get_why",
+        "get_overview",
+        "get_health",
+        "get_dead_code"
+      ]
+    }
+  }
+}

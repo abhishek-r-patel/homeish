@@ -143,14 +143,7 @@ export function SocietyForm({
         pattern="^\+?[0-9]{10,15}$"
         type="tel"
       />
-      <TextInput
-        defaultValue={initial?.timezone ?? 'Asia/Kolkata'}
-        id="society-timezone"
-        label="Time zone"
-        maxLength={64}
-        name="timezone"
-        required
-      />
+      <p className="text-body">Time zone: India Standard Time (IST)</p>
       <TextInput
         defaultValue={initial?.currency ?? 'INR'}
         id="society-currency"

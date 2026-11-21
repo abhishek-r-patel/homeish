@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    background_color: '#f6f4ef',
+    background_color: '#f5f7fa',
     description:
       'A little more like home. Homeish helps communities manage visitors, deliveries and everyday society services.',
     display: 'standalone',

@@ -129,6 +129,41 @@ test('resident pays by UPI and an admin confirms with a corrected amount', async
   await expect(queue.getByText('UTR445566AB')).toHaveCount(0);
 });
 
+test('preserves the exact entered paise in large UPI links', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/billing-payments');
+  const amount = page.getByLabel('Amount paid');
+  const payLink = page.getByRole('link', {
+    name: 'Pay with UPI App',
+    exact: true,
+  });
+  await amount.fill('90071992547409.91');
+  await expect(payLink).toHaveAttribute('href', /am=90071992547409\.91/);
+  await amount.fill('90071992547409.92');
+  await expect(payLink).not.toHaveAttribute('href', /(?:[?&])am=/);
+});
+
+test('only prefills a household balance within the single-payment limit', async ({
+  page,
+}) => {
+  const warning = page.getByText(
+    'Your balance is too large for one payment. Enter a smaller amount.',
+  );
+  const amount = page.getByLabel('Amount paid');
+  await page.goto('/fixtures/billing-payments?balance=max');
+  await expect(amount).toHaveValue('90071992547409.91');
+  await expect(warning).toHaveCount(0);
+
+  await page.goto('/fixtures/billing-payments?balance=over-max');
+  await expect(amount).toHaveValue('');
+  await expect(warning).toBeVisible();
+  await amount.fill('1000');
+  await expect(
+    page.getByRole('link', { name: 'Pay with UPI App', exact: true }),
+  ).toHaveAttribute('href', /am=1000\.00/);
+});
+
 test('admin rejection requires a reason and committee members only view', async ({
   page,
 }) => {

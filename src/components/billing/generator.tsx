@@ -1,6 +1,7 @@
 // Preview and confirm society bills without calculating money in the browser.
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import {
@@ -15,6 +16,7 @@ import { Card } from '@/components/ui/data-display';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { Banner } from '@/components/ui/feedback';
 import { useUiTranslator } from '@/components/ui/language';
+import { todayInIndia } from '@/lib/india-time';
 import { billingDate, billingMoney, billingPeriod } from './presentation';
 import { ActionResult } from './action-state';
 
@@ -49,8 +51,7 @@ type GenerateAction = (data: FormData) => Promise<
 >;
 
 function currentPeriod(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  return `${todayInIndia().slice(0, 7)}-01`;
 }
 
 function GeneratorMessage({
@@ -290,7 +291,10 @@ export function BillingGenerator({
               {units.length ? (
                 <ul className="grid gap-space-2 sm:grid-cols-2">
                   {units.map((unit) => (
-                    <li key={unit.id}>
+                    <li
+                      key={unit.id}
+                      className="flex flex-wrap items-center justify-between gap-space-2"
+                    >
                       <label className="flex min-h-12 items-center gap-space-2">
                         <input
                           checked={unitIds.includes(unit.id)}
@@ -304,6 +308,18 @@ export function BillingGenerator({
                           ? t(' - {area} sq ft', { area: unit.areaSqft })
                           : ''}
                       </label>
+                      <Link
+                        className="inline-flex min-h-12 items-center text-body text-brand underline"
+                        href={`/admin/billing/units/${unit.id}`}
+                        target="_blank"
+                        rel="noopener"
+                        aria-label={t(
+                          'Review move-in dates for {unit} (opens in a new tab)',
+                          { unit: unit.number },
+                        )}
+                      >
+                        {t('Move-in dates')}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -337,6 +353,7 @@ export function BillingGenerator({
                             fixed: 'Fixed per unit',
                             per_sqft: 'Per square foot',
                             custom: 'Custom per unit',
+                            percent_of_charge: 'Percentage of Maintenance',
                           }[charge.method],
                         )}
                         )
@@ -471,21 +488,43 @@ export function BillingGenerator({
               </li>
             ))}
           </ul>
+          {preview.skipped.length ? (
+            <div className="mt-space-4">
+              <h3 className="text-body-strong">{t('Omitted charges')}</h3>
+              <ul className="grid gap-space-2">
+                {preview.skipped.map((line) => (
+                  <li key={`${line.unit_id}:${line.charge_type_id}`}>
+                    {line.unit_number} - {line.charge_name}:{' '}
+                    {t(
+                      {
+                        not_eligible: 'Occupancy does not match',
+                        not_applicable: 'Base charge does not apply',
+                        rounds_to_zero: 'Rounds to zero',
+                      }[line.reason],
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           {preview.new_line_count === 0 ? (
             <Banner tone="info">
               {t(
-                'All selected unit and charge combinations already have bills.',
+                preview.skipped.length
+                  ? 'There are no new charges to bill for this selection.'
+                  : 'All selected unit and charge combinations already have bills.',
               )}
             </Banner>
-          ) : (
-            <div className="mt-space-4 flex flex-wrap gap-space-2">
-              <Button
-                onClick={() => setStep(2)}
-                type="button"
-                variant="secondary"
-              >
-                {t('Back to Units and Charges')}
-              </Button>
+          ) : null}
+          <div className="mt-space-4 flex flex-wrap gap-space-2">
+            <Button
+              onClick={() => setStep(2)}
+              type="button"
+              variant="secondary"
+            >
+              {t('Back to Units and Charges')}
+            </Button>
+            {preview.new_line_count ? (
               <Button
                 disabled={pending}
                 onClick={() => {
@@ -496,8 +535,8 @@ export function BillingGenerator({
               >
                 {t('Review and Generate')}
               </Button>
-            </div>
-          )}
+            ) : null}
+          </div>
         </Card>
       ) : null}
       <ConfirmDialog

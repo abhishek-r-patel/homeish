@@ -69,7 +69,8 @@ describe('retention privileged task', () => {
         listingsDeleted: 0,
         repliesDeleted: 2,
       })
-      .mockResolvedValueOnce({ contactLogsDeleted: 3 });
+      .mockResolvedValueOnce({ contactLogsDeleted: 3 })
+      .mockResolvedValueOnce(2);
   });
 
   it('deduplicates and removes listed files before the database purge', async () => {
@@ -124,6 +125,7 @@ describe('retention privileged task', () => {
       'community_retention_files_list',
       'community_retention_run',
       'communication_retention_run',
+      'unit_vacancy_retention_run',
     ]);
   });
 

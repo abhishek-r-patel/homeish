@@ -644,7 +644,7 @@ describe.skipIf(!hasDatabase)('database resident directory', () => {
       );
       await asUser('admin', (client) =>
         client.query(
-          `select public.end_unit_occupancy($1,$2,current_date,$3)`,
+          `select public.end_unit_occupancy($1,$2,(now() at time zone 'Asia/Kolkata')::date,$3)`,
           [fixture.societyId, movedOccupant.rows[0]?.id, crypto.randomUUID()],
         ),
       );

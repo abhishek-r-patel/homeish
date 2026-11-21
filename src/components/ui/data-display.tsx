@@ -34,6 +34,7 @@ export const statusMap = {
     label: 'Pending response',
     tone: 'warning',
   },
+  'delivery.no_response': { icon: '◷', label: 'No response', tone: 'neutral' },
   'delivery.allowed': { icon: '✓', label: 'Allowed', tone: 'info' },
   'delivery.left_at_gate': { icon: '▣', label: 'Left at gate', tone: 'info' },
   'delivery.denied': { icon: '×', label: 'Denied', tone: 'danger' },

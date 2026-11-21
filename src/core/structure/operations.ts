@@ -148,6 +148,11 @@ export async function setBlockActive(formData: FormData) {
     .eq('society_id', societyId)
     .select('id')
     .maybeSingle();
+  if (error?.code === '23514') {
+    throw new ValidationError({
+      form: 'Move this building’s placed units in Unit 360 first.',
+    });
+  }
   if (error) throw new Error('Could not update the block.', { cause: error });
   if (!data) throw new AppError('NOT_FOUND');
 }

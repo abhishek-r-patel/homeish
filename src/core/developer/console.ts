@@ -13,6 +13,7 @@ import {
   verifyFileAttachment,
 } from '../files/attachments';
 import { runUserErasurePrivileged } from '../privileged';
+import { INDIA_TIME_ZONE } from '../../lib/india-time';
 
 export { societyStatusSchema } from './status';
 export type { DeveloperSocietyStatus } from './status';
@@ -35,7 +36,7 @@ export const societyInputSchema = z
         .regex(/^\+?[0-9]{10,15}$/)
         .nullable(),
     ),
-    timezone: z.string().trim().min(1).max(64),
+    timezone: z.literal(INDIA_TIME_ZONE).default(INDIA_TIME_ZONE),
     currency: z
       .string()
       .trim()

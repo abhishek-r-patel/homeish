@@ -11,7 +11,7 @@ import {
   endOccupancyAction,
   inviteResidentAction,
   moveOccupantAction,
-} from '@/app/(admin)/members/actions';
+} from '@/app/(admin)/admin/members/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { listSocietyMembers } from '@/core/members/operations';
 import { Button } from '@/components/ui/button';

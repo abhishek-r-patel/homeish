@@ -59,13 +59,9 @@ export default async function ResidentPayPage({
 
   const units = billing.units.map((unit) => ({
     ...unit,
-    outstandingPaise: billing.bills
-      .filter(
-        (bill) =>
-          bill.unit_id === unit.id &&
-          (bill.status === 'due' || bill.status === 'partially_paid'),
-      )
-      .reduce((sum, bill) => sum + bill.outstanding_paise, 0),
+    outstandingPaise:
+      billing.outstanding.find((item) => item.unit_id === unit.id)
+        ?.outstanding_paise ?? '0',
   }));
   const resubmitId =
     typeof params.resubmit === 'string' ? params.resubmit : undefined;
@@ -73,7 +69,7 @@ export default async function ResidentPayPage({
     (payment) => payment.id === resubmitId && payment.status === 'rejected',
   );
   const defaultUnit =
-    units.find((unit) => unit.outstandingPaise > 0) ?? units[0];
+    units.find((unit) => BigInt(unit.outstandingPaise) > BigInt(0)) ?? units[0];
 
   return (
     <section className="grid max-w-content-default gap-space-5">

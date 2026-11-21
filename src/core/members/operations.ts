@@ -8,6 +8,7 @@ import { createUserSupabaseClient } from '../db/server-client';
 import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { MAX_RESIDENT_CSV_BYTES, parseResidentsCsv } from './residents-csv';
+import { todayInIndia } from '../../lib/india-time';
 
 const roleSchema = z.enum([
   'admin',
@@ -458,7 +459,7 @@ export async function assignOccupant(formData: FormData, requestId: string) {
     p_relationship: parsed.relationship,
     p_is_primary: parsed.isPrimary,
     p_is_approver: parsed.isApprover,
-    p_started_at: parsed.startedAt ?? new Date().toISOString().slice(0, 10),
+    p_started_at: parsed.startedAt ?? todayInIndia(),
     p_request_id: requestId,
   });
   raiseRpcError('Could not assign this resident to the unit.', error);
@@ -488,7 +489,7 @@ export async function endOccupancy(formData: FormData, requestId: string) {
   const { error } = await context.db.rpc('end_unit_occupancy', {
     p_society_id: societyId,
     p_occupant_id: parsed.occupantId,
-    p_ended_at: parsed.endedAt ?? new Date().toISOString().slice(0, 10),
+    p_ended_at: parsed.endedAt ?? todayInIndia(),
     p_request_id: requestId,
   });
   raiseRpcError('Could not end this occupancy.', error);

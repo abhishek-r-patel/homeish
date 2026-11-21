@@ -1,6 +1,13 @@
 // Verify the module registry, settings hooks and disabled-module experience.
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { ANALYTICS_METRICS } from '../../src/core/analytics/catalogue';
+import {
+  GETTING_STARTED_PATHS,
+  HELP_ARTICLES,
+} from '../../src/core/help/articles';
 import {
   getModuleDefinition,
   getModuleNavigation,
@@ -121,6 +128,7 @@ describe('module registry', () => {
       '/admin',
       '/admin/analytics',
       '/admin/communication',
+      '/admin/structure',
       '/admin/guards',
       '/admin/society-profile',
       '/admin/adoption',
@@ -331,5 +339,59 @@ describe('module registry', () => {
       due_day_of_month: 'last_day',
       rounding: 'rupee',
     });
+  });
+});
+
+describe('in-app links', () => {
+  // The admin dashboard (A-01) is planned but not built yet.
+  const KNOWN_UNBUILT = new Set(['/admin']);
+
+  function appRoutes() {
+    const appDir = join(__dirname, '../../src/app');
+    const routes: RegExp[] = [];
+    const walk = (dir: string, segments: string[]) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          walk(join(dir, entry.name), [...segments, entry.name]);
+        } else if (/^(page|route)\.tsx?$/.test(entry.name)) {
+          const path = segments
+            .filter((segment) => !/^\(.*\)$/.test(segment))
+            .map((segment) =>
+              /^\[.*\]$/.test(segment)
+                ? '[^/]+'
+                : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+            )
+            .join('/');
+          routes.push(new RegExp(`^/${path}$`));
+        }
+      }
+    };
+    walk(appDir, []);
+    return routes;
+  }
+
+  it('point menus, help and analytics tiles at pages that exist', () => {
+    const hrefs = [
+      ...Object.values(MODULE_REGISTRY).flatMap((definition) =>
+        Object.values(definition.navigation).flatMap((items) =>
+          (items ?? []).map((item) => item.href),
+        ),
+      ),
+      ...HELP_ARTICLES.flatMap((article) =>
+        article.links.map((link) => link.href),
+      ),
+      ...Object.values(GETTING_STARTED_PATHS).flatMap((steps) =>
+        steps.flatMap((step) => step.links.map((link) => link.href)),
+      ),
+      ...ANALYTICS_METRICS.map((metric) => metric.href),
+    ];
+    const routes = appRoutes();
+    const missing = [
+      ...new Set(hrefs.map((href) => href.split(/[?#]/)[0] || '/')),
+    ].filter(
+      (path) =>
+        !KNOWN_UNBUILT.has(path) && !routes.some((route) => route.test(path)),
+    );
+    expect(missing).toEqual([]);
   });
 });

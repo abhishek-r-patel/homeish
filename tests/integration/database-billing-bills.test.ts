@@ -91,6 +91,9 @@ describe.skipIf(!hasDatabase)('database billing bills and ledger', () => {
     name: string,
     method: string,
     amount: number | null,
+    eligibility = 'all',
+    baseId?: string,
+    basisPoints?: number,
   ) {
     return database.asRole(
       'authenticated',
@@ -99,15 +102,189 @@ describe.skipIf(!hasDatabase)('database billing bills and ledger', () => {
         const result = await client.query<{ charge: { id: string } }>(
           `select to_jsonb(charge) as charge
            from public.billing_charge_save(
-             $1, null, $2, $3, $4, true, null, 'billing-bills-charge'
+             $1, null, $2, $3, $4, true, null, 'billing-bills-charge', $5, $6, $7
            ) charge`,
-          [societyId, name, method, amount],
+          [
+            societyId,
+            name,
+            method,
+            amount,
+            baseId ?? null,
+            basisPoints ?? null,
+            eligibility,
+          ],
         );
         return result.rows[0]!.charge;
       },
       { commit: true },
     );
   }
+
+  it('uses the confirmed tenant move-in date and skips percentages rounding to zero', async () => {
+    const tenantUnit = await database.asSuperuser(async (client) => {
+      const {
+        rows: [unit],
+      } = await client.query<{ id: string }>(
+        `insert into public.units (society_id, number, created_by)
+         values ($1, 'P37-tenant', $2) returning id`,
+        [societyId, users.admin],
+      );
+      const {
+        rows: [occupant],
+      } = await client.query<{ id: string }>(
+        `insert into public.unit_occupants
+           (society_id, unit_id, membership_id, relationship, status, started_at, created_by)
+         values ($1, $2, $3, 'tenant', 'active', '2020-04-28', $4) returning id`,
+        [societyId, unit!.id, residentMembershipId, users.admin],
+      );
+      return { id: unit!.id, occupantId: occupant!.id };
+    });
+    const base = await saveCharge(
+      'P37 Tenant maintenance',
+      'fixed',
+      10_000,
+      'tenant',
+    );
+    const percent = await saveCharge(
+      'P37 Tenant surcharge',
+      'percent_of_charge',
+      null,
+      'all',
+      base.id,
+      1000,
+    );
+    async function tenantPreview(period: string, charges: string[]) {
+      return database.asRole(
+        'authenticated',
+        { sub: users.admin },
+        async (client) => {
+          const {
+            rows: [row],
+          } = await client.query<{ data: unknown }>(
+            `select public.billing_bills_preview($1, $2, array[$3]::uuid[], $4, '[]') as data`,
+            [societyId, period, tenantUnit.id, charges],
+          );
+          return row!.data;
+        },
+      );
+    }
+
+    await expect(
+      tenantPreview('2020-05-01', [percent.id, base.id]),
+    ).rejects.toMatchObject({
+      code: '22023',
+      hint: 'tenant_move_in_unconfirmed',
+    });
+    await expect(
+      tenantPreview('9999-05-01', [percent.id, base.id]),
+    ).rejects.toMatchObject({
+      code: '22023',
+      hint: 'occupancy_period_not_started',
+    });
+    await expect(
+      database.asRole('authenticated', { sub: users.committee }, (client) =>
+        client.query(
+          `select public.billing_confirm_tenant_move_in($1, $2, '2020-05-03', 'p37-move')`,
+          [societyId, tenantUnit.occupantId],
+        ),
+      ),
+    ).rejects.toMatchObject({ code: '42501' });
+    await database.asRole(
+      'authenticated',
+      { sub: users.admin },
+      (client) =>
+        client.query(
+          `select public.billing_confirm_tenant_move_in($1, $2, '2020-05-03', 'p37-move')`,
+          [societyId, tenantUnit.occupantId],
+        ),
+      { commit: true },
+    );
+    const may = await tenantPreview('2020-05-01', [percent.id, base.id]);
+    expect(may).toMatchObject({
+      lines: [],
+      skipped: expect.arrayContaining([
+        expect.objectContaining({
+          charge_type_id: base.id,
+          reason: 'not_eligible',
+        }),
+        expect.objectContaining({
+          charge_type_id: percent.id,
+          reason: 'not_applicable',
+        }),
+      ]),
+    });
+    const tiny = await saveCharge(
+      'P37 Tiny surcharge',
+      'percent_of_charge',
+      null,
+      'all',
+      base.id,
+      1,
+    );
+    const june = await tenantPreview('2020-06-01', [
+      percent.id,
+      tiny.id,
+      base.id,
+    ]);
+    expect(june).toEqual(
+      await tenantPreview('2020-06-01', [base.id, tiny.id, percent.id]),
+    );
+    expect(june).toMatchObject({
+      new_total_paise: '11000',
+      lines: expect.arrayContaining([
+        expect.objectContaining({
+          charge_type_id: percent.id,
+          amount_paise: 1000,
+        }),
+      ]),
+      skipped: [
+        expect.objectContaining({
+          charge_type_id: tiny.id,
+          reason: 'rounds_to_zero',
+        }),
+      ],
+    });
+  });
+
+  it('lets committee estimate configured charges without creating bills or ledger entries', async () => {
+    const counts = () =>
+      database.asSuperuser(
+        async (client) =>
+          (
+            await client.query(
+              `select (select count(*) from public.billing_bills where society_id = $1) as bills,
+                (select count(*) from public.billing_ledger_entries where society_id = $1) as ledger,
+                (select count(*) from public.units where society_id = $1) as units`,
+              [societyId],
+            )
+          ).rows[0],
+      );
+    const before = await counts();
+    const estimate = (role: keyof UserIds) =>
+      database.asRole(
+        'authenticated',
+        { sub: users[role] },
+        async (client) =>
+          (
+            await client.query<{ result: unknown }>(
+              `select public.billing_estimate($1, 1500, 'vacant', '[]') as result`,
+              [societyId],
+            )
+          ).rows[0]!.result,
+        { commit: true },
+      );
+    expect(await estimate('committee')).toMatchObject({
+      total_paise: '155000',
+      skipped: expect.arrayContaining([
+        expect.objectContaining({
+          charge_type_id: customChargeId,
+          reason: 'no_amount',
+        }),
+      ]),
+    });
+    await expect(estimate('resident')).rejects.toMatchObject({ code: '42501' });
+    expect(await counts()).toEqual(before);
+  });
 
   async function updateSettings() {
     return database.asRole(

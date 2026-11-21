@@ -6,6 +6,7 @@ playwright-report/
 test-results/
 .vercel/
 .turbo/
+.repowise/
 *.tsbuildinfo
 .env*
 !.env.example

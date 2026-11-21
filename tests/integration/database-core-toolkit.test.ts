@@ -124,16 +124,16 @@ describe.skipIf(!hasDatabase)('database core toolkit (P35)', () => {
       }
       societyId = (
         await client.query<{ id: string }>(
-          `insert into public.societies (name, address, city, contact_email, contact_phone, created_by, timezone)
-           values ('Toolkit Society', '1 Test Road', 'Pune', 'office@example.test', '9876543210', $1, 'UTC')
+          `insert into public.societies (name, address, city, contact_email, contact_phone, created_by)
+           values ('Toolkit Society', '1 Test Road', 'Pune', 'office@example.test', '9876543210', $1)
            returning id`,
           [users.admin],
         )
       ).rows[0]!.id;
       foreignSocietyId = (
         await client.query<{ id: string }>(
-          `insert into public.societies (name, created_by, timezone)
-           values ('Other Toolkit Society', $1, 'UTC') returning id`,
+          `insert into public.societies (name, created_by)
+           values ('Other Toolkit Society', $1) returning id`,
           [users.foreignAdmin],
         )
       ).rows[0]!.id;

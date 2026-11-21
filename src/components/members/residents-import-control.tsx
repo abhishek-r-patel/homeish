@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react';
 import {
   confirmResidentsImportAction,
   previewResidentsImportAction,
-} from '@/app/(admin)/members/actions';
+} from '@/app/(admin)/admin/members/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import {
   MAX_RESIDENT_CSV_BYTES,

@@ -683,6 +683,10 @@ const REPORT_LABELS: Record<BillingReport, string> = {
   dues_by_unit: 'Dues by unit',
   collections: 'Collections',
   defaulters: 'Defaulters',
+  collections_by_mode: 'Collections by payment mode',
+  block_totals: 'Wing totals',
+  bill_status: 'Bill status summary',
+  unapplied_credit: 'Unapplied advance credit',
 };
 
 export function ReportExportButtons({

@@ -10,6 +10,10 @@ import { Card } from '@/components/ui/data-display';
 import { Banner, EmptyState } from '@/components/ui/feedback';
 import { todayInTimeZone } from '@/core/billing/format';
 import {
+  residentNextDueDate,
+  residentOutstandingTotal,
+} from '@/core/billing/resident-summary';
+import {
   formatLocalizedCurrency,
   formatLocalizedDate,
 } from '@/core/i18n/format';
@@ -69,23 +73,15 @@ export default async function ResidentBillsPage({
     );
   }
 
-  const openBills = billing.bills.filter(
-    (bill) => bill.status === 'due' || bill.status === 'partially_paid',
-  );
-  const outstanding = openBills.reduce(
-    (sum, bill) => sum + bill.outstanding_paise,
-    0,
-  );
-  const nextDue = openBills
-    .map((bill) => bill.due_date)
-    .sort((left, right) => left.localeCompare(right))[0];
-  const overdue = openBills.some((bill) => bill.due_date < today);
+  const outstanding = residentOutstandingTotal(billing.outstanding);
+  const nextDue = residentNextDueDate(billing.outstanding);
+  const overdue = nextDue !== null && nextDue < today;
   const awaiting = billing.payments.filter(
     (payment) => payment.status === 'awaiting_confirmation',
   );
   const awaitingPaise = awaiting.reduce(
-    (sum, payment) => sum + payment.amount_paise,
-    0,
+    (sum, payment) => sum + BigInt(payment.amount_paise),
+    BigInt(0),
   );
   const latest = billing.payments[0];
   const rejected = latest?.status === 'rejected' ? latest : null;
@@ -159,14 +155,14 @@ export default async function ResidentBillsPage({
               })}
             </p>
           ) : null}
-          {outstanding > 0 && canPay ? (
+          {outstanding > BigInt(0) && canPay ? (
             <div>
               <Link className={primaryLinkClass} href="/bills/pay">
                 {t('Pay Now')}
               </Link>
             </div>
           ) : null}
-          {outstanding > 0 && !billing.paymentDetails ? (
+          {outstanding > BigInt(0) && !billing.paymentDetails ? (
             <p className="text-body text-ink-muted">
               {t(
                 'The society has not added UPI payment details yet. Pay at the society office.',

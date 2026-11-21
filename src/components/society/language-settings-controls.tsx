@@ -4,7 +4,7 @@
 import { useState, useTransition } from 'react';
 import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateHindiAvailabilityAction } from '@/app/(admin)/settings/actions';
+import { updateHindiAvailabilityAction } from '@/app/(admin)/admin/settings/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import { Button } from '@/components/ui/button';
 import { CheckboxInput } from '@/components/ui/choice-controls';

@@ -218,9 +218,13 @@ function SvgIcon({ path }: { path: string }) {
   );
 }
 
+export function ModuleIcon({ moduleKey }: { moduleKey: ModuleKey }) {
+  return <SvgIcon path={MODULE_ICONS[moduleKey]} />;
+}
+
 function NavigationIcon({ item }: { item: ShellNavigationItem }) {
   if (item.moduleKey) {
-    return <SvgIcon path={MODULE_ICONS[item.moduleKey]} />;
+    return <ModuleIcon moduleKey={item.moduleKey} />;
   }
   return (
     <span
@@ -415,6 +419,7 @@ function TopBar({
 
         <details className="relative">
           <summary
+            aria-label={translate('Account')}
             className={`flex min-h-12 cursor-pointer list-none items-center gap-space-2 rounded-md px-space-3 text-body-strong focus-visible:outline-2 focus-visible:outline-focus ${menuColor}`}
           >
             <span

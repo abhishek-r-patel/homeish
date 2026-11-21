@@ -13,7 +13,11 @@ import { authorizeRequest } from '../permissions/authorize';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { sendBillingReceiptEmailPrivileged } from '../privileged';
 import { buildRequestContext } from '../tenancy/request-context';
-import { billingRpc as rpc, readBillingPaymentDetails } from './queries';
+import {
+  billingRpc as rpc,
+  readBillingPaymentDetails,
+  readResidentOutstanding,
+} from './queries';
 import {
   billingBillDetailsSchema,
   billingBillSchema,
@@ -21,6 +25,9 @@ import {
   billingCollectionEfficiencySchema,
   billingDashboardInputSchema,
   billingDashboardSchema,
+  billingEstimateInputSchema,
+  billingEstimateSchema,
+  billingReportSummarySchema,
   billingFineInputSchema,
   billingGenerationResultSchema,
   billingLedgerEntrySchema,
@@ -212,8 +219,102 @@ export async function saveBillingCharge(input: unknown, requestId: string) {
       p_active: charge.active,
       p_expected_updated_at: charge.expectedUpdatedAt,
       p_request_id: context.requestId,
+      p_eligibility: charge.eligibility,
+      p_base_charge_type_id: charge.baseChargeTypeId,
+      p_percent_basis_points: charge.percentBasisPoints,
     },
     chargeTypeSchema,
+  );
+}
+
+export async function estimateBilling(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'billing:charges:read',
+    false,
+    requestId,
+  );
+  const estimate = parseInput(billingEstimateInputSchema, input);
+  return rpc(
+    context,
+    'billing_estimate',
+    {
+      p_society_id: societyId,
+      p_area_sqft: estimate.areaSqft,
+      p_occupancy: estimate.occupancy,
+      p_custom_amounts: estimate.customAmounts.map((item) => ({
+        charge_type_id: item.chargeTypeId,
+        amount_paise: item.amountRupees,
+      })),
+    },
+    billingEstimateSchema,
+  );
+}
+
+export async function listBillingEstimateCharges() {
+  const { context, societyId } = await getContext('billing:charges:read');
+  const charges = await rpc(
+    context,
+    'billing_charges_list',
+    { p_society_id: societyId },
+    z.array(chargeTypeSchema),
+  );
+  return charges.filter((charge) => charge.active);
+}
+
+export async function listUnconfirmedTenantMoves(unitId: string) {
+  const { context, societyId } = await getContext('billing:bills:manage', true);
+  return rpc(
+    context,
+    'billing_unconfirmed_tenant_moves',
+    {
+      p_society_id: societyId,
+      p_unit_id: parseInput(z.uuid(), unitId),
+    },
+    z.array(
+      z.object({
+        id: z.uuid(),
+        name: z.string().nullable(),
+        ended_on: z.iso.date().nullable(),
+      }),
+    ),
+  );
+}
+
+export async function confirmTenantMoveIn(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'billing:bills:manage',
+    true,
+    requestId,
+  );
+  const move = parseInput(
+    z.object({ occupantId: z.uuid(), moveInOn: z.iso.date() }).strict(),
+    input,
+  );
+  await rpc(
+    context,
+    'billing_confirm_tenant_move_in',
+    {
+      p_society_id: societyId,
+      p_occupant_id: move.occupantId,
+      p_move_in_on: move.moveInOn,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+  );
+}
+
+export async function getBillingReportSummary(input: unknown) {
+  const { context, societyId } = await getContext('billing:charges:read');
+  const range = parseInput(billingDashboardInputSchema, input);
+  return rpc(
+    context,
+    'billing_report_summary',
+    {
+      p_society_id: societyId,
+      p_from: range.from,
+      p_to: range.to,
+    },
+    billingReportSummarySchema,
   );
 }
 
@@ -866,24 +967,16 @@ export async function getResidentBilling() {
     ).values(),
   ].sort((left, right) => left.number.localeCompare(right.number));
   const unitIds = new Set(units.map((unit) => unit.id));
-  const [bills, payments, ledgers, paymentDetails, society] = await Promise.all(
-    [
+  const [lists, ledgers, paymentDetails, society, outstanding] =
+    await Promise.all([
       rpc(
         context,
-        'billing_bills_list',
-        { p_society_id: societyId, p_limit: 100, p_offset: 0 },
-        z.array(billingBillSchema),
-      ),
-      rpc(
-        context,
-        'billing_payments_list',
-        {
-          p_society_id: societyId,
-          p_limit: 100,
-          p_offset: 0,
-          p_status: null,
-        },
-        z.array(billingPaymentSchema),
+        'billing_resident_lists',
+        { p_society_id: societyId },
+        z.object({
+          bills: z.array(billingBillSchema),
+          payments: z.array(billingPaymentSchema),
+        }),
       ),
       Promise.all(
         units.map(async (unit) => ({
@@ -902,8 +995,8 @@ export async function getResidentBilling() {
         .select('timezone, unit_label')
         .eq('id', societyId)
         .single(),
-    ],
-  );
+      readResidentOutstanding(context),
+    ]);
   if (society.error) {
     throw new Error('Society details could not be loaded.', {
       cause: society.error,
@@ -919,9 +1012,10 @@ export async function getResidentBilling() {
   }
   return {
     units,
-    bills: bills.filter((bill) => unitIds.has(bill.unit_id)),
-    payments: payments.filter((payment) => unitIds.has(payment.unit_id)),
+    bills: lists.bills.filter((bill) => unitIds.has(bill.unit_id)),
+    payments: lists.payments.filter((payment) => unitIds.has(payment.unit_id)),
     ledgers,
+    outstanding,
     paymentDetails,
     qrUrl,
     timezone: society.data.timezone,

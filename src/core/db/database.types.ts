@@ -1018,11 +1018,14 @@ export type Database = {
         Row: {
           active: boolean;
           amount_paise: number | null;
+          base_charge_type_id: string | null;
           created_at: string;
           created_by: string;
+          eligibility: string;
           id: string;
           method: string;
           name: string;
+          percent_basis_points: number | null;
           society_id: string;
           updated_at: string;
           updated_by: string;
@@ -1031,11 +1034,14 @@ export type Database = {
         Insert: {
           active?: boolean;
           amount_paise?: number | null;
+          base_charge_type_id?: string | null;
           created_at?: string;
           created_by: string;
+          eligibility?: string;
           id?: string;
           method: string;
           name: string;
+          percent_basis_points?: number | null;
           society_id: string;
           updated_at?: string;
           updated_by: string;
@@ -1043,16 +1049,26 @@ export type Database = {
         Update: {
           active?: boolean;
           amount_paise?: number | null;
+          base_charge_type_id?: string | null;
           created_at?: string;
           created_by?: string;
+          eligibility?: string;
           id?: string;
           method?: string;
           name?: string;
+          percent_basis_points?: number | null;
           society_id?: string;
           updated_at?: string;
           updated_by?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'billing_charge_types_base_same_society_fkey';
+            columns: ['society_id', 'base_charge_type_id'];
+            isOneToOne: false;
+            referencedRelation: 'billing_charge_types';
+            referencedColumns: ['society_id', 'id'];
+          },
           {
             foreignKeyName: 'billing_charge_types_created_by_fkey';
             columns: ['created_by'];
@@ -1645,6 +1661,91 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
+          },
+        ];
+      };
+      building_floors: {
+        Row: {
+          block_id: string;
+          id: string;
+          label: string | null;
+          level: number;
+          society_id: string;
+          whole: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_id: string;
+          id?: string;
+          label?: string | null;
+          level: number;
+          society_id: string;
+          whole?: boolean;
+        };
+        Update: {
+          block_id?: string;
+          id?: string;
+          label?: string | null;
+          level?: number;
+          society_id?: string;
+          whole?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'building_floors_society_id_block_id_fkey';
+            columns: ['society_id', 'block_id'];
+            isOneToOne: false;
+            referencedRelation: 'blocks';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      building_spaces: {
+        Row: {
+          duplex: boolean;
+          floor_id: string;
+          id: string;
+          kind: string;
+          name: string | null;
+          position: number;
+          society_id: string;
+          unit_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          duplex?: boolean;
+          floor_id: string;
+          id?: string;
+          kind: string;
+          name?: string | null;
+          position: number;
+          society_id: string;
+          unit_id?: string | null;
+        };
+        Update: {
+          duplex?: boolean;
+          floor_id?: string;
+          id?: string;
+          kind?: string;
+          name?: string | null;
+          position?: number;
+          society_id?: string;
+          unit_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'building_spaces_society_id_floor_id_fkey';
+            columns: ['society_id', 'floor_id'];
+            isOneToOne: false;
+            referencedRelation: 'building_floors';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'building_spaces_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: true;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
           },
         ];
       };
@@ -10486,8 +10587,70 @@ export type Database = {
           },
         ];
       };
+      unit_area_history: {
+        Row: {
+          built_up_sqft: number | null;
+          carpet_sqft: number | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          outdoor_sqft: number | null;
+          society_id: string;
+          source: string;
+          status: string;
+          unit_id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          built_up_sqft?: number | null;
+          carpet_sqft?: number | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          outdoor_sqft?: number | null;
+          society_id: string;
+          source: string;
+          status: string;
+          unit_id: string;
+          version: number;
+        };
+        Update: {
+          built_up_sqft?: number | null;
+          carpet_sqft?: number | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          outdoor_sqft?: number | null;
+          society_id?: string;
+          source?: string;
+          status?: string;
+          unit_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_area_history_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_area_history_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       unit_occupants: {
         Row: {
+          billing_confirmed_move_in_on: string | null;
           created_at: string;
           created_by: string;
           ended_at: string | null;
@@ -10505,6 +10668,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          billing_confirmed_move_in_on?: string | null;
           created_at?: string;
           created_by?: string;
           ended_at?: string | null;
@@ -10521,6 +10685,7 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          billing_confirmed_move_in_on?: string | null;
           created_at?: string;
           created_by?: string;
           ended_at?: string | null;
@@ -10571,6 +10736,77 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
+          },
+        ];
+      };
+      unit_vacancy_followups: {
+        Row: {
+          assigned_to: string;
+          client_request_id: string;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          follow_up_on: string;
+          id: string;
+          inspection_on: string | null;
+          kind: string;
+          society_id: string;
+          starts_on: string;
+          unit_id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          assigned_to: string;
+          client_request_id: string;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by: string;
+          follow_up_on: string;
+          id?: string;
+          inspection_on?: string | null;
+          kind: string;
+          society_id: string;
+          starts_on: string;
+          unit_id: string;
+          version?: number;
+        };
+        Update: {
+          assigned_to?: string;
+          client_request_id?: string;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          follow_up_on?: string;
+          id?: string;
+          inspection_on?: string | null;
+          kind?: string;
+          society_id?: string;
+          starts_on?: string;
+          unit_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_vacancy_followups_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_vacancy_followups_society_id_assigned_to_fkey';
+            columns: ['society_id', 'assigned_to'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_vacancy_followups_society_id_unit_id_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
           },
         ];
       };
@@ -12394,21 +12630,27 @@ export type Database = {
         Args: {
           p_active: boolean;
           p_amount_paise: number;
+          p_base_charge_type_id?: string;
+          p_eligibility?: string;
           p_expected_updated_at: string;
           p_id: string;
           p_method: string;
           p_name: string;
+          p_percent_basis_points?: number;
           p_request_id: string;
           p_society_id: string;
         };
         Returns: {
           active: boolean;
           amount_paise: number | null;
+          base_charge_type_id: string | null;
           created_at: string;
           created_by: string;
+          eligibility: string;
           id: string;
           method: string;
           name: string;
+          percent_basis_points: number | null;
           society_id: string;
           updated_at: string;
           updated_by: string;
@@ -12425,11 +12667,14 @@ export type Database = {
         Returns: {
           active: boolean;
           amount_paise: number | null;
+          base_charge_type_id: string | null;
           created_at: string;
           created_by: string;
+          eligibility: string;
           id: string;
           method: string;
           name: string;
+          percent_basis_points: number | null;
           society_id: string;
           updated_at: string;
           updated_by: string;
@@ -12445,8 +12690,26 @@ export type Database = {
         Args: { p_as_of_date: string; p_society_id: string };
         Returns: Json;
       };
+      billing_confirm_tenant_move_in: {
+        Args: {
+          p_move_in_on: string;
+          p_occupant_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
       billing_dashboard: {
         Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: Json;
+      };
+      billing_estimate: {
+        Args: {
+          p_area_sqft: number;
+          p_custom_amounts: Json;
+          p_occupancy: string;
+          p_society_id: string;
+        };
         Returns: Json;
       };
       billing_fine_add: {
@@ -12611,6 +12874,15 @@ export type Database = {
         };
         Returns: Json;
       };
+      billing_report_summary: {
+        Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: Json;
+      };
+      billing_resident_lists: { Args: { p_society_id: string }; Returns: Json };
+      billing_resident_outstanding: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
       billing_settings_update: {
         Args: {
           p_due_day: string;
@@ -12624,6 +12896,36 @@ export type Database = {
       billing_stale_payments_run: {
         Args: { p_request_id: string; p_society_id: string; p_today: string };
         Returns: Json;
+      };
+      billing_unconfirmed_tenant_moves: {
+        Args: { p_society_id: string; p_unit_id: string };
+        Returns: Json;
+      };
+      building_layout_get: {
+        Args: { p_block_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      building_layout_save: {
+        Args: {
+          p_block_id: string;
+          p_client_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_values: Json;
+        };
+        Returns: string;
+      };
+      building_unit_place: {
+        Args: {
+          p_block_id: string;
+          p_client_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_space_id: string;
+          p_unit_id: string;
+          p_version: string;
+        };
+        Returns: boolean;
       };
       change_member_roles: {
         Args: {
@@ -16059,6 +16361,7 @@ export type Database = {
           status: string;
         }[];
       };
+      resident_home_get: { Args: { p_society_id: string }; Returns: Json };
       rotate_society_join_code: {
         Args: { p_request_id: string; p_society_id: string };
         Returns: string;
@@ -16500,6 +16803,25 @@ export type Database = {
       tenancy_workspace_get: {
         Args: { p_include_targets?: boolean; p_society_id: string };
         Returns: Json;
+      };
+      unit_records_get: {
+        Args: { p_society_id: string; p_unit_id: string };
+        Returns: Json;
+      };
+      unit_records_save: {
+        Args: {
+          p_client_request_id: string;
+          p_kind: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_unit_id: string;
+          p_values: Json;
+        };
+        Returns: boolean;
+      };
+      unit_vacancy_retention_run: {
+        Args: { p_request_trace: string; p_today: string };
+        Returns: number;
       };
       user_erasure_complete: {
         Args: { p_actor_id: string; p_request_id: string; p_user_id: string };

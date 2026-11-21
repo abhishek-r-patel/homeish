@@ -24,7 +24,7 @@ Required:
 Optional:
   --contact-email <email>    Society office email
   --contact-phone <phone>    10-15 digits, optional leading +
-  --timezone <zone>          Default Asia/Kolkata
+  --timezone <zone>          Only Asia/Kolkata is supported (default)
   --currency <code>          Default INR
   --unit-label <label>       Default Unit (letters and spaces)
   --plan <plan>              Free-text plan label
@@ -59,15 +59,6 @@ export class OnboardingError extends Error {}
 
 function text(value) {
   return typeof value === 'string' ? value.trim() : '';
-}
-
-function isTimeZone(value) {
-  try {
-    new Intl.DateTimeFormat('en', { timeZone: value });
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 // Mirrors the developer console's society and first-admin rules (src/core/developer/console.ts).
@@ -133,12 +124,8 @@ export function parseOnboardingArgs(argv) {
   if (input.contactPhone && !/^\+?[0-9]{10,15}$/.test(input.contactPhone)) {
     errors.push('--contact-phone must be 10-15 digits with an optional +.');
   }
-  if (
-    input.timezone.length < 1 ||
-    input.timezone.length > 64 ||
-    !isTimeZone(input.timezone)
-  ) {
-    errors.push('--timezone must be an IANA time zone such as Asia/Kolkata.');
+  if (input.timezone !== 'Asia/Kolkata') {
+    errors.push('--timezone must be Asia/Kolkata (India Standard Time).');
   }
   if (!/^[A-Z]{3}$/.test(input.currency)) {
     errors.push('--currency must be a three-letter code such as INR.');

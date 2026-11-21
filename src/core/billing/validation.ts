@@ -71,17 +71,62 @@ export const rupeesSchema = z
 
 const timestamp = z.iso.datetime({ offset: true });
 const paiseText = z.string().regex(/^\d+$/);
+const chargeMethodSchema = z.enum([
+  'fixed',
+  'per_sqft',
+  'custom',
+  'percent_of_charge',
+]);
+const eligibilitySchema = z.enum(['all', 'owner', 'tenant']);
+const occupancySchema = z.enum(['owner', 'tenant', 'vacant']);
+const percentSchema = rupeesSchema.refine((value) => value <= 10000, {
+  message: 'Enter a percentage from 0.01 to 100.',
+});
 export const chargeFormSchema = z
   .object({
     id: z.uuid().nullable(),
     name: z.string().trim().min(2).max(120),
-    method: z.enum(['fixed', 'per_sqft', 'custom']),
+    method: chargeMethodSchema,
     amountRupees: z.string().trim().max(32),
+    eligibility: eligibilitySchema.default('all'),
+    percentRate: z.string().trim().max(32).default(''),
+    baseChargeTypeId: z.uuid().nullable().default(null),
     active: z.boolean(),
     expectedUpdatedAt: timestamp.nullable(),
   })
   .strict()
   .superRefine((input, context) => {
+    if (input.method === 'percent_of_charge') {
+      if (!input.baseChargeTypeId || input.baseChargeTypeId === input.id) {
+        context.addIssue({
+          code: 'custom',
+          path: ['baseChargeTypeId'],
+          message: 'Choose a different base charge.',
+        });
+      }
+      if (!percentSchema.safeParse(input.percentRate).success) {
+        context.addIssue({
+          code: 'custom',
+          path: ['percentRate'],
+          message: 'Enter a percentage from 0.01 to 100.',
+        });
+      }
+      if (input.amountRupees) {
+        context.addIssue({
+          code: 'custom',
+          path: ['amountRupees'],
+          message: 'Percentage charges do not use a fixed amount.',
+        });
+      }
+      return;
+    }
+    if (input.baseChargeTypeId || input.percentRate) {
+      context.addIssue({
+        code: 'custom',
+        path: ['percentRate'],
+        message: 'Only percentage charges use a base charge and percentage.',
+      });
+    }
     if (input.method === 'custom') {
       if (input.amountRupees !== '') {
         context.addIssue({
@@ -101,10 +146,16 @@ export const chargeFormSchema = z
       }
     }
   })
-  .transform(({ amountRupees, ...input }) => ({
+  .transform(({ amountRupees, percentRate, ...input }) => ({
     ...input,
     amountPaise:
-      input.method === 'custom' ? null : rupeesSchema.parse(amountRupees),
+      input.method === 'fixed' || input.method === 'per_sqft'
+        ? rupeesSchema.parse(amountRupees)
+        : null,
+    percentBasisPoints:
+      input.method === 'percent_of_charge'
+        ? percentSchema.parse(percentRate)
+        : null,
   }));
 
 export const paymentDetailsInputSchema = z
@@ -125,8 +176,11 @@ export const chargeTypeSchema = z.object({
   id: z.uuid(),
   society_id: z.uuid(),
   name: z.string(),
-  method: z.enum(['fixed', 'per_sqft', 'custom']),
+  method: chargeMethodSchema,
   amount_paise: z.number().int().positive().max(MAX_MONEY_PAISE).nullable(),
+  eligibility: eligibilitySchema,
+  base_charge_type_id: z.uuid().nullable(),
+  percent_basis_points: z.number().int().min(1).max(10000).nullable(),
   active: z.boolean(),
   updated_at: timestamp,
 });
@@ -230,13 +284,74 @@ export const billingPreviewSchema = z.object({
       unit_number: z.string(),
       charge_type_id: z.uuid(),
       charge_name: z.string(),
-      method: z.enum(['fixed', 'per_sqft', 'custom']),
+      method: chargeMethodSchema,
       amount_paise: moneyPaiseSchema,
       already_generated: z.boolean(),
     }),
   ),
+  skipped: z.array(
+    z.object({
+      unit_id: z.uuid(),
+      unit_number: z.string(),
+      charge_type_id: z.uuid(),
+      charge_name: z.string(),
+      reason: z.enum(['not_eligible', 'not_applicable', 'rounds_to_zero']),
+    }),
+  ),
   preview_hash: z.string().regex(/^[a-f0-9]{32}$/),
 });
+
+export const billingEstimateInputSchema = z
+  .object({
+    areaSqft: z
+      .string()
+      .trim()
+      .regex(
+        /^\d{1,6}(?:\.\d{1,2})?$/,
+        'Enter an area in square feet with up to two decimals.',
+      )
+      .transform(Number)
+      .pipe(z.number().positive()),
+    occupancy: occupancySchema,
+    customAmounts: z
+      .array(
+        z
+          .object({
+            chargeTypeId: z.uuid(),
+            amountRupees: rupeesSchema,
+          })
+          .strict(),
+      )
+      .max(100),
+  })
+  .strict();
+
+export const billingEstimateSchema = z.object({
+  area_sqft: z.string(),
+  occupancy: occupancySchema,
+  lines: z.array(
+    z.object({
+      charge_type_id: z.uuid(),
+      charge_name: z.string(),
+      amount_paise: moneyPaiseSchema,
+    }),
+  ),
+  skipped: z.array(
+    z.object({
+      charge_type_id: z.uuid(),
+      charge_name: z.string(),
+      reason: z.enum([
+        'not_eligible',
+        'not_applicable',
+        'rounds_to_zero',
+        'no_amount',
+        'base_excluded',
+      ]),
+    }),
+  ),
+  total_paise: paiseText,
+});
+export type BillingEstimate = z.infer<typeof billingEstimateSchema>;
 
 export const billingGenerationResultSchema = z.object({
   job_id: z.uuid(),
@@ -734,7 +849,48 @@ export const BILLING_REPORTS = [
   'dues_by_unit',
   'collections',
   'defaulters',
+  'collections_by_mode',
+  'block_totals',
+  'bill_status',
+  'unapplied_credit',
 ] as const;
+
+const reportCount = z.number().int().nonnegative();
+export const billingReportSummarySchema = z.object({
+  collections_by_mode: z.array(
+    z.object({
+      mode: z.enum(['upi', 'cash', 'cheque', 'bank_transfer']),
+      payment_count: reportCount,
+      amount_paise: paiseText,
+    }),
+  ),
+  block_totals: z.array(
+    z.object({
+      block_id: z.uuid().nullable(),
+      block_name: z.string().nullable(),
+      billed_paise: paiseText,
+      collected_paise: paiseText,
+      outstanding_paise: paiseText,
+    }),
+  ),
+  status_summary: z.array(
+    z.object({
+      status: z.enum([
+        'due',
+        'partially_paid',
+        'overdue',
+        'paid',
+        'waived',
+        'cancelled',
+      ]),
+      bill_count: reportCount,
+      total_paise: paiseText,
+      outstanding_paise: paiseText,
+    }),
+  ),
+  unapplied_credit_paise: paiseText,
+  credit_as_of: z.iso.date(),
+});
 
 export const billingReportExportInputSchema = z
   .object({

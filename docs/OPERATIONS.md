@@ -322,8 +322,8 @@ first-admin email.
      --developer-email you@example.test
    ```
 
-   Optional flags: `--contact-email`, `--contact-phone`, `--timezone` (default
-   `Asia/Kolkata`), `--currency` (default `INR`), `--unit-label` (default
+   Optional flags: `--contact-email`, `--contact-phone`, `--timezone` (only
+   `Asia/Kolkata`, also the default), `--currency` (default `INR`), `--unit-label` (default
    `Unit`), `--plan` and `--society-id`. Run with `--help` to list them. Slugs
    are 1–63 lowercase letters, digits or hyphens. `www`, `demo`, `beta`,
    `admin` and `api` are reserved. A slug cannot be changed once it is set.

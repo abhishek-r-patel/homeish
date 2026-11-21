@@ -99,6 +99,213 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   CSV: 'CSV',
   Current: 'वर्तमान',
   'Current structure': 'वर्तमान संरचना',
+  'Unit layout': 'यूनिट की मंज़िलवार सूची',
+  'No active units': 'कोई सक्रिय यूनिट नहीं है',
+  'Floor not recorded': 'मंज़िल दर्ज नहीं है',
+  'Unknown block': 'ब्लॉक की जानकारी उपलब्ध नहीं है',
+  'Unit 360': 'यूनिट का पूरा विवरण',
+  'Loading unit records': 'यूनिट रिकॉर्ड लोड हो रहे हैं',
+  'Current occupancy': 'मौजूदा निवासी',
+  Tenants: 'किरायेदार',
+  'Family members': 'परिवार के सदस्य',
+  Verified: 'सत्यापित',
+  'Core occupancy is not proof of title or vacancy.':
+    'निवासी रिकॉर्ड मालिकाना हक़ या यूनिट के खाली होने का प्रमाण नहीं है।',
+  'Ledger balance': 'खाते की शेष राशि',
+  Unavailable: 'उपलब्ध नहीं',
+  'No allocated parking slots.': 'कोई पार्किंग स्थान आवंटित नहीं है।',
+  'No unit documents are available.': 'यूनिट के दस्तावेज़ उपलब्ध नहीं हैं।',
+  'Measured area': 'मापा गया क्षेत्रफल',
+  'Measurements do not change the area used for billing.':
+    'माप बदलने से बिल के लिए इस्तेमाल होने वाला क्षेत्रफल नहीं बदलता।',
+  'Billing area (sq ft)': 'बिल का क्षेत्रफल (वर्ग फ़ुट)',
+  'Carpet area (sq ft)': 'कारपेट क्षेत्रफल (वर्ग फ़ुट)',
+  'Built-up area (sq ft)': 'निर्मित क्षेत्रफल (वर्ग फ़ुट)',
+  'Balcony or terrace (sq ft)': 'बालकनी या छत (वर्ग फ़ुट)',
+  'No measured area has been recorded.': 'कोई मापा गया क्षेत्रफल दर्ज नहीं है।',
+  'Re-measure': 'फिर से मापें',
+  'Measurement status': 'माप की स्थिति',
+  'Measurement source': 'माप का स्रोत',
+  'This society is read-only.': 'इस सोसाइटी में केवल देखने की अनुमति है।',
+  'Choose a status': 'स्थिति चुनें',
+  Vacant: 'खाली',
+  Locked: 'बंद',
+  'Save Area Review': 'माप की समीक्षा सहेजें',
+  'Save Measurements': 'माप सहेजें',
+  'Vacancy follow-up': 'खाली यूनिट की फ़ॉलो-अप',
+  'Private to admins. This record does not change occupancy, access or billing.':
+    'केवल एडमिन के लिए। इस रिकॉर्ड से निवासी, ऐप की पहुँच या बिल नहीं बदलते।',
+  'No vacancy follow-up has been recorded.':
+    'खाली यूनिट की कोई फ़ॉलो-अप दर्ज नहीं है।',
+  'Assigned admin': 'ज़िम्मेदार एडमिन',
+  'Choose an admin': 'एडमिन चुनें',
+  'Inspection date': 'निरीक्षण की तारीख',
+  'Next follow-up': 'अगली फ़ॉलो-अप',
+  'Follow-up type': 'फ़ॉलो-अप का प्रकार',
+  'Save Vacancy Follow-up': 'खाली यूनिट की फ़ॉलो-अप सहेजें',
+  'Close Vacancy Follow-up': 'खाली यूनिट की फ़ॉलो-अप बंद करें',
+  Building: 'इमारत',
+  'Check the unit record and try again.': 'यूनिट रिकॉर्ड जाँचकर फिर कोशिश करें।',
+  'Unit record saved.': 'यूनिट रिकॉर्ड सहेजा गया।',
+  'Enter at least one measured area.': 'कम से कम एक मापा गया क्षेत्रफल दर्ज करें।',
+  'Building layout': 'इमारत का लेआउट',
+  'See how each building is laid out floor by floor.':
+    'देखें कि हर इमारत मंज़िल-दर-मंज़िल कैसे बनी है।',
+  'Building layout saved.': 'इमारत का लेआउट सहेजा गया।',
+  'Unit placement saved.': 'यूनिट की जगह सहेजी गई।',
+  'Check the building layout and try again.':
+    'इमारत का लेआउट जाँचकर फिर कोशिश करें।',
+  'Choose a free unit spot and try again.':
+    'यूनिट की कोई खाली जगह चुनकर फिर कोशिश करें।',
+  'Another unit in this building already uses this number.':
+    'इस इमारत में किसी दूसरी यूनिट का यही नंबर पहले से है।',
+  'Could not load the building layout.': 'इमारत का लेआउट लोड नहीं हो सका।',
+  'Move this building’s placed units in Unit 360 first.':
+    'पहले यूनिट के पूरे विवरण में इस इमारत की रखी गई यूनिट हटाएँ।',
+  'Building name': 'इमारत का नाम',
+  'Building {number}': 'इमारत {number}',
+  'Save building': 'इमारत सहेजें',
+  'Edit layout': 'लेआउट बदलें',
+  'Add building': 'इमारत जोड़ें',
+  'Archive building': 'इमारत संग्रहित करें',
+  'Building archived.': 'इमारत संग्रहित की गई।',
+  'Building drafted. Adjust it, then save.':
+    'इमारत का मसौदा बन गया। बदलाव करें, फिर सहेजें।',
+  'Changes discarded.': 'बदलाव हटा दिए गए।',
+  'Use + on the roof to add a floor, + at the end of a floor to add a unit spot, and + under the building to add a basement. Select a floor name or any spot to edit it. A new spot is an empty position, not a unit record.':
+    'छत पर + से मंज़िल, मंज़िल के अंत में + से यूनिट की जगह और इमारत के नीचे + से बेसमेंट जोड़ें। बदलने के लिए मंज़िल का नाम या कोई भी जगह चुनें। नई जगह सिर्फ़ खाली स्थान है, यूनिट रिकॉर्ड नहीं।',
+  'This building has no layout yet. Choose Edit layout to draw it.':
+    'इस इमारत का अभी कोई लेआउट नहीं है। बनाने के लिए लेआउट बदलें चुनें।',
+  'This building has no layout yet.': 'इस इमारत का अभी कोई लेआउट नहीं है।',
+  'This building has no layout yet. Draw it on the Structure screen first.':
+    'इस इमारत का अभी कोई लेआउट नहीं है। पहले सोसाइटी संरचना स्क्रीन पर इसे बनाएँ।',
+  'No buildings yet. Add one to start.':
+    'अभी कोई इमारत नहीं है। शुरू करने के लिए एक जोड़ें।',
+  'No buildings yet.': 'अभी कोई इमारत नहीं है।',
+  'Choose Edit layout to change this layout.':
+    'यह लेआउट बदलने के लिए लेआउट बदलें चुनें।',
+  'You can view this layout but not change it.':
+    'आप यह लेआउट देख सकते हैं, पर बदल नहीं सकते।',
+  'Whole floor: {use}': 'पूरी मंज़िल: {use}',
+  '{count} spaces': '{count} जगहें',
+  '{count} units placed': '{count} यूनिट रखी गईं',
+  'Floor name': 'मंज़िल का नाम',
+  'Leave blank for the automatic name. Use it for refuge floors, podiums or skipped numbers.':
+    'अपने-आप बने नाम के लिए खाली छोड़ें। रिफ़्यूज मंज़िल, पोडियम या छोड़े गए नंबरों के लिए इसका उपयोग करें।',
+  'Floor use': 'मंज़िल का उपयोग',
+  'Separate spaces': 'अलग-अलग जगहें',
+  'Whole floor: Parking': 'पूरी मंज़िल: पार्किंग',
+  'Whole floor: Amenity': 'पूरी मंज़िल: सुविधा',
+  'Whole floor: Shop / commercial': 'पूरी मंज़िल: दुकान / व्यावसायिक',
+  'Whole floor: Service room': 'पूरी मंज़िल: सर्विस रूम',
+  'Name shown on the layout': 'लेआउट पर दिखने वाला नाम',
+  'Copy this floor’s layout': 'इस मंज़िल का लेआउट कॉपी करें',
+  'From floor': 'किस मंज़िल से',
+  'To floor': 'किस मंज़िल तक',
+  'Floors with placed units or duplexes are never overwritten.':
+    'जिन मंज़िलों पर यूनिट रखी गई हैं या डुप्लेक्स हैं, वे कभी नहीं बदलतीं।',
+  'Copy layout to floors': 'लेआउट मंज़िलों पर कॉपी करें',
+  'Remove floor': 'मंज़िल हटाएँ',
+  '{floor} · spot {spot}': '{floor} · जगह {spot}',
+  Spot: 'जगह',
+  'Duplex with {floor}, {space}': '{floor} के साथ डुप्लेक्स, {space}',
+  'This unit was placed in Unit 360. Move it there before changing or removing this spot.':
+    'यह यूनिट, यूनिट के पूरे विवरण से रखी गई थी। यह जगह बदलने या हटाने से पहले उसे वहीं से हटाएँ।',
+  'Open Unit 360': 'यूनिट का पूरा विवरण खोलें',
+  'Space type': 'जगह का प्रकार',
+  'Duplex: this unit also uses the same spot on the floor above':
+    'डुप्लेक्स: यह यूनिट ऊपर की मंज़िल पर इसी जगह का भी उपयोग करती है',
+  'Move left': 'बाएँ ले जाएँ',
+  'Move right': 'दाएँ ले जाएँ',
+  'Remove spot': 'जगह हटाएँ',
+  'Start with a regular shape, then adjust single floors and spots on the drawing.':
+    'एक सामान्य आकार से शुरू करें, फिर ड्रॉइंग पर अलग-अलग मंज़िलें और जगहें बदलें।',
+  'Ground floor': 'भूतल',
+  'Parking (whole floor)': 'पार्किंग (पूरी मंज़िल)',
+  'Unit spots': 'यूनिट की जगहें',
+  Shops: 'दुकानें',
+  'Floors (0–99)': 'मंज़िलें (0–99)',
+  'Spots per floor': 'हर मंज़िल पर जगहें',
+  'Basements (0–5)': 'बेसमेंट (0–5)',
+  'Create draft layout': 'लेआउट का मसौदा बनाएँ',
+  'Basement {number}': 'बेसमेंट {number}',
+  Ground: 'भूतल',
+  'Free unit spot': 'यूनिट की खाली जगह',
+  'Add new floor on top': 'ऊपर नई मंज़िल जोड़ें',
+  '{floors} floors · {basements} basements · {placed} units placed · {free} free spots':
+    '{floors} मंज़िलें · {basements} बेसमेंट · {placed} यूनिट रखी गईं · {free} खाली जगहें',
+  'Edit {floor}': '{floor} बदलें',
+  '{floor}, whole floor: {use}': '{floor}, पूरी मंज़िल: {use}',
+  '{floor}, spot {spot}: {space}': '{floor}, जगह {spot}: {space}',
+  'Current spot: {label}': 'मौजूदा जगह: {label}',
+  'Place here: {label}': 'यहाँ रखें: {label}',
+  Duplex: 'डुप्लेक्स',
+  'Add new unit spot to {floor}': '{floor} में यूनिट की नई जगह जोड़ें',
+  'Add basement below': 'नीचे बेसमेंट जोड़ें',
+  Legend: 'संकेत',
+  'Duplex (two floors)': 'डुप्लेक्स (दो मंज़िलें)',
+  'Unit spot': 'यूनिट की जगह',
+  'Shop / commercial': 'दुकान / व्यावसायिक',
+  'Service room': 'सर्विस रूम',
+  'Blank gap': 'खाली स्थान',
+  'Building name must be 1 to 60 characters.':
+    'इमारत का नाम 1 से 60 अक्षरों का होना चाहिए।',
+  'Floors must run without gaps and include Ground.':
+    'मंज़िलें बिना अंतर के होनी चाहिए और उनमें भूतल शामिल होना चाहिए।',
+  'A building can have up to {count} floors.':
+    'एक इमारत में अधिकतम {count} मंज़िलें हो सकती हैं।',
+  'A building can have up to {count} basements.':
+    'एक इमारत में अधिकतम {count} बेसमेंट हो सकते हैं।',
+  'A floor can have 1 to {count} spaces.':
+    'एक मंज़िल पर 1 से {count} जगहें हो सकती हैं।',
+  'A whole floor must be one parking, amenity, shop or service space.':
+    'पूरी मंज़िल एक ही पार्किंग, सुविधा, दुकान या सर्विस जगह होनी चाहिए।',
+  'A duplex needs a free unit spot directly above, in the same position.':
+    'डुप्लेक्स के लिए ठीक ऊपर, उसी स्थान पर यूनिट की खाली जगह चाहिए।',
+  'Floor added.': 'मंज़िल जोड़ी गई।',
+  'Basement added.': 'बेसमेंट जोड़ा गया।',
+  'Unit spot added. No unit record created.':
+    'यूनिट की जगह जोड़ी गई। कोई यूनिट रिकॉर्ड नहीं बना।',
+  'Ground cannot be removed.': 'भूतल हटाया नहीं जा सकता।',
+  'Only the top floor or the lowest basement can be removed, so floor numbers stay in order.':
+    'सिर्फ़ सबसे ऊपर की मंज़िल या सबसे नीचे का बेसमेंट हटाया जा सकता है, ताकि मंज़िलों के नंबर क्रम में रहें।',
+  'Move this floor’s units in Unit 360 first.':
+    'पहले यूनिट के पूरे विवरण में इस मंज़िल की यूनिट हटाएँ।',
+  'Turn off the duplex on this floor first.': 'पहले इस मंज़िल का डुप्लेक्स बंद करें।',
+  'Floor removed.': 'मंज़िल हटाई गई।',
+  'Move this floor’s units and turn off duplexes before making it one whole space.':
+    'इसे एक पूरी जगह बनाने से पहले इस मंज़िल की यूनिट हटाएँ और डुप्लेक्स बंद करें।',
+  'Choose the first and last floor to copy to.':
+    'जिन मंज़िलों पर कॉपी करना है, उनकी पहली और आखिरी मंज़िल चुनें।',
+  'Choose floors other than the one being copied.':
+    'जिस मंज़िल को कॉपी कर रहे हैं, उसके अलावा दूसरी मंज़िलें चुनें।',
+  'A floor in that range has placed units or a duplex, so it cannot be overwritten.':
+    'उस सीमा की किसी मंज़िल पर यूनिट रखी गई है या डुप्लेक्स है, इसलिए उसे बदला नहीं जा सकता।',
+  'Layout copied to {count} floors. Units and duplexes are not copied.':
+    'लेआउट {count} मंज़िलों पर कॉपी हुआ। यूनिट और डुप्लेक्स कॉपी नहीं होते।',
+  'Unit {unit} is placed here. Move it in Unit 360 first.':
+    'यूनिट {unit} यहाँ रखी गई है। पहले उसे यूनिट के पूरे विवरण में हटाएँ।',
+  'Turn off the duplex first.': 'पहले डुप्लेक्स बंद करें।',
+  'Spots in line with a duplex cannot be moved. Turn off the duplex first.':
+    'डुप्लेक्स की सीध वाली जगहें हटाई नहीं जा सकतीं। पहले डुप्लेक्स बंद करें।',
+  'A floor needs at least one space.': 'एक मंज़िल पर कम से कम एक जगह होनी चाहिए।',
+  'Removing this spot would shift a duplex out of line. Turn that duplex off first.':
+    'यह जगह हटाने से डुप्लेक्स सीध से हट जाएगा। पहले वह डुप्लेक्स बंद करें।',
+  'Spot removed.': 'जगह हटाई गई।',
+  'Place in building layout': 'इमारत के लेआउट में रखें',
+  'This unit is not placed on a building layout yet.':
+    'यह यूनिट अभी किसी इमारत के लेआउट में नहीं रखी गई है।',
+  'Remove from spot': 'जगह से हटाएँ',
+  'Choose a free unit spot. Placing the unit also sets its building and floor.':
+    'यूनिट की खाली जगह चुनें। यूनिट रखने से उसकी इमारत और मंज़िल भी तय हो जाती है।',
+  'Place unit here?': 'यूनिट यहाँ रखें?',
+  '{building}, {floor}: {space}': '{building}, {floor}: {space}',
+  '{building}, {floor}, spot {spot}': '{building}, {floor}, जगह {spot}',
+  'The unit’s building and floor will change to match this spot.':
+    'यूनिट की इमारत और मंज़िल इस जगह के अनुसार बदल जाएगी।',
+  'Place unit': 'यूनिट रखें',
+  'Use dates on or after the vacancy start date.':
+    'खाली होने की तारीख से पहले की तारीख न चुनें।',
   Deficit: 'घाटा',
   'Delivery log': 'डिलीवरी लॉग',
   'Delivery management': 'डिलीवरी प्रबंधन',

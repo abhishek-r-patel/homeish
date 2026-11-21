@@ -229,7 +229,7 @@ export async function InventoryWorkspace({
                   )}{' '}
                   · {row.vendor ?? row.purpose ?? t('Receipt')}
                   {row.cost_paise !== null
-                    ? ` · ${formatLocalizedCurrency(Number(row.cost_paise), locale)}`
+                    ? ` · ${formatLocalizedCurrency(row.cost_paise, locale)}`
                     : ''}
                 </p>
               </li>

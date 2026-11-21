@@ -115,6 +115,73 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'Fixed per unit': 'हर यूनिट के लिए तय राशि',
   'Per square foot': 'प्रति वर्ग फुट',
   'Custom per unit': 'हर यूनिट के लिए अलग राशि',
+  'Percentage of Maintenance': 'रखरखाव शुल्क का प्रतिशत',
+  'Apply to': 'इन पर लागू करें',
+  'All units': 'सभी यूनिट',
+  'Base charge': 'आधार शुल्क',
+  'Choose a base charge': 'आधार शुल्क चुनें',
+  'Percentage rate (%)': 'प्रतिशत दर (%)',
+  'Choose a different base charge.': 'कोई दूसरा आधार शुल्क चुनें।',
+  'Enter a percentage from 0.01 to 100.': '0.01 से 100 तक प्रतिशत भरें।',
+  'Percentage charges do not use a fixed amount.':
+    'प्रतिशत वाले शुल्क में तय राशि नहीं भरते।',
+  'Only percentage charges use a base charge and percentage.':
+    'आधार शुल्क और प्रतिशत केवल प्रतिशत वाले शुल्क में भरें।',
+  'Choose an active fixed, per-square-foot or custom charge as the base.':
+    'आधार के लिए सक्रिय तय, प्रति वर्ग फुट या यूनिट के अनुसार अलग शुल्क चुनें।',
+  'Change the percentage charges that use this base first.':
+    'पहले इस आधार का उपयोग करने वाले प्रतिशत शुल्क बदलें।',
+  'Wait until the billed month begins to apply occupancy rules.':
+    'निवास के नियम लागू करने के लिए बिल वाले महीने की शुरुआत तक इंतज़ार करें।',
+  'Omitted charges': 'नहीं जोड़े गए शुल्क',
+  'Occupancy does not match': 'निवास की शर्त पूरी नहीं होती',
+  'Base charge does not apply': 'आधार शुल्क लागू नहीं होता',
+  'Rounds to zero': 'राउंडिंग के बाद शून्य',
+  'There are no new charges to bill for this selection.':
+    'इस चयन के लिए कोई नया शुल्क नहीं है।',
+  Estimate: 'अनुमान',
+  'Charge estimate': 'शुल्क का अनुमान',
+  'An estimate only. No bill or unit is created.':
+    'सिर्फ अनुमान है। कोई बिल या यूनिट नहीं बनती।',
+  'No active charge types.': 'कोई सक्रिय शुल्क प्रकार नहीं है।',
+  Occupancy: 'कौन रहता है',
+  Vacant: 'खाली',
+  'Custom amounts are optional. Leave blank to exclude the charge.':
+    'कस्टम राशि भरना ज़रूरी नहीं है। शुल्क छोड़ने के लिए खाली रखें।',
+  '{charge} (INR)': '{charge} (रुपये)',
+  'Calculate Estimate': 'अनुमान निकालें',
+  'Estimated total': 'अनुमानित कुल',
+  'No charges apply to this estimate.': 'इस अनुमान में कोई शुल्क लागू नहीं होता।',
+  'No custom amount entered': 'कस्टम राशि नहीं भरी',
+  'Base charge was omitted': 'आधार शुल्क नहीं जोड़ा गया',
+  'Enter an area in square feet with up to two decimals.':
+    'वर्ग फुट में क्षेत्रफल भरें। दशमलव के बाद अधिकतम दो अंक रखें।',
+  'Collections by payment mode': 'भुगतान के तरीके के अनुसार वसूली',
+  '{count} payments': '{count} भुगतान',
+  'Wing totals': 'विंग के अनुसार कुल',
+  'Bills for the selected months, with current balances.':
+    'चुने गए महीनों के बिल और उनकी मौजूदा बकाया राशि।',
+  'No wing assigned': 'विंग नहीं चुना गया',
+  'Bill status summary': 'बिल की स्थिति का सारांश',
+  'Unapplied advance credit': 'बिलों में इस्तेमाल न हुई अग्रिम राशि',
+  'As of {date}': '{date} तक',
+  'Actual move-in date confirmed for billing.':
+    'बिल के लिए रहने की असली शुरुआत की तारीख पक्की की गई।',
+  'Tenant name unavailable': 'किरायेदार का नाम उपलब्ध नहीं है',
+  'Actual move-in date': 'रहने की असली शुरुआत की तारीख',
+  'Confirm Move-In Date': 'रहने की शुरुआत की तारीख पक्की करें',
+  'Tenant move-in dates': 'किरायेदारों के रहने की शुरुआत की तारीखें',
+  'Move-in dates': 'रहने की शुरुआत की तारीखें',
+  'Review move-in dates for {unit} (opens in a new tab)':
+    '{unit} की रहने की शुरुआत की तारीखें देखें (नए टैब में खुलेगा)',
+  'Confirm the day the tenant actually moved in. This changes future bill calculations, not published bills or resident access.':
+    'पक्का करें कि किरायेदार किस दिन रहने आया। इससे आगे की बिल गणना बदलती है, प्रकाशित बिल या निवासियों की पहुँच नहीं।',
+  'Confirm the actual tenant move-in date for {unit} before applying occupancy rules.':
+    'निवास के नियम लागू करने से पहले {unit} के किरायेदार की असली शुरुआत की तारीख पक्की करें।',
+  'No base charge is available for {unit} this month. Include the base charge in the run.':
+    'इस महीने {unit} के लिए आधार शुल्क नहीं है। बिल बनाते समय आधार शुल्क शामिल करें।',
+  'Enter the custom amount for {charge} on {unit}.':
+    '{unit} पर {charge} की कस्टम राशि भरें।',
   'Charge name': 'शुल्क का नाम',
   'Calculation method': 'गणना का तरीका',
   "Enter each unit's amount when generating bills.":
@@ -779,6 +846,13 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'Open {label} (private link, up to five minutes)':
     '{label} खोलें (निजी लिंक, अधिकतम पाँच मिनट)',
   'Owner consent': 'मालिक की सहमति',
+  'Proof attached': 'प्रमाण जोड़ा गया',
+  'Required for this request; no retained proof is available.':
+    'इस अनुरोध के लिए ज़रूरी है; कोई सहेजा हुआ प्रमाण उपलब्ध नहीं है।',
+  'Not required for this request': 'इस अनुरोध के लिए ज़रूरी नहीं है',
+  'Available in private documents': 'निजी दस्तावेज़ों में उपलब्ध है',
+  'Issued; file no longer available': 'जारी किया गया; फ़ाइल अब उपलब्ध नहीं है',
+  'No NOC available': 'कोई NOC उपलब्ध नहीं है',
   'Police-verification proof is not required by this society.':
     'इस सोसाइटी में पुलिस सत्यापन का प्रमाण ज़रूरी नहीं है।',
   'Positive dues block completion and NOC issue. There is no override.':

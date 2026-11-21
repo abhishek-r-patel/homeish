@@ -22,11 +22,11 @@
 
 ### 1.1 Direction: "The Gate Register"
 
-Homeish digitizes the paper visitor register, the notice board and the maintenance receipt book. The look draws from those objects: warm off-white paper, dark ink text, ruled dividers, stamped status labels, and one confident blue. It should feel like a well-kept, trustworthy ledger, not a startup dashboard.
+Homeish digitizes the paper visitor register, the notice board and the maintenance receipt book. The look keeps their clear, trustworthy records while using a cool light background, dark ink text, softer corners, stamped status labels, and one confident blue.
 
 | Do                                                                            | Do not                                                    |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Warm paper background, ink-dark text, thin ruled lines                        | Gradients, glassmorphism, neon, glow, blurred blobs       |
+| Cool light background, ink-dark text, clear dividers and softer corners       | Gradients, glassmorphism, neon, glow, blurred blobs       |
 | One brand colour used sparingly for primary actions and selection             | Multi-colour hero sections, decorative illustration packs |
 | Stamp-style status labels (text + icon + tint)                                | Colour-only status dots                                   |
 | Dense, scannable lists for staff; spacious, single-task screens for residents | Card-in-card-in-card nesting, shadows on everything       |
@@ -50,7 +50,7 @@ Homeish digitizes the paper visitor register, the notice board and the maintenan
 - Plain, short, active. Sentence case for headings and labels. Title Case only for primary button labels (e.g., "Pay Now", "Generate Bills").
 - Address the user directly ("Your dues", "Allow this visitor?").
 - No exclamation marks, no emoji, no humour in errors.
-- Dates: `Sat, 9 Nov 2026`. Times: `6:30 PM` (12-hour). Always society timezone; show the zone label only on deadlines/due dates when it differs from the viewer's device zone. **[DA-01]**
+- Dates: `Sat, 9 Nov 2026`. Times: `6:30 PM` (12-hour), always India Standard Time. If a zone label is needed, show **IST**, not the device timezone or a GMT offset. Date-only values keep their recorded calendar day. **[DA-01]**
 - Currency: `₹12,500.00` (Indian digit grouping `₹1,25,000.00`). Minor units never leak into UI (DAT-2).
 
 ---
@@ -66,10 +66,10 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 | `ink`            | `#1B1F23` | Primary text, headings                                                            |
 | `ink-muted`      | `#59606A` | Secondary text, captions, helper text                                             |
 | `ink-disabled`   | `#8A9099` | Disabled text only (not for essential content)                                    |
-| `paper`          | `#F6F4EF` | App background                                                                    |
+| `paper`          | `#F5F7FA` | App background                                                                    |
 | `surface`        | `#FFFFFF` | Cards, inputs, sheets, table bodies                                               |
-| `surface-sunken` | `#EFECE5` | Table headers, read-only fields, code blocks                                      |
-| `rule`           | `#DDD8CC` | Decorative dividers, card outlines                                                |
+| `surface-sunken` | `#EDF1F6` | Table headers, read-only fields, code blocks                                      |
+| `rule`           | `#D9E0E8` | Decorative dividers, card outlines                                                |
 | `rule-strong`    | `#7A7F86` | Essential control borders (inputs, checkboxes, secondary buttons), 3:1 on surface |
 | `brand`          | `#1E4E8C` | Primary buttons, links, selected state, focus accent                              |
 | `brand-hover`    | `#183F72` | Hover/pressed brand                                                               |
@@ -85,7 +85,7 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 | `warning` | `#8A4B00` | `#FBF0DC`          | Pending attention, expiring, overdue soon |
 | `danger`  | `#B42318` | `#FBE9E7`          | Denied, failed, overdue, destructive      |
 | `info`    | `#1E4E8C` | `#E6EEF8`          | Neutral information, in progress          |
-| `neutral` | `#59606A` | `#ECE9E1`          | Draft, closed, inactive, cancelled        |
+| `neutral` | `#59606A` | `#E9EDF2`          | Draft, closed, inactive, cancelled        |
 
 ### 2.3 Colour rules
 
@@ -114,7 +114,7 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 
 ### 3.1 Typeface
 
-- **Default families:** Manrope for body text and Sora for headings, bundled with the app so browsers do not request fonts from another site. Users may choose these or their device-default font; the preference is saved to their account. **[DD-02 — Approved 2026-11-09]**
+- **Default families:** Nunito for body text and Quicksand for headings, bundled with the app so browsers do not request fonts from another site. Users may choose these or their device-default font; the preference is saved to their account. The existing `manrope_sora` saved value continues to mean Homeish typography. **[DD-02 — amended 2026-11-20]**
 - **Indic scripts (P33, D-66):** locally bundled Noto Sans Devanagari supports Hindi; the variable font and SIL Open Font License 1.1 are in [public/fonts/](../public/fonts/) and [OFL.txt](../public/fonts/OFL.txt). Line-height tokens below accommodate taller glyphs.
 - **Numerals:** Enable tabular numerals on all amounts, counts, dates in tables, codes and OTP.
 - **Monospace (log viewer, reference IDs, stack traces only):** system monospace stack.
@@ -166,8 +166,8 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 | Token            | Value              | Use                                              |
 | ---------------- | ------------------ | ------------------------------------------------ |
 | `radius-sm`      | 6px                | Chips, badges, small buttons                     |
-| `radius-md`      | 8px                | Inputs, buttons, cards, tables                   |
-| `radius-lg`      | 12px               | Bottom sheets (top corners), modals              |
+| `radius-md`      | 12px               | Inputs, buttons, cards, tables                   |
+| `radius-lg`      | 20px               | Bottom sheets (top corners), modals, home hero   |
 | `border`         | 1px `rule`         | Cards, dividers, table lines                     |
 | `border-control` | 1px `rule-strong`  | Inputs, checkboxes, secondary buttons            |
 | `shadow-overlay` | single soft shadow | Modals, bottom sheets, popovers, toasts **only** |
@@ -194,6 +194,7 @@ A chip = icon + sentence-case label + tint background + full-strength text. 6px 
 | Visitor: Checked out                                           | neutral                                     | arrow-out                                     |
 | Visitor: Still inside (overdue, VIS-9)                         | warning                                     | alert                                         |
 | Delivery: Pending response                                     | warning                                     | clock                                         |
+| Delivery: No response                                          | neutral                                     | clock-off                                     |
 | Delivery: Allowed / Left at gate                               | info                                        | check / package                               |
 | Delivery: Denied                                               | danger                                      | cross                                         |
 | Delivery: Collected / Closed                                   | success / neutral                           | check                                         |
@@ -688,7 +689,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 
 ### 12.3 Resident (R-01 – R-08)
 
-- **R-01 Home:** greeting line (name, unit), then an **Action needed** region (pending visitor/delivery approvals, amount due) only if non-empty, then module shortcuts (large icon buttons, max 2 columns on `compact`) generated from enabled modules, then recent activity (last 5 items, mixed with module chips). Dues hero appears first when `billing` is enabled and there are dues.
+- **R-01 Home:** greeting line (name, unit), then an **Action needed** region (pending visitor/delivery approvals, amount due) only if non-empty, then module shortcuts (large icon buttons, max 2 columns on `compact`) generated from enabled modules, then recent activity. Dues hero appears first when `billing` is enabled and there are dues. The amount is the exact total of open bills across the resident's active units, not a limited bill page; a submitted payment is not deducted before confirmation. Visitor and delivery actions appear only for the resident's approver units while the response is still open. The latest five activity items are the most recently changed visitor and delivery entries for the household, household bills, and service requests the resident created, with module labels and current status. Include only enabled modules and the active society, even for people who also have a staff role. Show a clear no-unit state rather than suggesting an unknown balance is paid. **[Option C — approved for implementation 2026-11-20]**
 - **R-02 Visitors:** segmented (Today, Upcoming, History); primary action "Pre-Approve Visitor" (floating on compact is **not** used; button sits in the page header/top of the list). Approval deep link opens the Visitor approval card: Allow/Deny pair at the bottom within thumb reach. MVP+ (A-10): a **Frequent visitors** card saves a name (and optional vehicle) per unit; each saved visitor has a one-step **Pre-approve** form (from/until) and a **Remove** button with the visitor's name in its accessible label.
 - **R-03 Deliveries:** list with response buttons on pending items; **Delivery preference** setting shown as option cards on a settings sub-page. MVP+ (A-14): an **Expected deliveries** card lets a resident pick unit, platform and window (society timezone shown as help text) and lists upcoming announcements with **Cancel**.
 - **R-04 Dues:** Amount due hero → Pay Now (Primary) → bills list (Due, Overdue, Paid chips) → ledger and receipts under tabs (Bills / Ledger / Receipts). Bill detail shows line items as a definition list with a total row, due date, status and PDF download. **UPI payment screen** (opened by Pay Now): exact amount; society payee name and UPI ID with a Copy button; QR code; "Pay with UPI App" button on phones; a visible line "UPI details last changed on {date}"; then a short form for the UPI reference number (required) and an optional screenshot, with Primary "Submit Payment Details". After submitting, a result screen shows Awaiting confirmation. Rejected submissions show the admin's reason with Resubmit.
@@ -698,10 +699,16 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 
 ### 12.4 Admin and Committee (A-01 – A-12)
 
+- **Society Structure (P36):** the **Building layout** card sits above the existing block and unit management cards. Admins draw each building; committee members open the same screen from **Building layout** in their menu and see the drawing read-only, without the management cards. Unit numbers in the management list open the admin-only Unit 360 workspace. Unit 360 shows Core occupancy, live permitted Billing/Parking/Documents records, measured-area history, private vacancy follow-ups and the unit's layout spot. In the measured-area form, group the short decimal fields side by side when space permits and stack them on narrow screens. Disabled or denied sources show Unavailable; read-only societies hide edit controls.
+  - **Building drawing:** choose **Building** to show one building as a front view: a roof, floors from the top floor down to Ground, basements below, then a foundation. Each floor row has its name on the left and one box per spot: unit spots show the placed unit number or a dash when free; parking, amenity, shop/commercial and service-room spots show their name; blank gaps are dashed. A whole-floor use (for example stilt parking) is one wide box. A duplex unit is one box spanning its two floors. A summary line counts floors, basements, placed units and free spots, and a legend explains the box styles. The drawing scrolls sideways inside its card on narrow screens; the page itself never does.
+  - **Editing (admins):** **Edit layout** turns on editing. **+** on the roof adds a floor on top, **+** at the end of a floor adds an empty unit spot, and **+** under the building adds a basement; each **+** names its action on hover and focus. Selecting a floor name or any box opens a popup; there are no separate edit icons. The floor popup sets an optional floor name, the floor use (separate spaces or one whole-floor use), the whole-floor name, copying this floor's layout to a range of floors, and removing the floor (top floor or lowest basement only; never Ground). The spot popup sets the space type, an optional display name, duplex on/off, move left/right and remove. Without a name, a box shows its translated space type; a whole-floor box shows “Type · Name” only when the name adds something beyond the type. Floors or spots holding placed units or duplexes cannot be overwritten, retyped or removed; the popup explains why. **Add building** asks for a name, ground-floor use, floors (0–99), spots per floor (1–20) and basements (0–5), then drafts a regular shape to adjust. Nothing is saved until **Save building**; **Cancel** discards the draft. **Archive building** is refused while units are placed in it. New spots are empty positions, never unit records.
+  - **Placing a unit (Unit 360):** the **Place in building layout** card shows the current spot, a **Building** choice and the same drawing in pick mode where only free unit spots (and the unit's own spot) can be selected. Choosing a spot asks for confirmation because placing also sets the unit's building and floor. **Remove from spot** clears the placement. Changing a unit's block or floor elsewhere removes its placement.
+
 - **A-01 Dashboard:** stat tiles (only for enabled modules) in a grid: Visitors today, Still inside, Open requests, Overdue requests, Collected this month, Outstanding; below, two columns on `expanded`: "Needs attention" list (overdue requests, defaulters, expiring AMCs, low stock) and "Recent activity". Tiles are links to pre-filtered lists. No decorative charts in MVP.
 - **List pages (A-03, A-05–A-08, etc.):** page header (title, primary action, secondary actions in overflow), toolbar (search, Filters, Export if permitted), table (6.12), pagination (6.13).
 - **A-07 Billing:** page uses tabs: Bills, Charge Types, Payments (with a **Review queue** of UPI submissions showing reference, amount, screenshot and Confirm / Reject with a required reason; submissions waiting beyond the alert days are flagged), Fines, Reports, Payment Settings (UPI ID, payee name, QR image; saving needs a confirm dialog stating that admins and committee will be notified). Bill generation is a stepper opened from the Bills tab (7.3). Unit ledger opens in a side panel (`expanded`) or full page (`compact`). Record Payment and Add Fine open in a dialog/sheet.
   - P7A exposes only Charge Types and Payment Settings, with a read-only summary of developer-managed billing rules. Unimplemented bill/payment/report tabs and resident payment actions stay hidden. QR upload failures must be retried or removed before saving; abandoned uploads can be removed explicitly. Payment-detail saves require a focused confirmation showing the proposed UPI ID and payee, retain entered values on failure, and show one persistent outcome after success.
+  - P37: Charge Types shows the occupancy rule and asks for a base and rate only for Percentage of Maintenance. The bill stepper lists omitted lines with reasons and tells admins when a move-in date must be confirmed before billing. Estimate is a read-only tab for admins and committee with area, occupancy and optional custom amounts; show a clearly marked estimate and list exclusions separately. Reports adds payment-mode, wing and bill-status aggregates and labels unapplied credit with its current as-of date. Use the existing loading, empty, error, permission and export patterns.
 - **A-08 Requests:** table with status, category, unit, assignee, SLA due (overdue highlighted with danger chip), detail with assign control (select + "Assign" Primary), status change segmented control, internal comment thread. MVP+ (D-17): a **Sort** select (Overdue first, then newest / Most upvoted) and an upvote count caption on common-area rows.
 - **Settings pages:** two-column on `expanded` (section nav left, form right); single column on compact.
 - **Language availability (P33, D-67):** show the Hindi control in Society settings only after the developer enables Language Support. Admins can change it; committee members see a read-only status. English is always available. If either the module or society setting is off, signed-in society screens use English and saved preferences remain unchanged. When the module is off, tell admins to ask the platform developer to enable it.
@@ -736,6 +743,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - Amenity definitions use repeatable weekday/time fieldsets and exact fee inputs. The date picker shows exclusive slots, the 24-hour lead and guest limit. Each booking explicitly acknowledges current rules. Household booking cards retain original time, fee and accepted rules after schedule edits. Administrator cancellation asks for a reason and confirmation; any fee receives a full ledger credit.
 - Navigation comes from current membership roles and enabled modules. Read-only committee shells omit write permissions. Edit controls remount when their optimistic version changes; booking acknowledgement resets when the date, rules version or slot changes.
 - Tenancy (P18) uses the existing role shells: resident/owner requests and private detail, administrator/committee schedule and administrator private detail, and a status-only guard schedule. Lists use shared responsive tables, status filters and exact-total pagination. Committee and guard views load no tenant selectors or private details. Disabled, denied, suspended/read-only, loading, empty, filtered-empty and error states remain distinct.
+- P36 summarizes the effect at completion, recorded agreement expiry, required proof and retained NOC availability on existing private move details. Missing retained files do not establish noncompliance. Committee and guard schedules remain unchanged.
 - Move forms choose an existing tenant/invitation, configured unit label, society-local future window, agreement expiry and optional existing amenity booking. Proofs are private, immutable PDF/JPG/PNG up to 5 MiB; rental agreement is mandatory, police proof only when enabled, and government ID copies are prohibited. The detail page separates owner consent, scheduling approval and confirmed actual completion; access changes only on completion. Consequential decisions require confirmation, rejection/cancellation requires a reason, dues states never describe disabled Billing as cleared, and issued NOCs and immutable history remain available to authorised readers.
 - Proof controls show upload and attachment as separate states, retain recoverable errors and reference IDs, allow retry/removal before attachment, and ignore cancelled or superseded upload results. Private links are requested on demand and removed after their returned lifetime, never embedded permanently in list data.
 - Development-only fixtures exercise these controls with synthetic in-memory state. Tenancy injects all actions and keeps default file transport in memory; automated tests explicitly opt into intercepted HTTP and block unmatched hosted requests or real Server Actions. Browser checks cover 320/390/768/1280-pixel reflow, accessibility, lost-response retries, exact pagination, stale-proof recovery, consent/completion separation, dues/NOC failures, preserved AMC history and amenity fee/rules/time snapshots.
@@ -942,7 +950,7 @@ For P33, use the active interface language for shared controls, accessible label
 
 ## 18. Public website and environment entries
 
-Approved 2026-11-09: the bare product host is a marketing website, separate from society sign-in. It reuses the paper, ink, blue, Manrope, Sora and selected logo direction. H1/H2 implementation was authorised on 2026-11-15 (PRD 4.0.1, D-49), retaining those tokens and branding. Do not invent customer counts, testimonials, availability, contact details or paid pricing.
+Approved 2026-11-09: the bare product host is a marketing website, separate from society sign-in. It reuses the shared cool background, ink, blue, Nunito, Quicksand and selected logo direction. H1/H2 implementation was authorised on 2026-11-15 (PRD 4.0.1, D-49); the shared typography and palette were amended on 2026-11-20. Do not invent customer counts, testimonials, availability, contact details or paid pricing.
 
 Website-only tokens: `marketing-display` = 40px mobile / 64px expanded, weight 700, line height 1.1; `content-marketing` = 1200px. All other website values reuse existing tokens. Navigation wraps on phones; links and controls have 48px minimum targets; provide a skip link.
 
@@ -994,14 +1002,14 @@ The existing demo-host illustration remains labelled synthetic, with browser-mem
 
 ## 20. Decisions Requiring Your Approval
 
-| ID    | Decision                                                                                                      | Recommendation                                                                                                 | Priority |
-| ----- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------- |
-| DD-01 | Light theme only in MVP (dark mode later)                                                                     | **Approved 2026-11-09:** light theme only; dark mode may be revisited after MVP                                | Closed   |
-| DD-02 | Typeface and user preference                                                                                  | **Approved 2026-11-09:** Manrope body + Sora headings by default; account-saved option for device-default font | Closed   |
-| DD-03 | Guard alert sound/haptic on resident decision, with mute                                                      | **Approved 2026-11-09:** brief alert with a global mute setting                                                | Closed   |
-| DD-04 | "Help" screen exposing a copyable session/request ID on every role                                            | **Approved 2026-11-09:** copyable ID available from Help throughout the app                                    | Closed   |
-| DD-05 | Society-configurable unit terminology                                                                         | **Approved 2026-11-09:** custom text, 1–24 letters or spaces; defaults to "Unit"                               | Closed   |
-| DD-06 | Brand colour (`#1E4E8C` blue) and the "Gate Register" paper-and-ink direction                                 | **Approved 2026-11-09:** documented palette and direction                                                      | Closed   |
-| DD-07 | Product logo/mark (product name Homeish confirmed in PRD D-01)                                                | **Approved 2026-11-09:** Homeish wordmark paired with the roof-and-entry mark from logo concept 15             | Closed   |
-| DD-08 | Bottom tab bar for residents/admin on phones vs. hamburger drawer                                             | **Approved 2026-11-09:** bottom tabs on phones                                                                 | Closed   |
-| DD-09 | Confirmation for developer high-impact actions (suspend/archive society, disabling module with pending items) | **Approved 2026-11-09:** standard dialog stating the consequence; no typed confirmation                        | Closed   |
+| ID    | Decision                                                                                                      | Recommendation                                                                                           | Priority |
+| ----- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------- |
+| DD-01 | Light theme only in MVP (dark mode later)                                                                     | **Approved 2026-11-09:** light theme only; dark mode may be revisited after MVP                          | Closed   |
+| DD-02 | Typeface and user preference                                                                                  | **Amended 2026-11-20:** Nunito body + Quicksand headings; retain the account-saved device-default option | Closed   |
+| DD-03 | Guard alert sound/haptic on resident decision, with mute                                                      | **Approved 2026-11-09:** brief alert with a global mute setting                                          | Closed   |
+| DD-04 | "Help" screen exposing a copyable session/request ID on every role                                            | **Approved 2026-11-09:** copyable ID available from Help throughout the app                              | Closed   |
+| DD-05 | Society-configurable unit terminology                                                                         | **Approved 2026-11-09:** custom text, 1–24 letters or spaces; defaults to "Unit"                         | Closed   |
+| DD-06 | Brand colour (`#1E4E8C` blue) and the "Gate Register" direction                                               | **Amended 2026-11-20:** retain blue and clear records; use a cool background and softer corners          | Closed   |
+| DD-07 | Product logo/mark (product name Homeish confirmed in PRD D-01)                                                | **Approved 2026-11-09:** Homeish wordmark paired with the roof-and-entry mark from logo concept 15       | Closed   |
+| DD-08 | Bottom tab bar for residents/admin on phones vs. hamburger drawer                                             | **Approved 2026-11-09:** bottom tabs on phones                                                           | Closed   |
+| DD-09 | Confirmation for developer high-impact actions (suspend/archive society, disabling module with pending items) | **Approved 2026-11-09:** standard dialog stating the consequence; no typed confirmation                  | Closed   |

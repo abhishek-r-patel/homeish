@@ -47,6 +47,12 @@ const methodLabels = {
   fixed: 'Fixed per unit',
   per_sqft: 'Per square foot',
   custom: 'Custom per unit',
+  percent_of_charge: 'Percentage of Maintenance',
+} as const;
+const eligibilityLabels = {
+  all: 'All units',
+  owner: 'Owner-occupied',
+  tenant: 'Tenant-occupied',
 } as const;
 
 function ordinal(day: number): string {
@@ -114,12 +120,14 @@ function validationResult(error: z.ZodError): ServerActionResult<never> {
 function ChargeForm({
   action,
   charge,
+  charges,
   onDirtyChange,
   onPendingChange,
   onSaved,
 }: {
   action: ChargeAction;
   charge: ChargeType | null;
+  charges: ChargeType[];
   onDirtyChange: (dirty: boolean) => void;
   onPendingChange: (pending: boolean) => void;
   onSaved: () => void;
@@ -142,7 +150,10 @@ function ChargeForm({
       id: charge?.id ?? null,
       name: data.get('name'),
       method,
-      amountRupees: method === 'custom' ? '' : data.get('amountRupees'),
+      amountRupees: data.get('amountRupees') ?? '',
+      eligibility: data.get('eligibility'),
+      percentRate: data.get('percentRate') ?? '',
+      baseChargeTypeId: data.get('baseChargeTypeId') || null,
       active: data.get('active') === 'on',
       expectedUpdatedAt: charge?.updated_at ?? null,
     };
@@ -155,10 +166,7 @@ function ChargeForm({
     data.set('id', charge?.id ?? '');
     data.set('expectedUpdatedAt', charge?.updated_at ?? '');
     data.set('method', method);
-    data.set(
-      'amountRupees',
-      method === 'custom' ? '' : String(data.get('amountRupees')),
-    );
+    data.set('amountRupees', String(input.amountRupees));
     data.set('active', String(input.active));
     onPendingChange(true);
     startTransition(async () => {
@@ -215,7 +223,12 @@ function ChargeForm({
             id="billing-charge-method"
             onChange={(event) => {
               const next = event.currentTarget.value;
-              if (next === 'fixed' || next === 'per_sqft' || next === 'custom')
+              if (
+                next === 'fixed' ||
+                next === 'per_sqft' ||
+                next === 'custom' ||
+                next === 'percent_of_charge'
+              )
                 setMethod(next);
             }}
             value={method}
@@ -227,7 +240,60 @@ function ChargeForm({
             ))}
           </select>
         </label>
-        {method === 'custom' ? (
+        <label className="grid gap-space-1 text-body-strong">
+          {t('Apply to')}
+          <select
+            className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+            defaultValue={charge?.eligibility ?? 'all'}
+            name="eligibility"
+          >
+            {Object.entries(eligibilityLabels).map(([key, label]) => (
+              <option key={key} value={key}>
+                {t(label)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {method === 'percent_of_charge' ? (
+          <>
+            <label className="grid gap-space-1 text-body-strong">
+              {t('Base charge')}
+              <select
+                className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+                defaultValue={charge?.base_charge_type_id ?? ''}
+                name="baseChargeTypeId"
+                required
+              >
+                <option value="">{t('Choose a base charge')}</option>
+                {charges
+                  .filter(
+                    (base) =>
+                      base.id !== charge?.id &&
+                      base.method !== 'percent_of_charge' &&
+                      (base.active || base.id === charge?.base_charge_type_id),
+                  )
+                  .map((base) => (
+                    <option key={base.id} value={base.id}>
+                      {base.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <TextInput
+              id="billing-charge-percent"
+              name="percentRate"
+              label={t('Percentage rate (%)')}
+              inputMode="decimal"
+              maxLength={6}
+              required
+              defaultValue={
+                charge?.percent_basis_points
+                  ? rupeesFromPaise(charge.percent_basis_points)
+                  : ''
+              }
+            />
+          </>
+        ) : method === 'custom' ? (
           <p className="text-body text-ink-muted">
             {t("Enter each unit's amount when generating bills.")}
           </p>
@@ -741,12 +807,16 @@ export function BillingSetup({
                 <h3 className="break-words text-body-strong">{charge.name}</h3>
                 <p className="text-caption text-ink-muted">
                   {t(methodLabels[charge.method])}
+                  {charge.percent_basis_points !== null
+                    ? ` (${rupeesFromPaise(charge.percent_basis_points)}%)`
+                    : ''}
                   {charge.amount_paise !== null
                     ? ` - ${locale === 'hi' ? billingMoney(charge.amount_paise, locale) : `INR ${rupeesFromPaise(charge.amount_paise)}`}`
                     : ''}
                 </p>
                 <p className="text-caption">
-                  {t(charge.active ? 'Active' : 'Inactive')}
+                  <span>{t(charge.active ? 'Active' : 'Inactive')}</span> ·{' '}
+                  <span>{t(eligibilityLabels[charge.eligibility])}</span>
                 </p>
               </div>
               {canManage ? (
@@ -1026,6 +1096,7 @@ export function BillingSetup({
           <ChargeForm
             action={chargeAction}
             charge={editing}
+            charges={charges}
             key={editing?.id ?? 'new'}
             onDirtyChange={setChargeDirty}
             onPendingChange={setChargePending}

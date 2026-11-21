@@ -113,6 +113,12 @@ describe('management Hindi interfaces', () => {
     expect(render(<Balance />)).toContain('-Rs. 9007199254740993123.45');
   });
 
+  it('keeps a large billing balance exact in Hindi', () => {
+    expect(billingMoney('9007199255804991', 'hi')).toBe(
+      '₹9,00,71,99,25,58,049.91',
+    );
+  });
+
   it('translates job counts and row failures while preserving entered content and English export records', () => {
     const markup = render(
       <JobResult

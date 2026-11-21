@@ -8,7 +8,7 @@ import {
   setGuardPinAction,
   updateGateSettingsAction,
   updateGuardAction,
-} from '@/app/(admin)/guards/actions';
+} from '@/app/(admin)/admin/guards/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { GuardRosterItem } from '@/core/guards/operations';
 import { Banner } from '@/components/ui/feedback';

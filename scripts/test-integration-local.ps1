@@ -27,7 +27,10 @@ $port = 54329
 $data = Join-Path ([IO.Path]::GetTempPath()) "homeish-it-$([guid]::NewGuid().ToString('N'))"
 $pgCtl = Join-Path $bin 'pg_ctl.exe'
 $exitCode = 1
+$clock = [Diagnostics.Stopwatch]::StartNew()
+function Format-Elapsed { '{0}m {1:00}s' -f [int][Math]::Floor($clock.Elapsed.TotalMinutes), $clock.Elapsed.Seconds }
 try {
+  Write-Host "[1/3] Creating a temporary PostgreSQL server on port $port..."
   & (Join-Path $bin 'initdb.exe') -D $data -U supabase_admin --auth=trust -E UTF8 --no-locale *> $null
   if ($LASTEXITCODE -ne 0) { Write-Error 'initdb failed.' }
 
@@ -45,15 +48,18 @@ try {
     $ready = $LASTEXITCODE -eq 0
   }
   if (-not $ready) { Write-Error 'The temporary PostgreSQL server did not start.' }
+  Write-Host "[2/3] Server ready after $(Format-Elapsed). Running tests; the first files also build the migration template..."
 
   $env:INTEGRATION_DATABASE_URL = "postgres://supabase_admin@127.0.0.1:$port/postgres"
   npx vitest run --config vitest.integration.config.ts @VitestArgs
   $exitCode = $LASTEXITCODE
 }
 finally {
+  Write-Host '[3/3] Stopping the temporary server and deleting its files...'
   if (Test-Path (Join-Path $data 'postmaster.pid')) {
     & $pgCtl -D $data -m fast -w stop *> $null
   }
   Remove-Item -Recurse -Force $data -ErrorAction SilentlyContinue
+  Write-Host "Finished in $(Format-Elapsed) (exit code $exitCode)."
 }
 exit $exitCode

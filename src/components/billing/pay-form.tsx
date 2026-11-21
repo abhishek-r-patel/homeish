@@ -16,7 +16,11 @@ import { TextInput } from '@/components/ui/text-input';
 import { Banner } from '@/components/ui/feedback';
 import { useUiTranslator } from '@/components/ui/language';
 import { billingMoney, billingTimestamp } from './presentation';
-import { rupeesFromPaise } from '@/core/billing/validation';
+import {
+  MAX_MONEY_PAISE,
+  rupeesFromPaise,
+  rupeesSchema,
+} from '@/core/billing/validation';
 import { publicEnvironment } from '@/core/config/public-env';
 import {
   ActionResult,
@@ -31,7 +35,11 @@ const uploadResponseSchema = z.object({
   data: z.object({ path: z.string(), signedUrl: z.url() }),
 });
 
-type PayUnit = { id: string; number: string; outstandingPaise: number };
+type PayUnit = {
+  id: string;
+  number: string;
+  outstandingPaise: number | string;
+};
 
 type PayFormProps = {
   details: { upi_id: string; payee_name: string; updated_at: string };
@@ -49,10 +57,16 @@ type PayFormProps = {
 
 function upiLink(upiId: string, payee: string, amount: string) {
   const query = new URLSearchParams({ pa: upiId, pn: payee, cu: 'INR' });
-  if (/^\d+(\.\d{1,2})?$/.test(amount) && Number(amount) > 0) {
-    query.set('am', Number(amount).toFixed(2));
-  }
+  const parsed = rupeesSchema.safeParse(amount);
+  if (parsed.success) query.set('am', rupeesFromPaise(parsed.data));
   return `upi://pay?${query.toString()}`;
+}
+
+function defaultPaymentAmount(paise: number | string) {
+  const value = BigInt(paise);
+  return value > BigInt(0) && value <= BigInt(MAX_MONEY_PAISE)
+    ? rupeesFromPaise(paise)
+    : '';
 }
 
 function uploadProof(
@@ -113,7 +127,7 @@ export function BillingPayForm({
   const unit = units.find((item) => item.id === unitId);
   const [amount, setAmount] = useState(() => {
     const paise = initialAmountPaise ?? unit?.outstandingPaise ?? 0;
-    return paise > 0 ? rupeesFromPaise(paise) : '';
+    return defaultPaymentAmount(paise);
   });
   const [reference, setReference] = useState('');
   const [paidOn, setPaidOn] = useState(today);
@@ -134,11 +148,7 @@ export function BillingPayForm({
     setProofPath(null);
     setUploadMessage(null);
     const nextUnit = units.find((item) => item.id === next);
-    setAmount(
-      nextUnit && nextUnit.outstandingPaise > 0
-        ? rupeesFromPaise(nextUnit.outstandingPaise)
-        : '',
-    );
+    setAmount(nextUnit ? defaultPaymentAmount(nextUnit.outstandingPaise) : '');
   }
 
   async function startUpload(upload: UploadFile) {
@@ -337,7 +347,7 @@ export function BillingPayForm({
           <AmountInput
             error={fieldError(submit.result, 'amountRupees', 'amount_paise')}
             helpText={
-              unit && unit.outstandingPaise > 0
+              unit && BigInt(unit.outstandingPaise) > BigInt(0)
                 ? t('Outstanding for {unitLabel} {unit}: {amount}', {
                     unitLabel: unitLabel.toLowerCase(),
                     unit: unit.number,
@@ -351,6 +361,13 @@ export function BillingPayForm({
             required
             value={amount}
           />
+          {unit && BigInt(unit.outstandingPaise) > BigInt(MAX_MONEY_PAISE) ? (
+            <Banner tone="warning">
+              {t(
+                'Your balance is too large for one payment. Enter a smaller amount.',
+              )}
+            </Banner>
+          ) : null}
           <TextInput
             autoCapitalize="characters"
             autoComplete="off"
