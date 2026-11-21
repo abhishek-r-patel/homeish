@@ -234,7 +234,7 @@ export async function estimateBilling(input: unknown, requestId: string) {
     requestId,
   );
   const estimate = parseInput(billingEstimateInputSchema, input);
-  return rpc(
+  const result = await rpc(
     context,
     'billing_estimate',
     {
@@ -246,8 +246,36 @@ export async function estimateBilling(input: unknown, requestId: string) {
         amount_paise: item.amountRupees,
       })),
     },
-    billingEstimateSchema,
+    billingEstimateSchema.omit({ months: true, fund_breakdown: true }),
   );
+  if (!context.enabledModules.has('expense')) {
+    return { ...result, months: estimate.months, fund_breakdown: [] };
+  }
+  const breakdown = await rpc(
+    context,
+    'expense_billing_estimate_breakdown',
+    {
+      p_society_id: societyId,
+      p_lines: result.lines,
+      p_months: estimate.months,
+    },
+    z.object({
+      months: z.number().int().min(1).max(12),
+      funds: z.array(
+        z.object({
+          fund_id: z.uuid().nullable(),
+          fund_name: z.string().nullable(),
+          monthly_paise: z.string().regex(/^\d+$/),
+          preview_paise: z.string().regex(/^\d+$/),
+        }),
+      ),
+    }),
+  );
+  return {
+    ...result,
+    months: breakdown.months,
+    fund_breakdown: breakdown.funds,
+  };
 }
 
 export async function listBillingEstimateCharges() {

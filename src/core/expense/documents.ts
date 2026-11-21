@@ -30,6 +30,7 @@ const SOURCE_LABELS: Record<ExpenseEntry['source'], string> = {
   income: 'Income',
   billing_payment: 'Maintenance collection',
   reversal: 'Reversal',
+  transfer: 'Transfer',
 };
 export function entrySourceLabel(source: ExpenseEntry['source']): string {
   return SOURCE_LABELS[source];

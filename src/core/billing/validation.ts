@@ -323,6 +323,7 @@ export const billingEstimateInputSchema = z
           .strict(),
       )
       .max(100),
+    months: z.number().int().min(1).max(12).default(1),
   })
   .strict();
 
@@ -350,6 +351,18 @@ export const billingEstimateSchema = z.object({
     }),
   ),
   total_paise: paiseText,
+  months: z.number().int().min(1).max(12),
+  fund_breakdown: z.array(
+    z.object({
+      fund_id: z.uuid().nullable(),
+      fund_name: z.string().nullable(),
+      monthly_paise: z.string().regex(/^\d+$/),
+      preview_paise: z
+        .string()
+        .regex(/^\d+$/)
+        .refine((value) => BigInt(value) <= BigInt(MAX_MONEY_PAISE)),
+    }),
+  ),
 });
 export type BillingEstimate = z.infer<typeof billingEstimateSchema>;
 

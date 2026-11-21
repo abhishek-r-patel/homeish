@@ -196,6 +196,7 @@ describe('billing money and setup validation', () => {
     expect(billingEstimateInputSchema.parse(input)).toMatchObject({
       areaSqft: 1250.25,
       occupancy: 'vacant',
+      months: 1,
     });
     expect(
       billingEstimateInputSchema.safeParse({ ...input, areaSqft: '0' }).success,
@@ -203,6 +204,9 @@ describe('billing money and setup validation', () => {
     expect(
       billingEstimateInputSchema.safeParse({ ...input, unitId: 'unexpected' })
         .success,
+    ).toBe(false);
+    expect(
+      billingEstimateInputSchema.safeParse({ ...input, months: 13 }).success,
     ).toBe(false);
   });
 

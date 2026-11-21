@@ -4,18 +4,35 @@ import { runServerAction } from '@/core/actions/server-action';
 import { ValidationError } from '@/core/errors';
 import {
   assignPettyCash,
+  activateExpenseFunds,
   cancelStatementItem,
   closeExpenseMonth,
+  correctExpenseFundAllocation,
+  correctExpenseFundOpening,
+  confirmExpenseFundAllocations,
   decideExpense,
   matchStatementItem,
   recordCashCount,
   recordExpense,
   recordIncome,
+  recordExpenseTransfer,
+  saveExpenseFixedDeposit,
+  saveExpenseFundInterest,
+  saveExpenseFundTransferRule,
+  recordExpenseFundTransfer,
+  reverseExpenseFundTransfer,
+  saveExpenseFundCorpus,
+  linkExpenseFundReceipt,
+  saveExpenseFundWork,
+  linkExpenseFundWork,
   recordStatementItem,
   reopenExpenseMonth,
   reverseExpenseEntry,
+  reverseExpenseTransfer,
   saveExpenseAccount,
   saveExpenseCategory,
+  saveExpenseFund,
+  saveExpenseFundMapping,
   saveExpenseSettings,
 } from '@/core/expense/operations';
 
@@ -58,6 +75,72 @@ export async function reverseEntryAction(form: FormData) {
     return 'Reversal recorded.';
   });
 }
+export async function recordTransferAction(form: FormData) {
+  return runServerAction('/admin/expenses', async (id) => {
+    await recordExpenseTransfer(input(form), id);
+    return 'Transfer recorded between the two accounts.';
+  });
+}
+export async function reverseTransferAction(form: FormData) {
+  return runServerAction('/admin/expenses', async (id) => {
+    await reverseExpenseTransfer(input(form), id);
+    return 'Both transfer entries reversed.';
+  });
+}
+export async function saveExpenseFixedDepositAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFixedDeposit(input(form), id);
+    return 'Fixed deposit saved.';
+  });
+}
+export async function saveExpenseFundInterestAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFundInterest(input(form), id);
+    return 'Interest and TDS record saved.';
+  });
+}
+export async function saveExpenseFundTransferRuleAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFundTransferRule(input(form), id);
+    return 'Fund transfer pair saved.';
+  });
+}
+export async function recordExpenseFundTransferAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await recordExpenseFundTransfer(input(form), id);
+    return 'Fund allocation transfer recorded.';
+  });
+}
+export async function reverseExpenseFundTransferAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await reverseExpenseFundTransfer(input(form), id);
+    return 'Fund allocation transfer reversed.';
+  });
+}
+export async function saveExpenseFundCorpusAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFundCorpus(input(form), id);
+    return 'Corpus record saved. This is not a bill or legal debt.';
+  });
+}
+export async function linkExpenseFundReceiptAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await linkExpenseFundReceipt(input(form), id);
+    return 'Receipt linked to the corpus record.';
+  });
+}
+export async function saveExpenseFundWorkAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFundWork(input(form), id);
+    return 'Sanctioned work saved.';
+  });
+}
+export async function linkExpenseFundWorkAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await linkExpenseFundWork(input(form), id);
+    return 'Accounts expense linked to sanctioned work.';
+  });
+}
 export async function saveExpenseAccountAction(form: FormData) {
   return runServerAction('/admin/expenses/setup', async (id) => {
     await saveExpenseAccount(input(form), id);
@@ -68,6 +151,44 @@ export async function saveExpenseCategoryAction(form: FormData) {
   return runServerAction('/admin/expenses/setup', async (id) => {
     await saveExpenseCategory(input(form), id);
     return 'Category saved.';
+  });
+}
+export async function saveExpenseFundAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFund(input(form), id);
+    return 'Fund saved.';
+  });
+}
+export async function activateExpenseFundsAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await activateExpenseFunds(input(form), id);
+    return 'Fund tracking activated.';
+  });
+}
+export async function saveExpenseFundMappingAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFundMapping(input(form), id);
+    return 'Fund suggestion saved.';
+  });
+}
+export async function confirmExpenseFundAllocationsAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    const result = await confirmExpenseFundAllocations(input(form), id);
+    return result.skipped.length
+      ? `Confirmed ${result.confirmed_count} allocations. ${result.skipped.length} closed-month entries were skipped.`
+      : `Confirmed ${result.confirmed_count} allocations.`;
+  });
+}
+export async function correctExpenseFundOpeningAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await correctExpenseFundOpening(input(form), id);
+    return 'Fund opening corrected and re-confirmed.';
+  });
+}
+export async function correctExpenseFundAllocationAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await correctExpenseFundAllocation(input(form), id);
+    return 'Fund allocation corrected.';
   });
 }
 export async function saveExpenseSettingsAction(form: FormData) {
