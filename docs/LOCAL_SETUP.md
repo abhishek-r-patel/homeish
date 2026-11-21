@@ -122,3 +122,136 @@ Before real email testing, verify the sender domain in Brevo and configure its S
 - `supabase/seed/`: synthetic seed files (`*.sql`, configured in `supabase/config.toml`); never real people.
 - `tests/integration/`: database integration tests and their harness; run with `npm run test:integration:local`.
 - `supabase/config.toml`: CLI settings. It describes a local stack we do not run; hosted project settings are changed in the dashboard, never with `supabase config push`.
+
+## 7. Optional RepoWise
+
+RepoWise helps explore code relationships and possible test or documentation
+impacts. It is an optional developer tool, not an app dependency. Version
+0.61.0 uses the AGPL-3.0-or-later licence; review it before distributing the
+tool. The shared [Copilot configuration](../.mcp.json) uses a separate, local,
+committed-only snapshot. It never includes uncommitted Homeish changes, and its
+one-commit history limits history-based suggestions. Check findings against
+the current working tree and tests; never delete code solely on its reports.
+
+The setup disables RepoWise telemetry, selects the mock provider and embedder,
+excludes environment files from the index, and disables editor changes and
+hooks. Model answers and the uncommitted-change risk tool are not exposed to
+Copilot. The clone can still contain tracked example files and Git metadata can
+contain tracked file names. Copilot can receive indexed code snippets when it
+uses the tools. The offline settings are not an operating-system firewall:
+RepoWise still runs with your account's permissions.
+
+### One-time setup
+
+Install Python 3.12 and RepoWise separately in an isolated location outside the
+Homeish checkout. This downloads packages; it does not add an npm dependency.
+For example, replace the paths below with your own:
+
+```powershell
+$tool = 'C:\path\outside-homeish\repowise-tool'
+if (Test-Path -LiteralPath $tool) { throw 'Choose a new tool directory' }
+& 'C:\path\to\python312\python.exe' -m venv $tool
+if ($LASTEXITCODE -ne 0) { throw 'Could not create the virtual environment' }
+& (Join-Path $tool 'Scripts\python.exe') -m pip install --only-binary=:all: 'repowise==0.61.0'
+if ($LASTEXITCODE -ne 0) { throw 'Could not install RepoWise' }
+```
+
+In a dedicated PowerShell window opened in Homeish, choose two new, separate
+directories outside the checkout for the snapshot and its private profile.
+Do not copy your normal home directory or agent transcripts into that profile.
+If you already installed version 0.61.0, point the executable setting at it:
+
+```powershell
+$env:HOMEISH_REPOWISE_EXECUTABLE = 'C:\path\outside-homeish\repowise-tool\Scripts\repowise.exe'
+$env:HOMEISH_REPOWISE_SNAPSHOT = 'C:\path\outside-homeish\repowise-snapshot'
+$env:HOMEISH_REPOWISE_PROFILE = 'C:\path\outside-homeish\repowise-profile'
+$source = git rev-parse --show-toplevel
+if ($LASTEXITCODE -ne 0) { throw 'Open PowerShell in the Homeish checkout first' }
+if ((Test-Path -LiteralPath $env:HOMEISH_REPOWISE_SNAPSHOT) -or
+    (Test-Path -LiteralPath $env:HOMEISH_REPOWISE_PROFILE)) {
+  throw 'Choose new snapshot and profile directories'
+}
+New-Item -ItemType Directory -Force -Path $env:HOMEISH_REPOWISE_PROFILE | Out-Null
+git clone --no-local --depth 1 -- $source $env:HOMEISH_REPOWISE_SNAPSHOT
+if ($LASTEXITCODE -ne 0) { throw 'Could not clone the committed snapshot' }
+```
+
+Set these process-only protections in that window before **each** indexing or
+refresh command. They also keep RepoWise's transcript search in the dedicated
+profile. Close the window afterwards; these do not change your normal home:
+
+```powershell
+$env:USERPROFILE = $env:HOMEISH_REPOWISE_PROFILE
+$env:HOME = $env:HOMEISH_REPOWISE_PROFILE
+$env:XDG_CONFIG_HOME = $env:HOMEISH_REPOWISE_PROFILE
+$env:COPILOT_HOME = $env:HOMEISH_REPOWISE_PROFILE
+$env:REPOWISE_CONFIG_DIR = $env:HOMEISH_REPOWISE_PROFILE
+$env:REPOWISE_OFFLINE = '1'
+$env:REPOWISE_TELEMETRY_DISABLED = '1'
+$env:REPOWISE_PROVIDER = 'mock'
+$env:REPOWISE_EMBEDDER = 'mock'
+$env:REPOWISE_DB_URL = ''
+$env:REPOWISE_PLUGINS = ''
+$env:DO_NOT_TRACK = '1'
+$env:HF_HUB_OFFLINE = '1'
+$env:HF_HUB_DISABLE_TELEMETRY = '1'
+$env:TRANSFORMERS_OFFLINE = '1'
+$env:PYTHONNOUSERSITE = '1'
+```
+
+Build the index and pin its provider to mock:
+
+```powershell
+& $env:HOMEISH_REPOWISE_EXECUTABLE init $env:HOMEISH_REPOWISE_SNAPSHOT `
+  --provider mock --embedder mock --no-prose --no-codex --no-editor-setup `
+  --no-hook --no-distill-hook --no-claude-md --no-agents --no-save-key `
+  --no-workspace --commit-limit 1 --exclude '.env*' --exclude '**/.env*'
+if ($LASTEXITCODE -ne 0) { throw 'RepoWise indexing failed' }
+& $env:HOMEISH_REPOWISE_EXECUTABLE config set --path $env:HOMEISH_REPOWISE_SNAPSHOT provider mock
+if ($LASTEXITCODE -ne 0) { throw 'Could not pin the mock provider' }
+```
+
+For VS Code to find the paths in future sessions, set only these three
+non-secret user variables, after checking that they are not already set:
+
+```powershell
+$names = 'HOMEISH_REPOWISE_EXECUTABLE', 'HOMEISH_REPOWISE_SNAPSHOT', 'HOMEISH_REPOWISE_PROFILE'
+foreach ($name in $names) {
+  if ([Environment]::GetEnvironmentVariable($name, 'User')) {
+    throw "$name is already set; review it before changing it"
+  }
+}
+foreach ($name in $names) {
+  [Environment]::SetEnvironmentVariable($name, [Environment]::GetEnvironmentVariable($name, 'Process'), 'User')
+}
+```
+
+Restart VS Code completely, open the trusted Homeish workspace, and enable
+`repowise` in **Chat: Open Customizations → MCP Servers** if necessary. Ask
+Copilot to use RepoWise to find a known symbol, then inspect the tool call. A
+successful local index alone does not prove that Copilot loaded the server.
+Developers who do not opt in can disable this server in their workspace; the
+app itself does not require it.
+
+### Refresh after a commit
+
+The snapshot does not refresh automatically. In a new dedicated PowerShell
+window, first set the process-only protections above, then run:
+
+```powershell
+git -C $env:HOMEISH_REPOWISE_SNAPSHOT fetch --depth 1 --no-tags origin HEAD
+if ($LASTEXITCODE -ne 0) { throw 'Could not fetch the local committed HEAD' }
+git -C $env:HOMEISH_REPOWISE_SNAPSHOT switch --detach FETCH_HEAD
+if ($LASTEXITCODE -ne 0) { throw 'Could not update the snapshot' }
+$budget = @(git -C $env:HOMEISH_REPOWISE_SNAPSHOT ls-files).Count
+if ($LASTEXITCODE -ne 0 -or $budget -eq 0) { throw 'Could not count tracked snapshot files' }
+& $env:HOMEISH_REPOWISE_EXECUTABLE update $env:HOMEISH_REPOWISE_SNAPSHOT `
+  --no-workspace --no-agents --provider mock --cascade-budget $budget
+if ($LASTEXITCODE -ne 0) { throw 'RepoWise index update failed' }
+```
+
+The snapshot's `origin` is the local Homeish checkout. If Git refuses to switch
+because the snapshot has changes, stop and investigate; do not force or reset
+it. Check the update output for stale-page warnings and treat any remaining
+stale pages as incomplete. Do not add a hosted service, model provider, hook
+or live-worktree index without separate approval.
