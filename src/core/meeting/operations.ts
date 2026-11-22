@@ -21,6 +21,12 @@ import {
   eligibleMinutesFolders,
 } from './document-copy';
 import {
+  meetingAgendaDurationsSchema,
+  meetingAgendaTemplateArchiveInputSchema,
+  meetingAgendaTemplateArchiveResultSchema,
+  meetingAgendaTemplateInputSchema,
+  meetingAgendaTemplateSaveResultSchema,
+  meetingAgendaTemplatesSchema,
   meetingActionResultSchema,
   meetingActionSaveInputSchema,
   meetingActionStatusInputSchema,
@@ -233,15 +239,31 @@ export async function getMeetingAdminList(status: unknown = null) {
 export async function getMeetingAdminDetail(meetingId: unknown) {
   const { context, societyId } = await getContext('meeting:list');
   const values = parseModuleInput(meetingIdInputSchema, { meetingId });
-  const detail = await callMeetingRpc(
-    context,
-    'meeting_admin_get',
-    { p_society_id: societyId, p_meeting_id: values.meetingId },
-    meetingAdminGetSchema,
-    'Could not load this meeting. Refresh and retry.',
+  const [detail, durations] = await Promise.all([
+    callMeetingRpc(
+      context,
+      'meeting_admin_get',
+      { p_society_id: societyId, p_meeting_id: values.meetingId },
+      meetingAdminGetSchema,
+      'Could not load this meeting. Refresh and retry.',
+    ),
+    callMeetingRpc(
+      context,
+      'meeting_agenda_durations_get',
+      { p_society_id: societyId, p_meeting_id: values.meetingId },
+      meetingAgendaDurationsSchema,
+      'Could not load agenda timings. Refresh and retry.',
+    ),
+  ]);
+  const durationById = new Map(
+    durations.map((item) => [item.id, item.durationMinutes]),
   );
   return {
     ...detail,
+    agenda: detail.agenda.map((item) => ({
+      ...item,
+      durationMinutes: durationById.get(item.id) ?? null,
+    })),
     settings: normalizeMeetingSettings(detail.settings ?? {}),
     canManage: context.roles.includes('admin'),
     canWriteMinutes: isManagement(context),
@@ -258,6 +280,17 @@ export async function getMeetingInviteeOptions() {
     { p_society_id: societyId },
     meetingInviteeOptionsSchema,
     'Could not load units and committee members. Refresh and retry.',
+  );
+}
+
+export async function getMeetingAgendaTemplates() {
+  const { context, societyId } = await getContext('meeting:manage');
+  return callMeetingRpc(
+    context,
+    'meeting_agenda_templates_get',
+    { p_society_id: societyId, p_meeting_type: null },
+    meetingAgendaTemplatesSchema,
+    'Could not load agenda templates. Refresh and retry.',
   );
 }
 
@@ -373,6 +406,60 @@ export async function getMeetingDocumentFolders(
 }
 
 // Admin lifecycle writes
+
+export async function saveMeetingAgendaTemplate(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'meeting:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(meetingAgendaTemplateInputSchema, input);
+  return callMeetingRpc(
+    context,
+    'meeting_agenda_template_save',
+    {
+      p_society_id: societyId,
+      p_template_id: values.templateId,
+      p_expected_version: values.expectedVersion,
+      p_client_request_id: values.clientRequestId,
+      p_template: values.template,
+      p_request_id: context.requestId,
+    },
+    meetingAgendaTemplateSaveResultSchema,
+    'The agenda template was not saved. Check the details and retry.',
+  );
+}
+
+export async function archiveMeetingAgendaTemplate(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'meeting:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(
+    meetingAgendaTemplateArchiveInputSchema,
+    input,
+  );
+  return callMeetingRpc(
+    context,
+    'meeting_agenda_template_archive',
+    {
+      p_society_id: societyId,
+      p_template_id: values.templateId,
+      p_expected_version: values.expectedVersion,
+      p_archived: values.archived,
+      p_request_id: context.requestId,
+    },
+    meetingAgendaTemplateArchiveResultSchema,
+    'The agenda template was not updated. Refresh and retry.',
+  );
+}
 
 export async function createMeeting(input: unknown, requestId: string) {
   const { context, societyId } = await getContext(

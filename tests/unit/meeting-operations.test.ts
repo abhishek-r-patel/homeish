@@ -44,9 +44,11 @@ vi.mock('../../src/core/meeting/document-copy', () => ({
 import { AppError } from '../../src/core/errors';
 import {
   cancelMeeting,
+  archiveMeetingAgendaTemplate,
   createMeetingResolutionPoll,
   mapMeetingError,
   publishMeetingMinutes,
+  saveMeetingAgendaTemplate,
   saveMeetingAction,
   scheduleMeeting,
 } from '../../src/core/meeting/operations';
@@ -160,6 +162,51 @@ describe('meeting operations', () => {
       scheduleMeeting({ meetingId: MEETING, expectedVersion: 1 }, REQUEST),
     ).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(mocks.sendPushes).not.toHaveBeenCalled();
+  });
+
+  it('validates and saves agenda templates through admin-only RPCs', async () => {
+    mocks.callModuleRpc
+      .mockResolvedValueOnce({ templateId: id('8'), version: 1 })
+      .mockResolvedValueOnce({
+        templateId: id('8'),
+        version: 2,
+        archived: true,
+      });
+    await expect(
+      saveMeetingAgendaTemplate(
+        {
+          templateId: null,
+          expectedVersion: null,
+          clientRequestId: id('9'),
+          template: {
+            name: 'AGM standard',
+            meetingTypes: ['agm', 'committee'],
+            items: [
+              {
+                title: 'Accounts',
+                description: null,
+                suggestedDurationMinutes: 20,
+              },
+            ],
+          },
+        },
+        REQUEST,
+      ),
+    ).resolves.toEqual({ templateId: id('8'), version: 1 });
+    await expect(
+      archiveMeetingAgendaTemplate(
+        { templateId: id('8'), expectedVersion: 1, archived: true },
+        REQUEST,
+      ),
+    ).resolves.toEqual({
+      templateId: id('8'),
+      version: 2,
+      archived: true,
+    });
+    expect(mocks.callModuleRpc.mock.calls.map((call) => call[1])).toEqual([
+      'meeting_agenda_template_save',
+      'meeting_agenda_template_archive',
+    ]);
   });
 
   it('returns a failed Documents copy without failing publication', async () => {

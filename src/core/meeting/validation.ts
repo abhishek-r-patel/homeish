@@ -75,6 +75,9 @@ export const MEETING_ONLINE_URL_MAX = 500;
 export const MEETING_AGENDA_LIMIT = 50;
 export const MEETING_AGENDA_TITLE_MAX = 200;
 export const MEETING_AGENDA_DESCRIPTION_MAX = 2000;
+export const MEETING_AGENDA_DURATION_MIN = 1;
+export const MEETING_AGENDA_DURATION_MAX = 1440;
+export const MEETING_TEMPLATE_NAME_MAX = 150;
 export const MEETING_REASON_MAX = 500;
 export const MEETING_PROXY_NAME_MAX = 120;
 export const MEETING_RESOLUTION_TITLE_MAX = 200;
@@ -147,8 +150,38 @@ const agendaInputSchema = z
       .min(1, 'Give every agenda item a title.')
       .max(MEETING_AGENDA_TITLE_MAX),
     description: optionalText(MEETING_AGENDA_DESCRIPTION_MAX),
+    durationMinutes: z
+      .number()
+      .int()
+      .min(MEETING_AGENDA_DURATION_MIN)
+      .max(MEETING_AGENDA_DURATION_MAX)
+      .nullable()
+      .optional()
+      .transform((value) => value ?? null),
   })
   .strict();
+
+const templateItemsSchema = z
+  .array(
+    z
+      .object({
+        title: z
+          .string()
+          .trim()
+          .min(1, 'Give every template agenda item a title.')
+          .max(MEETING_AGENDA_TITLE_MAX),
+        description: optionalText(MEETING_AGENDA_DESCRIPTION_MAX),
+        suggestedDurationMinutes: z
+          .number()
+          .int()
+          .min(MEETING_AGENDA_DURATION_MIN)
+          .max(MEETING_AGENDA_DURATION_MAX)
+          .nullable(),
+      })
+      .strict(),
+  )
+  .min(1, 'Add at least one agenda item.')
+  .max(MEETING_AGENDA_LIMIT, 'Keep the agenda to 50 items or fewer.');
 
 const inviteesInputSchema = z.union([
   z.object({ scope: z.literal('default') }).strict(),
@@ -224,6 +257,46 @@ export const meetingUpdateInputSchema = z
     meetingId: uuid,
     expectedVersion: version,
     meeting: meetingInputSchema,
+  })
+  .strict();
+
+export const meetingAgendaTemplateInputSchema = z
+  .object({
+    templateId: uuid.nullable(),
+    expectedVersion: version.nullable(),
+    clientRequestId: uuid,
+    template: z
+      .object({
+        name: z
+          .string()
+          .trim()
+          .min(1, 'Give the template a name.')
+          .max(MEETING_TEMPLATE_NAME_MAX),
+        meetingTypes: z
+          .array(meetingTypeSchema)
+          .min(1, 'Choose at least one meeting type.')
+          .max(MEETING_TYPES.length)
+          .refine((types) => new Set(types).size === types.length, {
+            message: 'Choose each meeting type only once.',
+          }),
+        items: templateItemsSchema,
+      })
+      .strict(),
+  })
+  .strict()
+  .refine(
+    (input) => (input.templateId === null) === (input.expectedVersion === null),
+    {
+      path: ['expectedVersion'],
+      message: 'Refresh the template and retry.',
+    },
+  );
+
+export const meetingAgendaTemplateArchiveInputSchema = z
+  .object({
+    templateId: uuid,
+    expectedVersion: version,
+    archived: z.boolean(),
   })
   .strict();
 
@@ -408,6 +481,13 @@ const agendaItemSchema = z.object({
   id: uuid,
   title: z.string(),
   description: z.string().nullable(),
+  durationMinutes: z
+    .number()
+    .int()
+    .min(MEETING_AGENDA_DURATION_MIN)
+    .max(MEETING_AGENDA_DURATION_MAX)
+    .nullable()
+    .optional(),
 });
 
 const pollSummarySchema = z
@@ -688,6 +768,42 @@ export const meetingMyActionsSchema = z.object({
   items: z.array(myActionSchema),
 });
 
+export const meetingAgendaDurationsSchema = z.array(
+  z.object({ id: uuid, durationMinutes: z.number().int().nullable() }),
+);
+
+const agendaTemplateItemSchema = z.object({
+  title: z.string(),
+  description: z.string().nullable(),
+  suggestedDurationMinutes: z
+    .number()
+    .int()
+    .min(MEETING_AGENDA_DURATION_MIN)
+    .max(MEETING_AGENDA_DURATION_MAX)
+    .nullable(),
+});
+
+export const meetingAgendaTemplatesSchema = z.object({
+  items: z.array(
+    z.object({
+      id: uuid,
+      name: z.string().min(1).max(MEETING_TEMPLATE_NAME_MAX),
+      meetingTypes: z.array(meetingTypeSchema).min(1).max(MEETING_TYPES.length),
+      archivedAt: nullableTimestamp,
+      version,
+      items: z.array(agendaTemplateItemSchema).min(1).max(MEETING_AGENDA_LIMIT),
+    }),
+  ),
+});
+
+export const meetingAgendaTemplateSaveResultSchema = z.object({
+  templateId: uuid,
+  version,
+});
+
+export const meetingAgendaTemplateArchiveResultSchema =
+  meetingAgendaTemplateSaveResultSchema.extend({ archived: z.boolean() });
+
 export type MeetingAdminList = z.infer<typeof meetingAdminListSchema>;
 export type MeetingAdminDetail = z.infer<typeof meetingAdminGetSchema>;
 export type MeetingInviteeOptions = z.infer<typeof meetingInviteeOptionsSchema>;
@@ -699,3 +815,6 @@ export type MeetingMemberDetail = z.infer<typeof meetingMemberGetSchema>;
 export type MeetingMyAction = z.infer<typeof myActionSchema>;
 export type MeetingActionItem = z.infer<typeof actionItemSchema>;
 export type MeetingQuorum = z.infer<typeof quorumSchema>;
+export type MeetingAgendaTemplate = z.infer<
+  typeof meetingAgendaTemplatesSchema
+>['items'][number];
