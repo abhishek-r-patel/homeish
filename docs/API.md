@@ -528,6 +528,19 @@ Routes: `/admin/expenses` (balances, own-account transfers, approvals, forms, ca
 
 Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 
+**P41 financial reports (D-77; proposed 2026-11-22, coding not yet approved).** PRD EXP-21–EXP-26; database contract in DATABASE.md §9.7. All reads are for admins and committee, and all writes are admin-only. No operation changes book entries, bills, fund allocations or vendor records. The proposed operations are:
+
+- `getExpenseStatements(range)`: the receipts-and-payments statement, the month-by-head table and the four P41.7 figures. Ranges are at most two years.
+- `getExpenseFinancialPosition(asOf)`: summary lines, each with a source and an availability state. Dues and vendor bills are only for today. Deposits are separate, and committee results omit bank references.
+- `getExpenseMultiYear()`: the current financial year to date plus four previous years, with part-year and not-available flags.
+- `getExpenseAudit(financialYear)`: the year record, queries, objections, revisions, derived statuses and the four year-end checks.
+- `acknowledgeExpenseAuditWarning`: idempotent, once per society.
+- `saveExpenseAuditYear`, `saveExpenseAuditQuery` and `saveExpenseAuditObjection`: idempotent by `clientRequestId` with optimistic versions. Each edit writes a revision. There is no delete operation. Query assignees must be the society's admins or committee members.
+- `getExpenseAgmDraft(financialYear)` and `saveExpenseAgmDraft`: assembled sections plus up to 10 versioned plain-text sections.
+- AGM section switches are saved through the existing `saveExpenseSettings` as `agm_report_sections`.
+
+Routes add `/admin/expenses/statements`, `/admin/expenses/audit` and `/admin/expenses/agm-report`. The export route gains `report=statements|position|agm`. Statements export as CSV or PDF, the position summary as PDF, and the AGM draft as PDF. Without `report`, the export keeps its current behaviour.
+
 **P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest has no API or calculation until an accountant/legal review approves its rate, basis and late-fee interaction.
 
 - `billing.paymentPlan.list` (admin, committee) reads plans; `billing.paymentPlan.save` (admin) creates a tracker record from a unit, selected open bill IDs, down-payment amount, installment count, first due date and remarks, or updates terms and remarks on an existing plan. The database snapshots the selected bills' remaining balances when creating a plan. An open bill can belong to only one non-cancelled plan; saved bill links cannot be changed. Equal monthly installments start on the first due date, with the last installment absorbing paise rounding. Progress is derived only from confirmed allocations for payments dated on or after the plan date and confirmed after plan creation, applied to the down payment and then installments in order. Actual ledger due remains authoritative; no caller-entered paid totals are accepted.
