@@ -4276,6 +4276,442 @@ export type Database = {
           },
         ];
       };
+      expense_agm_drafts: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          financial_year_start: string;
+          id: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+          written_sections: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          financial_year_start: string;
+          id?: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+          written_sections?: NonNullable<Json>;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          financial_year_start?: string;
+          id?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+          written_sections?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_agm_drafts_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_agm_drafts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_agm_drafts_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_audit_acknowledgements: {
+        Row: {
+          acknowledged_at: string;
+          acknowledged_by: string;
+          client_request_id: string;
+          society_id: string;
+          warning_acknowledged_text: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string;
+          acknowledged_by: string;
+          client_request_id: string;
+          society_id: string;
+          warning_acknowledged_text: string;
+        };
+        Update: {
+          acknowledged_at?: string;
+          acknowledged_by?: string;
+          client_request_id?: string;
+          society_id?: string;
+          warning_acknowledged_text?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_acknowledgements_acknowledged_by_fkey';
+            columns: ['acknowledged_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_acknowledgements_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_audit_objections: {
+        Row: {
+          audit_year_id: string;
+          corrected_on: string | null;
+          correction_note: string | null;
+          created_at: string;
+          created_by: string;
+          description: string;
+          due_date: string;
+          evidence_document_id: string | null;
+          id: string;
+          owner_user_id: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          audit_year_id: string;
+          corrected_on?: string | null;
+          correction_note?: string | null;
+          created_at?: string;
+          created_by: string;
+          description: string;
+          due_date: string;
+          evidence_document_id?: string | null;
+          id?: string;
+          owner_user_id: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          audit_year_id?: string;
+          corrected_on?: string | null;
+          correction_note?: string | null;
+          created_at?: string;
+          created_by?: string;
+          description?: string;
+          due_date?: string;
+          evidence_document_id?: string | null;
+          id?: string;
+          owner_user_id?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_objections_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_document_fkey';
+            columns: ['society_id', 'evidence_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_owner_fkey';
+            columns: ['society_id', 'owner_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'user_id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_year_fkey';
+            columns: ['society_id', 'audit_year_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_audit_years';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_audit_queries: {
+        Row: {
+          area: string;
+          assignee_user_id: string;
+          audit_year_id: string;
+          created_at: string;
+          created_by: string;
+          due_date: string;
+          id: string;
+          query_date: string;
+          query_number: number;
+          question: string;
+          response: string | null;
+          response_date: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          area: string;
+          assignee_user_id: string;
+          audit_year_id: string;
+          created_at?: string;
+          created_by: string;
+          due_date: string;
+          id?: string;
+          query_date: string;
+          query_number: number;
+          question: string;
+          response?: string | null;
+          response_date?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          area?: string;
+          assignee_user_id?: string;
+          audit_year_id?: string;
+          created_at?: string;
+          created_by?: string;
+          due_date?: string;
+          id?: string;
+          query_date?: string;
+          query_number?: number;
+          question?: string;
+          response?: string | null;
+          response_date?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_queries_assignee_fkey';
+            columns: ['society_id', 'assignee_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'user_id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_year_fkey';
+            columns: ['society_id', 'audit_year_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_audit_years';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_audit_revisions: {
+        Row: {
+          after_data: NonNullable<Json>;
+          before_data: Json | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          revision_number: number;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          after_data: NonNullable<Json>;
+          before_data?: Json | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          revision_number: number;
+          society_id: string;
+        };
+        Update: {
+          after_data?: NonNullable<Json>;
+          before_data?: Json | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          revision_number?: number;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_revisions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_revisions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_audit_years: {
+        Row: {
+          appointed_on: string;
+          appointment_document_id: string | null;
+          appointment_reference: string | null;
+          auditor_firm: string;
+          auditor_name: string;
+          created_at: string;
+          created_by: string;
+          filed_on: string | null;
+          financial_year_start: string;
+          id: string;
+          opinion: string | null;
+          opinion_text: string | null;
+          placed_before_agm_on: string | null;
+          report_received_on: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          appointed_on: string;
+          appointment_document_id?: string | null;
+          appointment_reference?: string | null;
+          auditor_firm: string;
+          auditor_name: string;
+          created_at?: string;
+          created_by: string;
+          filed_on?: string | null;
+          financial_year_start: string;
+          id?: string;
+          opinion?: string | null;
+          opinion_text?: string | null;
+          placed_before_agm_on?: string | null;
+          report_received_on?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          appointed_on?: string;
+          appointment_document_id?: string | null;
+          appointment_reference?: string | null;
+          auditor_firm?: string;
+          auditor_name?: string;
+          created_at?: string;
+          created_by?: string;
+          filed_on?: string | null;
+          financial_year_start?: string;
+          id?: string;
+          opinion?: string | null;
+          opinion_text?: string | null;
+          placed_before_agm_on?: string | null;
+          report_received_on?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_years_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_years_document_fkey';
+            columns: ['society_id', 'appointment_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_years_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_years_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       expense_book_entries: {
         Row: {
           account_id: string;
@@ -15881,6 +16317,101 @@ export type Database = {
         };
         Returns: string;
       };
+      expense_agm_draft: {
+        Args: { p_financial_year_start: string; p_society_id: string };
+        Returns: Json;
+      };
+      expense_agm_draft_save: {
+        Args: {
+          p_client_request_id: string;
+          p_draft_id: string;
+          p_expected_version: number;
+          p_financial_year_start: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_written_sections: Json;
+        };
+        Returns: string;
+      };
+      expense_agm_settings_save: {
+        Args: {
+          p_expected_updated_at: string;
+          p_request_trace: string;
+          p_sections: Json;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_get: {
+        Args: { p_financial_year_start: string; p_society_id: string };
+        Returns: Json;
+      };
+      expense_audit_objection_save: {
+        Args: {
+          p_audit_year_id: string;
+          p_client_request_id: string;
+          p_corrected_on: string;
+          p_correction_note: string;
+          p_description: string;
+          p_due_date: string;
+          p_evidence_document_id: string;
+          p_expected_version: number;
+          p_objection_id: string;
+          p_owner_user_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_query_save: {
+        Args: {
+          p_area: string;
+          p_assignee_user_id: string;
+          p_audit_year_id: string;
+          p_client_request_id: string;
+          p_due_date: string;
+          p_expected_version: number;
+          p_query_date: string;
+          p_query_id: string;
+          p_query_number: number;
+          p_question: string;
+          p_request_trace: string;
+          p_response: string;
+          p_response_date: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_warning_acknowledge: {
+        Args: {
+          p_acknowledged: boolean;
+          p_client_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_year_save: {
+        Args: {
+          p_appointed_on: string;
+          p_appointment_document_id: string;
+          p_appointment_reference: string;
+          p_auditor_firm: string;
+          p_auditor_name: string;
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_filed_on: string;
+          p_financial_year_start: string;
+          p_opinion: string;
+          p_opinion_text: string;
+          p_placed_before_agm_on: string;
+          p_report_received_on: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_year_id: string;
+        };
+        Returns: string;
+      };
       expense_billing_collection_suggestions: {
         Args: { p_limit: number; p_society_id: string };
         Returns: Json;
@@ -15950,6 +16481,10 @@ export type Database = {
           p_society_id: string;
           p_status: string;
         };
+        Returns: Json;
+      };
+      expense_financial_position: {
+        Args: { p_as_of: string; p_society_id: string };
         Returns: Json;
       };
       expense_fixed_deposit_save: {
@@ -16219,6 +16754,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      expense_multi_year: { Args: { p_society_id: string }; Returns: Json };
       expense_petty_cash_assign: {
         Args: {
           p_account_id: string;
@@ -16310,6 +16846,10 @@ export type Database = {
           p_statement_date: string;
         };
         Returns: string;
+      };
+      expense_statements: {
+        Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: Json;
       };
       expense_transfer_record: {
         Args: {
