@@ -86,23 +86,24 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 **Expansion roadmap (D-38 — approved 2026-11-14).** The modules below are planned in three waves (P3 must-have, P4 high value, P5 good to have). Each still needs its phase-kickoff decisions (Section 5.10) before it is built, ships switched off, and follows the module completion gate. Build may run in parallel with pilot hardening, but no expansion module is enabled for a live society before the pilot go-live gates are closed.
 
-| #   | Module                                   | Key             | Disableable | Release |
-| --- | ---------------------------------------- | --------------- | ----------- | ------- |
-| 10  | Society Expenses & Accounts              | `expense`       | Yes         | P3-1    |
-| 11  | Resident & Vehicle Directory             | `directory`     | Yes         | P3-2    |
-| 12  | Move-in / Move-out & Tenancy             | `tenancy`       | Yes         | P3-3    |
-| 13  | Document Repository                      | `document`      | Yes         | P3-4    |
-| 14  | Parking Management                       | `parking`       | Yes         | P3-5    |
-| 15  | Emergency & SOS                          | `sos`           | Yes         | P3-6    |
-| 16  | Polls & Voting (ported from Civic Pulse) | `poll`          | Yes         | P4-1    |
-| 17  | Meetings & AGM                           | `meeting`       | Yes         | P4-2    |
-| 18  | Vendors & Purchase Approvals             | `vendor`        | Yes         | P4-3    |
-| 19  | Guard Patrol & Incident Log              | `patrol`        | Yes         | P4-4    |
-| 20  | Utility Metering                         | `metering`      | Yes         | P4-5    |
-| 21  | Asset Register                           | `asset`         | Yes         | P5-1    |
-| 22  | Resident Community & Marketplace         | `community`     | Yes         | P5-2    |
-| 23  | Events & RSVPs                           | `event`         | Yes         | P5-3    |
-| 24  | Home-Services Directory                  | `home_services` | Yes         | P5-4    |
+| #   | Module                                             | Key             | Disableable | Release |
+| --- | -------------------------------------------------- | --------------- | ----------- | ------- |
+| 10  | Society Expenses & Accounts                        | `expense`       | Yes         | P3-1    |
+| 11  | Resident & Vehicle Directory                       | `directory`     | Yes         | P3-2    |
+| 12  | Move-in / Move-out & Tenancy                       | `tenancy`       | Yes         | P3-3    |
+| 13  | Document Repository                                | `document`      | Yes         | P3-4    |
+| 14  | Parking Management                                 | `parking`       | Yes         | P3-5    |
+| 15  | Emergency & SOS                                    | `sos`           | Yes         | P3-6    |
+| 16  | Polls & Voting (ported from Civic Pulse)           | `poll`          | Yes         | P4-1    |
+| 17  | Meetings & AGM                                     | `meeting`       | Yes         | P4-2    |
+| 18  | Vendors & Purchase Approvals                       | `vendor`        | Yes         | P4-3    |
+| 19  | Guard Patrol & Incident Log                        | `patrol`        | Yes         | P4-4    |
+| 20  | Utility Metering                                   | `metering`      | Yes         | P4-5    |
+| 21  | Asset Register                                     | `asset`         | Yes         | P5-1    |
+| 22  | Resident Community & Marketplace                   | `community`     | Yes         | P5-2    |
+| 23  | Events & RSVPs                                     | `event`         | Yes         | P5-3    |
+| 24  | Home-Services Directory                            | `home_services` | Yes         | P5-4    |
+| 25  | Major Repairs & Redevelopment (P50; D-82 proposed) | `major_works`   | Yes         | P50     |
 
 Platform enhancements in the same waves (not separate modules): committee analytics dashboard (P4-6), service-request SLA escalation (P5-5, inside `service_request`), and multi-language (P5-6, Core). The multi-society overview and outside operator accounts (P5-7) are deferred to the future (D-65); see [deferred-features.md](roadmap/deferred-features.md).
 
@@ -111,7 +112,7 @@ Platform enhancements in the same waves (not separate modules): committee analyt
 - `delivery` is independent of `visitor`; it shares only Core notification and unit data. **[A-05]** (Avoids coupling so modules toggle independently.)
 - `staff`, `housekeeping`, `amc` are independent of each other. `amc` may link to `service_request` optionally if both enabled (P2).
 - Enabling/disabling a module never deletes its data (see MOD-4).
-- Expansion modules use optional links only: `parking` and `tenancy` read `directory` vehicles/contacts when it is enabled; `vendor` and `metering` post to `expense`/`billing` only when those are enabled; `meeting` can attach `poll` resolutions; `asset` can link to `amc` contracts. A module never requires another optional module to be enabled. **[A-36]**
+- Expansion modules use optional links only: `parking` and `tenancy` read `directory` vehicles/contacts when it is enabled; `vendor` and `metering` post to `expense`/`billing` only when those are enabled; `meeting` can attach `poll` resolutions; `asset` can link to `amc` contracts; `major_works` (P50) links to `expense`, `vendor`, `meeting` and `poll` records only when those are enabled. A module never requires another optional module to be enabled. **[A-36]**
 
 ---
 
@@ -532,7 +533,7 @@ Simple society bookkeeping, not double-entry accounting (D-39). **P16 kickoff de
 - `EXP-10` Petty cash: an admin marks one cash account as petty cash and names one app user as its custodian. The custodian sees only the petty-cash view and records physical cash counts (date, counted amount, note); admins can too. The book amount comes from P16 entries; any difference from a count is shown, never posted. Changing the custodian requires a handover count, and the custodian history is kept. A fixed float (imprest) amount is left for a possible future Pro version.
 - `EXP-11` The accounts report adds monthly net surplus/deficit and the cumulative figure from the start of the financial year, labelled so it is not mistaken for cash or bank balances. No new P27 metric.
 
-**P39.5 and P40 manual fund tracking (D-73 — approved 2026-11-21, refined by D-74; P39.5/P39.7, P40.1a–P40.7 and the partial P40.8 report are on beta/testdb).** These tools do not establish legal or accounting authority. An admin must acknowledge a warning before use; professional review is recommended rather than an in-app prerequisite. Applicable statutory and bye-law checks, P10 and separate live-release approval still apply. Admins manage the records; committee members read them, except that fixed-deposit references are admin-only. Residents and guards have no general access. P40.9 and the full reconciliation/target P40.8 report remain planned.
+**P39.5 and P40 manual fund tracking (D-73 — approved 2026-11-21, refined by D-74; P39.5/P39.7, P40.1a–P40.7 and the partial P40.8 report are on beta/testdb).** These tools do not establish legal or accounting authority. An admin must acknowledge a warning before use; professional review is recommended rather than an in-app prerequisite. Applicable statutory and bye-law checks, P10 and separate live-release approval still apply. Admins manage the records; committee members read them, except that fixed-deposit references are admin-only. Residents and guards have no general access. The full reconciliation/target P40.8 report remains planned; P40.9 is proposed as EXP-30 under D-82.
 
 - `EXP-12` Admins name and maintain society funds. Fund tracking starts off until an admin sets a cutover and opening allocations against the cash/bank book total at the end of the preceding day. The cutover is the first day of a month, and the previous month must be closed before activation (D-74). Named openings may not exceed that total; the remainder is Unallocated. A negative opening total prevents activation until reconciled, without blocking Accounts. Historical entries remain reviewable and do not count twice; new account openings after cutover are Unallocated, not income. Entries can be split only when their allocations total the source entry, and reversals follow the same split. Unmapped historical reversals remain Unallocated until the original is mapped. An admin may set a suggested fund for each expense category and income type; a suggestion is never saved until an admin confirms it, one by one or in bulk (D-74). Backdated changes flag the opening for review; opening corrections and allocation changes retain reasons and history. Reopen a closed month before changing its allocations. Show negative fund balances and warnings, but do not block normal cash-book posting.
 - `EXP-13` The existing Billing estimate may group each charge under at most one fund; unmapped charges remain Unallocated. An optional 1–12 month preview repeats the monthly estimate and states that rates and occupancy are assumed unchanged. The preview creates no bill or actual payment allocation. Separately, a confirmed Billing collection in Accounts shows a suggested split that follows the paid bills' charge lines and their funds, in proportion for part payments; rounding leftovers, lines without a charge type or fund and amounts not applied to a bill stay Unallocated. The suggestion is saved only when an admin confirms it (D-74). The original estimate remains usable if Accounts is disabled.
@@ -600,6 +601,16 @@ Simple society bookkeeping, not double-entry accounting (D-39). **P16 kickoff de
   - **Evidence:** an amount, date and note, with an optional link to an Accounts entry, vendor bill or vendor contract and an optional private PDF, JPG or PNG of at most 5 MiB. Admins and committee can see evidence, and it is kept permanently. A wrong record is voided with a reason, never deleted.
   - **Realised to date:** the total of records that are not voided, always shown separately from the expected saving.
   - **No financial effect:** estimates and statuses create no income, expense reduction, budget change, contract change or Accounts entry. The tracker is on screen only, with no downloads, and all history is kept.
+
+**P40.9 repair forecast (D-82 — proposed 2026-11-22, coding not yet approved).** EXP-30 covers P40.9 inside Accounts (`expense`), which must be enabled; fund tracking (EXP-12) is needed only for the fund gap. Admins manage; committee members read; residents and guards have no access. The forecast is an estimate only. It creates no Accounts entry, fund allocation, bill, levy, budget or work approval.
+
+- `EXP-30` (P40.9) A **Repair forecast** under Accounts → Funds lists major repair items:
+  - **Item details:** name (up to 120 characters), category (`Structure`, `Waterproofing`, `Painting`, `Lifts`, `Plumbing`, `Electrical`, `Fire safety`, `Other`), optional last done year, repeat every N years (1–50), today's cost, the item's own inflation % (0–20, up to two decimals) and optional notes up to 500 characters.
+  - **Next due year:** last done year plus the repeat period. When the last done year is unknown, the admin enters the next due year. A due year before the current financial year shows as `Overdue` and is counted in the current year.
+  - **10-year table:** for each of the current and next nine financial years, each due item's estimated cost is today's cost × (1 + inflation %)^(years from now), rounded to the rupee. An item repeats within the 10 years when its cycle allows. Every figure is labelled "Estimate".
+  - **Fund gap:** the admin may pick one active fund (EXP-12). The table shows that fund's current recorded balance against the cumulative estimate and labels any shortfall "Estimated gap". Without active fund tracking, the gap shows "Fund balance not available". The balance is never projected forward.
+  - **Start a project:** when Major repairs & redevelopment (`major_works`) is enabled, an admin can start a P50 project from an item (MWK-1). The project copies the name, category and estimate and keeps the link, and the item shows "Project started". The admin updates the last done year; nothing changes automatically.
+  - Items are archived with a reason, never deleted, and kept permanently with their change history.
 
 #### 5.10.2 Resident & Vehicle Directory (`directory`) — P3-2
 
@@ -903,6 +914,43 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 - `CORE-30` The admin-only Unit 360 workspace shows current Core occupancy and live records from enabled, authorized modules; unavailable information is not zero or cleared. Admins can record carpet, built-up and optional balcony/terrace area in square feet with a source and dated verification history. New or corrected measurements start Pending; admins can mark them Verified or Re-measure. The measured areas never replace the billing area.
 - `CORE-31` Admins can manually record one open vacant or locked follow-up per unit, with start date, assigned society admin, optional inspection date and next follow-up date. Edits and closure are audited. Closed follow-ups are kept for 12 months; recurrence opens a new record. Do not collect contact details, reasons or free-text notes, or change occupancy, access or billing.
 
+#### 5.10.14 Major Repairs & Redevelopment (`major_works`) — P50
+
+**P50 major repairs and redevelopment (D-82 — proposed 2026-11-22, coding not yet approved).** MWK-1–MWK-8 cover P50.1–P50.6. This is a new optional module, off by default. It needs no other optional module and links to Accounts (`expense`), Vendors (`vendor`), Meetings (`meeting`) and Polls (`poll`) only when those are enabled. Admins change records. Committee members read every record and score quotes. Residents see only the repair-project list (MWK-1) and, for owners, their own unit's consent status (MWK-7). Guards and housekeeping supervisors have no access. Homeish never approves work, creates a bill, levy, receivable or Accounts entry, verifies or endorses a developer, or states that a legal consent threshold is met. Qualified local review is recommended but is not an in-app prerequisite (accepted risk, owner decision 2026-11-22).
+
+- `MWK-1` (P50.1) **Repair projects.**
+  - A project has a title (up to 120 characters), location, category (the EXP-30 list), priority (`Low`, `Medium`, `High`, `Urgent`), estimate, planned start and end dates, actual start and end dates, progress % (0–100) and notes up to 2,000 characters. It may link to the EXP-30 forecast item it started from.
+  - Status: `Planned` → `Quoting` → `Approved` → `In progress` → `Completed`; `On hold` from Quoting, Approved or In progress and back; `Cancelled` from any status before Completed. On hold and Cancelled need a reason.
+  - Moving to Approved records the approval the society gave elsewhere: an approving body (`Committee`, `General body`, `Other`), date and an optional link to a passed Meetings resolution. The app records it and never approves anything itself.
+  - Residents (owners, tenants and family) see each project's title, location, status, progress and planned dates — no money, quotes, audits, files or notes.
+- `MWK-2` (P50.1) **Budget and spend.**
+  - Each project has a budget source. `Typed` (default): the admin types the approved budget. `Linked sanctioned work`: the admin links one P40.4 sanctioned-work record (EXP-15), whose amount becomes the budget. Switching keeps the typed amount in the history, and the screen shows any difference.
+  - Spend so far comes only from posted Accounts entries. In Typed mode, admins tag posted expense entries to the project. Tags across projects cannot exceed an entry's amount, and reversals reduce them. In Linked mode, spend is the sanctioned work's linked spending, and any project tags are kept but not counted.
+  - When Accounts is off, the budget still shows, and spend shows "Not available". Overspend shows a warning and never blocks anything.
+- `MWK-3` (P50.1b) **Structural audits.**
+  - Admins record each structural audit: date, auditor name, findings summary up to 2,000 characters, rating (`Fine`, `Minor repairs`, `Major repairs`, `Unsafe`), an optional private report (PDF, JPG or PNG, up to 10 MiB), repair status (`Not needed`, `Pending`, `In progress`, `Done`) with optional linked projects, and the next due date.
+  - Admins get an in-app reminder 30 days before the latest audit's next due date, and once on the day it becomes overdue. Audits are kept permanently. A wrong audit is voided with a reason, never deleted.
+- `MWK-4` (P50.2) **Quotes and committee scoring.**
+  - A project holds up to three quotes. When Vendors is enabled, the admin may link one vendor purchase request, and its live quotes are shown (P24); otherwise, or in addition up to three in total, the admin types quotes: vendor name, amount, scope note and an optional private file. Each quote has a "Like-for-like scope" tick. The app shows the lowest, the highest and each quote's % above the lowest.
+  - Admins and committee members set 2–8 criteria with whole-number weights totalling 100, until the admin opens scoring; the criteria then lock. While scoring is open, each admin and committee member privately scores each included quote 0–10 per criterion and may change their scores. After the admin closes scoring, everyone with access sees each quote's weighted average (0–10) and how many people scored. Individual scores are never shown to anyone.
+  - The app never labels a winner or ranks quotes as a recommendation. The admin may leave a quote, or the whole project, out of scoring with a reason. The admin separately records the chosen quote, the reason and an optional resolution link.
+- `MWK-5` (P50.3) **What-if funding scenarios.**
+  - Admins create named scenarios for a project: the amount to raise (typed, or the project's estimate or budget less a typed or chosen-fund amount), and a split by unit area (`units.area_sqft`) or equal per unit across active units. Units without an area are listed, and the scenario stays incomplete until the admin fixes them or switches to equal. Amounts round to the rupee, and the rounding difference is shown.
+  - Admins and committee members see scenarios; residents do not. A scenario never creates a bill, charge, receivable, notice, receipt or levy, and it is labelled "What-if only — not a levy".
+- `MWK-6` (P50.4) **Redevelopment proposals.**
+  - Admins record proposals: developer name, received date, stage (`Received` → `Under review` → `Shortlisted` → `Selected`; `Rejected` or `Withdrawn` from any earlier stage, with a reason), a decision due date, and offer terms: extra area %, monthly rent per unit, corpus per unit, timeline in months, bank guarantee amount and other terms up to 1,000 characters, each optional. Private evidence files (PDF, JPG or PNG, up to 10 MiB each) may be attached.
+  - Offers show side by side, labelled "As stated by the developer — not verified by Homeish". Admins and committee members only.
+- `MWK-7` (P50.5) **Consent and milestones.**
+  - Each unit with at least one active owner has one consent status per proposal: `Pending`, `Consents` or `Does not consent`. The record shows how it was recorded (`In-app poll` or `Recorded by admin`), the date, who recorded it and an optional private signed-form file. Admins and committee members see all records; each owner sees only their own unit's status and method, never files or other units.
+  - A `major_works` setting, **consent method**: `Poll answer counts as consent` (default) or `Admin-recorded consent only`. Before the first consent poll, or before switching to the poll method, the admin confirms once: "Our bye-laws and applicable rules allow this consent method, and I accept responsibility for it." The confirmation is audited.
+  - When Polls is enabled, an admin can create a draft consent poll from a proposal. It is a named public poll (POL-1) with the options "I consent" and "I do not consent", for the whole society, with tenant voting off for that poll; it follows the normal poll schedule and notifications. When it completes under the poll method, each voting unit's answer fills that unit's consent record unless an admin-recorded entry already exists. Under the admin-recorded method, the answers are shown beside the tally as "Indicative only" and never change a record. Copied answers stay after the poll's two-year purge (D-60).
+  - The tally shows counts and % of eligible units for each status. It never says that a legal or statutory threshold is met.
+  - Milestones are a dated checklist per proposal: title, planned date, actual date, status (`To do`, `Done`, `Not needed`) and a note.
+- `MWK-8` (P50.6) **Summary and retention.**
+  - An on-screen summary for admins and committee members shows, for each active project, budget against spend (MWK-2), progress, delay (past the planned end and not completed), overdue audits and the number of open proposals by stage. It never shows consent details or files, adds no P27 metric and has no download.
+  - Residents (owners, tenants and family) get a simplified summary: the MWK-1 project list with each project's status, progress and planned dates, and no money, audits, quotes, delays or redevelopment information.
+  - Projects, audits, quotes, scores, scenarios and their history are kept permanently. An admin may archive a proposal in Selected, Rejected or Withdrawn; its consent records, milestones and files are purged by the daily job 8 years after archiving, and the purge is audited with counts.
+
 ---
 
 ## 6. Core User Journeys (End-to-End)
@@ -1016,6 +1064,10 @@ Legend: **C**reate, **R**ead, **U**pdate, **D**elete/cancel, **A**pprove, `own` 
 | Official elections (P46): settings, tracker, voter list, costs     | –            | CRUD            | R (no who-voted list)                                                            | –              | –             | –              | –              | –                   |
 | Official elections (P46): nominate self, vote, dispute             | –            | –               | –                                                                                | –              | –             | C own          | –              | –                   |
 | Official elections (P46): results and turnout after declaration    | –            | R               | R                                                                                | –              | –             | R              | R              | R                   |
+| Repair forecast (P40.9)                                            | –            | CRUD            | R                                                                                | –              | –             | –              | –              | –                   |
+| Major works (P50): projects, audits, quotes, scenarios, proposals  | –            | CRUD            | R; score quotes                                                                  | –              | –             | –              | –              | –                   |
+| Major works (P50): repair-project list (status and progress)       | –            | R               | R                                                                                | –              | –             | R              | R              | R                   |
+| Major works (P50): own unit's redevelopment consent status         | –            | R all           | R all                                                                            | –              | –             | R own          | –              | –                   |
 | Export data (CSV)                                                  | –            | Yes             | Yes (reports they can view)                                                      | –              | –             | –              | –              | –                   |
 
 **Rules**
@@ -1449,7 +1501,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 
 **D-72 — P37 billing additions (Approved 2026-11-20):** Supplements the original D-12 decision with the fourth charge method in BIL-1. Adopts the first-of-month occupancy, confirmed actual tenant move-in, estimate and reports contracts in BIL-22–BIL-24. P37.5 and new delivery channels remain unapproved.
 
-**D-73 — P39.5 and P40 manual fund tracking (Approved for local implementation 2026-11-21):** See EXP-12–EXP-19. The owner selected manual tools with a warning instead of requiring a professional review inside the app, including for redevelopment transfers. This decision did not claim legal or accounting approval or authorize release or live use. Beta was approved separately; live use remains unapproved. P40.9 remains in B7.
+**D-73 — P39.5 and P40 manual fund tracking (Approved for local implementation 2026-11-21):** See EXP-12–EXP-19. The owner selected manual tools with a warning instead of requiring a professional review inside the app, including for redevelopment transfers. This decision did not claim legal or accounting approval or authorize release or live use. Beta was approved separately; live use remains unapproved. P40.9 is planned with P50 under D-82 (proposed).
 
 **D-74 — P40 plan recheck refinements (Approved 2026-11-21):** After the plan was checked against the code, the owner chose: (1) suggested fund splits for Billing collections from bill charge lines, and optional suggested funds per expense category and income type, always confirmed by an admin (EXP-12, EXP-13); (2) a cutover on the first day of a month whose previous month is closed (EXP-12); (3) a new Accounts transfer between the society's own accounts with a deposit account type, so fixed deposits are held in Accounts and never double counted (EXP-17, EXP-20). This narrows GAP-M11-04-A only for paired own-account transfers; journal entries, a general ledger and trial balance remain excluded. EXP-20's exact contract was confirmed at the coding go-ahead. (4) P40.1 is split into P40.1a–P40.1c. This decision did not authorize release or live use; beta was approved separately and live use remains unapproved.
 
@@ -1488,6 +1540,21 @@ The owner accepted the fourteen planning defaults in the implementation plan's P
 - voter disputes within a dispute window (default 5 days, admin-set); recorded outside-app results; linked election costs; permanent retention.
 
 The owner accepted the twenty-four planning defaults in the implementation plan's P46 kickoff decisions. The scope is re-sized to about 12 blocks. This changes POL-4's entitlement only for official elections and adds an election-scoped sign-in for outside returning officers to CORE-9's closed sign-up. It does not change D-60, D-61 or D-42 for existing polls and meetings, and M02 legal membership work remains deferred. Coding, hosted migration, release and live use each need separate approval.
+
+**D-82 — P50 major repairs and redevelopment with the P40.9 forecast (Proposed 2026-11-22; coding not yet approved):** Building on the 2026-11-19 batch decisions (new optional module, committee-set scoring criteria, the app never picks a winner, what-if-only levies, redevelopment limited to admins and committee), the owner chose:
+
+- planning P40.9 and P50 together; module key `major_works`; admins change records and committee members read and score;
+- residents see repair-project status and progress only; owners see only their own unit's consent status;
+- a typed project budget by default, with an optional switch to a linked P40.4 sanctioned-work record; spend only from tagged posted Accounts entries;
+- structural audits with a private report and 30-day due reminders;
+- quotes from a linked Vendor purchase request, or typed up to three; private per-member scores shown only as averages after scoring closes;
+- what-if scenarios split by unit area or equal per unit, for admins and committee only;
+- side-by-side developer offers labelled as unverified;
+- consent by an owners-only in-app poll by default, with a society setting for admin-recorded consent only, after a one-time admin accepted-risk confirmation; no statutory threshold claim;
+- a 10-year repair forecast under Accounts → Funds with each item's own inflation %, a "Start a project" link and a fund gap;
+- a full summary for admins and committee, plus a simplified resident version (status and progress only); permanent repair records and an 8-year purge of archived redevelopment records.
+
+The owner accepted the nineteen planning defaults in the implementation plan's P50 kickoff decisions. P50 is re-split into eight tasks, about 15 blocks, and P40.9 stays M. This adds module 25 and extends POL-1 only with draft consent polls created from a proposal; D-60, D-42 and EXP-15 are otherwise unchanged. Coding, hosted migration, release and live use each need separate approval.
 
 ## 18. Glossary
 
