@@ -3162,6 +3162,42 @@ export type Database = {
           },
         ];
       };
+      document_amendment_milestones: {
+        Row: {
+          historical_evidence: boolean;
+          milestone_date: string | null;
+          milestone_type: string;
+          note: string | null;
+          record_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          historical_evidence?: boolean;
+          milestone_date?: string | null;
+          milestone_type: string;
+          note?: string | null;
+          record_id: string;
+          society_id: string;
+        };
+        Update: {
+          historical_evidence?: boolean;
+          milestone_date?: string | null;
+          milestone_type?: string;
+          note?: string | null;
+          record_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_amendments_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       document_folders: {
         Row: {
           archived_at: string | null;
@@ -3237,6 +3273,360 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
+          },
+        ];
+      };
+      document_governance_records: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          kind: string;
+          society_id: string;
+          source_document_version_id: string | null;
+          source_kind: string | null;
+          source_outcome: string | null;
+          source_resolution_id: string | null;
+          source_snapshot: NonNullable<Json>;
+          source_tenancy_document_id: string | null;
+          source_unavailable_at: string | null;
+          source_version: number | null;
+          state: string;
+          title: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          kind: string;
+          society_id: string;
+          source_document_version_id?: string | null;
+          source_kind?: string | null;
+          source_outcome?: string | null;
+          source_resolution_id?: string | null;
+          source_snapshot?: NonNullable<Json>;
+          source_tenancy_document_id?: string | null;
+          source_unavailable_at?: string | null;
+          source_version?: number | null;
+          state?: string;
+          title: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          kind?: string;
+          society_id?: string;
+          source_document_version_id?: string | null;
+          source_kind?: string | null;
+          source_outcome?: string | null;
+          source_resolution_id?: string | null;
+          source_snapshot?: NonNullable<Json>;
+          source_tenancy_document_id?: string | null;
+          source_unavailable_at?: string | null;
+          source_version?: number | null;
+          state?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_governance_document_fkey';
+            columns: ['society_id', 'source_document_version_id'];
+            isOneToOne: false;
+            referencedRelation: 'document_versions';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'document_governance_noc_fkey';
+            columns: ['society_id', 'source_tenancy_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_resolution_fkey';
+            columns: ['society_id', 'source_resolution_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_governance_revisions: {
+        Row: {
+          action: string;
+          changed_fields: string[];
+          created_at: string;
+          created_by: string;
+          id: string;
+          previous_values: NonNullable<Json>;
+          reason: string | null;
+          record_id: string;
+          request_id: string;
+          society_id: string;
+          source_kinds_after: string[];
+          source_kinds_before: string[];
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          changed_fields?: string[];
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          previous_values: NonNullable<Json>;
+          reason?: string | null;
+          record_id: string;
+          request_id: string;
+          society_id: string;
+          source_kinds_after?: string[];
+          source_kinds_before?: string[];
+        };
+        Update: {
+          action?: string;
+          changed_fields?: string[];
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          previous_values?: NonNullable<Json>;
+          reason?: string | null;
+          record_id?: string;
+          request_id?: string;
+          society_id?: string;
+          source_kinds_after?: string[];
+          source_kinds_before?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_governance_revisions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_revisions_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: false;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_house_rules: {
+        Row: {
+          approval_date: string | null;
+          approving_resolution_id: string | null;
+          approving_resolution_outcome: string | null;
+          approving_resolution_snapshot: NonNullable<Json>;
+          approving_resolution_unavailable_at: string | null;
+          approving_resolution_version: number | null;
+          effective_date: string | null;
+          gate_locked: boolean;
+          publication_state: string;
+          published_at: string | null;
+          published_by: string | null;
+          record_id: string;
+          rule_text: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          approval_date?: string | null;
+          approving_resolution_id?: string | null;
+          approving_resolution_outcome?: string | null;
+          approving_resolution_snapshot?: NonNullable<Json>;
+          approving_resolution_unavailable_at?: string | null;
+          approving_resolution_version?: number | null;
+          effective_date?: string | null;
+          gate_locked?: boolean;
+          publication_state?: string;
+          published_at?: string | null;
+          published_by?: string | null;
+          record_id: string;
+          rule_text?: string | null;
+          society_id: string;
+        };
+        Update: {
+          approval_date?: string | null;
+          approving_resolution_id?: string | null;
+          approving_resolution_outcome?: string | null;
+          approving_resolution_snapshot?: NonNullable<Json>;
+          approving_resolution_unavailable_at?: string | null;
+          approving_resolution_version?: number | null;
+          effective_date?: string | null;
+          gate_locked?: boolean;
+          publication_state?: string;
+          published_at?: string | null;
+          published_by?: string | null;
+          record_id?: string;
+          rule_text?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_house_rules_published_by_fkey';
+            columns: ['published_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_house_rules_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'document_house_rules_resolution_fkey';
+            columns: ['society_id', 'approving_resolution_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_register_indexes: {
+        Row: {
+          applicability_basis: string | null;
+          clause_or_page: string | null;
+          custodian: string | null;
+          format: string | null;
+          maintenance_state: string | null;
+          physical_location: string | null;
+          record_id: string;
+          register_name: string | null;
+          register_type: string | null;
+          review_date: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          applicability_basis?: string | null;
+          clause_or_page?: string | null;
+          custodian?: string | null;
+          format?: string | null;
+          maintenance_state?: string | null;
+          physical_location?: string | null;
+          record_id: string;
+          register_name?: string | null;
+          register_type?: string | null;
+          review_date?: string | null;
+          society_id: string;
+        };
+        Update: {
+          applicability_basis?: string | null;
+          clause_or_page?: string | null;
+          custodian?: string | null;
+          format?: string | null;
+          maintenance_state?: string | null;
+          physical_location?: string | null;
+          record_id?: string;
+          register_name?: string | null;
+          register_type?: string | null;
+          review_date?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_register_indexes_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_validities: {
+        Row: {
+          expiry_date: string | null;
+          expiry_kind: string;
+          issue_date: string | null;
+          issuing_authority: string | null;
+          record_id: string;
+          reference: string | null;
+          reminder_cycle_date: string | null;
+          reminder_last_milestone: number | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          expiry_date?: string | null;
+          expiry_kind: string;
+          issue_date?: string | null;
+          issuing_authority?: string | null;
+          record_id: string;
+          reference?: string | null;
+          reminder_cycle_date?: string | null;
+          reminder_last_milestone?: number | null;
+          society_id: string;
+        };
+        Update: {
+          expiry_date?: string | null;
+          expiry_kind?: string;
+          issue_date?: string | null;
+          issuing_authority?: string | null;
+          record_id?: string;
+          reference?: string | null;
+          reminder_cycle_date?: string | null;
+          reminder_last_milestone?: number | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_validities_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
           },
         ];
       };
@@ -15093,6 +15483,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      document_expiry_reminders_run: {
+        Args: { p_request_trace: string; p_society_id: string };
+        Returns: number;
+      };
       document_folder_save: {
         Args: {
           p_audience: string;
@@ -15118,6 +15512,82 @@ export type Database = {
         Args: { p_document_id: string; p_society_id: string };
         Returns: Json;
       };
+      document_governance_get: {
+        Args: { p_record_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      document_governance_history: {
+        Args: {
+          p_limit: number;
+          p_offset: number;
+          p_record_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_governance_list: {
+        Args: {
+          p_include_archived: boolean;
+          p_kind: string;
+          p_limit: number;
+          p_offset: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_governance_save: {
+        Args: {
+          p_approving_resolution_id: string;
+          p_client_request_id: string;
+          p_details: Json;
+          p_document_version_id: string;
+          p_expected_version: number;
+          p_kind: string;
+          p_reason: string;
+          p_record_id: string;
+          p_request_id: string;
+          p_resolution_id: string;
+          p_society_id: string;
+          p_state: string;
+          p_tenancy_document_id: string;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      document_governance_set_archived: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_reason: string;
+          p_record_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_governance_sources_list: {
+        Args: {
+          p_kind: string;
+          p_limit: number;
+          p_offset: number;
+          p_society_id: string;
+          p_source_type: string;
+        };
+        Returns: Json;
+      };
+      document_house_rule_publish: {
+        Args: {
+          p_expected_version: number;
+          p_record_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_house_rules_published_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
       document_list: {
         Args: {
           p_folder_id: string;
@@ -15141,6 +15611,14 @@ export type Database = {
           p_archived: boolean;
           p_document_id: string;
           p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_settings_update: {
+        Args: {
+          p_expiry_reminders_enabled: boolean;
           p_request_id: string;
           p_society_id: string;
         };
