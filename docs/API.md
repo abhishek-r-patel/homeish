@@ -528,7 +528,7 @@ Routes: `/admin/expenses` (balances, own-account transfers, approvals, forms, ca
 
 Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 
-**P41 financial reports (D-77; proposed 2026-11-22, coding not yet approved).** PRD EXP-21–EXP-26; database contract in DATABASE.md §9.7. All reads are for admins and committee, and all writes are admin-only. No operation changes book entries, bills, fund allocations or vendor records. The proposed operations are:
+**P41 financial reports (D-77; implemented and verified locally 2026-11-22, release pending).** PRD EXP-21–EXP-26; database contract in DATABASE.md §9.7. P41.3 remains blocked. All implemented reads are for admins and committee, and all writes are admin-only. No operation changes book entries, bills, fund allocations or vendor records. The operations are:
 
 - `getExpenseStatements(range)`: the receipts-and-payments statement, the month-by-head table and the four P41.7 figures. Ranges are at most two years.
 - `getExpenseFinancialPosition(asOf)`: summary lines, each with a source and an availability state. Dues and vendor bills are only for today. Deposits are separate, and committee results omit bank references.
@@ -537,7 +537,7 @@ Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 - `acknowledgeExpenseAuditWarning`: idempotent, once per society.
 - `saveExpenseAuditYear`, `saveExpenseAuditQuery` and `saveExpenseAuditObjection`: idempotent by `clientRequestId` with optimistic versions. Each edit writes a revision. There is no delete operation. Query assignees must be the society's admins or committee members.
 - `getExpenseAgmDraft(financialYear)` and `saveExpenseAgmDraft`: assembled sections plus up to 10 versioned plain-text sections.
-- AGM section switches are saved through the existing `saveExpenseSettings` as `agm_report_sections`.
+- AGM section switches are saved through `saveExpenseAgmSettings` as `agm_report_sections`; the existing `saveExpenseSettings` preserves that key.
 
 Routes add `/admin/expenses/statements`, `/admin/expenses/audit` and `/admin/expenses/agm-report`. The export route gains `report=statements|position|agm`. Statements export as CSV or PDF, the position summary as PDF, and the AGM draft as PDF. Without `report`, the export keeps its current behaviour.
 

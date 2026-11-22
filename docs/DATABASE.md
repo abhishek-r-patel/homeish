@@ -912,7 +912,7 @@ Both directory migrations have been tested only against disposable local Postgre
 
 **P39.5/P39.7/P40 approved scope on beta/testdb (D-73, D-74):** Forward-only migrations add all 13 approved society-scoped tables: `expense_funds`, `expense_fund_openings`, `expense_fund_opening_allocations`, `expense_fund_entry_allocations`, `expense_fund_mappings`, `expense_fund_corpus_records`, `expense_fund_receipt_links`, `expense_fund_works`, `expense_fund_work_links`, `expense_fund_transfer_rules`, `expense_fund_transfers`, `expense_fixed_deposits` and `expense_fund_interest_records`. They use same-society FKs, RLS with no direct API-role access, minimal grants, append-only financial/cap history, optimistic versions or request locks, and the existing per-society books lock. Opening and entry versions preserve reasons and cap checks. Receipt/work links cannot exceed source allocations, and corrections cannot reduce linked amounts. Fund totals plus Unallocated reconcile to the Accounts total. P39.7 adds a `deposit` account type plus paired `transfer` book entries and pair reversal; report and P27 flow functions exclude them, while balances and running balances include them. Fixed-deposit register figures never add to Accounts totals, and committee reads redact references. Types are generated from the fully migrated disposable schema and match testdb. Existing applied migrations were not edited; existing P16 book entries remain authoritative and append-only.
 
-**P41 proposed contract (D-77; 2026-11-22, coding not yet approved):** One forward-only migration.
+**P41 contract (D-77; implemented and verified locally 2026-11-22, hosted migration and release pending):** Forward-only migration `20261130110000_expense_financial_reports.sql`.
 
 - **Read RPCs:** `expense_statements(p_society_id, p_from, p_to)`, `expense_financial_position(p_society_id, p_as_of)` and `expense_multi_year(p_society_id)`. They are SECURITY DEFINER with `private.expense_authorize(..., 'read')`, granted to `authenticated` only. They exclude `transfer_pair_id` legs, use `private.expense_balance` for money held, and read fund, Billing and P47 bill data only when those modules are enabled. Committee results redact deposit references.
 - **Tables:**
@@ -921,11 +921,11 @@ Both directory migrations have been tested only against disposable local Postgre
   - `expense_audit_objections`: description, owner, due date, correction note, optional P19 document and version.
   - `expense_audit_revisions`: an append-only previous-value snapshot for every edit.
   - `expense_agm_drafts`: unique per society and financial year, with up to 10 `{title ≤120, body ≤10,000}` sections in jsonb and a version.
-  - A per-society warning acknowledgement record that keeps `warning_acknowledged_text`, following the P40 pattern.
+  - `expense_audit_acknowledgements`: the permanent per-society warning record with `warning_acknowledged_text`, following the P40 pattern.
 - **Table safeguards:** same-society composite FKs (assignee and owner are active admin or committee memberships), RLS enabled with no direct API-role access, `client_request_id` uniqueness, and no delete grants or paths.
-- **Audit and AGM RPCs:** read RPCs `expense_audit` and `expense_audit_checks` (months closed, statement items unmatched more than 30 days, deposit links, petty-cash count 25 Mar–7 Apr), plus `expense_agm_draft`. Admin-only write RPCs cover acknowledgement, year, query, objection and AGM draft saves. Retention is permanent.
+- **Audit and AGM RPCs:** `expense_audit_get` returns the year, permitted P19 document choices, query/objection records, permanent revision metadata and the four private checks (months closed, statement items unmatched more than 30 days, deposit links, petty-cash count 25 Mar–7 Apr). `expense_agm_draft` returns the section settings and saved draft. Admin-only save RPCs cover acknowledgement, year, query, objection, AGM draft and section settings. Retention is permanent.
 - **Settings:** AGM section switches are stored in the existing `expense` module settings as `agm_report_sections`.
-- **Types:** generated types are regenerated from the migrated disposable schema.
+- **Types:** `src/core/db/database.types.ts` is regenerated from the fully migrated disposable schema.
 
 Migration `20261115190000_expense_foundation.sql` adds the master data and expense records:
 
