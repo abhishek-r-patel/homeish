@@ -914,6 +914,8 @@ Both directory migrations have been tested only against disposable local Postgre
 
 **P41 contract (D-77; implemented and verified locally 2026-11-22, hosted migration and release pending):** Forward-only migration `20261130110000_expense_financial_reports.sql`.
 
+Forward-only repair migration `20261201120000_expense_tenancy_fk_indexes.sql` adds the leading indexes required for the P41 audit record foreign keys.
+
 - **Read RPCs:** `expense_statements(p_society_id, p_from, p_to)`, `expense_financial_position(p_society_id, p_as_of)` and `expense_multi_year(p_society_id)`. They are SECURITY DEFINER with `private.expense_authorize(..., 'read')`, granted to `authenticated` only. They exclude `transfer_pair_id` legs, use `private.expense_balance` for money held, and read fund, Billing and P47 bill data only when those modules are enabled. Committee results redact deposit references.
 - **Tables:**
   - `expense_audit_years`: unique per society and financial year. It holds auditor, firm, appointed date, reference, optional P19 document, report received, placed-before-AGM and filed dates, an opinion enum (`unmodified`, `qualified`, `adverse`, `disclaimer`, `other`) with text, and a version.
@@ -988,6 +990,8 @@ The approved local build uses `tenancy`, disabled by default, with the optional 
 - Service-only `tenancy_retention_files_list` includes expired documents and unattached uploads older than 24 hours, across enabled and disabled societies. Proof attachment rejects expired uploads. For orphan candidates, listing takes the society key-share lock before its directory lifecycle lock, waits for in-flight attachments, then rechecks committed metadata in a fresh snapshot with a fixed cutoff. The existing privileged retention runner removes Storage objects before `tenancy_retention_run` marks missing expired documents deleted and clears expired preparations. Future job dates cannot delete files before their actual deadline. Core ending and proof attachment share the lifecycle lock, so late attachments cannot escape retention.
 
 **P51 and P35.10–P35.12 contract (D-78; approved for local coding 2026-11-22).** One forward-only migration in the `tenancy` module. Existing `tenancy_moves`, `tenancy_documents` NOC rows and their retention are not rewritten.
+
+Forward-only repair migration `20261201120000_expense_tenancy_fk_indexes.sql` adds the leading indexes required for the P51 clearance and transfer foreign keys.
 
 - **Settings:** the existing Tenancy module settings gain `clearance_handover_basis` (`bills` by default, or `total`) and `clearance_agreement_evidence` (`admin_note` by default, `signed_upload`, or `in_app_and_upload`). A change applies to new handovers only.
 - **Tables** (all same-society composite FKs, RLS enabled with no direct API-role access, `client_request_id` uniqueness, integer versions, and no delete grants or paths):
