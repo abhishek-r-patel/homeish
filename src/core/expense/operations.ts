@@ -1,4 +1,4 @@
-// Authorize P16/P39 expense workflows, verify receipts and shape books for display and export.
+// Authorize P16/P39/P41 expense workflows and shape books, statements and drafts for display.
 import 'server-only';
 import { z } from 'zod';
 import { AppError, createRequestId } from '../errors';
@@ -12,9 +12,18 @@ import {
 } from '../tenancy/request-context';
 import {
   expenseAccountInputSchema,
+  expenseAgmDraftInputSchema,
+  expenseAgmDraftSchema,
+  expenseAgmSettingsInputSchema,
+  expenseAuditAcknowledgeInputSchema,
+  expenseAuditObjectionInputSchema,
+  expenseAuditQueryInputSchema,
+  expenseAuditSchema,
+  expenseAuditYearInputSchema,
   expenseCategoryInputSchema,
   expenseDecisionInputSchema,
   expenseEntriesPageSchema,
+  expenseFinancialPositionSchema,
   expenseFundActivationInputSchema,
   expenseFundAllocationInputSchema,
   expenseFundAllocationCorrectionInputSchema,
@@ -45,6 +54,7 @@ import {
   expenseIncomeInputSchema,
   expenseMonthCloseInputSchema,
   expenseMonthReopenInputSchema,
+  expenseMultiYearSchema,
   expensePageSchema,
   expenseRangeSchema,
   expenseRecordInputSchema,
@@ -52,6 +62,7 @@ import {
   expenseReportSchema,
   expenseReverseInputSchema,
   expenseSettingsInputSchema,
+  expenseStatementsSchema,
   expenseTransferInputSchema,
   expenseTransferReverseInputSchema,
   expenseWorkspaceSchema,
@@ -106,6 +117,17 @@ async function withReceiptUrls<T extends { receipt_path: string | null }>(
       receiptUrl: await signReceipt(context, row.receipt_path),
     })),
   );
+}
+
+async function expenseSocietyName(context: RequestContext, societyId: string) {
+  const { data, error } = await context.db
+    .from('societies')
+    .select('name')
+    .eq('id', societyId)
+    .single();
+  if (error || !data)
+    throw new Error('Could not load the society name.', { cause: error });
+  return data.name;
 }
 
 function pageOffset(page: number) {
@@ -197,6 +219,77 @@ export async function getExpenseReport(range: unknown) {
   );
 }
 
+export async function getExpenseStatements(range: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(expenseRangeSchema, range);
+  return callModuleRpc(
+    context,
+    'expense_statements',
+    { p_society_id: societyId, p_from: parsed.from, p_to: parsed.to },
+    expenseStatementsSchema,
+    'Choose a valid statement range of up to two years.',
+  );
+}
+
+export async function getExpenseFinancialPosition(asOf: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(z.iso.date(), asOf);
+  return callModuleRpc(
+    context,
+    'expense_financial_position',
+    { p_society_id: societyId, p_as_of: parsed },
+    expenseFinancialPositionSchema,
+    'Choose today or an earlier financial-position date.',
+  );
+}
+
+export async function getExpenseMultiYear() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_multi_year',
+    { p_society_id: societyId },
+    expenseMultiYearSchema,
+    'Could not load the five-year comparison.',
+  );
+}
+
+export async function getExpenseAudit(financialYearStart: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(
+    z.iso.date().refine((value) => value.endsWith('-04-01')),
+    financialYearStart,
+  );
+  return callModuleRpc(
+    context,
+    'expense_audit_get',
+    {
+      p_society_id: societyId,
+      p_financial_year_start: parsed,
+    },
+    expenseAuditSchema,
+    'Choose an April-to-March financial year.',
+  );
+}
+
+export async function getExpenseAgmDraft(financialYearStart: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(
+    z.iso.date().refine((value) => value.endsWith('-04-01')),
+    financialYearStart,
+  );
+  return callModuleRpc(
+    context,
+    'expense_agm_draft',
+    {
+      p_society_id: societyId,
+      p_financial_year_start: parsed,
+    },
+    expenseAgmDraftSchema,
+    'Choose an April-to-March financial year.',
+  );
+}
+
 export async function getExpenseFunds(cutover: unknown) {
   const { context, societyId } = await expenseContext('read');
   const parsed = expenseFundCutoverQuerySchema.safeParse(cutover);
@@ -279,14 +372,109 @@ export async function exportExpenseEntries(range: unknown) {
     expenseReportSchema,
     'Could not export the report.',
   );
-  const { data, error } = await context.db
-    .from('societies')
-    .select('name')
-    .eq('id', societyId)
-    .single();
-  if (error || !data)
-    throw new Error('Could not load the society name.', { cause: error });
-  return { rows, report, societyName: data.name };
+  return {
+    rows,
+    report,
+    societyName: await expenseSocietyName(context, societyId),
+  };
+}
+
+export async function exportExpenseStatements(range: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(expenseRangeSchema, range);
+  const statements = await callModuleRpc(
+    context,
+    'expense_statements',
+    { p_society_id: societyId, p_from: parsed.from, p_to: parsed.to },
+    expenseStatementsSchema,
+    'Could not export the financial statements.',
+  );
+  return {
+    statements,
+    societyName: await expenseSocietyName(context, societyId),
+  };
+}
+
+export async function exportExpenseFinancialPosition(asOf: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(z.iso.date(), asOf);
+  const position = await callModuleRpc(
+    context,
+    'expense_financial_position',
+    { p_society_id: societyId, p_as_of: parsed },
+    expenseFinancialPositionSchema,
+    'Could not export the financial-position summary.',
+  );
+  return {
+    position,
+    societyName: await expenseSocietyName(context, societyId),
+  };
+}
+
+export async function exportExpenseAgmDraft(financialYearStart: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(
+    z.iso.date().refine((value) => value.endsWith('-04-01')),
+    financialYearStart,
+  );
+  const today = await callModuleRpc(
+    context,
+    'expense_workspace',
+    { p_society_id: societyId },
+    expenseWorkspaceSchema,
+    'Could not load the Accounts date.',
+  );
+  const yearEnd = new Date(`${parsed}T00:00:00Z`);
+  yearEnd.setUTCFullYear(yearEnd.getUTCFullYear() + 1);
+  yearEnd.setUTCDate(0);
+  const reportEnd = yearEnd.toISOString().slice(0, 10);
+  const to = today.today < reportEnd ? today.today : reportEnd;
+  const [statements, position, comparison, audit, draft] = await Promise.all([
+    callModuleRpc(
+      context,
+      'expense_statements',
+      { p_society_id: societyId, p_from: parsed, p_to: to },
+      expenseStatementsSchema,
+      'Could not load the AGM finances.',
+    ),
+    callModuleRpc(
+      context,
+      'expense_financial_position',
+      { p_society_id: societyId, p_as_of: to },
+      expenseFinancialPositionSchema,
+      'Could not load the AGM financial-position summary.',
+    ),
+    callModuleRpc(
+      context,
+      'expense_multi_year',
+      { p_society_id: societyId },
+      expenseMultiYearSchema,
+      'Could not load the AGM comparison.',
+    ),
+    callModuleRpc(
+      context,
+      'expense_audit_get',
+      { p_society_id: societyId, p_financial_year_start: parsed },
+      expenseAuditSchema,
+      'Could not load the AGM audit status.',
+    ),
+    callModuleRpc(
+      context,
+      'expense_agm_draft',
+      { p_society_id: societyId, p_financial_year_start: parsed },
+      expenseAgmDraftSchema,
+      'Could not load the AGM draft.',
+    ),
+  ]);
+  if (!draft.warning_acknowledged_at) throw new AppError('FORBIDDEN');
+  return {
+    statements,
+    position,
+    comparison,
+    audit,
+    draft,
+    societyName: await expenseSocietyName(context, societyId),
+  };
 }
 
 export async function saveExpenseSettings(input: unknown, requestId: string) {
@@ -304,6 +492,150 @@ export async function saveExpenseSettings(input: unknown, requestId: string) {
     },
     z.object({ updated_at: z.string() }),
     'Choose an active bank account and a valid approval limit.',
+  );
+}
+
+export async function acknowledgeExpenseAuditWarning(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseAuditAcknowledgeInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_audit_warning_acknowledge',
+    {
+      p_society_id: societyId,
+      p_acknowledged: parsed.acknowledged,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.iso.datetime({ offset: true }),
+    'Acknowledge the audit and AGM warning.',
+  );
+}
+
+export async function saveExpenseAuditYear(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseAuditYearInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_audit_year_save',
+    {
+      p_society_id: societyId,
+      p_year_id: parsed.yearId,
+      p_financial_year_start: parsed.financialYearStart,
+      p_auditor_name: parsed.auditorName,
+      p_auditor_firm: parsed.auditorFirm,
+      p_appointed_on: parsed.appointedOn,
+      p_appointment_reference: parsed.appointmentReference,
+      p_appointment_document_id: parsed.appointmentDocumentId,
+      p_report_received_on: parsed.reportReceivedOn,
+      p_placed_before_agm_on: parsed.placedBeforeAgmOn,
+      p_filed_on: parsed.filedOn,
+      p_opinion: parsed.opinion,
+      p_opinion_text: parsed.opinionText,
+      p_expected_version: parsed.expectedVersion,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the audit year, report dates, copied opinion and warning acknowledgement.',
+  );
+}
+
+export async function saveExpenseAuditQuery(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseAuditQueryInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_audit_query_save',
+    {
+      p_society_id: societyId,
+      p_query_id: parsed.queryId,
+      p_audit_year_id: parsed.auditYearId,
+      p_query_number: parsed.queryNumber,
+      p_query_date: parsed.queryDate,
+      p_area: parsed.area,
+      p_question: parsed.question,
+      p_assignee_user_id: parsed.assigneeUserId,
+      p_due_date: parsed.dueDate,
+      p_response: parsed.response,
+      p_response_date: parsed.responseDate,
+      p_expected_version: parsed.expectedVersion,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the query, assignee, due date and response.',
+  );
+}
+
+export async function saveExpenseAuditObjection(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseAuditObjectionInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_audit_objection_save',
+    {
+      p_society_id: societyId,
+      p_objection_id: parsed.objectionId,
+      p_audit_year_id: parsed.auditYearId,
+      p_description: parsed.description,
+      p_owner_user_id: parsed.ownerUserId,
+      p_due_date: parsed.dueDate,
+      p_correction_note: parsed.correctionNote,
+      p_corrected_on: parsed.correctedOn,
+      p_evidence_document_id: parsed.evidenceDocumentId,
+      p_expected_version: parsed.expectedVersion,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the objection, owner, correction and evidence document.',
+  );
+}
+
+export async function saveExpenseAgmDraft(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseAgmDraftInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_agm_draft_save',
+    {
+      p_society_id: societyId,
+      p_draft_id: parsed.draftId,
+      p_financial_year_start: parsed.financialYearStart,
+      p_written_sections: parsed.writtenSections,
+      p_expected_version: parsed.expectedVersion,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the AGM sections and acknowledge the warning.',
+  );
+}
+
+export async function saveExpenseAgmSettings(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseAgmSettingsInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_agm_settings_save',
+    {
+      p_society_id: societyId,
+      p_sections: parsed.sections,
+      p_expected_updated_at: parsed.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.iso.datetime({ offset: true }),
+    'Choose the AGM report sections and refresh if the settings changed.',
   );
 }
 

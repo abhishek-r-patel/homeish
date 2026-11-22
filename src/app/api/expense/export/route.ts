@@ -2,11 +2,20 @@
 import { z } from 'zod';
 import { runDownloadRoute } from '@/core/files/download';
 import { parseModuleInput } from '@/core/db/validated-rpc';
-import { exportExpenseEntries } from '@/core/expense/operations';
 import {
+  exportExpenseAgmDraft,
+  exportExpenseEntries,
+  exportExpenseFinancialPosition,
+  exportExpenseStatements,
+} from '@/core/expense/operations';
+import {
+  expenseAgmDraftPdf,
   expenseEntriesCsv,
   expenseExportFileName,
+  expenseFinancialPositionPdf,
   expenseReportPdf,
+  expenseStatementsCsv,
+  expenseStatementsPdf,
 } from '@/core/expense/documents';
 
 export async function GET(request: Request) {
@@ -16,6 +25,54 @@ export async function GET(request: Request) {
       z.enum(['csv', 'pdf']),
       query.get('format'),
     );
+    const reportKind = parseModuleInput(
+      z.enum(['entries', 'statements', 'position', 'agm']),
+      query.get('report') ?? 'entries',
+    );
+    if (reportKind === 'statements') {
+      const { statements, societyName } = await exportExpenseStatements({
+        from: query.get('from'),
+        to: query.get('to'),
+      });
+      return {
+        contentType:
+          format === 'csv' ? 'text/csv; charset=utf-8' : 'application/pdf',
+        fileName: `homeish-statements-${statements.from}-to-${statements.to}.${format}`,
+        body:
+          format === 'csv'
+            ? expenseStatementsCsv(statements)
+            : await expenseStatementsPdf(societyName, statements),
+      };
+    }
+    if (reportKind === 'position') {
+      parseModuleInput(z.literal('pdf'), format);
+      const { position, societyName } = await exportExpenseFinancialPosition(
+        query.get('asOf'),
+      );
+      return {
+        contentType: 'application/pdf',
+        fileName: `homeish-financial-position-${position.as_of}.pdf`,
+        body: await expenseFinancialPositionPdf(societyName, position),
+      };
+    }
+    if (reportKind === 'agm') {
+      parseModuleInput(z.literal('pdf'), format);
+      const exported = await exportExpenseAgmDraft(
+        query.get('financialYearStart'),
+      );
+      return {
+        contentType: 'application/pdf',
+        fileName: `homeish-agm-draft-${exported.draft.financial_year_start}.pdf`,
+        body: await expenseAgmDraftPdf(
+          exported.societyName,
+          exported.statements,
+          exported.position,
+          exported.comparison,
+          exported.audit,
+          exported.draft,
+        ),
+      };
+    }
     const { rows, report, societyName } = await exportExpenseEntries({
       from: query.get('from'),
       to: query.get('to'),
