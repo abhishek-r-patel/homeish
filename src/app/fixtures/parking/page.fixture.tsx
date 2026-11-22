@@ -7,6 +7,7 @@ import type { ServerActionResult } from '@/core/actions/server-action';
 import {
   parkingAllocateInputSchema,
   parkingAllocationEndInputSchema,
+  parkingConditionInputSchema,
   parkingPassCancelInputSchema,
   parkingPassInputSchema,
   parkingReportInputSchema,
@@ -383,6 +384,7 @@ const ACTIONS: ParkingActions = {
   saveSettings: stub(parkingSettingsInputSchema, 'Photo retention saved.'),
   saveSlot: stub(parkingSlotInputSchema, 'Slot saved.'),
   archiveSlot: stub(parkingSlotArchiveInputSchema, 'Slot archived.'),
+  setCondition: stub(parkingConditionInputSchema, 'Slot condition saved.'),
   allocate: stub(parkingAllocateInputSchema, 'Slot allocated.'),
   endAllocation: stub(parkingAllocationEndInputSchema, 'Allocation ended.'),
   resolveReport: stub(parkingReportResolveInputSchema, 'Report resolved.'),
@@ -464,6 +466,33 @@ export default function ParkingFixturePage() {
         ) : (
           <ParkingAdminView
             workspace={adminWorkspace(scenario, role === 'admin')}
+            summary={{
+              slots_total: 4,
+              vacant_slots: 2,
+              allocated_slots: 1,
+              vehicle_count: 2,
+              condition_counts: {
+                available: 3,
+                needs_attention: 1,
+                out_of_service: 0,
+              },
+              by_slot_type: [
+                {
+                  slot_type: 'car',
+                  slot_count: 3,
+                  vacant_count: 1,
+                  allocated_count: 1,
+                  vehicle_count: 2,
+                },
+                {
+                  slot_type: 'visitor',
+                  slot_count: 1,
+                  vacant_count: 0,
+                  allocated_count: 0,
+                  vehicle_count: 0,
+                },
+              ],
+            }}
             actions={ACTIONS}
             fileRequest={requestFiles}
             now={NOW}

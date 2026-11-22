@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   normalizeVehicleNumber,
+  parkingConditionInputSchema,
   parkingPassInputSchema,
   parkingReportInputSchema,
   parkingSettingsInputSchema,
@@ -112,6 +113,23 @@ describe('parking validation', () => {
         expectedVersion: 2,
       }).success,
     ).toBe(true);
+  });
+
+  it('accepts only the three parking condition states and a current version', () => {
+    expect(
+      parkingConditionInputSchema.safeParse({
+        slotId: SLOT,
+        conditionStatus: 'available',
+        expectedVersion: 2,
+      }).success,
+    ).toBe(true);
+    expect(
+      parkingConditionInputSchema.safeParse({
+        slotId: SLOT,
+        conditionStatus: 'occupied',
+        expectedVersion: 2,
+      }).success,
+    ).toBe(false);
   });
 });
 

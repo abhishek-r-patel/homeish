@@ -10,6 +10,7 @@ import {
   parkingAdminWorkspaceSchema,
   parkingAllocateInputSchema,
   parkingAllocationEndInputSchema,
+  parkingConditionInputSchema,
   parkingGuardBoardSchema,
   parkingGuardQuerySchema,
   parkingPassCancelInputSchema,
@@ -22,6 +23,7 @@ import {
   parkingSettingsInputSchema,
   parkingSlotArchiveInputSchema,
   parkingSlotInputSchema,
+  parkingSummarySchema,
   parkingVehicleLinkInputSchema,
 } from './validation';
 
@@ -75,6 +77,17 @@ export async function getParkingAdminWorkspace() {
     { p_society_id: societyId },
     parkingAdminWorkspaceSchema,
     'Could not load society parking. Refresh and retry.',
+  );
+}
+
+export async function getParkingSummary() {
+  const { context, societyId } = await getContext('parking:list');
+  return callModuleRpc(
+    context,
+    'parking_summary',
+    { p_society_id: societyId },
+    parkingSummarySchema,
+    'Could not load the parking summary. Refresh and retry.',
   );
 }
 
@@ -153,6 +166,28 @@ export async function archiveParkingSlot(input: unknown, requestId: string) {
     },
     z.null(),
     'The slot was not archived. End its allocation first, then retry.',
+  );
+}
+
+export async function setParkingCondition(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'parking:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(parkingConditionInputSchema, input);
+  await callModuleRpc(
+    context,
+    'parking_condition_set',
+    {
+      p_society_id: societyId,
+      p_slot_id: values.slotId,
+      p_condition_status: values.conditionStatus,
+      p_expected_version: values.expectedVersion,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The slot condition was not saved. Refresh and retry.',
   );
 }
 

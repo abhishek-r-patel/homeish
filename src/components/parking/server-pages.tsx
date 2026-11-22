@@ -5,6 +5,7 @@ import {
   getParkingAdminWorkspace,
   getParkingGuardBoard,
   getParkingResidentWorkspace,
+  getParkingSummary,
 } from '../../core/parking/operations';
 import { ParkingAdminView } from './admin';
 import { ParkingGuardView } from './guard';
@@ -55,12 +56,16 @@ export async function ParkingResidentPage() {
 
 export async function ParkingAdminPage() {
   let workspace;
+  let summary;
   try {
-    workspace = await getParkingAdminWorkspace();
+    [workspace, summary] = await Promise.all([
+      getParkingAdminWorkspace(),
+      getParkingSummary(),
+    ]);
   } catch (error) {
     return pageFailure(error, 'Society parking', '/admin', '/admin/parking');
   }
-  return <ParkingAdminView workspace={workspace} />;
+  return <ParkingAdminView workspace={workspace} summary={summary} />;
 }
 
 export async function ParkingGuardPage({

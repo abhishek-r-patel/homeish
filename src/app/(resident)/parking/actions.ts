@@ -16,6 +16,7 @@ import {
   resolveParkingReport,
   saveParkingSettings,
   saveParkingSlot,
+  setParkingCondition,
   setParkingVehicleLink,
 } from '@/core/parking/operations';
 
@@ -37,6 +38,13 @@ export async function archiveParkingSlotAction(form: FormData) {
   return runServerAction('/admin/parking', async (requestId) => {
     await archiveParkingSlot(readModuleActionInput(form), requestId);
     return 'Slot archived. Its history is kept.';
+  });
+}
+
+export async function setParkingConditionAction(form: FormData) {
+  return runServerAction('/admin/parking', async (requestId) => {
+    await setParkingCondition(readModuleActionInput(form), requestId);
+    return 'Slot condition saved.';
   });
 }
 
