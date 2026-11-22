@@ -9,7 +9,10 @@ import {
   documentCreateInputSchema,
   documentFolderArchiveInputSchema,
   documentFolderInputSchema,
+  documentGovernanceArchiveInputSchema,
+  documentGovernanceSaveInputSchema,
   documentSearchSchema,
+  documentSettingsInputSchema,
   documentUpdateInputSchema,
   documentUploadInputSchema,
   documentVersionArchiveInputSchema,
@@ -17,11 +20,14 @@ import {
   type DocumentFolder,
   type DocumentItem,
   type DocumentList,
+  type DocumentGovernanceRecord,
+  type DocumentGovernanceSource,
   type DocumentVersion,
   type DocumentWorkspace,
 } from '@/core/document/validation';
 import { documentUploadPath } from '@/core/document/presentation';
 import type { DocumentActions } from '@/components/document/files';
+import type { GovernanceActions } from '@/components/document/governance';
 import {
   DocumentRouteState,
   DocumentWorkspaceView,
@@ -209,6 +215,57 @@ function DocumentFixture() {
   const [folders, setFolders] = useState(INITIAL_FOLDERS);
   const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
   const [versions, setVersions] = useState(INITIAL_VERSIONS);
+  const [governanceRecords, setGovernanceRecords] = useState<
+    DocumentGovernanceRecord[]
+  >([
+    {
+      id: 'c1d55fc3-0751-4b79-86c1-5b3e25942392',
+      kind: 'validity',
+      title: 'Registration certificate',
+      state: 'verified',
+      source: {
+        state: 'available',
+        kind: 'document_version',
+        id: INITIAL_VERSIONS['e1d55fc3-0751-4b79-86c1-5b3e25942392']?.[1]?.id,
+        label: 'Society bylaws 2026',
+        versionNumber: '2',
+      },
+      version: 1,
+      archivedAt: null,
+      createdAt: CREATED_AT,
+      updatedAt: CREATED_AT,
+      validity: {
+        issuingAuthority: 'Registrar',
+        reference: 'REG-2026-01',
+        issueDate: '2026-01-10',
+        expiryKind: 'dated',
+        expiryDate: '2027-01-10',
+      },
+    },
+    {
+      id: 'c2d55fc3-0751-4b79-86c1-5b3e25942392',
+      kind: 'house_rule',
+      title: 'Common-area rule draft',
+      state: 'draft',
+      source: {
+        state: 'unlinked',
+        label: 'No linked evidence',
+      },
+      version: 1,
+      archivedAt: null,
+      createdAt: CREATED_AT,
+      updatedAt: CREATED_AT,
+      houseRule: {
+        text: 'Keep common areas accessible and quiet.',
+        approvalDate: null,
+        effectiveDate: null,
+        publicationState: 'draft',
+        gateLocked: true,
+        decisionState: 'needs_review',
+      },
+    },
+  ]);
+  const [remindersEnabled, setRemindersEnabled] = useState(false);
 
   const items = documents.map((document) => ({
     ...document,
@@ -492,6 +549,154 @@ function DocumentFixture() {
       return { ok: true, message: 'Version updated.' };
     },
   };
+  const governanceSelection = {
+    kind: search.governanceKind,
+    sourceKind: search.governanceSourceKind,
+    sourceOffset: search.governanceSourceOffset,
+    recordId: search.governanceRecord,
+    archived: search.governanceArchived,
+    offset: search.governanceOffset,
+  };
+  const allGovernanceSources = [
+    {
+      kind: 'document_version',
+      id: 'f2d55fc3-0751-4b79-86c1-5b3e25942392',
+      documentId: 'e1d55fc3-0751-4b79-86c1-5b3e25942392',
+      title: 'Society bylaws 2026',
+      fileName: 'bylaws-v2.pdf',
+      versionNumber: 2,
+      scope: 'society_folder',
+      historical: false,
+    },
+    {
+      kind: 'tenancy_noc',
+      id: 'b1d55fc3-0751-4b79-86c1-5b3e25942392',
+      moveId: MOVE_ID,
+      title: 'Tenancy NOC',
+      issuedAt: CREATED_AT,
+      historical: false,
+    },
+    {
+      kind: 'meeting_resolution',
+      id: 'f4d55fc3-0751-4b79-86c1-5b3e25942392',
+      meetingId: 'f5d55fc3-0751-4b79-86c1-5b3e25942392',
+      title: 'Adopt the house rules',
+      outcome: 'passed',
+      versionNumber: 1,
+      historical: false,
+    },
+  ] satisfies DocumentGovernanceSource[];
+  const governanceSources = allGovernanceSources.filter(
+    (source) => source.kind === governanceSelection.sourceKind,
+  );
+  const governanceDecisions = allGovernanceSources.filter(
+    (source) => source.kind === 'meeting_resolution',
+  );
+  const governanceDetail =
+    governanceRecords.find(
+      (record) => record.id === governanceSelection.recordId,
+    ) ?? null;
+  const governanceActions: GovernanceActions = {
+    save: async (form) => {
+      const parsed = documentGovernanceSaveInputSchema.safeParse(input(form));
+      if (!parsed.success)
+        return failure(
+          parsed.error.issues[0]?.message ?? 'Check the governance record.',
+        );
+      const value = parsed.data;
+      const existing = governanceRecords.find(
+        (record) => record.id === value.recordId,
+      );
+      const selectedSource = value.source;
+      const source =
+        selectedSource === null
+          ? { state: 'unlinked' as const, label: 'No linked evidence' }
+          : {
+              state: 'available' as const,
+              kind: selectedSource.kind,
+              id: selectedSource.id,
+              label:
+                allGovernanceSources.find(
+                  (item) => item.id === selectedSource.id,
+                )?.title ?? 'Linked evidence',
+            };
+      const next = {
+        id: existing?.id ?? crypto.randomUUID(),
+        kind: value.kind,
+        title: value.title,
+        state: value.state,
+        source,
+        version: (existing?.version ?? 0) + 1,
+        archivedAt: existing?.archivedAt ?? null,
+        createdAt: existing?.createdAt ?? new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        validity:
+          value.kind === 'validity'
+            ? (value.details as NonNullable<
+                DocumentGovernanceRecord['validity']
+              >)
+            : undefined,
+        register:
+          value.kind === 'register'
+            ? (value.details as NonNullable<
+                DocumentGovernanceRecord['register']
+              >)
+            : undefined,
+        amendment:
+          value.kind === 'amendment'
+            ? (value.details as NonNullable<
+                DocumentGovernanceRecord['amendment']
+              >)
+            : undefined,
+        houseRule:
+          value.kind === 'house_rule'
+            ? {
+                ...(value.details as {
+                  text: string | null;
+                  approvalDate: string | null;
+                  effectiveDate: string | null;
+                }),
+                publicationState: 'draft' as const,
+                gateLocked: true as const,
+                decisionState: 'needs_review' as const,
+                approvingResolutionId: value.approvingResolutionId,
+              }
+            : undefined,
+      } satisfies DocumentGovernanceRecord;
+      setGovernanceRecords((current) =>
+        existing
+          ? current.map((record) => (record.id === existing.id ? next : record))
+          : [next, ...current],
+      );
+      return { ok: true, message: 'Governance record saved.' };
+    },
+    archive: async (form) => {
+      const parsed = documentGovernanceArchiveInputSchema.safeParse(
+        input(form),
+      );
+      if (!parsed.success) return failure('Check the archive reason.');
+      setGovernanceRecords((current) =>
+        current.map((record) =>
+          record.id === parsed.data.recordId
+            ? {
+                ...record,
+                archivedAt: parsed.data.archived
+                  ? new Date().toISOString()
+                  : null,
+                version: record.version + 1,
+              }
+            : record,
+        ),
+      );
+      return { ok: true, message: 'Governance record updated.' };
+    },
+    settings: async (form) => {
+      const parsed = documentSettingsInputSchema.safeParse(input(form));
+      if (!parsed.success) return failure('Check the reminder setting.');
+      setRemindersEnabled(parsed.data.expiryRemindersEnabled);
+      return { ok: true, message: 'Reminder setting saved.' };
+    },
+  };
 
   return (
     <main className="mx-auto grid w-full max-w-content gap-space-5 p-space-4">
@@ -535,6 +740,28 @@ function DocumentFixture() {
           baseHref={BASE_HREF}
           actions={actions}
           request={requestFiles}
+          governance={
+            management
+              ? {
+                  records: {
+                    total: governanceRecords.length,
+                    items: governanceRecords,
+                  },
+                  detail: governanceDetail,
+                  history: governanceDetail ? { total: 0, items: [] } : null,
+                  sources: {
+                    total: governanceSources.length,
+                    items: governanceSources,
+                  },
+                  decisionSources: governanceDecisions,
+                  selection: governanceSelection,
+                  settings: { expiryRemindersEnabled: remindersEnabled },
+                  tenancyEnabled: true,
+                  meetingEnabled: true,
+                  actions: governanceActions,
+                }
+              : undefined
+          }
         />
       ) : (
         <DocumentRouteState

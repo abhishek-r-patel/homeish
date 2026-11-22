@@ -11,9 +11,11 @@ import {
 } from '@/core/document/presentation';
 import type {
   DocumentDetail,
+  DocumentGovernanceRecord,
   DocumentItem,
   DocumentList,
   DocumentWorkspace,
+  DocumentPublishedHouseRule,
 } from '@/core/document/validation';
 import { TenancyDocumentLink } from '@/components/tenancy/documents';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,13 @@ import {
   type DocumentActions,
 } from './files';
 import { useDocumentPresentation } from './presentation';
+import {
+  DocumentGovernanceWorkspace,
+  type GovernanceActions,
+  type GovernanceHistory,
+  type GovernanceSelection,
+} from './governance';
+import type { DocumentGovernanceSource } from '@/core/document/validation';
 
 export type DocumentMode = 'resident' | 'management';
 export type DocumentRouteStateKind =
@@ -309,6 +318,8 @@ export function DocumentWorkspaceView({
   baseHref,
   actions = DEFAULT_DOCUMENT_ACTIONS,
   request,
+  governance,
+  publishedRules = [],
 }: {
   workspace: DocumentWorkspace;
   list: DocumentList | null;
@@ -318,6 +329,19 @@ export function DocumentWorkspaceView({
   baseHref: string;
   actions?: DocumentActions;
   request?: typeof fetch;
+  governance?: {
+    records: { total: number; items: DocumentGovernanceRecord[] };
+    detail: DocumentGovernanceRecord | null;
+    history: GovernanceHistory | null;
+    sources: { total: number; items: DocumentGovernanceSource[] };
+    decisionSources: DocumentGovernanceSource[];
+    selection: GovernanceSelection;
+    settings: { expiryRemindersEnabled: boolean };
+    tenancyEnabled: boolean;
+    meetingEnabled: boolean;
+    actions?: GovernanceActions;
+  };
+  publishedRules?: DocumentPublishedHouseRule[];
 }) {
   const { t, date } = useDocumentPresentation();
   const management = mode === 'management';
@@ -623,6 +647,58 @@ export function DocumentWorkspaceView({
           ) : null}
         </div>
       </div>
+      {governance && management ? (
+        <DocumentGovernanceWorkspace
+          records={governance.records.items}
+          total={governance.records.total}
+          detail={governance.detail}
+          history={governance.history}
+          sources={governance.sources}
+          decisionSources={governance.decisionSources}
+          selection={governance.selection}
+          baseHref={baseHref}
+          canManage={workspace.can_manage}
+          writable={workspace.writable}
+          settings={governance.settings}
+          tenancyEnabled={governance.tenancyEnabled}
+          meetingEnabled={governance.meetingEnabled}
+          actions={governance.actions}
+        />
+      ) : null}
+      {publishedRules.length > 0 ? (
+        <section
+          className="grid gap-space-4"
+          aria-labelledby="published-house-rules-title"
+        >
+          <h2 id="published-house-rules-title" className="text-heading">
+            {t('Published house rules')}
+          </h2>
+          <ul className="grid gap-space-3">
+            {publishedRules.map((rule) => (
+              <li key={rule.id}>
+                <Card
+                  title={rule.title}
+                  description={t('Source: {title}', {
+                    title: rule.sourceTitle,
+                  })}
+                >
+                  <div className="grid gap-space-3">
+                    <p className="whitespace-pre-wrap text-body break-words">
+                      {rule.text}
+                    </p>
+                    <p className="text-caption text-ink-muted">
+                      {t('Recorded approval {date} · effective {effective}', {
+                        date: date(`${rule.approvalDate}T00:00:00+05:30`),
+                        effective: date(`${rule.effectiveDate}T00:00:00+05:30`),
+                      })}
+                    </p>
+                  </div>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <p className="text-caption text-ink-muted">
         {t(
           'NOCs and other generated documents remain in English. Document titles and content are shown as uploaded.',

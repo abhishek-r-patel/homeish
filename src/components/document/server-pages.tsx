@@ -4,7 +4,12 @@ import { AppError } from '../../core/errors';
 import {
   getDocument,
   getDocumentWorkspace,
+  getGovernanceRecord,
+  listGovernanceHistory,
+  listGovernanceRecords,
+  listGovernanceSources,
   listDocuments,
+  listPublishedHouseRules,
 } from '../../core/document/operations';
 import { documentSearchSchema } from '../../core/document/validation';
 import {
@@ -14,6 +19,8 @@ import {
   documentHref,
   type DocumentMode,
 } from './workspace';
+import type { GovernanceSelection } from './governance';
+import type { DocumentGovernanceSourceKind } from '@/core/document/validation';
 
 export type DocumentPageSearch = Record<string, string | string[] | undefined>;
 export const DOCUMENT_PAGE_METADATA = {
@@ -68,19 +75,91 @@ export async function DocumentIndexPage({
     const workspace = await getDocumentWorkspace();
     if (management && !workspace.is_staff) throw new AppError('FORBIDDEN');
     const target = selection.folder ?? selection.unit;
-    const [list, detail] = await Promise.all([
-      target
-        ? listDocuments({
-            folderId: selection.folder ?? null,
-            unitId: selection.unit ?? null,
-            includeArchived: selection.archived,
-            limit: DOCUMENT_PAGE_SIZE,
-            offset: selection.offset,
-          })
-        : null,
-      selection.document ? getDocument(selection.document) : null,
-    ]);
-    props = { workspace, list, detail };
+    const [list, detail, governanceRecords, governanceDetail, publishedRules] =
+      await Promise.all([
+        target
+          ? listDocuments({
+              folderId: selection.folder ?? null,
+              unitId: selection.unit ?? null,
+              includeArchived: selection.archived,
+              limit: DOCUMENT_PAGE_SIZE,
+              offset: selection.offset,
+            })
+          : null,
+        selection.document ? getDocument(selection.document) : null,
+        management
+          ? listGovernanceRecords({
+              kind: null,
+              includeArchived: search.governanceArchived,
+              limit: DOCUMENT_PAGE_SIZE,
+              offset: search.governanceOffset,
+            })
+          : null,
+        management && workspace.can_manage && search.governanceRecord
+          ? getGovernanceRecord(search.governanceRecord)
+          : null,
+        !management ? listPublishedHouseRules() : null,
+      ]);
+    let governance = null;
+    if (management && governanceRecords) {
+      const kind = governanceDetail?.kind ?? search.governanceKind;
+      const requestedSourceKind: DocumentGovernanceSourceKind =
+        kind === 'house_rule'
+          ? 'document_version'
+          : (governanceDetail?.source.kind ?? search.governanceSourceKind);
+      const sourceAvailable =
+        (requestedSourceKind !== 'tenancy_noc' ||
+          governanceRecords.tenancyEnabled) &&
+        (requestedSourceKind !== 'meeting_resolution' ||
+          governanceRecords.meetingEnabled);
+      const [sources, decisionSources, history] = workspace.can_manage
+        ? await Promise.all([
+            sourceAvailable
+              ? listGovernanceSources({
+                  kind,
+                  sourceKind: requestedSourceKind,
+                  limit: DOCUMENT_PAGE_SIZE,
+                  offset: search.governanceSourceOffset,
+                })
+              : Promise.resolve({ total: 0, items: [] }),
+            kind === 'house_rule' && governanceRecords.meetingEnabled
+              ? listGovernanceSources({
+                  kind,
+                  sourceKind: 'meeting_resolution',
+                  limit: 100,
+                  offset: 0,
+                }).then((result) => result.items)
+              : Promise.resolve([]),
+            governanceDetail
+              ? listGovernanceHistory({
+                  recordId: governanceDetail.id,
+                  limit: 25,
+                  offset: 0,
+                })
+              : Promise.resolve(null),
+          ])
+        : [{ total: 0, items: [] }, [], null];
+      const governanceSelection: GovernanceSelection = {
+        kind,
+        sourceKind: requestedSourceKind,
+        sourceOffset: search.governanceSourceOffset,
+        recordId: governanceDetail?.id,
+        archived: search.governanceArchived,
+        offset: search.governanceOffset,
+      };
+      governance = {
+        records: governanceRecords,
+        detail: governanceDetail,
+        history,
+        sources,
+        decisionSources,
+        selection: governanceSelection,
+        settings: governanceRecords.settings,
+        tenancyEnabled: governanceRecords.tenancyEnabled,
+        meetingEnabled: governanceRecords.meetingEnabled,
+      };
+    }
+    props = { workspace, list, detail, governance, publishedRules };
   } catch (error) {
     return pageFailure(error, documentHref(baseHref, {}));
   }
@@ -90,6 +169,8 @@ export async function DocumentIndexPage({
       selection={selection}
       mode={mode}
       baseHref={baseHref}
+      governance={props.governance ?? undefined}
+      publishedRules={props.publishedRules?.items ?? []}
     />
   );
 }
