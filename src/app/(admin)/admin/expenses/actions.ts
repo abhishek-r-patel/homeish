@@ -1,10 +1,11 @@
-// Run authorized expense, income, approval, setup, reconciliation, petty-cash and month-close mutations.
+// Run authorized expense, funds, audit, AGM and month-close mutations.
 'use server';
 import { runServerAction } from '@/core/actions/server-action';
 import { ValidationError } from '@/core/errors';
 import {
   assignPettyCash,
   activateExpenseFunds,
+  acknowledgeExpenseAuditWarning,
   cancelStatementItem,
   closeExpenseMonth,
   correctExpenseFundAllocation,
@@ -34,6 +35,11 @@ import {
   saveExpenseFund,
   saveExpenseFundMapping,
   saveExpenseSettings,
+  saveExpenseAuditObjection,
+  saveExpenseAuditQuery,
+  saveExpenseAuditYear,
+  saveExpenseAgmDraft,
+  saveExpenseAgmSettings,
 } from '@/core/expense/operations';
 
 function input(form: FormData): unknown {
@@ -195,6 +201,42 @@ export async function saveExpenseSettingsAction(form: FormData) {
   return runServerAction('/admin/expenses/setup', async (id) => {
     await saveExpenseSettings(input(form), id);
     return 'Account settings saved.';
+  });
+}
+export async function acknowledgeExpenseAuditWarningAction(form: FormData) {
+  return runServerAction('/admin/expenses/audit', async (id) => {
+    await acknowledgeExpenseAuditWarning(input(form), id);
+    return 'Audit and AGM warning acknowledged.';
+  });
+}
+export async function saveExpenseAuditYearAction(form: FormData) {
+  return runServerAction('/admin/expenses/audit', async (id) => {
+    await saveExpenseAuditYear(input(form), id);
+    return 'Audit year saved.';
+  });
+}
+export async function saveExpenseAuditQueryAction(form: FormData) {
+  return runServerAction('/admin/expenses/audit', async (id) => {
+    await saveExpenseAuditQuery(input(form), id);
+    return 'Audit query saved.';
+  });
+}
+export async function saveExpenseAuditObjectionAction(form: FormData) {
+  return runServerAction('/admin/expenses/audit', async (id) => {
+    await saveExpenseAuditObjection(input(form), id);
+    return 'Audit objection saved.';
+  });
+}
+export async function saveExpenseAgmDraftAction(form: FormData) {
+  return runServerAction('/admin/expenses/agm-report', async (id) => {
+    await saveExpenseAgmDraft(input(form), id);
+    return 'AGM draft saved.';
+  });
+}
+export async function saveExpenseAgmSettingsAction(form: FormData) {
+  return runServerAction('/admin/expenses/setup', async (id) => {
+    await saveExpenseAgmSettings(input(form), id);
+    return 'AGM report sections saved.';
   });
 }
 export async function closeExpenseMonthAction(form: FormData) {
