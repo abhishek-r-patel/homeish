@@ -854,6 +854,43 @@ admin or committee access. CSV is formula-safe and PDF is rendered with the exis
 exports separate aggregate results from the list of units that voted; neither format contains email addresses.
 The `/fixtures/poll` page uses synthetic scenarios and does not call production services.
 
+**P46 official elections (D-81; proposed 2026-11-22, coding not yet approved).** PRD POL-7–POL-11; database
+contract in DATABASE.md §9.17. Operations live in `src/core/poll/` beside the P22 operations, which are unchanged.
+Writes are idempotent by `clientRequestId`, version-checked, audited and use `otherWritesUserMinute`. Every call checks
+the `poll` module, `official_voting_enabled` and, for returning-officer calls, an active election-officer assignment
+(`private.poll_election_officer_access`) instead of a society role. Guards and housekeeping supervisors have no access.
+The operations are:
+
+- `setPollOfficialVoting` (admin): switch on with legal type and confirmation, or off when no election is active;
+  `updatePollElectionSettings` (admin): dispute window, supporters and multi-win rule.
+- `listPollElections`, `getPollElection` (residents see published fields; admins, committee and the returning officer
+  see management fields); `createPollElection`, `savePollElection`, `cancelPollElection` (admin; reason; before
+  Voting) and `advancePollElectionStage` (admin until a returning officer is assigned; then the returning officer).
+- `savePollElectionActivities`, `linkPollElectionSource`, `unlinkPollElectionSource` (admin).
+- `assignPollReturningOfficer` (member or outside email invite), `revokePollReturningOfficer` (reason),
+  `confirmPollOfficerConflict` (the officer), `savePollElectionHelpers` (admin; names and roles only).
+- `getPollElectionVoterList`, `setPollElectionVoter`, `removePollElectionVoter` (reason), `restorePollElectionVoter`
+  (admin before lock; returning officer reads after lock).
+- `submitPollNomination`, `withdrawPollNomination` (active owner of a listed unit, self only);
+  `requestPollNominationSupporter`, `respondPollNominationSupporter` (supporters setting on; listed voter);
+  `decidePollNomination` (returning officer, or admin while none is assigned; reason).
+- `submitPollElectionBallot` (listed voter once; up to the seats per post or NOTA; choices never returned or stored per
+  voter); `extendPollElectionVoting` (returning officer; reason).
+- `resolvePollElectionTie`, `choosePollElectionPost` (winning candidate within 3 days), `decidePollElectionPost`
+  (returning officer), `declarePollElection` (returning officer; final, unedited).
+- `getPollElectionResults` (everyone in the society once declared: per-post totals and turnout);
+  `getPollElectionVoted` (admin and the returning officer: units that voted, no choices).
+- `recordPollExternalResult` (admin; Document link required).
+- `raisePollElectionDispute` (listed voter inside the window; optional signed-upload file);
+  `listPollElectionDisputes`, `updatePollElectionDispute` (admin and the returning officer; resolution note required).
+- `linkPollElectionExpense`, `unlinkPollElectionExpense` (admin; existing posted entries only).
+
+Pages add `/polls/elections`, `/polls/elections/{electionId}`, `/admin/polls/elections`,
+`/admin/polls/elections/new`, `/admin/polls/elections/{electionId}` and the officer workspace
+`/elections/{electionId}/officer`, the only page an outside returning officer can open. The download route
+`GET /api/polls/elections/{electionId}/summary?format=pdf` returns the summary for admins, committee and the returning
+officer, with no voter names or choices, using the existing `pdf-lib` dependency and the export rate limit.
+
 ### 5.26 Meetings & AGM (`meeting`, P23; D-61)
 
 Operations live in `src/core/meeting/`; Server Actions are in the resident and admin Meetings routes. The module

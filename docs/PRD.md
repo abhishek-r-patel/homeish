@@ -697,6 +697,39 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 **P22 owner decisions (D-60, approved 2026-11-16):** one vote per unit, cast by its representative. The default representative is the unit's active primary occupant if eligible, otherwise the earliest active owner; an admin or an active owner of that unit can choose another eligible occupant, and every change is audited. The voter list and representative names are frozen when a vote is scheduled or immediately activated. Tenant voting is a society setting (off by default, D-42); while a vote is a draft the admin can override it for that vote only, and the vote's value (the override, otherwise the society setting at that moment) is fixed when the vote is scheduled or immediately activated, together with the voter list; family members never vote. A vote covers the whole society by default, or blocks the admin chooses. Everyone living in a voting unit sees the vote and its permitted totals; only the representative votes. Residents see live totals of an open public poll; a private election shows turnout only until it completes. Private elections include "None of the above", which is counted but never wins. The admin can extend the deadline, complete early or cancel (from scheduled or open) with a required reason. Committee members see turnout counts while voting is open (never choices, never names) and results, roster and exports after completion; admins see who has voted once it opens. PDF and CSV exports are for admins and committee, completed votes only, with no email addresses; private exports list who voted, never choices. In-app notifications only: to the representatives when a vote opens, when results are available and when a scheduled or open vote is cancelled. Two years after a vote completes or is cancelled, per-person records (named responses, participation and voter list) are deleted; totals are kept. The load test target is 500 units with 100 concurrent voters.
 
+**P46 official elections (D-81 — proposed 2026-11-22, coding not yet approved).** POL-7–POL-11 cover P46.1–P46.3 inside the `poll` module, which must be enabled. Official elections reuse the P22 secret-ballot engine as a separate election type; everyday polls, representatives, tenant voting, exports, notifications and the two-year P22 retention (D-60) are unchanged, and P23 meetings are unchanged. The app counts the votes; the returning officer declares the result. Homeish does not verify the society's law, bye-laws or authority, does not calculate legal deadlines and does not state that a notice, nomination or election is legally valid. Qualified local review is recommended but is not an in-app prerequisite (accepted risk, owner decision 2026-11-19). Admins manage; committee members read management views without the who-voted list; guards and housekeeping supervisors have no access.
+
+- `POL-7` (P46.1) **Switching on and tracking official elections.**
+  - Official voting is a `poll` setting, off by default. To switch it on, an admin chooses the society's legal type (`Apartment association` or `Housing co-operative`) and confirms: "Our registered rules allow online voting for committee elections and I am authorised to switch this on." No proof is uploaded. The admin, time and legal type are audited and shown on every election. It cannot be switched off while an official election is between Nominations open and Declared.
+  - An election has a title, the snapshotted legal type, and posts, each with a name and number of seats. Stages: `Planning` → `Nominations open` → `Scrutiny` → `Candidates published` → `Voting` → `Counted` → `Declared` → `Closed`; `Cancelled` from any stage before Declared, with a required reason. A post whose accepted candidates do not exceed its seats is not balloted (POL-9); if no post needs a ballot, the election moves from Candidates published to Counted.
+  - A schedule list holds activities with an owner, planned and actual dates, status (`To do`, `Done`, `Not needed`) and an optional note. Dates are the society's own plan: the app shows them and never derives legal deadlines or judges notice sufficiency.
+  - Notices are links to existing Notice (`notice`) or Meeting (`meeting`) records, or Document (`document`) evidence, when those modules are enabled; there is no second notice system.
+- `POL-8` (P46.1b) **Returning officer and other officers.**
+  - Each election has at most one returning officer, required before Voting. They may be an active society member (any role) or an outside person invited by email for that election only. A returning officer can never be a candidate in that election. On accepting, they confirm "I am not a candidate and have no conflict of interest", which is audited. A resident returning officer still votes if they are their unit's voter.
+  - Admins may also record assistants or observers by name and role only; they get no access and no contact details are stored.
+  - An outside returning officer signs in with the existing email code. They see only that election's returning-officer screens, with no resident, billing or other society data, and are never a society member. Their access ends 30 days after the declaration, or when all disputes are closed if later. An admin can revoke or replace a returning officer at any time before Declared, with a reason.
+- `POL-9` (P46.2) **Voter list and nominations.**
+  - The voter list is built from units with at least one active owner. Each listed unit has one voter: the earliest active owner unless an admin names another active owner of that unit. An admin may remove a unit with a required reason (for example, unpaid dues under the society's rules); the app never removes units from billing data by itself. Tenants and family members never vote. Every change is audited.
+  - The list, with voter and unit-label snapshots, locks when nominations open and cannot change afterwards.
+  - Candidates always nominate themselves; nobody can nominate another person. Any active owner of a listed unit may stand for one or more posts during the nomination window set by the admin, and may withdraw before it closes.
+  - A `poll` setting (off by default) adds supporters: when on, a self-nominated candidate may name a proposer and a seconder from the voter list, who each confirm in the app; nominations without supporters are still accepted. The candidate is never placed on the ballot by supporters.
+  - In Scrutiny, the returning officer — or an admin while no returning officer is appointed — accepts or rejects each nomination with a reason for rejection. Accepted candidates are published to all residents.
+  - A post whose accepted candidates do not exceed its seats is declared elected unopposed by the returning officer and left off the ballot.
+- `POL-10` (P46.2b) **Voting, counting and declaration.**
+  - Voting is online in the app only, for the locked voters, between admin-set start and end times. Each voter picks up to the number of seats for each balloted post, or "None of the above", once. Only per-candidate totals are stored, and who voted is stored separately (application-level secrecy, as POL-2; not cryptographic anonymity). Nobody, including admins and the returning officer, can see how a person voted.
+  - The returning officer can extend voting or cancel with a reason; an admin can cancel with a reason before Voting. Counting runs automatically at close. NOTA is counted but never wins.
+  - Ties are resolved by the returning officer, who records the method (for example, drawing lots) and a reason.
+  - When one person wins more than one post, by default the candidate chooses which post to keep within 3 days; each other post then goes to the next-highest candidate for it who is not already elected, never NOTA. If the candidate does not choose in time, or the refill is tied or has no candidate, the returning officer decides and records why. A `poll` setting lets an admin make the returning officer decide in every such case.
+  - The returning officer declares the result. A declaration is final in the app and is never edited; disputes are recorded beside it (POL-11).
+  - Declared results and turnout are visible to everyone in the society. The who-voted list is visible to admins and the returning officer only; committee members see totals and turnout.
+  - In-app notifications go to voters when nominations open and when candidates are published, voting opens and the result is declared; to named supporters for confirmation; and to a candidate who must choose a post.
+- `POL-11` (P46.3) **Outside elections, disputes, costs and summary.**
+  - Admins can record an election held outside the app (for example, on paper): date, posts, winners, optional vote counts and evidence linked from Documents. It is labelled "Recorded result — held outside the app".
+  - Any listed voter may raise a dispute about an official election within the dispute window after declaration (a `poll` setting, default 5 days, 1–30). A dispute has text up to 2,000 characters and an optional private PDF, JPG or PNG file up to 5 MiB. Statuses: `Open` → `Under review` → `Resolved` or `Rejected`, with a required resolution note. Admins and the returning officer see all disputes; the raiser sees their own; committee members see counts only.
+  - Admins may link posted Accounts (`expense`) entries to an election, when that module is enabled, to show its total cost. No entry, ledger or approval is created or changed.
+  - An election summary on screen and as a PDF, generated on request and not stored, for admins, committee members and the returning officer, shows posts, results, turnout, timeline, dispute count and total cost — never who voted or how anyone voted.
+  - Elections, voter lists, who-voted records, nominations, supporter confirmations, scrutiny decisions, tie and post-choice records, disputes and outside results are kept permanently. Ballot choices are never stored.
+
 #### 5.10.8 Meetings & AGM (`meeting`) — P4-2
 
 - `MTG-1` Admin schedules a meeting (AGM, SGM, committee) with agenda, venue/online link and notice period check.
@@ -926,6 +959,8 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 A user can hold multiple roles within a society (e.g., committee + resident). Permissions are the union.
 
+**Returning officer (P46, D-81 proposed):** not a role. It is an assignment to one official election, held by a society member or an outside person invited by email for that election. It grants only that election's nomination scrutiny, tie, post-choice, declaration, who-voted and dispute screens (POL-8), and an outside returning officer gets no society membership or other data. Owners vote and nominate only when they are the listed voter or an active owner of a listed unit (POL-9).
+
 ### 8.2 Permission Matrix
 
 Legend: **C**reate, **R**ead, **U**pdate, **D**elete/cancel, **A**pprove, `own` = own unit/records only, `–` = no access.
@@ -978,6 +1013,9 @@ Legend: **C**reate, **R**ead, **U**pdate, **D**elete/cancel, **A**pprove, `own` 
 | **AMC**: manage                                                    | –            | CRUD            | R                                                                                | –              | –             | –              | –              | –                   |
 | **Notice**: post                                                   | –            | CRUD            | CRUD                                                                             | –              | –             | R              | R              | R                   |
 | **Amenity**: book                                                  | –            | CRUD            | R                                                                                | –              | –             | C/D own        | C/D own        | C/D own             |
+| Official elections (P46): settings, tracker, voter list, costs     | –            | CRUD            | R (no who-voted list)                                                            | –              | –             | –              | –              | –                   |
+| Official elections (P46): nominate self, vote, dispute             | –            | –               | –                                                                                | –              | –             | C own          | –              | –                   |
+| Official elections (P46): results and turnout after declaration    | –            | R               | R                                                                                | –              | –             | R              | R              | R                   |
 | Export data (CSV)                                                  | –            | Yes             | Yes (reports they can view)                                                      | –              | –             | –              | –              | –                   |
 
 **Rules**
@@ -1436,6 +1474,20 @@ Items marked **High** block design/build of the affected module; resolve them be
 - **Savings tracker (EXP-29):** admins manage and committee views; evidence may include a link and an optional private file.
 
 The owner accepted the fourteen planning defaults in the implementation plan's P42 kickoff decisions. The scope is re-sized to about 5 blocks. This keeps GAP-M13-01/04/08 Option A: no budget source, no second approval tracker and no duplicate metrics. P42.2 stays blocked for B7. Coding, hosted migration, release and live use each need separate approval.
+
+**D-81 — P46 official elections kickoff (Proposed 2026-11-22; coding not yet approved):** Building on the 2026-11-19 decisions (app count, returning-officer declaration, secret ballot, admin-prepared locked voter list, admin confirmation instead of uploaded proof), the owner chose:
+
+- reuse of the P22 secret-ballot engine as a separate official election type, with P22 polls unchanged;
+- a legal type (Apartment association or Housing co-operative) picked when switching on, shown on every election;
+- one voter per unit, the earliest active owner unless the admin names another owner; admin removal with a reason, never automatic from dues;
+- self-nomination only, by any active owner of a listed unit, for one or more posts; optional proposer/seconder support (setting off by default) that never replaces self-nomination; final acceptance by the returning officer, or an admin while none is appointed;
+- a returning officer who may be any society member or an outside person invited for one election, who may still vote if a listed voter, but may never be a candidate;
+- online-only voting with NOTA; ties resolved and recorded by the returning officer; unopposed declarations;
+- when someone wins several posts, the candidate chooses and the app refills the other posts (default), or the returning officer decides (setting);
+- results and turnout for all residents, the who-voted list for admins and the returning officer;
+- voter disputes within a dispute window (default 5 days, admin-set); recorded outside-app results; linked election costs; permanent retention.
+
+The owner accepted the twenty-four planning defaults in the implementation plan's P46 kickoff decisions. The scope is re-sized to about 12 blocks. This changes POL-4's entitlement only for official elections and adds an election-scoped sign-in for outside returning officers to CORE-9's closed sign-up. It does not change D-60, D-61 or D-42 for existing polls and meetings, and M02 legal membership work remains deferred. Coding, hosted migration, release and live use each need separate approval.
 
 ## 18. Glossary
 

@@ -886,6 +886,19 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **Communication dashboard** (`/admin/communication`, admins and committee members) shows one month with **Previous month**, a month picker with **Show**, and **Next month** (hidden for the current month). Sections: Notices (Posted, Removed, Planned now), Meetings, Events, SOS, Service requests (Received, Resolved, Average days to resolve) and Contact log (Contacts logged, Contacts closed, Open now, Follow-up overdue). Each figure has a one-line definition, and a banner says figures count Homeish records only and sections for switched-off modules are hidden.
 - Route states follow Section 9.3. Fixtures: `/fixtures/notices` (drafts, scheduling and planning) and `/fixtures/communication` (contact log and dashboard).
 
+### 12.22 Official elections (P46; D-81 proposed 2026-11-22, coding not yet approved)
+
+- **Switch-on:** Polls settings add an **Official elections** card. Turning it on asks for the legal type (Apartment association or Housing co-operative) and a confirmation checkbox that the society's rules allow online voting, with a plain note that Homeish does not check legal validity. Switching off is disabled, with the reason, while an election is active.
+- **Elections tab:** `/polls` and `/admin/polls` add an **Elections** tab beside everyday polls; official elections always carry an "Official election" label and the legal type. Admin detail shows a stage stepper (Planning → Nominations → Scrutiny → Candidates published → Voting → Counted → Declared → Closed) with the next action, posts and seats, advisory schedule ("Planned dates — not legal deadlines"), linked notices, meetings and documents, the returning officer card and costs.
+- **Voter list:** a table of units, voter and source ("Earliest owner" or "Named by admin") with **Change voter** and **Remove** (reason). A lock banner appears once nominations open. Tenants and family never appear.
+- **Nominations:** listed owners see **Nominate yourself** with post checkboxes and, when supporters are on, optional proposer and seconder pickers from the voter list with pending/confirmed chips. Supporters get an in-app request with **Confirm** and **Decline**. The returning officer sees each nomination with **Accept** and **Reject** (reason). Published candidates show to every resident; unopposed posts show "Elected unopposed".
+- **Ballot:** reuses the P22 private ballot: names the unit, shows each post with its seat limit and NOTA, a review step, and a confirmation that never echoes choices. After voting the page shows "Your unit has voted".
+- **Officer workspace (`/elections/{electionId}/officer`):** the only screen an outside returning officer sees, with the conflict confirmation first, then scrutiny, voting controls (extend with reason), the count, tie resolution (method and reason), post choices and **Declare results** with a final confirmation that says declarations cannot be edited. A banner shows when access ends.
+- **Results:** per-post totals, winners, NOTA and turnout as text; outside-app results carry the "Recorded result — held outside the app" label and document link. Admins and the returning officer also see **Units that voted**; committee members see totals only.
+- **Disputes:** listed voters see **Raise a dispute** until the window closes ("Open until …"), with text and an optional file; raisers see their own; admins and the returning officer see a status list; committee members see counts only with resolution notes required to close.
+- **Summary:** admins, committee and the returning officer get the on-screen summary and **Download PDF**; no voter names or choices.
+- Shared loading, empty, error, denied and accessibility patterns apply; outside officers see a denied state for every other route.
+
 ---
 
 ## 13. Iconography and Imagery
