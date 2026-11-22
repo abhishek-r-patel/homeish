@@ -577,6 +577,30 @@ Simple society bookkeeping, not double-entry accounting (D-39). **P16 kickoff de
 
   They appear only in Accounts, never on the P27 dashboard, and accept no manual targets, weights or scores.
 
+**P42 expense control additions (D-80 — proposed 2026-11-22, coding not yet approved).** EXP-27–EXP-29 cover P42.1, P42.3 and P42.4. P42.2 budget alerts remain blocked for B7. None of these features creates, changes or deletes an Accounts entry, bill, budget, fund allocation, vendor payment or contract, and none adds an approval step (D-44 and D-54 unchanged). Access follows P16 unless stated: admins manage, committee read-only, residents and guards none. The existing Reports page, Statements tab, their exports and the P27 dashboard are unchanged.
+
+- `EXP-27` (P42.1) Each expense category may hold four optional details:
+  - a group of up to 60 characters, typed by an admin, with existing groups suggested and matched ignoring capitals;
+  - a cost nature: `Fixed`, `Variable` or `Periodic`;
+  - an owner, who must be an active admin or committee member when saved; if they later lose that role, the name stays, marked "no longer an admin or committee member";
+  - a description of up to 500 characters.
+
+  Details can be edited on active and inactive categories, and each edit keeps the previous values with who and when. Category IDs, names, active state and historical entries never change. The details appear on the category list and as filters in the vendor spend report. No budget, year-to-date, percentage or alert field is added.
+
+- `EXP-28` (P42.3) A read-only **vendor spend report** in Accounts covers any range of up to 24 months, defaulting to the current financial year. It uses posted expense payments less their reversals and excludes own-account transfers and income.
+  - **Matching order:** a P47.7 bill-payment link counts for its linked amount. Then an admin-confirmed payee mapping applies. Anything left is shown under the typed payee as "Not linked to a vendor".
+  - **Payee mappings:** an admin maps a typed payee, matched ignoring capitals and extra spaces, to one vendor. The mapping applies to past and future posted expenses with that payee. Removing it needs a reason and keeps the history, and committee can view mappings. An unmapped payee with an exact vendor-name match is shown only as a suggestion until an admin confirms it.
+  - **Figures:** for each vendor or payee, the total, share of the range's spending, active months, average per active month, a month-by-month table and a category breakdown. The report can be filtered by category, group and cost nature, and it reconciles to the Accounts expense total for the range.
+  - **High share:** shown when a vendor or payee is 40% or more of the range's spending, labelled "a reporting signal, not a finding".
+  - **Approved quotes:** a separate column, "Approved quotes — not payments", totals the selected quotes on P24 purchase requests approved in the range. It is never added to totals. The column and mappings are hidden when the Vendor module is off; payees still show.
+  - **Downloads:** CSV and PDF downloads match the screen. They are generated when requested and not stored.
+- `EXP-29` (P42.4) A **Savings** tab in Accounts tracks cost-saving initiatives:
+  - **Initiative details:** title (up to 120 characters), description, type (`Renegotiation`, `Energy saving`, `Reduced consumption`, `Vendor change`, `Process change`, `Other`), an optional owner following the EXP-27 rule, an optional category and vendor, baseline annual cost and expected annual saving.
+  - **Status:** `Idea`, `Approved`, `Implementing`, `Realised` and `Dropped`. Status can move between the first four; Realised needs at least one evidence record. Dropped needs a reason, and returning from Dropped to Idea also needs a reason.
+  - **Evidence:** an amount, date and note, with an optional link to an Accounts entry, vendor bill or vendor contract and an optional private PDF, JPG or PNG of at most 5 MiB. Admins and committee can see evidence, and it is kept permanently. A wrong record is voided with a reason, never deleted.
+  - **Realised to date:** the total of records that are not voided, always shown separately from the expected saving.
+  - **No financial effect:** estimates and statuses create no income, expense reduction, budget change, contract change or Accounts entry. The tracker is on screen only, with no downloads, and all history is kept.
+
 #### 5.10.2 Resident & Vehicle Directory (`directory`) — P3-2
 
 Builds on Core unit occupants (owner, tenant, family). **P17 kickoff decisions (approved 2026-11-14):** resident-visible directory shows name and unit by default, phone is hidden unless the person opts in; admins and committee may still see verified contact phones regardless of resident-directory phone opt-in; committee directory access is read-only; guards see the unit for a matched vehicle but never phone; there is no vehicle-per-unit cap; when Core ends an occupancy, directory/vehicle access is deactivated immediately and personal directory data is deleted one year after its recorded `ended_at`, except required audit records. Guard lookup uses the existing standard authenticated-action rate-limit policy. A society's supported maximum size is not yet known, so database-side pagination is required before fetching directory lists. **D-48 (approved 2026-11-14):** when an active resident moves to another unit in the same society, transfer active vehicles and emergency contacts to the new unit, audit each transfer, and require vehicle re-verification; keep visibility preferences attached to the person.
@@ -1400,6 +1424,18 @@ Items marked **High** block design/build of the affected module; resolve them be
 **D-78 — P51 and P35.10–P35.12 transfer and clearance kickoff (Approved for local coding 2026-11-22):** The owner chose to build now behind an acknowledged warning, following the P41 pattern, with qualified legal review recommended but not an in-app prerequisite. The buyer is a typed name, optionally linked to an invited member. Cases are tracker-only and never change Core ownership. The owner chose five forward stages plus Rejected/Withdrawn, and two Tenancy settings. Handover covers specific bills by default, or the total balance. Agreement evidence is an admin note by default, an uploaded signed agreement, or in-app consent plus upload. Certificates get per-society, per-financial-year numbers and a typed signatory designation. Cases, handovers and new certificates are kept permanently. Admins manage, committee reads, and parties see only their own records. The owner accepted the twelve planning defaults in the implementation plan's P51 kickoff decisions. This approves TEN-7–TEN-11 for local implementation and, once implemented, changes TEN-3 and D-50 for new issues only. Existing NOCs keep their meaning and retention. Hosted migration, release and live use remain separate approvals.
 
 **D-79 — P52 tenant, parking and facilities kickoff (Approved for local coding 2026-11-22):** The owner selected the planned five-task, approximately eight-block scope. P18 progress remains derived from existing records; verification tracking is optional/off by default, stores `pending`, `verified` or `rejected` plus date/reference, and collects no full ID copies. Agreement type is `rental`, `leave_and_licence`, `company_lease`, `paying_guest` or `other`. Parking gains operational condition and read-only vacancy/vehicle-count summaries, without fees or vehicle-expiry fields. P15 gains a resident month calendar with availability-only as the default; admins may select name or name-and-unit visibility, subject to Directory being enabled and its resident visibility preferences. This is a new P52-only exception to D-22; the existing booking picker remains anonymous for other units. Same-amenity overlap is only an integrity warning. Facility activity requires a link to a P15/P28/P14/P13 source and inherits that source's retention; P13 remains the service workflow. No deposit accounting, duplicate ledgers, new module or dependency is authorized. The owner approved these choices and the start of local coding; hosted migration, release and live use remain separate approvals.
+
+**D-80 — P42 expense control kickoff (Proposed 2026-11-22; coding not yet approved):** For P42.1, P42.3 and P42.4, the owner chose:
+
+- **Category details (EXP-27):** an admin-typed category group with existing groups suggested, and an optional owner linked to an active admin or committee member.
+- **Vendor spend report (EXP-28):**
+  - admin-confirmed payee-to-vendor mappings in addition to P47.7 bill-payment links;
+  - a separate approved-quote column;
+  - a 40% "High share" reporting signal;
+  - CSV and PDF downloads.
+- **Savings tracker (EXP-29):** admins manage and committee views; evidence may include a link and an optional private file.
+
+The owner accepted the fourteen planning defaults in the implementation plan's P42 kickoff decisions. The scope is re-sized to about 5 blocks. This keeps GAP-M13-01/04/08 Option A: no budget source, no second approval tracker and no duplicate metrics. P42.2 stays blocked for B7. Coding, hosted migration, release and live use each need separate approval.
 
 ## 18. Glossary
 

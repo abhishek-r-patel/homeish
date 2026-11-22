@@ -543,6 +543,16 @@ Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 
 Routes add `/admin/expenses/statements`, `/admin/expenses/audit` and `/admin/expenses/agm-report`. The export route gains `report=statements|position|agm`. Statements export as CSV or PDF, the position summary as PDF, and the AGM draft as PDF. Without `report`, the export keeps its current behaviour.
 
+**P42 expense control (D-80; proposed 2026-11-22, coding not yet approved).** PRD EXP-27–EXP-29; database contract in DATABASE.md §9.7. Reads are for admins and committee; writes are admin-only, idempotent by `clientRequestId` and version-checked. No operation changes book entries, expenses, bills, payments, contracts, fund allocations or vendor records. The operations are:
+
+- `saveExpenseCategoryDetails`: group, cost nature, owner and description for an active or inactive category. It returns the group suggestions and revision history through the existing category list.
+- `saveExpensePayeeMapping` and `removeExpensePayeeMapping` (reason required) are available only when the Vendor module is enabled.
+- `getExpenseVendorSpend(range, filters)`: the EXP-28 report, including suggestions, the high-share flag, approved quotes (Vendor module only) and the reconciliation total.
+- `listExpenseSavings` and `getExpenseSavings(id)`: initiatives, status history and evidence with realised-to-date.
+- `saveExpenseSavings`, `changeExpenseSavingsStatus` (with reason rules), `addExpenseSavingsEvidence` (with an optional signed-upload file) and `voidExpenseSavingsEvidence` (reason required).
+
+The route adds `/admin/expenses/savings`; the vendor spend view is part of the existing reports area at `/admin/expenses/vendor-spend`. The export route gains `report=vendor_spend` for CSV and PDF, which use the existing export rate limit. Savings have no export.
+
 **P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest has no API or calculation until an accountant/legal review approves its rate, basis and late-fee interaction.
 
 - `billing.paymentPlan.list` (admin, committee) reads plans; `billing.paymentPlan.save` (admin) creates a tracker record from a unit, selected open bill IDs, down-payment amount, installment count, first due date and remarks, or updates terms and remarks on an existing plan. The database snapshots the selected bills' remaining balances when creating a plan. An open bill can belong to only one non-cancelled plan; saved bill links cannot be changed. Equal monthly installments start on the first due date, with the last installment absorbing paise rounding. Progress is derived only from confirmed allocations for payments dated on or after the plan date and confirmed after plan creation, applied to the down payment and then installments in order. Actual ledger due remains authoritative; no caller-entered paid totals are accepted.
