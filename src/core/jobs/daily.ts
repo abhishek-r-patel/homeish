@@ -18,6 +18,7 @@ import {
   runMeetingActionRemindersPrivileged,
   runEventRemindersPrivileged,
   runNoticeScheduledPublishPrivileged,
+  runDocumentExpiryRemindersPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -97,6 +98,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'tenancy.reminders',
     run: async (societyId: string) => {
       await runTenancyRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'document.expiry_reminders',
+    run: async (societyId: string) => {
+      await runDocumentExpiryRemindersPrivileged(societyId);
     },
   },
   {

@@ -1,10 +1,18 @@
-// Validate Document Repository input; the module has no society-level settings.
+// Validate Document Repository and factual governance inputs shared by forms and operations.
 import { z } from 'zod';
 import { FILE_CONTENT_TYPES, MAX_FILE_BYTES } from '../files/constraints';
 
-export const DEFAULT_DOCUMENT_SETTINGS = {} as const;
+export const DEFAULT_DOCUMENT_SETTINGS = {
+  expiry_reminders_enabled: false,
+} as const;
 
-export const documentSettingsSchema = z.object({}).strict();
+export const documentSettingsSchema = z
+  .object({ expiry_reminders_enabled: z.boolean().optional() })
+  .strict();
+
+export const documentSettingsInputSchema = z
+  .object({ expiryRemindersEnabled: z.boolean() })
+  .strict();
 
 export const DOCUMENT_FOLDER_AUDIENCES = [
   'all_residents',
@@ -181,6 +189,38 @@ export const documentSearchSchema = z
       .optional()
       .catch(undefined)
       .transform((value) => value ?? 0),
+    governanceKind: z
+      .enum(['validity', 'register', 'amendment', 'house_rule'])
+      .optional()
+      .catch(undefined)
+      .transform((value) => value ?? 'validity'),
+    governanceSourceKind: z
+      .enum(['document_version', 'tenancy_noc', 'meeting_resolution'])
+      .optional()
+      .catch(undefined)
+      .transform((value) => value ?? 'document_version'),
+    governanceSourceOffset: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(100_000)
+      .optional()
+      .catch(undefined)
+      .transform((value) => value ?? 0),
+    governanceRecord: z.uuid().optional().catch(undefined),
+    governanceArchived: z
+      .enum(['1'])
+      .optional()
+      .catch(undefined)
+      .transform((value) => value === '1'),
+    governanceOffset: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(100_000)
+      .optional()
+      .catch(undefined)
+      .transform((value) => value ?? 0),
   })
   .strip();
 
@@ -304,3 +344,362 @@ export type DocumentTenancyNoc = z.infer<typeof documentTenancyNocSchema>;
 export type DocumentWorkspace = z.infer<typeof documentWorkspaceSchema>;
 export type DocumentList = z.infer<typeof documentListSchema>;
 export type DocumentDetail = z.infer<typeof documentDetailSchema>;
+
+export const DOCUMENT_GOVERNANCE_KINDS = [
+  'validity',
+  'register',
+  'amendment',
+  'house_rule',
+] as const;
+export const DOCUMENT_GOVERNANCE_STATES = [
+  'draft',
+  'verified',
+  'needs_review',
+] as const;
+export const DOCUMENT_GOVERNANCE_SOURCE_KINDS = [
+  'document_version',
+  'tenancy_noc',
+  'meeting_resolution',
+] as const;
+export const DOCUMENT_GOVERNANCE_EXPIRY_KINDS = [
+  'unknown',
+  'dated',
+  'perpetual',
+] as const;
+export const DOCUMENT_GOVERNANCE_MILESTONE_KINDS = [
+  'meeting',
+  'filing',
+  'registrar_approval',
+] as const;
+export const DOCUMENT_GOVERNANCE_MAINTENANCE_STATES = [
+  'not_started',
+  'maintained',
+  'needs_review',
+  'not_applicable',
+] as const;
+
+export const documentGovernanceKindSchema = z.enum(DOCUMENT_GOVERNANCE_KINDS);
+export const documentGovernanceStateSchema = z.enum(DOCUMENT_GOVERNANCE_STATES);
+export const documentGovernanceSourceKindSchema = z.enum(
+  DOCUMENT_GOVERNANCE_SOURCE_KINDS,
+);
+const dateOrNull = z.iso.date().nullable();
+const governanceText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullable()
+    .transform((value) => (value ? value : null));
+const governanceSource = z
+  .object({
+    kind: documentGovernanceSourceKindSchema,
+    id: z.uuid(),
+  })
+  .strict()
+  .nullable();
+
+export const documentGovernanceValidityDetailsSchema = z
+  .object({
+    issuingAuthority: governanceText(200),
+    reference: governanceText(200),
+    issueDate: dateOrNull,
+    expiryKind: z.enum(DOCUMENT_GOVERNANCE_EXPIRY_KINDS),
+    expiryDate: dateOrNull,
+  })
+  .strict()
+  .superRefine((details, context) => {
+    if ((details.expiryKind === 'dated') !== (details.expiryDate !== null)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['expiryDate'],
+        message: 'A dated expiry needs an expiry date.',
+      });
+    }
+  });
+
+export const documentGovernanceRegisterDetailsSchema = z
+  .object({
+    name: governanceText(160),
+    type: governanceText(120),
+    basis: governanceText(500),
+    maintenanceState: z.enum(DOCUMENT_GOVERNANCE_MAINTENANCE_STATES).nullable(),
+    clauseOrPage: governanceText(200),
+    format: governanceText(200),
+    physicalLocation: governanceText(200),
+    custodian: governanceText(200),
+    reviewDate: dateOrNull,
+  })
+  .strict();
+
+export const documentGovernanceAmendmentDetailsSchema = z
+  .object({
+    milestoneType: z.enum(DOCUMENT_GOVERNANCE_MILESTONE_KINDS),
+    milestoneDate: dateOrNull,
+    note: governanceText(500),
+    historicalEvidence: z.boolean(),
+  })
+  .strict();
+
+export const documentGovernanceHouseRuleDetailsSchema = z
+  .object({
+    text: governanceText(5000),
+    approvalDate: dateOrNull,
+    effectiveDate: dateOrNull,
+  })
+  .strict()
+  .refine(
+    (details) =>
+      !details.approvalDate ||
+      !details.effectiveDate ||
+      details.effectiveDate >= details.approvalDate,
+    {
+      path: ['effectiveDate'],
+      message: 'Effective date cannot be before the approval date.',
+    },
+  );
+
+const governanceDetailsSchema = z.union([
+  documentGovernanceValidityDetailsSchema,
+  documentGovernanceRegisterDetailsSchema,
+  documentGovernanceAmendmentDetailsSchema,
+  documentGovernanceHouseRuleDetailsSchema,
+]);
+
+export const documentGovernanceSaveInputSchema = z
+  .object({
+    recordId: z.uuid().nullable(),
+    kind: documentGovernanceKindSchema,
+    title: z.string().trim().min(1).max(160),
+    state: z.enum(['draft', 'verified']),
+    source: governanceSource,
+    approvingResolutionId: z.uuid().nullable(),
+    details: governanceDetailsSchema,
+    expectedVersion: version.nullable(),
+    reason: governanceText(500),
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    if ((input.recordId === null) !== (input.expectedVersion === null)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['expectedVersion'],
+        message: 'Refresh the record before saving.',
+      });
+    }
+    if (input.recordId !== null && input.reason === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['reason'],
+        message: 'Give a reason for this correction.',
+      });
+    }
+    if (
+      input.kind === 'house_rule' &&
+      input.source?.kind !== 'document_version'
+    ) {
+      if (input.state === 'verified') {
+        context.addIssue({
+          code: 'custom',
+          path: ['source'],
+          message: 'House rules need a society-folder document.',
+        });
+      }
+    } else if (
+      input.kind !== 'house_rule' &&
+      input.approvingResolutionId !== null
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['approvingResolutionId'],
+        message: 'Only house rules can have an approving decision.',
+      });
+    }
+    if (input.state === 'verified' && input.source === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['source'],
+        message: 'Verified records need authorized evidence.',
+      });
+    }
+  });
+
+export const documentGovernanceArchiveInputSchema = z
+  .object({
+    recordId: z.uuid(),
+    archived: z.boolean(),
+    expectedVersion: version,
+    reason: z.string().trim().min(1).max(500),
+  })
+  .strict();
+
+export const documentGovernanceListInputSchema = z
+  .object({
+    kind: documentGovernanceKindSchema.nullable(),
+    includeArchived: z.boolean().default(false),
+    limit: z.number().int().min(1).max(100).default(25),
+    offset: z.number().int().min(0).max(2_147_483_647).default(0),
+  })
+  .strict();
+
+export const documentGovernanceSourceListInputSchema = z
+  .object({
+    kind: documentGovernanceKindSchema,
+    sourceKind: documentGovernanceSourceKindSchema,
+    limit: z.number().int().min(1).max(100).default(25),
+    offset: z.number().int().min(0).max(2_147_483_647).default(0),
+  })
+  .strict();
+
+export const documentGovernanceSourceSchema = z
+  .object({
+    state: z.enum(['unlinked', 'available', 'needs_review']),
+    kind: documentGovernanceSourceKindSchema.optional(),
+    id: z.uuid().nullable().optional(),
+    label: z.string().min(1).max(200),
+    versionNumber: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const documentGovernanceRecordSchema = z
+  .object({
+    id: z.uuid(),
+    kind: documentGovernanceKindSchema,
+    title: z.string().min(1).max(160),
+    state: documentGovernanceStateSchema,
+    source: documentGovernanceSourceSchema,
+    version,
+    archivedAt: timestamp.nullable(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    validity: documentGovernanceValidityDetailsSchema
+      .extend({
+        dateState: z
+          .enum(['unknown', 'perpetual', 'upcoming', 'due_today', 'past_date'])
+          .optional(),
+      })
+      .optional(),
+    register: documentGovernanceRegisterDetailsSchema.partial().optional(),
+    amendment: documentGovernanceAmendmentDetailsSchema.partial().optional(),
+    houseRule: z
+      .object({
+        text: z.string().nullable().optional(),
+        approvalDate: dateOrNull.optional(),
+        effectiveDate: dateOrNull.optional(),
+        approvingResolutionId: z.uuid().nullable().optional(),
+        approvingResolutionLabel: z.string().max(200).nullable().optional(),
+        publicationState: z.enum([
+          'draft',
+          'published',
+          'withdrawn',
+          'superseded',
+        ]),
+        gateLocked: z.literal(true),
+        decisionState: z.enum(['available', 'needs_review']),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
+export const documentGovernanceListSchema = z
+  .object({
+    total: z.number().int().min(0),
+    items: z.array(documentGovernanceRecordSchema),
+    settings: z.object({ expiryRemindersEnabled: z.boolean() }).strict(),
+    tenancyEnabled: z.boolean(),
+    meetingEnabled: z.boolean(),
+  })
+  .strict();
+
+export const documentGovernanceSourceListSchema = z
+  .object({
+    total: z.number().int().min(0),
+    items: z.array(
+      z
+        .object({
+          kind: documentGovernanceSourceKindSchema,
+          id: z.uuid(),
+          documentId: z.uuid().optional(),
+          meetingId: z.uuid().optional(),
+          moveId: z.uuid().optional(),
+          title: z.string().min(1).max(200),
+          fileName: z.string().max(200).optional(),
+          versionNumber: z.number().int().min(1).optional(),
+          scope: z.enum(['unit', 'society_folder']).optional(),
+          issuedAt: timestamp.optional(),
+          outcome: z
+            .enum(['pending', 'passed', 'failed', 'deferred'])
+            .optional(),
+          historical: z.boolean(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+
+export const documentGovernanceHistoryItemSchema = z
+  .object({
+    id: z.uuid(),
+    action: z.enum(['create', 'update', 'verify', 'archive', 'restore']),
+    changedFields: z.array(z.string()),
+    reason: z.string().max(500).nullable(),
+    createdAt: timestamp,
+    actorName: z.string().nullable(),
+    previousValues: z.record(z.string(), z.unknown()),
+  })
+  .strict();
+
+export const documentGovernanceHistoryInputSchema = z
+  .object({
+    recordId: z.uuid(),
+    limit: z.number().int().min(1).max(100).default(25),
+    offset: z.number().int().min(0).max(2_147_483_647).default(0),
+  })
+  .strict();
+
+export const documentHouseRulePublishInputSchema = z
+  .object({
+    recordId: z.uuid(),
+    expectedVersion: version,
+  })
+  .strict();
+
+export const documentGovernanceHistorySchema = z
+  .object({
+    total: z.number().int().min(0),
+    items: z.array(documentGovernanceHistoryItemSchema),
+  })
+  .strict();
+
+export const documentPublishedHouseRuleSchema = z
+  .object({
+    id: z.uuid(),
+    title: z.string().min(1).max(160),
+    text: z.string().min(1).max(5000),
+    approvalDate: z.iso.date(),
+    effectiveDate: z.iso.date(),
+    sourceTitle: z.string().min(1).max(120),
+  })
+  .strict();
+
+export const documentPublishedHouseRulesSchema = z
+  .object({ items: z.array(documentPublishedHouseRuleSchema) })
+  .strict();
+
+export type DocumentGovernanceKind = z.infer<
+  typeof documentGovernanceKindSchema
+>;
+export type DocumentGovernanceSourceKind = z.infer<
+  typeof documentGovernanceSourceKindSchema
+>;
+export type DocumentGovernanceRecord = z.infer<
+  typeof documentGovernanceRecordSchema
+>;
+export type DocumentGovernanceSource = z.infer<
+  typeof documentGovernanceSourceListSchema
+>['items'][number];
+export type DocumentPublishedHouseRule = z.infer<
+  typeof documentPublishedHouseRuleSchema
+>;

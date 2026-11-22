@@ -64,3 +64,4 @@ export { runPollReconcilePrivileged, runPollRetentionPrivileged } from './poll';
 export { runMeetingActionRemindersPrivileged } from './meeting';
 export { runEventRemindersPrivileged } from './event';
 export { runNoticeScheduledPublishPrivileged } from './communication';
+export { runDocumentExpiryRemindersPrivileged } from './document';

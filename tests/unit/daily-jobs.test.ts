@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   runMeetingActionRemindersPrivileged: vi.fn(),
   runEventRemindersPrivileged: vi.fn(),
   runNoticeScheduledPublishPrivileged: vi.fn(),
+  runDocumentExpiryRemindersPrivileged: vi.fn(),
 }));
 
 vi.mock('../../src/core/logging/error-logger', () => ({
@@ -48,6 +49,8 @@ vi.mock('../../src/core/privileged', () => ({
   runEventRemindersPrivileged: mocks.runEventRemindersPrivileged,
   runNoticeScheduledPublishPrivileged:
     mocks.runNoticeScheduledPublishPrivileged,
+  runDocumentExpiryRemindersPrivileged:
+    mocks.runDocumentExpiryRemindersPrivileged,
 }));
 
 import {
@@ -216,6 +219,7 @@ describe('daily jobs', () => {
       'amc.reminders',
       'vendor.contract_reminders',
       'tenancy.reminders',
+      'document.expiry_reminders',
       'poll.reconcile',
       'meeting.action_reminders',
       'event.reminders',
