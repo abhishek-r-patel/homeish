@@ -3,8 +3,13 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { MeetingRouteState } from '@/components/meeting/shared';
 import { MeetingEditor } from '@/components/meeting/editor';
-import { updateMeetingAction } from '@/app/(admin)/admin/meetings/server-actions';
 import {
+  archiveMeetingAgendaTemplateAction,
+  saveMeetingAgendaTemplateAction,
+  updateMeetingAction,
+} from '@/app/(admin)/admin/meetings/server-actions';
+import {
+  getMeetingAgendaTemplates,
   getMeetingAdminDetail,
   getMeetingInviteeOptions,
 } from '@/core/meeting/operations';
@@ -23,11 +28,12 @@ export default async function EditMeetingPage({
   const { meetingId } = await params;
   if (!z.uuid().safeParse(meetingId).success) notFound();
   const result = await loadMeetingPage(['admin'], async () => {
-    const [detail, options] = await Promise.all([
+    const [detail, options, templates] = await Promise.all([
       getMeetingAdminDetail(meetingId),
       getMeetingInviteeOptions(),
+      getMeetingAgendaTemplates(),
     ]);
-    return { detail, options };
+    return { detail, options, templates: templates.items };
   });
   if (result.state) {
     return (
@@ -43,6 +49,9 @@ export default async function EditMeetingPage({
       detail={result.data.detail}
       options={result.data.options}
       settings={result.data.detail.settings}
+      templates={result.data.templates}
+      templateSaveAction={saveMeetingAgendaTemplateAction}
+      templateArchiveAction={archiveMeetingAgendaTemplateAction}
       action={updateMeetingAction}
       now={new Date().toISOString()}
     />

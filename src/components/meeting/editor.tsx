@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useMemo, useState } from 'react';
 import { useUiTranslator } from '@/components/ui/language';
-import { formatLocalizedNumber } from '@/core/i18n/format';
+import { formatLocalizedNumber, formatLocalizedTime } from '@/core/i18n/format';
 import { Button } from '@/components/ui/button';
 import { CheckboxInput, RadioGroup } from '@/components/ui/choice-controls';
 import { Card } from '@/components/ui/data-display';
@@ -21,22 +21,28 @@ import {
 import { SelectInput } from '@/components/ui/select-input';
 import { TextAreaInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
+import { deriveAgendaTiming } from '@/core/meeting/agenda';
 import { noticeCheck } from '@/core/meeting/quorum';
 import {
+  MEETING_AGENDA_DURATION_MAX,
   MEETING_AGENDA_DESCRIPTION_MAX,
   MEETING_AGENDA_LIMIT,
   MEETING_AGENDA_TITLE_MAX,
   MEETING_DESCRIPTION_MAX,
   MEETING_ONLINE_URL_MAX,
+  MEETING_TEMPLATE_NAME_MAX,
   MEETING_TITLE_MAX,
   MEETING_TYPES,
   MEETING_VENUE_MAX,
   isUnitMeeting,
   meetingCreateInputSchema,
   meetingInputSchema,
+  meetingAgendaTemplateArchiveInputSchema,
+  meetingAgendaTemplateInputSchema,
   meetingUpdateInputSchema,
   meetingWriteResultSchema,
   type MeetingAdminDetail,
+  type MeetingAgendaTemplate,
   type MeetingInviteeOptions,
   type MeetingSettings,
   type MeetingType,
@@ -47,7 +53,12 @@ import {
   NoticeWarning,
 } from './shared';
 
-type AgendaDraft = { key: string; title: string; description: string };
+type AgendaDraft = {
+  key: string;
+  title: string;
+  description: string;
+  durationMinutes: string;
+};
 
 function timeParts(value: string | null): { date: string; time: TimeParts } {
   if (!value) {
@@ -141,14 +152,29 @@ function requiredNoticeDays(settings: MeetingSettings, type: MeetingType) {
 function AgendaEditor({
   items,
   onChange,
+  startsAt = null,
+  legendLabel = 'Agenda',
 }: {
   items: AgendaDraft[];
   onChange: (items: AgendaDraft[]) => void;
+  startsAt?: string | null;
+  legendLabel?: string;
 }) {
   const { locale, translate: t } = useUiTranslator();
   const number = (value: number) =>
     formatLocalizedNumber(value, locale ?? 'en');
   const id = useId();
+  const timing = useMemo(
+    () =>
+      deriveAgendaTiming(
+        startsAt,
+        items.map((item) => ({
+          durationMinutes:
+            item.durationMinutes === '' ? null : Number(item.durationMinutes),
+        })),
+      ),
+    [items, startsAt],
+  );
   function update(index: number, patch: Partial<AgendaDraft>) {
     onChange(
       items.map((item, position) =>
@@ -165,7 +191,7 @@ function AgendaEditor({
   }
   return (
     <fieldset className="grid min-w-0 gap-space-3">
-      <legend className="text-body-strong">{t('Agenda')}</legend>
+      <legend className="text-body-strong">{t(legendLabel)}</legend>
       {items.length === 0 ? (
         <p className="text-caption text-ink-muted">
           {t('No agenda items yet.')}
@@ -200,6 +226,51 @@ function AgendaEditor({
                   update(index, { description: event.currentTarget.value })
                 }
               />
+              <TextInput
+                id={`${id}-${item.key}-duration`}
+                label={t('Duration in minutes (optional)')}
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={MEETING_AGENDA_DURATION_MAX}
+                value={item.durationMinutes}
+                onChange={(event) =>
+                  update(index, { durationMinutes: event.currentTarget.value })
+                }
+              />
+              {startsAt && timing[index]?.estimatedStartsAt ? (
+                <p className="text-caption text-ink-muted">
+                  {timing[index].estimatedEndsAt
+                    ? t('Estimated time: {start} to {end}', {
+                        start: formatLocalizedTime(
+                          new Date(timing[index].estimatedStartsAt),
+                          locale ?? 'en',
+                          { timeZone: 'Asia/Kolkata' },
+                        ),
+                        end: formatLocalizedTime(
+                          new Date(timing[index].estimatedEndsAt),
+                          locale ?? 'en',
+                          { timeZone: 'Asia/Kolkata' },
+                        ),
+                      })
+                    : t(
+                        'Estimated start: {start}. Add a duration to continue.',
+                        {
+                          start: formatLocalizedTime(
+                            new Date(timing[index].estimatedStartsAt),
+                            locale ?? 'en',
+                            { timeZone: 'Asia/Kolkata' },
+                          ),
+                        },
+                      )}
+                </p>
+              ) : startsAt ? (
+                <p className="text-caption text-ink-muted">
+                  {t(
+                    'Estimated time unavailable after an item without a duration.',
+                  )}
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-space-2">
                 <Button
                   type="button"
@@ -238,13 +309,280 @@ function AgendaEditor({
         onClick={() =>
           onChange([
             ...items,
-            { key: crypto.randomUUID(), title: '', description: '' },
+            {
+              key: crypto.randomUUID(),
+              title: '',
+              description: '',
+              durationMinutes: '',
+            },
           ])
         }
       >
         {t('Add agenda item')}
       </Button>
     </fieldset>
+  );
+}
+
+function TemplatePicker({
+  agenda,
+  meetingType,
+  onApply,
+  templates,
+}: {
+  agenda: AgendaDraft[];
+  meetingType: MeetingType;
+  onApply: (items: AgendaDraft[]) => void;
+  templates: MeetingAgendaTemplate[];
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  const [selectedId, setSelectedId] = useState('');
+  const available = templates.filter(
+    (template) =>
+      template.archivedAt === null &&
+      template.meetingTypes.includes(meetingType),
+  );
+  const selected = available.find((template) => template.id === selectedId);
+
+  function apply() {
+    if (!selected) return;
+    onApply(
+      selected.items.map((item) => ({
+        key: crypto.randomUUID(),
+        title: item.title,
+        description: item.description ?? '',
+        durationMinutes:
+          item.suggestedDurationMinutes === null
+            ? ''
+            : String(item.suggestedDurationMinutes),
+      })),
+    );
+  }
+
+  if (available.length === 0) {
+    return (
+      <p className="text-caption text-ink-muted">
+        {t(
+          'No active template matches this meeting type. You can create one below.',
+        )}
+      </p>
+    );
+  }
+  return (
+    <div className="grid gap-space-2">
+      <SelectInput
+        id={`${id}-template`}
+        label={t('Use an agenda template (optional)')}
+        value={selected?.id ?? ''}
+        placeholder={t('Choose a template')}
+        options={available.map((template) => ({
+          value: template.id,
+          label: template.name,
+        }))}
+        onChange={(event) => setSelectedId(event.currentTarget.value)}
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={!selected}
+        onClick={() => {
+          if (
+            agenda.length === 0 ||
+            window.confirm(
+              t(
+                'Replace the current agenda? The copied template items stay editable, and nothing is saved until you save the meeting.',
+              ),
+            )
+          ) {
+            apply();
+          }
+        }}
+      >
+        {t('Apply template')}
+      </Button>
+    </div>
+  );
+}
+
+function AgendaTemplateManager({
+  saveAction,
+  archiveAction,
+  templates,
+}: {
+  saveAction: ModuleFormAction;
+  archiveAction: ModuleFormAction;
+  templates: MeetingAgendaTemplate[];
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  const [selectedId, setSelectedId] = useState('');
+  const selected = templates.find((template) => template.id === selectedId);
+  const [name, setName] = useState(selected?.name ?? '');
+  const [meetingTypes, setMeetingTypes] = useState<MeetingType[]>(
+    selected?.meetingTypes ?? ['agm'],
+  );
+  const [items, setItems] = useState<AgendaDraft[]>(() =>
+    selected
+      ? selected.items.map((item) => ({
+          key: crypto.randomUUID(),
+          title: item.title,
+          description: item.description ?? '',
+          durationMinutes:
+            item.suggestedDurationMinutes === null
+              ? ''
+              : String(item.suggestedDurationMinutes),
+        }))
+      : [
+          {
+            key: crypto.randomUUID(),
+            title: '',
+            description: '',
+            durationMinutes: '',
+          },
+        ],
+  );
+
+  function choose(value: string) {
+    setSelectedId(value);
+    const next = templates.find((template) => template.id === value);
+    setName(next?.name ?? '');
+    setMeetingTypes(next?.meetingTypes ?? ['agm']);
+    setItems(
+      next
+        ? next.items.map((item) => ({
+            key: crypto.randomUUID(),
+            title: item.title,
+            description: item.description ?? '',
+            durationMinutes:
+              item.suggestedDurationMinutes === null
+                ? ''
+                : String(item.suggestedDurationMinutes),
+          }))
+        : [
+            {
+              key: crypto.randomUUID(),
+              title: '',
+              description: '',
+              durationMinutes: '',
+            },
+          ],
+    );
+  }
+
+  return (
+    <Card
+      title={t('Agenda templates')}
+      description={t(
+        'Shared with this society. Changes affect future uses only; copied meeting agendas stay unchanged.',
+      )}
+    >
+      <div className="grid min-w-0 gap-space-4">
+        <SelectInput
+          id={`${id}-selected`}
+          label={t('Template to manage')}
+          value={selectedId}
+          options={[
+            { value: '', label: t('New template') },
+            ...templates.map((template) => ({
+              value: template.id,
+              label: `${template.name}${template.archivedAt ? ` ${t('(archived)')}` : ''}`,
+            })),
+          ]}
+          onChange={(event) => choose(event.currentTarget.value)}
+        />
+        <ModuleActionForm
+          action={saveAction}
+          idempotent={!selected}
+          submitLabel={t(selected ? 'Save template' : 'Create template')}
+          input={(_form, clientRequestId) => {
+            if (!clientRequestId && !selected) {
+              throw new Error('The request identifier is unavailable.');
+            }
+            return meetingAgendaTemplateInputSchema.parse({
+              templateId: selected?.id ?? null,
+              expectedVersion: selected?.version ?? null,
+              clientRequestId: clientRequestId ?? crypto.randomUUID(),
+              template: {
+                name,
+                meetingTypes,
+                items: items.map((item) => ({
+                  title: item.title,
+                  description: item.description || null,
+                  suggestedDurationMinutes:
+                    item.durationMinutes === ''
+                      ? null
+                      : Number(item.durationMinutes),
+                })),
+              },
+            });
+          }}
+        >
+          <TextInput
+            id={`${id}-name`}
+            label={t('Template name')}
+            maxLength={MEETING_TEMPLATE_NAME_MAX}
+            required
+            value={name}
+            onChange={(event) => setName(event.currentTarget.value)}
+          />
+          <fieldset className="grid gap-space-2">
+            <legend className="text-body-strong">{t('Meeting types')}</legend>
+            {MEETING_TYPES.map((type) => (
+              <CheckboxInput
+                key={type}
+                id={`${id}-type-${type}`}
+                label={t(MEETING_TYPE_NAMES[type])}
+                checked={meetingTypes.includes(type)}
+                onChange={(event) => {
+                  const checked = event.currentTarget.checked;
+                  setMeetingTypes((current) =>
+                    checked
+                      ? [...new Set([...current, type])]
+                      : current.filter((value) => value !== type),
+                  );
+                }}
+              />
+            ))}
+          </fieldset>
+          <AgendaEditor
+            items={items}
+            onChange={setItems}
+            legendLabel="Template agenda"
+          />
+        </ModuleActionForm>
+        {selected ? (
+          <ModuleActionForm
+            action={archiveAction}
+            submitLabel={t(
+              selected.archivedAt ? 'Restore template' : 'Archive template',
+            )}
+            input={() =>
+              meetingAgendaTemplateArchiveInputSchema.parse({
+                templateId: selected.id,
+                expectedVersion: selected.version,
+                archived: selected.archivedAt === null,
+              })
+            }
+            confirmMessage={
+              selected.archivedAt
+                ? undefined
+                : t(
+                    'Archive this template? Existing meeting agendas will not change.',
+                  )
+            }
+          >
+            <p className="text-caption text-ink-muted">
+              {t(
+                selected.archivedAt
+                  ? 'Restored templates return to the meeting template picker.'
+                  : 'Archived templates stay available here and can be restored later.',
+              )}
+            </p>
+          </ModuleActionForm>
+        ) : null}
+      </div>
+    </Card>
   );
 }
 
@@ -444,12 +782,18 @@ export function MeetingEditor({
   detail,
   options,
   settings,
+  templates,
+  templateSaveAction,
+  templateArchiveAction,
   action,
   now,
 }: {
   detail: MeetingAdminDetail | null;
   options: MeetingInviteeOptions;
   settings: MeetingSettings;
+  templates: MeetingAgendaTemplate[];
+  templateSaveAction: ModuleFormAction;
+  templateArchiveAction: ModuleFormAction;
   action: ModuleFormAction;
   now: string;
 }) {
@@ -475,6 +819,10 @@ export function MeetingEditor({
       key: item.id,
       title: item.title,
       description: item.description ?? '',
+      durationMinutes:
+        item.durationMinutes === undefined || item.durationMinutes === null
+          ? ''
+          : String(item.durationMinutes),
     })),
   );
   const [scope, setScope] = useState<'default' | 'custom'>(
@@ -505,6 +853,8 @@ export function MeetingEditor({
       agenda: agenda.map((item) => ({
         title: item.title,
         description: item.description || null,
+        durationMinutes:
+          item.durationMinutes === '' ? null : Number(item.durationMinutes),
       })),
       invitees:
         scope === 'default'
@@ -666,7 +1016,24 @@ export function MeetingEditor({
           </div>
         </Card>
         <Card title={t('Agenda')}>
-          <AgendaEditor items={agenda} onChange={setAgenda} />
+          <div className="grid min-w-0 gap-space-4">
+            <TemplatePicker
+              agenda={agenda}
+              meetingType={meetingType}
+              templates={templates}
+              onApply={setAgenda}
+            />
+            <AgendaEditor
+              items={agenda}
+              onChange={setAgenda}
+              startsAt={startsAt}
+            />
+            <p className="text-caption text-ink-muted">
+              {t(
+                'Agenda times are planning estimates only. They do not change the meeting time or establish legal or statutory validity.',
+              )}
+            </p>
+          </div>
         </Card>
         <Card
           title={t('Invitees')}
@@ -720,6 +1087,11 @@ export function MeetingEditor({
           </div>
         </Card>
       </ModuleActionForm>
+      <AgendaTemplateManager
+        templates={templates}
+        saveAction={templateSaveAction}
+        archiveAction={templateArchiveAction}
+      />
     </section>
   );
 }

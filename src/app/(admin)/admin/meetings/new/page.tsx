@@ -1,8 +1,13 @@
 // Let administrators create a meeting draft with agenda and invitees.
 import { MeetingRouteState } from '@/components/meeting/shared';
 import { MeetingEditor } from '@/components/meeting/editor';
-import { createMeetingAction } from '@/app/(admin)/admin/meetings/server-actions';
 import {
+  archiveMeetingAgendaTemplateAction,
+  createMeetingAction,
+  saveMeetingAgendaTemplateAction,
+} from '@/app/(admin)/admin/meetings/server-actions';
+import {
+  getMeetingAgendaTemplates,
   getMeetingInviteeOptions,
   getMeetingSettings,
 } from '@/core/meeting/operations';
@@ -15,11 +20,12 @@ export const metadata = {
 
 export default async function NewMeetingPage() {
   const result = await loadMeetingPage(['admin'], async () => {
-    const [options, settings] = await Promise.all([
+    const [options, settings, templates] = await Promise.all([
       getMeetingInviteeOptions(),
       getMeetingSettings(),
+      getMeetingAgendaTemplates(),
     ]);
-    return { options, settings: settings.settings };
+    return { options, settings: settings.settings, templates: templates.items };
   });
   if (result.state) {
     return (
@@ -35,6 +41,9 @@ export default async function NewMeetingPage() {
       detail={null}
       options={result.data.options}
       settings={result.data.settings}
+      templates={result.data.templates}
+      templateSaveAction={saveMeetingAgendaTemplateAction}
+      templateArchiveAction={archiveMeetingAgendaTemplateAction}
       action={createMeetingAction}
       now={new Date().toISOString()}
     />

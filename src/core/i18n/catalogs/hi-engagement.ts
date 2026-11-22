@@ -442,6 +442,42 @@ const meetingsAndServices: Readonly<Record<string, string>> = {
   'Agenda item {number} details (optional)':
     'कार्यसूची के विषय {number} का विवरण (वैकल्पिक)',
   'Agenda item {number} title': 'कार्यसूची के विषय {number} का नाम',
+  'Agenda template saved.': 'कार्यसूची का साँचा सहेजा गया।',
+  'Agenda template archived.': 'कार्यसूची का साँचा संग्रहित किया गया।',
+  'Agenda template restored.': 'कार्यसूची का साँचा फिर चालू किया गया।',
+  'Agenda templates': 'कार्यसूची के साँचे',
+  'Agenda times are planning estimates only. They do not change the meeting time or establish legal or statutory validity.':
+    'कार्यसूची के समय केवल योजना के अनुमान हैं। ये बैठक का समय नहीं बदलते और कानूनी या वैधानिक मान्यता तय नहीं करते।',
+  'Apply template': 'साँचा लगाएँ',
+  'Archive template': 'साँचा संग्रहित करें',
+  'Archive this template? Existing meeting agendas will not change.':
+    'यह साँचा संग्रहित करें? पहले से बनी बैठकों की कार्यसूची नहीं बदलेगी।',
+  'Archived templates stay available here and can be restored later.':
+    'संग्रहित साँचे यहीं उपलब्ध रहते हैं और बाद में फिर चालू किए जा सकते हैं।',
+  'Choose a template': 'साँचा चुनें',
+  'Create template': 'साँचा बनाएँ',
+  'Duration in minutes (optional)': 'मिनटों में अवधि (वैकल्पिक)',
+  'Estimated start: {start}. Add a duration to continue.':
+    'अनुमानित शुरुआत: {start}। आगे का समय निकालने के लिए अवधि जोड़ें।',
+  'Estimated time unavailable after an item without a duration.':
+    'अवधि नहीं लिखे विषय के बाद अनुमानित समय उपलब्ध नहीं है।',
+  'Estimated time: {start} to {end}': 'अनुमानित समय: {start} से {end}',
+  'Meeting types': 'बैठक के प्रकार',
+  'New template': 'नया साँचा',
+  'No active template matches this meeting type. You can create one below.':
+    'इस बैठक के प्रकार से मिलता कोई चालू साँचा नहीं है। आप नीचे नया बना सकते हैं।',
+  'Replace the current agenda? The copied template items stay editable, and nothing is saved until you save the meeting.':
+    'मौजूदा कार्यसूची बदलें? साँचे से आए विषय बदले जा सकेंगे, और बैठक सहेजने तक कुछ सहेजा नहीं जाएगा।',
+  'Restore template': 'साँचा फिर चालू करें',
+  'Restored templates return to the meeting template picker.':
+    'फिर चालू किए गए साँचे बैठक के साँचा चुनने के विकल्प में लौट आते हैं।',
+  'Save template': 'साँचा सहेजें',
+  'Shared with this society. Changes affect future uses only; copied meeting agendas stay unchanged.':
+    'यह साँचा पूरी सोसायटी में साझा है। बदलाव केवल आगे के उपयोग पर लागू होंगे; पहले कॉपी की गई बैठक की कार्यसूची नहीं बदलेगी।',
+  'Template agenda': 'साँचे की कार्यसूची',
+  'Template name': 'साँचे का नाम',
+  'Template to manage': 'सँभालने के लिए साँचा',
+  'Use an agenda template (optional)': 'कार्यसूची का साँचा इस्तेमाल करें (वैकल्पिक)',
   All: 'सभी',
   'All service types': 'सभी सेवाएँ',
   'An administrator hid your comment. Your stars still count. Only you and the administrators can see the comment.':
