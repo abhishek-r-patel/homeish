@@ -7,11 +7,13 @@ import { MODULE_REGISTRY } from '../../src/core/modules';
 import { SOCIETY_ROLES } from '../../src/core/permissions';
 import {
   tenancyDocumentInputSchema,
+  tenancyAgreementMetadataInputSchema,
   tenancyDuesSchema,
   tenancyMoveInputSchema,
   tenancyListSearchSchema,
   tenancyMoveDetailSchema,
   tenancyWorkspaceSchema,
+  tenancyVerificationInputSchema,
 } from '../../src/core/tenancy/moves/validation';
 import {
   formatTenancyBalance,
@@ -244,7 +246,15 @@ const operationCases = [
     name: 'settings',
     permissions: ['tenancy:manage'],
     run: () =>
-      saveTenancySettings({ policeVerificationRequired: true }, requestId),
+      saveTenancySettings(
+        {
+          policeVerificationRequired: true,
+          verificationTrackingEnabled: false,
+          clearanceHandoverBasis: 'bills',
+          clearanceAgreementEvidence: 'admin_note',
+        },
+        requestId,
+      ),
     result: null,
   },
 ];
@@ -609,5 +619,45 @@ describe('tenancy inputs', () => {
         }).success,
       ).toBe(false);
     }
+  });
+
+  it('limits optional tenancy metadata to approved tracking values without identity copies', () => {
+    expect(
+      tenancyVerificationInputSchema.parse({
+        moveId,
+        expectedVersion: 4,
+        status: 'verified',
+        recordedOn: '2026-11-22',
+        reference: 'Police receipt 123',
+      }),
+    ).toMatchObject({ status: 'verified' });
+    expect(
+      tenancyVerificationInputSchema.safeParse({
+        moveId,
+        expectedVersion: 4,
+        status: 'compliant',
+        recordedOn: '2026-11-22',
+        reference: '123',
+      }).success,
+    ).toBe(false);
+    expect(
+      tenancyAgreementMetadataInputSchema.safeParse({
+        moveId,
+        expectedVersion: 4,
+        agreementType: 'company_lease',
+        startsOn: '2026-11-01',
+        expiresOn: '2027-10-31',
+      }).success,
+    ).toBe(true);
+    expect(
+      tenancyAgreementMetadataInputSchema.safeParse({
+        moveId,
+        expectedVersion: 4,
+        agreementType: 'company_lease',
+        startsOn: '2026-11-01',
+        expiresOn: '2027-10-31',
+        identityDocument: 'forbidden.pdf',
+      }).success,
+    ).toBe(false);
   });
 });

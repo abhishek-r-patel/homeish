@@ -15,6 +15,7 @@ import {
   tenancyListSearchSchema,
   tenancyStatusSchema,
   type TenancyMoveDetail,
+  TenancyMoveProgress,
   type TenancyPage,
   type TenancyStatus,
   type TenancyWorkspace,
@@ -42,7 +43,13 @@ import {
   type TenancyActions,
 } from './controls';
 import { TenancyDocumentLink, TenancyProofUpload } from './documents';
+import { TenancyMetadataControls } from './metadata';
 import { useTenancyPresentation } from './presentation';
+import type {
+  ClearanceHandover,
+  ClearanceHandoverDetail,
+} from '@/core/tenancy/transfers/validation';
+import { MoveClearancePanel } from './move-clearance';
 
 export type TenancyAudience = 'resident' | 'management' | 'guard';
 export type TenancyRouteStateKind =
@@ -425,7 +432,7 @@ function TenancyDues({
       {dues.status === 'pending' ? (
         <p>
           {t(
-            'Positive dues block completion and NOC issue. There is no override.',
+            'Positive dues block completion and certificate issue unless a current conditional handover is approved. Dues are checked again.',
           )}
         </p>
       ) : null}
@@ -435,20 +442,26 @@ function TenancyDues({
 
 export function TenancyMoveView({
   detail,
+  progress,
   workspace,
   audience,
   baseHref,
   actions = DEFAULT_TENANCY_ACTIONS,
   backHref,
   fileRequest,
+  handovers = [],
+  handoverDetails = [],
 }: {
   detail: TenancyMoveDetail;
+  progress: TenancyMoveProgress;
   workspace: TenancyWorkspace;
   audience: Exclude<TenancyAudience, 'guard'>;
   baseHref: string;
   actions?: TenancyActions;
   backHref?: string;
   fileRequest?: typeof fetch;
+  handovers?: ClearanceHandover[];
+  handoverDetails?: ClearanceHandoverDetail[];
 }) {
   const { t, date, time } = useTenancyPresentation();
   const move = detail.move;
@@ -459,6 +472,9 @@ export function TenancyMoveView({
   const consentReady = move.kind === 'move_out' || detail.owner_consent_valid;
   const noc = detail.documents.find((document) => document.kind === 'noc');
   const positiveDues = detail.dues?.status === 'pending';
+  const hasApprovedHandover = handovers.some(
+    (handover) => handover.status === 'approved',
+  );
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
       <a
@@ -572,6 +588,52 @@ export function TenancyMoveView({
           )}
         </p>
       </Card>
+      <Card title={t('Move progress')}>
+        <ol className="grid gap-space-3">
+          {progress.steps.map((step) => (
+            <li
+              key={step.key}
+              className="grid gap-space-1 rounded-md border border-rule p-space-3"
+            >
+              <p className="text-body-strong">
+                {t(
+                  {
+                    request_recorded: 'Request recorded',
+                    owner_consent: 'Owner consent',
+                    required_proofs: 'Required proofs',
+                    verification: 'Optional verification',
+                    admin_scheduled: 'Administrator scheduling',
+                    actual_completion: 'Actual completion',
+                    core_occupancy: 'Core occupancy updated',
+                  }[step.key],
+                )}
+              </p>
+              <p className="text-caption text-ink-muted">
+                {t(
+                  {
+                    complete: 'Complete',
+                    pending: 'Pending',
+                    blocked: 'Blocked',
+                    not_required: 'Not required',
+                  }[step.state],
+                )}
+                {step.at
+                  ? ` · ${
+                      step.key === 'verification'
+                        ? date(step.at.slice(0, 10))
+                        : time(step.at, workspace.timezone)
+                    }`
+                  : ''}
+              </p>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-space-3 text-caption text-ink-muted">
+          {t(
+            'Progress is derived from the existing P18 move and Core occupancy. No second tenant or occupancy record is created.',
+          )}
+        </p>
+      </Card>
       {move.status === 'approved' ? (
         <Banner tone="info" title={t('Scheduled, not completed')}>
           {t(
@@ -615,6 +677,82 @@ export function TenancyMoveView({
         </Card>
       ) : null}
       <TenancyDues detail={detail} timezone={workspace.timezone} />
+      <MoveClearancePanel
+        canManage={canManage}
+        detail={detail}
+        handovers={handovers}
+        handoverDetails={handoverDetails}
+        workspace={workspace}
+      />
+      {move.kind === 'move_in' &&
+      (progress.agreement.type || progress.verification_tracking_enabled) ? (
+        <Card title={t('Verification and agreement metadata')}>
+          <dl className="grid gap-space-3 text-body">
+            <div>
+              <dt className="text-caption text-ink-muted">
+                {t('Agreement type')}
+              </dt>
+              <dd>
+                {progress.agreement.type
+                  ? t(progress.agreement.type.replaceAll('_', ' '))
+                  : t('Not recorded')}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-caption text-ink-muted">
+                {t('Agreement start')}
+              </dt>
+              <dd>
+                {progress.agreement.starts_on
+                  ? date(progress.agreement.starts_on)
+                  : t('Not recorded')}
+              </dd>
+            </div>
+            {progress.verification_tracking_enabled ? (
+              <>
+                <div>
+                  <dt className="text-caption text-ink-muted">
+                    {t('Verification status')}
+                  </dt>
+                  <dd>
+                    {progress.verification.status
+                      ? t(progress.verification.status)
+                      : t('Not recorded')}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-ink-muted">
+                    {t('Verification date')}
+                  </dt>
+                  <dd>
+                    {progress.verification.checked_on
+                      ? date(progress.verification.checked_on)
+                      : t('Not recorded')}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-caption text-ink-muted">
+                    {t('Verification reference')}
+                  </dt>
+                  <dd>
+                    {progress.verification.reference ?? t('Not recorded')}
+                  </dd>
+                </div>
+              </>
+            ) : null}
+          </dl>
+          <p className="mt-space-3 text-caption text-ink-muted">
+            {t(
+              'This metadata is not a legal-compliance decision. No government ID copy is stored here.',
+            )}
+          </p>
+          {canManage && canWrite ? (
+            <div className="mt-space-4 border-t border-rule pt-space-4">
+              <TenancyMetadataControls detail={detail} progress={progress} />
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
       <Card
         title={t('Private documents')}
         description={t(
@@ -696,19 +834,11 @@ export function TenancyMoveView({
                   'An administrator can issue the approved move-out NOC. The file records dues status at issue; current dues are checked again.',
                 )}
               </p>
-              {!positiveDues ? (
-                <TenancyDecisionControl
-                  detail={detail}
-                  decision="issue"
-                  action={actions.issue}
-                />
-              ) : (
-                <p className="text-caption text-danger">
-                  {t(
-                    'Clear the positive balance and refresh before issuing the NOC.',
-                  )}
-                </p>
-              )}
+              <p className="text-caption text-ink-muted">
+                {t(
+                  'Use the numbered certificate control above. Positive dues may use a fully approved conditional handover; current dues are checked again.',
+                )}
+              </p>
             </>
           ) : null}
         </div>
@@ -730,17 +860,20 @@ export function TenancyMoveView({
             move.status === 'approved' &&
             proofsReady &&
             consentReady &&
-            !positiveDues ? (
+            (!positiveDues || hasApprovedHandover) ? (
               <TenancyDecisionControl
                 detail={detail}
                 decision="complete"
                 action={actions.complete}
               />
             ) : null}
-            {canManage && move.status === 'approved' && positiveDues ? (
+            {canManage &&
+            move.status === 'approved' &&
+            positiveDues &&
+            !hasApprovedHandover ? (
               <p className="text-body text-danger">
                 {t(
-                  'Clear the positive balance and refresh before confirming actual completion.',
+                  'Clear the positive balance or approve the required conditional handover before confirming actual completion.',
                 )}
               </p>
             ) : null}

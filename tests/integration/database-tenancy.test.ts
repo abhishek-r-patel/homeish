@@ -10,6 +10,7 @@ import {
 } from './support/database';
 import {
   tenancyMoveDetailSchema,
+  tenancyMoveProgressSchema,
   tenancyNocPreparationSchema,
   tenancyPageSchema,
   tenancyWorkspaceSchema,
@@ -355,6 +356,48 @@ async function createFixture(database: TestDatabase) {
     );
   const service = <T>(run: (client: Client) => Promise<T>) =>
     database.asRole('service_role', null, run, { commit: true });
+  const acknowledgeClearance = (
+    actor: Actor = 'admin',
+    clientId = crypto.randomUUID(),
+  ) =>
+    asActor(actor, (client) =>
+      client.query('select public.tenancy_clearance_acknowledge($1,$2,$3,$4)', [
+        fixture.society,
+        'This tracker is not legal advice and is not proof of title transfer. It does not replace checking the applicable state act or bye-laws.',
+        clientId,
+        crypto.randomUUID(),
+      ]),
+    );
+  const createTransferCase = async (
+    actor: Actor = 'admin',
+    clientId = crypto.randomUUID(),
+  ) =>
+    (
+      await asActor(actor, (client) =>
+        client.query<{ id: string }>(
+          `select public.tenancy_transfer_case_save(
+            $1,null,$2,current_date,$3,$4,null,$5,$6
+          ) as id`,
+          [
+            fixture.society,
+            fixture.unit('A-101'),
+            JSON.stringify([
+              {
+                membership_id: requireId(memberships, 'owner'),
+              },
+            ]),
+            JSON.stringify({
+              name: 'Synthetic buyer',
+              phone: '+910000000000',
+              email: 'buyer@example.test',
+              membership_id: requireId(memberships, 'newTenant'),
+            }),
+            clientId,
+            crypto.randomUUID(),
+          ],
+        ),
+      )
+    ).rows[0]!.id;
   return {
     database,
     users,
@@ -375,6 +418,8 @@ async function createFixture(database: TestDatabase) {
     uploadNoc,
     issueNoc,
     service,
+    acknowledgeClearance,
+    createTransferCase,
     ...fixture,
   };
 }
@@ -1483,6 +1528,434 @@ describe.skipIf(!hasDatabase)('database tenancy moves', () => {
         ),
       );
       expect(await dbError(f.page('owner'))).toMatchObject({ code: '42501' });
+    });
+  });
+
+  it('requires the one-time warning and isolates transfer cases by role and society', async () => {
+    await withFixture(async (f) => {
+      expect(await dbError(f.createTransferCase())).toMatchObject({
+        code: '23505',
+      });
+
+      await (async () => {
+        await withFixture(async (f) => {
+          const move = await f.create('move_in', 'owner');
+          const actorCall = async (
+            actor: Actor,
+            sql: string,
+            values: unknown[],
+          ) => f.asActor(actor, (client) => client.query(sql, values));
+
+          expect(
+            (
+              await dbError(
+                actorCall(
+                  'admin',
+                  'select public.tenancy_verification_save($1,$2,$3,$4,$5,$6,$7)',
+                  [
+                    f.society,
+                    move,
+                    await f.version(move),
+                    'pending',
+                    '2026-11-22',
+                    'OFF-123',
+                    crypto.randomUUID(),
+                  ],
+                ),
+              )
+            ).code,
+          ).toBe('23514');
+          await actorCall(
+            'admin',
+            'select public.tenancy_verification_settings_update($1,$2,$3)',
+            [f.society, true, crypto.randomUUID()],
+          );
+          await actorCall(
+            'admin',
+            'select public.tenancy_verification_save($1,$2,$3,$4,$5,$6,$7)',
+            [
+              f.society,
+              move,
+              await f.version(move),
+              'verified',
+              '2026-11-22',
+              'VERIFY-123',
+              crypto.randomUUID(),
+            ],
+          );
+          await actorCall(
+            'admin',
+            'select public.tenancy_agreement_metadata_save($1,$2,$3,$4,$5,$6,$7)',
+            [
+              f.society,
+              move,
+              await f.version(move),
+              'company_lease',
+              '2026-11-01',
+              '2027-10-31',
+              crypto.randomUUID(),
+            ],
+          );
+
+          const progress = tenancyMoveProgressSchema.parse(
+            (
+              await actorCall(
+                'owner',
+                'select public.tenancy_move_progress_get($1,$2) as value',
+                [f.society, move],
+              )
+            ).rows[0]!.value,
+          );
+          expect(progress.verification).toEqual({
+            status: 'verified',
+            checked_on: '2026-11-22',
+            reference: 'VERIFY-123',
+          });
+          expect(progress.agreement).toMatchObject({
+            type: 'company_lease',
+            starts_on: '2026-11-01',
+            expires_on: '2027-10-31',
+          });
+          expect(
+            progress.steps.find((step) => step.key === 'verification'),
+          ).toMatchObject({ state: 'complete' });
+          expect(JSON.stringify(progress)).not.toMatch(
+            /identity_document|government_id|aadhaar/i,
+          );
+          expect(
+            (
+              await dbError(
+                actorCall(
+                  'committee',
+                  'select public.tenancy_verification_save($1,$2,$3,$4,$5,$6,$7)',
+                  [
+                    f.society,
+                    move,
+                    await f.version(move),
+                    'pending',
+                    '2026-11-22',
+                    'DENIED',
+                    crypto.randomUUID(),
+                  ],
+                ),
+              )
+            ).code,
+          ).toBe('42501');
+          expect(
+            (
+              await dbError(
+                actorCall(
+                  'foreignAdmin',
+                  'select public.tenancy_move_progress_get($1,$2)',
+                  [f.society, move],
+                ),
+              )
+            ).code,
+          ).toBe('42501');
+          expect(
+            (
+              await dbError(
+                f.asActor('admin', (client) =>
+                  client.query(
+                    'update public.tenancy_moves set verification_reference=$2 where id=$1',
+                    [move, 'bypass'],
+                  ),
+                ),
+              )
+            ).code,
+          ).toBe('42501');
+        });
+      })();
+      expect(await dbError(f.acknowledgeClearance('committee'))).toMatchObject({
+        code: '42501',
+      });
+      expect(
+        (
+          await f.asActor('admin', (client) =>
+            client.query<{ value: { acknowledged: boolean } }>(
+              'select public.tenancy_clearance_acknowledgement_get($1) as value',
+              [f.society],
+            ),
+          )
+        ).rows[0]!.value.acknowledged,
+      ).toBe(false);
+      await f.acknowledgeClearance();
+      expect(
+        (
+          await f.asActor('admin', (client) =>
+            client.query<{ value: { acknowledged: boolean } }>(
+              'select public.tenancy_clearance_acknowledgement_get($1) as value',
+              [f.society],
+            ),
+          )
+        ).rows[0]!.value.acknowledged,
+      ).toBe(true);
+      const clientId = crypto.randomUUID();
+      const transfer = await f.createTransferCase('admin', clientId);
+      expect(await f.createTransferCase('admin', clientId)).toBe(transfer);
+      const detail = async (actor: Actor) =>
+        (
+          await f.asActor(actor, (client) =>
+            client.query<{ value: Record<string, unknown> }>(
+              'select public.tenancy_transfer_case_get($1,$2) as value',
+              [f.society, transfer],
+            ),
+          )
+        ).rows[0]!.value;
+      const admin = await detail('admin');
+      const adminParties = admin.parties as Array<Record<string, unknown>>;
+      expect(
+        adminParties.find((party) => party.role === 'buyer'),
+      ).toMatchObject({
+        phone: '+910000000000',
+        email: 'buyer@example.test',
+      });
+      const committee = await detail('committee');
+      expect(
+        (committee.parties as Array<Record<string, unknown>>).find(
+          (party) => party.role === 'buyer',
+        ),
+      ).toMatchObject({ phone: null, email: null });
+      expect(committee.handovers).toEqual([]);
+      expect(await dbError(detail('otherResident'))).toMatchObject({
+        code: 'P0002',
+      });
+      expect(await dbError(detail('foreignAdmin'))).toMatchObject({
+        code: '42501',
+      });
+      const page = await f.asActor('tenant', (client) =>
+        client.query<{ value: { total: number } }>(
+          'select public.tenancy_transfer_cases_page($1) as value',
+          [f.society],
+        ),
+      );
+      expect(page.rows[0]!.value.total).toBe(0);
+    });
+  });
+
+  it('keeps disabled Billing not checked and allows no false clearance handover', async () => {
+    await withFixture(async (f) => {
+      await f.acknowledgeClearance();
+      const move = await f.completedMoveOut();
+      const dues = (
+        await f.asActor('admin', (client) =>
+          client.query<{ value: Record<string, unknown> }>(
+            'select public.tenancy_clearance_dues_check($1,$2,null) as value',
+            [f.society, move],
+          ),
+        )
+      ).rows[0]!.value;
+      expect(dues).toEqual({
+        status: 'not_checked',
+        bills: [],
+        total_paise: null,
+        checked_at: null,
+      });
+      expect(
+        await dbError(
+          f.asActor('admin', (client) =>
+            client.query(
+              `select public.tenancy_clearance_handover_draft(
+                $1,$2,null,null,$3,'tenant','Synthetic note',$4,$5
+              )`,
+              [
+                f.society,
+                move,
+                requireId(f.memberships, 'tenant'),
+                crypto.randomUUID(),
+                crypto.randomUUID(),
+              ],
+            ),
+          ),
+        ),
+      ).toMatchObject({ code: '23514' });
+    });
+  });
+
+  it('uses an approved handover for move completion but rejects newly increased dues', async () => {
+    await withFixture(async (f) => {
+      await f.acknowledgeClearance();
+      const move = await f.create('move_out', 'tenant');
+      await f.decide(move);
+      await f.makeWindowCurrent(move);
+      await f.database.asSuperuser(async (client) => {
+        await client.query(
+          `update public.module_configs set enabled=true
+           where society_id=$1 and module_key='billing'`,
+          [f.society],
+        );
+        await client.query(
+          `insert into public.billing_ledger_entries(
+             society_id,unit_id,kind,direction,amount_paise,reason,created_by
+           ) values($1,$2,'adjustment','debit',10000,'Synthetic transfer dues',$3)`,
+          [f.society, f.unit('B-201'), requireId(f.users, 'admin')],
+        );
+      });
+      expect(await dbError(f.complete(move))).toMatchObject({ code: '23514' });
+      const clientId = crypto.randomUUID();
+      const draft = async () =>
+        (
+          await f.asActor('admin', (client) =>
+            client.query<{ id: string }>(
+              `select public.tenancy_clearance_handover_draft(
+                $1,$2,null,null,$3,'tenant','Synthetic administrator note',$4,$5
+              ) as id`,
+              [
+                f.society,
+                move,
+                requireId(f.memberships, 'tenant'),
+                clientId,
+                crypto.randomUUID(),
+              ],
+            ),
+          )
+        ).rows[0]!.id;
+      const handover = await draft();
+      expect(await draft()).toBe(handover);
+      const approve = await f.asActor('admin', (client) =>
+        client.query(
+          'select public.tenancy_clearance_handover_approve($1,$2,1,$3,$4)',
+          [f.society, handover, 'H-2026-001', crypto.randomUUID()],
+        ),
+      );
+      expect(approve.rowCount).toBe(1);
+      await f.database.asSuperuser((client) =>
+        client.query(
+          `insert into public.billing_ledger_entries(
+            society_id,unit_id,kind,direction,amount_paise,reason,created_by
+          ) values($1,$2,'adjustment','debit',100,'Synthetic later dues',$3)`,
+          [f.society, f.unit('B-201'), requireId(f.users, 'admin')],
+        ),
+      );
+      expect(await dbError(f.complete(move))).toMatchObject({ code: '23505' });
+      await f.database.asSuperuser((client) =>
+        client.query(
+          `insert into public.billing_ledger_entries(
+            society_id,unit_id,kind,direction,amount_paise,reason,created_by
+          ) values($1,$2,'adjustment','credit',100,'Synthetic later settlement',$3)`,
+          [f.society, f.unit('B-201'), requireId(f.users, 'admin')],
+        ),
+      );
+      await f.complete(move);
+      expect(
+        (
+          await f.database.asSuperuser((client) =>
+            client.query<{ status: string; balance: string }>(
+              `select status,(select sum(case direction when 'debit' then amount_paise else -amount_paise end)::text
+                from public.billing_ledger_entries where unit_id=$2) as balance
+               from public.unit_occupants where id=$1`,
+              [requireId(f.occupancies, 'tenant'), f.unit('B-201')],
+            ),
+          )
+        ).rows[0],
+      ).toEqual({ status: 'ended', balance: '10000' });
+    });
+  });
+
+  it('issues numbered attested certificates idempotently and keeps their rows immutable', async () => {
+    await withFixture(async (f) => {
+      await f.acknowledgeClearance();
+      const move = await f.completedMoveOut();
+      const clientId = crypto.randomUUID();
+      const prepared = (
+        await f.asActor('admin', (client) =>
+          client.query<{ value: Record<string, unknown> }>(
+            `select public.tenancy_certificate_prepare(
+              $1,$2,null,'Move-out clearance','Committee secretary',$3,$4
+            ) as value`,
+            [f.society, move, clientId, crypto.randomUUID()],
+          ),
+        )
+      ).rows[0]!.value;
+      expect(prepared.kind).toBe('not_checked');
+      const path = prepared.path as string;
+      await f.asActor('admin', (client) =>
+        client.query(
+          `insert into storage.objects(bucket_id,name,metadata)
+           values('tenancy-files',$1,'{"mimetype":"application/pdf","size":2048}')`,
+          [path],
+        ),
+      );
+      expect(
+        await dbError(
+          f.asActor('admin', (client) =>
+            client.query(
+              'select public.tenancy_certificate_attest($1,$2,null,$3,$4,$5,$6)',
+              [
+                f.society,
+                move,
+                requireId(f.users, 'admin'),
+                path,
+                'a'.repeat(64),
+                crypto.randomUUID(),
+              ],
+            ),
+          ),
+        ),
+      ).toMatchObject({ code: '42501' });
+      await f.service((client) =>
+        client.query(
+          'select public.tenancy_certificate_attest($1,$2,null,$3,$4,$5,$6)',
+          [
+            f.society,
+            move,
+            requireId(f.users, 'admin'),
+            path,
+            'a'.repeat(64),
+            crypto.randomUUID(),
+          ],
+        ),
+      );
+      const issue = () =>
+        f.asActor('admin', (client) =>
+          client.query<{ id: string }>(
+            'select public.tenancy_certificate_issue($1,$2,null,$3,$4) as id',
+            [
+              f.society,
+              move,
+              prepared.expected_version as number,
+              crypto.randomUUID(),
+            ],
+          ),
+        );
+      const issued = (await issue()).rows[0]!.id;
+      expect((await issue()).rows[0]!.id).toBe(issued);
+      const certificate = await f.database.asSuperuser((client) =>
+        client.query<{
+          number: string;
+          kind: string;
+          superseded_by: string | null;
+        }>(
+          `select number,kind,superseded_by from public.tenancy_certificates
+           where id=$1`,
+          [issued],
+        ),
+      );
+      expect(certificate.rows[0]).toMatchObject({
+        number: expect.stringMatching(/^NOC\/\d{4}-\d{2}\/0001$/),
+        kind: 'not_checked',
+        superseded_by: null,
+      });
+      expect(
+        await dbError(
+          f.asActor('admin', (client) =>
+            client.query(
+              'select * from public.tenancy_certificates where id=$1',
+              [issued],
+            ),
+          ),
+        ),
+      ).toMatchObject({ code: '42501' });
+      expect(
+        await dbError(
+          f.database.asSuperuser((client) =>
+            client.query(
+              'delete from public.tenancy_certificates where id=$1',
+              [issued],
+            ),
+          ),
+        ),
+      ).toMatchObject({ message: expect.stringMatching(/append.only/i) });
     });
   });
 });

@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
   workspace: vi.fn<(includeTargets?: boolean) => Promise<TenancyWorkspace>>(),
   list: vi.fn<() => Promise<TenancyPage>>(),
   detail: vi.fn(),
+  progress: vi.fn(),
+  handovers: vi.fn(),
+  handoverDetail: vi.fn(),
   routeState: vi.fn(() => null),
   workspaceView: vi.fn(() => null),
   moveView: vi.fn(() => null),
@@ -19,6 +22,11 @@ vi.mock('../../src/core/tenancy/moves/operations', () => ({
   getTenancyWorkspace: mocks.workspace,
   listTenancyMoves: mocks.list,
   getTenancyMove: mocks.detail,
+  getTenancyMoveProgress: mocks.progress,
+}));
+vi.mock('../../src/core/tenancy/transfers/operations', () => ({
+  listClearanceHandovers: mocks.handovers,
+  getClearanceHandover: mocks.handoverDetail,
 }));
 vi.mock('../../src/components/tenancy/workspace', () => ({
   TenancyRouteState: mocks.routeState,
@@ -49,6 +57,20 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.workspace.mockResolvedValue(workspace);
   mocks.list.mockResolvedValue({ items: [], total: 0, limit: 25, offset: 0 });
+  mocks.progress.mockResolvedValue({
+    move_id: moveId,
+    version: 3,
+    steps: [],
+    verification_tracking_enabled: false,
+    verification: { status: null, checked_on: null, reference: null },
+    agreement: { type: null, starts_on: null, expires_on: null },
+  });
+  mocks.handovers.mockResolvedValue({
+    items: [],
+    total: 0,
+    limit: 25,
+    offset: 0,
+  });
 });
 
 describe('moving screen boundaries', () => {

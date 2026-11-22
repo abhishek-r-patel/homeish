@@ -5,10 +5,15 @@ import { z } from 'zod';
 import { AppError } from '../../core/errors';
 import {
   getTenancyMove,
+  getTenancyMoveProgress,
   getTenancyWorkspace,
   listTenancyMoves,
 } from '../../core/tenancy/moves/operations';
 import { tenancyListSearchSchema } from '../../core/tenancy/moves/validation';
+import {
+  getClearanceHandover,
+  listClearanceHandovers,
+} from '../../core/tenancy/transfers/operations';
 import {
   TenancyMoveView,
   TenancyRouteState,
@@ -116,10 +121,30 @@ export async function TenancyDetailPage({
         content = { kind: 'not_found' };
       } else {
         retryHref = `${baseHref}/${id.data}`;
-        const detail = await getTenancyMove(id.data);
+        const [detail, progress, handovers] = await Promise.all([
+          getTenancyMove(id.data),
+          getTenancyMoveProgress(id.data),
+          listClearanceHandovers({
+            moveId: id.data,
+            caseId: null,
+            limit: 25,
+            offset: 0,
+          }),
+        ]);
+        const handoverDetails = await Promise.all(
+          handovers.items.map((handover) => getClearanceHandover(handover.id)),
+        );
         content = {
           kind: 'ready',
-          props: { detail, workspace, audience, baseHref },
+          props: {
+            detail,
+            progress,
+            workspace,
+            audience,
+            baseHref,
+            handovers: handovers.items,
+            handoverDetails,
+          },
         };
       }
     }

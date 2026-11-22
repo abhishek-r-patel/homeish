@@ -463,6 +463,22 @@ export function TenancySettingsControl({
   const [required, setRequired] = useState(
     workspace.police_verification_required,
   );
+  const [verificationTracking, setVerificationTracking] = useState(
+    workspace.verification_tracking_enabled ?? false,
+  );
+  const [handoverBasis, setHandoverBasis] = useState(
+    workspace.clearance_handover_basis ?? 'bills',
+  );
+  const [agreementEvidence, setAgreementEvidence] = useState(
+    workspace.clearance_agreement_evidence ?? 'admin_note',
+  );
+  const changed =
+    required !== workspace.police_verification_required ||
+    verificationTracking !==
+      (workspace.verification_tracking_enabled ?? false) ||
+    handoverBasis !== (workspace.clearance_handover_basis ?? 'bills') ||
+    agreementEvidence !==
+      (workspace.clearance_agreement_evidence ?? 'admin_note');
   return (
     <Card
       title={t('Proof requirements')}
@@ -476,7 +492,52 @@ export function TenancySettingsControl({
         checked={required}
         onChange={(event) => setRequired(event.currentTarget.checked)}
       />
-      {required !== workspace.police_verification_required ? (
+      <CheckboxInput
+        id={`${id}-verification`}
+        label={t('Track optional verification status')}
+        checked={verificationTracking}
+        onChange={(event) =>
+          setVerificationTracking(event.currentTarget.checked)
+        }
+        description={t(
+          'Stores only pending, verified or rejected, plus a date and reference. It does not establish legal compliance.',
+        )}
+      />
+      <SelectInput
+        id={`${id}-basis`}
+        label={t('Conditional handover basis')}
+        value={handoverBasis}
+        options={[
+          { value: 'bills', label: t('Specific unpaid bills (default)') },
+          { value: 'total', label: t('Total outstanding unit balance') },
+        ]}
+        onChange={(event) =>
+          setHandoverBasis(
+            z.enum(['bills', 'total']).parse(event.currentTarget.value),
+          )
+        }
+      />
+      <SelectInput
+        id={`${id}-evidence`}
+        label={t('Handover agreement evidence')}
+        value={agreementEvidence}
+        options={[
+          { value: 'admin_note', label: t('Administrator note (default)') },
+          { value: 'signed_upload', label: t('Uploaded signed agreement') },
+          {
+            value: 'in_app_and_upload',
+            label: t('In-app consent and upload for parties without accounts'),
+          },
+        ]}
+        onChange={(event) =>
+          setAgreementEvidence(
+            z
+              .enum(['admin_note', 'signed_upload', 'in_app_and_upload'])
+              .parse(event.currentTarget.value),
+          )
+        }
+      />
+      {changed ? (
         <TenancyConfirmation
           action={action}
           label={t('Save Proof Requirement')}
@@ -488,6 +549,9 @@ export function TenancySettingsControl({
           input={() =>
             tenancySettingsInputSchema.parse({
               policeVerificationRequired: required,
+              verificationTrackingEnabled: verificationTracking,
+              clearanceHandoverBasis: handoverBasis,
+              clearanceAgreementEvidence: agreementEvidence,
             })
           }
         />

@@ -4,14 +4,33 @@ import { FILE_CONTENT_TYPES, MAX_FILE_BYTES } from '../../files/constraints';
 
 export const DEFAULT_TENANCY_SETTINGS = {
   police_verification_required: false,
+  verification_tracking_enabled: false,
+  clearance_handover_basis: 'bills',
+  clearance_agreement_evidence: 'admin_note',
 } as const;
 
 export const tenancySettingsSchema = z
-  .object({ police_verification_required: z.boolean().optional() })
+  .object({
+    police_verification_required: z.boolean().optional(),
+    verification_tracking_enabled: z.boolean().optional(),
+    clearance_handover_basis: z.enum(['bills', 'total']).optional(),
+    clearance_agreement_evidence: z
+      .enum(['admin_note', 'signed_upload', 'in_app_and_upload'])
+      .optional(),
+  })
   .strict();
 
 export const tenancySettingsInputSchema = z
-  .object({ policeVerificationRequired: z.boolean() })
+  .object({
+    policeVerificationRequired: z.boolean(),
+    verificationTrackingEnabled: z.boolean(),
+    clearanceHandoverBasis: z.enum(['bills', 'total']),
+    clearanceAgreementEvidence: z.enum([
+      'admin_note',
+      'signed_upload',
+      'in_app_and_upload',
+    ]),
+  })
   .strict();
 
 export const TENANCY_STATUSES = [
@@ -33,6 +52,18 @@ export const tenancyDocumentKindSchema = z.enum([
   'rental_agreement',
   'police_verification',
   'noc',
+]);
+export const tenancyVerificationStatusSchema = z.enum([
+  'pending',
+  'verified',
+  'rejected',
+]);
+export const tenancyAgreementTypeSchema = z.enum([
+  'rental',
+  'leave_and_licence',
+  'company_lease',
+  'paying_guest',
+  'other',
 ]);
 
 const timestamp = z.iso.datetime({ offset: true });
@@ -73,6 +104,30 @@ export const tenancyMoveInputSchema = z
 export const tenancyVersionInputSchema = z
   .object({ moveId: z.uuid(), expectedVersion: version })
   .strict();
+
+export const tenancyVerificationInputSchema = z
+  .object({
+    moveId: z.uuid(),
+    expectedVersion: version,
+    status: tenancyVerificationStatusSchema,
+    recordedOn: z.iso.date(),
+    reference: z.string().trim().min(1).max(120),
+  })
+  .strict();
+
+export const tenancyAgreementMetadataInputSchema = z
+  .object({
+    moveId: z.uuid(),
+    expectedVersion: version,
+    agreementType: tenancyAgreementTypeSchema,
+    startsOn: z.iso.date(),
+    expiresOn: z.iso.date(),
+  })
+  .strict()
+  .refine(({ startsOn, expiresOn }) => startsOn <= expiresOn, {
+    path: ['expiresOn'],
+    message: 'Agreement expiry must be on or after its start date.',
+  });
 
 export const tenancyDecisionInputSchema = z
   .object({
@@ -148,6 +203,11 @@ export const tenancyWorkspaceSchema = z
     can_create: z.boolean(),
     can_write: z.boolean(),
     police_verification_required: z.boolean(),
+    verification_tracking_enabled: z.boolean().optional(),
+    clearance_handover_basis: z.enum(['bills', 'total']).optional(),
+    clearance_agreement_evidence: z
+      .enum(['admin_note', 'signed_upload', 'in_app_and_upload'])
+      .optional(),
     amenity_enabled: z.boolean(),
     units: z.array(z.object({ id: z.uuid(), number: z.string() }).strict()),
     tenants: z.array(
@@ -329,6 +389,45 @@ export const tenancyMoveDetailSchema = z
   })
   .strict();
 
+export const tenancyMoveProgressSchema = z
+  .object({
+    move_id: z.uuid(),
+    version,
+    steps: z.array(
+      z
+        .object({
+          key: z.enum([
+            'request_recorded',
+            'owner_consent',
+            'required_proofs',
+            'verification',
+            'admin_scheduled',
+            'actual_completion',
+            'core_occupancy',
+          ]),
+          state: z.enum(['complete', 'pending', 'blocked', 'not_required']),
+          at: z.union([timestamp, z.iso.date()]).nullable(),
+        })
+        .strict(),
+    ),
+    verification_tracking_enabled: z.boolean(),
+    verification: z
+      .object({
+        status: tenancyVerificationStatusSchema.nullable(),
+        checked_on: z.iso.date().nullable(),
+        reference: z.string().max(120).nullable(),
+      })
+      .strict(),
+    agreement: z
+      .object({
+        type: tenancyAgreementTypeSchema.nullable(),
+        starts_on: z.iso.date().nullable(),
+        expires_on: z.iso.date().nullable(),
+      })
+      .strict(),
+  })
+  .strict();
+
 export const tenancyDocumentInputSchema = z
   .object({
     moveId: z.uuid(),
@@ -345,5 +444,10 @@ export type TenancyPage = z.infer<typeof tenancyPageSchema>;
 export type TenancyWorkspace = z.infer<typeof tenancyWorkspaceSchema>;
 export type TenancyMoveInput = z.infer<typeof tenancyMoveInputSchema>;
 export type TenancyProofKind = z.infer<typeof tenancyProofKindSchema>;
+export type TenancyVerificationStatus = z.infer<
+  typeof tenancyVerificationStatusSchema
+>;
+export type TenancyAgreementType = z.infer<typeof tenancyAgreementTypeSchema>;
+export type TenancyMoveProgress = z.infer<typeof tenancyMoveProgressSchema>;
 export type TenancyNocSnapshot = z.infer<typeof tenancyNocSnapshotSchema>;
 export type TenancyNocPreparation = z.infer<typeof tenancyNocPreparationSchema>;

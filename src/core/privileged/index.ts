@@ -57,6 +57,7 @@ export type { TransactionalEmail } from '../notifications/email';
 export { runAmcRemindersPrivileged } from './amc';
 export { runVendorContractRemindersPrivileged } from './vendor';
 export {
+  attestTenancyCertificatePrivileged,
   attestTenancyNocPrivileged,
   runTenancyRemindersPrivileged,
 } from './tenancy';
