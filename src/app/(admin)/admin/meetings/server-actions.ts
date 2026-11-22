@@ -5,6 +5,7 @@ import {
   runServerAction,
 } from '@/core/actions/server-action';
 import {
+  archiveMeetingAgendaTemplate,
   cancelMeeting,
   createMeeting,
   createMeetingResolutionPoll,
@@ -16,6 +17,7 @@ import {
   removeMeetingAttendance,
   retryMeetingMinutesCopy,
   saveMeetingAction,
+  saveMeetingAgendaTemplate,
   saveMeetingMinutes,
   saveMeetingResolution,
   scheduleMeeting,
@@ -50,6 +52,28 @@ export async function updateMeetingAction(form: FormData) {
       message: `${result.rescheduled ? 'Changes saved and invitees notified.' : 'Changes saved.'}${shortNoticeSuffix(result.notice)}`,
       data: result,
     };
+  });
+}
+
+export async function saveMeetingAgendaTemplateAction(form: FormData) {
+  return runServerAction('/admin/meetings/templates', async (requestId) => ({
+    message: 'Agenda template saved.',
+    data: await saveMeetingAgendaTemplate(
+      readModuleActionInput(form),
+      requestId,
+    ),
+  }));
+}
+
+export async function archiveMeetingAgendaTemplateAction(form: FormData) {
+  return runServerAction('/admin/meetings/templates', async (requestId) => {
+    const result = await archiveMeetingAgendaTemplate(
+      readModuleActionInput(form),
+      requestId,
+    );
+    return result.archived
+      ? 'Agenda template archived.'
+      : 'Agenda template restored.';
   });
 }
 

@@ -57,7 +57,11 @@ export interface MeetingInput {
   endsAt: string;
   venue: string | null;
   onlineUrl: string | null;
-  agenda: { title: string; description: string | null }[];
+  agenda: {
+    title: string;
+    description: string | null;
+    durationMinutes?: number | null;
+  }[];
   invitees: {
     scope: 'default' | 'custom';
     unitIds?: string[];

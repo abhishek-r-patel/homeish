@@ -8,11 +8,14 @@ import { prepareDocumentUpload } from '@/core/document/files';
 import {
   addDocumentVersion,
   createDocument,
+  saveGovernanceRecord,
   saveDocumentFolder,
+  setGovernanceRecordArchived,
   setDocumentArchived,
   setDocumentFolderArchived,
   setDocumentVersionArchived,
   updateDocument,
+  updateDocumentReminderSettings,
 } from '@/core/document/operations';
 
 const ROUTE = '/admin/documents';
@@ -82,5 +85,34 @@ export async function setDocumentVersionArchivedAction(form: FormData) {
   return runServerAction(ROUTE, async (requestId) => {
     await setDocumentVersionArchived(readModuleActionInput(form), requestId);
     return 'Version updated. Residents see the latest active version.';
+  });
+}
+
+export async function saveGovernanceRecordAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await saveGovernanceRecord(readModuleActionInput(form), requestId);
+    return 'Governance record saved. It remains factual and is not a legal-compliance finding.';
+  });
+}
+
+export async function setGovernanceRecordArchivedAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    const record = await setGovernanceRecordArchived(
+      readModuleActionInput(form),
+      requestId,
+    );
+    return record.archivedAt
+      ? 'Record archived. Its private history was kept.'
+      : 'Record restored as a draft. Recheck its evidence before verifying it.';
+  });
+}
+
+export async function updateDocumentReminderSettingsAction(form: FormData) {
+  return runServerAction(ROUTE, async (requestId) => {
+    await updateDocumentReminderSettings(
+      readModuleActionInput(form),
+      requestId,
+    );
+    return 'Document expiry reminder setting saved.';
   });
 }

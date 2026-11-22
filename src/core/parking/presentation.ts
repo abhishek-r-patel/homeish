@@ -2,6 +2,7 @@
 import {
   PARKING_PASS_MAX_HOURS,
   type ParkingAllocation,
+  type ParkingConditionStatus,
   type ParkingSlotType,
 } from './validation';
 
@@ -13,6 +14,13 @@ export const PARKING_SLOT_TYPE_LABELS: Record<ParkingSlotType, string> = {
   ev: 'EV (electric car)',
   visitor: 'Visitor',
 };
+
+export const PARKING_CONDITION_LABELS: Record<ParkingConditionStatus, string> =
+  {
+    available: 'Available',
+    needs_attention: 'Needs attention',
+    out_of_service: 'Out of service',
+  };
 
 export const PARKING_REQUEST_STATUS_LABELS = {
   waiting: 'Waiting',

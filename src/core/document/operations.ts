@@ -13,8 +13,20 @@ import {
   documentFolderArchiveInputSchema,
   documentFolderInputSchema,
   documentFolderSchema,
+  documentGovernanceArchiveInputSchema,
+  documentGovernanceHistorySchema,
+  documentGovernanceHistoryInputSchema,
+  documentGovernanceListInputSchema,
+  documentGovernanceListSchema,
+  documentGovernanceRecordSchema,
+  documentGovernanceSaveInputSchema,
+  documentGovernanceSourceListInputSchema,
+  documentGovernanceSourceListSchema,
   documentListInputSchema,
   documentListSchema,
+  documentPublishedHouseRulesSchema,
+  documentHouseRulePublishInputSchema,
+  documentSettingsInputSchema,
   documentSchema,
   documentUpdateInputSchema,
   documentVersionArchiveInputSchema,
@@ -249,5 +261,190 @@ export async function setDocumentVersionArchived(
     },
     documentSchema,
     'Could not change the version. A document must keep at least one active version.',
+  );
+}
+
+export async function listGovernanceSources(input: unknown) {
+  const { context, societyId } = await getDocumentContext('document:manage');
+  const page = parseModuleInput(documentGovernanceSourceListInputSchema, input);
+  return callModuleRpc(
+    context,
+    'document_governance_sources_list',
+    {
+      p_society_id: societyId,
+      p_kind: page.kind,
+      p_source_type: page.sourceKind,
+      p_limit: page.limit,
+      p_offset: page.offset,
+    },
+    documentGovernanceSourceListSchema,
+    'Could not load evidence sources. Refresh and retry.',
+  );
+}
+
+export async function listGovernanceRecords(input: unknown) {
+  const { context, societyId } = await getDocumentContext('document:list');
+  const page = parseModuleInput(documentGovernanceListInputSchema, input);
+  return callModuleRpc(
+    context,
+    'document_governance_list',
+    {
+      p_society_id: societyId,
+      p_kind: page.kind,
+      p_include_archived: page.includeArchived,
+      p_limit: page.limit,
+      p_offset: page.offset,
+    },
+    documentGovernanceListSchema,
+    'Could not load governance records. Refresh and retry.',
+  );
+}
+
+export async function getGovernanceRecord(recordId: unknown) {
+  const { context, societyId } = await getDocumentContext('document:list');
+  return callModuleRpc(
+    context,
+    'document_governance_get',
+    {
+      p_society_id: societyId,
+      p_record_id: parseModuleInput(z.uuid(), recordId),
+    },
+    documentGovernanceRecordSchema,
+    'Could not load this governance record. Refresh and retry.',
+  );
+}
+
+export async function saveGovernanceRecord(input: unknown, requestId: string) {
+  const { context, societyId } = await getDocumentContext(
+    'document:manage',
+    true,
+    requestId,
+  );
+  const record = parseModuleInput(documentGovernanceSaveInputSchema, input);
+  const sourceKind = record.source?.kind ?? null;
+  return callModuleRpc(
+    context,
+    'document_governance_save',
+    {
+      p_society_id: societyId,
+      p_record_id: record.recordId,
+      p_kind: record.kind,
+      p_title: record.title,
+      p_state: record.state,
+      p_document_version_id:
+        sourceKind === 'document_version' ? record.source?.id : null,
+      p_tenancy_document_id:
+        sourceKind === 'tenancy_noc' ? record.source?.id : null,
+      p_resolution_id:
+        sourceKind === 'meeting_resolution' ? record.source?.id : null,
+      p_approving_resolution_id: record.approvingResolutionId,
+      p_details: record.details,
+      p_expected_version: record.expectedVersion,
+      p_reason: record.reason,
+      p_client_request_id: record.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    documentGovernanceRecordSchema,
+    record.recordId
+      ? 'Could not save this record. Check the source, reason and current version, then retry.'
+      : 'Could not create this record. Check the evidence and retry.',
+  );
+}
+
+export async function setGovernanceRecordArchived(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getDocumentContext(
+    'document:manage',
+    true,
+    requestId,
+  );
+  const change = parseModuleInput(documentGovernanceArchiveInputSchema, input);
+  return callModuleRpc(
+    context,
+    'document_governance_set_archived',
+    {
+      p_society_id: societyId,
+      p_record_id: change.recordId,
+      p_archived: change.archived,
+      p_expected_version: change.expectedVersion,
+      p_reason: change.reason,
+      p_request_id: context.requestId,
+    },
+    documentGovernanceRecordSchema,
+    'Could not change this record. Check the reason and refresh the latest version.',
+  );
+}
+
+export async function listGovernanceHistory(input: unknown) {
+  const { context, societyId } = await getDocumentContext('document:manage');
+  const page = parseModuleInput(documentGovernanceHistoryInputSchema, input);
+  return callModuleRpc(
+    context,
+    'document_governance_history',
+    {
+      p_society_id: societyId,
+      p_record_id: page.recordId,
+      p_limit: page.limit,
+      p_offset: page.offset,
+    },
+    documentGovernanceHistorySchema,
+    'Could not load private history. Refresh and retry.',
+  );
+}
+
+export async function publishHouseRule(input: unknown, requestId: string) {
+  const { context, societyId } = await getDocumentContext(
+    'document:manage',
+    true,
+    requestId,
+  );
+  const record = parseModuleInput(documentHouseRulePublishInputSchema, input);
+  return callModuleRpc(
+    context,
+    'document_house_rule_publish',
+    {
+      p_society_id: societyId,
+      p_record_id: record.recordId,
+      p_expected_version: record.expectedVersion,
+      p_request_id: context.requestId,
+    },
+    documentGovernanceRecordSchema,
+    'Publishing is locked pending qualified review and a separately approved unlock.',
+  );
+}
+
+export async function listPublishedHouseRules() {
+  const { context, societyId } = await getDocumentContext('document:list');
+  return callModuleRpc(
+    context,
+    'document_house_rules_published_list',
+    { p_society_id: societyId },
+    documentPublishedHouseRulesSchema,
+    'Could not load published house rules. Refresh and retry.',
+  );
+}
+
+export async function updateDocumentReminderSettings(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getDocumentContext(
+    'document:manage',
+    true,
+    requestId,
+  );
+  const settings = parseModuleInput(documentSettingsInputSchema, input);
+  return callModuleRpc(
+    context,
+    'document_settings_update',
+    {
+      p_society_id: societyId,
+      p_expiry_reminders_enabled: settings.expiryRemindersEnabled,
+      p_request_id: context.requestId,
+    },
+    z.object({ expiry_reminders_enabled: z.boolean() }).strict(),
+    'Could not save the reminder setting. Nothing was changed; retry.',
   );
 }

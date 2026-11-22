@@ -96,6 +96,7 @@ Key boundaries still apply:
   - Names describe the domain in the product's vocabulary (DESIGN Section 16): _visitor_, _delivery_, _dues_, _bill_, _unit_, _society_, _service request_ — not synonyms. Never hard-code a society's custom wording; use the configured label.
   - No abbreviations that are not already in the documents. Booleans read as questions (`isActive`, `hasHistory`).
 - **Small, single-purpose functions** and components. Prefer clear code over clever code; avoid deep nesting; return early.
+- **Keep new source files under about 300 lines; split by job, not by size alone.** Existing larger files are split only as an approved, behaviour-neutral change of its own, never as a side effect of other work. Generated types, translation catalogues, migrations and fixtures are exempt.
 - **No dead code, commented-out code, unused exports, leftover debug output or TODOs without an owner and a reason.**
 - **Header comment in every source file:** one or two lines stating the file's purpose. **Inline comments only for non-obvious decisions** (why, never what). Do not write multi-paragraph comments or comments that narrate your change.
 - **Plain-language user text** follows DESIGN Section 1.3 and Section 16 (sentence case, Title Case on primary buttons, no jargon, no emoji). All user-facing strings are kept together per module so they can be translated later (PRD NFR-13).

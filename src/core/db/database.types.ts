@@ -295,6 +295,98 @@ export type Database = {
           },
         ];
       };
+      amenity_activity_records: {
+        Row: {
+          activity_kind: string;
+          amc_visit_id: string | null;
+          amenity_booking_id: string | null;
+          asset_id: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          event_at: string;
+          id: string;
+          note: string | null;
+          service_request_id: string | null;
+          society_id: string;
+          source_kind: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          activity_kind: string;
+          amc_visit_id?: string | null;
+          amenity_booking_id?: string | null;
+          asset_id?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          event_at: string;
+          id?: string;
+          note?: string | null;
+          service_request_id?: string | null;
+          society_id: string;
+          source_kind: string;
+        };
+        Update: {
+          activity_kind?: string;
+          amc_visit_id?: string | null;
+          amenity_booking_id?: string | null;
+          asset_id?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          event_at?: string;
+          id?: string;
+          note?: string | null;
+          service_request_id?: string | null;
+          society_id?: string;
+          source_kind?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'amenity_activity_amc_visit_fkey';
+            columns: ['society_id', 'amc_visit_id'];
+            isOneToOne: false;
+            referencedRelation: 'amc_visits';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_activity_asset_fkey';
+            columns: ['society_id', 'asset_id'];
+            isOneToOne: false;
+            referencedRelation: 'assets';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_activity_booking_fkey';
+            columns: ['society_id', 'amenity_booking_id'];
+            isOneToOne: false;
+            referencedRelation: 'amenity_bookings';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'amenity_activity_records_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_activity_records_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'amenity_activity_service_request_fkey';
+            columns: ['society_id', 'service_request_id'];
+            isOneToOne: false;
+            referencedRelation: 'service_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       amenity_bookings: {
         Row: {
           amenity_id: string;
@@ -3162,6 +3254,42 @@ export type Database = {
           },
         ];
       };
+      document_amendment_milestones: {
+        Row: {
+          historical_evidence: boolean;
+          milestone_date: string | null;
+          milestone_type: string;
+          note: string | null;
+          record_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          historical_evidence?: boolean;
+          milestone_date?: string | null;
+          milestone_type: string;
+          note?: string | null;
+          record_id: string;
+          society_id: string;
+        };
+        Update: {
+          historical_evidence?: boolean;
+          milestone_date?: string | null;
+          milestone_type?: string;
+          note?: string | null;
+          record_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_amendments_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
       document_folders: {
         Row: {
           archived_at: string | null;
@@ -3237,6 +3365,360 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
+          },
+        ];
+      };
+      document_governance_records: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          kind: string;
+          society_id: string;
+          source_document_version_id: string | null;
+          source_kind: string | null;
+          source_outcome: string | null;
+          source_resolution_id: string | null;
+          source_snapshot: NonNullable<Json>;
+          source_tenancy_document_id: string | null;
+          source_unavailable_at: string | null;
+          source_version: number | null;
+          state: string;
+          title: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          kind: string;
+          society_id: string;
+          source_document_version_id?: string | null;
+          source_kind?: string | null;
+          source_outcome?: string | null;
+          source_resolution_id?: string | null;
+          source_snapshot?: NonNullable<Json>;
+          source_tenancy_document_id?: string | null;
+          source_unavailable_at?: string | null;
+          source_version?: number | null;
+          state?: string;
+          title: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          kind?: string;
+          society_id?: string;
+          source_document_version_id?: string | null;
+          source_kind?: string | null;
+          source_outcome?: string | null;
+          source_resolution_id?: string | null;
+          source_snapshot?: NonNullable<Json>;
+          source_tenancy_document_id?: string | null;
+          source_unavailable_at?: string | null;
+          source_version?: number | null;
+          state?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_governance_document_fkey';
+            columns: ['society_id', 'source_document_version_id'];
+            isOneToOne: false;
+            referencedRelation: 'document_versions';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'document_governance_noc_fkey';
+            columns: ['society_id', 'source_tenancy_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_records_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_resolution_fkey';
+            columns: ['society_id', 'source_resolution_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_governance_revisions: {
+        Row: {
+          action: string;
+          changed_fields: string[];
+          created_at: string;
+          created_by: string;
+          id: string;
+          previous_values: NonNullable<Json>;
+          reason: string | null;
+          record_id: string;
+          request_id: string;
+          society_id: string;
+          source_kinds_after: string[];
+          source_kinds_before: string[];
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          changed_fields?: string[];
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          previous_values: NonNullable<Json>;
+          reason?: string | null;
+          record_id: string;
+          request_id: string;
+          society_id: string;
+          source_kinds_after?: string[];
+          source_kinds_before?: string[];
+        };
+        Update: {
+          action?: string;
+          changed_fields?: string[];
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          previous_values?: NonNullable<Json>;
+          reason?: string | null;
+          record_id?: string;
+          request_id?: string;
+          society_id?: string;
+          source_kinds_after?: string[];
+          source_kinds_before?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_governance_revisions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_governance_revisions_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: false;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_house_rules: {
+        Row: {
+          approval_date: string | null;
+          approving_resolution_id: string | null;
+          approving_resolution_outcome: string | null;
+          approving_resolution_snapshot: NonNullable<Json>;
+          approving_resolution_unavailable_at: string | null;
+          approving_resolution_version: number | null;
+          effective_date: string | null;
+          gate_locked: boolean;
+          publication_state: string;
+          published_at: string | null;
+          published_by: string | null;
+          record_id: string;
+          rule_text: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          approval_date?: string | null;
+          approving_resolution_id?: string | null;
+          approving_resolution_outcome?: string | null;
+          approving_resolution_snapshot?: NonNullable<Json>;
+          approving_resolution_unavailable_at?: string | null;
+          approving_resolution_version?: number | null;
+          effective_date?: string | null;
+          gate_locked?: boolean;
+          publication_state?: string;
+          published_at?: string | null;
+          published_by?: string | null;
+          record_id: string;
+          rule_text?: string | null;
+          society_id: string;
+        };
+        Update: {
+          approval_date?: string | null;
+          approving_resolution_id?: string | null;
+          approving_resolution_outcome?: string | null;
+          approving_resolution_snapshot?: NonNullable<Json>;
+          approving_resolution_unavailable_at?: string | null;
+          approving_resolution_version?: number | null;
+          effective_date?: string | null;
+          gate_locked?: boolean;
+          publication_state?: string;
+          published_at?: string | null;
+          published_by?: string | null;
+          record_id?: string;
+          rule_text?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_house_rules_published_by_fkey';
+            columns: ['published_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'document_house_rules_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'document_house_rules_resolution_fkey';
+            columns: ['society_id', 'approving_resolution_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_register_indexes: {
+        Row: {
+          applicability_basis: string | null;
+          clause_or_page: string | null;
+          custodian: string | null;
+          format: string | null;
+          maintenance_state: string | null;
+          physical_location: string | null;
+          record_id: string;
+          register_name: string | null;
+          register_type: string | null;
+          review_date: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          applicability_basis?: string | null;
+          clause_or_page?: string | null;
+          custodian?: string | null;
+          format?: string | null;
+          maintenance_state?: string | null;
+          physical_location?: string | null;
+          record_id: string;
+          register_name?: string | null;
+          register_type?: string | null;
+          review_date?: string | null;
+          society_id: string;
+        };
+        Update: {
+          applicability_basis?: string | null;
+          clause_or_page?: string | null;
+          custodian?: string | null;
+          format?: string | null;
+          maintenance_state?: string | null;
+          physical_location?: string | null;
+          record_id?: string;
+          register_name?: string | null;
+          register_type?: string | null;
+          review_date?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_register_indexes_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      document_validities: {
+        Row: {
+          expiry_date: string | null;
+          expiry_kind: string;
+          issue_date: string | null;
+          issuing_authority: string | null;
+          record_id: string;
+          reference: string | null;
+          reminder_cycle_date: string | null;
+          reminder_last_milestone: number | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          expiry_date?: string | null;
+          expiry_kind: string;
+          issue_date?: string | null;
+          issuing_authority?: string | null;
+          record_id: string;
+          reference?: string | null;
+          reminder_cycle_date?: string | null;
+          reminder_last_milestone?: number | null;
+          society_id: string;
+        };
+        Update: {
+          expiry_date?: string | null;
+          expiry_kind?: string;
+          issue_date?: string | null;
+          issuing_authority?: string | null;
+          record_id?: string;
+          reference?: string | null;
+          reminder_cycle_date?: string | null;
+          reminder_last_milestone?: number | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'document_validities_record_fkey';
+            columns: ['society_id', 'record_id'];
+            isOneToOne: true;
+            referencedRelation: 'document_governance_records';
+            referencedColumns: ['society_id', 'id'];
           },
         ];
       };
@@ -3879,6 +4361,442 @@ export type Database = {
           },
           {
             foreignKeyName: 'expense_accounts_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_agm_drafts: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          financial_year_start: string;
+          id: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+          written_sections: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          financial_year_start: string;
+          id?: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+          written_sections?: NonNullable<Json>;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          financial_year_start?: string;
+          id?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+          written_sections?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_agm_drafts_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_agm_drafts_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_agm_drafts_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_audit_acknowledgements: {
+        Row: {
+          acknowledged_at: string;
+          acknowledged_by: string;
+          client_request_id: string;
+          society_id: string;
+          warning_acknowledged_text: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string;
+          acknowledged_by: string;
+          client_request_id: string;
+          society_id: string;
+          warning_acknowledged_text: string;
+        };
+        Update: {
+          acknowledged_at?: string;
+          acknowledged_by?: string;
+          client_request_id?: string;
+          society_id?: string;
+          warning_acknowledged_text?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_acknowledgements_acknowledged_by_fkey';
+            columns: ['acknowledged_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_acknowledgements_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_audit_objections: {
+        Row: {
+          audit_year_id: string;
+          corrected_on: string | null;
+          correction_note: string | null;
+          created_at: string;
+          created_by: string;
+          description: string;
+          due_date: string;
+          evidence_document_id: string | null;
+          id: string;
+          owner_user_id: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          audit_year_id: string;
+          corrected_on?: string | null;
+          correction_note?: string | null;
+          created_at?: string;
+          created_by: string;
+          description: string;
+          due_date: string;
+          evidence_document_id?: string | null;
+          id?: string;
+          owner_user_id: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          audit_year_id?: string;
+          corrected_on?: string | null;
+          correction_note?: string | null;
+          created_at?: string;
+          created_by?: string;
+          description?: string;
+          due_date?: string;
+          evidence_document_id?: string | null;
+          id?: string;
+          owner_user_id?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_objections_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_document_fkey';
+            columns: ['society_id', 'evidence_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_owner_fkey';
+            columns: ['society_id', 'owner_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'user_id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_objections_year_fkey';
+            columns: ['society_id', 'audit_year_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_audit_years';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_audit_queries: {
+        Row: {
+          area: string;
+          assignee_user_id: string;
+          audit_year_id: string;
+          created_at: string;
+          created_by: string;
+          due_date: string;
+          id: string;
+          query_date: string;
+          query_number: number;
+          question: string;
+          response: string | null;
+          response_date: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          area: string;
+          assignee_user_id: string;
+          audit_year_id: string;
+          created_at?: string;
+          created_by: string;
+          due_date: string;
+          id?: string;
+          query_date: string;
+          query_number: number;
+          question: string;
+          response?: string | null;
+          response_date?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          area?: string;
+          assignee_user_id?: string;
+          audit_year_id?: string;
+          created_at?: string;
+          created_by?: string;
+          due_date?: string;
+          id?: string;
+          query_date?: string;
+          query_number?: number;
+          question?: string;
+          response?: string | null;
+          response_date?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_queries_assignee_fkey';
+            columns: ['society_id', 'assignee_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'user_id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_queries_year_fkey';
+            columns: ['society_id', 'audit_year_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_audit_years';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_audit_revisions: {
+        Row: {
+          after_data: NonNullable<Json>;
+          before_data: Json | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          revision_number: number;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          after_data: NonNullable<Json>;
+          before_data?: Json | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          revision_number: number;
+          society_id: string;
+        };
+        Update: {
+          after_data?: NonNullable<Json>;
+          before_data?: Json | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          revision_number?: number;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_revisions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_revisions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_audit_years: {
+        Row: {
+          appointed_on: string;
+          appointment_document_id: string | null;
+          appointment_reference: string | null;
+          auditor_firm: string;
+          auditor_name: string;
+          created_at: string;
+          created_by: string;
+          filed_on: string | null;
+          financial_year_start: string;
+          id: string;
+          opinion: string | null;
+          opinion_text: string | null;
+          placed_before_agm_on: string | null;
+          report_received_on: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          appointed_on: string;
+          appointment_document_id?: string | null;
+          appointment_reference?: string | null;
+          auditor_firm: string;
+          auditor_name: string;
+          created_at?: string;
+          created_by: string;
+          filed_on?: string | null;
+          financial_year_start: string;
+          id?: string;
+          opinion?: string | null;
+          opinion_text?: string | null;
+          placed_before_agm_on?: string | null;
+          report_received_on?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          appointed_on?: string;
+          appointment_document_id?: string | null;
+          appointment_reference?: string | null;
+          auditor_firm?: string;
+          auditor_name?: string;
+          created_at?: string;
+          created_by?: string;
+          filed_on?: string | null;
+          financial_year_start?: string;
+          id?: string;
+          opinion?: string | null;
+          opinion_text?: string | null;
+          placed_before_agm_on?: string | null;
+          report_received_on?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_audit_years_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_years_document_fkey';
+            columns: ['society_id', 'appointment_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_years_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_audit_years_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -6156,6 +7074,7 @@ export type Database = {
       meeting_agenda_items: {
         Row: {
           description: string | null;
+          duration_minutes: number | null;
           id: string;
           meeting_id: string;
           position: number;
@@ -6165,6 +7084,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           description?: string | null;
+          duration_minutes?: number | null;
           id?: string;
           meeting_id: string;
           position: number;
@@ -6173,6 +7093,7 @@ export type Database = {
         };
         Update: {
           description?: string | null;
+          duration_minutes?: number | null;
           id?: string;
           meeting_id?: string;
           position?: number;
@@ -6192,6 +7113,117 @@ export type Database = {
             columns: ['society_id'];
             isOneToOne: false;
             referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      meeting_agenda_template_items: {
+        Row: {
+          description: string | null;
+          id: string;
+          position: number;
+          society_id: string;
+          suggested_duration_minutes: number | null;
+          template_id: string;
+          title: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          description?: string | null;
+          id?: string;
+          position: number;
+          society_id: string;
+          suggested_duration_minutes?: number | null;
+          template_id: string;
+          title: string;
+        };
+        Update: {
+          description?: string | null;
+          id?: string;
+          position?: number;
+          society_id?: string;
+          suggested_duration_minutes?: number | null;
+          template_id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'meeting_agenda_template_items_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'meeting_agenda_template_items_template_fkey';
+            columns: ['society_id', 'template_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_agenda_templates';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      meeting_agenda_templates: {
+        Row: {
+          archived_at: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          meeting_types: string[];
+          name: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          meeting_types: string[];
+          name: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          meeting_types?: string[];
+          name?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'meeting_agenda_templates_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'meeting_agenda_templates_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'meeting_agenda_templates_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -8035,6 +9067,7 @@ export type Database = {
           archived_at: string | null;
           archived_by: string | null;
           client_request_id: string;
+          condition_status: string;
           created_at: string;
           created_by: string;
           id: string;
@@ -8051,6 +9084,7 @@ export type Database = {
           archived_at?: string | null;
           archived_by?: string | null;
           client_request_id: string;
+          condition_status?: string;
           created_at?: string;
           created_by: string;
           id?: string;
@@ -8066,6 +9100,7 @@ export type Database = {
           archived_at?: string | null;
           archived_by?: string | null;
           client_request_id?: string;
+          condition_status?: string;
           created_at?: string;
           created_by?: string;
           id?: string;
@@ -11287,6 +12322,473 @@ export type Database = {
           },
         ];
       };
+      tenancy_certificate_counters: {
+        Row: {
+          financial_year: string;
+          last_sequence: number;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          financial_year: string;
+          last_sequence?: number;
+          society_id: string;
+        };
+        Update: {
+          financial_year?: string;
+          last_sequence?: number;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_certificate_counters_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tenancy_certificates: {
+        Row: {
+          byte_hash: string;
+          case_id: string | null;
+          client_request_id: string;
+          dues_snapshot: NonNullable<Json>;
+          financial_year: string;
+          handover_id: string | null;
+          id: string;
+          issued_at: string;
+          issued_by: string;
+          kind: string;
+          move_id: string | null;
+          number: string;
+          parties_snapshot: NonNullable<Json>;
+          path: string;
+          purpose: string;
+          sequence_number: number;
+          signatory_designation: string;
+          signatory_name: string;
+          size_bytes: number;
+          society_id: string;
+          source_version: number;
+          supersede_reason: string | null;
+          superseded_by: string | null;
+          unit_snapshot: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          byte_hash: string;
+          case_id?: string | null;
+          client_request_id: string;
+          dues_snapshot: NonNullable<Json>;
+          financial_year: string;
+          handover_id?: string | null;
+          id?: string;
+          issued_at?: string;
+          issued_by: string;
+          kind: string;
+          move_id?: string | null;
+          number: string;
+          parties_snapshot: NonNullable<Json>;
+          path: string;
+          purpose: string;
+          sequence_number: number;
+          signatory_designation: string;
+          signatory_name: string;
+          size_bytes: number;
+          society_id: string;
+          source_version: number;
+          supersede_reason?: string | null;
+          superseded_by?: string | null;
+          unit_snapshot: NonNullable<Json>;
+        };
+        Update: {
+          byte_hash?: string;
+          case_id?: string | null;
+          client_request_id?: string;
+          dues_snapshot?: NonNullable<Json>;
+          financial_year?: string;
+          handover_id?: string | null;
+          id?: string;
+          issued_at?: string;
+          issued_by?: string;
+          kind?: string;
+          move_id?: string | null;
+          number?: string;
+          parties_snapshot?: NonNullable<Json>;
+          path?: string;
+          purpose?: string;
+          sequence_number?: number;
+          signatory_designation?: string;
+          signatory_name?: string;
+          size_bytes?: number;
+          society_id?: string;
+          source_version?: number;
+          supersede_reason?: string | null;
+          superseded_by?: string | null;
+          unit_snapshot?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_certificates_case_fkey';
+            columns: ['society_id', 'case_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_cases';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_certificates_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_clearance_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_certificates_issued_by_fkey';
+            columns: ['issued_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_certificates_move_fkey';
+            columns: ['society_id', 'move_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_moves';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_certificates_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_certificates_superseded_fkey';
+            columns: ['society_id', 'superseded_by'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_certificates';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      tenancy_clearance_acknowledgements: {
+        Row: {
+          acknowledged_at: string;
+          acknowledged_by: string;
+          client_request_id: string;
+          society_id: string;
+          warning_text: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string;
+          acknowledged_by: string;
+          client_request_id: string;
+          society_id: string;
+          warning_text: string;
+        };
+        Update: {
+          acknowledged_at?: string;
+          acknowledged_by?: string;
+          client_request_id?: string;
+          society_id?: string;
+          warning_text?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_clearance_acknowledgements_acknowledged_by_fkey';
+            columns: ['acknowledged_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_acknowledgements_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tenancy_clearance_consents: {
+        Row: {
+          consented_at: string;
+          consented_by: string;
+          expected_version: number;
+          handover_id: string;
+          id: string;
+          membership_id: string;
+          role: string;
+          society_id: string;
+          transfer_party_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          consented_at?: string;
+          consented_by: string;
+          expected_version: number;
+          handover_id: string;
+          id?: string;
+          membership_id: string;
+          role: string;
+          society_id: string;
+          transfer_party_id?: string | null;
+        };
+        Update: {
+          consented_at?: string;
+          consented_by?: string;
+          expected_version?: number;
+          handover_id?: string;
+          id?: string;
+          membership_id?: string;
+          role?: string;
+          society_id?: string;
+          transfer_party_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_clearance_consents_consented_by_fkey';
+            columns: ['consented_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_consents_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_clearance_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_consents_member_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_consents_party_fkey';
+            columns: ['society_id', 'transfer_party_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_parties';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      tenancy_clearance_files: {
+        Row: {
+          content_type: string;
+          created_at: string;
+          created_by: string;
+          handover_id: string;
+          id: string;
+          membership_id: string | null;
+          path: string;
+          size_bytes: number;
+          society_id: string;
+          transfer_party_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          content_type: string;
+          created_at?: string;
+          created_by: string;
+          handover_id: string;
+          id?: string;
+          membership_id?: string | null;
+          path: string;
+          size_bytes: number;
+          society_id: string;
+          transfer_party_id?: string | null;
+        };
+        Update: {
+          content_type?: string;
+          created_at?: string;
+          created_by?: string;
+          handover_id?: string;
+          id?: string;
+          membership_id?: string | null;
+          path?: string;
+          size_bytes?: number;
+          society_id?: string;
+          transfer_party_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_clearance_files_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_files_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_clearance_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_files_member_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_files_party_fkey';
+            columns: ['society_id', 'transfer_party_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_parties';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      tenancy_clearance_handovers: {
+        Row: {
+          admin_note: string | null;
+          approval_reference: string | null;
+          approved_at: string | null;
+          approved_by: string | null;
+          basis: string;
+          case_id: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          dues_snapshot: NonNullable<Json>;
+          evidence_mode: string;
+          id: string;
+          move_id: string | null;
+          responsible_membership_id: string | null;
+          responsible_role: string;
+          responsible_transfer_party_id: string | null;
+          society_id: string;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          admin_note?: string | null;
+          approval_reference?: string | null;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          basis: string;
+          case_id?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          dues_snapshot: NonNullable<Json>;
+          evidence_mode: string;
+          id?: string;
+          move_id?: string | null;
+          responsible_membership_id?: string | null;
+          responsible_role: string;
+          responsible_transfer_party_id?: string | null;
+          society_id: string;
+          status?: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          admin_note?: string | null;
+          approval_reference?: string | null;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          basis?: string;
+          case_id?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          dues_snapshot?: NonNullable<Json>;
+          evidence_mode?: string;
+          id?: string;
+          move_id?: string | null;
+          responsible_membership_id?: string | null;
+          responsible_role?: string;
+          responsible_transfer_party_id?: string | null;
+          society_id?: string;
+          status?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_approved_by_fkey';
+            columns: ['approved_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_case_fkey';
+            columns: ['society_id', 'case_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_cases';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_move_fkey';
+            columns: ['society_id', 'move_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_moves';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_responsible_member_fkey';
+            columns: ['society_id', 'responsible_membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_responsible_party_fkey';
+            columns: ['society_id', 'case_id', 'responsible_transfer_party_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_parties';
+            referencedColumns: ['society_id', 'case_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_clearance_handovers_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       tenancy_documents: {
         Row: {
           content_type: string;
@@ -11420,9 +12922,12 @@ export type Database = {
       tenancy_moves: {
         Row: {
           agreement_expires_on: string | null;
+          agreement_starts_on: string | null;
+          agreement_type: string | null;
           amenity_booking_id: string | null;
           approved_at: string | null;
           approved_by: string | null;
+          certificate_preparation: Json | null;
           client_request_id: string;
           completed_at: string | null;
           completed_by: string | null;
@@ -11449,14 +12954,20 @@ export type Database = {
           unit_id: string;
           updated_at: string;
           updated_by: string;
+          verification_checked_on: string | null;
+          verification_reference: string | null;
+          verification_status: string | null;
           version: number;
         };
         ComputedFields: never;
         Insert: {
           agreement_expires_on?: string | null;
+          agreement_starts_on?: string | null;
+          agreement_type?: string | null;
           amenity_booking_id?: string | null;
           approved_at?: string | null;
           approved_by?: string | null;
+          certificate_preparation?: Json | null;
           client_request_id: string;
           completed_at?: string | null;
           completed_by?: string | null;
@@ -11483,13 +12994,19 @@ export type Database = {
           unit_id: string;
           updated_at?: string;
           updated_by: string;
+          verification_checked_on?: string | null;
+          verification_reference?: string | null;
+          verification_status?: string | null;
           version?: number;
         };
         Update: {
           agreement_expires_on?: string | null;
+          agreement_starts_on?: string | null;
+          agreement_type?: string | null;
           amenity_booking_id?: string | null;
           approved_at?: string | null;
           approved_by?: string | null;
+          certificate_preparation?: Json | null;
           client_request_id?: string;
           completed_at?: string | null;
           completed_by?: string | null;
@@ -11516,6 +13033,9 @@ export type Database = {
           unit_id?: string;
           updated_at?: string;
           updated_by?: string;
+          verification_checked_on?: string | null;
+          verification_reference?: string | null;
+          verification_status?: string | null;
           version?: number;
         };
         Relationships: [
@@ -11601,6 +13121,309 @@ export type Database = {
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tenancy_transfer_cases: {
+        Row: {
+          certificate_preparation: Json | null;
+          client_request_id: string;
+          closing_reason: string | null;
+          committee_decision_on: string | null;
+          completed_on: string | null;
+          created_at: string;
+          created_by: string;
+          documents_checked_on: string | null;
+          dues_settled_on: string | null;
+          id: string;
+          received_on: string;
+          rejected_on: string | null;
+          society_id: string;
+          stage: string;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+          withdrawn_on: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          certificate_preparation?: Json | null;
+          client_request_id: string;
+          closing_reason?: string | null;
+          committee_decision_on?: string | null;
+          completed_on?: string | null;
+          created_at?: string;
+          created_by: string;
+          documents_checked_on?: string | null;
+          dues_settled_on?: string | null;
+          id?: string;
+          received_on: string;
+          rejected_on?: string | null;
+          society_id: string;
+          stage: string;
+          unit_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+          withdrawn_on?: string | null;
+        };
+        Update: {
+          certificate_preparation?: Json | null;
+          client_request_id?: string;
+          closing_reason?: string | null;
+          committee_decision_on?: string | null;
+          completed_on?: string | null;
+          created_at?: string;
+          created_by?: string;
+          documents_checked_on?: string | null;
+          dues_settled_on?: string | null;
+          id?: string;
+          received_on?: string;
+          rejected_on?: string | null;
+          society_id?: string;
+          stage?: string;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+          withdrawn_on?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_transfer_cases_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_cases_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_cases_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_cases_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tenancy_transfer_decisions: {
+        Row: {
+          case_id: string;
+          client_request_id: string;
+          conditions: NonNullable<Json>;
+          created_at: string;
+          created_by: string;
+          decision: string;
+          id: string;
+          meeting_id: string | null;
+          resolution_date: string;
+          resolution_reference: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          case_id: string;
+          client_request_id: string;
+          conditions?: NonNullable<Json>;
+          created_at?: string;
+          created_by: string;
+          decision: string;
+          id?: string;
+          meeting_id?: string | null;
+          resolution_date: string;
+          resolution_reference: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          case_id?: string;
+          client_request_id?: string;
+          conditions?: NonNullable<Json>;
+          created_at?: string;
+          created_by?: string;
+          decision?: string;
+          id?: string;
+          meeting_id?: string | null;
+          resolution_date?: string;
+          resolution_reference?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_transfer_decisions_case_fkey';
+            columns: ['society_id', 'case_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_cases';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_decisions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_decisions_meeting_fkey';
+            columns: ['society_id', 'meeting_id'];
+            isOneToOne: false;
+            referencedRelation: 'meetings';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_decisions_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tenancy_transfer_parties: {
+        Row: {
+          active: boolean;
+          case_id: string;
+          created_at: string;
+          created_by: string;
+          email: string | null;
+          id: string;
+          membership_id: string | null;
+          name: string;
+          phone: string | null;
+          role: string;
+          society_id: string;
+          superseded_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          active?: boolean;
+          case_id: string;
+          created_at?: string;
+          created_by: string;
+          email?: string | null;
+          id?: string;
+          membership_id?: string | null;
+          name: string;
+          phone?: string | null;
+          role: string;
+          society_id: string;
+          superseded_at?: string | null;
+        };
+        Update: {
+          active?: boolean;
+          case_id?: string;
+          created_at?: string;
+          created_by?: string;
+          email?: string | null;
+          id?: string;
+          membership_id?: string | null;
+          name?: string;
+          phone?: string | null;
+          role?: string;
+          society_id?: string;
+          superseded_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_transfer_parties_case_fkey';
+            columns: ['society_id', 'case_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_cases';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_parties_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_parties_membership_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      tenancy_transfer_revisions: {
+        Row: {
+          action: string;
+          changed_fields: string[];
+          created_at: string;
+          created_by: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          previous_values: NonNullable<Json>;
+          reason: string | null;
+          request_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          changed_fields?: string[];
+          created_at?: string;
+          created_by: string;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          previous_values: NonNullable<Json>;
+          reason?: string | null;
+          request_id: string;
+          society_id: string;
+        };
+        Update: {
+          action?: string;
+          changed_fields?: string[];
+          created_at?: string;
+          created_by?: string;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          previous_values?: NonNullable<Json>;
+          reason?: string | null;
+          request_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenancy_transfer_revisions_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenancy_transfer_revisions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
             referencedColumns: ['id'];
           },
         ];
@@ -13447,6 +15270,19 @@ export type Database = {
         Returns: string;
       };
       amc_workspace: { Args: { p_society_id: string }; Returns: Json };
+      amenity_activity_record: {
+        Args: {
+          p_activity_kind: string;
+          p_client_request_id: string;
+          p_note: string;
+          p_occurred_at_local: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_source_id: string;
+          p_source_kind: string;
+        };
+        Returns: string;
+      };
       amenity_book: {
         Args: {
           p_amenity_id: string;
@@ -13462,6 +15298,22 @@ export type Database = {
         };
         Returns: string;
       };
+      amenity_calendar_month: {
+        Args: { p_limit?: number; p_month: string; p_society_id: string };
+        Returns: Json;
+      };
+      amenity_calendar_settings_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      amenity_calendar_visibility_save: {
+        Args: {
+          p_request_id: string;
+          p_resident_calendar_identity: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
       amenity_cancel: {
         Args: {
           p_booking_id: string;
@@ -13470,6 +15322,10 @@ export type Database = {
           p_society_id: string;
         };
         Returns: string;
+      };
+      amenity_facilities_report: {
+        Args: { p_limit?: number; p_offset?: number; p_society_id: string };
+        Returns: Json;
       };
       amenity_save: {
         Args: {
@@ -15093,6 +16949,10 @@ export type Database = {
         };
         Returns: Json;
       };
+      document_expiry_reminders_run: {
+        Args: { p_request_trace: string; p_society_id: string };
+        Returns: number;
+      };
       document_folder_save: {
         Args: {
           p_audience: string;
@@ -15118,6 +16978,82 @@ export type Database = {
         Args: { p_document_id: string; p_society_id: string };
         Returns: Json;
       };
+      document_governance_get: {
+        Args: { p_record_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      document_governance_history: {
+        Args: {
+          p_limit: number;
+          p_offset: number;
+          p_record_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_governance_list: {
+        Args: {
+          p_include_archived: boolean;
+          p_kind: string;
+          p_limit: number;
+          p_offset: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_governance_save: {
+        Args: {
+          p_approving_resolution_id: string;
+          p_client_request_id: string;
+          p_details: Json;
+          p_document_version_id: string;
+          p_expected_version: number;
+          p_kind: string;
+          p_reason: string;
+          p_record_id: string;
+          p_request_id: string;
+          p_resolution_id: string;
+          p_society_id: string;
+          p_state: string;
+          p_tenancy_document_id: string;
+          p_title: string;
+        };
+        Returns: Json;
+      };
+      document_governance_set_archived: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_reason: string;
+          p_record_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_governance_sources_list: {
+        Args: {
+          p_kind: string;
+          p_limit: number;
+          p_offset: number;
+          p_society_id: string;
+          p_source_type: string;
+        };
+        Returns: Json;
+      };
+      document_house_rule_publish: {
+        Args: {
+          p_expected_version: number;
+          p_record_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_house_rules_published_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
       document_list: {
         Args: {
           p_folder_id: string;
@@ -15141,6 +17077,14 @@ export type Database = {
           p_archived: boolean;
           p_document_id: string;
           p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      document_settings_update: {
+        Args: {
+          p_expiry_reminders_enabled: boolean;
           p_request_id: string;
           p_society_id: string;
         };
@@ -15289,6 +17233,101 @@ export type Database = {
         };
         Returns: string;
       };
+      expense_agm_draft: {
+        Args: { p_financial_year_start: string; p_society_id: string };
+        Returns: Json;
+      };
+      expense_agm_draft_save: {
+        Args: {
+          p_client_request_id: string;
+          p_draft_id: string;
+          p_expected_version: number;
+          p_financial_year_start: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_written_sections: Json;
+        };
+        Returns: string;
+      };
+      expense_agm_settings_save: {
+        Args: {
+          p_expected_updated_at: string;
+          p_request_trace: string;
+          p_sections: Json;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_get: {
+        Args: { p_financial_year_start: string; p_society_id: string };
+        Returns: Json;
+      };
+      expense_audit_objection_save: {
+        Args: {
+          p_audit_year_id: string;
+          p_client_request_id: string;
+          p_corrected_on: string;
+          p_correction_note: string;
+          p_description: string;
+          p_due_date: string;
+          p_evidence_document_id: string;
+          p_expected_version: number;
+          p_objection_id: string;
+          p_owner_user_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_query_save: {
+        Args: {
+          p_area: string;
+          p_assignee_user_id: string;
+          p_audit_year_id: string;
+          p_client_request_id: string;
+          p_due_date: string;
+          p_expected_version: number;
+          p_query_date: string;
+          p_query_id: string;
+          p_query_number: number;
+          p_question: string;
+          p_request_trace: string;
+          p_response: string;
+          p_response_date: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_warning_acknowledge: {
+        Args: {
+          p_acknowledged: boolean;
+          p_client_request_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_audit_year_save: {
+        Args: {
+          p_appointed_on: string;
+          p_appointment_document_id: string;
+          p_appointment_reference: string;
+          p_auditor_firm: string;
+          p_auditor_name: string;
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_filed_on: string;
+          p_financial_year_start: string;
+          p_opinion: string;
+          p_opinion_text: string;
+          p_placed_before_agm_on: string;
+          p_report_received_on: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_year_id: string;
+        };
+        Returns: string;
+      };
       expense_billing_collection_suggestions: {
         Args: { p_limit: number; p_society_id: string };
         Returns: Json;
@@ -15358,6 +17397,10 @@ export type Database = {
           p_society_id: string;
           p_status: string;
         };
+        Returns: Json;
+      };
+      expense_financial_position: {
+        Args: { p_as_of: string; p_society_id: string };
         Returns: Json;
       };
       expense_fixed_deposit_save: {
@@ -15627,6 +17670,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      expense_multi_year: { Args: { p_society_id: string }; Returns: Json };
       expense_petty_cash_assign: {
         Args: {
           p_account_id: string;
@@ -15718,6 +17762,10 @@ export type Database = {
           p_statement_date: string;
         };
         Returns: string;
+      };
+      expense_statements: {
+        Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: Json;
       };
       expense_transfer_record: {
         Args: {
@@ -16004,6 +18052,35 @@ export type Database = {
           p_society_id: string;
           p_status: string;
         };
+        Returns: Json;
+      };
+      meeting_agenda_durations_get: {
+        Args: { p_meeting_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      meeting_agenda_template_archive: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_template_id: string;
+        };
+        Returns: Json;
+      };
+      meeting_agenda_template_save: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_template: Json;
+          p_template_id: string;
+        };
+        Returns: Json;
+      };
+      meeting_agenda_templates_get: {
+        Args: { p_meeting_type: string; p_society_id: string };
         Returns: Json;
       };
       meeting_attendance_remove: {
@@ -16478,6 +18555,16 @@ export type Database = {
         };
         Returns: undefined;
       };
+      parking_condition_set: {
+        Args: {
+          p_condition_status: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_slot_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
       parking_guard_board: {
         Args: { p_query: string; p_society_id: string };
         Returns: Json;
@@ -16598,6 +18685,7 @@ export type Database = {
         };
         Returns: string;
       };
+      parking_summary: { Args: { p_society_id: string }; Returns: Json };
       parking_vehicle_link_set: {
         Args: {
           p_allocation_id: string;
@@ -17985,6 +20073,153 @@ export type Database = {
         };
         Returns: string;
       };
+      tenancy_agreement_metadata_save: {
+        Args: {
+          p_agreement_expires_on: string;
+          p_agreement_starts_on: string;
+          p_agreement_type: string;
+          p_expected_version: number;
+          p_move_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_certificate_attest: {
+        Args: {
+          p_byte_hash: string;
+          p_case_id: string;
+          p_issuer_id: string;
+          p_move_id: string;
+          p_path: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_certificate_issue: {
+        Args: {
+          p_case_id: string;
+          p_expected_version: number;
+          p_move_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_certificate_prepare: {
+        Args: {
+          p_case_id: string;
+          p_client_request_id: string;
+          p_move_id: string;
+          p_purpose: string;
+          p_request_id: string;
+          p_signatory_designation: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      tenancy_certificate_supersede: {
+        Args: {
+          p_certificate_id: string;
+          p_reason: string;
+          p_replacement_certificate_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_certificates_page: {
+        Args: { p_limit?: number; p_offset?: number; p_society_id: string };
+        Returns: Json;
+      };
+      tenancy_clearance_acknowledge: {
+        Args: {
+          p_client_request_id: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_warning_text: string;
+        };
+        Returns: string;
+      };
+      tenancy_clearance_acknowledgement_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      tenancy_clearance_dues_check: {
+        Args: { p_case_id?: string; p_move_id?: string; p_society_id: string };
+        Returns: Json;
+      };
+      tenancy_clearance_file_attach: {
+        Args: {
+          p_covered_membership_id: string;
+          p_covered_party_id: string;
+          p_expected_version: number;
+          p_handover_id: string;
+          p_path: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_clearance_file_upload_path: {
+        Args: {
+          p_content_type: string;
+          p_covered_membership_id: string;
+          p_covered_party_id: string;
+          p_handover_id: string;
+          p_size_bytes: number;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_clearance_handover_approve: {
+        Args: {
+          p_approval_reference: string;
+          p_expected_version: number;
+          p_handover_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_clearance_handover_consent: {
+        Args: {
+          p_expected_version: number;
+          p_handover_id: string;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_clearance_handover_draft: {
+        Args: {
+          p_admin_note: string;
+          p_case_id: string;
+          p_client_request_id: string;
+          p_move_id: string;
+          p_request_id: string;
+          p_responsible_membership_id: string;
+          p_responsible_party_id: string;
+          p_responsible_role: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_clearance_handover_get: {
+        Args: { p_handover_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      tenancy_clearance_handovers_page: {
+        Args: {
+          p_case_id?: string;
+          p_limit?: number;
+          p_move_id?: string;
+          p_offset?: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       tenancy_document_attach: {
         Args: {
           p_expected_version: number;
@@ -18041,6 +20276,10 @@ export type Database = {
         Returns: undefined;
       };
       tenancy_move_get: {
+        Args: { p_move_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      tenancy_move_progress_get: {
         Args: { p_move_id: string; p_society_id: string };
         Returns: Json;
       };
@@ -18108,11 +20347,106 @@ export type Database = {
         Args: { p_request_trace: string; p_today: string };
         Returns: Json;
       };
-      tenancy_settings_update: {
+      tenancy_settings_update:
+        | {
+            Args: {
+              p_clearance_agreement_evidence: string;
+              p_clearance_handover_basis: string;
+              p_police_verification_required: boolean;
+              p_request_id: string;
+              p_society_id: string;
+            };
+            Returns: undefined;
+          }
+        | {
+            Args: {
+              p_clearance_agreement_evidence: string;
+              p_clearance_handover_basis: string;
+              p_police_verification_required: boolean;
+              p_request_id: string;
+              p_society_id: string;
+              p_verification_tracking_enabled: boolean;
+            };
+            Returns: undefined;
+          }
+        | {
+            Args: {
+              p_police_verification_required: boolean;
+              p_request_id: string;
+              p_society_id: string;
+            };
+            Returns: undefined;
+          };
+      tenancy_transfer_case_advance: {
         Args: {
-          p_police_verification_required: boolean;
+          p_case_id: string;
+          p_expected_version: number;
+          p_next_stage: string;
+          p_reason: string;
           p_request_id: string;
           p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_transfer_case_get: {
+        Args: { p_case_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      tenancy_transfer_case_save: {
+        Args: {
+          p_buyer: Json;
+          p_case_id: string;
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_received_on: string;
+          p_request_id: string;
+          p_sellers: Json;
+          p_society_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_transfer_cases_page: {
+        Args: {
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+          p_stage?: string;
+        };
+        Returns: Json;
+      };
+      tenancy_transfer_decision_record: {
+        Args: {
+          p_case_id: string;
+          p_client_request_id: string;
+          p_conditions: Json;
+          p_decision: string;
+          p_expected_version: number;
+          p_meeting_id: string;
+          p_request_id: string;
+          p_resolution_date: string;
+          p_resolution_reference: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      tenancy_verification_save: {
+        Args: {
+          p_expected_version: number;
+          p_move_id: string;
+          p_request_id: string;
+          p_society_id: string;
+          p_verification_checked_on: string;
+          p_verification_reference: string;
+          p_verification_status: string;
+        };
+        Returns: undefined;
+      };
+      tenancy_verification_settings_update: {
+        Args: {
+          p_request_id: string;
+          p_society_id: string;
+          p_verification_tracking_enabled: boolean;
         };
         Returns: undefined;
       };

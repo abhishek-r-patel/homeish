@@ -6,9 +6,15 @@ import {
   ExpenseCategoryForm,
   ExpenseSettingsForm,
 } from '@/components/expense/controls';
+import { ExpenseAgmSettingsForm } from '@/components/expense/agm';
 import { PettyCashAssignForm } from '@/components/expense/reconciliation-controls';
 import { ExpenseNav } from '@/components/expense/nav';
-import { getExpenseWorkspace, getPettyCash } from '@/core/expense/operations';
+import {
+  getExpenseAgmDraft,
+  getExpenseWorkspace,
+  getPettyCash,
+} from '@/core/expense/operations';
+import { expenseFinancialYearStart } from '@/core/expense/validation';
 import {
   formatLocalizedCurrency,
   formatLocalizedDate,
@@ -32,7 +38,10 @@ export default async function ExpenseSetupPage() {
     );
   const w = await getExpenseWorkspace();
   if (!w.can_manage) notFound();
-  const petty = await getPettyCash();
+  const [petty, agm] = await Promise.all([
+    getPettyCash(),
+    getExpenseAgmDraft(expenseFinancialYearStart(w.today)),
+  ]);
   const pettyAccount = petty.account ?? petty.cash_account;
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
@@ -42,6 +51,18 @@ export default async function ExpenseSetupPage() {
         <ExpenseSettingsForm
           key={w.settings.updated_at ?? 'new'}
           workspace={w}
+        />
+      </Card>
+      <Card
+        title={t('AGM report sections')}
+        description={t(
+          'All sections are on by default. Disabled sections stay out of the draft and PDF.',
+        )}
+      >
+        <ExpenseAgmSettingsForm
+          key={agm.settings_updated_at}
+          sections={agm.sections}
+          updatedAt={agm.settings_updated_at}
         />
       </Card>
       <Card

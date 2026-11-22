@@ -1,4 +1,4 @@
-// Validate P16/P39 expense inputs, RPC payloads and module settings.
+// Validate P16/P39/P41 expense inputs, RPC payloads and module settings.
 import { z } from 'zod';
 import { nonnegativeRupeesSchema, rupeesSchema } from '../billing/validation';
 
@@ -432,6 +432,365 @@ export const expenseRecordResultSchema = z.object({
   status: z.enum(EXPENSE_STATUSES),
 });
 
+const financialYearStartSchema = z.iso
+  .date()
+  .refine(
+    (value) => value.endsWith('-04-01'),
+    'Choose an April-to-March financial year.',
+  );
+const expectedVersionSchema = z.number().int().min(1).nullable();
+export const EXPENSE_AGM_WARNING =
+  'The audit tracker and AGM draft do not replace an auditor, accountant or legal advice. They record society-entered facts and are not a statutory report, certification or submission.';
+export const EXPENSE_AGM_SECTION_KEYS = [
+  'finances',
+  'comparison',
+  'funds',
+  'audit',
+  'position',
+  'written',
+] as const;
+export const expenseAgmSectionsSchema = z
+  .object({
+    finances: z.boolean(),
+    comparison: z.boolean(),
+    funds: z.boolean(),
+    audit: z.boolean(),
+    position: z.boolean(),
+    written: z.boolean(),
+  })
+  .strict();
+
+export const expenseAuditAcknowledgeInputSchema = z
+  .object({
+    acknowledged: z.boolean().refine(Boolean, {
+      message: 'Acknowledge the audit and AGM warning.',
+    }),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const expenseAuditYearInputSchema = z
+  .object({
+    yearId: z.uuid().nullable(),
+    financialYearStart: financialYearStartSchema,
+    auditorName: text(120),
+    auditorFirm: text(160),
+    appointedOn: z.iso.date(),
+    appointmentReference: optionalText(160).nullable(),
+    appointmentDocumentId: z.uuid().nullable(),
+    reportReceivedOn: z.iso.date().nullable(),
+    placedBeforeAgmOn: z.iso.date().nullable(),
+    filedOn: z.iso.date().nullable(),
+    opinion: z
+      .enum(['unmodified', 'qualified', 'adverse', 'disclaimer', 'other'])
+      .nullable(),
+    opinionText: optionalText(4000).nullable(),
+    expectedVersion: expectedVersionSchema,
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.appointmentReference !== null ||
+      value.appointmentDocumentId !== null,
+    {
+      path: ['appointmentReference'],
+      message: 'Add a decision reference or document.',
+    },
+  )
+  .refine(
+    (value) => (value.opinion === null) === (value.opinionText === null),
+    {
+      path: ['opinionText'],
+      message: 'Add the copied opinion and its text together.',
+    },
+  );
+export const expenseAuditQueryInputSchema = z
+  .object({
+    queryId: z.uuid().nullable(),
+    auditYearId: z.uuid(),
+    queryNumber: z.number().int().min(1).max(999999),
+    queryDate: z.iso.date(),
+    area: text(120),
+    question: text(4000),
+    assigneeUserId: z.uuid(),
+    dueDate: z.iso.date(),
+    response: optionalText(4000).nullable(),
+    responseDate: z.iso.date().nullable(),
+    expectedVersion: expectedVersionSchema,
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .refine((value) => value.dueDate >= value.queryDate, {
+    path: ['dueDate'],
+    message: 'Choose a due date on or after the query date.',
+  })
+  .refine(
+    (value) => (value.response === null) === (value.responseDate === null),
+    {
+      path: ['response'],
+      message: 'Add the response and its date together.',
+    },
+  );
+export const expenseAuditObjectionInputSchema = z
+  .object({
+    objectionId: z.uuid().nullable(),
+    auditYearId: z.uuid(),
+    description: text(4000),
+    ownerUserId: z.uuid(),
+    dueDate: z.iso.date(),
+    correctionNote: optionalText(4000).nullable(),
+    correctedOn: z.iso.date().nullable(),
+    evidenceDocumentId: z.uuid().nullable(),
+    expectedVersion: expectedVersionSchema,
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .refine(
+    (value) => (value.correctionNote === null) === (value.correctedOn === null),
+    {
+      path: ['correctionNote'],
+      message: 'Add the correction note and its date together.',
+    },
+  );
+export const expenseAgmDraftInputSchema = z
+  .object({
+    draftId: z.uuid().nullable(),
+    financialYearStart: financialYearStartSchema,
+    writtenSections: z
+      .array(z.object({ title: text(120), body: text(10_000) }).strict())
+      .max(10),
+    expectedVersion: expectedVersionSchema,
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const expenseAgmSettingsInputSchema = z
+  .object({
+    sections: expenseAgmSectionsSchema,
+    expectedUpdatedAt: timestamp,
+  })
+  .strict();
+
+export const expenseStatementsSchema = z.object({
+  from: z.iso.date(),
+  to: z.iso.date(),
+  opening_money_paise: money,
+  accounts_added_opening_paise: money,
+  receipts_paise: money,
+  payments_paise: money,
+  closing_money_paise: money,
+  identity_matches: z.boolean(),
+  accounts_added: z.array(
+    z.object({
+      account: z.string(),
+      account_type: z.enum(['cash', 'bank', 'deposit']),
+      opening_on: z.iso.date(),
+      opening_balance_paise: money,
+    }),
+  ),
+  receipt_heads: z.array(
+    z.object({
+      key: z.string(),
+      label: z.string(),
+      amount_paise: money,
+    }),
+  ),
+  payment_heads: z.array(
+    z.object({
+      key: z.uuid(),
+      label: z.string(),
+      amount_paise: money,
+    }),
+  ),
+  months: z.array(
+    z.object({
+      month: z.iso.date(),
+      heads: z.array(
+        z.object({
+          kind: z.enum(['receipt', 'payment']),
+          key: z.string(),
+          label: z.string(),
+          amount_paise: money,
+        }),
+      ),
+    }),
+  ),
+  figures: z.object({
+    average_monthly_expense_paise: money.nonnegative(),
+    average_months: z.number().int().min(0).max(12),
+    cash_cover_months: z.number().nullable(),
+    category_shares: z.array(
+      z.object({
+        category: z.string(),
+        expense_paise: money,
+        share_percent: z.number().nullable(),
+      }),
+    ),
+    comparison_from: z.iso.date(),
+    comparison_to: z.iso.date(),
+    income_change_percent: z.number().nullable(),
+    expenditure_change_percent: z.number().nullable(),
+  }),
+});
+export const expenseFinancialPositionSchema = z.object({
+  as_of: z.iso.date(),
+  billing_enabled: z.boolean(),
+  vendor_enabled: z.boolean(),
+  funds_enabled: z.boolean(),
+  accounts: z.array(
+    z.object({
+      id: z.uuid(),
+      account: z.string(),
+      account_type: z.enum(['cash', 'bank', 'deposit']),
+      active: z.boolean(),
+      available: z.boolean(),
+      balance_paise: money.nullable(),
+    }),
+  ),
+  accounts_total_paise: money,
+  funds: z.array(z.object({ fund: z.string(), balance_paise: money })),
+  unallocated_paise: money.nullable(),
+  member_dues_paise: money.nullable(),
+  vendor_bills_paise: money.nullable(),
+  fixed_deposits: z.array(
+    z.object({
+      bank_name: z.string(),
+      reference: z.string().nullable(),
+      principal_paise: money.nullable(),
+      account_balance_paise: money.nullable(),
+      maturity_on: z.iso.date(),
+    }),
+  ),
+});
+const multiYearHeadSchema = z.object({
+  kind: z.enum(['receipt', 'payment']),
+  key: z.string(),
+  label: z.string(),
+  amount_paise: money,
+  change_percent: z.number().nullable(),
+});
+export const expenseMultiYearSchema = z.object({
+  current_financial_year_start: z.iso.date(),
+  books_started_on: z.iso.date().nullable(),
+  years: z.array(
+    z.object({
+      financial_year_start: z.iso.date(),
+      from: z.iso.date(),
+      to: z.iso.date(),
+      report_end: z.iso.date(),
+      is_current: z.boolean(),
+      not_available: z.boolean(),
+      part_year: z.boolean(),
+      income_paise: money,
+      expense_paise: money,
+      heads: z.array(multiYearHeadSchema),
+    }),
+  ),
+});
+const expenseAuditYearSchema = z.object({
+  id: z.uuid(),
+  auditor_name: z.string(),
+  auditor_firm: z.string(),
+  appointed_on: z.iso.date(),
+  appointment_reference: z.string().nullable(),
+  appointment_document_id: z.uuid().nullable(),
+  report_received_on: z.iso.date().nullable(),
+  placed_before_agm_on: z.iso.date().nullable(),
+  filed_on: z.iso.date().nullable(),
+  opinion: z
+    .enum(['unmodified', 'qualified', 'adverse', 'disclaimer', 'other'])
+    .nullable(),
+  opinion_text: z.string().nullable(),
+  version: z.number().int().positive(),
+  updated_at: timestamp,
+});
+export const expenseAuditSchema = z.object({
+  financial_year_start: z.iso.date(),
+  can_manage: z.boolean(),
+  warning_acknowledged_at: timestamp.nullable(),
+  year: expenseAuditYearSchema.nullable(),
+  queries: z.array(
+    z.object({
+      id: z.uuid(),
+      query_number: z.number().int(),
+      query_date: z.iso.date(),
+      area: z.string(),
+      question: z.string(),
+      assignee_user_id: z.uuid(),
+      assignee_name: z.string(),
+      due_date: z.iso.date(),
+      response: z.string().nullable(),
+      response_date: z.iso.date().nullable(),
+      status: z.enum(['open', 'answered', 'overdue']),
+      version: z.number().int().positive(),
+      updated_at: timestamp,
+    }),
+  ),
+  objections: z.array(
+    z.object({
+      id: z.uuid(),
+      description: z.string(),
+      owner_user_id: z.uuid(),
+      owner_name: z.string(),
+      due_date: z.iso.date(),
+      correction_note: z.string().nullable(),
+      corrected_on: z.iso.date().nullable(),
+      evidence_document_id: z.uuid().nullable(),
+      status: z.enum(['open', 'overdue', 'resolved']),
+      version: z.number().int().positive(),
+      updated_at: timestamp,
+    }),
+  ),
+  staff: z.array(z.object({ user_id: z.uuid(), full_name: z.string() })),
+  documents: z.array(z.object({ id: z.uuid(), title: z.string() })),
+  checks: z.array(
+    z.object({
+      key: z.enum([
+        'months_closed',
+        'bank_unmatched',
+        'fixed_deposits',
+        'petty_cash_count',
+      ]),
+      status: z.enum(['pass', 'attention']),
+      detail: z.string(),
+    }),
+  ),
+  revisions: z.array(
+    z.object({
+      id: z.uuid(),
+      entity_type: z.enum(['audit_year', 'query', 'objection', 'agm_draft']),
+      entity_id: z.uuid(),
+      revision_number: z.number().int().positive(),
+      created_at: timestamp,
+      created_by_name: z.string(),
+    }),
+  ),
+});
+export const expenseAgmDraftSchema = z.object({
+  financial_year_start: z.iso.date(),
+  can_manage: z.boolean(),
+  warning_acknowledged_at: timestamp.nullable(),
+  sections: expenseAgmSectionsSchema,
+  settings_updated_at: timestamp,
+  draft: z
+    .object({
+      id: z.uuid(),
+      written_sections: z.array(
+        z.object({ title: z.string(), body: z.string() }),
+      ),
+      version: z.number().int().positive(),
+      updated_at: timestamp,
+    })
+    .nullable(),
+  revisions: z.array(
+    z.object({
+      id: z.uuid(),
+      revision_number: z.number().int().positive(),
+      created_at: timestamp,
+      created_by_name: z.string(),
+    }),
+  ),
+});
+
 export const STATEMENT_ITEM_STATUSES = [
   'unmatched',
   'matched',
@@ -704,6 +1063,13 @@ export type ExpenseFundsActivity = z.infer<typeof expenseFundsActivitySchema>;
 export type ExpenseRow = z.infer<typeof expenseRowSchema>;
 export type ExpenseEntry = z.infer<typeof expenseEntrySchema>;
 export type ExpenseReport = z.infer<typeof expenseReportSchema>;
+export type ExpenseStatements = z.infer<typeof expenseStatementsSchema>;
+export type ExpenseFinancialPosition = z.infer<
+  typeof expenseFinancialPositionSchema
+>;
+export type ExpenseMultiYear = z.infer<typeof expenseMultiYearSchema>;
+export type ExpenseAudit = z.infer<typeof expenseAuditSchema>;
+export type ExpenseAgmDraft = z.infer<typeof expenseAgmDraftSchema>;
 export type Reconciliation = z.infer<typeof reconciliationSchema>;
 export type PettyCashView = z.infer<typeof pettyCashViewSchema>;
 

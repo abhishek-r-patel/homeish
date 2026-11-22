@@ -122,6 +122,46 @@ test('book entries carry vouchers, statement items match or cancel and petty cas
   }
 });
 
+test('P41 audit warning and AGM draft forms stay usable on phones', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/expense');
+  const p41 = page.getByRole('region', { name: 'P41 audit and AGM' });
+  await p41.getByRole('checkbox', { name: /I understand the warning/ }).check();
+  await p41.getByRole('button', { name: 'Acknowledge and continue' }).click();
+  await expect(p41.getByRole('status')).toContainText('Warning acknowledged');
+
+  await p41.getByText('Audit year', { exact: true }).click();
+  const auditYear = p41
+    .locator('details')
+    .filter({ hasText: 'Audit year' })
+    .first();
+  await auditYear.getByLabel('Auditor name').fill('Synthetic Auditor');
+  await auditYear.getByLabel('Firm').fill('Synthetic Firm');
+  await auditYear.getByLabel('Appointment date').fill('2026-04-20');
+  await auditYear
+    .getByLabel('Appointment decision reference')
+    .fill('AGM/2026/1');
+  await auditYear.getByRole('button', { name: 'Start audit year' }).click();
+  await expect(auditYear.getByRole('status')).toContainText('Audit year saved');
+
+  await p41.getByRole('button', { name: /Add written section/ }).click();
+  await p41.getByLabel('Title (required)').fill('Treasurer note');
+  await p41.getByLabel('Text (required)').fill('Synthetic AGM draft text.');
+  await p41.getByRole('button', { name: 'Create AGM draft' }).click();
+  await expect(
+    p41.getByRole('status').filter({ hasText: 'AGM draft' }),
+  ).toContainText('AGM draft saved');
+
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+});
+
 test('fund opening requires acknowledgement and stays within the Accounts total', async ({
   page,
 }) => {

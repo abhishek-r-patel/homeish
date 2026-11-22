@@ -112,8 +112,35 @@ const agenda = [
     id: AGENDA_1,
     title: 'Approve last year’s accounts',
     description: 'Audited statement shared with the notice.',
+    durationMinutes: 15,
   },
-  { id: AGENDA_2, title: 'Repaint the main gate', description: null },
+  {
+    id: AGENDA_2,
+    title: 'Repaint the main gate',
+    description: null,
+    durationMinutes: 10,
+  },
+];
+const agendaTemplates = [
+  {
+    id: id('71'),
+    name: 'Annual meeting standard',
+    meetingTypes: ['agm'] as const,
+    archivedAt: null,
+    version: 1,
+    items: [
+      {
+        title: 'Confirm the chair',
+        description: 'Start the meeting.',
+        suggestedDurationMinutes: 5,
+      },
+      {
+        title: 'Approve the accounts',
+        description: null,
+        suggestedDurationMinutes: 20,
+      },
+    ],
+  },
 ];
 
 const invited = [
@@ -529,6 +556,12 @@ export default function MeetingFixturePage() {
             detail={adminDetail('draft', role)}
             options={inviteeOptions}
             settings={settings}
+            templates={agendaTemplates.map((template) => ({
+              ...template,
+              meetingTypes: [...template.meetingTypes],
+            }))}
+            templateSaveAction={successAction}
+            templateArchiveAction={successAction}
             action={successAction}
             now={NOW}
           />

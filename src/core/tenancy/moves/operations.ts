@@ -10,14 +10,17 @@ import { attestTenancyNocPrivileged } from '../../privileged';
 import { buildRequestContext } from '../request-context';
 import { storePreparedTenancyNoc } from './files';
 import {
+  tenancyAgreementMetadataInputSchema,
   tenancyDecisionInputSchema,
   tenancyDocumentInputSchema,
   tenancyMoveDetailSchema,
   tenancyMoveInputSchema,
+  tenancyMoveProgressSchema,
   tenancyNocPreparationSchema,
   tenancyPageInputSchema,
   tenancyPageSchema,
   tenancySettingsInputSchema,
+  tenancyVerificationInputSchema,
   tenancyVersionInputSchema,
   tenancyWorkspaceSchema,
 } from './validation';
@@ -90,6 +93,18 @@ export async function getTenancyMove(moveId: unknown) {
     { p_society_id: societyId, p_move_id: id },
     tenancyMoveDetailSchema,
     'Could not load the move request. Refresh and retry.',
+  );
+}
+
+export async function getTenancyMoveProgress(moveId: unknown) {
+  const { context, societyId } = await getContext('tenancy:files');
+  const id = parseModuleInput(z.uuid(), moveId);
+  return callModuleRpc(
+    context,
+    'tenancy_move_progress_get',
+    { p_society_id: societyId, p_move_id: id },
+    tenancyMoveProgressSchema,
+    'Could not load move progress. Refresh and retry.',
   );
 }
 
@@ -221,10 +236,67 @@ export async function saveTenancySettings(input: unknown, requestId: string) {
     {
       p_society_id: societyId,
       p_police_verification_required: values.policeVerificationRequired,
+      p_clearance_handover_basis: values.clearanceHandoverBasis,
+      p_clearance_agreement_evidence: values.clearanceAgreementEvidence,
+      p_verification_tracking_enabled: values.verificationTrackingEnabled,
       p_request_id: context.requestId,
     },
     z.null(),
-    'Could not update the tenant proof requirement. Retry before using the new setting.',
+    'Could not update the Tenancy settings.',
+  );
+}
+
+export async function saveTenancyVerification(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'tenancy:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(tenancyVerificationInputSchema, input);
+  await callModuleRpc(
+    context,
+    'tenancy_verification_save',
+    {
+      p_society_id: societyId,
+      p_move_id: values.moveId,
+      p_expected_version: values.expectedVersion,
+      p_verification_status: values.status,
+      p_verification_checked_on: values.recordedOn,
+      p_verification_reference: values.reference,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The verification record was not saved. Refresh and retry.',
+  );
+}
+
+export async function saveTenancyAgreementMetadata(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'tenancy:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(tenancyAgreementMetadataInputSchema, input);
+  await callModuleRpc(
+    context,
+    'tenancy_agreement_metadata_save',
+    {
+      p_society_id: societyId,
+      p_move_id: values.moveId,
+      p_expected_version: values.expectedVersion,
+      p_agreement_type: values.agreementType,
+      p_agreement_starts_on: values.startsOn,
+      p_agreement_expires_on: values.expiresOn,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'The agreement metadata was not saved. Refresh and retry.',
   );
 }
 

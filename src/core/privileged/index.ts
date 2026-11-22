@@ -57,6 +57,7 @@ export type { TransactionalEmail } from '../notifications/email';
 export { runAmcRemindersPrivileged } from './amc';
 export { runVendorContractRemindersPrivileged } from './vendor';
 export {
+  attestTenancyCertificatePrivileged,
   attestTenancyNocPrivileged,
   runTenancyRemindersPrivileged,
 } from './tenancy';
@@ -64,3 +65,4 @@ export { runPollReconcilePrivileged, runPollRetentionPrivileged } from './poll';
 export { runMeetingActionRemindersPrivileged } from './meeting';
 export { runEventRemindersPrivileged } from './event';
 export { runNoticeScheduledPublishPrivileged } from './communication';
+export { runDocumentExpiryRemindersPrivileged } from './document';

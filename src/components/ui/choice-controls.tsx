@@ -42,7 +42,7 @@ export function CheckboxInput({
           id={id}
           type="checkbox"
         />
-        <span className="absolute inset-0 rounded-sm border border-rule-strong bg-surface peer-checked:border-brand peer-checked:bg-brand peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-disabled:cursor-not-allowed peer-disabled:bg-surface-sunken" />
+        <span className="pointer-events-none absolute inset-0 rounded-sm border border-rule-strong bg-surface peer-checked:border-brand peer-checked:bg-brand peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-disabled:cursor-not-allowed peer-disabled:bg-surface-sunken" />
         <svg
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 size-6 p-space-1 text-on-brand opacity-0 peer-checked:opacity-100"
@@ -87,7 +87,7 @@ export function RadioInput({
           id={id}
           type="radio"
         />
-        <span className="absolute inset-0 rounded-full border border-rule-strong bg-surface peer-checked:border-brand peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-disabled:bg-surface-sunken" />
+        <span className="pointer-events-none absolute inset-0 rounded-full border border-rule-strong bg-surface peer-checked:border-brand peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-disabled:bg-surface-sunken" />
         <span className="pointer-events-none absolute inset-0 m-auto size-3 rounded-full bg-brand opacity-0 peer-checked:opacity-100" />
       </span>
       <span className="flex-1">

@@ -31,6 +31,12 @@ export const PARKING_SLOT_TYPES = [
 export const PARKING_REQUEST_SLOT_TYPES = ['car', 'two_wheeler', 'ev'] as const;
 export const parkingSlotTypeSchema = z.enum(PARKING_SLOT_TYPES);
 export const parkingRequestSlotTypeSchema = z.enum(PARKING_REQUEST_SLOT_TYPES);
+export const PARKING_CONDITION_STATUSES = [
+  'available',
+  'needs_attention',
+  'out_of_service',
+] as const;
+export const parkingConditionStatusSchema = z.enum(PARKING_CONDITION_STATUSES);
 
 /** Mirrors private.parking_normalize_vehicle: drop spaces and hyphens, upper-case. */
 export function normalizeVehicleNumber(value: string) {
@@ -114,6 +120,14 @@ export const parkingSlotInputSchema = z
 
 export const parkingSlotArchiveInputSchema = z
   .object({ slotId: z.uuid(), expectedVersion: version })
+  .strict();
+
+export const parkingConditionInputSchema = z
+  .object({
+    slotId: z.uuid(),
+    conditionStatus: parkingConditionStatusSchema,
+    expectedVersion: version,
+  })
   .strict();
 
 export const parkingRequestInputSchema = z
@@ -358,6 +372,7 @@ export const parkingAdminWorkspaceSchema = z
           id: z.uuid(),
           label: z.string(),
           slot_type: parkingSlotTypeSchema,
+          condition_status: parkingConditionStatusSchema.optional(),
           location_note: z.string().nullable(),
           archived_at: timestamp.nullable(),
           version,
@@ -384,6 +399,42 @@ export const parkingAdminWorkspaceSchema = z
   })
   .strict();
 
+export const parkingSummarySchema = z
+  .object({
+    slots_total: z.number().int().nonnegative(),
+    vacant_slots: z.number().int().nonnegative(),
+    allocated_slots: z.number().int().nonnegative(),
+    vehicle_count: z.number().int().nonnegative(),
+    condition_counts: z
+      .object({
+        available: z.number().int().nonnegative(),
+        needs_attention: z.number().int().nonnegative(),
+        out_of_service: z.number().int().nonnegative(),
+      })
+      .strict(),
+    by_slot_type: z.array(
+      z
+        .object({
+          slot_type: parkingSlotTypeSchema,
+          slot_count: z.number().int().nonnegative(),
+          vacant_count: z.number().int().nonnegative(),
+          allocated_count: z.number().int().nonnegative(),
+          vehicle_count: z.number().int().nonnegative(),
+        })
+        .strict(),
+    ),
+  })
+  .strict()
+  .refine(
+    ({ slots_total, vacant_slots, allocated_slots, condition_counts }) =>
+      vacant_slots + allocated_slots <= slots_total &&
+      condition_counts.available +
+        condition_counts.needs_attention +
+        condition_counts.out_of_service ===
+        slots_total,
+    'Parking summary counts exceed the active slot count.',
+  );
+
 export const parkingGuardBoardSchema = z
   .object({
     visitor_enabled: z.boolean(),
@@ -404,6 +455,9 @@ export const parkingGuardBoardSchema = z
   .strict();
 
 export type ParkingSlotType = z.infer<typeof parkingSlotTypeSchema>;
+export type ParkingConditionStatus = z.infer<
+  typeof parkingConditionStatusSchema
+>;
 export type ParkingRequestSlotType = z.infer<
   typeof parkingRequestSlotTypeSchema
 >;
@@ -414,4 +468,5 @@ export type ParkingResidentWorkspace = z.infer<
   typeof parkingResidentWorkspaceSchema
 >;
 export type ParkingAdminWorkspace = z.infer<typeof parkingAdminWorkspaceSchema>;
+export type ParkingSummary = z.infer<typeof parkingSummarySchema>;
 export type ParkingGuardBoard = z.infer<typeof parkingGuardBoardSchema>;

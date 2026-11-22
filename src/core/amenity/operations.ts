@@ -8,9 +8,15 @@ import { buildRequestContext } from '../tenancy/request-context';
 import { todayInTimeZone } from '../billing/format';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import {
+  amenityActivityInputSchema,
+  amenityCalendarSchema,
+  amenityCalendarSettingsSchema,
+  amenityCalendarVisibilityInputSchema,
+  amenityFacilitiesReportSchema,
   amenityInputSchema,
   amenityBookingInputSchema,
   amenityCancelInputSchema,
+  amenityMonthSchema,
   amenityWorkspaceSchema,
 } from './validation';
 async function contextFor(
@@ -124,4 +130,102 @@ export async function cancelAmenity(input: unknown, requestId: string) {
   );
   await sendNotificationPushesForRequest(requestId);
   return id;
+}
+
+export async function getAmenityCalendarMonth(month?: string) {
+  const { context, societyId } = await contextFor();
+  let selected = month;
+  if (selected === undefined) {
+    const { data, error } = await context.db
+      .from('societies')
+      .select('timezone')
+      .eq('id', societyId)
+      .single();
+    if (error || !data)
+      throw new Error('Could not load the calendar timezone.', {
+        cause: error,
+      });
+    selected = todayInTimeZone(data.timezone).slice(0, 7);
+  }
+  return callModuleRpc(
+    context,
+    'amenity_calendar_month',
+    {
+      p_society_id: societyId,
+      p_month: `${parseModuleInput(amenityMonthSchema, selected)}-01`,
+      p_limit: 500,
+    },
+    amenityCalendarSchema,
+    'Could not load the amenity calendar. Refresh and retry.',
+  );
+}
+
+export async function getAmenityCalendarSettings() {
+  const { context, societyId } = await contextFor();
+  return callModuleRpc(
+    context,
+    'amenity_calendar_settings_get',
+    { p_society_id: societyId },
+    amenityCalendarSettingsSchema,
+    'Could not load amenity calendar settings.',
+  );
+}
+
+export async function saveAmenityCalendarVisibility(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await contextFor(
+    'amenity:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(amenityCalendarVisibilityInputSchema, input);
+  await callModuleRpc(
+    context,
+    'amenity_calendar_visibility_save',
+    {
+      p_society_id: societyId,
+      p_resident_calendar_identity: values.identity,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'Could not save the amenity calendar setting. Refresh and retry.',
+  );
+}
+
+export async function getAmenityFacilitiesReport() {
+  const { context, societyId } = await contextFor();
+  return callModuleRpc(
+    context,
+    'amenity_facilities_report',
+    { p_society_id: societyId, p_limit: 100, p_offset: 0 },
+    amenityFacilitiesReportSchema,
+    'Could not load the facilities report. Refresh and retry.',
+  );
+}
+
+export async function recordAmenityActivity(input: unknown, requestId: string) {
+  const { context, societyId } = await contextFor(
+    'amenity:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(amenityActivityInputSchema, input);
+  return callModuleRpc(
+    context,
+    'amenity_activity_record',
+    {
+      p_society_id: societyId,
+      p_source_kind: values.sourceType,
+      p_source_id: values.sourceId,
+      p_activity_kind: values.activityKind,
+      p_occurred_at_local: values.occurredAtLocal,
+      p_note: values.note,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The facility activity was not saved. Choose an enabled, existing source and retry.',
+  );
 }

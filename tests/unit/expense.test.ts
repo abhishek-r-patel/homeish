@@ -4,6 +4,9 @@ import {
   cashCountInputSchema,
   cashDifferenceKind,
   expenseAccountInputSchema,
+  expenseAgmDraftInputSchema,
+  expenseAuditObjectionInputSchema,
+  expenseAuditYearInputSchema,
   expenseDecisionInputSchema,
   expenseFinancialYearStart,
   expenseFundActivationInputSchema,
@@ -27,10 +30,13 @@ import {
   expenseFundWorkInputSchema,
   type ExpenseEntry,
   type ExpenseReport,
+  type ExpenseStatements,
 } from '../../src/core/expense/validation';
 import {
   expenseEntriesCsv,
   expenseReportPdf,
+  expenseStatementsCsv,
+  expenseStatementsPdf,
   formatSignedRupees,
 } from '../../src/core/expense/documents';
 
@@ -484,6 +490,108 @@ describe('expense exports', () => {
       outstanding_dues_paise: 900_000,
     };
     const pdf = await expenseReportPdf('Green Acres', report, [entry]);
+    expect(new TextDecoder().decode(pdf.slice(0, 5))).toBe('%PDF-');
+  });
+
+  it('requires P41 audit references, paired opinions and paired corrections', () => {
+    const year = {
+      yearId: null,
+      financialYearStart: '2026-04-01',
+      auditorName: 'Synthetic Auditor',
+      auditorFirm: 'Synthetic Firm',
+      appointedOn: '2026-04-20',
+      appointmentReference: 'Resolution 1',
+      appointmentDocumentId: null,
+      reportReceivedOn: null,
+      placedBeforeAgmOn: null,
+      filedOn: null,
+      opinion: null,
+      opinionText: null,
+      expectedVersion: null,
+      clientRequestId: id,
+    };
+    expect(expenseAuditYearInputSchema.safeParse(year).success).toBe(true);
+    expect(
+      expenseAuditYearInputSchema.safeParse({
+        ...year,
+        appointmentReference: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseAuditYearInputSchema.safeParse({
+        ...year,
+        opinion: 'qualified',
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseAuditObjectionInputSchema.safeParse({
+        objectionId: null,
+        auditYearId: id,
+        description: 'Synthetic objection',
+        ownerUserId: id,
+        dueDate: '2026-05-20',
+        correctionNote: 'Corrected from the bank statement.',
+        correctedOn: null,
+        evidenceDocumentId: null,
+        expectedVersion: null,
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('caps AGM drafts and produces safe statement exports', async () => {
+    expect(
+      expenseAgmDraftInputSchema.safeParse({
+        draftId: null,
+        financialYearStart: '2026-04-01',
+        writtenSections: Array.from({ length: 11 }, (_, index) => ({
+          title: `Section ${index}`,
+          body: 'Synthetic text.',
+        })),
+        expectedVersion: null,
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    const statements: ExpenseStatements = {
+      from: '2026-04-01',
+      to: '2026-04-30',
+      opening_money_paise: 100_000,
+      accounts_added_opening_paise: 0,
+      receipts_paise: 25_000,
+      payments_paise: 10_000,
+      closing_money_paise: 115_000,
+      identity_matches: true,
+      accounts_added: [],
+      receipt_heads: [
+        { key: '=unsafe', label: '=unsafe', amount_paise: 25_000 },
+      ],
+      payment_heads: [],
+      months: [
+        {
+          month: '2026-04-01',
+          heads: [
+            {
+              kind: 'receipt',
+              key: '=unsafe',
+              label: '=unsafe',
+              amount_paise: 25_000,
+            },
+          ],
+        },
+      ],
+      figures: {
+        average_monthly_expense_paise: 10_000,
+        average_months: 1,
+        cash_cover_months: 11.5,
+        category_shares: [],
+        comparison_from: '2025-04-01',
+        comparison_to: '2025-04-30',
+        income_change_percent: null,
+        expenditure_change_percent: null,
+      },
+    };
+    expect(expenseStatementsCsv(statements)).toContain("'=unsafe");
+    const pdf = await expenseStatementsPdf('Green Acres', statements);
     expect(new TextDecoder().decode(pdf.slice(0, 5))).toBe('%PDF-');
   });
 });

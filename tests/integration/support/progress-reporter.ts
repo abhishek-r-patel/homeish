@@ -19,7 +19,7 @@ function formatDuration(ms: number): string {
   return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`;
 }
 
-export class IntegrationProgressReporter implements Reporter {
+export default class IntegrationProgressReporter implements Reporter {
   private ctx: Vitest | undefined;
   private total = 0;
   private done = 0;

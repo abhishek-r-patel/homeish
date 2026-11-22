@@ -17,7 +17,9 @@ import {
   type TenancyWorkspace,
 } from '@/core/tenancy/moves/validation';
 import { tenancyProofsReady } from '@/core/tenancy/moves/presentation';
+import { certificatePrepareInputSchema } from '@/core/tenancy/transfers/validation';
 import type { TenancyActions } from '@/components/tenancy/controls';
+import { TransferWorkspaceView } from '@/components/tenancy/transfer-workspace';
 import {
   TenancyMoveView,
   TenancyRouteState,
@@ -123,6 +125,7 @@ const scenarioSchema = z.enum([
   'pagination',
   'move_out',
   'empty',
+  'transfers',
   ...ROUTE_STATES,
 ]);
 const duesSchema = z.enum(['not_checked', 'cleared', 'pending']);
@@ -522,6 +525,48 @@ export default function TenancyFixturePage() {
     },
   };
 
+  const issueCertificate = async (data: FormData) => {
+    const parsed = certificatePrepareInputSchema.parse(input(data));
+    const record = moves.find((move) => move.move.id === parsed.moveId);
+    if (!record) throw new Error('The synthetic move was not found.');
+    if (financialFailure) {
+      setFinancialFailure(false);
+      return {
+        ok: false as const,
+        code: 'INTERNAL_ERROR' as const,
+        referenceId: 'ERR-F1A2B3C4D5',
+        message: 'Dues could not be checked. No NOC was issued; retry.',
+      };
+    }
+    if (
+      !canManage ||
+      record.move.status !== 'completed' ||
+      duesMode === 'pending'
+    )
+      return failure('Current positive dues block certificate issue.');
+    save(
+      {
+        ...record,
+        documents: [
+          ...record.documents,
+          {
+            id: DOCUMENT_ID,
+            kind: 'noc',
+            path: `${SOCIETY_ID}/moves/${record.move.id}/noc/${DOCUMENT_ID}.pdf`,
+            content_type: 'application/pdf',
+            size_bytes: 256,
+            created_at: record.completed_at ?? CREATED_AT,
+          },
+        ],
+      },
+      'noc_issued',
+    );
+    return {
+      ok: true as const,
+      message: 'Numbered tenancy certificate issued.',
+    };
+  };
+
   function changeScenario(value: z.infer<typeof scenarioSchema>) {
     setScenario(value);
     setSelected(null);
@@ -657,46 +702,168 @@ export default function TenancyFixturePage() {
           new URL(publicEnvironment.NEXT_PUBLIC_SUPABASE_URL).origin
         }
       >
-        {routeState ? (
-          <TenancyRouteState
-            kind={routeState}
-            returnHref="/fixtures/tenancy"
-            referenceId={routeState === 'error' ? 'ERR-F1A2B3C4D5' : undefined}
-            onRetry={
-              routeState === 'error'
-                ? () => changeScenario('workflow')
-                : undefined
+        {scenario === 'transfers' ? (
+          <TransferWorkspaceView
+            detail={null}
+            dues={null}
+            certificates={[]}
+            acknowledgement={
+              role === 'admin'
+                ? { acknowledged: false, acknowledged_at: null }
+                : null
             }
-          />
-        ) : detail ? (
-          <TenancyMoveView
-            detail={detail}
+            mode={
+              role === 'committee'
+                ? 'committee'
+                : role === 'admin'
+                  ? 'admin'
+                  : 'own'
+            }
+            page={{
+              items: [
+                {
+                  id: 'f0d55fc3-0751-4b79-86c1-5b3e25942392',
+                  unit_id: UNIT_ID,
+                  unit_number: 'A-101',
+                  stage: 'received',
+                  received_on: '2026-11-15',
+                  version: 1,
+                  buyers: [
+                    {
+                      id: '10d55fc3-0751-4b79-86c1-5b3e25942392',
+                      name: 'Synthetic Buyer',
+                    },
+                  ],
+                },
+              ],
+              total: 1,
+              limit: 25,
+              offset: 0,
+            }}
             workspace={workspace}
-            audience={audience === 'guard' ? 'resident' : audience}
-            baseHref="/fixtures/tenancy"
-            backHref="#schedule"
-            actions={actions}
-            fileRequest={requestFiles}
           />
         ) : (
-          <TenancyWorkspaceView
-            workspace={workspace}
-            page={page}
-            status={status}
-            audience={audience}
-            baseHref="/fixtures/tenancy"
-            actions={actions}
-            getMoveHref={(id) => `#move-${id}`}
-            onCreated={setSelected}
-            onStatusChange={(next) => {
-              setStatus(next);
-              setOffset(0);
-            }}
-            onPageChange={(nextOffset, nextLimit) => {
-              setOffset(nextOffset);
-              setLimit(nextLimit);
-            }}
-          />
+          <>
+            {routeState ? (
+              <TenancyRouteState
+                kind={routeState}
+                returnHref="/fixtures/tenancy"
+                referenceId={
+                  routeState === 'error' ? 'ERR-F1A2B3C4D5' : undefined
+                }
+                onRetry={
+                  routeState === 'error'
+                    ? () => changeScenario('workflow')
+                    : undefined
+                }
+              />
+            ) : detail ? (
+              <TenancyMoveView
+                detail={detail}
+                progress={{
+                  move_id: detail.move.id,
+                  version: detail.move.version,
+                  steps: [
+                    {
+                      key: 'request_recorded',
+                      state: 'complete',
+                      at: CREATED_AT,
+                    },
+                    {
+                      key: 'owner_consent',
+                      state:
+                        detail.move.kind === 'move_out'
+                          ? 'not_required'
+                          : detail.owner_consent_valid
+                            ? 'complete'
+                            : 'pending',
+                      at: detail.owner_consent_valid ? CREATED_AT : null,
+                    },
+                    {
+                      key: 'required_proofs',
+                      state:
+                        detail.move.kind === 'move_out'
+                          ? 'not_required'
+                          : 'pending',
+                      at: null,
+                    },
+                    {
+                      key: 'verification',
+                      state: 'not_required',
+                      at: null,
+                    },
+                    {
+                      key: 'admin_scheduled',
+                      state:
+                        detail.move.status === 'approved' ||
+                        detail.move.status === 'completed'
+                          ? 'complete'
+                          : 'pending',
+                      at:
+                        detail.move.status === 'approved' ||
+                        detail.move.status === 'completed'
+                          ? CREATED_AT
+                          : null,
+                    },
+                    {
+                      key: 'actual_completion',
+                      state:
+                        detail.move.status === 'completed'
+                          ? 'complete'
+                          : 'pending',
+                      at: detail.completed_at,
+                    },
+                    {
+                      key: 'core_occupancy',
+                      state:
+                        detail.move.status === 'completed'
+                          ? 'complete'
+                          : 'pending',
+                      at: detail.completed_at,
+                    },
+                  ],
+                  verification_tracking_enabled: false,
+                  verification: {
+                    status: null,
+                    checked_on: null,
+                    reference: null,
+                  },
+                  agreement: {
+                    type: detail.move.kind === 'move_in' ? 'rental' : null,
+                    starts_on:
+                      detail.move.kind === 'move_in' ? '2026-11-15' : null,
+                    expires_on: detail.agreement_expires_on,
+                  },
+                }}
+                workspace={workspace}
+                audience={audience === 'guard' ? 'resident' : audience}
+                baseHref="/fixtures/tenancy"
+                backHref="#schedule"
+                actions={actions}
+                certificateAction={issueCertificate}
+                fileRequest={requestFiles}
+              />
+            ) : (
+              <TenancyWorkspaceView
+                workspace={workspace}
+                page={page}
+                status={status}
+                audience={audience}
+                baseHref="/fixtures/tenancy"
+                actions={actions}
+                getMoveHref={(id) => `#move-${id}`}
+                onCreated={setSelected}
+                onStatusChange={(next) => {
+                  setStatus(next);
+                  setOffset(0);
+                }}
+                onPageChange={(nextOffset, nextLimit) => {
+                  setOffset(nextOffset);
+                  setLimit(nextLimit);
+                }}
+              />
+            )}
+          </>
         )}
       </main>
     </>

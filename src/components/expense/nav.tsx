@@ -12,6 +12,24 @@ const VIEWS = [
     manageOnly: false,
   },
   {
+    key: 'statements',
+    href: '/admin/expenses/statements',
+    label: 'Statements',
+    manageOnly: false,
+  },
+  {
+    key: 'audit',
+    href: '/admin/expenses/audit',
+    label: 'Audit tracker',
+    manageOnly: false,
+  },
+  {
+    key: 'agm-report',
+    href: '/admin/expenses/agm-report',
+    label: 'AGM draft',
+    manageOnly: false,
+  },
+  {
     key: 'reconciliation',
     href: '/admin/expenses/reconciliation',
     label: 'Reconciliation',

@@ -27,6 +27,8 @@ const MEETING_TABLES = [
   'meeting_resolutions',
   'meeting_minutes',
   'meeting_action_items',
+  'meeting_agenda_templates',
+  'meeting_agenda_template_items',
 ];
 
 describe.skipIf(!hasDatabase)('meeting database foundation', () => {
@@ -122,7 +124,7 @@ describe.skipIf(!hasDatabase)('meeting database foundation', () => {
       ),
     );
 
-    expect(functions.rows).toHaveLength(30);
+    expect(functions.rows).toHaveLength(34);
     for (const fn of functions.rows) {
       expect(fn).toMatchObject({
         society_first: true,

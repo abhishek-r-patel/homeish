@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { AppError, ConflictError, createRequestId } from '../errors';
 import { tenancyNocPathSchema } from '../tenancy/moves/validation';
+import { certificatePathSchema } from '../tenancy/transfers/validation';
 import { privilegedClient } from './server-client';
 
 export async function attestTenancyNocPrivileged(input: {
@@ -65,4 +66,60 @@ export async function runTenancyRemindersPrivileged(
         },
       ),
     );
+}
+
+export async function attestTenancyCertificatePrivileged(input: {
+  societyId: string;
+  moveId: string | null;
+  caseId: string | null;
+  issuerId: string;
+  path: string;
+  expectedBytes: Uint8Array;
+  requestId: string;
+}): Promise<void> {
+  if (
+    !certificatePathSchema.safeParse(input.path).success ||
+    !input.path.startsWith(
+      `${input.societyId.toLowerCase()}/tenancy-certificates/`,
+    ) ||
+    (input.moveId === null) === (input.caseId === null)
+  ) {
+    throw new AppError('FORBIDDEN');
+  }
+  const { data, error } = await privilegedClient.storage
+    .from('tenancy-files')
+    .download(input.path);
+  if (error || !data) {
+    throw new Error(
+      'Could not verify the stored clearance certificate PDF. Retry issuance.',
+      { cause: error },
+    );
+  }
+  if (!Buffer.from(await data.arrayBuffer()).equals(input.expectedBytes)) {
+    throw new ConflictError(
+      'invalid_state',
+      'The stored certificate does not match the approved PDF. Prepare a new certificate after the current preparation expires.',
+    );
+  }
+  const bytes = new Uint8Array(input.expectedBytes.byteLength);
+  bytes.set(input.expectedBytes);
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+  const hash = Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
+  z.null().parse(
+    await invokeUntypedRpc<unknown>(
+      privilegedClient,
+      'tenancy_certificate_attest',
+      {
+        p_society_id: input.societyId,
+        p_move_id: input.moveId,
+        p_case_id: input.caseId,
+        p_issuer_id: input.issuerId,
+        p_path: input.path,
+        p_byte_hash: hash,
+        p_request_id: input.requestId,
+      },
+    ),
+  );
 }

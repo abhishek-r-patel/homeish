@@ -24,11 +24,25 @@ import {
   StatementItemForm,
   StatementMatchForm,
 } from '@/components/expense/reconciliation-controls';
+import {
+  ExpenseAuditQueryForm,
+  ExpenseAuditWarningForm,
+  ExpenseAuditYearForm,
+} from '@/components/expense/audit';
+import {
+  ExpenseAgmDraftForm,
+  ExpenseAgmSettingsForm,
+} from '@/components/expense/agm';
 import { Banner } from '@/components/ui/feedback';
 import type { ModuleFormAction } from '@/components/ui/module-action-form';
 import {
   cashCountInputSchema,
   cashDifferenceKind,
+  expenseAgmDraftInputSchema,
+  expenseAgmSettingsInputSchema,
+  expenseAuditAcknowledgeInputSchema,
+  expenseAuditQueryInputSchema,
+  expenseAuditYearInputSchema,
   DEFAULT_EXPENSE_APPROVAL_THRESHOLD_PAISE,
   expenseAccountInputSchema,
   expenseDecisionInputSchema,
@@ -57,6 +71,7 @@ const financialYear =
   Number(today.slice(0, 4)) - (Number(today.slice(5, 7)) < 4 ? 1 : 0);
 const yearLabel = `${financialYear}-${String((financialYear + 1) % 100).padStart(2, '0')}`;
 const cashAccountId = '00000000-0000-4000-8000-000000000010';
+const auditYearId = '00000000-0000-4000-8000-000000000030';
 const pettyBookPaise = 500_000;
 const members = [
   {
@@ -106,6 +121,23 @@ function input(data: FormData): unknown {
 }
 function failure(message: string) {
   return { ok: false as const, code: 'VALIDATION_FAILED' as const, message };
+}
+
+function acceptP41(
+  schema:
+    | typeof expenseAuditAcknowledgeInputSchema
+    | typeof expenseAuditYearInputSchema
+    | typeof expenseAuditQueryInputSchema
+    | typeof expenseAgmDraftInputSchema
+    | typeof expenseAgmSettingsInputSchema,
+  message: string,
+): ModuleFormAction {
+  return async (data) => {
+    const parsed = schema.safeParse(input(data));
+    return parsed.success
+      ? { ok: true, message }
+      : failure(parsed.error.issues[0].message);
+  };
 }
 
 export default function ExpenseFixturePage() {
@@ -698,6 +730,60 @@ export default function ExpenseFixturePage() {
             />
           )
         ) : null}
+      </section>
+      <section
+        aria-label="P41 audit and AGM"
+        className="grid min-w-0 gap-space-5"
+      >
+        <h2 className="text-heading font-semibold">P41 audit and AGM</h2>
+        <ExpenseAuditWarningForm
+          action={acceptP41(
+            expenseAuditAcknowledgeInputSchema,
+            'Warning acknowledged.',
+          )}
+        />
+        <details>
+          <summary className="cursor-pointer">Audit year</summary>
+          <ExpenseAuditYearForm
+            financialYearStart={`${financialYear}-04-01`}
+            year={null}
+            documents={[]}
+            action={acceptP41(expenseAuditYearInputSchema, 'Audit year saved.')}
+          />
+        </details>
+        <details>
+          <summary className="cursor-pointer">Audit query</summary>
+          <ExpenseAuditQueryForm
+            auditYearId={auditYearId}
+            query={null}
+            staff={members}
+            today={today}
+            action={acceptP41(
+              expenseAuditQueryInputSchema,
+              'Audit query saved.',
+            )}
+          />
+        </details>
+        <ExpenseAgmSettingsForm
+          sections={{
+            finances: true,
+            comparison: true,
+            funds: true,
+            audit: true,
+            position: true,
+            written: true,
+          }}
+          updatedAt="2026-11-22T00:00:00.000Z"
+          action={acceptP41(
+            expenseAgmSettingsInputSchema,
+            'AGM sections saved.',
+          )}
+        />
+        <ExpenseAgmDraftForm
+          draft={null}
+          financialYearStart={`${financialYear}-04-01`}
+          action={acceptP41(expenseAgmDraftInputSchema, 'AGM draft saved.')}
+        />
       </section>
     </main>
   );

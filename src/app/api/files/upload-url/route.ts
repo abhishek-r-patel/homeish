@@ -18,6 +18,8 @@ import { enforceRateLimit } from '../../../../core/rate-limit';
 import { authorizeRequest } from '../../../../core/permissions/authorize';
 import { prepareTenancyProofUpload } from '../../../../core/tenancy/moves/files';
 import { tenancyProofKindSchema } from '../../../../core/tenancy/moves/validation';
+import { prepareClearanceFileUpload } from '../../../../core/tenancy/transfers/files';
+import { clearanceUploadInputSchema } from '../../../../core/tenancy/transfers/validation';
 import { prepareParkingPhotoUpload } from '../../../../core/parking/files';
 import { preparePatrolPhotoUpload } from '../../../../core/patrol/files';
 import { prepareMeteringPhotoUpload } from '../../../../core/metering/files';
@@ -48,12 +50,32 @@ const issueSchema = z.discriminatedUnion('bucket', [
   z
     .object({
       bucket: z.literal('tenancy-files'),
-      moveId: z.uuid(),
-      kind: tenancyProofKindSchema,
+      moveId: z.uuid().optional(),
+      kind: tenancyProofKindSchema.optional(),
+      handoverId: z.uuid().optional(),
+      coveredTransferPartyId: z.uuid().nullable().optional(),
+      coveredMembershipId: z.uuid().nullable().optional(),
       contentType: z.enum(FILE_CONTENT_TYPES),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
     })
-    .strict(),
+    .strict()
+    .superRefine((value, context) => {
+      const proof = value.moveId !== undefined || value.kind !== undefined;
+      const clearance =
+        value.handoverId !== undefined ||
+        value.coveredTransferPartyId !== undefined ||
+        value.coveredMembershipId !== undefined;
+      if (
+        (proof && (value.moveId === undefined || value.kind === undefined)) ||
+        (!proof && !clearance) ||
+        (proof && clearance)
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Choose one tenancy proof or clearance agreement upload.',
+        });
+      }
+    }),
   z
     .object({
       bucket: z.literal('society-assets'),
@@ -238,7 +260,24 @@ export async function POST(request: Request) {
         return { path, signedUrl: data.signedUrl };
       }
       if (input.bucket === 'tenancy-files') {
-        const path = await prepareTenancyProofUpload(context, input);
+        const path =
+          input.handoverId !== undefined
+            ? await prepareClearanceFileUpload(
+                context,
+                clearanceUploadInputSchema.parse({
+                  handoverId: input.handoverId,
+                  coveredTransferPartyId: input.coveredTransferPartyId ?? null,
+                  coveredMembershipId: input.coveredMembershipId ?? null,
+                  contentType: input.contentType,
+                  sizeBytes: input.sizeBytes,
+                }),
+              )
+            : await prepareTenancyProofUpload(context, {
+                moveId: z.uuid().parse(input.moveId),
+                kind: tenancyProofKindSchema.parse(input.kind),
+                contentType: input.contentType,
+                sizeBytes: input.sizeBytes,
+              });
         await enforceRateLimit(
           'fileUploadUserHourly',
           context.userId,

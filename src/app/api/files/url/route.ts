@@ -12,6 +12,8 @@ import { authorizeRequest } from '../../../../core/permissions/authorize';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 import { authoriseTenancyDocumentView } from '../../../../core/tenancy/moves/files';
 import { tenancyDocumentPathSchema } from '../../../../core/tenancy/moves/validation';
+import { authoriseTransferDocumentView } from '../../../../core/tenancy/transfers/files';
+import { transferFilePathSchema } from '../../../../core/tenancy/transfers/validation';
 import { authoriseParkingPhotoView } from '../../../../core/parking/files';
 import { parkingPhotoPathSchema } from '../../../../core/parking/validation';
 import { authorisePatrolPhotoView } from '../../../../core/patrol/files';
@@ -41,7 +43,7 @@ const viewSchema = z.discriminatedUnion('bucket', [
   z
     .object({
       bucket: z.literal('tenancy-files'),
-      path: tenancyDocumentPathSchema,
+      path: z.union([tenancyDocumentPathSchema, transferFilePathSchema]),
     })
     .strict(),
   z
@@ -140,7 +142,11 @@ export async function POST(request: Request) {
     } else if (input.bucket === 'metering-photos') {
       await authoriseMeteringPhotoView(context, input.path);
     } else if (input.bucket === 'tenancy-files') {
-      await authoriseTenancyDocumentView(context, input.path);
+      if (input.path.split('/')[1] === 'moves') {
+        await authoriseTenancyDocumentView(context, input.path);
+      } else {
+        await authoriseTransferDocumentView(context, input.path);
+      }
     } else if (input.bucket === 'delivery-photos') {
       authorizeRequest(context, {
         moduleKey: 'delivery',

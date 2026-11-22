@@ -2,7 +2,9 @@
 'use server';
 import { runServerAction } from '@/core/actions/server-action';
 import {
+  recordAmenityActivity,
   saveAmenity,
+  saveAmenityCalendarVisibility,
   bookAmenity,
   cancelAmenity,
 } from '@/core/amenity/operations';
@@ -34,4 +36,18 @@ export async function cancelAmenityAction(form: FormData) {
     await cancelAmenity(input(form), id);
     return 'Booking cancelled. Any booking fee has been fully credited to the unit ledger.';
   });
+}
+
+export async function saveAmenityCalendarVisibilityAction(form: FormData) {
+  return runServerAction('/admin/settings', async (id) => {
+    await saveAmenityCalendarVisibility(input(form), id);
+    return 'Amenity calendar visibility saved.';
+  });
+}
+
+export async function recordAmenityActivityAction(form: FormData) {
+  return runServerAction<string>('/admin/amenities', async (id) => ({
+    data: await recordAmenityActivity(input(form), id),
+    message: 'Facility activity recorded.',
+  }));
 }

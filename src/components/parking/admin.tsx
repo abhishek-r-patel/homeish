@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import {
   PARKING_PASS_STATE_LABELS,
+  PARKING_CONDITION_LABELS,
   PARKING_SLOT_TYPE_LABELS,
   parkingLinkedVehicles,
   parkingPassState,
@@ -11,13 +12,16 @@ import {
 import {
   PARKING_PHOTO_RETENTION_MAX_DAYS,
   PARKING_PHOTO_RETENTION_MIN_DAYS,
+  PARKING_CONDITION_STATUSES,
   PARKING_REQUEST_SLOT_TYPES,
   PARKING_SLOT_TYPES,
   parkingAllocateInputSchema,
+  parkingConditionInputSchema,
   parkingReportResolveInputSchema,
   parkingSettingsInputSchema,
   parkingSlotInputSchema,
   type ParkingAdminWorkspace,
+  type ParkingSummary,
 } from '@/core/parking/validation';
 import { Banner } from '@/components/ui/feedback';
 import { Card } from '@/components/ui/data-display';
@@ -170,6 +174,41 @@ function AllocateForm({
   );
 }
 
+function ConditionForm({
+  slot,
+  actions,
+}: {
+  slot: AdminSlot;
+  actions: ParkingActions;
+}) {
+  const { t } = useParkingCopy();
+  const id = useId();
+  return (
+    <ModuleActionForm
+      action={actions.setCondition}
+      submitLabel={t('Save condition for slot {label}', { label: slot.label })}
+      input={(form) =>
+        parkingConditionInputSchema.parse({
+          slotId: slot.id,
+          conditionStatus: form.get('conditionStatus'),
+          expectedVersion: slot.version,
+        })
+      }
+    >
+      <SelectInput
+        id={`${id}-condition`}
+        name="conditionStatus"
+        label={t('Slot condition')}
+        defaultValue={slot.condition_status ?? 'available'}
+        options={PARKING_CONDITION_STATUSES.map((value) => ({
+          value,
+          label: t(PARKING_CONDITION_LABELS[value]),
+        }))}
+      />
+    </ModuleActionForm>
+  );
+}
+
 function SlotItem({
   slot,
   workspace,
@@ -206,6 +245,13 @@ function SlotItem({
                 ? t('Visitor slot, used through visitor passes')
                 : t('Free')}
           {slot.location_note ? ` · ${slot.location_note}` : ''}
+        </p>
+        <p className="text-caption">
+          {t('Condition: {condition}', {
+            condition: t(
+              PARKING_CONDITION_LABELS[slot.condition_status ?? 'available'],
+            ),
+          })}
         </p>
         {allocation?.skip_reason ? (
           <p className="text-caption">
@@ -254,6 +300,12 @@ function SlotItem({
             </summary>
             <SlotForm slot={slot} actions={actions} />
           </details>
+          <details className="grid gap-space-2">
+            <summary className="min-h-12 cursor-pointer content-center text-brand underline">
+              {t('Set condition for slot {label}', { label: slot.label })}
+            </summary>
+            <ConditionForm slot={slot} actions={actions} />
+          </details>
           {allocation ? null : (
             <ParkingQuickAction
               action={actions.archiveSlot}
@@ -272,11 +324,13 @@ function SlotItem({
 
 export function ParkingAdminView({
   workspace,
+  summary,
   actions = PARKING_ACTIONS,
   fileRequest,
   now: fixedNow,
 }: {
   workspace: ParkingAdminWorkspace;
+  summary?: ParkingSummary;
   actions?: ParkingActions;
   fileRequest?: typeof fetch;
   now?: number;
@@ -301,6 +355,35 @@ export function ParkingAdminView({
           {t('Only administrators can change slots, allocations and settings.')}
         </Banner>
       )}
+
+      {summary ? (
+        <Card title={t('Parking summary')}>
+          <dl className="grid gap-space-3 medium:grid-cols-3">
+            {[
+              ['Active slots', summary.slots_total],
+              ['Available condition', summary.condition_counts.available],
+              ['Vacant slots', summary.vacant_slots],
+              ['Needs attention', summary.condition_counts.needs_attention],
+              ['Out of service', summary.condition_counts.out_of_service],
+              ['Linked vehicles', summary.vehicle_count],
+            ].map(([label, count]) => (
+              <div key={String(label)}>
+                <dt className="text-caption text-ink-muted">
+                  {t(String(label))}
+                </dt>
+                <dd className="text-title-small font-semibold">
+                  {formatLocalizedNumber(Number(count), locale)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-space-3 text-caption text-ink-muted">
+            {t(
+              'This summary shows counts only. Vehicle numbers and resident details are not included.',
+            )}
+          </p>
+        </Card>
+      ) : null}
 
       <Card
         title={t('Slots')}

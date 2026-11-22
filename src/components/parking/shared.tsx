@@ -25,6 +25,7 @@ import {
   resolveParkingReportAction,
   saveParkingSettingsAction,
   saveParkingSlotAction,
+  setParkingConditionAction,
   setParkingVehicleLinkAction,
 } from '@/app/(resident)/parking/actions';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,7 @@ export type ParkingActions = {
   saveSettings: ModuleFormAction;
   saveSlot: ModuleFormAction;
   archiveSlot: ModuleFormAction;
+  setCondition: ModuleFormAction;
   allocate: ModuleFormAction;
   endAllocation: ModuleFormAction;
   resolveReport: ModuleFormAction;
@@ -85,6 +87,7 @@ export const PARKING_ACTIONS: ParkingActions = {
   saveSettings: saveParkingSettingsAction,
   saveSlot: saveParkingSlotAction,
   archiveSlot: archiveParkingSlotAction,
+  setCondition: setParkingConditionAction,
   allocate: allocateParkingSlotAction,
   endAllocation: endParkingAllocationAction,
   resolveReport: resolveParkingReportAction,

@@ -3,9 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   documentCreateInputSchema,
   documentFolderInputSchema,
+  documentGovernanceSaveInputSchema,
   documentListInputSchema,
   documentPathSchema,
   documentSearchSchema,
+  documentSettingsSchema,
   documentUploadInputSchema,
 } from '../../src/core/document/validation';
 import {
@@ -33,8 +35,10 @@ vi.mock('../../src/core/rate-limit', () => ({
 
 import {
   getDocumentWorkspace,
+  saveGovernanceRecord,
   saveDocumentFolder,
   setDocumentVersionArchived,
+  updateDocumentReminderSettings,
 } from '../../src/core/document/operations';
 
 const societyId = 'c0d55fc3-0751-4b79-86c1-5b3e25942392';
@@ -71,6 +75,88 @@ function context(roles: string[], enabled = true) {
 }
 
 describe('document validation', () => {
+  it('requires linked evidence for verified governance records', () => {
+    const input = {
+      recordId: null,
+      kind: 'validity',
+      title: 'Registration certificate',
+      state: 'verified',
+      source: null,
+      approvingResolutionId: null,
+      details: {
+        issuingAuthority: 'Registrar',
+        reference: 'REG-1',
+        issueDate: '2026-01-01',
+        expiryKind: 'dated',
+        expiryDate: '2027-01-01',
+      },
+      expectedVersion: null,
+      reason: null,
+      clientRequestId: fileId,
+    };
+    expect(documentGovernanceSaveInputSchema.safeParse(input).success).toBe(
+      false,
+    );
+    expect(
+      documentGovernanceSaveInputSchema.safeParse({
+        ...input,
+        source: { kind: 'document_version', id: fileId },
+      }).success,
+    ).toBe(true);
+  });
+
+  it('limits dated expiry, house-rule length and correction reasons', () => {
+    expect(
+      documentGovernanceSaveInputSchema.safeParse({
+        recordId: null,
+        kind: 'validity',
+        title: 'Certificate',
+        state: 'draft',
+        source: null,
+        approvingResolutionId: null,
+        details: {
+          issuingAuthority: null,
+          reference: null,
+          issueDate: null,
+          expiryKind: 'perpetual',
+          expiryDate: '2027-01-01',
+        },
+        expectedVersion: null,
+        reason: null,
+        clientRequestId: fileId,
+      }).success,
+    ).toBe(false);
+    expect(
+      documentGovernanceSaveInputSchema.safeParse({
+        recordId: folderId,
+        kind: 'house_rule',
+        title: 'Rule',
+        state: 'verified',
+        source: { kind: 'document_version', id: fileId },
+        approvingResolutionId: fileId,
+        details: {
+          text: 'x'.repeat(5001),
+          approvalDate: '2026-01-01',
+          effectiveDate: '2026-01-02',
+        },
+        expectedVersion: 1,
+        reason: 'Correct the text',
+        clientRequestId: unitId,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('keeps the empty Documents settings compatible and defaults reminders off', () => {
+    expect(documentSettingsSchema.parse({})).toEqual({});
+    expect(
+      documentSettingsSchema.parse({ expiry_reminders_enabled: true }),
+    ).toEqual({ expiry_reminders_enabled: true });
+    expect(
+      documentSettingsSchema.safeParse({ case_reminders_enabled: true })
+        .success,
+    ).toBe(false);
+  });
+
   it('requires exactly one target and a unit audience only for units', () => {
     expect(documentCreateInputSchema.parse(createInput).description).toBe(null);
     expect(
@@ -149,9 +235,13 @@ describe('document validation', () => {
     ).toEqual({
       folder: undefined,
       unit: unitId,
-      document: undefined,
       archived: false,
       offset: 0,
+      governanceKind: 'validity',
+      governanceSourceKind: 'document_version',
+      governanceSourceOffset: 0,
+      governanceArchived: false,
+      governanceOffset: 0,
     });
   });
 });
@@ -253,5 +343,79 @@ describe('document operations', () => {
         'request-1',
       ),
     ).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+
+  it('maps governance sources and reminder settings without widening access', async () => {
+    mocks.buildRequestContext.mockResolvedValue(context(['admin']));
+    mocks.invokeUntypedRpc.mockResolvedValue({
+      id: folderId,
+      kind: 'validity',
+      title: 'Registration certificate',
+      state: 'verified',
+      source: {
+        state: 'available',
+        kind: 'document_version',
+        id: fileId,
+        label: 'Certificate',
+      },
+      version: 1,
+      archivedAt: null,
+      createdAt: '2026-11-22T10:00:00Z',
+      updatedAt: '2026-11-22T10:00:00Z',
+      validity: {
+        issuingAuthority: 'Registrar',
+        reference: 'REG-1',
+        issueDate: '2026-01-01',
+        expiryKind: 'dated',
+        expiryDate: '2027-01-01',
+      },
+    });
+    await saveGovernanceRecord(
+      {
+        recordId: null,
+        kind: 'validity',
+        title: 'Registration certificate',
+        state: 'verified',
+        source: { kind: 'document_version', id: fileId },
+        approvingResolutionId: null,
+        details: {
+          issuingAuthority: 'Registrar',
+          reference: 'REG-1',
+          issueDate: '2026-01-01',
+          expiryKind: 'dated',
+          expiryDate: '2027-01-01',
+        },
+        expectedVersion: null,
+        reason: null,
+        clientRequestId: fileId,
+      },
+      'request-1',
+    );
+    expect(mocks.invokeUntypedRpc).toHaveBeenCalledWith(
+      {},
+      'document_governance_save',
+      expect.objectContaining({
+        p_document_version_id: fileId,
+        p_tenancy_document_id: null,
+        p_resolution_id: null,
+        p_approving_resolution_id: null,
+      }),
+    );
+    mocks.invokeUntypedRpc.mockResolvedValue({
+      expiry_reminders_enabled: true,
+    });
+    await updateDocumentReminderSettings(
+      { expiryRemindersEnabled: true },
+      'request-1',
+    );
+    expect(mocks.invokeUntypedRpc).toHaveBeenLastCalledWith(
+      {},
+      'document_settings_update',
+      {
+        p_society_id: societyId,
+        p_expiry_reminders_enabled: true,
+        p_request_id: 'request-1',
+      },
+    );
   });
 });

@@ -20,6 +20,10 @@ import {
 } from '../staff/validation';
 import { amcSettingsSchema, DEFAULT_AMC_SETTINGS } from '../amc/validation';
 import {
+  amenitySettingsSchema,
+  DEFAULT_AMENITY_SETTINGS,
+} from '../amenity/validation';
+import {
   DEFAULT_EXPENSE_SETTINGS,
   expenseSettingsSchema,
 } from '../expense/validation';
@@ -760,7 +764,7 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
   },
   amenity: {
     core: false,
-    defaultSettings: emptySettings,
+    defaultSettings: DEFAULT_AMENITY_SETTINGS,
     key: 'amenity',
     name: 'Amenity Booking',
     navigation: {
@@ -788,8 +792,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'amenity:book': ['admin', 'resident'],
       'amenity:cancel': ['admin', 'resident'],
     },
-    settingsAccess: emptySettingsAccess,
-    settingsSchema: emptySettingsSchema,
+    settingsAccess: { resident_calendar_identity: 'admin' },
+    settingsSchema: amenitySettingsSchema,
   },
   directory: {
     core: false,
@@ -911,7 +915,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'tenancy:files': ['admin', 'resident'],
       'tenancy:guard': ['guard'],
     },
-    settingsAccess: { police_verification_required: 'admin' },
+    settingsAccess: {
+      police_verification_required: 'admin',
+      verification_tracking_enabled: 'admin',
+      clearance_handover_basis: 'admin',
+      clearance_agreement_evidence: 'admin',
+    },
     settingsSchema: tenancySettingsSchema,
   },
   document: {
