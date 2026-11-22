@@ -630,6 +630,11 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 - `MTG-5` (P43.5, owner decision 2026-11-21) Admins and committee members see a read-only **Meeting summary** for the last 6 months, the last 12 months or the current financial year: meetings scheduled, held and cancelled; quorum met; average attendance; resolutions by outcome; action items open, overdue and done; held meetings whose minutes are not yet published; and each person's open and overdue action items with the next due date. It is factual only — no score or ranking. A headline tile also appears on Analytics.
 
+**P45 requirements (MTG-6/7; approved for local coding on 2026-11-22 and implemented locally):**
+
+- `MTG-6` Admins may give each agenda item an optional duration of 1–1,440 minutes. When a meeting start time is set, the app derives advisory item start/end estimates in agenda order. A blank duration leaves that item's end and all later item times unknown; without a meeting start time, no estimates are shown. Estimates never change the scheduled meeting time, block scheduling, or claim legal sufficiency or statutory timing.
+- `MTG-7` Admins manage society-shared agenda templates with an ordered list of up to 50 titles, optional descriptions and suggested durations, tagged for one or more meeting types (AGM, SGM, committee). Admins can filter templates by the meeting type, apply one to a draft as an editable copy, and edit or archive/restore templates. If the draft already has agenda items, replacing them requires confirmation. Later template edits or archiving never change agendas already copied into meetings. Committee members remain read-only and cannot manage or use these templates.
+
 #### 5.10.9 Vendors & Purchase Approvals (`vendor`) — P4-3
 
 - `VEN-1` Vendor directory with category, contact, GST number (optional), documents and a rating from admin/committee.
@@ -1333,6 +1338,8 @@ Items marked **High** block design/build of the affected module; resolve them be
 **D-74 — P40 plan recheck refinements (Approved 2026-11-21):** After the plan was checked against the code, the owner chose: (1) suggested fund splits for Billing collections from bill charge lines, and optional suggested funds per expense category and income type, always confirmed by an admin (EXP-12, EXP-13); (2) a cutover on the first day of a month whose previous month is closed (EXP-12); (3) a new Accounts transfer between the society's own accounts with a deposit account type, so fixed deposits are held in Accounts and never double counted (EXP-17, EXP-20). This narrows GAP-M11-04-A only for paired own-account transfers; journal entries, a general ledger and trial balance remain excluded. EXP-20's exact contract was confirmed at the coding go-ahead. (4) P40.1 is split into P40.1a–P40.1c. This decision did not authorize release or live use; beta was approved separately and live use remains unapproved.
 
 **D-75 — P44 document-governance kickoff (Approved 2026-11-22 for the buildable local scope):** See DOC-5–DOC-9 and the choices in §5.10.4. Local coding is approved for DOC-5–DOC-7 and DOC-9, including the selected P18 NOC sources, retained P44 records after NOC-file deletion, one latest-milestone catch-up and publishing code that remains locked. DOC-8, private case implementation, the later publication unlock, hosted migrations, deployment and live use remain separate blocked or approval gates.
+
+**D-76 — P45 agenda timing and templates (Approved 2026-11-22 for local coding):** The implemented local scope adds optional duration estimates and reusable, society-shared templates tagged by meeting type. Blank durations stop the estimate chain; admins alone manage and use templates; applying copies items into an editable draft and asks before replacing an existing agenda; archived templates can be restored. Copies do not change when templates are edited. Timing is advisory only and does not assert legal sufficiency or statutory defaults. Hosted migration, release and live enablement remain separate approvals.
 
 ## 18. Glossary
 

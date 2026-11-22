@@ -1193,6 +1193,18 @@ access is through authorized security-definer RPCs. Records are kept permanently
   materialised invite list. Default AGM/SGM invites all active units; committee meetings invite active admin and
   committee members. Re-materialising an edited scheduled meeting audits any attendance it removes
   (`attendance.remove`).
+- **P45.1 implemented locally (owner approved for local coding 2026-11-22):** `20261130100000_meeting_agenda_enhancements.sql`
+  adds nullable
+  `duration_minutes` to `meeting_agenda_items` (1–1,440 when present). Add society-scoped
+  `meeting_agenda_templates` and `meeting_agenda_template_items`; templates store a name, one or more allowed
+  meeting-type tags, active/archived state and optimistic version, while ordered items store title, optional
+  description and nullable suggested duration. Keep the existing deny-all direct-table policies and use
+  admin-authorized RPCs only. Archiving hides a template from selection and it can be restored. Applying a template
+  copies its items into the meeting's agenda; do not retain a template link, so later template edits or archiving
+  cannot change any meeting. Use a forward-only migration, regenerate database types, and preserve existing P23
+  response shapes for a compatible rollback. Legacy P23 updates that omit the duration field preserve a same-position,
+  unchanged agenda item's stored duration; an explicit `null` still clears it. Template creation uses the idempotent
+  request key under a unique-index conflict, and replay does not create duplicate items or audit events.
 - `meeting_attendance`: one row per invited unit or member; in person, online or proxy (proxy needs a name and
   counts toward quorum). Admin marks or removes any row; while check-in is open an owner or tenant occupant (never
   family) can check their own unit in once. Quorum is an indicator only: present × 100 ≥ percent × invited.

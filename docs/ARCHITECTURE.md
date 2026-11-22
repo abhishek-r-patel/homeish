@@ -178,6 +178,14 @@ the existing `pdf-lib` dependency and copies it into a Documents folder through 
 copy uses one stable request ID per meeting, so a retry cannot create a duplicate, and a failed copy never undoes the
 publish. A synthetic `/fixtures/meeting` page supports accessibility and journey checks.
 
+**P45 extension — implemented locally, not released:** The existing `meeting` module adds optional per-agenda-item
+durations and society-shared agenda templates without adding a route, module or dependency. Template reads and writes
+stay admin-only through existing module authorization and tenant-scoped RPCs; committee roles have no template access.
+Template application is a client-side editable copy into the existing meeting save flow, so no template link exists in
+meeting records and later template changes cannot alter copied agendas. Calculated item times are advisory client data,
+not legal or statutory facts, and a missing duration stops the remaining estimate chain. The forward-only migration
+preserves old P23 update clients by retaining unchanged same-position durations when the new field is omitted.
+
 P27 committee analytics is part of Core (`src/core/analytics/`), not a module: the admin picks metrics from a closed
 catalogue, and each metric shows only while its module is enabled. Each metric is a private SQL function reached only
 through `analytics_dashboard`, which checks the caller once and runs the selected functions in catalogue order. The
