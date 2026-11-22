@@ -530,6 +530,275 @@ describe.skipIf(!hasDatabase)('database amenity booking', () => {
             ).message,
           ).toContain('societies_india_timezone_check');
         }
+
+        if (!throughMigration) {
+          const calendarSettings = await asUser('committee', (client) =>
+            client.query<{ data: unknown }>(
+              'select public.amenity_calendar_settings_get($1) as data',
+              [f.societyId],
+            ),
+          );
+          expect(calendarSettings.rows[0]!.data).toEqual({
+            resident_calendar_identity: 'availability_only',
+            directory_enabled: false,
+            can_manage: false,
+          });
+          expect(
+            (
+              await dbError(
+                asUser('a', (client) =>
+                  client.query(
+                    'select public.amenity_calendar_settings_get($1)',
+                    [f.societyId],
+                  ),
+                ),
+              )
+            ).code,
+          ).toBe('42501');
+          await asUser('admin', (client) =>
+            client.query(
+              'select public.amenity_calendar_visibility_save($1,$2,$3)',
+              [f.societyId, 'booker_name_and_unit', 'calendar-settings'],
+            ),
+          );
+          await db.asSuperuser((client) =>
+            client.query(
+              `insert into public.module_configs(society_id,module_key,enabled,settings)
+             values($1,'directory',true,'{}'),($1,'asset',true,'{}')
+             on conflict(society_id,module_key) do update
+               set enabled=excluded.enabled`,
+              [f.societyId],
+            ),
+          );
+
+          const calendarMonth = await asUser('a', (client) =>
+            client.query<{ data: Record<string, unknown> }>(
+              'select public.amenity_calendar_month($1,$2,$3) as data',
+              [f.societyId, `${horizon.slice(0, 7)}-01`, 500],
+            ),
+          );
+          expect(calendarMonth.rows[0]!.data.month).toMatch(/^\d{4}-\d{2}$/);
+          const calendarItems = calendarMonth.rows[0]!.data.items as Record<
+            string,
+            unknown
+          >[];
+          expect(calendarItems.length).toBeGreaterThan(0);
+          expect(calendarItems.some((item) => item.booker_name)).toBe(true);
+          expect(calendarItems.some((item) => item.unit_number)).toBe(true);
+          expect(JSON.stringify(calendarItems)).not.toMatch(
+            /guest_count|rules_snapshot|cancel_reason|email|phone/i,
+          );
+
+          await db.asSuperuser(async (client) => {
+            await client.query(
+              `insert into public.directory_preferences
+             (society_id,membership_id,name_visible,unit_visible,phone_visible,updated_by)
+             values($1,$2,false,true,false,$3)`,
+              [f.societyId, f.members.get(winner), f.users.get('admin')],
+            );
+            await client.query(
+              "update public.module_configs set enabled=false where society_id=$1 and module_key='directory'",
+              [f.societyId],
+            );
+          });
+          const hiddenCalendar = await asUser('a', (client) =>
+            client.query<{ data: Record<string, unknown> }>(
+              'select public.amenity_calendar_month($1,$2,500) as data',
+              [f.societyId, `${horizon.slice(0, 7)}-01`],
+            ),
+          );
+          const hiddenItems = hiddenCalendar.rows[0]!.data.items as Record<
+            string,
+            unknown
+          >[];
+          expect(
+            hiddenItems.every(
+              (item) => item.booker_name === null && item.unit_number === null,
+            ),
+          ).toBe(true);
+          await db.asSuperuser((client) =>
+            client.query(
+              "update public.module_configs set enabled=true where society_id=$1 and module_key='directory'",
+              [f.societyId],
+            ),
+          );
+          const preferenceHidden = await asUser('a', (client) =>
+            client.query<{ data: Record<string, unknown> }>(
+              'select public.amenity_calendar_month($1,$2,500) as data',
+              [f.societyId, `${horizon.slice(0, 7)}-01`],
+            ),
+          );
+          expect(
+            (
+              preferenceHidden.rows[0]!.data.items as Record<string, unknown>[]
+            ).some((item) => item.booker_name === null && item.unit_number),
+          ).toBe(true);
+
+          const source = await db.asSuperuser(async (client) => {
+            const categoryId = (
+              await client.query<{ id: string }>(
+                `insert into public.asset_categories
+               (society_id,name,client_request_id,created_by,updated_by)
+               values($1,'P52 category',gen_random_uuid(),$2,$2) returning id`,
+                [f.societyId, f.users.get('admin')],
+              )
+            ).rows[0]!.id;
+            return (
+              await client.query<{ id: string }>(
+                `insert into public.assets
+               (society_id,category_id,name,location,client_request_id,created_by,updated_by)
+               values($1,$2,'P52 lift','Tower A',gen_random_uuid(),$3,$3) returning id`,
+                [f.societyId, categoryId, f.users.get('admin')],
+              )
+            ).rows[0]!.id;
+          });
+          const localTime = await asUser('admin', (client) =>
+            client.query<{ value: string }>(
+              `select to_char(clock_timestamp() at time zone 'Asia/Kolkata'
+              - interval '1 minute','YYYY-MM-DD"T"HH24:MI') as value`,
+            ),
+          );
+          const activityRequest = crypto.randomUUID();
+          const activity = await asUser('admin', (client) =>
+            client.query<{ id: string }>(
+              `select public.amenity_activity_record(
+              $1,'asset',$2,'use',$3,'Synthetic facility use',$4,'activity-record'
+            ) as id`,
+              [f.societyId, source, localTime.rows[0]!.value, activityRequest],
+            ),
+          );
+          expect(
+            (
+              await asUser('admin', (client) =>
+                client.query<{ id: string }>(
+                  `select public.amenity_activity_record(
+                  $1,'asset',$2,'use',$3,'Synthetic facility use',$4,'activity-record-retry'
+                ) as id`,
+                  [
+                    f.societyId,
+                    source,
+                    localTime.rows[0]!.value,
+                    activityRequest,
+                  ],
+                ),
+              )
+            ).rows[0]!.id,
+          ).toBe(activity.rows[0]!.id);
+          expect(
+            (
+              await dbError(
+                asUser('a', (client) =>
+                  client.query(
+                    `select public.amenity_activity_record(
+                    $1,'asset',$2,'issue','2026-01-01T09:00','Synthetic',$3,$4
+                  )`,
+                    [
+                      f.societyId,
+                      source,
+                      crypto.randomUUID(),
+                      crypto.randomUUID(),
+                    ],
+                  ),
+                ),
+              )
+            ).code,
+          ).toBe('42501');
+          expect(
+            (
+              await dbError(
+                asUser('admin', (client) =>
+                  client.query(
+                    `select public.amenity_activity_record(
+                    $1,'asset',$2,'issue','2026-1-1T09:00','Synthetic',$3,$4
+                  )`,
+                    [
+                      f.societyId,
+                      source,
+                      crypto.randomUUID(),
+                      crypto.randomUUID(),
+                    ],
+                  ),
+                ),
+              )
+            ).code,
+          ).toBe('22023');
+
+          const report = await asUser('admin', (client) =>
+            client.query<{ data: Record<string, unknown> }>(
+              'select public.amenity_facilities_report($1,25,0) as data',
+              [f.societyId],
+            ),
+          );
+          expect(report.rows[0]!.data).toMatchObject({
+            timezone: 'Asia/Kolkata',
+            can_record: true,
+          });
+          expect(
+            (
+              report.rows[0]!.data.source_choices as {
+                source_kind: string;
+                source_id: string;
+              }[]
+            ).some(
+              (choice) =>
+                choice.source_kind === 'asset' && choice.source_id === source,
+            ),
+          ).toBe(true);
+          const committeeReport = await asUser('committee', (client) =>
+            client.query<{ data: Record<string, unknown> }>(
+              'select public.amenity_facilities_report($1,25,0) as data',
+              [f.societyId],
+            ),
+          );
+          expect(committeeReport.rows[0]!.data.can_record).toBe(false);
+          expect(committeeReport.rows[0]!.data.source_choices).toEqual([]);
+          expect(
+            (
+              await dbError(
+                asUser('admin', (client) =>
+                  client.query('select * from public.amenity_activity_records'),
+                ),
+              )
+            ).code,
+          ).toBe('42501');
+          expect(
+            (
+              await dbError(
+                db.asSuperuser((client) =>
+                  client.query(
+                    'update public.amenity_activity_records set note=$2 where id=$1',
+                    [activity.rows[0]!.id, 'Changed'],
+                  ),
+                ),
+              )
+            ).code,
+          ).toBe('55000');
+
+          await db.asSuperuser((client) =>
+            client.query(
+              "update public.module_configs set enabled=false where society_id=$1 and module_key='asset'",
+              [f.societyId],
+            ),
+          );
+          const hiddenReport = await asUser('admin', (client) =>
+            client.query<{ data: { total: number; items: unknown[] } }>(
+              'select public.amenity_facilities_report($1,25,0) as data',
+              [f.societyId],
+            ),
+          );
+          expect(hiddenReport.rows[0]!.data).toMatchObject({
+            total: 0,
+            items: [],
+          });
+          const retained = await db.asSuperuser((client) =>
+            client.query<{ count: string }>(
+              'select count(*)::text from public.amenity_activity_records where id=$1',
+              [activity.rows[0]!.id],
+            ),
+          );
+          expect(retained.rows[0]!.count).toBe('1');
+        }
+
         await db.asSuperuser((client) =>
           client.query(
             "update public.module_configs set enabled=false where society_id=$1 and module_key='amenity'",

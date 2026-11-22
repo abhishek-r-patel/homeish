@@ -937,4 +937,112 @@ describe.skipIf(!hasDatabase)('parking database contracts', () => {
     );
     expect(stored?.photo_path).toBeNull();
   });
+
+  it('updates P52 slot condition and exposes aggregate-only manager summaries', async () => {
+    const slot = await createSlot('P52-CONDITION', 'car');
+    const allocation = await allocate(slot, 'A-101', 'P52 summary');
+    await link('owner', allocation, 'MH01AB1234');
+
+    expect(
+      (
+        await dbError(
+          call('committee', 'parking_condition_set', [
+            society,
+            slot,
+            'needs_attention',
+            1,
+            'committee-condition',
+          ]),
+        )
+      ).code,
+    ).toBe('42501');
+    await call('admin', 'parking_condition_set', [
+      society,
+      slot,
+      'needs_attention',
+      1,
+      'admin-condition',
+    ]);
+    expect(
+      (
+        await dbError(
+          call('admin', 'parking_condition_set', [
+            society,
+            slot,
+            'out_of_service',
+            1,
+            'stale-condition',
+          ]),
+        )
+      ).code,
+    ).toBe('40001');
+    expect(
+      (
+        await dbError(
+          call('admin', 'parking_condition_set', [
+            society,
+            slot,
+            'closed',
+            2,
+            'invalid-condition',
+          ]),
+        )
+      ).code,
+    ).toBe('22023');
+
+    const summary = (await call('admin', 'parking_summary', [society])) as {
+      slots_total: number;
+      allocated_slots: number;
+      vehicle_count: number;
+      condition_counts: Record<string, number>;
+      by_slot_type: unknown[];
+    };
+    expect(summary.slots_total).toBeGreaterThan(0);
+    expect(summary.allocated_slots).toBeGreaterThan(0);
+    expect(summary.vehicle_count).toBeGreaterThan(0);
+    expect(summary.condition_counts.needs_attention).toBeGreaterThan(0);
+    expect(JSON.stringify(summary)).not.toMatch(/MH0|registration_number/i);
+    expect(await call('committee', 'parking_summary', [society])).toEqual(
+      summary,
+    );
+    expect(
+      (await dbError(call('owner', 'parking_summary', [society]))).code,
+    ).toBe('42501');
+    expect(
+      (
+        await dbError(
+          database.asRole('authenticated', { sub: user('admin') }, (client) =>
+            client.query(
+              'select condition_status from public.parking_slots where id=$1',
+              [slot],
+            ),
+          ),
+        )
+      ).code,
+    ).toBe('42501');
+
+    const audit = await database.asSuperuser(
+      async (client) =>
+        (
+          await client.query<{ after: Record<string, unknown> }>(
+            `select "after" from public.audit_logs
+           where action='parking.slot.condition.update' and entity_id=$1`,
+            [slot],
+          )
+        ).rows.at(-1)?.after,
+    );
+    expect(audit).toMatchObject({
+      condition_status: 'needs_attention',
+      version: 2,
+    });
+
+    await setModule('parking', false);
+    try {
+      expect(
+        (await dbError(call('admin', 'parking_summary', [society]))).code,
+      ).toBe('42501');
+    } finally {
+      await setModule('parking', true);
+    }
+  });
 });
