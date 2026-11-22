@@ -242,7 +242,12 @@ export default async function ExpenseReportsPage({
           {report.balances.map((b) => (
             <li key={b.account} className="flex justify-between gap-space-3">
               <span>
-                {b.account} ({b.account_type === 'cash' ? t('Cash') : t('Bank')}
+                {b.account} (
+                {b.account_type === 'cash'
+                  ? t('Cash')
+                  : b.account_type === 'deposit'
+                    ? t('Deposit')
+                    : t('Bank')}
                 {b.active ? '' : ', inactive'})
               </span>
               <span className="tabular-nums">

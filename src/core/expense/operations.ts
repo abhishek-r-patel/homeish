@@ -15,6 +15,33 @@ import {
   expenseCategoryInputSchema,
   expenseDecisionInputSchema,
   expenseEntriesPageSchema,
+  expenseFundActivationInputSchema,
+  expenseFundAllocationInputSchema,
+  expenseFundAllocationCorrectionInputSchema,
+  expenseFundAllocationResultSchema,
+  expenseFundCutoverQuerySchema,
+  expenseFundInputSchema,
+  expenseFundMappingInputSchema,
+  expenseFundOpeningCorrectionInputSchema,
+  expenseFixedDepositInputSchema,
+  expenseFixedDepositsSchema,
+  expenseFundInterestInputSchema,
+  expenseFundInterestRecordsSchema,
+  expenseFundTransferInputSchema,
+  expenseFundTransferReverseInputSchema,
+  expenseFundTransferRuleInputSchema,
+  expenseFundTransfersSchema,
+  expenseFundCorpusInputSchema,
+  expenseFundCorpusSchema,
+  expenseFundReceiptLinkInputSchema,
+  expenseFundWorkInputSchema,
+  expenseFundWorkLinkInputSchema,
+  expenseFundWorksSchema,
+  expenseFundReportSchema,
+  expenseFundsActivitySchema,
+  expenseFundBillingMappingsSchema,
+  expenseBillingCollectionSuggestionsSchema,
+  expenseFundsWorkspaceSchema,
   expenseIncomeInputSchema,
   expenseMonthCloseInputSchema,
   expenseMonthReopenInputSchema,
@@ -25,6 +52,8 @@ import {
   expenseReportSchema,
   expenseReverseInputSchema,
   expenseSettingsInputSchema,
+  expenseTransferInputSchema,
+  expenseTransferReverseInputSchema,
   expenseWorkspaceSchema,
   EXPENSE_STATUSES,
   cashCountInputSchema,
@@ -168,6 +197,58 @@ export async function getExpenseReport(range: unknown) {
   );
 }
 
+export async function getExpenseFunds(cutover: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = expenseFundCutoverQuerySchema.safeParse(cutover);
+  return callModuleRpc(
+    context,
+    'expense_funds_workspace',
+    {
+      p_society_id: societyId,
+      p_cutover_on: parsed.success ? (parsed.data ?? null) : null,
+    },
+    expenseFundsWorkspaceSchema,
+    'Could not load society funds.',
+  );
+}
+
+export async function getExpenseFundActivity(page: number) {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_funds_activity_transfers',
+    {
+      p_society_id: societyId,
+      p_limit: 50,
+      p_offset: pageOffset(page),
+    },
+    expenseFundsActivitySchema,
+    'Could not load fund balances and allocations.',
+  );
+}
+
+export async function getExpenseFundBillingMappings() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_fund_billing_mappings_list',
+    { p_society_id: societyId },
+    expenseFundBillingMappingsSchema,
+    'Could not load Billing charge fund mappings.',
+  );
+}
+
+export async function getExpenseBillingCollectionSuggestions() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_billing_collection_suggestions',
+    { p_society_id: societyId, p_limit: 200 },
+    expenseBillingCollectionSuggestionsSchema,
+    'Could not load Billing collection suggestions.',
+  );
+}
+
 // Exports read every entry in the range, a page at a time.
 export async function exportExpenseEntries(range: unknown) {
   const { context, societyId } = await expenseContext('read');
@@ -267,6 +348,436 @@ export async function saveExpenseCategory(input: unknown, requestId: string) {
   );
 }
 
+export async function saveExpenseFund(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_save',
+    {
+      p_society_id: societyId,
+      p_fund_id: v.fundId,
+      p_name: v.name,
+      p_active: v.active,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the fund name. A fund can be deactivated but not removed once it is used.',
+  );
+}
+
+export async function activateExpenseFunds(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundActivationInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_funds_activate',
+    {
+      p_society_id: societyId,
+      p_cutover_on: v.cutoverOn,
+      p_allocations: v.allocations.map((allocation) => ({
+        fund_id: allocation.fundId,
+        amount_paise: allocation.amountRupees,
+      })),
+      p_acknowledged: v.acknowledged,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the cutover, close the previous month, acknowledge the warning and keep the fund openings within the non-negative Accounts total.',
+  );
+}
+
+export async function saveExpenseFundMapping(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundMappingInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_mapping_save',
+    {
+      p_society_id: societyId,
+      p_source_kind: v.sourceKind,
+      p_source_id: v.sourceId,
+      p_income_kind: v.incomeKind,
+      p_fund_id: v.fundId,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose an active fund and a valid expense category or income type.',
+  );
+}
+
+export async function confirmExpenseFundAllocations(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundAllocationInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_allocations_confirm',
+    {
+      p_society_id: societyId,
+      p_items: v.items.map((item) => ({
+        entry_id: item.entryId,
+        allocations: item.allocations.map((allocation) => ({
+          fund_id: allocation.fundId,
+          amount_paise: allocation.amountRupees,
+        })),
+      })),
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    expenseFundAllocationResultSchema,
+    'Check the allocations. Each entry must equal its allocation total, and closed months are listed as skipped.',
+  );
+}
+
+export async function correctExpenseFundOpening(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundOpeningCorrectionInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_opening_correct',
+    {
+      p_society_id: societyId,
+      p_allocations: v.allocations.map((allocation) => ({
+        fund_id: allocation.fundId,
+        amount_paise: allocation.amountRupees,
+      })),
+      p_reason: v.reason,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Give a reason, close the previous month and keep the corrected opening within the current non-negative Accounts total.',
+  );
+}
+
+export async function correctExpenseFundAllocation(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundAllocationCorrectionInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_allocation_correct',
+    {
+      p_society_id: societyId,
+      p_entry_id: v.entryId,
+      p_allocations: v.allocations.map((allocation) => ({
+        fund_id: allocation.fundId,
+        amount_paise: allocation.amountRupees,
+      })),
+      p_reason: v.reason,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Give a reason, reopen the month if closed, and keep the corrected split equal to the Accounts entry.',
+  );
+}
+
+export async function getExpenseFixedDeposits() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_fixed_deposits_list',
+    { p_society_id: societyId },
+    expenseFixedDepositsSchema,
+    'Could not load fixed deposits.',
+  );
+}
+
+export async function saveExpenseFixedDeposit(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFixedDepositInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fixed_deposit_save',
+    {
+      p_society_id: societyId,
+      p_deposit_id: v.depositId,
+      p_predecessor_id: v.predecessorId,
+      p_fund_id: v.fundId,
+      p_account_id: v.accountId,
+      p_bank_name: v.bankName,
+      p_reference: v.reference,
+      p_principal_paise: v.principalRupees,
+      p_quoted_rate: v.quotedRate,
+      p_deposit_on: v.depositOn,
+      p_maturity_on: v.maturityOn,
+      p_maturity_value_paise: v.maturityValueRupees,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the fund, deposit account and bank-confirmed deposit terms. A renewal keeps the same account and fund.',
+  );
+}
+
+export async function getExpenseFundInterestRecords() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_fund_interest_list',
+    { p_society_id: societyId },
+    expenseFundInterestRecordsSchema,
+    'Could not load interest and TDS records.',
+  );
+}
+
+export async function saveExpenseFundInterest(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundInterestInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_interest_save',
+    {
+      p_society_id: societyId,
+      p_record_id: v.recordId,
+      p_fund_id: v.fundId,
+      p_fixed_deposit_id: v.fixedDepositId,
+      p_income_entry_id: v.incomeEntryId,
+      p_source_label: v.sourceLabel,
+      p_period_from: v.periodFrom,
+      p_period_to: v.periodTo,
+      p_gross_interest_paise: v.grossInterestRupees,
+      p_tax_withheld_paise: v.taxWithheldRupees,
+      p_actual_credit_paise: v.actualCreditRupees,
+      p_average_balance_paise: v.averageBalanceRupees,
+      p_note: v.note,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the fund, dates, source, bank amounts and linked Accounts interest income.',
+  );
+}
+
+export async function getExpenseFundTransfers() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_fund_transfers_list',
+    { p_society_id: societyId },
+    expenseFundTransfersSchema,
+    'Could not load fund transfer rules and records.',
+  );
+}
+
+export async function saveExpenseFundTransferRule(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundTransferRuleInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_transfer_rule_save',
+    {
+      p_society_id: societyId,
+      p_rule_id: v.ruleId,
+      p_from_fund_id: v.fromFundId,
+      p_to_fund_id: v.toFundId,
+      p_active: v.active,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose two active funds. Existing transfer pairs cannot be changed; deactivate the rule instead.',
+  );
+}
+
+export async function recordExpenseFundTransfer(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundTransferInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_transfer_record',
+    {
+      p_society_id: societyId,
+      p_from_fund_id: v.fromFundId,
+      p_to_fund_id: v.toFundId,
+      p_transfer_on: v.transferOn,
+      p_amount_paise: v.amountRupees,
+      p_reason: v.reason,
+      p_decision_reference: v.decisionReference,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose a configured fund pair and an available source-fund balance. This moves allocation only, not bank money.',
+  );
+}
+
+export async function reverseExpenseFundTransfer(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundTransferReverseInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_transfer_reverse',
+    {
+      p_society_id: societyId,
+      p_transfer_id: v.transferId,
+      p_reverse_on: v.reverseOn,
+      p_reason: v.reason,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Give a reason and reverse the allocation transfer on or after its original date.',
+  );
+}
+
+export async function getExpenseFundCorpus() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_fund_corpus_list',
+    { p_society_id: societyId },
+    expenseFundCorpusSchema,
+    'Could not load corpus records.',
+  );
+}
+
+export async function saveExpenseFundCorpus(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundCorpusInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_corpus_save',
+    {
+      p_society_id: societyId,
+      p_record_id: v.recordId,
+      p_unit_id: v.unitId,
+      p_fund_id: v.fundId,
+      p_event_description: v.eventDescription,
+      p_event_on: v.eventOn,
+      p_reported_amount_paise: v.reportedAmountRupees,
+      p_concession_paise: v.concessionRupees,
+      p_concession_reason: v.concessionReason,
+      p_decision_reference: v.decisionReference,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the unit, fund, reported amount, concession and decision reference.',
+  );
+}
+
+export async function linkExpenseFundReceipt(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundReceiptLinkInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_receipt_link',
+    {
+      p_society_id: societyId,
+      p_corpus_record_id: v.corpusRecordId,
+      p_entry_id: v.entryId,
+      p_amount_paise: v.amountRupees,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose an unreversed Accounts receipt allocated to this fund and stay within both source and corpus caps.',
+  );
+}
+
+export async function getExpenseFundWorks() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_fund_works_list',
+    { p_society_id: societyId },
+    expenseFundWorksSchema,
+    'Could not load sanctioned work.',
+  );
+}
+
+export async function saveExpenseFundWork(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundWorkInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_work_save',
+    {
+      p_society_id: societyId,
+      p_work_id: v.workId,
+      p_fund_id: v.fundId,
+      p_title: v.title,
+      p_sanctioned_amount_paise: v.sanctionedAmountRupees,
+      p_sanctioned_on: v.sanctionedOn,
+      p_valid_until: v.validUntil,
+      p_meeting_resolution_id: v.meetingResolutionId,
+      p_external_reference: v.externalReference,
+      p_expected_updated_at: v.expectedUpdatedAt,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose a passed Homeish resolution or an external reference, plus a fund and valid sanction details.',
+  );
+}
+
+export async function linkExpenseFundWork(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseFundWorkLinkInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_work_link',
+    {
+      p_society_id: societyId,
+      p_work_id: v.workId,
+      p_entry_id: v.entryId,
+      p_amount_paise: v.amountRupees,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose an unreversed posted expense in this fund and stay within its unlinked allocation and sanctioned amount.',
+  );
+}
+
+export async function getExpenseFundReport(range: {
+  from: string;
+  to: string;
+}) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(expenseRangeSchema, range);
+  return callModuleRpc(
+    context,
+    'expense_fund_report',
+    { p_society_id: societyId, p_from: parsed.from, p_to: parsed.to },
+    expenseFundReportSchema,
+    'Choose a valid fund report range of up to two years.',
+  );
+}
+
 export async function recordExpense(input: unknown, requestId: string) {
   const { context, societyId } = await expenseContext('manage', requestId);
   const v = parseModuleInput(expenseRecordInputSchema, input);
@@ -357,6 +868,50 @@ export async function reverseExpenseEntry(input: unknown, requestId: string) {
     },
     z.uuid(),
     'Only expenses and manual income can be reversed, on or after their date, in an open month.',
+  );
+}
+
+export async function recordExpenseTransfer(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseTransferInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_transfer_record',
+    {
+      p_society_id: societyId,
+      p_from_account_id: v.fromAccountId,
+      p_to_account_id: v.toAccountId,
+      p_transfer_on: v.transferOn,
+      p_amount_paise: v.amountRupees,
+      p_reference: v.reference,
+      p_note: v.note,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose two active Accounts, an allowed date and a valid amount. Transfers move money between the society’s own accounts but never count as income or expense.',
+  );
+}
+
+export async function reverseExpenseTransfer(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const v = parseModuleInput(expenseTransferReverseInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_transfer_reverse',
+    {
+      p_society_id: societyId,
+      p_transfer_pair_id: v.transferPairId,
+      p_reverse_on: v.reverseOn,
+      p_reason: v.reason,
+      p_client_request_id: v.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Reverse both transfer legs together, on or after the transfer date and in open months.',
   );
 }
 

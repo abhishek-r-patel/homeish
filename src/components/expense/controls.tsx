@@ -16,8 +16,10 @@ import {
   decideExpenseAction,
   recordExpenseAction,
   recordIncomeAction,
+  recordTransferAction,
   reopenExpenseMonthAction,
   reverseEntryAction,
+  reverseTransferAction,
   saveExpenseAccountAction,
   saveExpenseCategoryAction,
   saveExpenseSettingsAction,
@@ -46,12 +48,23 @@ const INCOME_KINDS = [
 function accountOptions(
   accounts: readonly ExpenseAccount[],
   t: (source: string, values?: MessageValues) => string,
+  includeDeposit = true,
 ) {
   return accounts
-    .filter((account) => account.active)
+    .filter(
+      (account) =>
+        account.active &&
+        (includeDeposit || account.account_type !== 'deposit'),
+    )
     .map((account) => ({
       value: account.id,
-      label: `${account.name} (${t(account.account_type === 'cash' ? 'Cash' : 'Bank')})`,
+      label: `${account.name} (${t(
+        account.account_type === 'cash'
+          ? 'Cash'
+          : account.account_type === 'deposit'
+            ? 'Deposit'
+            : 'Bank',
+      )})`,
     }));
 }
 
@@ -131,7 +144,7 @@ export function ExpenseRecordForm({
         label={t('Paid from')}
         name="accountId"
         required
-        options={accountOptions(accounts, t)}
+        options={accountOptions(accounts, t, false)}
         helpText={t('Cash payments must come from a cash account.')}
       />
       <SelectInput
@@ -229,6 +242,7 @@ export function ExpenseIncomeForm({
         name="accountId"
         required
         options={accountOptions(accounts, t)}
+        helpText={t('Deposit accounts accept interest income only.')}
       />
       <TextInput
         id={`${id}-reference`}
@@ -365,7 +379,13 @@ export function ExpenseAccountForm({
       {account ? (
         <p>
           {t('Type: {type}', {
-            type: t(account.account_type === 'cash' ? 'Cash' : 'Bank account'),
+            type: t(
+              account.account_type === 'cash'
+                ? 'Cash'
+                : account.account_type === 'deposit'
+                  ? 'Fixed-deposit account'
+                  : 'Bank account',
+            ),
           })}
         </p>
       ) : (
@@ -377,6 +397,7 @@ export function ExpenseAccountForm({
           options={[
             { value: 'bank', label: t('Bank account') },
             { value: 'cash', label: t('Cash') },
+            { value: 'deposit', label: t('Fixed-deposit account') },
           ]}
         />
       )}
@@ -448,6 +469,118 @@ export function ExpenseCategoryForm({
         label={t('Active')}
         name="active"
         defaultChecked={category?.active ?? true}
+      />
+    </ModuleActionForm>
+  );
+}
+
+export function ExpenseTransferForm({
+  accounts,
+  today,
+  action = recordTransferAction,
+}: {
+  accounts: readonly ExpenseAccount[];
+  today: string;
+  action?: ModuleFormAction;
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  return (
+    <ModuleActionForm
+      action={action}
+      idempotent
+      submitLabel={t('Record transfer')}
+      input={(data) => ({
+        fromAccountId: data.get('fromAccountId'),
+        toAccountId: data.get('toAccountId'),
+        transferOn: data.get('transferOn'),
+        amountRupees: data.get('amountRupees'),
+        reference: data.get('reference') ?? '',
+        note: data.get('note') ?? '',
+      })}
+    >
+      <TextInput
+        id={`${id}-date`}
+        label={t('Transfer date')}
+        name="transferOn"
+        type="date"
+        required
+        max={today}
+        defaultValue={today}
+      />
+      <SelectInput
+        id={`${id}-from`}
+        label={t('From account')}
+        name="fromAccountId"
+        required
+        options={accountOptions(accounts, t)}
+      />
+      <SelectInput
+        id={`${id}-to`}
+        label={t('To account')}
+        name="toAccountId"
+        required
+        options={accountOptions(accounts, t)}
+      />
+      <AmountInput
+        id={`${id}-amount`}
+        label={t('Amount')}
+        name="amountRupees"
+        required
+      />
+      <TextInput
+        id={`${id}-reference`}
+        label={t('Reference')}
+        name="reference"
+        maxLength={120}
+      />
+      <TextAreaInput
+        id={`${id}-note`}
+        label={t('Note')}
+        name="note"
+        maxLength={2000}
+      />
+    </ModuleActionForm>
+  );
+}
+
+export function ExpenseTransferReverseForm({
+  transferPairId,
+  today,
+  action = reverseTransferAction,
+}: {
+  transferPairId: string;
+  today: string;
+  action?: ModuleFormAction;
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  return (
+    <ModuleActionForm
+      action={action}
+      idempotent
+      submitLabel={t('Reverse both transfer entries')}
+      input={(data) => ({
+        transferPairId,
+        reverseOn: data.get('reverseOn'),
+        reason: data.get('reason'),
+      })}
+    >
+      <TextInput
+        id={`${id}-date`}
+        label={t('Reversal date')}
+        name="reverseOn"
+        type="date"
+        required
+        max={today}
+        defaultValue={today}
+      />
+      <TextAreaInput
+        id={`${id}-reason`}
+        label={t('Reason')}
+        name="reason"
+        required
+        maxLength={1000}
       />
     </ModuleActionForm>
   );

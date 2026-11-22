@@ -6,12 +6,25 @@ import {
   expenseAccountInputSchema,
   expenseDecisionInputSchema,
   expenseFinancialYearStart,
+  expenseFundActivationInputSchema,
+  expenseFundAllocationInputSchema,
+  expenseFundAllocationCorrectionInputSchema,
+  expenseFundInputSchema,
+  expenseFundMappingInputSchema,
+  expenseFundOpeningCorrectionInputSchema,
+  expenseFixedDepositInputSchema,
   expenseMonthCloseInputSchema,
   expenseRangeOrDefault,
   expenseRangeSchema,
   pettyCashAssignInputSchema,
   statementItemCancelInputSchema,
   statementItemInputSchema,
+  expenseTransferInputSchema,
+  expenseTransferReverseInputSchema,
+  expenseFundTransferInputSchema,
+  expenseFundTransferRuleInputSchema,
+  expenseFundCorpusInputSchema,
+  expenseFundWorkInputSchema,
   type ExpenseEntry,
   type ExpenseReport,
 } from '../../src/core/expense/validation';
@@ -28,6 +41,8 @@ const entry: ExpenseEntry = {
   direction: 'in',
   amount_paise: 250_000,
   source: 'billing_payment',
+  transfer_pair_id: null,
+  transfer_account_name: null,
   account_id: id,
   account_name: 'Main bank',
   category_name: null,
@@ -71,6 +86,150 @@ describe('expense validation', () => {
         ...base,
         accountId: id,
         openingBalanceRupees: '0',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('accepts deposit accounts and paired own-account transfers only', () => {
+    expect(
+      expenseAccountInputSchema.parse({
+        accountId: null,
+        expectedUpdatedAt: null,
+        name: 'Fixed deposit',
+        accountType: 'deposit',
+        openingOn: '2026-04-01',
+        openingBalanceRupees: '0',
+        active: true,
+      }).accountType,
+    ).toBe('deposit');
+    expect(
+      expenseTransferInputSchema.safeParse({
+        fromAccountId: id,
+        toAccountId: id,
+        transferOn: '2026-05-04',
+        amountRupees: '100',
+        reference: '',
+        note: '',
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseTransferReverseInputSchema.safeParse({
+        transferPairId: id,
+        reverseOn: '2026-05-04',
+        reason: ' ',
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('validates bank-confirmed deposits and leaves unknown figures null', () => {
+    expect(
+      expenseFixedDepositInputSchema.parse({
+        depositId: null,
+        predecessorId: null,
+        fundId: id,
+        accountId: null,
+        bankName: '  Society bank  ',
+        reference: ' ',
+        principalRupees: null,
+        quotedRate: null,
+        depositOn: '2026-04-01',
+        maturityOn: '2027-04-01',
+        maturityValueRupees: null,
+        expectedUpdatedAt: null,
+      }),
+    ).toMatchObject({
+      bankName: 'Society bank',
+      reference: null,
+      principalRupees: null,
+      quotedRate: null,
+    });
+
+    expect(
+      expenseFixedDepositInputSchema.safeParse({
+        depositId: null,
+        predecessorId: null,
+        fundId: id,
+        accountId: id,
+        bankName: 'Society bank',
+        reference: 'FD-1',
+        principalRupees: '100',
+        quotedRate: '7.2500',
+        depositOn: '2026-04-01',
+        maturityOn: '2026-03-31',
+        maturityValueRupees: '107.25',
+        expectedUpdatedAt: null,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('requires configured fund pairs, reasons and different funds', () => {
+    expect(
+      expenseFundTransferRuleInputSchema.safeParse({
+        ruleId: null,
+        fromFundId: id,
+        toFundId: id,
+        active: true,
+        expectedUpdatedAt: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundTransferInputSchema.safeParse({
+        fromFundId: id,
+        toFundId: '22222222-2222-4222-8222-222222222222',
+        transferOn: '2026-05-04',
+        amountRupees: '100',
+        reason: ' ',
+        decisionReference: 'Resolution-1',
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('requires a reason only for a used corpus concession', () => {
+    expect(
+      expenseFundCorpusInputSchema.safeParse({
+        recordId: null,
+        unitId: id,
+        fundId: id,
+        eventDescription: 'Transfer event',
+        eventOn: '2026-05-01',
+        reportedAmountRupees: '100',
+        concessionRupees: '10',
+        concessionReason: null,
+        decisionReference: 'Resolution-2',
+        expectedUpdatedAt: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundCorpusInputSchema.parse({
+        recordId: null,
+        unitId: id,
+        fundId: id,
+        eventDescription: 'Transfer event',
+        eventOn: '2026-05-01',
+        reportedAmountRupees: '100',
+        concessionRupees: '0',
+        concessionReason: null,
+        decisionReference: 'Resolution-2',
+        expectedUpdatedAt: null,
+      }).reportedAmountRupees,
+    ).toBe(10000);
+  });
+
+  it('requires one authority source for sanctioned work', () => {
+    expect(
+      expenseFundWorkInputSchema.safeParse({
+        workId: null,
+        fundId: id,
+        title: 'Lift repair',
+        sanctionedAmountRupees: '50000',
+        sanctionedOn: '2026-05-01',
+        validUntil: null,
+        meetingResolutionId: id,
+        externalReference: 'Resolution-4',
+        expectedUpdatedAt: null,
       }).success,
     ).toBe(false);
   });
@@ -120,6 +279,107 @@ describe('expense validation', () => {
         '2026-07-15',
       ),
     ).toEqual({ from: '2026-05-01', to: '2026-05-31' });
+  });
+
+  it('requires fund versions and acknowledged month-start openings', () => {
+    expect(
+      expenseFundInputSchema.safeParse({
+        fundId: id,
+        expectedUpdatedAt: null,
+        name: 'Repairs',
+        active: true,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundInputSchema.parse({
+        fundId: null,
+        expectedUpdatedAt: null,
+        name: '  Major repairs  ',
+        active: true,
+      }).name,
+    ).toBe('Major repairs');
+    expect(
+      expenseFundActivationInputSchema.safeParse({
+        cutoverOn: '2026-05-02',
+        allocations: [{ fundId: id, amountRupees: '100' }],
+        acknowledged: true,
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundActivationInputSchema.safeParse({
+        cutoverOn: '2026-05-01',
+        allocations: [{ fundId: id, amountRupees: '100' }],
+        acknowledged: false,
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundActivationInputSchema.parse({
+        cutoverOn: '2026-05-01',
+        allocations: [{ fundId: id, amountRupees: '100.50' }],
+        acknowledged: true,
+        clientRequestId: id,
+      }).allocations[0]?.amountRupees,
+    ).toBe(10_050);
+  });
+
+  it('validates suggestion mappings and bounded allocation batches', () => {
+    expect(
+      expenseFundMappingInputSchema.parse({
+        sourceKind: 'expense_category',
+        sourceId: id,
+        incomeKind: null,
+        fundId: id,
+        expectedUpdatedAt: null,
+      }).sourceId,
+    ).toBe(id);
+    expect(
+      expenseFundMappingInputSchema.safeParse({
+        sourceKind: 'income_kind',
+        sourceId: id,
+        incomeKind: null,
+        fundId: id,
+        expectedUpdatedAt: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundAllocationInputSchema
+        .parse({
+          items: [
+            {
+              entryId: id,
+              allocations: [
+                { fundId: id, amountRupees: '25.50' },
+                { fundId: null, amountRupees: '4.50' },
+              ],
+            },
+          ],
+          clientRequestId: id,
+        })
+        .items[0]?.allocations.map(({ amountRupees }) => amountRupees),
+    ).toEqual([2550, 450]);
+    expect(
+      expenseFundAllocationInputSchema.safeParse({
+        items: [],
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundAllocationCorrectionInputSchema.safeParse({
+        entryId: id,
+        allocations: [{ fundId: id, amountRupees: '25' }],
+        reason: ' ',
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseFundOpeningCorrectionInputSchema.parse({
+        allocations: [{ fundId: id, amountRupees: '0' }],
+        reason: '  Bank reconciliation completed  ',
+        clientRequestId: id,
+      }).reason,
+    ).toBe('Bank reconciliation completed');
   });
 });
 

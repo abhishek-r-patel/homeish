@@ -1965,6 +1965,8 @@ No phase status or delivery mark outside these edits changes. Twenty modules sti
 
 ## M10 — Sinking Fund, Reserve & Repair Fund (Tools 109–120)
 
+**Later owner decision (2026-11-21):** PRD D-73 supersedes the earlier M10 and P39.5 review gates for the approved manual tools, including redevelopment fund transfers. Professional review is recommended rather than an in-app prerequisite; applicable statutory/bye-law checks and separate live-release approval still apply. The original comparison below is historical and is not proof of implementation or professional approval.
+
 **Review status:** All 12 tools compared at detail level. The owner accepted all nine merged decisions for planning on 2026-11-18; GAP-M10-04 uses Option B. They are recorded in P40 and the Toolkit Review Decisions register in [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md#toolkit-review-decisions). Acceptance is not implementation approval.
 
 **Counts:** 4 NEW, 4 ENHANCEMENT, 1 CONFLICT; one base capability (Tool 117's fixed-deposit register) is already accepted in P39.5, and Tool 113 partly overlaps P37.3's planned general bill-estimate calculator. No tool is wholly irrelevant.

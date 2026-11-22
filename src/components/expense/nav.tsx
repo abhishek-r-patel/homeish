@@ -24,6 +24,12 @@ const VIEWS = [
     manageOnly: false,
   },
   {
+    key: 'funds',
+    href: '/admin/expenses/funds',
+    label: 'Funds',
+    manageOnly: false,
+  },
+  {
     key: 'setup',
     href: '/admin/expenses/setup',
     label: 'Setup',

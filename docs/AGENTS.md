@@ -62,9 +62,11 @@ This is not a greenfield scaffold. Inspect the current implementation and [root 
 
 ### 03.3 Phase workflow
 
-1. For the current phase, identify its agreed scope and blocked tasks. Gather the foreseeable owner decisions before building, with plain-language options, recommendations and examples; do not reopen approved decisions.
-2. Record approved decisions in the governing documents before coding. Do not make intermediate commits while gathering decisions or building the phase.
-3. Implement and verify the agreed phase scope. If a new consequential decision arises, pause and ask; report failed or unrun checks rather than calling the phase complete.
+Update the implementation plan before starting each phase or subphase and after each activity, recording actual progress and verification even when the status mark stays the same. Keep task rows, overview rows and status summaries consistent; beta is not owner acceptance.
+
+1. In the planning slice, identify the phase scope and blocked tasks, gather foreseeable owner decisions with plain-language options, recommendations and examples, and prepare the implementation plan and affected contract changes. Do not reopen approved decisions; mark proposals and open questions as such.
+2. Present the completed plan and proposed contracts, then pause for the owner's explicit go-ahead before writing application code, migrations or tests. Allow the owner to change models before confirming. Record approved decisions in the governing documents; do not make intermediate commits while planning or building.
+3. After the go-ahead, implement and verify the agreed phase scope. If a new consequential decision arises, pause and ask; report failed or unrun checks rather than calling the phase complete.
 4. Once the agreed work is complete, propose the local commits and wait for the owner's confirmation under the [commit workflow](../AGENTS.md#commit-and-release-workflow). Wait for a separate owner go-ahead before starting the next phase; ask for direction if the current phase is blocked or incomplete.
 
 ---
