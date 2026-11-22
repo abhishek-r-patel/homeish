@@ -6546,6 +6546,7 @@ export type Database = {
       meeting_agenda_items: {
         Row: {
           description: string | null;
+          duration_minutes: number | null;
           id: string;
           meeting_id: string;
           position: number;
@@ -6555,6 +6556,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           description?: string | null;
+          duration_minutes?: number | null;
           id?: string;
           meeting_id: string;
           position: number;
@@ -6563,6 +6565,7 @@ export type Database = {
         };
         Update: {
           description?: string | null;
+          duration_minutes?: number | null;
           id?: string;
           meeting_id?: string;
           position?: number;
@@ -6582,6 +6585,117 @@ export type Database = {
             columns: ['society_id'];
             isOneToOne: false;
             referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      meeting_agenda_template_items: {
+        Row: {
+          description: string | null;
+          id: string;
+          position: number;
+          society_id: string;
+          suggested_duration_minutes: number | null;
+          template_id: string;
+          title: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          description?: string | null;
+          id?: string;
+          position: number;
+          society_id: string;
+          suggested_duration_minutes?: number | null;
+          template_id: string;
+          title: string;
+        };
+        Update: {
+          description?: string | null;
+          id?: string;
+          position?: number;
+          society_id?: string;
+          suggested_duration_minutes?: number | null;
+          template_id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'meeting_agenda_template_items_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'meeting_agenda_template_items_template_fkey';
+            columns: ['society_id', 'template_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_agenda_templates';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      meeting_agenda_templates: {
+        Row: {
+          archived_at: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          meeting_types: string[];
+          name: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          meeting_types: string[];
+          name: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          meeting_types?: string[];
+          name?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'meeting_agenda_templates_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'meeting_agenda_templates_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'meeting_agenda_templates_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -16482,6 +16596,35 @@ export type Database = {
           p_society_id: string;
           p_status: string;
         };
+        Returns: Json;
+      };
+      meeting_agenda_durations_get: {
+        Args: { p_meeting_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      meeting_agenda_template_archive: {
+        Args: {
+          p_archived: boolean;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_template_id: string;
+        };
+        Returns: Json;
+      };
+      meeting_agenda_template_save: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_request_id: string;
+          p_society_id: string;
+          p_template: Json;
+          p_template_id: string;
+        };
+        Returns: Json;
+      };
+      meeting_agenda_templates_get: {
+        Args: { p_meeting_type: string; p_society_id: string };
         Returns: Json;
       };
       meeting_attendance_remove: {
