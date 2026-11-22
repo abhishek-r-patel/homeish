@@ -23,7 +23,10 @@ import {
 import { Card } from '@/components/ui/data-display';
 import { SelectInput } from '@/components/ui/select-input';
 import { TextInput } from '@/components/ui/text-input';
-import { ModuleActionForm } from '@/components/ui/module-action-form';
+import {
+  ModuleActionForm,
+  type ModuleFormAction,
+} from '@/components/ui/module-action-form';
 import { Banner } from '@/components/ui/feedback';
 import { useTenancyPresentation } from './presentation';
 import {
@@ -66,12 +69,14 @@ export function MoveClearancePanel({
   handovers,
   handoverDetails,
   canManage,
+  issueAction = issueTenancyCertificateAction,
 }: {
   detail: TenancyMoveDetail;
   workspace: TenancyWorkspace;
   handovers: ClearanceHandover[];
   handoverDetails: ClearanceHandoverDetail[];
   canManage: boolean;
+  issueAction?: ModuleFormAction;
 }) {
   const { t } = useTenancyPresentation();
   const id = useId();
@@ -207,7 +212,7 @@ export function MoveClearancePanel({
       workspace.can_write &&
       detail.move.status === 'completed' ? (
         <ModuleActionForm
-          action={issueTenancyCertificateAction}
+          action={issueAction}
           confirmMessage={t(
             'Issue this numbered certificate after a fresh dues recheck and exact PDF verification?',
           )}

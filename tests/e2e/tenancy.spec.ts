@@ -311,17 +311,25 @@ test('move-out blocks positive dues, retains failures for retry, and expires pri
   ).toHaveCount(0);
   await page.getByLabel('Fixture dues').selectOption('not_checked');
   await check(page, 'Fail next financial check');
-  await confirm(page, 'Issue Move-out NOC');
-  const issue = page.getByRole('dialog', {
-    name: 'Issue Move-out NOC',
-    exact: true,
+  await page
+    .getByLabel('Signatory designation (required)')
+    .fill('Society Secretary');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page
+    .getByRole('button', { name: 'Issue Numbered Certificate', exact: true })
+    .click();
+  const certificate = page.getByRole('region', {
+    name: 'Conditional handover and certificate',
   });
-  await expect(issue.getByRole('alert')).toContainText('No NOC was issued');
+  await expect(certificate.getByRole('alert')).toContainText(
+    'No NOC was issued',
+  );
   await expect(
     page.getByRole('button', { name: 'View Move-out NOC', exact: true }),
   ).toHaveCount(0);
-  await issue
-    .getByRole('button', { name: 'Issue Move-out NOC', exact: true })
+  page.once('dialog', (dialog) => dialog.accept());
+  await page
+    .getByRole('button', { name: 'Issue Numbered Certificate', exact: true })
     .click();
   await expect(
     details.getByText('Available in private documents'),

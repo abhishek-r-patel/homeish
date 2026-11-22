@@ -17,6 +17,7 @@ import {
   type TenancyWorkspace,
 } from '@/core/tenancy/moves/validation';
 import { tenancyProofsReady } from '@/core/tenancy/moves/presentation';
+import { certificatePrepareInputSchema } from '@/core/tenancy/transfers/validation';
 import type { TenancyActions } from '@/components/tenancy/controls';
 import { TransferWorkspaceView } from '@/components/tenancy/transfer-workspace';
 import {
@@ -524,6 +525,48 @@ export default function TenancyFixturePage() {
     },
   };
 
+  const issueCertificate = async (data: FormData) => {
+    const parsed = certificatePrepareInputSchema.parse(input(data));
+    const record = moves.find((move) => move.move.id === parsed.moveId);
+    if (!record) throw new Error('The synthetic move was not found.');
+    if (financialFailure) {
+      setFinancialFailure(false);
+      return {
+        ok: false as const,
+        code: 'INTERNAL_ERROR' as const,
+        referenceId: 'ERR-F1A2B3C4D5',
+        message: 'Dues could not be checked. No NOC was issued; retry.',
+      };
+    }
+    if (
+      !canManage ||
+      record.move.status !== 'completed' ||
+      duesMode === 'pending'
+    )
+      return failure('Current positive dues block certificate issue.');
+    save(
+      {
+        ...record,
+        documents: [
+          ...record.documents,
+          {
+            id: DOCUMENT_ID,
+            kind: 'noc',
+            path: `${SOCIETY_ID}/moves/${record.move.id}/noc/${DOCUMENT_ID}.pdf`,
+            content_type: 'application/pdf',
+            size_bytes: 256,
+            created_at: record.completed_at ?? CREATED_AT,
+          },
+        ],
+      },
+      'noc_issued',
+    );
+    return {
+      ok: true as const,
+      message: 'Numbered tenancy certificate issued.',
+    };
+  };
+
   function changeScenario(value: z.infer<typeof scenarioSchema>) {
     setScenario(value);
     setSelected(null);
@@ -797,6 +840,7 @@ export default function TenancyFixturePage() {
                 baseHref="/fixtures/tenancy"
                 backHref="#schedule"
                 actions={actions}
+                certificateAction={issueCertificate}
                 fileRequest={requestFiles}
               />
             ) : (

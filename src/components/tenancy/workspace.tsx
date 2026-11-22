@@ -29,6 +29,7 @@ import {
   Skeleton,
 } from '@/components/ui/feedback';
 import { SelectInput } from '@/components/ui/select-input';
+import type { ModuleFormAction } from '@/components/ui/module-action-form';
 import {
   DataTable,
   FilterBar,
@@ -449,6 +450,7 @@ export function TenancyMoveView({
   actions = DEFAULT_TENANCY_ACTIONS,
   backHref,
   fileRequest,
+  certificateAction,
   handovers = [],
   handoverDetails = [],
 }: {
@@ -460,6 +462,7 @@ export function TenancyMoveView({
   actions?: TenancyActions;
   backHref?: string;
   fileRequest?: typeof fetch;
+  certificateAction?: ModuleFormAction;
   handovers?: ClearanceHandover[];
   handoverDetails?: ClearanceHandoverDetail[];
 }) {
@@ -682,6 +685,7 @@ export function TenancyMoveView({
         detail={detail}
         handovers={handovers}
         handoverDetails={handoverDetails}
+        issueAction={certificateAction}
         workspace={workspace}
       />
       {move.kind === 'move_in' &&
