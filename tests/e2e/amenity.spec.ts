@@ -80,3 +80,48 @@ test('amenity bookings retain accepted rules and fees when an administrator chan
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   }
 });
+
+test('P52 calendar and facility controls preserve privacy and source boundaries', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/amenity');
+
+  await expect(
+    page.getByText('Synthetic Resident', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Occupied; identity is not available in this calendar.'),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      'Data-integrity warning: this booking overlaps another confirmed booking. Existing booking rules were not changed.',
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Previous month' }),
+  ).toHaveAttribute('href', '/fixtures/amenity?month=2026-10');
+
+  await page
+    .getByLabel('Resident calendar identity')
+    .selectOption('booker_name_and_unit');
+  await page
+    .getByRole('button', { name: 'Save amenity calendar visibility' })
+    .click();
+  await expect(page.getByText(/Calendar visibility saved:/)).toBeVisible();
+
+  await page
+    .getByLabel('Existing source')
+    .selectOption(`asset:${'9a696d6f-774c-41d1-ae47-6254d4a8f4cf'}`);
+  await page.getByLabel('Activity').selectOption('issue');
+  await page.getByLabel('Event time').fill('2026-11-22T10:00');
+  await page.getByRole('button', { name: 'Record facility activity' }).click();
+  await expect(page.getByText('Facility activity recorded.')).toBeVisible();
+
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+});

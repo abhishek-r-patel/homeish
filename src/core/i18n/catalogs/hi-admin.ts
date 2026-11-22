@@ -848,6 +848,8 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Society office': 'सोसाइटी कार्यालय',
   'Society payments': 'सोसाइटी के भुगतान',
   'Society settings': 'सोसाइटी सेटिंग',
+  'Choose what resident identity, if any, appears on the month calendar.':
+    'चुनें कि महीने के कैलेंडर में निवासी की कौन-सी पहचान दिखाई जाए; चाहें तो कोई भी नहीं।',
   'Society staff': 'सोसाइटी कर्मचारी',
   'Society Structure': 'सोसाइटी संरचना',
   Sort: 'क्रमबद्ध करें',

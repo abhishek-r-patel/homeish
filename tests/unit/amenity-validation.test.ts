@@ -1,6 +1,8 @@
 // Verify recurring schedule overlap, exact free/paid fees and versioned booking inputs.
 import { describe, expect, it } from 'vitest';
 import {
+  amenityActivityInputSchema,
+  amenityCalendarVisibilityInputSchema,
   amenityInputSchema,
   amenityBookingInputSchema,
 } from '../../src/core/amenity/validation';
@@ -78,6 +80,47 @@ describe('amenity validation', () => {
     ).toBe(false);
     expect(
       amenityBookingInputSchema.safeParse({ ...booking, fee_paise: 0 }).success,
+    ).toBe(false);
+  });
+
+  it('keeps calendar visibility to the approved closed choices', () => {
+    for (const identity of [
+      'availability_only',
+      'booker_name',
+      'booker_name_and_unit',
+    ]) {
+      expect(
+        amenityCalendarVisibilityInputSchema.safeParse({ identity }).success,
+      ).toBe(true);
+    }
+    expect(
+      amenityCalendarVisibilityInputSchema.safeParse({
+        identity: 'phone_and_email',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('requires a typed enabled source and bounded local facility event details', () => {
+    const input = {
+      sourceType: 'amenity_booking',
+      sourceId: id,
+      activityKind: 'use',
+      occurredAtLocal: '2026-11-22T18:30',
+      note: 'Clubhouse used for the booked event.',
+      clientRequestId: id,
+    };
+    expect(amenityActivityInputSchema.safeParse(input).success).toBe(true);
+    expect(
+      amenityActivityInputSchema.safeParse({
+        ...input,
+        sourceType: 'standalone',
+      }).success,
+    ).toBe(false);
+    expect(
+      amenityActivityInputSchema.safeParse({
+        ...input,
+        occurredAtLocal: '2026-11-22 18:30',
+      }).success,
     ).toBe(false);
   });
 });

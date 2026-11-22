@@ -4,7 +4,9 @@ import { Card } from '@/components/ui/data-display';
 import { ErrorPanel } from '@/components/ui/feedback';
 import { JoinCodeControls } from '@/components/society/join-code-controls';
 import { LanguageSettingsControls } from '@/components/society/language-settings-controls';
+import { AmenityCalendarSettings } from '@/components/amenity/settings';
 import { AppError, createRequestId } from '@/core/errors';
+import { getAmenityCalendarSettings } from '@/core/amenity/operations';
 import {
   getHindiAvailability,
   getJoinCodeSettings,
@@ -27,13 +29,17 @@ export default async function SocietySettingsPage() {
     context.languagePreference === 'hi' && context.isHindiEnabled ? 'hi' : 'en';
   const t = (source: string) => translateMessage(locale, source);
   const canViewFunds = context.enabledModules.has('expense') && canViewLanguage;
-  const [registrationSettings, languageSettings] = await Promise.all([
-    canManage ? getJoinCodeSettings(context) : Promise.resolve(null),
-    context.enabledModules.has('language')
-      ? getHindiAvailability(context)
-      : Promise.resolve(null),
-  ]);
-  if (!canManage && !languageSettings && !canViewFunds) {
+  const [registrationSettings, languageSettings, amenitySettings] =
+    await Promise.all([
+      canManage ? getJoinCodeSettings(context) : Promise.resolve(null),
+      context.enabledModules.has('language')
+        ? getHindiAvailability(context)
+        : Promise.resolve(null),
+      context.enabledModules.has('amenity')
+        ? getAmenityCalendarSettings()
+        : Promise.resolve(null),
+    ]);
+  if (!canManage && !languageSettings && !amenitySettings && !canViewFunds) {
     return (
       <ErrorPanel
         message={t(
@@ -104,6 +110,20 @@ export default async function SocietySettingsPage() {
               initialVersion={languageSettings.version}
             />
           </div>
+        </Card>
+      ) : null}
+      {amenitySettings ? (
+        <Card
+          description={t(
+            'Choose what resident identity, if any, appears on the month calendar.',
+          )}
+          title={t('Amenities')}
+        >
+          <AmenityCalendarSettings
+            identity={amenitySettings.resident_calendar_identity}
+            directoryEnabled={amenitySettings.directory_enabled}
+            canManage={amenitySettings.can_manage}
+          />
         </Card>
       ) : null}
       {canViewFunds ? (

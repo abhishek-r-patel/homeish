@@ -5,6 +5,27 @@ const time = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Enter a valid local time.');
 const timestamp = z.iso.datetime({ offset: true });
+export const amenityMonthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+export const AMENITY_CALENDAR_IDENTITIES = [
+  'availability_only',
+  'booker_name',
+  'booker_name_and_unit',
+] as const;
+export const amenityCalendarIdentitySchema = z.enum(
+  AMENITY_CALENDAR_IDENTITIES,
+);
+export const DEFAULT_AMENITY_SETTINGS = {
+  resident_calendar_identity: 'availability_only',
+} as const;
+export const amenitySettingsSchema = z
+  .object({
+    resident_calendar_identity: amenityCalendarIdentitySchema.optional(),
+  })
+  .strict();
+export const amenityCalendarVisibilityInputSchema = z
+  .object({ identity: amenityCalendarIdentitySchema })
+  .strict();
+
 export const recurringSlotSchema = z
   .object({ weekday: z.number().int().min(0).max(6), start: time, end: time })
   .strict()
@@ -123,7 +144,99 @@ export const amenityWorkspaceSchema = z.object({
   ),
   bookings: z.array(amenityBookingSchema),
 });
+export const amenityCalendarSchema = z
+  .object({
+    month: amenityMonthSchema,
+    timezone: z.string().min(1),
+    identity_mode: amenityCalendarIdentitySchema,
+    items: z.array(
+      z
+        .object({
+          amenity_id: z.uuid(),
+          amenity_name: z.string().min(1).max(120),
+          starts_at: timestamp,
+          ends_at: timestamp,
+          booker_name: z.string().max(120).nullable(),
+          unit_number: z.string().max(50).nullable(),
+          overlap_warning: z.boolean(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+export const amenityCalendarSettingsSchema = z
+  .object({
+    resident_calendar_identity: amenityCalendarIdentitySchema,
+    directory_enabled: z.boolean(),
+    can_manage: z.boolean(),
+  })
+  .strict();
+
+export const AMENITY_FACILITY_SOURCE_TYPES = [
+  'amenity_booking',
+  'asset',
+  'amc_visit',
+  'service_request',
+] as const;
+export const amenityFacilitySourceTypeSchema = z.enum(
+  AMENITY_FACILITY_SOURCE_TYPES,
+);
+export const amenityActivityInputSchema = z
+  .object({
+    sourceType: amenityFacilitySourceTypeSchema,
+    sourceId: z.uuid(),
+    activityKind: z.enum(['use', 'issue']),
+    occurredAtLocal: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
+    note: z
+      .string()
+      .trim()
+      .max(500)
+      .nullable()
+      .transform((value) => (value ? value : null)),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const amenityFacilitiesReportSchema = z
+  .object({
+    timezone: z.string().min(1),
+    can_record: z.boolean(),
+    limit: z.number().int().min(1).max(100),
+    offset: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative(),
+    source_choices: z.array(
+      z
+        .object({
+          source_kind: amenityFacilitySourceTypeSchema,
+          source_id: z.uuid(),
+          label: z.string().min(1).max(200),
+        })
+        .strict(),
+    ),
+    items: z.array(
+      z
+        .object({
+          id: z.uuid(),
+          source_kind: amenityFacilitySourceTypeSchema,
+          source_id: z.uuid(),
+          source_label: z.string().min(1).max(200),
+          activity_kind: z.enum(['use', 'issue']),
+          event_at: timestamp,
+          note: z.string().max(500).nullable(),
+          actor_name: z.string().min(1).max(120),
+          created_at: timestamp,
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 export type Amenity = z.infer<typeof amenitySchema>;
 export type AmenitySlot = z.infer<typeof amenitySlotSchema>;
 export type AmenityOccurrence = z.infer<typeof amenityOccurrenceSchema>;
 export type AmenityBooking = z.infer<typeof amenityBookingSchema>;
+export type AmenityCalendar = z.infer<typeof amenityCalendarSchema>;
+export type AmenityCalendarIdentity = z.infer<
+  typeof amenityCalendarIdentitySchema
+>;
+export type AmenityFacilitiesReport = z.infer<
+  typeof amenityFacilitiesReportSchema
+>;

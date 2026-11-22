@@ -93,6 +93,48 @@ export const HI_COMPONENTS: Readonly<Record<string, string>> = {
     'हर स्लॉट के लिए केवल एक बुकिंग की जा सकती है। कम से कम 24 घंटे पहले बुक करें; बुकिंग की अधिकतम अवधि या रोज़ाना बुकिंग सीमा नहीं है। सभी समय {timezone} के अनुसार हैं।',
   'Booking date': 'बुकिंग की तारीख',
   'Show availability and bookings': 'उपलब्धता और बुकिंग दिखाएँ',
+  'Month calendar': 'महीने का कैलेंडर',
+  'Confirmed bookings only. The booking picker on the date above keeps other units anonymous.':
+    'केवल पुष्टि की गई बुकिंग। ऊपर की तारीख़ चुनने वाले पिकर में अन्य यूनिट गुमनाम रहती हैं।',
+  'Calendar month navigation': 'कैलेंडर महीने की दिशा',
+  'Previous month': 'पिछला महीना',
+  'Next month': 'अगला महीना',
+  'Calendar month': 'कैलेंडर महीना',
+  'Show month': 'महीना दिखाएँ',
+  'Occupied; identity is not available in this calendar.':
+    'व्यस्त; इस कैलेंडर में पहचान उपलब्ध नहीं है।',
+  'Data-integrity warning: this booking overlaps another confirmed booking. Existing booking rules were not changed.':
+    'डेटा की चेतावनी: यह बुकिंग किसी दूसरी पुष्टि की गई बुकिंग से ओवरलैप करती है। मौजूदा बुकिंग नियम नहीं बदले गए हैं।',
+  'No confirmed bookings in this month.': 'इस महीने कोई पुष्टि की गई बुकिंग नहीं है।',
+  'Times use {timezone}.': 'समय {timezone} के अनुसार हैं।',
+  Facilities: 'सुविधा उपयोग',
+  'Factual use and issues stay linked to their existing booking, asset, AMC visit or service request.':
+    'वास्तविक उपयोग और समस्याएँ मौजूदा बुकिंग, एसेट, AMC विज़िट या सेवा अनुरोध से जुड़ी रहती हैं।',
+  'Only administrators can record facility activity.':
+    'केवल व्यवस्थापक सुविधा गतिविधि दर्ज कर सकते हैं।',
+  'Record facility activity': 'सुविधा गतिविधि दर्ज करें',
+  'Existing source': 'मौजूदा स्रोत',
+  Activity: 'गतिविधि',
+  Use: 'उपयोग',
+  Issue: 'समस्या',
+  'Event time': 'घटना का समय',
+  'Use society-local time ({timezone}).':
+    'सोसाइटी का स्थानीय समय ({timezone}) उपयोग करें।',
+  'Factual note (optional)': 'तथ्यात्मक टिप्पणी (वैकल्पिक)',
+  'Issues that need a service action must continue through Service Requests. This record is not a repair, charge or accounting entry.':
+    'जिन समस्याओं के लिए सेवा कार्रवाई चाहिए, उन्हें सेवा अनुरोध में आगे बढ़ाएँ। यह रिकॉर्ड मरम्मत, शुल्क या लेखा प्रविष्टि नहीं है।',
+  'No enabled booking, asset, AMC visit or service-request source is available. Activity cannot be recorded without one.':
+    'कोई चालू बुकिंग, एसेट, AMC विज़िट या सेवा-अनुरोध स्रोत उपलब्ध नहीं है। स्रोत के बिना गतिविधि दर्ज नहीं की जा सकती।',
+  'Recorded by {name} on {date}.': '{name} ने {date} को दर्ज किया।',
+  'No source-linked facility activity yet.':
+    'अभी कोई स्रोत से जुड़ी सुविधा गतिविधि नहीं है।',
+  'Residents see availability only.': 'निवासी केवल उपलब्धता देखते हैं।',
+  'The selected identity mode is unavailable because the Directory module is off. Residents still see availability only.':
+    'डायरेक्टरी मॉड्यूल बंद है, इसलिए चुना गया पहचान मोड उपलब्ध नहीं है। निवासी अभी भी केवल उपलब्धता देखते हैं।',
+  'Save amenity calendar visibility': 'सुविधा कैलेंडर दृश्यता सहेजें',
+  'Resident calendar identity': 'निवासी कैलेंडर पहचान',
+  'Name and unit are shown only when Directory is enabled and the person has allowed each field. Phone, email, guest count, rules and cancellation details are never shown here.':
+    'नाम और यूनिट केवल तब दिखते हैं जब डायरेक्टरी चालू हो और व्यक्ति ने हर फ़ील्ड की अनुमति दी हो। फ़ोन, ईमेल, अतिथि संख्या, नियम और रद्दीकरण विवरण यहाँ कभी नहीं दिखाए जाते।',
   'Add amenity': 'सुविधा जोड़ें',
   'Billing is disabled. Only free slots can be booked; cancellations still credit existing paid bookings.':
     'बिलिंग बंद है। केवल मुफ़्त स्लॉट बुक किए जा सकते हैं; रद्द करने पर पहले से भुगतान की गई बुकिंग का क्रेडिट फिर भी दिया जाएगा।',

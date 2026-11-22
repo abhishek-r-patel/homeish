@@ -6,12 +6,17 @@ import {
   AmenityBookingForm,
   AmenityCancellationForm,
 } from '@/components/amenity/controls';
+import { AmenityCalendarView } from '@/components/amenity/calendar';
+import { AmenityFacilitiesView } from '@/components/amenity/facilities';
+import { AmenityCalendarSettings } from '@/components/amenity/settings';
 import { Banner } from '@/components/ui/feedback';
 import type { ModuleFormAction } from '@/components/ui/module-action-form';
 import {
   amenityInputSchema,
   amenityBookingInputSchema,
   amenityCancelInputSchema,
+  amenityActivityInputSchema,
+  amenityCalendarVisibilityInputSchema,
   type Amenity,
   type AmenityBooking,
   type AmenitySlot,
@@ -115,6 +120,33 @@ export default function AmenityFixturePage() {
       message: 'Booking cancelled with a full ledger credit.',
     };
   };
+  const saveCalendar: ModuleFormAction = async (data) => {
+    const parsed = amenityCalendarVisibilityInputSchema.safeParse(input(data));
+    return parsed.success
+      ? {
+          ok: true,
+          message: `Calendar visibility saved: ${parsed.data.identity}.`,
+        }
+      : {
+          ok: false,
+          code: 'VALIDATION_FAILED',
+          message: 'Choose a listed calendar visibility mode.',
+        };
+  };
+  const recordActivity: ModuleFormAction = async (data) => {
+    const parsed = amenityActivityInputSchema.safeParse(input(data));
+    return parsed.success
+      ? {
+          ok: true,
+          data: crypto.randomUUID(),
+          message: 'Facility activity recorded.',
+        }
+      : {
+          ok: false,
+          code: 'VALIDATION_FAILED',
+          message: parsed.error.issues[0]?.message ?? 'Check the activity.',
+        };
+  };
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-content-default gap-space-5 px-space-4 py-space-6 text-ink">
       <Banner title="Synthetic amenity fixture" tone="info">
@@ -122,6 +154,60 @@ export default function AmenityFixturePage() {
         Reload to reset.
       </Banner>
       <h1 className="text-title font-semibold">Amenity workflows</h1>
+      <section aria-label="Amenity calendar settings">
+        <AmenityCalendarSettings
+          identity="booker_name"
+          directoryEnabled
+          canManage
+          action={saveCalendar}
+        />
+      </section>
+      <AmenityCalendarView
+        baseHref="/fixtures/amenity"
+        calendar={{
+          month: '2026-11',
+          timezone: 'Asia/Kolkata',
+          identity_mode: 'booker_name',
+          items: [
+            {
+              amenity_id: id,
+              amenity_name: 'Hall',
+              starts_at: '2026-11-22T03:30:00Z',
+              ends_at: '2026-11-22T05:30:00Z',
+              booker_name: 'Synthetic Resident',
+              unit_number: null,
+              overlap_warning: false,
+            },
+            {
+              amenity_id: id,
+              amenity_name: 'Hall',
+              starts_at: '2026-11-23T03:30:00Z',
+              ends_at: '2026-11-23T05:30:00Z',
+              booker_name: null,
+              unit_number: null,
+              overlap_warning: true,
+            },
+          ],
+        }}
+      />
+      <AmenityFacilitiesView
+        action={recordActivity}
+        report={{
+          timezone: 'Asia/Kolkata',
+          can_record: true,
+          limit: 100,
+          offset: 0,
+          total: 0,
+          source_choices: [
+            {
+              source_kind: 'asset',
+              source_id: id,
+              label: 'Synthetic lift · Tower A',
+            },
+          ],
+          items: [],
+        }}
+      />
       <section
         aria-label="Amenity definition"
         className="grid min-w-0 gap-space-3"

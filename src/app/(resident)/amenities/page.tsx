@@ -7,7 +7,8 @@ export const metadata = {
 export default async function AmenitiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; month?: string }>;
 }) {
-  return <AmenityWorkspace date={(await searchParams).date} />;
+  const query = await searchParams;
+  return <AmenityWorkspace date={query.date} month={query.month} />;
 }

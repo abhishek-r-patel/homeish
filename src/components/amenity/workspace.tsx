@@ -5,7 +5,13 @@ import {
   AmenityBookingForm,
   AmenityCancellationForm,
 } from './controls';
-import { getAmenityWorkspace } from '@/core/amenity/operations';
+import { AmenityCalendarView } from './calendar';
+import { AmenityFacilitiesView } from './facilities';
+import {
+  getAmenityCalendarMonth,
+  getAmenityFacilitiesReport,
+  getAmenityWorkspace,
+} from '@/core/amenity/operations';
 import { formatBillingTimestamp, formatRupees } from '@/core/billing/format';
 import {
   formatLocalizedCurrency,
@@ -32,8 +38,22 @@ function amenityDateTime(value: string, timeZone: string, locale: 'en' | 'hi') {
     : formatBillingTimestamp(value, timeZone);
 }
 
-export async function AmenityWorkspace({ date }: { date?: string }) {
-  const w = await getAmenityWorkspace(date);
+export async function AmenityWorkspace({
+  date,
+  month,
+  audience = 'resident',
+}: {
+  date?: string;
+  month?: string;
+  audience?: 'resident' | 'management';
+}) {
+  const [w, calendar, facilities] = await Promise.all([
+    getAmenityWorkspace(date),
+    getAmenityCalendarMonth(month),
+    audience === 'management'
+      ? getAmenityFacilitiesReport()
+      : Promise.resolve(null),
+  ]);
   const locale = await getRequestLocale();
   const t = createComponentTranslator(locale, (source, values) =>
     translateMessage(locale, source, values),
@@ -66,6 +86,10 @@ export async function AmenityWorkspace({ date }: { date?: string }) {
           {t('Show availability and bookings')}
         </button>
       </form>
+      <AmenityCalendarView
+        calendar={calendar}
+        baseHref={audience === 'management' ? '/admin/amenities' : '/amenities'}
+      />
       {w.can_manage ? (
         <Card title={t('Add amenity')}>
           <AmenityForm />
@@ -179,6 +203,7 @@ export async function AmenityWorkspace({ date }: { date?: string }) {
           </p>
         )}
       </Card>
+      {facilities ? <AmenityFacilitiesView report={facilities} /> : null}
     </section>
   );
 }
