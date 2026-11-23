@@ -9,8 +9,11 @@ import {
   exportExpenseStatements,
   exportExpenseVendorSpend,
 } from '@/core/expense/operations';
+import { exportExpenseBudget } from '@/core/expense/budget-operations';
 import {
   expenseAgmDraftPdf,
+  expenseBudgetCsv,
+  expenseBudgetPdf,
   expenseEntriesCsv,
   expenseExportFileName,
   expenseFinancialPositionPdf,
@@ -29,7 +32,14 @@ export async function GET(request: Request) {
       query.get('format'),
     );
     const reportKind = parseModuleInput(
-      z.enum(['entries', 'statements', 'position', 'agm', 'vendor_spend']),
+      z.enum([
+        'entries',
+        'statements',
+        'position',
+        'agm',
+        'vendor_spend',
+        'budget',
+      ]),
       query.get('report') ?? 'entries',
     );
     if (reportKind === 'statements') {
@@ -92,6 +102,21 @@ export async function GET(request: Request) {
           format === 'csv'
             ? expenseVendorSpendCsv(report)
             : await expenseVendorSpendPdf(societyName, report),
+      };
+    }
+    if (reportKind === 'budget') {
+      const { report, societyName } = await exportExpenseBudget({
+        financialYear: query.get('financialYear'),
+        asOf: query.get('asOf'),
+      });
+      return {
+        contentType:
+          format === 'csv' ? 'text/csv; charset=utf-8' : 'application/pdf',
+        fileName: `homeish-budget-${report.financial_year}-${report.as_of}.${format}`,
+        body:
+          format === 'csv'
+            ? expenseBudgetCsv(report)
+            : await expenseBudgetPdf(societyName, report),
       };
     }
     const { rows, report, societyName } = await exportExpenseEntries({

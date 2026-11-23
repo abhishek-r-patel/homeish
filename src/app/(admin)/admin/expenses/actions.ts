@@ -3,6 +3,14 @@
 import { runServerAction } from '@/core/actions/server-action';
 import { ValidationError } from '@/core/errors';
 import {
+  approveExpenseBudget,
+  discardExpenseBudget,
+  recordExpenseBudgetChange,
+  saveExpenseBudgetDraft,
+  saveExpenseBudgetSettings,
+  voidExpenseBudgetChange,
+} from '@/core/expense/budget-operations';
+import {
   assignPettyCash,
   activateExpenseFunds,
   acknowledgeExpenseAuditWarning,
@@ -193,6 +201,42 @@ export async function saveExpenseSavingsAction(form: FormData) {
   return runServerAction('/admin/expenses/savings', async (id) => {
     await saveExpenseSavings(input(form), id);
     return 'Savings initiative saved.';
+  });
+}
+export async function saveExpenseBudgetDraftAction(form: FormData) {
+  return runServerAction('/admin/expenses/budget', async (id) => {
+    await saveExpenseBudgetDraft(input(form), id);
+    return 'Budget draft saved.';
+  });
+}
+export async function approveExpenseBudgetAction(form: FormData) {
+  return runServerAction('/admin/expenses/budget', async (id) => {
+    await approveExpenseBudget(input(form), id);
+    return 'Budget approved. Its figures are now locked.';
+  });
+}
+export async function discardExpenseBudgetAction(form: FormData) {
+  return runServerAction('/admin/expenses/budget', async (id) => {
+    await discardExpenseBudget(input(form), id);
+    return 'Budget draft discarded. Its record is kept.';
+  });
+}
+export async function recordExpenseBudgetChangeAction(form: FormData) {
+  return runServerAction('/admin/expenses/budget', async (id) => {
+    await recordExpenseBudgetChange(input(form), id);
+    return 'Budget change recorded.';
+  });
+}
+export async function saveExpenseBudgetSettingsAction(form: FormData) {
+  return runServerAction('/admin/expenses/budget', async (id) => {
+    await saveExpenseBudgetSettings(input(form), id);
+    return 'Budget settings saved.';
+  });
+}
+export async function voidExpenseBudgetChangeAction(form: FormData) {
+  return runServerAction('/admin/expenses/budget', async (id) => {
+    await voidExpenseBudgetChange(input(form), id);
+    return 'Budget change cancelled. Its history is kept.';
   });
 }
 export async function saveExpenseRepairForecastItemAction(form: FormData) {
