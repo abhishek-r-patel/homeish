@@ -39,6 +39,7 @@ export const billingSettingsSchema = z
       .strict()
       .optional(),
     pending_confirmation_alert_days: days.min(1).optional(),
+    bill_email_on_publish: z.boolean().optional(),
   })
   .strict();
 
@@ -49,6 +50,7 @@ export const DEFAULT_BILLING_SETTINGS = {
   late_fee: null,
   reminders: { before_due_days: 3, on_due: true, overdue_every_days: 7 },
   pending_confirmation_alert_days: 3,
+  bill_email_on_publish: true,
 } satisfies Required<z.infer<typeof billingSettingsSchema>>;
 
 export const rupeesSchema = z
@@ -266,6 +268,7 @@ export const billingSettingsUpdateInputSchema = z
         value === 'last_day' ? 'last_day' : Number(value),
       ),
     rounding: z.enum(['rupee', 'paise']),
+    billEmailOnPublish: z.boolean(),
     expectedUpdatedAt: timestamp,
   })
   .strict();

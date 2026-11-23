@@ -444,6 +444,27 @@ function SocietyBillingPreferencesForm({
             <option value="paise">{t('Nearest paise, half up')}</option>
           </select>
         </label>
+        <label
+          className="flex items-start gap-space-3 text-body-strong"
+          htmlFor="billing-email-on-publish"
+        >
+          <input
+            className="mt-space-1 size-5"
+            defaultChecked={settings.bill_email_on_publish}
+            id="billing-email-on-publish"
+            name="billEmailOnPublish"
+            type="checkbox"
+            value="true"
+          />
+          <span className="grid gap-space-1">
+            {t('Email bill PDF when published')}
+            <span className="text-caption font-normal text-ink-muted">
+              {t(
+                'Email the bill summary and PDF to active unit occupants. Failed delivery is never shown as sent.',
+              )}
+            </span>
+          </span>
+        </label>
         <p className="text-caption text-ink-muted">
           {t(
             "A numeric due day past the end of a shorter month falls on that month's last day. These preferences affect future bills only.",
@@ -1019,6 +1040,14 @@ export function BillingSetup({
                     ? 'Nearest rupee, half up'
                     : 'Nearest paise, half up',
                 )}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-semibold">
+                {t('Email bill PDF when published')}:{' '}
+              </dt>
+              <dd className="inline">
+                {settings.bill_email_on_publish ? t('Enabled') : t('Disabled')}
               </dd>
             </div>
           </dl>

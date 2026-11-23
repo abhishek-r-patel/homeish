@@ -113,3 +113,37 @@ test('an admin places the unit on a free spot and only free spots can be chosen'
   ).toBeVisible();
   await expect(card.getByRole('button')).toHaveCount(0);
 });
+
+test('unit handover checklist stays usable and accessible on phones', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/unit-records');
+  const handovers = page.getByRole('region', { name: 'Unit handovers' });
+  await handovers.getByRole('button', { name: 'Start handover' }).click();
+  await handovers.getByRole('checkbox', { name: /Synthetic Resident/ }).check();
+  await handovers
+    .getByRole('button', { name: 'Start handover', exact: true })
+    .last()
+    .click();
+  await expect(
+    handovers.getByRole('status').filter({ hasText: 'Unit handover created' }),
+  ).toContainText('Unit handover created');
+
+  const answers = handovers
+    .locator('details')
+    .filter({ hasText: 'Checklist answers' });
+  await answers.getByText('Checklist answers').click();
+  await answers.getByLabel('Keys').selectOption('yes');
+  await answers.getByRole('button', { name: 'Save answers' }).click();
+  await expect(answers.getByRole('status')).toContainText(
+    'Handover checklist saved',
+  );
+
+  for (const width of [320, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+});

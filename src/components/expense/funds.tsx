@@ -7,6 +7,8 @@ import {
   correctExpenseFundAllocationAction,
   correctExpenseFundOpeningAction,
   saveExpenseFundAction,
+  saveExpenseFundTargetAction,
+  saveExpenseStatementBalanceAction,
   saveExpenseFundMappingAction,
   saveExpenseFixedDepositAction,
   saveExpenseFundInterestAction,
@@ -27,6 +29,7 @@ import type {
   ExpenseFundTransfer,
   ExpenseFundCorpusRecord,
   ExpenseFundWork,
+  ExpenseFundReconciliation,
 } from '@/core/expense/validation';
 import type { ExpenseAccount } from '@/core/expense/validation';
 import { EXPENSE_FUND_WARNING } from '@/core/expense/validation';
@@ -79,6 +82,108 @@ export function ExpenseFundForm({
         name="active"
         defaultChecked={fund?.active ?? true}
       />
+    </ModuleActionForm>
+  );
+}
+
+export function ExpenseFundTargetForm({
+  fund,
+  action = saveExpenseFundTargetAction,
+}: {
+  fund: ExpenseFundReconciliation['funds'][number];
+  action?: ModuleFormAction;
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  return (
+    <ModuleActionForm
+      action={action}
+      idempotent
+      submitLabel={t('Save target')}
+      input={(data) => ({
+        fundId: fund.fund_id,
+        targetRupees: data.get('targetRupees') || null,
+        targetDate: data.get('targetDate') || null,
+        expectedUpdatedAt: fund.target_updated_at,
+      })}
+    >
+      <AmountInput
+        id={`${id}-target`}
+        label={t('Target amount (optional)')}
+        name="targetRupees"
+        defaultValue={
+          fund.target_paise === null ? '' : rupeesFromPaise(fund.target_paise)
+        }
+      />
+      <TextInput
+        id={`${id}-date`}
+        label={t('Target date (optional)')}
+        name="targetDate"
+        type="date"
+        defaultValue={fund.target_date ?? ''}
+      />
+    </ModuleActionForm>
+  );
+}
+
+export function ExpenseStatementBalanceForm({
+  account,
+  month,
+  action = saveExpenseStatementBalanceAction,
+}: {
+  account: ExpenseFundReconciliation['accounts'][number];
+  month: string;
+  action?: ModuleFormAction;
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  const editing = account.updated_at !== null;
+  return (
+    <ModuleActionForm
+      action={action}
+      idempotent
+      submitLabel={t(
+        editing ? 'Update statement balance' : 'Save statement balance',
+      )}
+      input={(data) => ({
+        accountId: account.account_id,
+        month,
+        closingRupees: data.get('closingRupees'),
+        note: data.get('note'),
+        reason: data.get('reason'),
+        expectedUpdatedAt: account.updated_at,
+      })}
+    >
+      <AmountInput
+        id={`${id}-closing`}
+        label={t('Statement closing balance')}
+        name="closingRupees"
+        required
+        defaultValue={
+          account.statement_closing_paise === null
+            ? ''
+            : rupeesFromPaise(account.statement_closing_paise)
+        }
+      />
+      <TextAreaInput
+        id={`${id}-note`}
+        label={t('Note (optional)')}
+        name="note"
+        maxLength={500}
+        defaultValue={account.note ?? ''}
+      />
+      {editing ? (
+        <TextAreaInput
+          id={`${id}-reason`}
+          label={t('Reason for change')}
+          name="reason"
+          required
+          minLength={5}
+          maxLength={500}
+        />
+      ) : (
+        <input type="hidden" name="reason" value="" />
+      )}
     </ModuleActionForm>
   );
 }

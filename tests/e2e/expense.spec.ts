@@ -280,6 +280,24 @@ test('fund opening requires acknowledgement and stays within the Accounts total'
   await expect(activate).toBeEnabled();
   await activate.click();
   await expect(funds).toContainText('Fund tracking is active.');
+  const reconciliation = funds.getByRole('region', {
+    name: 'Fund reconciliation controls',
+  });
+  await reconciliation.getByLabel('Target amount (optional)').fill('200000');
+  await reconciliation.getByLabel('Target date (optional)').fill('2027-03-31');
+  await reconciliation.getByRole('button', { name: 'Save target' }).click();
+  await expect(reconciliation.getByRole('status')).toContainText(
+    'Fund target saved',
+  );
+  await reconciliation.getByLabel('Statement closing balance').fill('100000');
+  await reconciliation
+    .getByRole('button', { name: 'Save statement balance' })
+    .click();
+  await expect(
+    reconciliation.getByRole('status').filter({
+      hasText: 'Statement balance',
+    }),
+  ).toContainText('Statement balance saved');
   const suggestion = funds.getByRole('checkbox', { name: /RV\// });
   await suggestion.locator('..').click();
   await expect(suggestion).toBeChecked();

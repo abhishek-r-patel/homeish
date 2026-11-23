@@ -242,6 +242,7 @@ describe('billing money and setup validation', () => {
 
   it('keeps late fees off by default and enforces the approved percentage precision and cap', () => {
     expect(DEFAULT_BILLING_SETTINGS.late_fee).toBeNull();
+    expect(DEFAULT_BILLING_SETTINGS.bill_email_on_publish).toBe(true);
     expect(billingSettingsSchema.parse({})).toEqual({});
     expect(
       billingSettingsSchema.parse({

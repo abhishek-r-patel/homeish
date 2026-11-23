@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { UnitRecordPanels } from '@/components/structure/unit-record-panels';
 import { UnitPlacement } from '@/components/structure/unit-placement';
+import { UnitHandoversPanel } from '@/components/structure/unit-handovers';
 import { Card } from '@/components/ui/data-display';
 import { Banner, ErrorPanel } from '@/components/ui/feedback';
 import { AppError } from '@/core/errors';
@@ -13,6 +14,14 @@ import {
 import { translateMessage } from '@/core/i18n/messages';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { getUnitWorkspace } from '@/core/structure/unit-workspace';
+import {
+  addUnitHandoverPhotoAction,
+  closeUnitHandoverAction,
+  createUnitHandoverAction,
+  linkUnitHandoverReadingAction,
+  saveUnitHandoverItemsAction,
+  saveUnitHandoverTemplateAction,
+} from '../../actions';
 
 export const metadata = {
   title: 'Unit 360 | Homeish',
@@ -188,6 +197,18 @@ export default async function UnitWorkspacePage({
         />
       ) : null}
       <UnitRecordPanels unit={unit} records={records} canWrite={canWrite} />
+      <UnitHandoversPanel
+        unitId={unit.id}
+        workspace={workspace.handovers}
+        actions={{
+          template: saveUnitHandoverTemplateAction,
+          create: createUnitHandoverAction,
+          items: saveUnitHandoverItemsAction,
+          reading: linkUnitHandoverReadingAction,
+          photo: addUnitHandoverPhotoAction,
+          close: closeUnitHandoverAction,
+        }}
+      />
     </section>
   );
 }

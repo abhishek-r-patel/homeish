@@ -194,6 +194,42 @@ describe('notification delivery adapters', () => {
     expect(logger).not.toHaveBeenCalled();
   });
 
+  it('passes one validated PDF attachment to Brevo', async () => {
+    const requests: RequestInit[] = [];
+    const send = createTransactionalEmailSender({
+      apiKey: 'secret-api-key',
+      dailyQuota: 100,
+      fromAddress: 'no-reply@example.test',
+      reserveQuota: async () => ({
+        sent_count: 1,
+        allowed: true,
+        should_alert: false,
+      }),
+      fetcher: async (_input, init) => {
+        requests.push(init ?? {});
+        return new Response(null, { status: 201 });
+      },
+    });
+
+    await send({
+      ...emailMessage,
+      attachment: {
+        name: 'bill.pdf',
+        content: Buffer.from('%PDF-test').toString('base64'),
+      },
+    });
+
+    const request = requests[0];
+    expect(JSON.parse(String(request?.body))).toMatchObject({
+      attachment: [
+        {
+          name: 'bill.pdf',
+          content: Buffer.from('%PDF-test').toString('base64'),
+        },
+      ],
+    });
+  });
+
   it('aborts each Brevo request at the configured timeout', async () => {
     const signals: AbortSignal[] = [];
     const fetcher: typeof fetch = async (_input, init) =>

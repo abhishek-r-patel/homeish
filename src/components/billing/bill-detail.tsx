@@ -8,6 +8,7 @@ import { useUiTranslator } from '@/components/ui/language';
 import { billingDate, billingMoney, billingPeriod } from './presentation';
 import type { BillingBillDetails } from '@/core/billing/validation';
 import { linkButtonClass } from './styles';
+import { BillShare, type RecordBillShareAction } from './bill-share';
 
 export function BillDetail({
   backHref,
@@ -15,6 +16,7 @@ export function BillDetail({
   bill,
   children,
   ledgerHref,
+  shareAction,
   today,
 }: {
   backHref: string;
@@ -22,6 +24,7 @@ export function BillDetail({
   bill: BillingBillDetails;
   children?: React.ReactNode;
   ledgerHref?: string;
+  shareAction: RecordBillShareAction;
   today: string;
 }) {
   const { locale, translate: t } = useUiTranslator();
@@ -98,6 +101,7 @@ export function BillDetail({
         >
           {t('Download PDF')}
         </a>
+        <BillShare action={shareAction} bill={bill} />
         {ledgerHref ? (
           <Link className={linkButtonClass} href={ledgerHref}>
             {t('View Unit Ledger')}

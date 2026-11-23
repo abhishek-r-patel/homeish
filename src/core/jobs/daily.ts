@@ -5,6 +5,7 @@ import {
   completeDailyJobRun,
   listDailyJobSocieties,
   runBillingDailyTaskPrivileged,
+  runBillingEmailJobsPrivileged,
   runRetentionPrivileged,
   runServiceRequestAutoClosePrivileged,
   runServiceRequestEscalationPrivileged,
@@ -60,6 +61,12 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
   billingTask('billing.late_fees'),
   billingTask('billing.reminders'),
   billingTask('billing.stale_payments'),
+  {
+    name: 'billing.bill_email',
+    run: async (societyId) => {
+      await runBillingEmailJobsPrivileged(societyId);
+    },
+  },
   {
     name: 'visitor.expire',
     run: async (societyId: string) => {

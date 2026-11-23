@@ -23,6 +23,8 @@ import { clearanceUploadInputSchema } from '../../../../core/tenancy/transfers/v
 import { prepareParkingPhotoUpload } from '../../../../core/parking/files';
 import { preparePatrolPhotoUpload } from '../../../../core/patrol/files';
 import { prepareMeteringPhotoUpload } from '../../../../core/metering/files';
+import { prepareHandoverFileUpload } from '../../../../core/structure/handover-files';
+import { handoverFileUploadInputSchema } from '../../../../core/structure/handover-validation';
 import type { RequestContext } from '../../../../core/tenancy/request-context';
 
 const issueSchema = z.discriminatedUnion('bucket', [
@@ -30,6 +32,14 @@ const issueSchema = z.discriminatedUnion('bucket', [
     .object({
       bucket: z.literal('metering-photos'),
       contentType: z.enum(['image/jpeg', 'image/png']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('handover-photos'),
+      handoverId: z.uuid(),
+      contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
     })
     .strict(),
@@ -275,6 +285,26 @@ export async function POST(request: Request) {
           .createSignedUploadUrl(path);
         if (error || !data) {
           throw new Error('Could not issue the meter photo upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'handover-photos') {
+        const path = await prepareHandoverFileUpload(
+          context,
+          handoverFileUploadInputSchema.parse(input),
+        );
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the handover file upload token.', {
             cause: error,
           });
         }

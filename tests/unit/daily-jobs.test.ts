@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   claimDailyJobRun: vi.fn(),
   completeDailyJobRun: vi.fn(),
   runBillingDailyTaskPrivileged: vi.fn(),
+  runBillingEmailJobsPrivileged: vi.fn(),
   runRetentionPrivileged: vi.fn(),
   runVisitorExpirationPrivileged: vi.fn(),
   runServiceRequestAutoClosePrivileged: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock('../../src/core/privileged', () => ({
   claimDailyJobRun: mocks.claimDailyJobRun,
   completeDailyJobRun: mocks.completeDailyJobRun,
   runBillingDailyTaskPrivileged: mocks.runBillingDailyTaskPrivileged,
+  runBillingEmailJobsPrivileged: mocks.runBillingEmailJobsPrivileged,
   runRetentionPrivileged: mocks.runRetentionPrivileged,
   runVisitorExpirationPrivileged: mocks.runVisitorExpirationPrivileged,
   runServiceRequestAutoClosePrivileged:
@@ -212,6 +214,7 @@ describe('daily jobs', () => {
       'billing.late_fees',
       'billing.reminders',
       'billing.stale_payments',
+      'billing.bill_email',
       'visitor.expire',
       'service_request.auto_close',
       'service_request.escalate',

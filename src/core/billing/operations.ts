@@ -9,6 +9,7 @@ import {
   verifyFileAttachment,
 } from '../files/attachments';
 import { hasPermission } from '../permissions';
+import { publicEnvironment } from '../config/public-env';
 import { authorizeRequest } from '../permissions/authorize';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { sendBillingReceiptEmailPrivileged } from '../privileged';
@@ -61,7 +62,7 @@ import {
   paymentDetailsInputSchema,
   paymentDetailsSchema,
 } from './validation';
-import { formatRupees } from './format';
+import { formatBillingDate, formatBillingPeriod, formatRupees } from './format';
 
 type BillingPermission =
   | 'billing:charges:read'
@@ -190,6 +191,7 @@ export async function updateBillingSettings(input: unknown, requestId: string) {
       p_society_id: societyId,
       p_due_day: String(settings.dueDay),
       p_rounding: settings.rounding,
+      p_bill_email_on_publish: settings.billEmailOnPublish,
       p_expected_updated_at: settings.expectedUpdatedAt,
       p_request_id: context.requestId,
     },
@@ -449,6 +451,47 @@ export async function listBillingBills(page: number, pageSize: number) {
     },
     z.array(billingBillSchema),
   );
+}
+
+const billShareInputSchema = z.object({
+  billId: z.uuid(),
+  channel: z.enum(['native', 'whatsapp', 'email']),
+});
+
+export async function recordBillShare(input: unknown, requestId: string) {
+  const { context, societyId } = await getContext(
+    'billing:bills:read',
+    true,
+    requestId,
+  );
+  const share = parseInput(billShareInputSchema, input);
+  const billId = await rpc(
+    context,
+    'billing_bill_share_start',
+    {
+      p_society_id: societyId,
+      p_bill_id: share.billId,
+      p_channel: share.channel,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+  );
+  const bill = await rpc(
+    context,
+    'billing_bill_get',
+    { p_society_id: societyId, p_bill_id: billId },
+    billingBillDetailsSchema,
+  );
+  const url = new URL('/login', publicEnvironment.NEXT_PUBLIC_APP_URL);
+  url.searchParams.set('next', `/bills/${bill.id}`);
+  const text = [
+    `${bill.society_name} bill for ${bill.unit_label} ${bill.unit_number}.`,
+    `Bill month: ${formatBillingPeriod(bill.period_start)}`,
+    `Amount: ${formatRupees(bill.total_paise)}`,
+    `Due date: ${formatBillingDate(bill.due_date)}`,
+    `View bill (sign-in required): ${url.toString()}`,
+  ].join('\n');
+  return { bill_id: bill.id, text, url: url.toString() };
 }
 
 export async function getBillingBill(billId: string) {

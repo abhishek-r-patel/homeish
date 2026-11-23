@@ -1183,6 +1183,140 @@ describe.skipIf(!hasDatabase)('database tenancy moves', () => {
     });
   });
 
+  it('warns before move-out completion with an open linked unit handover', async () => {
+    await withFixture(async (f) => {
+      const move = await f.create('move_out');
+      await f.decide(move);
+      await f.makeWindowCurrent(move);
+      const handoverId = await f.asActor(
+        'admin',
+        async (client) =>
+          (
+            await client.query<{ id: string }>(
+              `select public.unit_handover_create(
+                 $1,$2,'tenant_move_out',$3,null,$4,
+                 'Move-out condition check',$5,$6,'handover-move-test'
+               ) as id`,
+              [
+                f.society,
+                f.unit('B-201'),
+                move,
+                new Date().toISOString().slice(0, 10),
+                [],
+                crypto.randomUUID(),
+              ],
+            )
+          ).rows[0]!.id,
+      );
+      expect(handoverId).toMatch(/^[0-9a-f-]{36}$/);
+      for (const actor of ['committee', 'foreignAdmin'] as const) {
+        expect(
+          await dbError(
+            f.asActor(actor, (client) =>
+              client.query(
+                'select public.tenancy_move_complete($1,$2,$3,$4,true)',
+                [f.society, move, 2, 'handover-unauthorized'],
+              ),
+            ),
+          ),
+        ).toMatchObject({ code: '42501' });
+      }
+      expect(
+        await dbError(
+          f.asActor('admin', async (client) =>
+            client.query('select public.tenancy_move_complete($1,$2,$3,$4)', [
+              f.society,
+              move,
+              await f.version(move),
+              'handover-move-blocked',
+            ]),
+          ),
+        ),
+      ).toMatchObject({ code: '23514' });
+      await f.asActor('admin', (client) =>
+        client.query('select public.tenancy_move_complete($1,$2,$3,$4,true)', [
+          f.society,
+          move,
+          2,
+          'handover-move-override',
+        ]),
+      );
+      const override = await f.database.asSuperuser((client) =>
+        client.query(
+          `select count(*)::integer as count from public.audit_logs
+           where society_id=$1
+             and action='core.unit_handover.override'
+             and request_id='handover-move-override'`,
+          [f.society],
+        ),
+      );
+      expect(override.rows).toEqual([{ count: 1 }]);
+    });
+  });
+
+  it('warns before transfer completion with an open owner handover', async () => {
+    await withFixture(async (f) => {
+      await f.acknowledgeClearance();
+      const transfer = await f.createTransferCase();
+      await f.database.asSuperuser((client) =>
+        client.query(
+          `update public.tenancy_transfer_cases
+           set stage='dues_settled',
+             documents_checked_on=current_date,
+             committee_decision_on=current_date,
+             dues_settled_on=current_date
+           where id=$1`,
+          [transfer],
+        ),
+      );
+      await f.asActor('admin', (client) =>
+        client.query(
+          `select public.unit_handover_create(
+             $1,$2,'owner_transfer',null,$3,current_date,
+             'Transfer condition check',$4,$5,'handover-transfer-test'
+           )`,
+          [
+            f.society,
+            f.unit('A-101'),
+            transfer,
+            [requireId(f.memberships, 'owner')],
+            crypto.randomUUID(),
+          ],
+        ),
+      );
+      expect(
+        await dbError(
+          f.asActor('admin', (client) =>
+            client.query(
+              `select public.tenancy_transfer_case_advance(
+                 $1,$2,1,'completed',null,'handover-transfer-blocked'
+               )`,
+              [f.society, transfer],
+            ),
+          ),
+        ),
+      ).toMatchObject({ code: '23514' });
+      await f.asActor('admin', (client) =>
+        client.query(
+          `select public.tenancy_transfer_case_advance(
+             $1,$2,1,'completed',null,'handover-transfer-override',true
+           )`,
+          [f.society, transfer],
+        ),
+      );
+      const override = await f.database.asSuperuser((client) =>
+        client.query(
+          `select count(*)::integer as count from public.audit_logs
+           where society_id=$1
+             and action='core.unit_handover.override'
+             and request_id='handover-transfer-override'`,
+          [f.society],
+        ),
+      );
+      expect(override.rows).toEqual([{ count: 1 }]);
+    });
+  });
+
   it('denies unrelated targets, consent bypasses, unauthorised roles and cross-society access', async () => {
     await withFixture(async (f) => {
       for (const actor of [

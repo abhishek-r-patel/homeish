@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
 import { ExpenseNav, ExpensePager } from '@/components/expense/nav';
+import { ExpenseFundReconciliation } from '@/components/expense/fund-reconciliation';
 import {
   ExpenseFundAllocationForm,
   ExpenseFundActivationForm,
@@ -31,6 +32,7 @@ import {
   getExpenseFundCorpus,
   getExpenseFundWorks,
   getExpenseFundReport,
+  getExpenseFundReconciliation,
   getExpenseFundTransfers,
   getExpenseFunds,
   getExpenseWorkspace,
@@ -76,6 +78,7 @@ export default async function ExpenseFundsPage({
     allocationPage?: string;
     reportFrom?: string;
     reportTo?: string;
+    reconciliationMonth?: string;
   }>;
 }) {
   const locale = await getRequestLocale();
@@ -114,6 +117,14 @@ export default async function ExpenseFundsPage({
     workspace.today,
   );
   const fundReport = opening ? await getExpenseFundReport(reportRange) : null;
+  const reconciliationMonth = search.reconciliationMonth?.match(/^\d{4}-\d{2}$/)
+    ? `${search.reconciliationMonth}-01`
+    : search.reconciliationMonth?.match(/^\d{4}-\d{2}-01$/)
+      ? search.reconciliationMonth
+      : `${reportRange.to.slice(0, 7)}-01`;
+  const reconciliation = opening
+    ? await getExpenseFundReconciliation(reconciliationMonth)
+    : null;
   const suggestableEntries = activity.entries.filter(
     (entry) =>
       entry.suggested_fund_id !== null &&
@@ -426,9 +437,9 @@ export default async function ExpenseFundsPage({
       )}
       {fundReport ? (
         <Card
-          title={t('Partial fund report')}
+          title={t('Fund report')}
           description={t(
-            'Available P16 and fixed-deposit data only. Reconciliation targets and health labels are not included.',
+            'Review monthly movements, source reconciliation and optional fund targets.',
           )}
         >
           <form method="get" className="grid gap-space-3 medium:grid-cols-3">
@@ -570,6 +581,50 @@ export default async function ExpenseFundsPage({
                   </li>
                 ))}
               </ul>
+            </div>
+          ) : null}
+          {reconciliation ? (
+            <div className="mt-space-5 border-t border-rule pt-space-5">
+              <form
+                method="get"
+                className="mb-space-4 flex flex-wrap items-end gap-space-3"
+              >
+                <input
+                  type="hidden"
+                  name="reportFrom"
+                  value={reportRange.from}
+                />
+                <input type="hidden" name="reportTo" value={reportRange.to} />
+                <label className="grid gap-space-1">
+                  {t('Reconciliation month')}
+                  <input
+                    type="month"
+                    name="reconciliationMonth"
+                    defaultValue={reconciliation.month.slice(0, 7)}
+                    max={workspace.today.slice(0, 7)}
+                    className={fieldClass}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="min-h-12 rounded-md border border-rule-strong px-space-4"
+                >
+                  {t('Show reconciliation')}
+                </button>
+              </form>
+              <ExpenseFundReconciliation
+                canManage={workspace.can_manage}
+                locale={locale}
+                report={reconciliation}
+              />
+              {workspace.can_manage ? (
+                <a
+                  className="mt-space-4 inline-block text-brand underline"
+                  href={`/api/expense/export?report=fund_reconciliation&month=${reconciliation.month}&format=csv`}
+                >
+                  {t('Download reconciliation CSV')}
+                </a>
+              ) : null}
             </div>
           ) : null}
         </Card>
@@ -1315,6 +1370,7 @@ export default async function ExpenseFundsPage({
             </Card>
           ) : null}
 
+          <span id="fund-activity" />
           <Card
             title={t('Accounts entries and fund allocations')}
             description={t(

@@ -111,6 +111,18 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'Download {report} CSV ({count} rows)':
     '{report} का CSV डाउनलोड करें ({count} पंक्तियाँ)',
   'Bill details': 'बिल की जानकारी',
+  'Email bill PDF when published': 'प्रकाशित होने पर बिल PDF ईमेल करें',
+  'Email the bill summary and PDF to active unit occupants. Failed delivery is never shown as sent.':
+    'सक्रिय यूनिट निवासियों को बिल का सारांश और PDF ईमेल करें। विफल डिलीवरी को भेजा गया नहीं दिखाया जाता।',
+  Share: 'साझा करें',
+  Enabled: 'चालू',
+  'Share started.': 'साझा करना शुरू हुआ।',
+  WhatsApp: 'व्हाट्सऐप',
+  'Share bill with': 'बिल यहाँ साझा करें',
+  'The bill share could not be opened. Use WhatsApp or email instead.':
+    'बिल साझा नहीं हो सका। इसके बजाय व्हाट्सऐप या ईमेल का उपयोग करें।',
+  'The bill share could not be recorded. Reconnect before sharing again.':
+    'बिल साझा करने का रिकॉर्ड नहीं बन सका। फिर साझा करने से पहले दोबारा कनेक्ट करें।',
   'View Unit Ledger': 'यूनिट का खाता देखें',
   'Fixed per unit': 'हर यूनिट के लिए तय राशि',
   'Per square foot': 'प्रति वर्ग फुट',

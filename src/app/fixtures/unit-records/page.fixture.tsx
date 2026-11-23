@@ -1,6 +1,7 @@
 // Render synthetic admin unit records for local browser coverage only.
 import { UnitPlacement } from '@/components/structure/unit-placement';
 import { UnitRecordPanels } from '@/components/structure/unit-record-panels';
+import { UnitHandoverFixture } from './handover.fixture';
 import {
   FIXTURE_UNIT_ID,
   fixtureLayout,
@@ -47,6 +48,7 @@ export default async function UnitRecordsFixture({
           followups: [],
         }}
       />
+      <UnitHandoverFixture />
     </main>
   );
 }

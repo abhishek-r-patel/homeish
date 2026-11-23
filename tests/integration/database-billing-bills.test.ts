@@ -513,4 +513,104 @@ describe.skipIf(!hasDatabase)('database billing bills and ledger', () => {
       ).code,
     ).toBe('42501');
   });
+
+  it('queues bill email by setting and audits authorized share starts', async () => {
+    const disabledBill = await database.asSuperuser(async (client) => {
+      await client.query(
+        `update public.module_configs
+         set settings = settings || '{"bill_email_on_publish":false}'::jsonb
+         where society_id = $1 and module_key = 'billing'`,
+        [societyId],
+      );
+      const bill = await client.query<{ id: string }>(
+        `insert into public.billing_bills (
+           society_id, unit_id, title, period_start, due_date, total_paise, created_by
+         ) values ($1, $2, 'No email bill', '2027-03-01', '2027-03-10', 100, $3)
+         returning id`,
+        [societyId, unitId, users.admin],
+      );
+      await client.query(
+        `update public.module_configs
+         set settings = settings || '{"bill_email_on_publish":true}'::jsonb
+         where society_id = $1 and module_key = 'billing'`,
+        [societyId],
+      );
+      return bill.rows[0]!.id;
+    });
+    expect(
+      (
+        await database.asSuperuser((client) =>
+          client.query(
+            `select count(*)::integer as count from public.jobs
+             where society_id = $1 and type = 'bill_email'
+               and summary->>'bill_id' = $2`,
+            [societyId, disabledBill],
+          ),
+        )
+      ).rows[0]?.count,
+    ).toBe(0);
+
+    const queuedBill = await database.asSuperuser(async (client) => {
+      const bill = await client.query<{ id: string }>(
+        `insert into public.billing_bills (
+           society_id, unit_id, title, period_start, due_date, total_paise, created_by
+         ) values ($1, $2, 'Queued email bill', '2027-04-01', '2027-04-10', 200, $3)
+         returning id`,
+        [societyId, unitId, users.admin],
+      );
+      return bill.rows[0]!.id;
+    });
+    const job = await database.asSuperuser((client) =>
+      client.query(
+        `select status, summary from public.jobs
+         where society_id = $1 and type = 'bill_email'
+           and summary->>'bill_id' = $2`,
+        [societyId, queuedBill],
+      ),
+    );
+    expect(job.rows[0]).toMatchObject({
+      status: 'queued',
+      summary: { bill_id: queuedBill },
+    });
+
+    for (const [role, channel] of [
+      ['resident', 'native'],
+      ['admin', 'email'],
+    ] as const) {
+      await database.asRole(
+        'authenticated',
+        { sub: users[role] },
+        (client) =>
+          client.query(
+            'select public.billing_bill_share_start($1, $2, $3, $4)',
+            [societyId, queuedBill, channel, `share-${role}`],
+          ),
+        { commit: true },
+      );
+    }
+    expect(
+      (
+        await dbError(
+          database.asRole('authenticated', { sub: users.committee }, (client) =>
+            client.query(
+              'select public.billing_bill_share_start($1, $2, $3, $4)',
+              [societyId, queuedBill, 'whatsapp', 'share-committee'],
+            ),
+          ),
+        )
+      ).code,
+    ).toBe('42501');
+    const audit = await database.asSuperuser((client) =>
+      client.query(
+        `select "after" from public.audit_logs
+         where action = 'billing.bill.share_started' and entity_id = $1
+         order by created_at`,
+        [queuedBill],
+      ),
+    );
+    expect(audit.rows.map((row) => row.after)).toEqual([
+      { channel: 'native' },
+      { channel: 'email' },
+    ]);
+  });
 });

@@ -6462,6 +6462,8 @@ export type Database = {
           id: string;
           name: string;
           society_id: string;
+          target_date: string | null;
+          target_paise: number | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -6473,6 +6475,8 @@ export type Database = {
           id?: string;
           name: string;
           society_id: string;
+          target_date?: string | null;
+          target_paise?: number | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -6483,6 +6487,8 @@ export type Database = {
           id?: string;
           name?: string;
           society_id?: string;
+          target_date?: string | null;
+          target_paise?: number | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -7149,6 +7155,137 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'expense_savings_initiatives';
             referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_statement_balance_revisions: {
+        Row: {
+          changed_at: string;
+          changed_by: string;
+          id: string;
+          previous_closing_paise: number;
+          previous_note: string | null;
+          previous_version: number;
+          reason: string;
+          society_id: string;
+          statement_balance_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          changed_at?: string;
+          changed_by: string;
+          id?: string;
+          previous_closing_paise: number;
+          previous_note?: string | null;
+          previous_version: number;
+          reason: string;
+          society_id: string;
+          statement_balance_id: string;
+        };
+        Update: {
+          changed_at?: string;
+          changed_by?: string;
+          id?: string;
+          previous_closing_paise?: number;
+          previous_note?: string | null;
+          previous_version?: number;
+          reason?: string;
+          society_id?: string;
+          statement_balance_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_statement_balance_revisions_balance_fkey';
+            columns: ['society_id', 'statement_balance_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_statement_balances';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_balance_revisions_changed_by_fkey';
+            columns: ['changed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_balance_revisions_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_statement_balances: {
+        Row: {
+          account_id: string;
+          closing_paise: number;
+          created_at: string;
+          created_by: string;
+          id: string;
+          month: string;
+          note: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          account_id: string;
+          closing_paise: number;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          month: string;
+          note?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          account_id?: string;
+          closing_paise?: number;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          month?: string;
+          note?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_statement_balances_account_fkey';
+            columns: ['society_id', 'account_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_accounts';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_balances_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_balances_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_statement_balances_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
         ];
       };
@@ -17245,6 +17382,461 @@ export type Database = {
           },
         ];
       };
+      unit_handover_acknowledgements: {
+        Row: {
+          acknowledged_at: string;
+          handover_id: string;
+          id: string;
+          membership_id: string;
+          note: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          acknowledged_at?: string;
+          handover_id: string;
+          id?: string;
+          membership_id: string;
+          note?: string | null;
+          society_id: string;
+        };
+        Update: {
+          acknowledged_at?: string;
+          handover_id?: string;
+          id?: string;
+          membership_id?: string;
+          note?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handover_acknowledgements_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_acknowledgements_membership_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      unit_handover_items: {
+        Row: {
+          handover_id: string;
+          id: string;
+          item_key: string;
+          label: string;
+          note: string | null;
+          position: number;
+          response: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          handover_id: string;
+          id?: string;
+          item_key: string;
+          label: string;
+          note?: string | null;
+          position: number;
+          response?: string | null;
+          society_id: string;
+        };
+        Update: {
+          handover_id?: string;
+          id?: string;
+          item_key?: string;
+          label?: string;
+          note?: string | null;
+          position?: number;
+          response?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handover_items_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      unit_handover_parties: {
+        Row: {
+          handover_id: string;
+          id: string;
+          membership_id: string;
+          party_name: string;
+          role_snapshot: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          handover_id: string;
+          id?: string;
+          membership_id: string;
+          party_name: string;
+          role_snapshot: string;
+          society_id: string;
+        };
+        Update: {
+          handover_id?: string;
+          id?: string;
+          membership_id?: string;
+          party_name?: string;
+          role_snapshot?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handover_parties_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_parties_membership_fkey';
+            columns: ['society_id', 'membership_id'];
+            isOneToOne: false;
+            referencedRelation: 'memberships';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      unit_handover_photos: {
+        Row: {
+          added_at: string;
+          added_by: string;
+          client_request_id: string;
+          content_type: string;
+          handover_id: string;
+          id: string;
+          path: string;
+          size_bytes: number;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          added_at?: string;
+          added_by: string;
+          client_request_id: string;
+          content_type: string;
+          handover_id: string;
+          id?: string;
+          path: string;
+          size_bytes: number;
+          society_id: string;
+        };
+        Update: {
+          added_at?: string;
+          added_by?: string;
+          client_request_id?: string;
+          content_type?: string;
+          handover_id?: string;
+          id?: string;
+          path?: string;
+          size_bytes?: number;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handover_photos_added_by_fkey';
+            columns: ['added_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_photos_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      unit_handover_readings: {
+        Row: {
+          added_at: string;
+          added_by: string;
+          client_request_id: string;
+          handover_id: string;
+          id: string;
+          reading_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          added_at?: string;
+          added_by: string;
+          client_request_id: string;
+          handover_id: string;
+          id?: string;
+          reading_id: string;
+          society_id: string;
+        };
+        Update: {
+          added_at?: string;
+          added_by?: string;
+          client_request_id?: string;
+          handover_id?: string;
+          id?: string;
+          reading_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handover_readings_added_by_fkey';
+            columns: ['added_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_readings_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_readings_reading_fkey';
+            columns: ['society_id', 'reading_id'];
+            isOneToOne: false;
+            referencedRelation: 'metering_readings';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      unit_handover_revisions: {
+        Row: {
+          action: string;
+          after: NonNullable<Json>;
+          before: Json | null;
+          changed_at: string;
+          changed_by: string;
+          handover_id: string;
+          id: string;
+          reason: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          after: NonNullable<Json>;
+          before?: Json | null;
+          changed_at?: string;
+          changed_by: string;
+          handover_id: string;
+          id?: string;
+          reason?: string | null;
+          society_id: string;
+        };
+        Update: {
+          action?: string;
+          after?: NonNullable<Json>;
+          before?: Json | null;
+          changed_at?: string;
+          changed_by?: string;
+          handover_id?: string;
+          id?: string;
+          reason?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handover_revisions_changed_by_fkey';
+            columns: ['changed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_revisions_handover_fkey';
+            columns: ['society_id', 'handover_id'];
+            isOneToOne: false;
+            referencedRelation: 'unit_handovers';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      unit_handover_templates: {
+        Row: {
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          items: NonNullable<Json>;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          items: NonNullable<Json>;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          items?: NonNullable<Json>;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handover_templates_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_templates_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handover_templates_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      unit_handovers: {
+        Row: {
+          client_request_id: string;
+          closed_at: string | null;
+          closed_by: string | null;
+          created_at: string;
+          created_by: string;
+          event_type: string;
+          handover_on: string;
+          id: string;
+          move_id: string | null;
+          note: string | null;
+          society_id: string;
+          status: string;
+          transfer_case_id: string | null;
+          unit_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          event_type: string;
+          handover_on: string;
+          id?: string;
+          move_id?: string | null;
+          note?: string | null;
+          society_id: string;
+          status: string;
+          transfer_case_id?: string | null;
+          unit_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          client_request_id?: string;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          event_type?: string;
+          handover_on?: string;
+          id?: string;
+          move_id?: string | null;
+          note?: string | null;
+          society_id?: string;
+          status?: string;
+          transfer_case_id?: string | null;
+          unit_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'unit_handovers_closed_by_fkey';
+            columns: ['closed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handovers_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handovers_move_fkey';
+            columns: ['society_id', 'move_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_moves';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_handovers_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'unit_handovers_transfer_case_fkey';
+            columns: ['society_id', 'transfer_case_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenancy_transfer_cases';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_handovers_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'unit_handovers_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       unit_occupants: {
         Row: {
           billing_confirmed_move_in_on: string | null;
@@ -21406,6 +21998,18 @@ export type Database = {
         };
         Returns: string;
       };
+      expense_fund_reconciliation: {
+        Args: { p_month: string; p_society_id: string };
+        Returns: Json;
+      };
+      expense_fund_reconciliation_export_record: {
+        Args: {
+          p_month: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
       expense_fund_report: {
         Args: { p_from: string; p_society_id: string; p_to: string };
         Returns: Json;
@@ -21418,6 +22022,18 @@ export type Database = {
           p_name: string;
           p_request_trace: string;
           p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_fund_target_save: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_fund_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_target_date: string;
+          p_target_paise: number;
         };
         Returns: string;
       };
@@ -21733,6 +22349,20 @@ export type Database = {
           p_society_id: string;
         };
         Returns: Json;
+      };
+      expense_statement_balance_save: {
+        Args: {
+          p_account_id: string;
+          p_client_request_id: string;
+          p_closing_paise: number;
+          p_expected_updated_at: string;
+          p_month: string;
+          p_note: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
       };
       expense_statement_item_cancel: {
         Args: {
@@ -24941,15 +25571,26 @@ export type Database = {
         };
         Returns: string;
       };
-      tenancy_move_complete: {
-        Args: {
-          p_expected_version: number;
-          p_move_id: string;
-          p_request_id: string;
-          p_society_id: string;
-        };
-        Returns: string;
-      };
+      tenancy_move_complete:
+        | {
+            Args: {
+              p_expected_version: number;
+              p_move_id: string;
+              p_request_id: string;
+              p_society_id: string;
+            };
+            Returns: string;
+          }
+        | {
+            Args: {
+              p_expected_version: number;
+              p_move_id: string;
+              p_override_open_handover: boolean;
+              p_request_id: string;
+              p_society_id: string;
+            };
+            Returns: string;
+          };
       tenancy_move_consent: {
         Args: {
           p_expected_version: number;
@@ -25087,17 +25728,30 @@ export type Database = {
             };
             Returns: undefined;
           };
-      tenancy_transfer_case_advance: {
-        Args: {
-          p_case_id: string;
-          p_expected_version: number;
-          p_next_stage: string;
-          p_reason: string;
-          p_request_id: string;
-          p_society_id: string;
-        };
-        Returns: string;
-      };
+      tenancy_transfer_case_advance:
+        | {
+            Args: {
+              p_case_id: string;
+              p_expected_version: number;
+              p_next_stage: string;
+              p_reason: string;
+              p_request_id: string;
+              p_society_id: string;
+            };
+            Returns: string;
+          }
+        | {
+            Args: {
+              p_case_id: string;
+              p_expected_version: number;
+              p_next_stage: string;
+              p_override_open_handover: boolean;
+              p_reason: string;
+              p_request_id: string;
+              p_society_id: string;
+            };
+            Returns: string;
+          };
       tenancy_transfer_case_get: {
         Args: { p_case_id: string; p_society_id: string };
         Returns: Json;
@@ -25162,6 +25816,99 @@ export type Database = {
       };
       tenancy_workspace_get: {
         Args: { p_include_targets?: boolean; p_society_id: string };
+        Returns: Json;
+      };
+      unit_handover_acknowledge: {
+        Args: {
+          p_handover_id: string;
+          p_note: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_close: {
+        Args: {
+          p_expected_version: number;
+          p_handover_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_create: {
+        Args: {
+          p_client_request_id: string;
+          p_event_type: string;
+          p_handover_on: string;
+          p_move_id: string;
+          p_note: string;
+          p_party_membership_ids: string[];
+          p_request_trace: string;
+          p_society_id: string;
+          p_transfer_case_id: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_file_access: {
+        Args: { p_path: string; p_society_id: string };
+        Returns: boolean;
+      };
+      unit_handover_items_save: {
+        Args: {
+          p_expected_version: number;
+          p_handover_id: string;
+          p_items: Json;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_photo_add: {
+        Args: {
+          p_client_request_id: string;
+          p_content_type: string;
+          p_handover_id: string;
+          p_path: string;
+          p_request_trace: string;
+          p_size_bytes: number;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_photo_upload_path: {
+        Args: {
+          p_content_type: string;
+          p_handover_id: string;
+          p_size_bytes: number;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_reading_link: {
+        Args: {
+          p_client_request_id: string;
+          p_handover_id: string;
+          p_reading_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_template_save: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_items: Json;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      unit_handover_workspace: {
+        Args: { p_society_id: string; p_unit_id: string };
         Returns: Json;
       };
       unit_records_get: {

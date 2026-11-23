@@ -104,6 +104,9 @@ export const tenancyMoveInputSchema = z
 export const tenancyVersionInputSchema = z
   .object({ moveId: z.uuid(), expectedVersion: version })
   .strict();
+export const tenancyCompleteInputSchema = tenancyVersionInputSchema
+  .extend({ overrideOpenHandover: z.boolean().default(false) })
+  .strict();
 
 export const tenancyVerificationInputSchema = z
   .object({

@@ -19,6 +19,7 @@ import type {
   ExpenseReport,
   ExpenseStatements,
   ExpenseVendorSpend,
+  ExpenseFundReconciliation,
 } from './validation';
 import type { ExpenseBudgetReport as BudgetReport } from './budget-validation';
 
@@ -290,6 +291,82 @@ export function expenseBudgetCsv(report: BudgetReport): string {
       rupeesFromPaise(month.net_paise),
       rupeesFromPaise(month.running_paise),
       month.is_estimate ? 'Estimate' : '',
+    ]);
+  return toCsv(rows[0], rows.slice(1));
+}
+
+export function expenseFundReconciliationCsv(
+  report: ExpenseFundReconciliation,
+): string {
+  const signedRupees = (paise: number) =>
+    `${paise < 0 ? '-' : ''}${rupeesFromPaise(Math.abs(paise))}`;
+  const rows: string[][] = [
+    [
+      'Section',
+      'Month',
+      'Name',
+      'Status',
+      'Book balance (Rs.)',
+      'Statement closing (Rs.)',
+      'Difference (Rs.)',
+      'Target (Rs.)',
+      'Target date',
+      'Target gap (Rs.)',
+      'Estimated monthly (Rs.)',
+      'Reason or note',
+    ],
+    [
+      'Reconciliation',
+      report.month,
+      '',
+      report.status === 'reconciled' ? 'Reconciled' : 'Needs review',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      report.reasons.join('; '),
+    ],
+  ];
+  for (const account of report.accounts)
+    rows.push([
+      'Account',
+      report.month,
+      account.account_name,
+      account.status === 'reconciled' ? 'Reconciled' : 'Needs review',
+      signedRupees(account.book_balance_paise),
+      account.statement_closing_paise === null
+        ? ''
+        : signedRupees(account.statement_closing_paise),
+      account.difference_paise === null
+        ? ''
+        : signedRupees(account.difference_paise),
+      '',
+      '',
+      '',
+      '',
+      account.note ?? '',
+    ]);
+  for (const fund of report.funds)
+    rows.push([
+      'Fund target',
+      report.month,
+      fund.fund_name,
+      fund.target_status?.replaceAll('_', ' ') ?? '',
+      signedRupees(fund.balance_paise),
+      '',
+      '',
+      fund.target_paise === null ? '' : rupeesFromPaise(fund.target_paise),
+      fund.target_date ?? '',
+      fund.target_gap_paise === null
+        ? ''
+        : rupeesFromPaise(fund.target_gap_paise),
+      fund.estimated_monthly_paise === null
+        ? ''
+        : rupeesFromPaise(fund.estimated_monthly_paise),
+      fund.active ? '' : 'Inactive',
     ]);
   return toCsv(rows[0], rows.slice(1));
 }

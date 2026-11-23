@@ -9,6 +9,7 @@ import {
 } from '@/core/billing/operations';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { recordBillShareAction } from '../../actions';
 
 export const metadata = {
   title: 'Bill | Homeish',
@@ -33,6 +34,7 @@ export default async function AdminBillPage({
       backLabel={translateMessage(locale, 'Bills')}
       bill={bill}
       ledgerHref={`/admin/billing/units/${bill.unit_id}`}
+      shareAction={recordBillShareAction}
       today={todayInTimeZone(admin.timezone)}
     >
       {admin.canManage ? <BillAdminActions bill={bill} /> : null}

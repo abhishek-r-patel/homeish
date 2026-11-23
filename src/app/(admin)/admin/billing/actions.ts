@@ -16,6 +16,7 @@ import {
   saveBillingPaymentPlan,
   saveBillingRecoveryAction,
   rejectBillingPayment,
+  recordBillShare,
   saveBillingCharge,
   updateBillingSettings,
   updateBillingPaymentDetails,
@@ -77,12 +78,26 @@ export async function updateBillingSettingsAction(formData: FormData) {
       {
         dueDay: value(formData, 'dueDay'),
         rounding: value(formData, 'rounding'),
+        billEmailOnPublish: formData.get('billEmailOnPublish') === 'true',
         expectedUpdatedAt: value(formData, 'expectedUpdatedAt'),
       },
       requestId,
     );
     revalidatePath('/admin/billing');
     return { data: result, message: 'Society billing preferences saved.' };
+  });
+}
+
+export async function recordBillShareAction(formData: FormData) {
+  return runServerAction('billing.bill.share', async (requestId) => {
+    const result = await recordBillShare(
+      {
+        billId: value(formData, 'billId'),
+        channel: value(formData, 'channel'),
+      },
+      requestId,
+    );
+    return { data: result, message: 'Share started.' };
   });
 }
 

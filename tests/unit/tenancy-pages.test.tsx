@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   progress: vi.fn(),
   handovers: vi.fn(),
   handoverDetail: vi.fn(),
+  unitHandovers: vi.fn(),
   routeState: vi.fn(() => null),
   workspaceView: vi.fn(() => null),
   moveView: vi.fn(() => null),
@@ -27,6 +28,9 @@ vi.mock('../../src/core/tenancy/moves/operations', () => ({
 vi.mock('../../src/core/tenancy/transfers/operations', () => ({
   listClearanceHandovers: mocks.handovers,
   getClearanceHandover: mocks.handoverDetail,
+}));
+vi.mock('../../src/core/structure/handover-operations', () => ({
+  getUnitHandoverWorkspace: mocks.unitHandovers,
 }));
 vi.mock('../../src/components/tenancy/workspace', () => ({
   TenancyRouteState: mocks.routeState,
@@ -70,6 +74,16 @@ beforeEach(() => {
     total: 0,
     limit: 25,
     offset: 0,
+  });
+  mocks.unitHandovers.mockResolvedValue({
+    can_manage: false,
+    today: '2026-11-15',
+    template: { items: [], version: 0, updated_at: null },
+    parties: [],
+    moves: [],
+    transfer_cases: [],
+    readings: [],
+    handovers: [],
   });
 });
 

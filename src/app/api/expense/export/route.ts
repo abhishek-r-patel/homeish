@@ -6,6 +6,7 @@ import {
   exportExpenseAgmDraft,
   exportExpenseEntries,
   exportExpenseFinancialPosition,
+  exportExpenseFundReconciliation,
   exportExpenseStatements,
   exportExpenseVendorSpend,
 } from '@/core/expense/operations';
@@ -17,6 +18,7 @@ import {
   expenseEntriesCsv,
   expenseExportFileName,
   expenseFinancialPositionPdf,
+  expenseFundReconciliationCsv,
   expenseReportPdf,
   expenseStatementsCsv,
   expenseStatementsPdf,
@@ -39,6 +41,7 @@ export async function GET(request: Request) {
         'agm',
         'vendor_spend',
         'budget',
+        'fund_reconciliation',
       ]),
       query.get('report') ?? 'entries',
     );
@@ -117,6 +120,15 @@ export async function GET(request: Request) {
           format === 'csv'
             ? expenseBudgetCsv(report)
             : await expenseBudgetPdf(societyName, report),
+      };
+    }
+    if (reportKind === 'fund_reconciliation') {
+      parseModuleInput(z.literal('csv'), format);
+      const report = await exportExpenseFundReconciliation(query.get('month'));
+      return {
+        contentType: 'text/csv; charset=utf-8',
+        fileName: `homeish-fund-reconciliation-${report.month}.csv`,
+        body: expenseFundReconciliationCsv(report),
       };
     }
     const { rows, report, societyName } = await exportExpenseEntries({

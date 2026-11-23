@@ -6,6 +6,18 @@ const emailMessageSchema = z
     htmlContent: z.string().max(20_000).optional(),
     subject: z.string().trim().min(1).max(200),
     textContent: z.string().max(20_000).optional(),
+    attachment: z
+      .object({
+        name: z
+          .string()
+          .trim()
+          .min(1)
+          .max(200)
+          .regex(/\.pdf$/i),
+        content: z.string().base64().max(8_000_000),
+      })
+      .strict()
+      .optional(),
     to: z
       .object({
         email: z.email().max(254),
@@ -59,6 +71,7 @@ export type TransactionalEmailOptions = {
 };
 
 type BrevoPayload = {
+  attachment?: { content: string; name: string }[];
   htmlContent?: string;
   sender: { email: string; name: string };
   subject: string;
@@ -199,6 +212,9 @@ export function createTransactionalEmailSender({
         : {}),
       ...(parsed.data.htmlContent
         ? { htmlContent: parsed.data.htmlContent }
+        : {}),
+      ...(parsed.data.attachment
+        ? { attachment: [parsed.data.attachment] }
         : {}),
     };
     return (await sendWithRetry(payload))
