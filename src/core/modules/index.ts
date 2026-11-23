@@ -1198,7 +1198,14 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'poll:list': ['admin', 'committee'],
       'poll:manage': ['admin'],
     },
-    settingsAccess: { tenant_voting_default: 'admin' },
+    settingsAccess: {
+      tenant_voting_default: 'admin',
+      official_voting_enabled: 'admin',
+      official_legal_type: 'admin',
+      dispute_window_days: 'admin',
+      nomination_supporters_enabled: 'admin',
+      multi_post_win_rule: 'admin',
+    },
     settingsSchema: pollSettingsSchema,
   },
   meeting: {

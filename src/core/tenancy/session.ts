@@ -13,6 +13,14 @@ import {
 import { buildRequestContext, type SocietyStatus } from './request-context';
 
 const switchSocietySchema = z.object({ societyId: z.string().uuid() }).strict();
+const officerAssignmentsSchema = z.array(
+  z.object({
+    election_id: z.string().uuid(),
+    society_id: z.string().uuid(),
+    title: z.string(),
+    stage: z.string(),
+  }),
+);
 
 export interface SessionSociety {
   id: string;
@@ -32,6 +40,12 @@ export interface SessionSnapshot {
   activeSocietyId: string | null;
   roles: readonly SocietyRole[];
   enabledModules: readonly ModuleKey[];
+  officerAssignments: readonly {
+    election_id: string;
+    society_id: string;
+    title: string;
+    stage: string;
+  }[];
   isDeveloperAccount: boolean;
   mfaVerified: boolean;
 }
@@ -59,13 +73,14 @@ export async function getSession(
   requestId = createRequestId(),
 ): Promise<SessionSnapshot> {
   const context = await buildRequestContext(requestId);
-  const [profileResult, membershipResult] = await Promise.all([
+  const [profileResult, membershipResult, officerResult] = await Promise.all([
     context.db
       .from('profiles')
       .select('email, full_name, status')
       .eq('id', context.userId)
       .maybeSingle(),
     context.db.rpc('session_memberships'),
+    context.db.rpc('poll_election_officer_assignments'),
   ]);
   if (profileResult.error) {
     throw new Error('Could not load the current user profile.', {
@@ -75,6 +90,11 @@ export async function getSession(
   if (membershipResult.error) {
     throw new Error("Could not load the current user's society list.", {
       cause: membershipResult.error,
+    });
+  }
+  if (officerResult.error) {
+    throw new Error("Could not load the current user's election assignments.", {
+      cause: officerResult.error,
     });
   }
   if (!profileResult.data || profileResult.data.status !== 'active') {
@@ -111,6 +131,7 @@ export async function getSession(
     activeSocietyId: context.societyId,
     roles: context.roles,
     enabledModules,
+    officerAssignments: officerAssignmentsSchema.parse(officerResult.data),
     isDeveloperAccount: context.isDeveloperAccount,
     mfaVerified: context.mfaVerified,
   };

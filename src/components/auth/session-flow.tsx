@@ -273,6 +273,22 @@ export function CurrentSession({
           Open Developer Console
         </Link>
       ) : null}
+      {session.officerAssignments.length ? (
+        <section className="grid gap-space-2">
+          <h2 className="text-body-strong">
+            {t('Returning officer assignments')}
+          </h2>
+          {session.officerAssignments.map((assignment) => (
+            <Link
+              key={assignment.election_id}
+              className="text-brand underline"
+              href={`/elections/${assignment.election_id}/officer`}
+            >
+              {assignment.title}
+            </Link>
+          ))}
+        </section>
+      ) : null}
       <SignOutButton
         label={t('Sign out')}
         onSignOut={signOut}
@@ -327,6 +343,22 @@ export function MembershipStatus({
             </li>
           ))}
         </ul>
+      ) : null}
+      {session.officerAssignments.length ? (
+        <section className="grid gap-space-2">
+          <h2 className="text-body-strong">
+            {t('Returning officer assignments')}
+          </h2>
+          {session.officerAssignments.map((assignment) => (
+            <Link
+              key={assignment.election_id}
+              className="text-brand underline"
+              href={`/elections/${assignment.election_id}/officer`}
+            >
+              {assignment.title}
+            </Link>
+          ))}
+        </section>
       ) : null}
       <ActionNotice state={notice} translateResponse={translateResponse} />
       <SignOutButton
