@@ -86,24 +86,24 @@ Modules are built and released one at a time, in the order below. **Core Platfor
 
 **Expansion roadmap (D-38 — approved 2026-11-14).** The modules below are planned in three waves (P3 must-have, P4 high value, P5 good to have). Each still needs its phase-kickoff decisions (Section 5.10) before it is built, ships switched off, and follows the module completion gate. Build may run in parallel with pilot hardening, but no expansion module is enabled for a live society before the pilot go-live gates are closed.
 
-| #   | Module                                             | Key             | Disableable | Release |
-| --- | -------------------------------------------------- | --------------- | ----------- | ------- |
-| 10  | Society Expenses & Accounts                        | `expense`       | Yes         | P3-1    |
-| 11  | Resident & Vehicle Directory                       | `directory`     | Yes         | P3-2    |
-| 12  | Move-in / Move-out & Tenancy                       | `tenancy`       | Yes         | P3-3    |
-| 13  | Document Repository                                | `document`      | Yes         | P3-4    |
-| 14  | Parking Management                                 | `parking`       | Yes         | P3-5    |
-| 15  | Emergency & SOS                                    | `sos`           | Yes         | P3-6    |
-| 16  | Polls & Voting (ported from Civic Pulse)           | `poll`          | Yes         | P4-1    |
-| 17  | Meetings & AGM                                     | `meeting`       | Yes         | P4-2    |
-| 18  | Vendors & Purchase Approvals                       | `vendor`        | Yes         | P4-3    |
-| 19  | Guard Patrol & Incident Log                        | `patrol`        | Yes         | P4-4    |
-| 20  | Utility Metering                                   | `metering`      | Yes         | P4-5    |
-| 21  | Asset Register                                     | `asset`         | Yes         | P5-1    |
-| 22  | Resident Community & Marketplace                   | `community`     | Yes         | P5-2    |
-| 23  | Events & RSVPs                                     | `event`         | Yes         | P5-3    |
-| 24  | Home-Services Directory                            | `home_services` | Yes         | P5-4    |
-| 25  | Major Repairs & Redevelopment (P50; D-82 proposed) | `major_works`   | Yes         | P50     |
+| #   | Module                                                        | Key             | Disableable | Release |
+| --- | ------------------------------------------------------------- | --------------- | ----------- | ------- |
+| 10  | Society Expenses & Accounts                                   | `expense`       | Yes         | P3-1    |
+| 11  | Resident & Vehicle Directory                                  | `directory`     | Yes         | P3-2    |
+| 12  | Move-in / Move-out & Tenancy                                  | `tenancy`       | Yes         | P3-3    |
+| 13  | Document Repository                                           | `document`      | Yes         | P3-4    |
+| 14  | Parking Management                                            | `parking`       | Yes         | P3-5    |
+| 15  | Emergency & SOS                                               | `sos`           | Yes         | P3-6    |
+| 16  | Polls & Voting (ported from Civic Pulse)                      | `poll`          | Yes         | P4-1    |
+| 17  | Meetings & AGM                                                | `meeting`       | Yes         | P4-2    |
+| 18  | Vendors & Purchase Approvals                                  | `vendor`        | Yes         | P4-3    |
+| 19  | Guard Patrol & Incident Log                                   | `patrol`        | Yes         | P4-4    |
+| 20  | Utility Metering                                              | `metering`      | Yes         | P4-5    |
+| 21  | Asset Register                                                | `asset`         | Yes         | P5-1    |
+| 22  | Resident Community & Marketplace                              | `community`     | Yes         | P5-2    |
+| 23  | Events & RSVPs                                                | `event`         | Yes         | P5-3    |
+| 24  | Home-Services Directory                                       | `home_services` | Yes         | P5-4    |
+| 25  | Major Repairs & Redevelopment (P50; D-82 implemented locally) | `major_works`   | Yes         | P50     |
 
 Platform enhancements in the same waves (not separate modules): committee analytics dashboard (P4-6), service-request SLA escalation (P5-5, inside `service_request`), and multi-language (P5-6, Core). The multi-society overview and outside operator accounts (P5-7) are deferred to the future (D-65); see [deferred-features.md](roadmap/deferred-features.md).
 
@@ -612,7 +612,7 @@ Simple society bookkeeping, not double-entry accounting (D-39). **P16 kickoff de
   - **Realised to date:** the total of records that are not voided, always shown separately from the expected saving.
   - **No financial effect:** estimates and statuses create no income, expense reduction, budget change, contract change or Accounts entry. The tracker is on screen only, with no downloads, and all history is kept.
 
-**P40.9 repair forecast (D-82 — proposed 2026-11-22, coding not yet approved).** EXP-30 covers P40.9 inside Accounts (`expense`), which must be enabled; fund tracking (EXP-12) is needed only for the fund gap. Admins manage; committee members read; residents and guards have no access. The forecast is an estimate only. It creates no Accounts entry, fund allocation, bill, levy, budget or work approval.
+**P40.9 repair forecast (D-82 — implemented and locally verified 2026-11-23; not released).** EXP-30 covers P40.9 inside Accounts (`expense`), which must be enabled; fund tracking (EXP-12) is needed only for the fund gap. Admins manage; committee members read; residents and guards have no access. The forecast is an estimate only. It creates no Accounts entry, fund allocation, bill, levy, budget or work approval.
 
 - `EXP-30` (P40.9) A **Repair forecast** under Accounts → Funds lists major repair items:
   - **Item details:** name (up to 120 characters), category (`Structure`, `Waterproofing`, `Painting`, `Lifts`, `Plumbing`, `Electrical`, `Fire safety`, `Other`), optional last done year, repeat every N years (1–50), today's cost, the item's own inflation % (0–20, up to two decimals) and optional notes up to 500 characters.
@@ -954,7 +954,7 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 #### 5.10.14 Major Repairs & Redevelopment (`major_works`) — P50
 
-**P50 major repairs and redevelopment (D-82 — proposed 2026-11-22, coding not yet approved).** MWK-1–MWK-8 cover P50.1–P50.6. This is a new optional module, off by default. It needs no other optional module and links to Accounts (`expense`), Vendors (`vendor`), Meetings (`meeting`) and Polls (`poll`) only when those are enabled. Admins change records. Committee members read every record and score quotes. Residents see only the repair-project list (MWK-1) and, for owners, their own unit's consent status (MWK-7). Guards and housekeeping supervisors have no access. Homeish never approves work, creates a bill, levy, receivable or Accounts entry, verifies or endorses a developer, or states that a legal consent threshold is met. Qualified local review is recommended but is not an in-app prerequisite (accepted risk, owner decision 2026-11-22).
+**P50 major repairs and redevelopment (D-82 — implemented and locally verified 2026-11-23; not released).** MWK-1–MWK-8 cover P50.1–P50.6. This is a new optional module, off by default. It needs no other optional module and links to Accounts (`expense`), Vendors (`vendor`), Meetings (`meeting`) and Polls (`poll`) only when those are enabled. Admins change records. Committee members read every record and score quotes. Residents see only the repair-project list (MWK-1) and, for owners, their own unit's consent status (MWK-7). Guards and housekeeping supervisors have no access. Homeish never approves work, creates a bill, levy, receivable or Accounts entry, verifies or endorses a developer, or states that a legal consent threshold is met. Qualified local review is recommended but is not an in-app prerequisite (accepted risk, owner decision 2026-11-22).
 
 - `MWK-1` (P50.1) **Repair projects.**
   - A project has a title (up to 120 characters), location, category (the EXP-30 list), priority (`Low`, `Medium`, `High`, `Urgent`), estimate, planned start and end dates, actual start and end dates, progress % (0–100) and notes up to 2,000 characters. It may link to the EXP-30 forecast item it started from.
@@ -1589,7 +1589,7 @@ The owner accepted the fourteen planning defaults in the implementation plan's P
 
 The owner accepted the twenty-four planning defaults in the implementation plan's P46 kickoff decisions. The scope is re-sized to about 12 blocks. This changes POL-4's entitlement only for official elections and adds an election-scoped sign-in for outside returning officers to CORE-9's closed sign-up. It does not change D-60, D-61 or D-42 for existing polls and meetings, and M02 legal membership work remains deferred. Coding, hosted migration, release and live use each need separate approval.
 
-**D-82 — P50 major repairs and redevelopment with the P40.9 forecast (Proposed 2026-11-22; coding not yet approved):** Building on the 2026-11-19 batch decisions (new optional module, committee-set scoring criteria, the app never picks a winner, what-if-only levies, redevelopment limited to admins and committee), the owner chose:
+**D-82 — P50 major repairs and redevelopment with the P40.9 forecast (Implemented and locally verified 2026-11-23; not released):** Building on the 2026-11-19 batch decisions (new optional module, committee-set scoring criteria, the app never picks a winner, what-if-only levies, redevelopment limited to admins and committee), the owner chose:
 
 - planning P40.9 and P50 together; module key `major_works`; admins change records and committee members read and score;
 - residents see repair-project status and progress only; owners see only their own unit's consent status;

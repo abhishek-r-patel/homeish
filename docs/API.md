@@ -563,7 +563,7 @@ Routes add `/admin/expenses/statements`, `/admin/expenses/audit` and `/admin/exp
 
 The route adds `/admin/expenses/savings`; the vendor spend view is part of the existing reports area at `/admin/expenses/vendor-spend`. The export route gains `report=vendor_spend` for CSV and PDF, which use the existing export rate limit. Savings have no export.
 
-**P40.9 repair forecast (D-82, EXP-30; proposed 2026-11-22, coding not yet approved).** Database contract in DATABASE.md §9.7. Reads are for admins and committee (`expense:list`); writes are admin-only (`expense:manage`), idempotent by `clientRequestId` and version-checked. Nothing posts, allocates, bills or approves.
+**P40.9 repair forecast (D-82, EXP-30; implemented and locally verified 2026-11-23, not released).** Database contract in DATABASE.md §9.7. Reads are for admins and committee (`expense:list`); writes are admin-only (`expense:manage`), idempotent by `clientRequestId` and version-checked. Nothing posts, allocates, bills or approves.
 
 - `getRepairForecast({ includeArchived })`: items with next due year and Overdue flag, the 10-year estimate table, the chosen fund and its gap or `fundBalanceAvailable: false`, and each item's linked P50 project.
 - `saveRepairForecastItem`, `archiveRepairForecastItem` / `restoreRepairForecastItem` (reason required to archive) and `setRepairForecastFund(fundId | null)`.
@@ -1070,7 +1070,7 @@ Operations are Server Actions over the database contracts in DATABASE.md 9.23.
 
 Routes are `/admin/notices?tab=planned`, `/admin/contact-log` and `/admin/communication` (`?month=YYYY-MM`; a missing, invalid or future month falls back to the current month).
 
-### 5.32 Major repairs & redevelopment (`major_works`, P50; D-82 proposed 2026-11-22, coding not yet approved)
+### 5.32 Major repairs & redevelopment (`major_works`, P50; D-82 implemented and locally verified 2026-11-23, not released)
 
 PRD MWK-1–MWK-8; database contract in DATABASE.md §9.24. Server Actions call caller-session RPCs. Every operation checks the module, role and writable society. Admin writes need `major_works:manage`; admin and committee reads and committee scoring need `major_works:list` and `major_works:score`; residents have `major_works:resident_read` only. Writes are idempotent by `clientRequestId`, version-checked and audited. No operation creates a bill, charge, receivable, levy, Accounts entry or approval. Links to Accounts, Vendors, Meetings and Polls return `MODULE_DISABLED` when that module is off; the rest of the module keeps working.
 
