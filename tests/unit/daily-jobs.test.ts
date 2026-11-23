@@ -220,6 +220,8 @@ describe('daily jobs', () => {
       'vendor.contract_reminders',
       'tenancy.reminders',
       'document.expiry_reminders',
+      'major_works.audit_reminders',
+      'major_works.retention',
       'poll.reconcile',
       'meeting.action_reminders',
       'event.reminders',

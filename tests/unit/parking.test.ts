@@ -15,7 +15,7 @@ import {
 } from '../../src/core/parking/presentation';
 
 const UNIT = 'd0d55fc3-0751-4b79-86c1-5b3e25942392';
-const SLOT = 'a0d55fc3-0751-4b79-86c1-5b3e25942392';
+const SLOT = '00000000-0000-4000-8000-000000000002';
 const REQUEST_ID = 'b0d55fc3-0751-4b79-86c1-5b3e25942392';
 
 function pass(startsAt: string, endsAt: string) {

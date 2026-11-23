@@ -44,6 +44,12 @@ export default async function AdminPollsPage() {
           >
             {t('Poll settings')}
           </Link>
+          <Link
+            className="text-brand underline focus-visible:outline-2 focus-visible:outline-focus"
+            href="/admin/polls/elections"
+          >
+            {t('Official elections')}
+          </Link>
         </nav>
       ) : null}
       <PollAdminListView workspace={result.data} />

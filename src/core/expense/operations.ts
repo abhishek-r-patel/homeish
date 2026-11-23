@@ -20,6 +20,7 @@ import {
   expenseAuditQueryInputSchema,
   expenseAuditSchema,
   expenseAuditYearInputSchema,
+  expenseCategoryDetailsInputSchema,
   expenseCategoryInputSchema,
   expenseDecisionInputSchema,
   expenseEntriesPageSchema,
@@ -56,15 +57,25 @@ import {
   expenseMonthReopenInputSchema,
   expenseMultiYearSchema,
   expensePageSchema,
+  expensePayeeMappingInputSchema,
+  expensePayeeMappingRemoveInputSchema,
   expenseRangeSchema,
   expenseRecordInputSchema,
   expenseRecordResultSchema,
   expenseReportSchema,
   expenseReverseInputSchema,
+  expenseSavingsDetailSchema,
+  expenseSavingsEvidenceInputSchema,
+  expenseSavingsEvidenceVoidInputSchema,
+  expenseSavingsInputSchema,
+  expenseSavingsListSchema,
+  expenseSavingsStatusInputSchema,
   expenseSettingsInputSchema,
   expenseStatementsSchema,
   expenseTransferInputSchema,
   expenseTransferReverseInputSchema,
+  expenseVendorSpendInputSchema,
+  expenseVendorSpendSchema,
   expenseWorkspaceSchema,
   EXPENSE_STATUSES,
   cashCountInputSchema,
@@ -217,6 +228,57 @@ export async function getExpenseReport(range: unknown) {
     expenseReportSchema,
     'Choose a valid report range of up to two years.',
   );
+}
+
+export async function getExpenseVendorSpend(input: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(expenseVendorSpendInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_vendor_spend_report',
+    {
+      p_society_id: societyId,
+      p_from: parsed.from,
+      p_to: parsed.to,
+      p_category_id: parsed.categoryId,
+      p_group: parsed.group,
+      p_cost_nature: parsed.costNature,
+    },
+    expenseVendorSpendSchema,
+    'Choose a valid vendor-spend range and filters.',
+  );
+}
+
+export async function listExpenseSavings() {
+  const { context, societyId } = await expenseContext('read');
+  return callModuleRpc(
+    context,
+    'expense_savings_list',
+    { p_society_id: societyId },
+    expenseSavingsListSchema,
+    'Could not load savings initiatives.',
+  );
+}
+
+export async function getExpenseSavings(id: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const initiativeId = parseModuleInput(z.uuid(), id);
+  const detail = await callModuleRpc(
+    context,
+    'expense_savings_get',
+    { p_society_id: societyId, p_initiative_id: initiativeId },
+    expenseSavingsDetailSchema,
+    'Could not load this savings initiative.',
+  );
+  return {
+    ...detail,
+    evidence: await Promise.all(
+      detail.evidence.map(async (evidence) => ({
+        ...evidence,
+        fileUrl: await signReceipt(context, evidence.file_path),
+      })),
+    ),
+  };
 }
 
 export async function getExpenseStatements(range: unknown) {
@@ -374,6 +436,29 @@ export async function exportExpenseEntries(range: unknown) {
   );
   return {
     rows,
+    report,
+    societyName: await expenseSocietyName(context, societyId),
+  };
+}
+
+export async function exportExpenseVendorSpend(input: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(expenseVendorSpendInputSchema, input);
+  const report = await callModuleRpc(
+    context,
+    'expense_vendor_spend_report',
+    {
+      p_society_id: societyId,
+      p_from: parsed.from,
+      p_to: parsed.to,
+      p_category_id: parsed.categoryId,
+      p_group: parsed.group,
+      p_cost_nature: parsed.costNature,
+    },
+    expenseVendorSpendSchema,
+    'Could not export the vendor spend report.',
+  );
+  return {
     report,
     societyName: await expenseSocietyName(context, societyId),
   };
@@ -677,6 +762,179 @@ export async function saveExpenseCategory(input: unknown, requestId: string) {
     },
     z.uuid(),
     'Check the category name.',
+  );
+}
+
+export async function saveExpenseCategoryDetails(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseCategoryDetailsInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_category_details_save',
+    {
+      p_society_id: societyId,
+      p_category_id: parsed.categoryId,
+      p_detail_group: parsed.detailGroup,
+      p_cost_nature: parsed.costNature,
+      p_owner_user_id: parsed.ownerUserId,
+      p_detail_description: parsed.detailDescription,
+      p_expected_version: parsed.expectedVersion,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the category details and choose an active admin or committee owner.',
+  );
+}
+
+export async function saveExpensePayeeMapping(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expensePayeeMappingInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_payee_mapping_save',
+    {
+      p_society_id: societyId,
+      p_payee: parsed.payee,
+      p_vendor_id: parsed.vendorId,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Choose an active vendor and check the payee mapping.',
+  );
+}
+
+export async function removeExpensePayeeMapping(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expensePayeeMappingRemoveInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_payee_mapping_remove',
+    {
+      p_society_id: societyId,
+      p_mapping_id: parsed.mappingId,
+      p_reason: parsed.reason,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Give a reason for removing this payee mapping.',
+  );
+}
+
+export async function saveExpenseSavings(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseSavingsInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_savings_save',
+    {
+      p_society_id: societyId,
+      p_initiative_id: parsed.initiativeId,
+      p_title: parsed.title,
+      p_description: parsed.description,
+      p_kind: parsed.kind,
+      p_owner_user_id: parsed.ownerUserId,
+      p_category_id: parsed.categoryId,
+      p_vendor_id: parsed.vendorId,
+      p_baseline_annual_paise: parsed.baselineAnnualRupees,
+      p_expected_annual_paise: parsed.expectedAnnualRupees,
+      p_expected_version: parsed.expectedVersion,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the savings initiative and its active owner, category and vendor.',
+  );
+}
+
+export async function changeExpenseSavingsStatus(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseSavingsStatusInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_savings_status_change',
+    {
+      p_society_id: societyId,
+      p_initiative_id: parsed.initiativeId,
+      p_to_status: parsed.status,
+      p_reason: parsed.reason,
+      p_expected_version: parsed.expectedVersion,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the status change and evidence. Dropping or restoring needs a reason.',
+  );
+}
+
+export async function addExpenseSavingsEvidence(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseSavingsEvidenceInputSchema, input);
+  if (parsed.filePath) {
+    await verifyFileAttachment(context, {
+      bucket: 'expense-files',
+      contentTypes: FILE_CONTENT_TYPES,
+      ownerPath: `${societyId}/savings/${parsed.initiativeId}`,
+      path: parsed.filePath,
+      societyId,
+    });
+  }
+  return callModuleRpc(
+    context,
+    'expense_savings_evidence_add',
+    {
+      p_society_id: societyId,
+      p_initiative_id: parsed.initiativeId,
+      p_amount_paise: parsed.amountRupees,
+      p_evidenced_on: parsed.evidencedOn,
+      p_note: parsed.note,
+      p_entry_id: parsed.entryId,
+      p_vendor_bill_id: parsed.vendorBillId,
+      p_vendor_contract_id: parsed.vendorContractId,
+      p_file_path: parsed.filePath,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the evidence date, amount, note, source link and attachment.',
+  );
+}
+
+export async function voidExpenseSavingsEvidence(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseSavingsEvidenceVoidInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_savings_evidence_void',
+    {
+      p_society_id: societyId,
+      p_evidence_id: parsed.evidenceId,
+      p_reason: parsed.reason,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Give a reason for voiding this evidence record.',
   );
 }
 

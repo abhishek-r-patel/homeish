@@ -19,6 +19,8 @@ import {
   runEventRemindersPrivileged,
   runNoticeScheduledPublishPrivileged,
   runDocumentExpiryRemindersPrivileged,
+  runMajorWorksAuditRemindersPrivileged,
+  runMajorWorksRetentionPrivileged,
   type BillingDailyTask,
 } from '../privileged';
 import { createRequestId } from '../errors';
@@ -104,6 +106,18 @@ export const dailyJobTasks: readonly DailyJobTask[] = [
     name: 'document.expiry_reminders',
     run: async (societyId: string) => {
       await runDocumentExpiryRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'major_works.audit_reminders',
+    run: async (societyId: string) => {
+      await runMajorWorksAuditRemindersPrivileged(societyId);
+    },
+  },
+  {
+    name: 'major_works.retention',
+    run: async (societyId: string, periodKey: string) => {
+      await runMajorWorksRetentionPrivileged(societyId, periodKey);
     },
   },
   {

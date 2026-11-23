@@ -3,11 +3,26 @@ import { z } from 'zod';
 
 export const DEFAULT_POLL_SETTINGS = {
   tenant_voting_default: false,
+  official_voting_enabled: false,
+  official_legal_type: null,
+  dispute_window_days: 5,
+  nomination_supporters_enabled: false,
+  multi_post_win_rule: 'candidate_choice',
 } as const;
 
 export const pollSettingsSchema = z
   .object({
     tenant_voting_default: z.boolean().optional(),
+    official_voting_enabled: z.boolean().optional(),
+    official_legal_type: z
+      .enum(['apartment_association', 'cooperative'])
+      .nullable()
+      .optional(),
+    dispute_window_days: z.number().int().min(1).max(30).optional(),
+    nomination_supporters_enabled: z.boolean().optional(),
+    multi_post_win_rule: z
+      .enum(['candidate_choice', 'returning_officer'])
+      .optional(),
   })
   .strict();
 

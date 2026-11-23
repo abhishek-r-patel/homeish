@@ -54,6 +54,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/resident') ||
     pathname.startsWith('/guard') ||
     pathname.startsWith('/admin') ||
+    pathname.startsWith('/elections') ||
     (pathname.startsWith('/developer') && pathname !== '/developer/login');
   const hasSupabaseAuthCookie = request.cookies
     .getAll()

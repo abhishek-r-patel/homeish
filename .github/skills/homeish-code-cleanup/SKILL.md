@@ -37,13 +37,18 @@ List each case with file and line, the category and the reason. Apply only the b
 
 - List files in scope over 300 lines (docs/AGENTS.md section 05), excluding the paths in section 1.
 - For each one, propose a split by job: the new `kebab-case` file names, what moves, and which imports change. Keep module strings together, and keep server-only code out of client files.
-- Split only the files the user approves, one per change. Give each new file a header comment, update every caller, and update [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) if the folder structure it describes changes.
+- Split only the files the user approves, one per change. Give each new file a header comment, update every caller, keep the moved code's validation and error handling, and update [docs/ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) if the folder structure it describes changes.
 
-## 6. Verify and report
+## 6. Shortcuts (report only)
+
+List each `shortcut:` comment in scope (docs/AGENTS.md section 05) as `file:line, the limit, when to upgrade`, and tag any that name no upgrade trigger. Do not remove or resolve them unasked.
+
+## 7. Verify and report
 
 - Re-run the baseline commands, then `npm run check`.
 - If database operations moved, run `npm run test:integration:local`. If screens or components moved, run `npm run e2e`.
 - Report:
   - what was removed or split;
   - what is waiting for approval;
+  - the shortcut list;
   - the commands run, with results before and after.

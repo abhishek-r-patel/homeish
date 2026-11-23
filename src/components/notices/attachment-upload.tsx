@@ -25,10 +25,12 @@ export function NoticeAttachmentUpload({
   initialPath = null,
   bucket = 'notice-files',
   id = 'notice-attachment',
+  expenseSavingsInitiativeId,
 }: {
   initialPath?: string | null;
   bucket?: 'notice-files' | 'amc-files' | 'expense-files';
   id?: string;
+  expenseSavingsInitiativeId?: string;
 }) {
   const { translate: t, translateFeedback } = useUiTranslator();
   const [path, setPath] = useState<string | null>(initialPath);
@@ -56,6 +58,9 @@ export function NoticeAttachmentUpload({
           contentType: file.type,
           sizeBytes: file.size,
           requestId: crypto.randomUUID(),
+          ...(bucket === 'expense-files' && expenseSavingsInitiativeId
+            ? { savingsInitiativeId: expenseSavingsInitiativeId }
+            : {}),
         }),
       });
       const result = await readEnvelope(response);

@@ -112,8 +112,8 @@ describe.skipIf(!hasDatabase)('poll database foundation', () => {
         service_execute: boolean;
       }>(
         `select p.proname as name,
-          (p.proname='poll_retention_run'
-            or p.proargnames[1]='p_society_id') as has_society_first,
+          (p.proname in ('poll_retention_run','poll_election_reconcile_due')
+            or coalesce(p.proargnames[1]='p_society_id', false)) as has_society_first,
           p.prosecdef as is_definer,
           'search_path=""'=any(p.proconfig) as safe_search_path,
           has_function_privilege('authenticated',p.oid,'execute') as authenticated_execute,
@@ -124,16 +124,17 @@ describe.skipIf(!hasDatabase)('poll database foundation', () => {
       ),
     );
 
-    expect(functions.rows).toHaveLength(22);
+    expect(functions.rows).toHaveLength(61);
     for (const fn of functions.rows) {
       expect(fn).toMatchObject({
-        has_society_first: true,
+        has_society_first: fn.name !== 'poll_election_officer_assignments',
         is_definer: true,
         safe_search_path: true,
       });
       if (
         fn.name === 'poll_reconcile_due' ||
-        fn.name === 'poll_retention_run'
+        fn.name === 'poll_retention_run' ||
+        fn.name === 'poll_election_reconcile_due'
       ) {
         expect(fn.authenticated_execute).toBe(false);
         expect(fn.service_execute).toBe(true);

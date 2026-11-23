@@ -23,6 +23,14 @@ The approved expansion modules (PRD D-38, Section 5.10; IMPLEMENTATION_PLAN P16â
 
 ## Deferred product ideas
 
+### Regional interface languages
+
+**Status:** deferred 2026-11-23 (PRD D-90). English and Hindi are the only implemented interface languages. Gujarati, Kannada, Tamil, Telugu and Bengali (Bangla) may be considered as possible future Pro languages if enough societies show interest and are willing to pay for them.
+
+The licensed Noto Sans font files are staged as future assets only. There are no translations, selectors, profile choices, plan rules, society settings, database changes or enabled UI for these five languages. Treat each language as unavailable; do not show it as coming soon inside a current product screen or imply a release date.
+
+Reconsider this only when society demand justifies it and the owner separately approves pricing/plan treatment, translation scope, owner language review, accessibility and device acceptance, technical design and implementation work. There is no numeric demand threshold or delivery commitment.
+
 ### Multi-society overview and operators (was P34)
 
 **Status:** deferred 2026-11-17 (PRD D-65, P5-7). The owner is not sure it is needed. Nothing is built, and no database, route or role exists for it. People who belong to several societies already use the existing society switcher. Bring this back only on an explicit owner decision, then re-plan it from the options below.

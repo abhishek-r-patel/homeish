@@ -1,4 +1,5 @@
 // Show fund setup and activate P40 allocations from the Accounts total.
+import Link from 'next/link';
 import { Card } from '@/components/ui/data-display';
 import { Banner } from '@/components/ui/feedback';
 import { ExpenseNav, ExpensePager } from '@/components/expense/nav';
@@ -172,6 +173,19 @@ export default async function ExpenseFundsPage({
           )}
         </Banner>
       ) : null}
+      <Card
+        title={t('Repair forecast')}
+        description={t(
+          'Estimate major repairs over the next ten financial years without creating a levy, bill or approval.',
+        )}
+      >
+        <Link
+          className="text-brand underline"
+          href="/admin/expenses/funds/forecast"
+        >
+          {t('Open repair forecast')}
+        </Link>
+      </Card>
 
       <Card
         title={t('Fund names')}

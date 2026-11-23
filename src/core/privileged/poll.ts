@@ -21,6 +21,12 @@ export async function runPollReconcilePrivileged(
     { p_society_id: societyId },
   );
   reconcileResultSchema.parse(result);
+  const electionResult = await invokeUntypedRpc<unknown>(
+    privilegedClient,
+    'poll_election_reconcile_due',
+    { p_society_id: societyId },
+  );
+  z.number().int().nonnegative().parse(electionResult);
 }
 
 export async function runPollRetentionPrivileged(): Promise<void> {

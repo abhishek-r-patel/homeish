@@ -3,7 +3,7 @@ import { Brand } from '@/components/ui/brand';
 import Link from 'next/link';
 
 export const privacyContactEmail = 'tech.abhishekpatel@gmail.com';
-export const privacyEffectiveDate = '12 November 2026';
+export const privacyEffectiveDate = '23 November 2026';
 
 const sections: { title: string; paragraphs: string[]; items?: string[] }[] = [
   {
@@ -39,6 +39,7 @@ const sections: { title: string; paragraphs: string[]; items?: string[] }[] = [
     items: [
       'Supabase: database, sign-in and private file storage.',
       'Vercel: website and application hosting.',
+      'Vercel Web Analytics: cookie-free, aggregated page-use measurements on the Beta public Homeish and privacy pages only. Authenticated society screens and custom user events are excluded. Vercel may process the page path, referrer, broad location, browser and device type; URLs with query parameters are stripped before sending.',
       'Brevo: transactional email, such as sign-in codes and alerts.',
       'Sentry: error monitoring, with personal data removed before sending.',
       'Google Drive and GitHub Actions: encrypted off-site database backups, described below.',

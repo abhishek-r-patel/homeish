@@ -12,6 +12,18 @@ const VIEWS = [
     manageOnly: false,
   },
   {
+    key: 'vendor-spend',
+    href: '/admin/expenses/vendor-spend',
+    label: 'Vendor spend',
+    manageOnly: false,
+  },
+  {
+    key: 'savings',
+    href: '/admin/expenses/savings',
+    label: 'Savings',
+    manageOnly: false,
+  },
+  {
     key: 'statements',
     href: '/admin/expenses/statements',
     label: 'Statements',

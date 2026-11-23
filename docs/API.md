@@ -469,9 +469,17 @@ Residents use `/amenities`; admin/committee use `/admin/amenities`. A date picke
 - `amenity_book`: active occupancy, exact current version/rules acknowledgement, guest limit and 24-hour lead are enforced again in PostgreSQL. Paid bookings require billing enabled and append a unit-ledger debit atomically. Stable client UUIDs protect retries.
 - `amenity_cancel`: the resident booker may cancel before the start; admins require a reason and notify residents. Every paid cancellation appends a full credit, never an edit or deletion, even if billing is subsequently disabled.
 
-Bookings confirm immediately. There is no booking horizon, daily unit cap, payment gateway or shared-capacity reservation model.
+Bookings currently confirm immediately. There is no booking horizon, daily unit cap, payment gateway or shared-capacity reservation model.
 
-**P52 operations (D-79; approved for local coding):** `getAmenityCalendarMonth` returns confirmed bookings for one society-local month. Residents see availability only by default; the admin-controlled `resident_calendar_identity` setting may return the booker's name or name and unit, only when Directory is enabled and each field is visible under that person's P17 preferences. Hidden or unavailable fields are omitted. The existing `amenity_workspace` remains anonymous for other units. `saveAmenityCalendarVisibility` is admin-only and audited. `recordAmenityActivity` is admin-only and requires a same-society P15 booking, P28 asset, P14 AMC visit or P13 service-request source; source retention applies. `getAmenityFacilitiesReport` is read-only for admins and committee, hides disabled-source data and may include only authorized read-only P16 figures. No operation changes bookings, capacity, fees or ledgers.
+**P35.8–P35.9 deposits (D-84 proposed 2026-11-23; coding not yet approved):** Existing behavior remains when deposits are off. In `per_amenity` mode, a required deposit reserves the slot as `awaiting_deposit` and confirms only after full receipts; the society may instead choose `immediate` confirmation, leaving the deposit outstanding. Amenity settings are snapshotted per booking. An admin may override the amount only before confirmation and before any receipt. The booking's usage fee remains separate.
+
+- Proposed admin operations configure the standard amount/requirement and record externally completed partial receipts, refunds and post-booking deductions. Every write is idempotent by `clientRequestId`, audited and append-only; corrections require a reasoned void and replacement.
+- A pending or confirmed booking cancellation returns all deposit money actually received without deduction. Existing usage-fee cancellation credit remains a separate Billing ledger action.
+- Admins manage the deposit history and evidence, committee members read, and active residents of the booking's unit read their own breakdown and evidence. Other residents and guards receive none. Deposit evidence uses a private bucket and short-lived links after parent-booking authorization.
+- The existing `/api/files/upload-url` route would accept `amenity-deposit-evidence` for admins only; saved evidence is attached to a same-society booking, and view links are issued only after authorizing the parent booking and active unit membership.
+- P16 records receipt/refund as distinct cash movements, not income/expense; retained deductions are reported as Other income without a second cash entry. P41 separates held cash movements and non-cash reclassification. P42.5 budget actuals include retained amounts under Other income. No payment gateway or automatic refund is added.
+
+**P52 operations (D-79; on beta/testdb, owner UAT pending):** `getAmenityCalendarMonth` returns confirmed bookings for one society-local month. Residents see availability only by default; the admin-controlled `resident_calendar_identity` setting may return the booker's name or name and unit, only when Directory is enabled and each field is visible under that person's P17 preferences. Hidden or unavailable fields are omitted. The existing `amenity_workspace` remains anonymous for other units. `saveAmenityCalendarVisibility` is admin-only and audited. `recordAmenityActivity` is admin-only and requires a same-society P15 booking, P28 asset, P14 AMC visit or P13 service-request source; source retention applies. `getAmenityFacilitiesReport` is read-only for admins and committee, hides disabled-source data and may include only authorized read-only P16 figures. No operation changes bookings, capacity, fees or ledgers.
 
 ### 5.14 Resident & vehicle directory (`directory`, P17)
 
@@ -530,7 +538,7 @@ Routes: `/admin/expenses` (balances, own-account transfers, approvals, forms, ca
 
 Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 
-**P41 financial reports (D-77; implemented and verified locally 2026-11-22, release pending).** PRD EXP-21–EXP-26; database contract in DATABASE.md §9.7. P41.3 remains blocked. All implemented reads are for admins and committee, and all writes are admin-only. No operation changes book entries, bills, fund allocations or vendor records. The operations are:
+**P41 financial reports (D-77; on beta/testdb 2026-11-22, owner UAT and main/live release pending).** PRD EXP-21–EXP-26; database contract in DATABASE.md §9.7. P41.3 remains blocked. All implemented reads are for admins and committee, and all writes are admin-only. No operation changes book entries, bills, fund allocations or vendor records. The operations are:
 
 - `getExpenseStatements(range)`: the receipts-and-payments statement, the month-by-head table and the four P41.7 figures. Ranges are at most two years.
 - `getExpenseFinancialPosition(asOf)`: summary lines, each with a source and an availability state. Dues and vendor bills are only for today. Deposits are separate, and committee results omit bank references.
@@ -541,9 +549,11 @@ Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 - `getExpenseAgmDraft(financialYear)` and `saveExpenseAgmDraft`: assembled sections plus up to 10 versioned plain-text sections.
 - AGM section switches are saved through `saveExpenseAgmSettings` as `agm_report_sections`; the existing `saveExpenseSettings` preserves that key.
 
+**Proposed D-84 report extension:** `getExpenseStatements` and the P16 reports separate actual deposit receipts/refunds from income and expenses; retained deductions appear as Other income on the deduction date without another cash movement. The statement shows held-deposit cash separately and the reclassification outside cash totals. P27 is unchanged.
+
 Routes add `/admin/expenses/statements`, `/admin/expenses/audit` and `/admin/expenses/agm-report`. The export route gains `report=statements|position|agm`. Statements export as CSV or PDF, the position summary as PDF, and the AGM draft as PDF. Without `report`, the export keeps its current behaviour.
 
-**P42 expense control (D-80; proposed 2026-11-22, coding not yet approved).** PRD EXP-27–EXP-29; database contract in DATABASE.md §9.7. Reads are for admins and committee; writes are admin-only, idempotent by `clientRequestId` and version-checked. No operation changes book entries, expenses, bills, payments, contracts, fund allocations or vendor records. The operations are:
+**P42 expense control (D-80; approved for local coding 2026-11-23, not released).** PRD EXP-27–EXP-29; database contract in DATABASE.md §9.7. Reads are for admins and committee; writes are admin-only, idempotent by `clientRequestId` and version-checked. No operation changes book entries, expenses, bills, payments, contracts, fund allocations or vendor records. The operations are:
 
 - `saveExpenseCategoryDetails`: group, cost nature, owner and description for an active or inactive category. It returns the group suggestions and revision history through the existing category list.
 - `saveExpensePayeeMapping` and `removeExpensePayeeMapping` (reason required) are available only when the Vendor module is enabled.
@@ -553,7 +563,29 @@ Routes add `/admin/expenses/statements`, `/admin/expenses/audit` and `/admin/exp
 
 The route adds `/admin/expenses/savings`; the vendor spend view is part of the existing reports area at `/admin/expenses/vendor-spend`. The export route gains `report=vendor_spend` for CSV and PDF, which use the existing export rate limit. Savings have no export.
 
-**P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest has no API or calculation until an accountant/legal review approves its rate, basis and late-fee interaction.
+**P40.9 repair forecast (D-82, EXP-30; implemented and locally verified 2026-11-23, not released).** Database contract in DATABASE.md §9.7. Reads are for admins and committee (`expense:list`); writes are admin-only (`expense:manage`), idempotent by `clientRequestId` and version-checked. Nothing posts, allocates, bills or approves.
+
+- `getRepairForecast({ includeArchived })`: items with next due year and Overdue flag, the 10-year estimate table, the chosen fund and its gap or `fundBalanceAvailable: false`, and each item's linked P50 project.
+- `saveRepairForecastItem`, `archiveRepairForecastItem` / `restoreRepairForecastItem` (reason required to archive) and `setRepairForecastFund(fundId | null)`.
+- `startProjectFromForecastItem(itemId)` is the P50 `createMajorWorksProject` with `forecastItemId`; it requires `major_works` to be enabled and returns `MODULE_DISABLED` otherwise.
+
+The screen is `/admin/expenses/funds/forecast`, linked from Accounts → Funds; it has no export.
+
+**Budgets (D-83, EXP-31–EXP-35, P41.3/P42.2/P42.5; proposed 2026-11-22, coding not yet approved).** Database contract in DATABASE.md §9.7. Reads are for admins and committee (`expense:list`). Writes are admin-only (`expense:manage`), idempotent by `clientRequestId` and version-checked. Nothing posts, allocates, bills, approves or blocks spending. Actuals use posted Accounts entries and, under proposed D-84, retained deposit deductions as non-cash Other income; the deduction does not create a second cash entry.
+
+- `getExpenseBudget(financialYear)`: the budget (or none), its status, approval details, lines with phasing and month figures, the change history and the current plan per head.
+- `getExpenseBudgetCopyPreview({ financialYear, percent })`: last year's actuals by head, including proposed D-84 retained-deposit income under Other, with the optional −50% to +100% adjustment rounded to the rupee. It saves nothing.
+- `saveExpenseBudgetDraft`: creates the draft or replaces its lines. Only drafts can be saved.
+- `discardExpenseBudget` (reason required, draft only) and `approveExpenseBudget` (body, date not in the future, optional meeting or document link, optional note). Approval locks the lines.
+- `recordExpenseBudgetChange`: an increase, a decrease or a move (`fromHead`, `toHead`) with amount, starting month, reason and approval details. A decrease below the current plan is refused with `BUDGET_BELOW_ZERO`.
+- `voidExpenseBudgetChange` (reason required; a move is voided as a pair). It is refused with `BUDGET_BELOW_ZERO` when it would leave a head negative.
+- `getExpenseBudgetReport({ financialYear, asOf })`: the EXP-33 summary and month table, the cash flow with forecast months flagged as estimates, and the EXP-34 burn rate, warnings and projections. Retained-deposit income is actual Other income; held receipts/refunds remain actual cash-flow movements, not budget income or expense.
+- `getResidentBudgetSummary(financialYear)` (active owner, tenant or family residents): `{ shared: false }` unless Accounts is enabled, the summary setting is on and the budget is approved. Otherwise it returns current budget, actual to date and % used per head, with totals.
+- `saveExpenseSettings` accepts `budgetForecastMethod`, `budgetWatchPercent` (50–100) and `budgetResidentSummary`, preserving the other keys.
+
+Routes add `/admin/expenses/budget` and the resident page `/budget`. The export route gains `report=budget&financialYear=YYYY` for CSV (formula-safe) and PDF for admins and committee members, using the existing export rate limit. Residents have no export.
+
+**P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest (P38.1, BIL-18) is proposed under D-89, below.
 
 - `billing.paymentPlan.list` (admin, committee) reads plans; `billing.paymentPlan.save` (admin) creates a tracker record from a unit, selected open bill IDs, down-payment amount, installment count, first due date and remarks, or updates terms and remarks on an existing plan. The database snapshots the selected bills' remaining balances when creating a plan. An open bill can belong to only one non-cancelled plan; saved bill links cannot be changed. Equal monthly installments start on the first due date, with the last installment absorbing paise rounding. Progress is derived only from confirmed allocations for payments dated on or after the plan date and confirmed after plan creation, applied to the down payment and then installments in order. Actual ledger due remains authoritative; no caller-entered paid totals are accepted.
 - `billing.paymentPlan.cancel` (admin) cancels a plan with a required reason, retains its record and releases its bills for a replacement plan. It does not change bills, payments or ledger entries.
@@ -598,7 +630,7 @@ The existing `/api/files/upload-url` accepts `{ bucket: "tenancy-files", moveId,
 
 NOC rendering preserves supported NFC text. If any rendered name/label needs unsupported font characters, issuance returns `VALIDATION_FAILED` before Storage upload or attestation, with a clear no-NOC-issued message. It never silently strips accents or replaces names. Full-script fonts are a separately approved follow-up (D-50); existing Billing/Expense PDF behaviour is unchanged.
 
-**P51 and P35.10–P35.12 operations (D-78; approved for local coding 2026-11-22).** These are new authorised operations in `src/core/tenancy/`, each backed by a caller-session RPC, with the same permission, rate-limit, version and error rules as above.
+**P51 and P35.10–P35.12 operations (D-78; on beta/testdb 2026-11-22, owner UAT and legal review pending).** These are authorised operations in `src/core/tenancy/`, each backed by a caller-session RPC, with the same permission, rate-limit, version and error rules as above.
 
 | Operation                                                           | Who                                       | Contract                                                                                                                                                                                                                                                                               |
 | ------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -614,9 +646,9 @@ NOC rendering preserves supported NFC text. If any rendered name/label needs uns
 | `supersedeTenancyCertificate`                                       | Admin                                     | Reason required; issues a replacement with a new number and links the old one, whose PDF is unchanged.                                                                                                                                                                                 |
 | `listTenancyCertificates`                                           | Admin, committee (metadata), own parties  | Number, kind, date, status; file links only for admins and parties.                                                                                                                                                                                                                    |
 
-`/api/files/upload-url` would accept `{ bucket: "tenancy-files", handoverId, contentType, sizeBytes }` for agreement files, and `/api/files/url` would serve handover files and certificates to admins and the parties only. The certificate attestation is a new privileged step, and the agreement and certificate Storage rules are new; the owner approved both on 2026-11-22 (see ARCHITECTURE §8.4). New pages are a **Transfers** tab inside `/admin/tenancy` (with `/admin/tenancy/transfers/{id}`) and the parties' own view inside `/tenancy`; no new module, navigation entry or public endpoint.
+`/api/files/upload-url` accepts `{ bucket: "tenancy-files", handoverId, contentType, sizeBytes }` for agreement files, and `/api/files/url` serves handover files and certificates to admins and the parties only. The certificate attestation is the implemented privileged step in ARCHITECTURE §8.4, with agreement and certificate Storage rules implemented on 2026-11-22. Pages are the **Transfers** tab inside `/admin/tenancy` (with `/admin/tenancy/transfers/{id}`) and the parties' own view inside `/tenancy`; no new module, top-level navigation entry or public endpoint was added.
 
-**P52 operations (D-79; approved for local coding):** `getTenancyMoveProgress` derives its projection from existing P18/Core records. Admins see private authorized details; committee and guards retain their current status-only projections; residents see only their own move details. `saveTenancyVerification` and `saveTenancyAgreementMetadata` are admin-only and update only status (`pending`, `verified`, `rejected`), date/reference, agreement type (`rental`, `leave_and_licence`, `company_lease`, `paying_guest`, `other`) and start date on the existing move. Verification tracking is off by default. No new documents, identity copies, occupancy records or compliance assertions are introduced.
+**P52 operations (D-79; on beta/testdb, owner UAT pending):** `getTenancyMoveProgress` derives its projection from existing P18/Core records. Admins see private authorized details; committee and guards retain their current status-only projections; residents see only their own move details. `saveTenancyVerification` and `saveTenancyAgreementMetadata` are admin-only and update only status (`pending`, `verified`, `rejected`), date/reference, agreement type (`rental`, `leave_and_licence`, `company_lease`, `paying_guest`, `other`) and start date on the existing move. Verification tracking is off by default. No new documents, identity copies, occupancy records or compliance assertions are introduced.
 
 ### 5.17 Document repository (`document`, P19)
 
@@ -639,9 +671,9 @@ Operations live in `src/core/document/`; admin Server Actions are in `(admin)/ad
 
 Permissions: `document:list` (admin, committee, resident) and `document:manage` (admin). Guards have no access. Pages are `/documents` (residents) and `/admin/documents` (admin and committee; committee is read-only). The module has no settings. Residents cannot upload. P19 uploads do not use `/api/files/upload-url`, and P19 downloads do not use `/api/files/url`: the storage read policy accepts only a version with a recent download audit row. Listed P18 NOCs use the existing private Tenancy download. Unattached uploads are removed after 24 hours by the retention task.
 
-**P44 operations — implemented locally, not released:**
+**P44 operations — on beta/testdb, owner UAT pending:**
 
-| Proposed operation                  | Caller                  | Input and result                                                                                                                                                                                                                                                                                                                                                     |
+| Operation                           | Caller                  | Input and result                                                                                                                                                                                                                                                                                                                                                     |
 | ----------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `listGovernanceSources`             | Admin                   | Record kind, source type and bounded pagination; list only authorized same-society P19 versions or available P18 NOCs. Allow historical P19 evidence only for amendment milestones, and society-folder sources only for house rules. Do not return private Storage paths or silently truncate NOCs at P19's 50-item display cap.                                     |
 | `listGovernanceRecords`             | Admin, committee        | Record kind and filters with the existing bounded P19 list envelope; return only authorized ordinary details. Unlinked drafts are visible to both; physical custody/location remain admin-only.                                                                                                                                                                      |
@@ -655,9 +687,17 @@ Permissions: `document:list` (admin, committee, resident) and `document:manage` 
 
 Use the existing permission map, validation and response envelope, `otherWritesUserMinute` for writes, the P19 signed-download action for P19 sources, the existing P18 private-file action for NOCs, and request IDs. P19 sources include society-folder and unit documents; P18 sources are issued, unexpired NOCs while Tenancy is enabled. Recheck NOC permissions on every read: committee status alone grants no access, but an independently entitled tenant or active unit owner may read their own linked record. An unavailable NOC does not become an unlinked draft or extend file retention; a disabled Tenancy module exposes no NOC-linked data or counts. House rules accept only P19 society-folder sources. Return existing `VALIDATION_FAILED`, `NOT_FOUND` for missing or unauthorized private sources, `MODULE_DISABLED`, and `CONFLICT/stale_version` or `CONFLICT/invalid_state` as appropriate; unexpected failures retain a reference ID. Never return private values in errors. Source links do not block P19 document/version changes, NOC retention or P23 resolution edits/deletion; the future P44.5 folder-audience guard is a separate privacy rule. No new HTTP route is proposed.
 
-The local server operations use the existing caller-session/RPC pattern. `document_expiry_reminders_run` is service-role-only and registered as `document.expiry_reminders`; `document_house_rule_publish` and `document_house_rules_published_list` remain fail-closed until a separately reviewed migration unlocks publication. No HTTP route, dependency or external channel was added.
+The server operations use the existing caller-session/RPC pattern. `document_expiry_reminders_run` is service-role-only and registered as `document.expiry_reminders`; `document_house_rule_publish` and `document_house_rules_published_list` remain fail-closed until a separately reviewed migration unlocks publication. No HTTP route, dependency or external channel was added.
 
-**P44.5 proposed later operations:** Admin-only case create/read/edit/archive, private history and evidence-link operations, plus an independently default-off service-only case-reminder job. Require evidence in a folder created admin-only and never widened, retain archived links, and serialize linking with folder-audience changes. Apply the same existing P19 authorization and five-minute link behavior to files; assigning a reviewer does not grant access. These operations, the folder audience and their retention are blocked pending the reviewed case-retention policy and a separate go-ahead.
+**P44.5 proposed later operations:** Admin-only case create/read/edit/archive, private history and evidence-link operations, plus an independently default-off service-only case-reminder job. Require evidence in a folder created admin-only and never widened, retain archived links, and serialize linking with folder-audience changes. Apply the same existing P19 authorization and five-minute link behavior to files; assigning a reviewer does not grant access. These operations and the folder audience are proposed under D-86: kept permanently unless the society opts in to a data cleanup rule; coding is not yet approved.
+
+**Previously blocked items (D-85–D-89; proposed 2026-11-23, coding not yet approved).** Each uses the existing permission map, validation, response envelope, `otherWritesUserMinute` for writes, idempotent `clientRequestId`, version checks, audit and request IDs. No new HTTP route except the screen routes named in DESIGN.md.
+
+- **Handover (P36.7, CORE-32, D-85):** `getHandoverTemplate` / `saveHandoverTemplate` (admin); `listHandovers` (admin all; committee summary without photos; parties their own); `getHandover`; `createHandover` (unit, event type, optional move or P51 case; copies the template); `saveHandoverItems`; `linkHandoverReading` (existing approved P26 reading only); `addHandoverPhoto` (private, 5 MiB) and the signed-download action; `acknowledgeHandover` (party, optional); `closeHandover`. Completing a move-out or P51 case with an open handover returns a warning that needs `overrideOpenHandover: true`, which is audited.
+- **Compliance register and case log (P43.4, P44.5, D-86):** `acknowledgeComplianceWarning` (admin, once per society); `listComplianceEntries` (admin, committee), `saveComplianceEntry` (admin); the P44.5 case operations above; `getDataCleanupRules` / `saveDataCleanupRule` (admin; kind, enabled, 1–20 years); service-only `runDataCleanup`.
+- **Reconciliation and targets (P40.8b–c, EXP-36, D-87):** `getFundReconciliation({ month })` (admin, committee) returns derived status per bank account and month with the reasons for Needs review; `saveStatementBalance` (admin; reason required when editing); `saveFundTarget` (admin; optional amount and date). The export route gains `report=fund_reconciliation` (admin only, audited, formula-safe CSV).
+- **Bill email and sharing (P37.5, BIL-27, D-88):** `saveBillingSettings` accepts `billEmailOnPublish`; publishing queues one email job per bill when it is on. Each email contains the summary (society, unit, bill month, amount, due date), a sign-in-required link to the bill and the bill PDF as an attachment, rendered by the job from the existing bill PDF; the transactional email sender gains an optional PDF attachment field on the same provider. A failed render or send is retried and logged, never reported as delivered. `recordBillShare({ billId, channel })` (resident for own unit, admin any unit) writes the audit row and returns the summary text and sign-in link; it never reports delivery.
+- **Interest (P38.1, BIL-18, D-89):** `acknowledgeInterestWarning` (admin); `getInterestSettings` (admin, committee); `saveInterestRate` (admin; mode, yearly rate above 0 and at most 24, effective date; appends history); service-only `runInterest` called from the monthly bill run, idempotent per unit and month. Interest bills are waived only through the existing waiver operation.
 
 ### 5.18 Parking management (`parking`, P20)
 
@@ -685,7 +725,7 @@ Operations live in `src/core/parking/`; all Server Actions are in `(resident)/pa
 
 Permissions: `parking:list` (admin, committee, resident), `parking:manage` (admin), `parking:request` and `parking:visitor_pass` (resident), `parking:report` (guard, resident) and `parking:guard` (guard). `photo_retention_days` is admin-editable. Pages are `/parking`, `/admin/parking` (admin and committee) and `/guard/parking`. The matched unit is shown only to admin, committee and that unit's residents, never to another reporter. Report photos are deleted after the retention setting; passes and reports are kept.
 
-**P52 operations (D-79; approved for local coding):** `setParkingCondition` is admin-only and version-checked, with `available`, `needs_attention` or `out_of_service`. `getParkingSummary` is read-only for admins and committee and returns vacancy and vehicle counts, never vehicle numbers. Existing P20 allocation, report, pass and no-fee behavior is unchanged.
+**P52 operations (D-79; on beta/testdb, owner UAT pending):** `setParkingCondition` is admin-only and version-checked, with `available`, `needs_attention` or `out_of_service`. `getParkingSummary` is read-only for admins and committee and returns vacancy and vehicle counts, never vehicle numbers. Existing P20 allocation, report, pass and no-fee behavior is unchanged.
 
 ### 5.19 Emergency and SOS (`sos`, P21; D-41)
 
@@ -854,6 +894,44 @@ admin or committee access. CSV is formula-safe and PDF is rendered with the exis
 exports separate aggregate results from the list of units that voted; neither format contains email addresses.
 The `/fixtures/poll` page uses synthetic scenarios and does not call production services.
 
+**P46 official elections (D-81; approved for local coding 2026-11-23, not released).** PRD POL-7–POL-11; database
+contract in DATABASE.md §9.17. Operations live in `src/core/poll/` beside the P22 operations, which are unchanged.
+Writes are idempotent by `clientRequestId`, version-checked, audited and use `otherWritesUserMinute`. Every call checks
+the `poll` module, `official_voting_enabled` and, for returning-officer calls, an active election-officer assignment
+(`private.poll_election_officer_access`) instead of a society role. Guards and housekeeping supervisors have no access.
+The operations are:
+
+- `setPollOfficialVoting` (admin): switch on with legal type and confirmation, or off when no election is active;
+  `updatePollElectionSettings` (admin): dispute window, supporters and multi-win rule.
+- `listPollElections`, `getPollElection` (residents see published fields; admins, committee and the returning officer
+  see management fields); `createPollElection`, `savePollElection`, `cancelPollElection` (admin; reason; before
+  Voting) and `advancePollElectionStage` (admin until a returning officer is assigned; then the returning officer).
+- `savePollElectionActivities`, `linkPollElectionSource`, `unlinkPollElectionSource` (admin).
+- `assignPollReturningOfficer` (member or outside email invite), `revokePollReturningOfficer` (reason),
+  `confirmPollOfficerConflict` (the officer), `savePollElectionHelpers` (admin; names and roles only).
+- `getPollElectionVoterList`, `setPollElectionVoter`, `removePollElectionVoter` (reason), `restorePollElectionVoter`
+  (admin before lock; returning officer reads after lock).
+- `submitPollNomination`, `withdrawPollNomination` (active owner of a listed unit, self only);
+  `requestPollNominationSupporter`, `respondPollNominationSupporter` (supporters setting on; listed voter);
+  `decidePollNomination` (returning officer, or admin while none is assigned; reason).
+- `submitPollElectionBallot` (listed voter once; up to the seats per post or NOTA; choices never returned or stored per
+  voter); `extendPollElectionVoting` (returning officer; reason).
+- `resolvePollElectionTie`, `choosePollElectionPost` (winning candidate within 3 days), `decidePollElectionPost`
+  (returning officer), `declarePollElection` (returning officer; final, unedited).
+- `getPollElectionResults` (everyone in the society once declared: per-post totals and turnout);
+  `getPollElectionVoted` (admin and the returning officer: units that voted, no choices).
+- `recordPollExternalResult` (admin; Document link required).
+- `savePollElectionOutside` (admin; one outside-app election, held date, posts, winners, optional counts and a required Document for each post). It is labelled "Recorded result — held outside the app" and never converts an in-app election.
+- `raisePollElectionDispute` (listed voter inside the window; optional signed-upload file);
+  `listPollElectionDisputes`, `updatePollElectionDispute` (admin and the returning officer; resolution note required).
+- `linkPollElectionExpense`, `unlinkPollElectionExpense` (admin; existing posted entries only).
+
+Pages add `/polls/elections`, `/polls/elections/{electionId}`, `/admin/polls/elections`,
+`/admin/polls/elections/new`, `/admin/polls/elections/{electionId}` and the officer workspace
+`/elections/{electionId}/officer`, the only page an outside returning officer can open. The download route
+`GET /api/polls/elections/{electionId}/summary?format=pdf` returns the summary for admins, committee and the returning
+officer, with no voter names or choices, using the existing `pdf-lib` dependency and the export rate limit.
+
 ### 5.26 Meetings & AGM (`meeting`, P23; D-61)
 
 Operations live in `src/core/meeting/`; Server Actions are in the resident and admin Meetings routes. The module
@@ -992,28 +1070,45 @@ Operations are Server Actions over the database contracts in DATABASE.md 9.23.
 
 Routes are `/admin/notices?tab=planned`, `/admin/contact-log` and `/admin/communication` (`?month=YYYY-MM`; a missing, invalid or future month falls back to the current month).
 
+### 5.32 Major repairs & redevelopment (`major_works`, P50; D-82 implemented and locally verified 2026-11-23, not released)
+
+PRD MWK-1–MWK-8; database contract in DATABASE.md §9.24. Server Actions call caller-session RPCs. Every operation checks the module, role and writable society. Admin writes need `major_works:manage`; admin and committee reads and committee scoring need `major_works:list` and `major_works:score`; residents have `major_works:resident_read` only. Writes are idempotent by `clientRequestId`, version-checked and audited. No operation creates a bill, charge, receivable, levy, Accounts entry or approval. Links to Accounts, Vendors, Meetings and Polls return `MODULE_DISABLED` when that module is off; the rest of the module keeps working.
+
+- **Projects:** `listMajorWorksProjects`, `getMajorWorksProject(id)`, `createMajorWorksProject` (optional `forecastItemId`), `updateMajorWorksProject`, `changeMajorWorksProjectStatus(status, reason?, approval?)` (reason for On hold and Cancelled; `approval` with body, date and optional passed `meetingResolutionId` for Approved), `setMajorWorksBudgetSource(typed amount | fundWorkId)`, `tagMajorWorksSpend(entryId, amount)` and `removeMajorWorksSpendTag(reason)`. Over-tagging an entry returns `VALIDATION_FAILED` with the remaining amount.
+- **Audits:** `listMajorWorksAudits`, `saveMajorWorksAudit` (linked projects and an optional report path) and `voidMajorWorksAudit(reason)`.
+- **Quotes and scoring:** `linkMajorWorksPurchaseRequest(requestId | null)`, `addMajorWorksQuote`, `removeMajorWorksQuote`, `setMajorWorksQuoteExclusion(reason)`, `saveMajorWorksCriteria` (2–8, total 100; refused once scoring opens), `openMajorWorksScoring`, `closeMajorWorksScoring`, `markMajorWorksNotScored(reason)`, `saveMajorWorksScores` (own scores, open only), `getMajorWorksScoring` (own scores while open; averages and scorer counts after closing; never another person's scores) and `recordMajorWorksChosenQuote(quoteId, reason, meetingResolutionId?)`.
+- **Scenarios:** `listMajorWorksScenarios(projectId)`, `saveMajorWorksScenario` and `getMajorWorksScenarioShares(id)` (per-unit shares, rounding difference and units missing an area). Admins and committee only.
+- **Redevelopment:** `listMajorWorksProposals`, `getMajorWorksProposals(ids)` for the side-by-side view, `saveMajorWorksProposal`, `changeMajorWorksProposalStage(stage, reason?)`, `archiveMajorWorksProposal`, `addMajorWorksProposalFile` and `saveMajorWorksMilestone` / `reorderMajorWorksMilestones`.
+- **Consent:** `getMajorWorksConsents(proposalId)` (records, counts and % of eligible units; under the recorded method also the poll's indicative answers), `recordMajorWorksConsent(unitId, status, signedFormPath?)`, `setMajorWorksConsentMethod(method, confirmed)` (the confirmation is required before switching to `poll`) and `createMajorWorksConsentPoll(proposalId, confirmed?)`, which creates a draft P22 vote for the admin to schedule through the normal poll screens.
+- **Residents:** `getMyMajorWorksProjects` (title, location, status, progress, planned dates) and `getMyMajorWorksConsents` (owners' own units' status and method).
+- **Summary:** `getMajorWorksSummary` (admins and committee) as MWK-8; no export.
+- **Files:** `prepareMajorWorksUpload({ kind: audit_report | quote | proposal | consent_form, contentType, sizeBytes })` (admin) issues a signed upload to the `major-works-files` path; PDF, JPEG or PNG up to 10 MiB. `majorWorksFileLink(path)` audits the download and returns a 300-second link to admins and committee members only. Unattached uploads are removed after 24 hours.
+
+Routes are `/admin/major-works` (projects, summary), `/admin/major-works/projects/[id]` (details, budget, quotes and scoring, scenarios), `/admin/major-works/audits`, `/admin/major-works/redevelopment` and `/admin/major-works/redevelopment/[id]` (offers, consent, milestones) for admins and committee, and `/major-works` for residents.
+
 ### 6.1 The daily job (`/api/jobs/daily`)
 
 Vercel Cron sends `GET`; `POST` remains supported for authenticated manual invocation. Both methods require the `CRON_SECRET` bearer token. A missing or incorrect secret returns `401`; the attempt is logged without recording the supplied token. The secret comparison is constant-time. Responses are `no-store` and use the standard JSON envelope; success returns `{ ok: true, data: { jobs: [{ job, succeeded, skipped, failed }] } }`. Only per-job counts are returned.
 
 Runs once a day (the free scheduler tier allows only one run per day and may start up to an hour late; the design tolerates both — ARCHITECTURE AD-02). The period key is the current calendar date in Asia/Kolkata. For each society-scoped task and trial/active society, the runner inserts `(society_id, job_name, period_key)` into `job_run_keys` before invoking the task. A conflict skips the task, so repeated calls for that date do no duplicate work. A global task claims one run key using the first eligible society; if there are no eligible societies, the retention task still runs because its database operations are idempotent. Each task failure is logged and counted without stopping other tasks or societies. A failed task can retry on the next period; it is not retried during the same period. Until modules register tasks, the registry is empty and the endpoint returns an empty `jobs` list without querying societies.
 
-| Task                                   | Behavior                                                                                                                                                                                           |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Late fees                              | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                                                         |
-| Reminders                              | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                                             |
-| Stale payments                         | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                                                        |
-| Visitor expiry                         | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                                             |
-| Delivery overdue view                  | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                                              |
-| Request auto-close                     | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                                                        |
-| Request SLA escalation                 | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set                             |
-| Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60)                             |
-| Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)                                  |
-| Event reminders                        | `event.reminders`, after `meeting.action_reminders`: one reminder per published event starting tomorrow (society-local) to flats that answered Going, in-app plus push; capped at 2000 (P30, D-63) |
-| Scheduled notices                      | `notice.scheduled_publish`, after `event.reminders`: catches up due timestamps and delivers pending scheduled-notice alerts; already-expired notices are archived without alerts (P53)             |
-| Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                                              |
-| Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3; logs affected and orphan-file counts by bucket                                                      |
-| Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)                               |
+| Task                                   | Behavior                                                                                                                                                                                                                           |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Late fees                              | Adds one late-fee bill per overdue bill and month per society rule (BIL-3)                                                                                                                                                         |
+| Reminders                              | Due-soon, due-today and overdue notifications (BIL-10)                                                                                                                                                                             |
+| Stale payments                         | Flags UPI submissions waiting more than N days and notifies admins (BIL-17)                                                                                                                                                        |
+| Visitor expiry                         | Finalises pending entries after their response deadline (VIS-4, VIS-7)                                                                                                                                                             |
+| Delivery overdue view                  | Computes pending-response expiry and flags uncollected parcels on read (DEL-5, DEL-7)                                                                                                                                              |
+| Request auto-close                     | Closes `resolved` requests after the society's days (SRQ-3)                                                                                                                                                                        |
+| Request SLA escalation                 | `service_request.escalate`, after auto-close: escalates overdue requests to admins, then to committee after the category's days (P32, D-59); in-app, plus email if set                                                             |
+| Poll opening, completion and retention | `poll.reconcile` and `poll.retention`: reconcile due votes and notifications, then purge per-person voter data older than two years while retaining totals (P22, D-60)                                                             |
+| Meeting action reminders               | `meeting.action_reminders`, after `poll.reconcile`: one overdue reminder per open action item per society-local day, in-app plus push; capped at 2000 (P23, D-61)                                                                  |
+| Event reminders                        | `event.reminders`, after `meeting.action_reminders`: one reminder per published event starting tomorrow (society-local) to flats that answered Going, in-app plus push; capped at 2000 (P30, D-63)                                 |
+| Scheduled notices                      | `notice.scheduled_publish`, after `event.reminders`: catches up due timestamps and delivers pending scheduled-notice alerts; already-expired notices are archived without alerts (P53)                                             |
+| Major-works audit reminders            | `major_works.audit_reminders` (proposed P50, D-82): one in-app reminder to admins 30 days before, and once when overdue, for the latest audit's next due date; skipped when the module is off                                      |
+| Module reminders (post-MVP)            | AMC expiry, low stock                                                                                                                                                                                                              |
+| Retention                              | Removes expired private files through Storage, then anonymises/deletes rows per DATABASE 11.3, including the proposed P50 8-year redevelopment purge (`major_works_retention_run`); logs affected and orphan-file counts by bucket |
+| Backup export                          | When enabled, GitHub Actions encrypts a nightly PostgreSQL 17 dump and uploads it to private Google Drive; weekly storage-file copy remains deferred (DATABASE 15.2)                                                               |
 
 A task failure is logged (error log + Sentry) and does not stop the other tasks; the next day's run retries unfinished work because tasks are idempotent.
 

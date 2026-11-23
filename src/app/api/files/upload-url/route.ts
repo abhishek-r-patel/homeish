@@ -139,6 +139,27 @@ const issueSchema = z.discriminatedUnion('bucket', [
       contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
       requestId: z.uuid(),
+      savingsInitiativeId: z.uuid().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('poll-dispute-files'),
+      contentType: z.enum(['image/jpeg', 'image/png', 'application/pdf']),
+      sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
+      electionId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('major-works-files'),
+      kind: z.enum(['audit_report', 'quote', 'proposal', 'consent_form']),
+      contentType: z.enum(FILE_CONTENT_TYPES),
+      sizeBytes: z
+        .number()
+        .int()
+        .positive()
+        .max(10 * 1024 * 1024),
     })
     .strict(),
   z
@@ -370,6 +391,77 @@ export async function POST(request: Request) {
         }
         return { path, signedUrl: data.signedUrl };
       }
+      if (input.bucket === 'poll-dispute-files') {
+        authorizeRequest(context, {
+          moduleKey: 'poll',
+          permission: 'poll:vote',
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension =
+          input.contentType === 'image/jpeg'
+            ? 'jpg'
+            : input.contentType === 'image/png'
+              ? 'png'
+              : 'pdf';
+        const path = `${societyId}/elections/${input.electionId}/disputes/${context.userId}/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error(
+            'Could not issue the election dispute upload token.',
+            {
+              cause: error,
+            },
+          );
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'major-works-files') {
+        authorizeRequest(context, {
+          moduleKey: 'major_works',
+          permission: 'major_works:manage',
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension =
+          input.contentType === 'image/jpeg'
+            ? 'jpg'
+            : input.contentType === 'image/png'
+              ? 'png'
+              : 'pdf';
+        const directory =
+          input.kind === 'audit_report'
+            ? 'audits'
+            : input.kind === 'quote'
+              ? 'quotes'
+              : input.kind === 'proposal'
+                ? 'proposals'
+                : 'consents';
+        const path = `${societyId}/${context.userId}/${directory}/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the major-works upload token.', {
+            cause: error,
+          });
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
       if (
         input.bucket === 'notice-files' ||
         input.bucket === 'amc-files' ||
@@ -405,7 +497,10 @@ export async function POST(request: Request) {
             ? `${societyId}/notices/${input.requestId}`
             : input.bucket === 'amc-files'
               ? `${societyId}/${context.userId}/amc`
-              : `${societyId}/${context.userId}/expense`;
+              : input.bucket === 'expense-files' &&
+                  input.savingsInitiativeId !== undefined
+                ? `${societyId}/savings/${input.savingsInitiativeId}`
+                : `${societyId}/${context.userId}/expense`;
         const path = `${directory}/${crypto.randomUUID()}.${extension}`;
         const { data, error } = await context.db.storage
           .from(input.bucket)

@@ -73,6 +73,10 @@ import {
   DEFAULT_COMMUNITY_SETTINGS,
   communitySettingsSchema,
 } from '../community/validation';
+import {
+  DEFAULT_MAJOR_WORKS_SETTINGS,
+  majorWorksSettingsSchema,
+} from '../major-works/validation';
 
 export { MODULE_KEYS };
 export type { ModuleKey };
@@ -1198,7 +1202,14 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'poll:list': ['admin', 'committee'],
       'poll:manage': ['admin'],
     },
-    settingsAccess: { tenant_voting_default: 'admin' },
+    settingsAccess: {
+      tenant_voting_default: 'admin',
+      official_voting_enabled: 'admin',
+      official_legal_type: 'admin',
+      dispute_window_days: 'admin',
+      nomination_supporters_enabled: 'admin',
+      multi_post_win_rule: 'admin',
+    },
     settingsSchema: pollSettingsSchema,
   },
   meeting: {
@@ -1297,6 +1308,43 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
     },
     settingsSchema: communitySettingsSchema,
   },
+  major_works: {
+    core: false,
+    defaultSettings: DEFAULT_MAJOR_WORKS_SETTINGS,
+    key: 'major_works',
+    name: 'Major repairs & redevelopment',
+    navigation: {
+      admin: [
+        {
+          href: '/admin/major-works',
+          label: 'Major works',
+          permission: 'major_works:list',
+        },
+      ],
+      committee: [
+        {
+          href: '/admin/major-works',
+          label: 'Major works',
+          permission: 'major_works:list',
+        },
+      ],
+      resident: [
+        {
+          href: '/major-works',
+          label: 'Major works',
+          permission: 'major_works:resident_read',
+        },
+      ],
+    },
+    permissions: {
+      'major_works:list': ['admin', 'committee'],
+      'major_works:manage': ['admin'],
+      'major_works:score': ['admin', 'committee'],
+      'major_works:resident_read': ['resident'],
+    },
+    settingsAccess: { consent_method: 'admin' },
+    settingsSchema: majorWorksSettingsSchema,
+  },
 };
 
 export function getModuleDefinition(moduleKey: ModuleKey) {
@@ -1339,6 +1387,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'meeting',
     'event',
     'community',
+    'major_works',
   ],
   committee: [
     'core',
@@ -1365,6 +1414,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'poll',
     'meeting',
     'event',
+    'major_works',
   ],
   guard: [
     'core',
@@ -1400,6 +1450,7 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
     'meeting',
     'event',
     'community',
+    'major_works',
   ],
 };
 

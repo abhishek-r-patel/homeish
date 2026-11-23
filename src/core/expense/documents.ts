@@ -18,6 +18,7 @@ import type {
   ExpenseMultiYear,
   ExpenseReport,
   ExpenseStatements,
+  ExpenseVendorSpend,
 } from './validation';
 
 export function formatSignedRupees(paise: number): string {
@@ -149,6 +150,35 @@ export function expenseStatementsCsv(statements: ExpenseStatements): string {
         rupeesFromPaise(head.amount_paise),
       ]);
   return toCsv(rows[0], rows.slice(1));
+}
+
+export function expenseVendorSpendCsv(report: ExpenseVendorSpend): string {
+  return toCsv(
+    [
+      'Vendor or payee',
+      'Linked vendor',
+      'Actual spend (Rs.)',
+      'Share (%)',
+      'High share',
+      'Active months',
+      'Average per active month (Rs.)',
+      'Approved quotes, not payments (Rs.)',
+      'Accounts total (Rs.)',
+    ],
+    report.rows.map((row) => [
+      row.vendor_name ?? row.payee ?? '',
+      row.vendor_id ? 'Yes' : 'No',
+      rupeesFromPaise(row.total_paise),
+      (row.share_bp / 100).toFixed(1),
+      row.high_share ? 'Reporting signal' : '',
+      row.active_months,
+      rupeesFromPaise(row.average_per_active_month_paise),
+      row.approved_quote_paise === null
+        ? ''
+        : rupeesFromPaise(row.approved_quote_paise),
+      rupeesFromPaise(report.accounts_expense_paise),
+    ]),
+  );
 }
 
 const PAGE_WIDTH = 595.28;
@@ -336,6 +366,64 @@ async function expensePdfWriter(title: string, societyName: string) {
   };
   line(writer, societyName, '', { bold: true, size: 16 });
   return { document, writer };
+}
+
+export async function expenseVendorSpendPdf(
+  societyName: string,
+  report: ExpenseVendorSpend,
+): Promise<Uint8Array> {
+  const { document, writer } = await expensePdfWriter(
+    `${societyName} vendor spend`,
+    societyName,
+  );
+  line(
+    writer,
+    `Vendor spend, ${formatBillingDate(report.from)} to ${formatBillingDate(report.to)}`,
+  );
+  line(
+    writer,
+    'Accounts expenditure',
+    formatSignedRupees(report.accounts_expense_paise),
+  );
+  line(
+    writer,
+    'Filtered expenditure',
+    formatSignedRupees(report.total_expense_paise),
+  );
+  paragraph(
+    writer,
+    'High share means 40% or more in this report. It is a reporting signal, not a finding. Approved quotes are not payments.',
+  );
+  for (const row of report.rows) {
+    section(writer, row.vendor_name ?? row.payee ?? 'Unknown payee');
+    line(
+      writer,
+      row.vendor_id ? 'Linked vendor' : 'Not linked to a vendor',
+      formatSignedRupees(row.total_paise),
+    );
+    line(
+      writer,
+      `Share ${(row.share_bp / 100).toFixed(1)}%; ${row.active_months} active month(s)`,
+      `Average ${formatSignedRupees(row.average_per_active_month_paise)}`,
+    );
+    if (row.high_share)
+      line(writer, 'High share: reporting signal, not a finding.');
+    if (row.approved_quote_paise !== null)
+      line(
+        writer,
+        'Approved quotes, not payments',
+        formatSignedRupees(row.approved_quote_paise),
+      );
+    for (const category of row.categories)
+      line(
+        writer,
+        category.category_name,
+        formatSignedRupees(category.amount_paise),
+      );
+  }
+  if (report.rows.length === 0)
+    line(writer, 'No posted expenditure matches this report.');
+  return document.save();
 }
 
 export async function expenseStatementsPdf(
