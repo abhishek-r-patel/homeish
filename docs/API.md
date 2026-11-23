@@ -469,7 +469,15 @@ Residents use `/amenities`; admin/committee use `/admin/amenities`. A date picke
 - `amenity_book`: active occupancy, exact current version/rules acknowledgement, guest limit and 24-hour lead are enforced again in PostgreSQL. Paid bookings require billing enabled and append a unit-ledger debit atomically. Stable client UUIDs protect retries.
 - `amenity_cancel`: the resident booker may cancel before the start; admins require a reason and notify residents. Every paid cancellation appends a full credit, never an edit or deletion, even if billing is subsequently disabled.
 
-Bookings confirm immediately. There is no booking horizon, daily unit cap, payment gateway or shared-capacity reservation model.
+Bookings currently confirm immediately. There is no booking horizon, daily unit cap, payment gateway or shared-capacity reservation model.
+
+**P35.8–P35.9 deposits (D-84 proposed 2026-11-23; coding not yet approved):** Existing behavior remains when deposits are off. In `per_amenity` mode, a required deposit reserves the slot as `awaiting_deposit` and confirms only after full receipts; the society may instead choose `immediate` confirmation, leaving the deposit outstanding. Amenity settings are snapshotted per booking. An admin may override the amount only before confirmation and before any receipt. The booking's usage fee remains separate.
+
+- Proposed admin operations configure the standard amount/requirement and record externally completed partial receipts, refunds and post-booking deductions. Every write is idempotent by `clientRequestId`, audited and append-only; corrections require a reasoned void and replacement.
+- A pending or confirmed booking cancellation returns all deposit money actually received without deduction. Existing usage-fee cancellation credit remains a separate Billing ledger action.
+- Admins manage the deposit history and evidence, committee members read, and active residents of the booking's unit read their own breakdown and evidence. Other residents and guards receive none. Deposit evidence uses a private bucket and short-lived links after parent-booking authorization.
+- The existing `/api/files/upload-url` route would accept `amenity-deposit-evidence` for admins only; saved evidence is attached to a same-society booking, and view links are issued only after authorizing the parent booking and active unit membership.
+- P16 records receipt/refund as distinct cash movements, not income/expense; retained deductions are reported as Other income without a second cash entry. P41 separates held cash movements and non-cash reclassification. P42.5 budget actuals include retained amounts under Other income. No payment gateway or automatic refund is added.
 
 **P52 operations (D-79; on beta/testdb, owner UAT pending):** `getAmenityCalendarMonth` returns confirmed bookings for one society-local month. Residents see availability only by default; the admin-controlled `resident_calendar_identity` setting may return the booker's name or name and unit, only when Directory is enabled and each field is visible under that person's P17 preferences. Hidden or unavailable fields are omitted. The existing `amenity_workspace` remains anonymous for other units. `saveAmenityCalendarVisibility` is admin-only and audited. `recordAmenityActivity` is admin-only and requires a same-society P15 booking, P28 asset, P14 AMC visit or P13 service-request source; source retention applies. `getAmenityFacilitiesReport` is read-only for admins and committee, hides disabled-source data and may include only authorized read-only P16 figures. No operation changes bookings, capacity, fees or ledgers.
 
@@ -541,9 +549,11 @@ Routes add `/admin/expenses/reconciliation` and `/petty-cash`.
 - `getExpenseAgmDraft(financialYear)` and `saveExpenseAgmDraft`: assembled sections plus up to 10 versioned plain-text sections.
 - AGM section switches are saved through `saveExpenseAgmSettings` as `agm_report_sections`; the existing `saveExpenseSettings` preserves that key.
 
+**Proposed D-84 report extension:** `getExpenseStatements` and the P16 reports separate actual deposit receipts/refunds from income and expenses; retained deductions appear as Other income on the deduction date without another cash movement. The statement shows held-deposit cash separately and the reclassification outside cash totals. P27 is unchanged.
+
 Routes add `/admin/expenses/statements`, `/admin/expenses/audit` and `/admin/expenses/agm-report`. The export route gains `report=statements|position|agm`. Statements export as CSV or PDF, the position summary as PDF, and the AGM draft as PDF. Without `report`, the export keeps its current behaviour.
 
-**P42 expense control (D-80; proposed 2026-11-22, coding not yet approved).** PRD EXP-27–EXP-29; database contract in DATABASE.md §9.7. Reads are for admins and committee; writes are admin-only, idempotent by `clientRequestId` and version-checked. No operation changes book entries, expenses, bills, payments, contracts, fund allocations or vendor records. The operations are:
+**P42 expense control (D-80; approved for local coding 2026-11-23, not released).** PRD EXP-27–EXP-29; database contract in DATABASE.md §9.7. Reads are for admins and committee; writes are admin-only, idempotent by `clientRequestId` and version-checked. No operation changes book entries, expenses, bills, payments, contracts, fund allocations or vendor records. The operations are:
 
 - `saveExpenseCategoryDetails`: group, cost nature, owner and description for an active or inactive category. It returns the group suggestions and revision history through the existing category list.
 - `saveExpensePayeeMapping` and `removeExpensePayeeMapping` (reason required) are available only when the Vendor module is enabled.
@@ -561,7 +571,21 @@ The route adds `/admin/expenses/savings`; the vendor spend view is part of the e
 
 The screen is `/admin/expenses/funds/forecast`, linked from Accounts → Funds; it has no export.
 
-**P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest has no API or calculation until an accountant/legal review approves its rate, basis and late-fee interaction.
+**Budgets (D-83, EXP-31–EXP-35, P41.3/P42.2/P42.5; proposed 2026-11-22, coding not yet approved).** Database contract in DATABASE.md §9.7. Reads are for admins and committee (`expense:list`). Writes are admin-only (`expense:manage`), idempotent by `clientRequestId` and version-checked. Nothing posts, allocates, bills, approves or blocks spending. Actuals use posted Accounts entries and, under proposed D-84, retained deposit deductions as non-cash Other income; the deduction does not create a second cash entry.
+
+- `getExpenseBudget(financialYear)`: the budget (or none), its status, approval details, lines with phasing and month figures, the change history and the current plan per head.
+- `getExpenseBudgetCopyPreview({ financialYear, percent })`: last year's actuals by head, including proposed D-84 retained-deposit income under Other, with the optional −50% to +100% adjustment rounded to the rupee. It saves nothing.
+- `saveExpenseBudgetDraft`: creates the draft or replaces its lines. Only drafts can be saved.
+- `discardExpenseBudget` (reason required, draft only) and `approveExpenseBudget` (body, date not in the future, optional meeting or document link, optional note). Approval locks the lines.
+- `recordExpenseBudgetChange`: an increase, a decrease or a move (`fromHead`, `toHead`) with amount, starting month, reason and approval details. A decrease below the current plan is refused with `BUDGET_BELOW_ZERO`.
+- `voidExpenseBudgetChange` (reason required; a move is voided as a pair). It is refused with `BUDGET_BELOW_ZERO` when it would leave a head negative.
+- `getExpenseBudgetReport({ financialYear, asOf })`: the EXP-33 summary and month table, the cash flow with forecast months flagged as estimates, and the EXP-34 burn rate, warnings and projections. Retained-deposit income is actual Other income; held receipts/refunds remain actual cash-flow movements, not budget income or expense.
+- `getResidentBudgetSummary(financialYear)` (active owner, tenant or family residents): `{ shared: false }` unless Accounts is enabled, the summary setting is on and the budget is approved. Otherwise it returns current budget, actual to date and % used per head, with totals.
+- `saveExpenseSettings` accepts `budgetForecastMethod`, `budgetWatchPercent` (50–100) and `budgetResidentSummary`, preserving the other keys.
+
+Routes add `/admin/expenses/budget` and the resident page `/budget`. The export route gains `report=budget&financialYear=YYYY` for CSV (formula-safe) and PDF for admins and committee members, using the existing export rate limit. Residents have no export.
+
+**P38 dues additions (D-71 approved for P38.2–P38.4):** These operations extend Billing but never post or edit a bill, payment allocation, reminder, fee or ledger entry. Payment plans have no in-app approval step or financial effect. Interest (P38.1, BIL-18) is proposed under D-89, below.
 
 - `billing.paymentPlan.list` (admin, committee) reads plans; `billing.paymentPlan.save` (admin) creates a tracker record from a unit, selected open bill IDs, down-payment amount, installment count, first due date and remarks, or updates terms and remarks on an existing plan. The database snapshots the selected bills' remaining balances when creating a plan. An open bill can belong to only one non-cancelled plan; saved bill links cannot be changed. Equal monthly installments start on the first due date, with the last installment absorbing paise rounding. Progress is derived only from confirmed allocations for payments dated on or after the plan date and confirmed after plan creation, applied to the down payment and then installments in order. Actual ledger due remains authoritative; no caller-entered paid totals are accepted.
 - `billing.paymentPlan.cancel` (admin) cancels a plan with a required reason, retains its record and releases its bills for a replacement plan. It does not change bills, payments or ledger entries.
@@ -665,7 +689,15 @@ Use the existing permission map, validation and response envelope, `otherWritesU
 
 The server operations use the existing caller-session/RPC pattern. `document_expiry_reminders_run` is service-role-only and registered as `document.expiry_reminders`; `document_house_rule_publish` and `document_house_rules_published_list` remain fail-closed until a separately reviewed migration unlocks publication. No HTTP route, dependency or external channel was added.
 
-**P44.5 proposed later operations:** Admin-only case create/read/edit/archive, private history and evidence-link operations, plus an independently default-off service-only case-reminder job. Require evidence in a folder created admin-only and never widened, retain archived links, and serialize linking with folder-audience changes. Apply the same existing P19 authorization and five-minute link behavior to files; assigning a reviewer does not grant access. These operations, the folder audience and their retention are blocked pending the reviewed case-retention policy and a separate go-ahead.
+**P44.5 proposed later operations:** Admin-only case create/read/edit/archive, private history and evidence-link operations, plus an independently default-off service-only case-reminder job. Require evidence in a folder created admin-only and never widened, retain archived links, and serialize linking with folder-audience changes. Apply the same existing P19 authorization and five-minute link behavior to files; assigning a reviewer does not grant access. These operations and the folder audience are proposed under D-86: kept permanently unless the society opts in to a data cleanup rule; coding is not yet approved.
+
+**Previously blocked items (D-85–D-89; proposed 2026-11-23, coding not yet approved).** Each uses the existing permission map, validation, response envelope, `otherWritesUserMinute` for writes, idempotent `clientRequestId`, version checks, audit and request IDs. No new HTTP route except the screen routes named in DESIGN.md.
+
+- **Handover (P36.7, CORE-32, D-85):** `getHandoverTemplate` / `saveHandoverTemplate` (admin); `listHandovers` (admin all; committee summary without photos; parties their own); `getHandover`; `createHandover` (unit, event type, optional move or P51 case; copies the template); `saveHandoverItems`; `linkHandoverReading` (existing approved P26 reading only); `addHandoverPhoto` (private, 5 MiB) and the signed-download action; `acknowledgeHandover` (party, optional); `closeHandover`. Completing a move-out or P51 case with an open handover returns a warning that needs `overrideOpenHandover: true`, which is audited.
+- **Compliance register and case log (P43.4, P44.5, D-86):** `acknowledgeComplianceWarning` (admin, once per society); `listComplianceEntries` (admin, committee), `saveComplianceEntry` (admin); the P44.5 case operations above; `getDataCleanupRules` / `saveDataCleanupRule` (admin; kind, enabled, 1–20 years); service-only `runDataCleanup`.
+- **Reconciliation and targets (P40.8b–c, EXP-36, D-87):** `getFundReconciliation({ month })` (admin, committee) returns derived status per bank account and month with the reasons for Needs review; `saveStatementBalance` (admin; reason required when editing); `saveFundTarget` (admin; optional amount and date). The export route gains `report=fund_reconciliation` (admin only, audited, formula-safe CSV).
+- **Bill email and sharing (P37.5, BIL-27, D-88):** `saveBillingSettings` accepts `billEmailOnPublish`; publishing queues one email job per bill when it is on. Each email contains the summary (society, unit, bill month, amount, due date), a sign-in-required link to the bill and the bill PDF as an attachment, rendered by the job from the existing bill PDF; the transactional email sender gains an optional PDF attachment field on the same provider. A failed render or send is retried and logged, never reported as delivered. `recordBillShare({ billId, channel })` (resident for own unit, admin any unit) writes the audit row and returns the summary text and sign-in link; it never reports delivery.
+- **Interest (P38.1, BIL-18, D-89):** `acknowledgeInterestWarning` (admin); `getInterestSettings` (admin, committee); `saveInterestRate` (admin; mode, yearly rate above 0 and at most 24, effective date; appends history); service-only `runInterest` called from the monthly bill run, idempotent per unit and month. Interest bills are waived only through the existing waiver operation.
 
 ### 5.18 Parking management (`parking`, P20)
 
@@ -862,7 +894,7 @@ admin or committee access. CSV is formula-safe and PDF is rendered with the exis
 exports separate aggregate results from the list of units that voted; neither format contains email addresses.
 The `/fixtures/poll` page uses synthetic scenarios and does not call production services.
 
-**P46 official elections (D-81; proposed 2026-11-22, coding not yet approved).** PRD POL-7–POL-11; database
+**P46 official elections (D-81; approved for local coding 2026-11-23, not released).** PRD POL-7–POL-11; database
 contract in DATABASE.md §9.17. Operations live in `src/core/poll/` beside the P22 operations, which are unchanged.
 Writes are idempotent by `clientRequestId`, version-checked, audited and use `otherWritesUserMinute`. Every call checks
 the `poll` module, `official_voting_enabled` and, for returning-officer calls, an active election-officer assignment
@@ -889,6 +921,7 @@ The operations are:
 - `getPollElectionResults` (everyone in the society once declared: per-post totals and turnout);
   `getPollElectionVoted` (admin and the returning officer: units that voted, no choices).
 - `recordPollExternalResult` (admin; Document link required).
+- `savePollElectionOutside` (admin; one outside-app election, held date, posts, winners, optional counts and a required Document for each post). It is labelled "Recorded result — held outside the app" and never converts an in-app election.
 - `raisePollElectionDispute` (listed voter inside the window; optional signed-upload file);
   `listPollElectionDisputes`, `updatePollElectionDispute` (admin and the returning officer; resolution note required).
 - `linkPollElectionExpense`, `unlinkPollElectionExpense` (admin; existing posted entries only).
