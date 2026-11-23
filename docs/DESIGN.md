@@ -917,7 +917,9 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 - **Residents:** `/major-works` lists projects with title, location, status, progress and planned dates only. Owners also see **Your consent** cards for their units (status and method, no files). An empty state reads "No repair projects yet".
 - Shared loading, empty, error, denied, disabled-module and accessibility patterns apply; statuses and ratings always pair colour with text; amounts use the existing rupee input and display patterns.
 
-### 12.24 Budgets (P41.3, P42.2, P42.5; D-83 proposed 2026-11-22, coding not yet approved)
+### 12.24 Budgets (P41.3, P42.2, P42.5; D-83 approved for local coding 2026-11-23)
+
+P42.5's draft, approval and change screens and P41.3's comparison, cash-flow, downloads and resident summary are implemented and locally verified. P42.2's warnings follow and are not started.
 
 - **Navigation:** Accounts gains a **Budget** tab (`/admin/expenses/budget`) for admins and committee members, with a financial-year picker. Residents get **Budget** (`/budget`) in their navigation only when Accounts is on. Guards and housekeeping supervisors see nothing.
 - **No budget yet:** the empty state reads "No budget for this year". Admins see **Start a budget**, which offers **Blank** or **Copy last year** with an optional percentage field (no default) and a preview before saving.
