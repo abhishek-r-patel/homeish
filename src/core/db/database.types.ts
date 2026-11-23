@@ -6363,6 +6363,204 @@ export type Database = {
           },
         ];
       };
+      expense_repair_forecast_item_revisions: {
+        Row: {
+          action: string;
+          after_values: NonNullable<Json>;
+          changed_at: string;
+          changed_by: string;
+          client_request_id: string;
+          id: string;
+          item_id: string;
+          previous_values: Json | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          after_values: NonNullable<Json>;
+          changed_at?: string;
+          changed_by: string;
+          client_request_id: string;
+          id?: string;
+          item_id: string;
+          previous_values?: Json | null;
+          society_id: string;
+        };
+        Update: {
+          action?: string;
+          after_values?: NonNullable<Json>;
+          changed_at?: string;
+          changed_by?: string;
+          client_request_id?: string;
+          id?: string;
+          item_id?: string;
+          previous_values?: Json | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_repair_forecast_item_revisions_changed_by_fkey';
+            columns: ['changed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_repair_forecast_item_revisions_item_fkey';
+            columns: ['society_id', 'item_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_repair_forecast_items';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      expense_repair_forecast_items: {
+        Row: {
+          archive_reason: string | null;
+          archived_at: string | null;
+          archived_by: string | null;
+          category: string;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          current_cost_paise: number;
+          cycle_years: number;
+          id: string;
+          inflation_bp: number;
+          last_done_year: number | null;
+          manual_next_due_year: number | null;
+          name: string;
+          notes: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archive_reason?: string | null;
+          archived_at?: string | null;
+          archived_by?: string | null;
+          category: string;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          current_cost_paise: number;
+          cycle_years: number;
+          id?: string;
+          inflation_bp?: number;
+          last_done_year?: number | null;
+          manual_next_due_year?: number | null;
+          name: string;
+          notes?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          archive_reason?: string | null;
+          archived_at?: string | null;
+          archived_by?: string | null;
+          category?: string;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          current_cost_paise?: number;
+          cycle_years?: number;
+          id?: string;
+          inflation_bp?: number;
+          last_done_year?: number | null;
+          manual_next_due_year?: number | null;
+          name?: string;
+          notes?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_repair_forecast_items_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_repair_forecast_items_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_repair_forecast_items_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_repair_forecast_items_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_repair_forecast_settings: {
+        Row: {
+          client_request_id: string | null;
+          gap_fund_id: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id?: string | null;
+          gap_fund_id?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          client_request_id?: string | null;
+          gap_fund_id?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_repair_forecast_settings_fund_fkey';
+            columns: ['society_id', 'gap_fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_repair_forecast_settings_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_repair_forecast_settings_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       expense_savings_evidence: {
         Row: {
           amount_paise: number;
@@ -7423,6 +7621,1355 @@ export type Database = {
             columns: ['society_id'];
             isOneToOne: false;
             referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_audit_events: {
+        Row: {
+          action: string;
+          actor_id: string;
+          after_values: NonNullable<Json>;
+          audit_id: string;
+          client_request_id: string;
+          created_at: string;
+          id: string;
+          previous_values: Json | null;
+          project_ids: NonNullable<Json>;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          actor_id: string;
+          after_values: NonNullable<Json>;
+          audit_id: string;
+          client_request_id: string;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          project_ids?: NonNullable<Json>;
+          society_id: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string;
+          after_values?: NonNullable<Json>;
+          audit_id?: string;
+          client_request_id?: string;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          project_ids?: NonNullable<Json>;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_audit_events_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_audit_events_audit_fkey';
+            columns: ['society_id', 'audit_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_audits';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_audit_projects: {
+        Row: {
+          audit_id: string;
+          project_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          audit_id: string;
+          project_id: string;
+          society_id: string;
+        };
+        Update: {
+          audit_id?: string;
+          project_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_audit_projects_audit_fkey';
+            columns: ['society_id', 'audit_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_audits';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_audit_projects_project_fkey';
+            columns: ['society_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_projects';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_audits: {
+        Row: {
+          audit_on: string;
+          auditor_name: string;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          findings: string;
+          id: string;
+          next_due_on: string;
+          rating: string;
+          reminder_due_sent_at: string | null;
+          reminder_overdue_sent_at: string | null;
+          repair_status: string;
+          report_path: string | null;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          audit_on: string;
+          auditor_name: string;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          findings: string;
+          id?: string;
+          next_due_on: string;
+          rating: string;
+          reminder_due_sent_at?: string | null;
+          reminder_overdue_sent_at?: string | null;
+          repair_status: string;
+          report_path?: string | null;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          audit_on?: string;
+          auditor_name?: string;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          findings?: string;
+          id?: string;
+          next_due_on?: string;
+          rating?: string;
+          reminder_due_sent_at?: string | null;
+          reminder_overdue_sent_at?: string | null;
+          repair_status?: string;
+          report_path?: string | null;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_audits_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_audits_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_audits_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_audits_voided_by_fkey';
+            columns: ['voided_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_consent_confirmations: {
+        Row: {
+          client_request_id: string;
+          confirmation_text_version: number;
+          confirmed_at: string;
+          confirmed_by: string;
+          id: string;
+          method: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          confirmation_text_version: number;
+          confirmed_at?: string;
+          confirmed_by: string;
+          id?: string;
+          method: string;
+          society_id: string;
+        };
+        Update: {
+          client_request_id?: string;
+          confirmation_text_version?: number;
+          confirmed_at?: string;
+          confirmed_by?: string;
+          id?: string;
+          method?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_consent_confirmations_confirmed_by_fkey';
+            columns: ['confirmed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_consent_confirmations_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_consent_events: {
+        Row: {
+          actor_id: string | null;
+          after_values: NonNullable<Json>;
+          client_request_id: string | null;
+          created_at: string;
+          id: string;
+          previous_values: Json | null;
+          proposal_id: string;
+          society_id: string;
+          unit_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id?: string | null;
+          after_values: NonNullable<Json>;
+          client_request_id?: string | null;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          proposal_id: string;
+          society_id: string;
+          unit_id: string;
+        };
+        Update: {
+          actor_id?: string | null;
+          after_values?: NonNullable<Json>;
+          client_request_id?: string | null;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          proposal_id?: string;
+          society_id?: string;
+          unit_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_consent_events_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_consent_events_consent_fkey';
+            columns: ['society_id', 'proposal_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_consents';
+            referencedColumns: ['society_id', 'proposal_id', 'unit_id'];
+          },
+        ];
+      };
+      major_works_consent_polls: {
+        Row: {
+          applied_at: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          poll_id: string;
+          proposal_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          applied_at?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          poll_id: string;
+          proposal_id: string;
+          society_id: string;
+        };
+        Update: {
+          applied_at?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          poll_id?: string;
+          proposal_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_consent_polls_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_consent_polls_poll_fkey';
+            columns: ['society_id', 'poll_id'];
+            isOneToOne: true;
+            referencedRelation: 'poll_votes';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_consent_polls_proposal_fkey';
+            columns: ['society_id', 'proposal_id'];
+            isOneToOne: true;
+            referencedRelation: 'major_works_proposals';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_consents: {
+        Row: {
+          method: string | null;
+          proposal_id: string;
+          recorded_by: string | null;
+          recorded_on: string | null;
+          signed_form_path: string | null;
+          society_id: string;
+          source_poll_id: string | null;
+          status: string;
+          unit_id: string;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          method?: string | null;
+          proposal_id: string;
+          recorded_by?: string | null;
+          recorded_on?: string | null;
+          signed_form_path?: string | null;
+          society_id: string;
+          source_poll_id?: string | null;
+          status?: string;
+          unit_id: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          method?: string | null;
+          proposal_id?: string;
+          recorded_by?: string | null;
+          recorded_on?: string | null;
+          signed_form_path?: string | null;
+          society_id?: string;
+          source_poll_id?: string | null;
+          status?: string;
+          unit_id?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_consents_poll_fkey';
+            columns: ['society_id', 'source_poll_id'];
+            isOneToOne: false;
+            referencedRelation: 'poll_votes';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_consents_proposal_fkey';
+            columns: ['society_id', 'proposal_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_proposals';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_consents_recorded_by_fkey';
+            columns: ['recorded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_consents_unit_fkey';
+            columns: ['society_id', 'unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_criteria: {
+        Row: {
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          name: string;
+          position: number;
+          project_id: string;
+          society_id: string;
+          weight: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          name: string;
+          position: number;
+          project_id: string;
+          society_id: string;
+          weight: number;
+        };
+        Update: {
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          name?: string;
+          position?: number;
+          project_id?: string;
+          society_id?: string;
+          weight?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_criteria_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_criteria_project_fkey';
+            columns: ['society_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_projects';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_milestones: {
+        Row: {
+          actual_on: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          id: string;
+          note: string | null;
+          planned_on: string | null;
+          position: number;
+          proposal_id: string;
+          society_id: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          actual_on?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          note?: string | null;
+          planned_on?: string | null;
+          position: number;
+          proposal_id: string;
+          society_id: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          actual_on?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          note?: string | null;
+          planned_on?: string | null;
+          position?: number;
+          proposal_id?: string;
+          society_id?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_milestones_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_milestones_proposal_fkey';
+            columns: ['society_id', 'proposal_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_proposals';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_milestones_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_project_events: {
+        Row: {
+          action: string;
+          actor_id: string;
+          after_values: NonNullable<Json>;
+          client_request_id: string;
+          created_at: string;
+          id: string;
+          previous_values: Json | null;
+          project_id: string;
+          reason: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          actor_id: string;
+          after_values: NonNullable<Json>;
+          client_request_id: string;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          project_id: string;
+          reason?: string | null;
+          society_id: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string;
+          after_values?: NonNullable<Json>;
+          client_request_id?: string;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          project_id?: string;
+          reason?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_project_events_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_project_events_project_fkey';
+            columns: ['society_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_projects';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_projects: {
+        Row: {
+          actual_end_on: string | null;
+          actual_start_on: string | null;
+          approval_body: string | null;
+          approval_date: string | null;
+          approval_meeting_resolution_id: string | null;
+          approval_resolution_title_snapshot: string | null;
+          approval_resolution_version_snapshot: number | null;
+          budget_source: string;
+          category: string;
+          chosen_quote_id: string | null;
+          chosen_quote_reason: string | null;
+          chosen_quote_resolution_id: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          estimate_paise: number;
+          forecast_item_id: string | null;
+          fund_work_id: string | null;
+          id: string;
+          linked_budget_paise: number | null;
+          location: string;
+          not_scored_reason: string | null;
+          notes: string | null;
+          planned_end_on: string | null;
+          planned_start_on: string | null;
+          priority: string;
+          progress_percent: number;
+          resume_status: string | null;
+          scoring_closed_at: string | null;
+          scoring_closed_by: string | null;
+          scoring_opened_at: string | null;
+          scoring_opened_by: string | null;
+          scoring_state: string;
+          society_id: string;
+          status: string;
+          status_reason: string | null;
+          title: string;
+          typed_budget_paise: number;
+          updated_at: string;
+          updated_by: string | null;
+          vendor_purchase_request_id: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          actual_end_on?: string | null;
+          actual_start_on?: string | null;
+          approval_body?: string | null;
+          approval_date?: string | null;
+          approval_meeting_resolution_id?: string | null;
+          approval_resolution_title_snapshot?: string | null;
+          approval_resolution_version_snapshot?: number | null;
+          budget_source?: string;
+          category: string;
+          chosen_quote_id?: string | null;
+          chosen_quote_reason?: string | null;
+          chosen_quote_resolution_id?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          estimate_paise: number;
+          forecast_item_id?: string | null;
+          fund_work_id?: string | null;
+          id?: string;
+          linked_budget_paise?: number | null;
+          location: string;
+          not_scored_reason?: string | null;
+          notes?: string | null;
+          planned_end_on?: string | null;
+          planned_start_on?: string | null;
+          priority: string;
+          progress_percent?: number;
+          resume_status?: string | null;
+          scoring_closed_at?: string | null;
+          scoring_closed_by?: string | null;
+          scoring_opened_at?: string | null;
+          scoring_opened_by?: string | null;
+          scoring_state?: string;
+          society_id: string;
+          status?: string;
+          status_reason?: string | null;
+          title: string;
+          typed_budget_paise?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          vendor_purchase_request_id?: string | null;
+          version?: number;
+        };
+        Update: {
+          actual_end_on?: string | null;
+          actual_start_on?: string | null;
+          approval_body?: string | null;
+          approval_date?: string | null;
+          approval_meeting_resolution_id?: string | null;
+          approval_resolution_title_snapshot?: string | null;
+          approval_resolution_version_snapshot?: number | null;
+          budget_source?: string;
+          category?: string;
+          chosen_quote_id?: string | null;
+          chosen_quote_reason?: string | null;
+          chosen_quote_resolution_id?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          estimate_paise?: number;
+          forecast_item_id?: string | null;
+          fund_work_id?: string | null;
+          id?: string;
+          linked_budget_paise?: number | null;
+          location?: string;
+          not_scored_reason?: string | null;
+          notes?: string | null;
+          planned_end_on?: string | null;
+          planned_start_on?: string | null;
+          priority?: string;
+          progress_percent?: number;
+          resume_status?: string | null;
+          scoring_closed_at?: string | null;
+          scoring_closed_by?: string | null;
+          scoring_opened_at?: string | null;
+          scoring_opened_by?: string | null;
+          scoring_state?: string;
+          society_id?: string;
+          status?: string;
+          status_reason?: string | null;
+          title?: string;
+          typed_budget_paise?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          vendor_purchase_request_id?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_projects_chosen_quote_fkey';
+            columns: ['society_id', 'chosen_quote_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_quotes';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_chosen_resolution_fkey';
+            columns: ['society_id', 'chosen_quote_resolution_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_forecast_fkey';
+            columns: ['society_id', 'forecast_item_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_repair_forecast_items';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_fund_work_fkey';
+            columns: ['society_id', 'fund_work_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_fund_works';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_purchase_request_fkey';
+            columns: ['society_id', 'vendor_purchase_request_id'];
+            isOneToOne: false;
+            referencedRelation: 'vendor_purchase_requests';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_resolution_fkey';
+            columns: ['society_id', 'approval_meeting_resolution_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_scoring_closed_by_fkey';
+            columns: ['scoring_closed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_scoring_opened_by_fkey';
+            columns: ['scoring_opened_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_projects_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_proposal_events: {
+        Row: {
+          action: string;
+          actor_id: string;
+          after_values: NonNullable<Json>;
+          client_request_id: string;
+          created_at: string;
+          id: string;
+          previous_values: Json | null;
+          proposal_id: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          actor_id: string;
+          after_values: NonNullable<Json>;
+          client_request_id: string;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          proposal_id: string;
+          society_id: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string;
+          after_values?: NonNullable<Json>;
+          client_request_id?: string;
+          created_at?: string;
+          id?: string;
+          previous_values?: Json | null;
+          proposal_id?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_proposal_events_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_proposal_events_proposal_fkey';
+            columns: ['society_id', 'proposal_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_proposals';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_proposal_files: {
+        Row: {
+          client_request_id: string;
+          content_type: string;
+          created_at: string;
+          id: string;
+          path: string;
+          proposal_id: string;
+          size_bytes: number;
+          society_id: string;
+          uploaded_by: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          client_request_id: string;
+          content_type: string;
+          created_at?: string;
+          id?: string;
+          path: string;
+          proposal_id: string;
+          size_bytes: number;
+          society_id: string;
+          uploaded_by: string;
+        };
+        Update: {
+          client_request_id?: string;
+          content_type?: string;
+          created_at?: string;
+          id?: string;
+          path?: string;
+          proposal_id?: string;
+          size_bytes?: number;
+          society_id?: string;
+          uploaded_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_proposal_files_proposal_fkey';
+            columns: ['society_id', 'proposal_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_proposals';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_proposal_files_uploaded_by_fkey';
+            columns: ['uploaded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_proposals: {
+        Row: {
+          archived_at: string | null;
+          archived_by: string | null;
+          bank_guarantee_paise: number | null;
+          client_request_id: string;
+          corpus_paise: number | null;
+          created_at: string;
+          created_by: string;
+          decision_due_on: string | null;
+          developer_name: string;
+          extra_area_bp: number | null;
+          id: string;
+          monthly_rent_paise: number | null;
+          other_terms: string | null;
+          purge_at: string | null;
+          purged_at: string | null;
+          received_on: string;
+          society_id: string;
+          stage: string;
+          stage_reason: string | null;
+          timeline_months: number | null;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          bank_guarantee_paise?: number | null;
+          client_request_id: string;
+          corpus_paise?: number | null;
+          created_at?: string;
+          created_by: string;
+          decision_due_on?: string | null;
+          developer_name: string;
+          extra_area_bp?: number | null;
+          id?: string;
+          monthly_rent_paise?: number | null;
+          other_terms?: string | null;
+          purge_at?: string | null;
+          purged_at?: string | null;
+          received_on: string;
+          society_id: string;
+          stage?: string;
+          stage_reason?: string | null;
+          timeline_months?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          archived_by?: string | null;
+          bank_guarantee_paise?: number | null;
+          client_request_id?: string;
+          corpus_paise?: number | null;
+          created_at?: string;
+          created_by?: string;
+          decision_due_on?: string | null;
+          developer_name?: string;
+          extra_area_bp?: number | null;
+          id?: string;
+          monthly_rent_paise?: number | null;
+          other_terms?: string | null;
+          purge_at?: string | null;
+          purged_at?: string | null;
+          received_on?: string;
+          society_id?: string;
+          stage?: string;
+          stage_reason?: string | null;
+          timeline_months?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_proposals_archived_by_fkey';
+            columns: ['archived_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_proposals_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_proposals_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_proposals_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_quotes: {
+        Row: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          excluded_at: string | null;
+          excluded_by: string | null;
+          exclusion_reason: string | null;
+          file_path: string | null;
+          id: string;
+          like_for_like: boolean;
+          project_id: string;
+          removal_reason: string | null;
+          removed_at: string | null;
+          removed_by: string | null;
+          scope_note: string;
+          society_id: string;
+          source: string;
+          vendor_name: string;
+          vendor_quote_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          excluded_at?: string | null;
+          excluded_by?: string | null;
+          exclusion_reason?: string | null;
+          file_path?: string | null;
+          id?: string;
+          like_for_like?: boolean;
+          project_id: string;
+          removal_reason?: string | null;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          scope_note: string;
+          society_id: string;
+          source: string;
+          vendor_name: string;
+          vendor_quote_id?: string | null;
+        };
+        Update: {
+          amount_paise?: number;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          excluded_at?: string | null;
+          excluded_by?: string | null;
+          exclusion_reason?: string | null;
+          file_path?: string | null;
+          id?: string;
+          like_for_like?: boolean;
+          project_id?: string;
+          removal_reason?: string | null;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          scope_note?: string;
+          society_id?: string;
+          source?: string;
+          vendor_name?: string;
+          vendor_quote_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_quotes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_quotes_excluded_by_fkey';
+            columns: ['excluded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_quotes_project_fkey';
+            columns: ['society_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_projects';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_quotes_removed_by_fkey';
+            columns: ['removed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_quotes_vendor_quote_fkey';
+            columns: ['society_id', 'vendor_quote_id'];
+            isOneToOne: false;
+            referencedRelation: 'vendor_quotes';
+            referencedColumns: ['society_id', 'id'];
+          },
+        ];
+      };
+      major_works_scenarios: {
+        Row: {
+          amount_basis: string;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          deduction_paise: number | null;
+          deduction_type: string;
+          fund_id: string | null;
+          id: string;
+          name: string;
+          project_id: string;
+          society_id: string;
+          split: string;
+          typed_amount_paise: number | null;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_basis: string;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          deduction_paise?: number | null;
+          deduction_type: string;
+          fund_id?: string | null;
+          id?: string;
+          name: string;
+          project_id: string;
+          society_id: string;
+          split: string;
+          typed_amount_paise?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          amount_basis?: string;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          deduction_paise?: number | null;
+          deduction_type?: string;
+          fund_id?: string | null;
+          id?: string;
+          name?: string;
+          project_id?: string;
+          society_id?: string;
+          split?: string;
+          typed_amount_paise?: number | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_scenarios_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_scenarios_fund_fkey';
+            columns: ['society_id', 'fund_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_funds';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_scenarios_project_fkey';
+            columns: ['society_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_projects';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_scenarios_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_scores: {
+        Row: {
+          criterion_id: string;
+          project_id: string;
+          quote_id: string;
+          score: number;
+          scorer_id: string;
+          society_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          criterion_id: string;
+          project_id: string;
+          quote_id: string;
+          score: number;
+          scorer_id: string;
+          society_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          criterion_id?: string;
+          project_id?: string;
+          quote_id?: string;
+          score?: number;
+          scorer_id?: string;
+          society_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_scores_criterion_fkey';
+            columns: ['society_id', 'criterion_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_criteria';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_scores_project_fkey';
+            columns: ['society_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_projects';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_scores_quote_fkey';
+            columns: ['society_id', 'quote_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_quotes';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_scores_scorer_id_fkey';
+            columns: ['scorer_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      major_works_spend_tags: {
+        Row: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          entry_id: string;
+          id: string;
+          project_id: string;
+          removal_client_request_id: string | null;
+          removal_reason: string | null;
+          removed_at: string | null;
+          removed_by: string | null;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_paise: number;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          entry_id: string;
+          id?: string;
+          project_id: string;
+          removal_client_request_id?: string | null;
+          removal_reason?: string | null;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          society_id: string;
+        };
+        Update: {
+          amount_paise?: number;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          entry_id?: string;
+          id?: string;
+          project_id?: string;
+          removal_client_request_id?: string | null;
+          removal_reason?: string | null;
+          removed_at?: string | null;
+          removed_by?: string | null;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'major_works_spend_tags_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'major_works_spend_tags_entry_fkey';
+            columns: ['society_id', 'entry_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_book_entries';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_spend_tags_project_fkey';
+            columns: ['society_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'major_works_projects';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'major_works_spend_tags_removed_by_fkey';
+            columns: ['removed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -19640,6 +21187,50 @@ export type Database = {
         };
         Returns: Json;
       };
+      expense_repair_forecast_fund_set: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_gap_fund_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_repair_forecast_get: {
+        Args: { p_include_archived: boolean; p_society_id: string };
+        Returns: Json;
+      };
+      expense_repair_forecast_item_archive: {
+        Args: {
+          p_archive: boolean;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_item_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_repair_forecast_item_save: {
+        Args: {
+          p_category: string;
+          p_client_request_id: string;
+          p_current_cost_paise: number;
+          p_cycle_years: number;
+          p_expected_updated_at: string;
+          p_inflation_bp: number;
+          p_item_id: string;
+          p_last_done_year: number;
+          p_manual_next_due_year: number;
+          p_name: string;
+          p_notes: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
       expense_report: {
         Args: { p_from: string; p_society_id: string; p_to: string };
         Returns: Json;
@@ -20000,6 +21591,347 @@ export type Database = {
       };
       lookup_registration_society: {
         Args: { p_join_code: string };
+        Returns: Json;
+      };
+      major_works_audit_reminders_run: {
+        Args: { p_request_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      major_works_audit_save: {
+        Args: {
+          p_audit_id: string;
+          p_audit_on: string;
+          p_auditor_name: string;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_findings: string;
+          p_next_due_on: string;
+          p_project_ids: string[];
+          p_rating: string;
+          p_repair_status: string;
+          p_report_path: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_audit_void: {
+        Args: {
+          p_audit_id: string;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_audits_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      major_works_chosen_quote_set: {
+        Args: {
+          p_expected_updated_at: string;
+          p_project_id: string;
+          p_quote_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_resolution_id: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_consent_method_set: {
+        Args: {
+          p_client_request_id: string;
+          p_confirmed: boolean;
+          p_method: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      major_works_consent_poll_create: {
+        Args: {
+          p_client_request_id: string;
+          p_confirmed: boolean;
+          p_proposal_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_consent_record: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_proposal_id: string;
+          p_request_trace: string;
+          p_signed_form_path: string;
+          p_society_id: string;
+          p_status: string;
+          p_unit_id: string;
+        };
+        Returns: string;
+      };
+      major_works_consents_get: {
+        Args: { p_proposal_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      major_works_criteria_set: {
+        Args: {
+          p_client_request_id: string;
+          p_items: Json;
+          p_project_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_milestone_save: {
+        Args: {
+          p_actual_on: string;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_milestone_id: string;
+          p_note: string;
+          p_planned_on: string;
+          p_position: number;
+          p_proposal_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_status: string;
+          p_title: string;
+        };
+        Returns: string;
+      };
+      major_works_milestones_list: {
+        Args: { p_proposal_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      major_works_my_consents_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      major_works_project_budget_set: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_fund_work_id: string;
+          p_project_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_source: string;
+          p_typed_budget_paise: number;
+        };
+        Returns: string;
+      };
+      major_works_project_save: {
+        Args: {
+          p_actual_end_on: string;
+          p_actual_start_on: string;
+          p_category: string;
+          p_client_request_id: string;
+          p_estimate_paise: number;
+          p_expected_updated_at: string;
+          p_forecast_item_id: string;
+          p_location: string;
+          p_notes: string;
+          p_planned_end_on: string;
+          p_planned_start_on: string;
+          p_priority: string;
+          p_progress_percent: number;
+          p_project_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_title: string;
+        };
+        Returns: string;
+      };
+      major_works_project_status_set: {
+        Args: {
+          p_approval_body: string;
+          p_approval_date: string;
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_meeting_resolution_id: string;
+          p_project_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_status: string;
+        };
+        Returns: string;
+      };
+      major_works_projects_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      major_works_proposal_archive: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_proposal_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_proposal_file_add: {
+        Args: {
+          p_client_request_id: string;
+          p_content_type: string;
+          p_path: string;
+          p_proposal_id: string;
+          p_request_trace: string;
+          p_size_bytes: number;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_proposal_save: {
+        Args: {
+          p_bank_guarantee_paise: number;
+          p_client_request_id: string;
+          p_corpus_paise: number;
+          p_decision_due_on: string;
+          p_developer_name: string;
+          p_expected_updated_at: string;
+          p_extra_area_bp: number;
+          p_monthly_rent_paise: number;
+          p_other_terms: string;
+          p_proposal_id: string;
+          p_received_on: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_timeline_months: number;
+        };
+        Returns: string;
+      };
+      major_works_proposal_stage_set: {
+        Args: {
+          p_client_request_id: string;
+          p_expected_updated_at: string;
+          p_proposal_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_stage: string;
+        };
+        Returns: string;
+      };
+      major_works_proposals_list: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      major_works_quote_add: {
+        Args: {
+          p_amount_paise: number;
+          p_client_request_id: string;
+          p_file_path: string;
+          p_like_for_like: boolean;
+          p_project_id: string;
+          p_request_trace: string;
+          p_scope_note: string;
+          p_society_id: string;
+          p_vendor_name: string;
+          p_vendor_quote_id: string;
+        };
+        Returns: string;
+      };
+      major_works_quote_remove: {
+        Args: {
+          p_client_request_id: string;
+          p_exclude: boolean;
+          p_quote_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_resident_projects_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      major_works_retention_files: {
+        Args: { p_society_id: string; p_today: string };
+        Returns: Json;
+      };
+      major_works_retention_run: {
+        Args: { p_request_id: string; p_society_id: string; p_today: string };
+        Returns: Json;
+      };
+      major_works_scenario_save: {
+        Args: {
+          p_amount_basis: string;
+          p_client_request_id: string;
+          p_deduction_paise: number;
+          p_deduction_type: string;
+          p_expected_updated_at: string;
+          p_fund_id: string;
+          p_name: string;
+          p_project_id: string;
+          p_request_trace: string;
+          p_scenario_id: string;
+          p_society_id: string;
+          p_split: string;
+          p_typed_amount_paise: number;
+        };
+        Returns: string;
+      };
+      major_works_scenarios_list: {
+        Args: { p_project_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      major_works_scores_save: {
+        Args: {
+          p_items: Json;
+          p_project_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: number;
+      };
+      major_works_scoring_get: {
+        Args: { p_project_id: string; p_society_id: string };
+        Returns: Json;
+      };
+      major_works_scoring_transition: {
+        Args: {
+          p_action: string;
+          p_expected_updated_at: string;
+          p_project_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_spend_tag_remove: {
+        Args: {
+          p_client_request_id: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_tag_id: string;
+        };
+        Returns: string;
+      };
+      major_works_spend_tag_save: {
+        Args: {
+          p_amount_paise: number;
+          p_client_request_id: string;
+          p_entry_id: string;
+          p_project_id: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      major_works_summary_get: {
+        Args: { p_society_id: string };
         Returns: Json;
       };
       mark_all_notifications_read: {
