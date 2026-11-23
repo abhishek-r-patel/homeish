@@ -4924,6 +4924,326 @@ export type Database = {
           },
         ];
       };
+      expense_budget_changes: {
+        Row: {
+          amount_paise: number;
+          approval_document_id: string | null;
+          approval_meeting_id: string | null;
+          approval_note: string | null;
+          approved_at: string;
+          approved_body: string;
+          approved_by: string;
+          approved_on: string;
+          budget_id: string;
+          category_id: string | null;
+          client_request_id: string;
+          created_at: string;
+          created_by: string;
+          direction: string;
+          effective_month: number;
+          id: string;
+          income_type: string | null;
+          month_paise: number[];
+          pair_id: string | null;
+          reason: string;
+          society_id: string;
+          void_reason: string | null;
+          voided_at: string | null;
+          voided_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_paise: number;
+          approval_document_id?: string | null;
+          approval_meeting_id?: string | null;
+          approval_note?: string | null;
+          approved_at?: string;
+          approved_body: string;
+          approved_by: string;
+          approved_on: string;
+          budget_id: string;
+          category_id?: string | null;
+          client_request_id: string;
+          created_at?: string;
+          created_by: string;
+          direction: string;
+          effective_month: number;
+          id?: string;
+          income_type?: string | null;
+          month_paise: number[];
+          pair_id?: string | null;
+          reason: string;
+          society_id: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Update: {
+          amount_paise?: number;
+          approval_document_id?: string | null;
+          approval_meeting_id?: string | null;
+          approval_note?: string | null;
+          approved_at?: string;
+          approved_body?: string;
+          approved_by?: string;
+          approved_on?: string;
+          budget_id?: string;
+          category_id?: string | null;
+          client_request_id?: string;
+          created_at?: string;
+          created_by?: string;
+          direction?: string;
+          effective_month?: number;
+          id?: string;
+          income_type?: string | null;
+          month_paise?: number[];
+          pair_id?: string | null;
+          reason?: string;
+          society_id?: string;
+          void_reason?: string | null;
+          voided_at?: string | null;
+          voided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_budget_changes_approval_document_fkey';
+            columns: ['society_id', 'approval_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_changes_approval_meeting_fkey';
+            columns: ['society_id', 'approval_meeting_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_changes_approved_by_fkey';
+            columns: ['approved_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_changes_budget_fkey';
+            columns: ['society_id', 'budget_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_budgets';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_changes_category_fkey';
+            columns: ['society_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_categories';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_changes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_changes_voided_by_fkey';
+            columns: ['voided_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_budget_lines: {
+        Row: {
+          annual_paise: number;
+          budget_id: string;
+          category_id: string | null;
+          created_at: string;
+          created_by: string;
+          id: string;
+          income_type: string | null;
+          month_paise: number[];
+          phasing: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          annual_paise: number;
+          budget_id: string;
+          category_id?: string | null;
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          income_type?: string | null;
+          month_paise: number[];
+          phasing: string;
+          society_id: string;
+        };
+        Update: {
+          annual_paise?: number;
+          budget_id?: string;
+          category_id?: string | null;
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          income_type?: string | null;
+          month_paise?: number[];
+          phasing?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_budget_lines_budget_fkey';
+            columns: ['society_id', 'budget_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_budgets';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_lines_category_fkey';
+            columns: ['society_id', 'category_id'];
+            isOneToOne: false;
+            referencedRelation: 'expense_categories';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budget_lines_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      expense_budgets: {
+        Row: {
+          approval_document_id: string | null;
+          approval_meeting_id: string | null;
+          approval_note: string | null;
+          approved_at: string | null;
+          approved_body: string | null;
+          approved_by: string | null;
+          approved_on: string | null;
+          client_request_id: string;
+          copy_percent_bp: number | null;
+          copy_source_year: number | null;
+          created_at: string;
+          created_by: string;
+          discard_reason: string | null;
+          discarded_at: string | null;
+          discarded_by: string | null;
+          financial_year: number;
+          id: string;
+          society_id: string;
+          status: string;
+          updated_at: string;
+          updated_by: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          approval_document_id?: string | null;
+          approval_meeting_id?: string | null;
+          approval_note?: string | null;
+          approved_at?: string | null;
+          approved_body?: string | null;
+          approved_by?: string | null;
+          approved_on?: string | null;
+          client_request_id: string;
+          copy_percent_bp?: number | null;
+          copy_source_year?: number | null;
+          created_at?: string;
+          created_by: string;
+          discard_reason?: string | null;
+          discarded_at?: string | null;
+          discarded_by?: string | null;
+          financial_year: number;
+          id?: string;
+          society_id: string;
+          status?: string;
+          updated_at?: string;
+          updated_by: string;
+          version?: number;
+        };
+        Update: {
+          approval_document_id?: string | null;
+          approval_meeting_id?: string | null;
+          approval_note?: string | null;
+          approved_at?: string | null;
+          approved_body?: string | null;
+          approved_by?: string | null;
+          approved_on?: string | null;
+          client_request_id?: string;
+          copy_percent_bp?: number | null;
+          copy_source_year?: number | null;
+          created_at?: string;
+          created_by?: string;
+          discard_reason?: string | null;
+          discarded_at?: string | null;
+          discarded_by?: string | null;
+          financial_year?: number;
+          id?: string;
+          society_id?: string;
+          status?: string;
+          updated_at?: string;
+          updated_by?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'expense_budgets_approval_document_fkey';
+            columns: ['society_id', 'approval_document_id'];
+            isOneToOne: false;
+            referencedRelation: 'documents';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budgets_approval_meeting_fkey';
+            columns: ['society_id', 'approval_meeting_id'];
+            isOneToOne: false;
+            referencedRelation: 'meeting_resolutions';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'expense_budgets_approved_by_fkey';
+            columns: ['approved_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_budgets_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_budgets_discarded_by_fkey';
+            columns: ['discarded_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_budgets_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'expense_budgets_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       expense_cash_counts: {
         Row: {
           account_id: string;
@@ -20770,6 +21090,114 @@ export type Database = {
       };
       expense_billing_estimate_breakdown: {
         Args: { p_lines: Json; p_months: number; p_society_id: string };
+        Returns: Json;
+      };
+      expense_budget_approve: {
+        Args: {
+          p_approval_document_id: string;
+          p_approval_meeting_id: string;
+          p_approval_note: string;
+          p_approved_body: string;
+          p_approved_on: string;
+          p_budget_id: string;
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_budget_change_record: {
+        Args: {
+          p_amount_paise: number;
+          p_approval_document_id: string;
+          p_approval_meeting_id: string;
+          p_approval_note: string;
+          p_approved_body: string;
+          p_approved_on: string;
+          p_budget_id: string;
+          p_category_id: string;
+          p_change_kind: string;
+          p_client_request_id: string;
+          p_effective_month: number;
+          p_expected_version: number;
+          p_income_type: string;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+          p_to_category_id: string;
+          p_to_income_type: string;
+        };
+        Returns: string;
+      };
+      expense_budget_change_void: {
+        Args: {
+          p_change_id: string;
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_budget_copy_preview: {
+        Args: {
+          p_financial_year: number;
+          p_percent_bp: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      expense_budget_discard: {
+        Args: {
+          p_budget_id: string;
+          p_client_request_id: string;
+          p_expected_version: number;
+          p_reason: string;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_budget_get: {
+        Args: { p_financial_year: number; p_society_id: string };
+        Returns: Json;
+      };
+      expense_budget_report: {
+        Args: {
+          p_as_of: string;
+          p_financial_year: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      expense_budget_resident_summary: {
+        Args: { p_financial_year: number; p_society_id: string };
+        Returns: Json;
+      };
+      expense_budget_save_draft: {
+        Args: {
+          p_client_request_id: string;
+          p_copy_percent_bp: number;
+          p_copy_source_year: number;
+          p_expected_version: number;
+          p_financial_year: number;
+          p_lines: Json;
+          p_request_trace: string;
+          p_society_id: string;
+        };
+        Returns: string;
+      };
+      expense_budget_settings_update: {
+        Args: {
+          p_expected_updated_at: string;
+          p_forecast_method: string;
+          p_request_trace: string;
+          p_resident_summary: boolean;
+          p_society_id: string;
+          p_watch_percent: number;
+        };
         Returns: Json;
       };
       expense_cash_count_record: {
