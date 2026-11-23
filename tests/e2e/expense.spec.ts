@@ -206,6 +206,41 @@ test('P42 category, mapping and savings controls stay usable on phones', async (
     savings.getByRole('status').filter({ hasText: 'Savings evidence' }),
   ).toContainText('Savings evidence added');
 
+  const budget = page.getByRole('region', { name: 'Budget controls' });
+  await budget.getByRole('button', { name: 'Save draft' }).click();
+  await expect(
+    budget.getByRole('status').filter({ hasText: 'Budget draft' }),
+  ).toContainText('Budget draft saved');
+  const approvalForm = budget
+    .getByRole('button', { name: 'Approve budget' })
+    .locator('xpath=ancestor::form');
+  page.once('dialog', (dialog) => dialog.accept());
+  await approvalForm.getByRole('button', { name: 'Approve budget' }).click();
+  await expect(
+    approvalForm.getByRole('status').filter({ hasText: 'Budget approved' }),
+  ).toContainText('Budget approved');
+  const changeForm = budget
+    .getByRole('button', { name: 'Record change' })
+    .locator('xpath=ancestor::form');
+  await changeForm.getByLabel('Amount').fill('2500');
+  await changeForm.getByLabel('Reason').fill('Approved repair allocation');
+  await changeForm.getByRole('button', { name: 'Record change' }).click();
+  await expect(
+    changeForm.getByRole('status').filter({ hasText: 'Budget change' }),
+  ).toContainText('Budget change recorded');
+  const settingsForm = budget
+    .getByRole('button', { name: 'Save budget settings' })
+    .locator('xpath=ancestor::form');
+  await settingsForm
+    .getByLabel('Cash-flow forecast')
+    .selectOption('average_3_months');
+  await settingsForm
+    .getByRole('button', { name: 'Save budget settings' })
+    .click();
+  await expect(
+    settingsForm.getByRole('status').filter({ hasText: 'Budget settings' }),
+  ).toContainText('Budget settings saved');
+
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     expect(

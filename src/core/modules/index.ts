@@ -863,16 +863,27 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           permission: 'expense:list',
         },
       ],
+      resident: [
+        {
+          href: '/budget',
+          label: 'Budget',
+          permission: 'expense:budget:read',
+        },
+      ],
     },
     permissions: {
       'expense:list': ['admin', 'committee'],
       'expense:manage': ['admin'],
       'expense:approve': ['committee'],
+      'expense:budget:read': ['resident'],
     },
     // Admins change these through the validated expense setup screen.
     settingsAccess: {
       approval_threshold_paise: 'developer',
       billing_income_account_id: 'developer',
+      budget_forecast_method: 'developer',
+      budget_watch_percent: 'developer',
+      budget_resident_summary: 'developer',
     },
     settingsSchema: expenseSettingsSchema,
   },

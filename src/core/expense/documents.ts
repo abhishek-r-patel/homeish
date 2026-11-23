@@ -20,6 +20,7 @@ import type {
   ExpenseStatements,
   ExpenseVendorSpend,
 } from './validation';
+import type { ExpenseBudgetReport as BudgetReport } from './budget-validation';
 
 export function formatSignedRupees(paise: number): string {
   return `${paise < 0 ? '-' : ''}Rs. ${rupeesFromPaise(Math.abs(paise))}`;
@@ -179,6 +180,86 @@ export function expenseVendorSpendCsv(report: ExpenseVendorSpend): string {
       rupeesFromPaise(report.accounts_expense_paise),
     ]),
   );
+}
+
+export function expenseBudgetCsv(report: BudgetReport): string {
+  const rows: string[][] = [
+    [
+      'Section',
+      'Month',
+      'Head',
+      'Original budget (Rs.)',
+      'Changes (Rs.)',
+      'Current budget (Rs.)',
+      'Plan to date (Rs.)',
+      'Actual to date (Rs.)',
+      'Difference (Rs.)',
+      'Used (%)',
+      'Money in (Rs.)',
+      'Money out (Rs.)',
+      'Net (Rs.)',
+      'Running net (Rs.)',
+      'Estimate',
+    ],
+  ];
+  for (const row of report.summary)
+    rows.push([
+      'Summary',
+      report.as_of,
+      row.name,
+      rupeesFromPaise(row.original_paise),
+      rupeesFromPaise(row.changes_paise),
+      rupeesFromPaise(row.current_paise),
+      rupeesFromPaise(row.plan_to_date_paise),
+      rupeesFromPaise(row.actual_to_date_paise),
+      `${row.difference_label}: ${rupeesFromPaise(row.difference_paise)}`,
+      row.percent_used_bp === null
+        ? 'Not available'
+        : (row.percent_used_bp / 100).toFixed(2),
+      '',
+      '',
+      '',
+      '',
+      '',
+    ]);
+  for (const month of report.months)
+    for (const head of month.heads)
+      rows.push([
+        'Month by head',
+        month.month,
+        head.name,
+        '',
+        '',
+        rupeesFromPaise(head.budget_paise),
+        '',
+        rupeesFromPaise(head.actual_paise),
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+      ]);
+  for (const month of report.cash_flow)
+    rows.push([
+      'Cash flow',
+      month.month,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      rupeesFromPaise(month.money_in_paise),
+      rupeesFromPaise(month.money_out_paise),
+      rupeesFromPaise(month.net_paise),
+      rupeesFromPaise(month.running_paise),
+      month.is_estimate ? 'Estimate' : '',
+    ]);
+  return toCsv(rows[0], rows.slice(1));
 }
 
 const PAGE_WIDTH = 595.28;
@@ -423,6 +504,54 @@ export async function expenseVendorSpendPdf(
   }
   if (report.rows.length === 0)
     line(writer, 'No posted expenditure matches this report.');
+  return document.save();
+}
+
+export async function expenseBudgetPdf(
+  societyName: string,
+  report: BudgetReport,
+): Promise<Uint8Array> {
+  const { document, writer } = await expensePdfWriter(
+    `${societyName} budget`,
+    societyName,
+  );
+  line(
+    writer,
+    `Budget ${report.financial_year}-${report.financial_year + 1}, as of ${formatBillingDate(report.as_of)}`,
+  );
+  paragraph(
+    writer,
+    `Forecast method: ${report.forecast_method === 'average_3_months' ? `average of ${report.months_averaged} complete month(s)` : report.forecast_method === 'budget' ? 'budget' : 'none'}.`,
+  );
+  section(writer, 'Budget against actual');
+  for (const row of report.summary) {
+    line(
+      writer,
+      row.name,
+      `${row.budgeted ? '' : 'Not budgeted · '}${row.difference_label} ${formatSignedRupees(row.difference_paise)}`,
+    );
+    paragraph(
+      writer,
+      `Current ${formatSignedRupees(row.current_paise)}. Plan to date ${formatSignedRupees(row.plan_to_date_paise)}. Actual to date ${formatSignedRupees(row.actual_to_date_paise)}. Used ${row.percent_used_bp === null ? 'Not available' : `${(row.percent_used_bp / 100).toFixed(2)}%`}.`,
+    );
+  }
+  section(writer, 'Monthly cash flow');
+  line(
+    writer,
+    'Opening money held',
+    formatSignedRupees(report.opening_money_paise),
+  );
+  line(
+    writer,
+    'Opening balances of accounts added',
+    formatSignedRupees(report.accounts_added_opening_paise),
+  );
+  for (const row of report.cash_flow)
+    line(
+      writer,
+      `${formatBillingPeriod(row.month)}${row.is_estimate ? ' · Estimate' : ''}${row.forecast_available ? '' : ' · Not available'}`,
+      `In ${formatSignedRupees(row.money_in_paise)} · Out ${formatSignedRupees(row.money_out_paise)} · Running ${formatSignedRupees(row.running_paise)}`,
+    );
   return document.save();
 }
 

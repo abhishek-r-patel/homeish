@@ -32,6 +32,9 @@ export const DEFAULT_EXPENSE_APPROVAL_THRESHOLD_PAISE = 5_000_000;
 export const DEFAULT_EXPENSE_SETTINGS = {
   approval_threshold_paise: DEFAULT_EXPENSE_APPROVAL_THRESHOLD_PAISE,
   billing_income_account_id: null,
+  budget_forecast_method: 'budget',
+  budget_watch_percent: 90,
+  budget_resident_summary: true,
 };
 export const expenseSettingsSchema = z
   .object({
@@ -42,6 +45,11 @@ export const expenseSettingsSchema = z
       .max(999_999_999_999_999)
       .optional(),
     billing_income_account_id: z.uuid().nullable().optional(),
+    budget_forecast_method: z
+      .enum(['budget', 'average_3_months', 'none'])
+      .optional(),
+    budget_watch_percent: z.number().int().min(50).max(100).optional(),
+    budget_resident_summary: z.boolean().optional(),
   })
   .strict();
 

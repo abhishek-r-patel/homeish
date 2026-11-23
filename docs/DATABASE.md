@@ -963,7 +963,7 @@ Forward-only repair migration `20261201120000_expense_tenancy_fk_indexes.sql` ad
 - **Writes:** `expense_repair_forecast_item_save`, `expense_repair_forecast_item_archive` (also restores) and `expense_repair_forecast_fund_set` need `expense:manage` and a writable society, take optimistic versions and are audited as `expense.repair_forecast.*`.
 - **Safeguards:** same-society composite FKs, RLS enabled with no direct API-role access and no delete grants.
 
-**Budget contract (D-83, EXP-31–EXP-35, P41.3/P42.2/P42.5; proposed 2026-11-22, coding not yet approved):** One forward migration in the `expense` area. It writes no money table, fund allocation, bill or approval, and adds nothing to the P27 catalogue. Amounts are integer paise in whole rupees (multiples of 100). Month arrays have 12 elements, April to March.
+**Budget contract (D-83, EXP-31–EXP-35, P41.3/P42.2/P42.5; approved for local coding 2026-11-23):** Migration `20261205100000_expense_budgets.sql` implements P42.5's permanent plan/change records and P41.3's report, cash-flow and resident-summary reads; P42.2 warning columns follow. It writes no money table, fund allocation, bill or approval, and adds nothing to the P27 catalogue. Amounts are integer paise in whole rupees (multiples of 100). Month arrays have 12 elements, April to March. D-84 retained-deposit actuals are added with P35.8–P35.9.
 
 - **`expense_budgets`:**
   - `society_id` and `financial_year` (the starting calendar year, so 2026 means April 2026 to March 2027).

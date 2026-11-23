@@ -226,6 +226,12 @@ export const statusMap = {
     label: 'Not applicable',
     tone: 'neutral',
   },
+  'expense_budget.draft': { icon: '✎', label: 'Draft', tone: 'neutral' },
+  'expense_budget.approved': {
+    icon: '✓',
+    label: 'Approved',
+    tone: 'success',
+  },
 } as const satisfies Record<string, StatusDefinition>;
 
 export type ProductStatus = keyof typeof statusMap;

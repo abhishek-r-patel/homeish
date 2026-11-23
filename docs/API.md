@@ -571,14 +571,14 @@ The route adds `/admin/expenses/savings`; the vendor spend view is part of the e
 
 The screen is `/admin/expenses/funds/forecast`, linked from Accounts → Funds; it has no export.
 
-**Budgets (D-83, EXP-31–EXP-35, P41.3/P42.2/P42.5; proposed 2026-11-22, coding not yet approved).** Database contract in DATABASE.md §9.7. Reads are for admins and committee (`expense:list`). Writes are admin-only (`expense:manage`), idempotent by `clientRequestId` and version-checked. Nothing posts, allocates, bills, approves or blocks spending. Actuals use posted Accounts entries and, under proposed D-84, retained deposit deductions as non-cash Other income; the deduction does not create a second cash entry.
+**Budgets (D-83, EXP-31–EXP-35, P41.3/P42.2/P42.5; approved for local coding 2026-11-23).** P42.5 and P41.3 operations below are implemented and locally verified; P42.2 warnings remain unstarted. Database contract in DATABASE.md §9.7. Reads are for admins and committee (`expense:list`). Writes are admin-only (`expense:manage`), idempotent by `clientRequestId` and version-checked. Nothing posts, allocates, bills, approves or blocks spending. Actuals use posted Accounts entries and, once D-84/P35.8–P35.9 is implemented, retained deposit deductions as non-cash Other income; the deduction does not create a second cash entry.
 
 - `getExpenseBudget(financialYear)`: the budget (or none), its status, approval details, lines with phasing and month figures, the change history and the current plan per head.
 - `getExpenseBudgetCopyPreview({ financialYear, percent })`: last year's actuals by head, including proposed D-84 retained-deposit income under Other, with the optional −50% to +100% adjustment rounded to the rupee. It saves nothing.
 - `saveExpenseBudgetDraft`: creates the draft or replaces its lines. Only drafts can be saved.
 - `discardExpenseBudget` (reason required, draft only) and `approveExpenseBudget` (body, date not in the future, optional meeting or document link, optional note). Approval locks the lines.
-- `recordExpenseBudgetChange`: an increase, a decrease or a move (`fromHead`, `toHead`) with amount, starting month, reason and approval details. A decrease below the current plan is refused with `BUDGET_BELOW_ZERO`.
-- `voidExpenseBudgetChange` (reason required; a move is voided as a pair). It is refused with `BUDGET_BELOW_ZERO` when it would leave a head negative.
+- `recordExpenseBudgetChange`: an increase, a decrease or a move (`fromHead`, `toHead`) with amount, starting month, reason and approval details. A decrease below the current plan returns `VALIDATION_FAILED`.
+- `voidExpenseBudgetChange` (reason required; a move is voided as a pair). It returns `VALIDATION_FAILED` when cancellation would leave a head negative.
 - `getExpenseBudgetReport({ financialYear, asOf })`: the EXP-33 summary and month table, the cash flow with forecast months flagged as estimates, and the EXP-34 burn rate, warnings and projections. Retained-deposit income is actual Other income; held receipts/refunds remain actual cash-flow movements, not budget income or expense.
 - `getResidentBudgetSummary(financialYear)` (active owner, tenant or family residents): `{ shared: false }` unless Accounts is enabled, the summary setting is on and the budget is approved. Otherwise it returns current budget, actual to date and % used per head, with totals.
 - `saveExpenseSettings` accepts `budgetForecastMethod`, `budgetWatchPercent` (50–100) and `budgetResidentSummary`, preserving the other keys.
