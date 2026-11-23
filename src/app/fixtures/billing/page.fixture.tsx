@@ -164,6 +164,12 @@ function Fixture() {
         paymentDetails={details}
         pendingQrPaths={[]}
         qrUrl={null}
+        interest={{
+          acknowledged_at: null,
+          can_manage: true,
+          current: null,
+          history: [],
+        }}
         settings={settings}
         settingsUpdatedAt={settingsUpdatedAt}
         settingsAction={async (formData) => {

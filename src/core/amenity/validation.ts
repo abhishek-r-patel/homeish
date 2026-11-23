@@ -1,6 +1,6 @@
 // Validate recurring exclusive amenity slots, fee snapshots and resident booking requests.
 import { z } from 'zod';
-import { nonnegativeRupeesSchema } from '../billing/validation';
+import { nonnegativeRupeesSchema, rupeesSchema } from '../billing/validation';
 const time = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Enter a valid local time.');
@@ -16,10 +16,14 @@ export const amenityCalendarIdentitySchema = z.enum(
 );
 export const DEFAULT_AMENITY_SETTINGS = {
   resident_calendar_identity: 'availability_only',
+  deposit_confirmation_policy: 'per_amenity',
 } as const;
 export const amenitySettingsSchema = z
   .object({
     resident_calendar_identity: amenityCalendarIdentitySchema.optional(),
+    deposit_confirmation_policy: z
+      .enum(['per_amenity', 'immediate'])
+      .optional(),
   })
   .strict();
 export const amenityCalendarVisibilityInputSchema = z
@@ -39,6 +43,8 @@ export const amenityInputSchema = z
     name: z.string().trim().min(1).max(120),
     capacity: z.number().int().min(1).max(10000),
     feeRupees: nonnegativeRupeesSchema,
+    depositRupees: nonnegativeRupeesSchema,
+    depositRequired: z.boolean(),
     rules: z.string().trim().max(5000),
     active: z.boolean(),
     slots: z.array(recurringSlotSchema).min(1).max(100),
@@ -85,11 +91,103 @@ export const amenityCancelInputSchema = z
     reason: z.string().trim().min(1).max(500).nullable(),
   })
   .strict();
+
+export const amenityDepositPolicyInputSchema = z
+  .object({ policy: z.enum(['per_amenity', 'immediate']) })
+  .strict();
+
+export const amenityDepositOverrideInputSchema = z
+  .object({
+    bookingId: z.uuid(),
+    amountRupees: rupeesSchema,
+    reason: z.string().trim().min(1).max(500),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+
+export const amenityDepositEventInputSchema = z
+  .object({
+    bookingId: z.uuid(),
+    kind: z.enum(['receipt', 'refund', 'deduction']),
+    amountRupees: rupeesSchema,
+    eventDate: z.iso.date(),
+    accountId: z.uuid().nullable(),
+    reference: z.string().trim().max(120).nullable(),
+    reason: z.string().trim().max(500).nullable(),
+    evidencePath: z.string().max(500).nullable(),
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      (value.kind === 'receipt' || value.kind === 'refund') &&
+      value.accountId === null
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['accountId'],
+        message: 'Choose an active cash or bank account.',
+      });
+    }
+    if (
+      value.kind !== 'receipt' &&
+      (!value.reason || value.reason.length === 0)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['reason'],
+        message: 'Enter a reason.',
+      });
+    }
+    if (value.kind === 'deduction' && value.evidencePath === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['evidencePath'],
+        message: 'Upload private deduction evidence.',
+      });
+    }
+  });
+
+export const amenityDepositVoidInputSchema = z
+  .object({
+    eventId: z.uuid(),
+    reason: z.string().trim().min(1).max(500),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+
+export const AMENITY_DEPOSIT_EVIDENCE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'application/pdf',
+] as const;
+
+export const amenityDepositUploadInputSchema = z
+  .object({
+    bookingId: z.uuid(),
+    contentType: z.enum(AMENITY_DEPOSIT_EVIDENCE_TYPES),
+    sizeBytes: z
+      .number()
+      .int()
+      .positive()
+      .max(5 * 1024 * 1024),
+  })
+  .strict();
+
+export const amenityDepositEvidencePathSchema = z
+  .string()
+  .max(500)
+  .regex(
+    /^[0-9a-f-]{36}\/amenity-deposits\/[0-9a-f-]{36}\/[0-9a-f-]+\.(jpg|png|pdf)$/i,
+  );
+
 export const amenitySchema = z.object({
   id: z.uuid(),
   name: z.string(),
   capacity: z.number().int().positive(),
   fee_paise: z.number().int().nonnegative().safe(),
+  deposit_paise: z.number().int().positive().safe().nullable(),
+  deposit_required_before_confirmation: z.boolean(),
   rules: z.string(),
   active: z.boolean(),
   updated_at: timestamp,
@@ -118,9 +216,44 @@ export const amenityBookingSchema = z.object({
   guest_count: z.number().int(),
   fee_paise: z.number().int().nonnegative().safe(),
   rules_snapshot: z.string(),
-  status: z.enum(['confirmed', 'cancelled']),
+  status: z.enum(['awaiting_deposit', 'confirmed', 'cancelled']),
   cancel_reason: z.string().nullable(),
   can_cancel: z.boolean(),
+  deposit: z
+    .object({
+      original_amount_paise: z.number().int().positive().safe(),
+      current_amount_paise: z.number().int().positive().safe(),
+      required_before_confirmation: z.boolean(),
+      version: z.number().int().positive(),
+      received_paise: z.number().int().nonnegative().safe(),
+      refunded_paise: z.number().int().nonnegative().safe(),
+      deducted_paise: z.number().int().nonnegative().safe(),
+      held_paise: z.number().int().nonnegative().safe(),
+      remaining_paise: z.number().int().nonnegative().safe(),
+      can_override: z.boolean(),
+      events: z.array(
+        z.object({
+          id: z.uuid(),
+          kind: z.enum([
+            'receipt',
+            'refund',
+            'deduction',
+            'terms_change',
+            'void',
+          ]),
+          amount_paise: z.number().int().positive().safe().nullable(),
+          event_date: z.iso.date().nullable(),
+          account_name: z.string().nullable(),
+          evidence_path: z.string().nullable(),
+          reason: z.string().nullable(),
+          reference: z.string().nullable(),
+          voids_event_id: z.uuid().nullable(),
+          created_at: timestamp,
+          is_voided: z.boolean(),
+        }),
+      ),
+    })
+    .nullable(),
 });
 export const amenityWorkspaceSchema = z.object({
   today: z.iso.date(),
@@ -129,10 +262,19 @@ export const amenityWorkspaceSchema = z.object({
   can_manage: z.boolean(),
   can_book: z.boolean(),
   billing_enabled: z.boolean(),
+  expense_enabled: z.boolean(),
+  deposit_confirmation_policy: z.enum(['per_amenity', 'immediate']),
   amenities: z.array(amenitySchema),
   slots: z.array(amenitySlotSchema),
   occurrences: z.array(amenityOccurrenceSchema),
   units: z.array(z.object({ id: z.uuid(), number: z.string() })),
+  expense_accounts: z.array(
+    z.object({
+      id: z.uuid(),
+      name: z.string(),
+      account_type: z.enum(['cash', 'bank']),
+    }),
+  ),
   busy: z.array(
     z
       .object({
@@ -167,6 +309,7 @@ export const amenityCalendarSchema = z
 export const amenityCalendarSettingsSchema = z
   .object({
     resident_calendar_identity: amenityCalendarIdentitySchema,
+    deposit_confirmation_policy: z.enum(['per_amenity', 'immediate']),
     directory_enabled: z.boolean(),
     can_manage: z.boolean(),
   })

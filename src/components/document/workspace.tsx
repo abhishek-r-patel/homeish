@@ -49,6 +49,8 @@ import {
   type GovernanceSelection,
 } from './governance';
 import type { DocumentGovernanceSource } from '@/core/document/validation';
+import { OfficialCasesWorkspace } from './official-cases';
+import type { OfficialCaseWorkspace } from '@/core/document/official-cases-validation';
 
 export type DocumentMode = 'resident' | 'management';
 export type DocumentRouteStateKind =
@@ -320,6 +322,7 @@ export function DocumentWorkspaceView({
   request,
   governance,
   publishedRules = [],
+  officialCases,
 }: {
   workspace: DocumentWorkspace;
   list: DocumentList | null;
@@ -342,6 +345,7 @@ export function DocumentWorkspaceView({
     actions?: GovernanceActions;
   };
   publishedRules?: DocumentPublishedHouseRule[];
+  officialCases?: OfficialCaseWorkspace | null;
 }) {
   const { t, date } = useDocumentPresentation();
   const management = mode === 'management';
@@ -664,6 +668,9 @@ export function DocumentWorkspaceView({
           meetingEnabled={governance.meetingEnabled}
           actions={governance.actions}
         />
+      ) : null}
+      {officialCases && workspace.can_manage ? (
+        <OfficialCasesWorkspace workspace={officialCases} />
       ) : null}
       {publishedRules.length > 0 ? (
         <section

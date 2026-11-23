@@ -18,6 +18,7 @@ const KIND_LABELS = {
   regular: 'Maintenance',
   fine: 'Fine',
   late_fee: 'Late fee',
+  interest: 'Interest',
 } as const;
 
 function billingDate(value: string, locale: 'en' | 'hi') {

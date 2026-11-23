@@ -12,6 +12,7 @@ export const DOCUMENT_FOLDER_AUDIENCE_LABELS: Record<
   all_residents: 'All residents',
   owners_only: 'Owners only',
   committee_admins: 'Committee and admins',
+  admin_only: 'Administrators only',
 };
 
 export const DOCUMENT_FOLDER_AUDIENCE_HELP: Record<
@@ -21,6 +22,8 @@ export const DOCUMENT_FOLDER_AUDIENCE_HELP: Record<
   all_residents: 'Owners, tenants and family members can view.',
   owners_only: 'Only residents who own a unit can view.',
   committee_admins: 'Only committee members and admins can view.',
+  admin_only:
+    'Only administrators can view. This folder may be used for private case evidence when created this way.',
 };
 
 export const DOCUMENT_UNIT_AUDIENCE_LABELS: Record<

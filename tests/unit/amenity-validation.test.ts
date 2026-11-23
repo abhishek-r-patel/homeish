@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   amenityActivityInputSchema,
   amenityCalendarVisibilityInputSchema,
+  amenityDepositEventInputSchema,
   amenityInputSchema,
   amenityBookingInputSchema,
 } from '../../src/core/amenity/validation';
@@ -12,6 +13,8 @@ const amenity = {
   name: 'Hall',
   capacity: 4,
   feeRupees: '0.00',
+  depositRupees: '0.00',
+  depositRequired: false,
   rules: 'Clean up',
   active: true,
   slots: [{ weekday: 1, start: '09:00', end: '10:00' }],
@@ -56,6 +59,44 @@ describe('amenity validation', () => {
     expect(
       amenityInputSchema.safeParse({ ...amenity, amenityId: id }).success,
     ).toBe(false);
+  });
+
+  it('accepts optional deposit terms and requires positive evidence-backed event money', () => {
+    expect(
+      amenityInputSchema.parse({
+        ...amenity,
+        depositRupees: '2500.50',
+        depositRequired: true,
+      }),
+    ).toMatchObject({
+      depositRupees: 250050,
+      depositRequired: true,
+    });
+    expect(
+      amenityInputSchema.safeParse({
+        ...amenity,
+        depositRupees: '0.00',
+        depositRequired: true,
+      }).success,
+    ).toBe(true);
+    const event = {
+      bookingId: id,
+      kind: 'deduction',
+      amountRupees: '50',
+      eventDate: '2026-11-23',
+      accountId: null,
+      reference: null,
+      reason: 'Cleaning charge',
+      evidencePath: null,
+      clientRequestId: id,
+    };
+    expect(amenityDepositEventInputSchema.safeParse(event).success).toBe(false);
+    expect(
+      amenityDepositEventInputSchema.safeParse({
+        ...event,
+        evidencePath: `${id}/amenity-deposits/${id}/${id}.pdf`,
+      }).success,
+    ).toBe(true);
   });
   it('rejects missing rules acknowledgement, fractional guests and injected booking fields', () => {
     const booking = {

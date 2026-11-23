@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
 import {
   addBillingFine,
+  acknowledgeBillingInterest,
   cancelBillingPaymentPlan,
   confirmBillingPayment,
   confirmTenantMoveIn,
@@ -15,6 +16,7 @@ import {
   previewBillingBills,
   saveBillingPaymentPlan,
   saveBillingRecoveryAction,
+  saveBillingInterestRate,
   rejectBillingPayment,
   recordBillShare,
   saveBillingCharge,
@@ -98,6 +100,28 @@ export async function recordBillShareAction(formData: FormData) {
       requestId,
     );
     return { data: result, message: 'Share started.' };
+  });
+}
+
+export async function acknowledgeBillingInterestAction() {
+  return runServerAction('billing.interest.acknowledge', async (requestId) => {
+    const result = await acknowledgeBillingInterest(requestId);
+    revalidatePath('/admin/billing');
+    return { data: result, message: 'Interest warning acknowledged.' };
+  });
+}
+
+export async function saveBillingInterestRateAction(formData: FormData) {
+  return runServerAction('billing.interest.save', async (requestId) => {
+    const result = await saveBillingInterestRate(
+      jsonValue(formData, 'input'),
+      requestId,
+    );
+    revalidatePath('/admin/billing');
+    return {
+      data: result,
+      message: 'Interest mode and rate history saved.',
+    };
   });
 }
 

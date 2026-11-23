@@ -21,6 +21,7 @@ import {
 } from './workspace';
 import type { GovernanceSelection } from './governance';
 import type { DocumentGovernanceSourceKind } from '@/core/document/validation';
+import { getOfficialCaseWorkspace } from '@/core/document/official-cases';
 
 export type DocumentPageSearch = Record<string, string | string[] | undefined>;
 export const DOCUMENT_PAGE_METADATA = {
@@ -75,31 +76,38 @@ export async function DocumentIndexPage({
     const workspace = await getDocumentWorkspace();
     if (management && !workspace.is_staff) throw new AppError('FORBIDDEN');
     const target = selection.folder ?? selection.unit;
-    const [list, detail, governanceRecords, governanceDetail, publishedRules] =
-      await Promise.all([
-        target
-          ? listDocuments({
-              folderId: selection.folder ?? null,
-              unitId: selection.unit ?? null,
-              includeArchived: selection.archived,
-              limit: DOCUMENT_PAGE_SIZE,
-              offset: selection.offset,
-            })
-          : null,
-        selection.document ? getDocument(selection.document) : null,
-        management
-          ? listGovernanceRecords({
-              kind: null,
-              includeArchived: search.governanceArchived,
-              limit: DOCUMENT_PAGE_SIZE,
-              offset: search.governanceOffset,
-            })
-          : null,
-        management && workspace.can_manage && search.governanceRecord
-          ? getGovernanceRecord(search.governanceRecord)
-          : null,
-        !management ? listPublishedHouseRules() : null,
-      ]);
+    const [
+      list,
+      detail,
+      governanceRecords,
+      governanceDetail,
+      publishedRules,
+      officialCases,
+    ] = await Promise.all([
+      target
+        ? listDocuments({
+            folderId: selection.folder ?? null,
+            unitId: selection.unit ?? null,
+            includeArchived: selection.archived,
+            limit: DOCUMENT_PAGE_SIZE,
+            offset: selection.offset,
+          })
+        : null,
+      selection.document ? getDocument(selection.document) : null,
+      management
+        ? listGovernanceRecords({
+            kind: null,
+            includeArchived: search.governanceArchived,
+            limit: DOCUMENT_PAGE_SIZE,
+            offset: search.governanceOffset,
+          })
+        : null,
+      management && workspace.can_manage && search.governanceRecord
+        ? getGovernanceRecord(search.governanceRecord)
+        : null,
+      !management ? listPublishedHouseRules() : null,
+      management && workspace.can_manage ? getOfficialCaseWorkspace() : null,
+    ]);
     let governance = null;
     if (management && governanceRecords) {
       const kind = governanceDetail?.kind ?? search.governanceKind;
@@ -159,7 +167,14 @@ export async function DocumentIndexPage({
         meetingEnabled: governanceRecords.meetingEnabled,
       };
     }
-    props = { workspace, list, detail, governance, publishedRules };
+    props = {
+      workspace,
+      list,
+      detail,
+      governance,
+      publishedRules,
+      officialCases,
+    };
   } catch (error) {
     return pageFailure(error, documentHref(baseHref, {}));
   }

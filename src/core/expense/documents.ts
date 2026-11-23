@@ -42,6 +42,7 @@ const SOURCE_LABELS: Record<ExpenseEntry['source'], string> = {
   billing_payment: 'Maintenance collection',
   reversal: 'Reversal',
   transfer: 'Transfer',
+  amenity_deposit: 'Held amenity deposit',
 };
 export function entrySourceLabel(source: ExpenseEntry['source']): string {
   return SOURCE_LABELS[source];
@@ -119,6 +120,24 @@ export function expenseStatementsCsv(statements: ExpenseStatements): string {
       `${statements.from} to ${statements.to}`,
       'Payments',
       rupeesFromPaise(statements.payments_paise),
+    ],
+    [
+      'Held deposit detail (included in cash movements)',
+      `${statements.from} to ${statements.to}`,
+      'Amenity deposit receipts',
+      rupeesFromPaise(statements.held_deposit_receipts_paise),
+    ],
+    [
+      'Held deposit detail (included in cash movements)',
+      `${statements.from} to ${statements.to}`,
+      'Amenity deposit refunds',
+      rupeesFromPaise(statements.held_deposit_refunds_paise),
+    ],
+    [
+      'Non-cash reclassification',
+      `${statements.from} to ${statements.to}`,
+      'Retained amenity deposit income',
+      rupeesFromPaise(statements.retained_deposit_income_paise),
     ],
     [
       'Receipts and payments',
@@ -694,6 +713,21 @@ export async function expenseStatementsPdf(
   );
   line(writer, 'Receipts', formatSignedRupees(statements.receipts_paise));
   line(writer, 'Payments', formatSignedRupees(statements.payments_paise));
+  line(
+    writer,
+    'Held amenity deposit receipts (included in receipts)',
+    formatSignedRupees(statements.held_deposit_receipts_paise),
+  );
+  line(
+    writer,
+    'Held amenity deposit refunds (included in payments)',
+    formatSignedRupees(statements.held_deposit_refunds_paise),
+  );
+  line(
+    writer,
+    'Retained deposit income (non-cash)',
+    formatSignedRupees(statements.retained_deposit_income_paise),
+  );
   line(
     writer,
     'Closing money held',

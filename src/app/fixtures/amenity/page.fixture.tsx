@@ -51,6 +51,9 @@ export default function AmenityFixturePage() {
       name: v.name,
       capacity: v.capacity,
       fee_paise: v.feeRupees,
+      deposit_paise: v.depositRupees === 0 ? null : v.depositRupees,
+      deposit_required_before_confirmation:
+        v.depositRequired && v.depositRupees > 0,
       rules: v.rules,
       active: v.active,
       updated_at: new Date().toISOString(),
@@ -99,6 +102,7 @@ export default function AmenityFixturePage() {
       status: 'confirmed',
       cancel_reason: null,
       can_cancel: true,
+      deposit: null,
     });
     if (amenity.fee_paise) setLedger((rows) => [...rows, amenity.fee_paise]);
     return { ok: true, message: 'Booking confirmed.' };
@@ -133,6 +137,10 @@ export default function AmenityFixturePage() {
           message: 'Choose a listed calendar visibility mode.',
         };
   };
+  const saveDepositPolicy: ModuleFormAction = async () => ({
+    ok: true,
+    message: 'Amenity deposit confirmation policy saved.',
+  });
   const recordActivity: ModuleFormAction = async (data) => {
     const parsed = amenityActivityInputSchema.safeParse(input(data));
     return parsed.success
@@ -160,6 +168,8 @@ export default function AmenityFixturePage() {
           directoryEnabled
           canManage
           action={saveCalendar}
+          depositPolicy="per_amenity"
+          depositPolicyAction={saveDepositPolicy}
         />
       </section>
       <AmenityCalendarView

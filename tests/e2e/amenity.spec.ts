@@ -11,6 +11,12 @@ test('amenity bookings retain accepted rules and fees when an administrator chan
   await definition.getByLabel('Maximum guests per booking').fill('4');
   await definition.getByLabel('Fee per booking').fill('123.45');
   await definition
+    .getByLabel('Refundable deposit in rupees (0 to turn off)')
+    .fill('500');
+  await definition
+    .getByLabel('Require the full deposit before confirmation')
+    .check();
+  await definition
     .getByLabel('Amenity rules', { exact: true })
     .fill('No shoes');
   await definition
@@ -108,6 +114,15 @@ test('P52 calendar and facility controls preserve privacy and source boundaries'
     .getByRole('button', { name: 'Save amenity calendar visibility' })
     .click();
   await expect(page.getByText(/Calendar visibility saved:/)).toBeVisible();
+  await page
+    .getByLabel('Booking confirmation when a deposit is configured')
+    .selectOption('immediate');
+  await page
+    .getByRole('button', { name: 'Save deposit confirmation policy' })
+    .click();
+  await expect(
+    page.getByText('Amenity deposit confirmation policy saved.'),
+  ).toBeVisible();
 
   await page
     .getByLabel('Existing source')

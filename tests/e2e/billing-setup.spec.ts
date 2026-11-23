@@ -79,6 +79,24 @@ test('configure a tenant-only percentage charge from an active base', async ({
   await expect(charge.getByText('Tenant-occupied')).toBeVisible();
 });
 
+test('interest starts behind an explicit non-advice acknowledgement', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/billing');
+  await expect(
+    page.getByRole('heading', { name: 'Interest on overdue bills' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      'Interest is not legal, tax or accounting advice. Review the rate and treatment with an accountant before live use.',
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Acknowledge interest warning' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Yearly interest rate (%)')).toHaveCount(0);
+});
+
 test('bill details offer accessible native and fallback sharing', async ({
   page,
 }) => {

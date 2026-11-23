@@ -11,6 +11,7 @@ const BILLING_DAILY_RPCS = {
   'billing.late_fees': 'billing_late_fees_run',
   'billing.reminders': 'billing_reminders_run',
   'billing.stale_payments': 'billing_stale_payments_run',
+  'billing.interest': 'billing_interest_run',
 } as const;
 
 export type BillingDailyTask = keyof typeof BILLING_DAILY_RPCS;

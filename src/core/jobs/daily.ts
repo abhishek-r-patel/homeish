@@ -6,6 +6,9 @@ import {
   listDailyJobSocieties,
   runBillingDailyTaskPrivileged,
   runBillingEmailJobsPrivileged,
+  runComplianceRemindersPrivileged,
+  runDataCleanupPrivileged,
+  runOfficialCaseRemindersPrivileged,
   runRetentionPrivileged,
   runServiceRequestAutoClosePrivileged,
   runServiceRequestEscalationPrivileged,
@@ -59,12 +62,31 @@ function billingTask(name: BillingDailyTask): DailySocietyJobTask {
 // Late fees run before reminders so reminder totals include the new charge.
 export const dailyJobTasks: readonly DailyJobTask[] = [
   billingTask('billing.late_fees'),
+  billingTask('billing.interest'),
   billingTask('billing.reminders'),
   billingTask('billing.stale_payments'),
   {
     name: 'billing.bill_email',
     run: async (societyId) => {
       await runBillingEmailJobsPrivileged(societyId);
+    },
+  },
+  {
+    name: 'compliance.reminders',
+    run: async (societyId, periodKey) => {
+      await runComplianceRemindersPrivileged(societyId, periodKey);
+    },
+  },
+  {
+    name: 'document.case_reminders',
+    run: async (societyId, periodKey) => {
+      await runOfficialCaseRemindersPrivileged(societyId, periodKey);
+    },
+  },
+  {
+    name: 'data_cleanup',
+    run: async (societyId, periodKey) => {
+      await runDataCleanupPrivileged(societyId, periodKey);
     },
   },
   {

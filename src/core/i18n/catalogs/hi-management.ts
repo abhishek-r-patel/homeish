@@ -966,6 +966,89 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'All residents': 'सभी निवासी',
   'Owners only': 'केवल मालिक',
   'Committee and admins': 'कमेटी और व्यवस्थापक',
+  'Administrators only': 'केवल व्यवस्थापक',
+  'Only administrators can view. This folder may be used for private case evidence when created this way.':
+    'केवल व्यवस्थापक देख सकते हैं। इस तरह बनाया गया फ़ोल्डर निजी मामला प्रमाण के लिए उपयोग हो सकता है।',
+  'Official correspondence and cases': 'आधिकारिक पत्राचार और मामले',
+  'Save official case reminders': 'आधिकारिक मामला रिमाइंडर सहेजें',
+  'No official cases have been entered.':
+    'कोई आधिकारिक मामला दर्ज नहीं किया गया है।',
+  'Next recorded date': 'अगली दर्ज तारीख',
+  Reviewer: 'समीक्षक',
+  'Compliance link': 'अनुपालन लिंक',
+  'No private evidence linked.': 'कोई निजी प्रमाण नहीं जुड़ा।',
+  'Link private case evidence': 'निजी मामला प्रमाण जोड़ें',
+  'Admin-only evidence file': 'केवल व्यवस्थापक प्रमाण फ़ाइल',
+  'Choose a private file': 'निजी फ़ाइल चुनें',
+  'Edit official case': 'आधिकारिक मामला बदलें',
+  'Add official case': 'आधिकारिक मामला जोड़ें',
+  'Save official case': 'आधिकारिक मामला सहेजें',
+  'Government or regulatory authority': 'सरकारी या नियामक प्राधिकरण',
+  Subject: 'विषय',
+  'Relevant period (optional)': 'संबंधित अवधि (वैकल्पिक)',
+  'Received date': 'प्राप्ति तारीख',
+  'Filing date': 'फाइलिंग तारीख',
+  'Reply due date': 'जवाब की नियत तारीख',
+  'Hearing or deadline date': 'सुनवाई या अंतिम तारीख',
+  'Response date': 'जवाब तारीख',
+  'Closed date (for Closed)': 'बंद करने की तारीख',
+  'Filing mode (optional)': 'फाइलिंग तरीका (वैकल्पिक)',
+  'Filing acknowledgement (optional)': 'फाइलिंग पावती (वैकल्पिक)',
+  Status: 'स्थिति',
+  'Reviewer (optional)': 'समीक्षक (वैकल्पिक)',
+  'No reviewer': 'कोई समीक्षक नहीं',
+  'Compliance record (optional)': 'अनुपालन रिकॉर्ड (वैकल्पिक)',
+  'No compliance link': 'कोई अनुपालन लिंक नहीं',
+  'Factual case note': 'तथ्यात्मक मामला नोट',
+  Event: 'लेन-देन',
+  Refund: 'वापसी',
+  'Amount in rupees': 'रुपये में राशि',
+  'Choose an account': 'खाता चुनें',
+  'Reference (optional)': 'संदर्भ (वैकल्पिक)',
+  'Void this deposit event and preserve a permanent correction?':
+    'इस जमा लेन-देन को रद्द कर स्थायी सुधार रखें?',
+  'Interest is not legal, tax or accounting advice. Review the rate and treatment with an accountant before live use.':
+    'ब्याज कानूनी, कर या लेखांकन सलाह नहीं है। लाइव उपयोग से पहले एकाउंटेंट से दर और व्यवहार की समीक्षा करें।',
+  'Off by default. A society administrator must acknowledge this warning before selecting interest.':
+    'डिफ़ॉल्ट रूप से बंद। ब्याज चुनने से पहले सोसाइटी व्यवस्थापक को यह चेतावनी स्वीकार करनी होगी।',
+  'Above 0% and at most 24%. This is an app safety limit, not a statement of the lawful rate. Leave the rate blank for Late fee only.':
+    '0% से अधिक और अधिकतम 24%। यह ऐप की सुरक्षा सीमा है, वैध दर का कथन नहीं। केवल विलंब शुल्क में दर खाली छोड़ें।',
+  'Current mode: {mode}.': 'वर्तमान तरीका: {mode}।',
+  'Current mode: Late fee only.': 'वर्तमान तरीका: केवल विलंब शुल्क।',
+  'Records are kept permanently by default. Enabling cleanup permanently deletes eligible records and their attached case files after the selected age; this is audited and cannot be undone.':
+    'रिकॉर्ड डिफ़ॉल्ट रूप से स्थायी रखे जाते हैं। सफाई चालू करने पर चुनी अवधि बाद योग्य रिकॉर्ड और जुड़े मामला फ़ाइलें स्थायी हटती हैं; यह ऑडिट होता है और वापस नहीं लिया जा सकता।',
+  'An administrator must record the accepted-risk acknowledgement before the register is available.':
+    'रजिस्टर उपलब्ध होने से पहले व्यवस्थापक को स्वीकार-जोखिम पुष्टि दर्ज करनी होगी।',
+  'Homeish supplies no obligations or deadlines. Enter only facts verified by your society and keep the original authority.':
+    'होमीश कोई दायित्व या समयसीमा नहीं देता। केवल सोसाइटी द्वारा सत्यापित तथ्य दर्ज करें और मूल प्राधिकरण रखें।',
+  'Send in-app reminders to administrators 30 and 7 days before a verified due date.':
+    'सत्यापित नियत तारीख से 30 और 7 दिन पहले व्यवस्थापकों को ऐप के भीतर रिमाइंडर भेजें।',
+  'Off by default. No email, SMS or WhatsApp is sent.':
+    'डिफ़ॉल्ट रूप से बंद। ईमेल, एसएमएस या व्हाट्सऐप नहीं भेजा जाता।',
+  '30-day and 7-day reminders are on.': '30-दिन और 7-दिन रिमाइंडर चालू हैं।',
+  'Reminders are off.': 'रिमाइंडर बंद हैं।',
+  Repeat: 'दोहराव',
+  'Choose a member': 'सदस्य चुनें',
+  'Do not treat an evidence file, completion date or this register as legal certification.':
+    'प्रमाण फ़ाइल, पूर्णता तारीख या इस रजिस्टर को कानूनी प्रमाणन न मानें।',
+  'An administrator must first acknowledge the warning in the Compliance register.':
+    'पहले व्यवस्थापक को अनुपालन रजिस्टर में चेतावनी स्वीकार करनी होगी।',
+  'Send admin-only in-app reminders 30 and 7 days before a recorded reply or hearing date.':
+    'दर्ज जवाब या सुनवाई तारीख से 30 और 7 दिन पहले केवल व्यवस्थापक ऐप रिमाइंडर भेजें।',
+  'This log does not send, submit or draft a legal response, calculate liability or grant access to evidence.':
+    'यह लॉग कानूनी जवाब भेजता, दाखिल या तैयार नहीं करता, देनदारी नहीं गिनता और प्रमाण तक पहुँच नहीं देता।',
+  'Interest on overdue bills': 'बकाया बिलों पर ब्याज',
+  'Acknowledge interest warning': 'ब्याज चेतावनी स्वीकार करें',
+  'Overdue charge mode': 'बकाया शुल्क तरीका',
+  'Late fee only': 'केवल विलंब शुल्क',
+  'Interest only': 'केवल ब्याज',
+  'Late fee and interest': 'विलंब शुल्क और ब्याज',
+  'Yearly interest rate (%)': 'वार्षिक ब्याज दर (%)',
+  'Save interest mode and rate': 'ब्याज तरीका और दर सहेजें',
+  'Rate history': 'दर इतिहास',
+  'No interest settings have been recorded.':
+    'अभी कोई ब्याज सेटिंग दर्ज नहीं की गई।',
+  'Effective date': 'प्रभावी तारीख',
   'Owners, tenants and family members can view.':
     'मालिक, किरायेदार और परिवार के सदस्य देख सकते हैं।',
   'Only residents who own a unit can view.':

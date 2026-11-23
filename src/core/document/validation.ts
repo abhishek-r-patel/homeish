@@ -18,6 +18,7 @@ export const DOCUMENT_FOLDER_AUDIENCES = [
   'all_residents',
   'owners_only',
   'committee_admins',
+  'admin_only',
 ] as const;
 export const DOCUMENT_UNIT_AUDIENCES = [
   'all_occupants',

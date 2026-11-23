@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
   completeDailyJobRun: vi.fn(),
   runBillingDailyTaskPrivileged: vi.fn(),
   runBillingEmailJobsPrivileged: vi.fn(),
+  runComplianceRemindersPrivileged: vi.fn(),
+  runDataCleanupPrivileged: vi.fn(),
+  runOfficialCaseRemindersPrivileged: vi.fn(),
   runRetentionPrivileged: vi.fn(),
   runVisitorExpirationPrivileged: vi.fn(),
   runServiceRequestAutoClosePrivileged: vi.fn(),
@@ -33,6 +36,9 @@ vi.mock('../../src/core/privileged', () => ({
   completeDailyJobRun: mocks.completeDailyJobRun,
   runBillingDailyTaskPrivileged: mocks.runBillingDailyTaskPrivileged,
   runBillingEmailJobsPrivileged: mocks.runBillingEmailJobsPrivileged,
+  runComplianceRemindersPrivileged: mocks.runComplianceRemindersPrivileged,
+  runDataCleanupPrivileged: mocks.runDataCleanupPrivileged,
+  runOfficialCaseRemindersPrivileged: mocks.runOfficialCaseRemindersPrivileged,
   runRetentionPrivileged: mocks.runRetentionPrivileged,
   runVisitorExpirationPrivileged: mocks.runVisitorExpirationPrivileged,
   runServiceRequestAutoClosePrivileged:
@@ -212,9 +218,13 @@ describe('daily jobs', () => {
     mocks.runBillingDailyTaskPrivileged.mockResolvedValue(undefined);
     expect(dailyJobTasks.map(({ name }) => name)).toEqual([
       'billing.late_fees',
+      'billing.interest',
       'billing.reminders',
       'billing.stale_payments',
       'billing.bill_email',
+      'compliance.reminders',
+      'document.case_reminders',
+      'data_cleanup',
       'visitor.expire',
       'service_request.auto_close',
       'service_request.escalate',
@@ -238,6 +248,8 @@ describe('daily jobs', () => {
     expect(mocks.runBillingDailyTaskPrivileged.mock.calls).toEqual([
       ['billing.late_fees', 'society-1', '2026-11-10'],
       ['billing.late_fees', 'society-2', '2026-11-10'],
+      ['billing.interest', 'society-1', '2026-11-10'],
+      ['billing.interest', 'society-2', '2026-11-10'],
       ['billing.reminders', 'society-1', '2026-11-10'],
       ['billing.reminders', 'society-2', '2026-11-10'],
       ['billing.stale_payments', 'society-1', '2026-11-10'],

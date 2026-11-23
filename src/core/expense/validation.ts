@@ -398,6 +398,7 @@ export const expenseEntrySchema = z.object({
     'billing_payment',
     'reversal',
     'transfer',
+    'amenity_deposit',
   ]),
   transfer_pair_id: z.uuid().nullable(),
   transfer_account_name: z.string().nullable(),
@@ -603,6 +604,9 @@ export const expenseStatementsSchema = z.object({
   receipts_paise: money,
   payments_paise: money,
   closing_money_paise: money,
+  held_deposit_receipts_paise: money,
+  held_deposit_refunds_paise: money,
+  retained_deposit_income_paise: money,
   identity_matches: z.boolean(),
   accounts_added: z.array(
     z.object({

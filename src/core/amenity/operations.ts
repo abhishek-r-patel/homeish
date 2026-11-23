@@ -12,6 +12,10 @@ import {
   amenityCalendarSchema,
   amenityCalendarSettingsSchema,
   amenityCalendarVisibilityInputSchema,
+  amenityDepositEventInputSchema,
+  amenityDepositOverrideInputSchema,
+  amenityDepositPolicyInputSchema,
+  amenityDepositVoidInputSchema,
   amenityFacilitiesReportSchema,
   amenityInputSchema,
   amenityBookingInputSchema,
@@ -78,6 +82,9 @@ export async function saveAmenity(input: unknown, requestId: string) {
       p_expected_updated_at: v.expectedUpdatedAt,
       p_client_request_id: v.clientRequestId,
       p_request_trace: requestId,
+      p_deposit_paise: v.depositRupees === 0 ? null : v.depositRupees,
+      p_deposit_required_before_confirmation:
+        v.depositRequired && v.depositRupees > 0,
     },
     z.uuid(),
     'Check recurring slots. Paid amenities require billing to be enabled.',
@@ -191,6 +198,111 @@ export async function saveAmenityCalendarVisibility(
     },
     z.null(),
     'Could not save the amenity calendar setting. Refresh and retry.',
+  );
+}
+
+export async function saveAmenityDepositPolicy(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await contextFor(
+    'amenity:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(amenityDepositPolicyInputSchema, input);
+  await callModuleRpc(
+    context,
+    'amenity_deposit_policy_save',
+    {
+      p_society_id: societyId,
+      p_policy: values.policy,
+      p_request_id: context.requestId,
+    },
+    z.null(),
+    'Could not save the amenity deposit policy. Refresh and retry.',
+  );
+}
+
+export async function overrideAmenityDeposit(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await contextFor(
+    'amenity:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(amenityDepositOverrideInputSchema, input);
+  return callModuleRpc(
+    context,
+    'amenity_deposit_override',
+    {
+      p_society_id: societyId,
+      p_booking_id: values.bookingId,
+      p_amount_paise: values.amountRupees,
+      p_reason: values.reason,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The deposit could not be changed. It may already be received or confirmed.',
+  );
+}
+
+export async function recordAmenityDepositEvent(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await contextFor(
+    'amenity:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(amenityDepositEventInputSchema, input);
+  return callModuleRpc(
+    context,
+    'amenity_deposit_event_record',
+    {
+      p_society_id: societyId,
+      p_booking_id: values.bookingId,
+      p_kind: values.kind,
+      p_amount_paise: values.amountRupees,
+      p_event_date: values.eventDate,
+      p_account_id: values.accountId,
+      p_reference: values.reference,
+      p_reason: values.reason,
+      p_evidence_path: values.evidencePath,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The deposit event could not be recorded. Check the held balance, account, date and evidence.',
+  );
+}
+
+export async function voidAmenityDepositEvent(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await contextFor(
+    'amenity:manage',
+    true,
+    requestId,
+  );
+  const values = parseModuleInput(amenityDepositVoidInputSchema, input);
+  return callModuleRpc(
+    context,
+    'amenity_deposit_event_void',
+    {
+      p_society_id: societyId,
+      p_event_id: values.eventId,
+      p_reason: values.reason,
+      p_client_request_id: values.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+    'The deposit event could not be voided. Review the booking and recorded cash.',
   );
 }
 

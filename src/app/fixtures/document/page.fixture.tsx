@@ -762,6 +762,47 @@ function DocumentFixture() {
                 }
               : undefined
           }
+          officialCases={
+            management
+              ? {
+                  warning:
+                    'These records are not legal advice or certification.',
+                  acknowledged: true,
+                  reminders_enabled: false,
+                  reviewer_choices: [],
+                  compliance_choices: [],
+                  evidence_choices: [],
+                  cases: [
+                    {
+                      id: '8a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+                      authority: 'Synthetic Registrar',
+                      reference: 'REF-1',
+                      subject: 'Official correspondence',
+                      relevant_period: '2026-27',
+                      received_on: '2026-11-20',
+                      filed_on: null,
+                      filing_mode: null,
+                      filing_acknowledgement: null,
+                      reply_due_on: '2026-12-20',
+                      hearing_on: null,
+                      response_on: null,
+                      status: 'open',
+                      reviewer_membership_id: null,
+                      reviewer_name: null,
+                      compliance_entry_id: null,
+                      compliance_title: null,
+                      closed_on: null,
+                      note: 'Factual app records only.',
+                      version: 1,
+                      updated_at: '2026-11-23T12:00:00.000Z',
+                      next_date: '2026-12-20',
+                      due_state: 'upcoming',
+                      evidence: [],
+                    },
+                  ],
+                }
+              : null
+          }
         />
       ) : (
         <DocumentRouteState

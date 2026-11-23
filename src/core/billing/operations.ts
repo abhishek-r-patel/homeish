@@ -31,6 +31,8 @@ import {
   billingReportSummarySchema,
   billingFineInputSchema,
   billingGenerationResultSchema,
+  billingInterestRateInputSchema,
+  billingInterestSettingsSchema,
   billingLedgerEntrySchema,
   billingPaymentPlanBillOptionSchema,
   billingPaymentPlanCancelInputSchema,
@@ -110,7 +112,7 @@ export async function getBillingPaymentDetails() {
 
 export async function getBillingSetup() {
   const { context, societyId } = await getContext('billing:charges:read');
-  const [charges, paymentDetails, societyResult, settingsResult] =
+  const [charges, paymentDetails, societyResult, settingsResult, interest] =
     await Promise.all([
       rpc(
         context,
@@ -130,6 +132,12 @@ export async function getBillingSetup() {
         .eq('society_id', societyId)
         .eq('module_key', 'billing')
         .single(),
+      rpc(
+        context,
+        'billing_interest_settings_get',
+        { p_society_id: societyId },
+        billingInterestSettingsSchema,
+      ),
     ]);
   if (societyResult.error || settingsResult.error) {
     throw new Error('The billing configuration could not be loaded.');
@@ -172,9 +180,49 @@ export async function getBillingSetup() {
       ...billingSettingsSchema.parse(settingsResult.data.settings),
     },
     settingsUpdatedAt: settingsResult.data.updated_at,
+    interest,
     canManage,
     suspended: context.societyStatus === 'suspended',
   };
+}
+
+export async function acknowledgeBillingInterest(requestId: string) {
+  const { context, societyId } = await getContext(
+    'billing:settings:manage',
+    true,
+    requestId,
+  );
+  return rpc(
+    context,
+    'billing_interest_acknowledge',
+    { p_society_id: societyId, p_request_id: context.requestId },
+    z.iso.datetime({ offset: true }),
+  );
+}
+
+export async function saveBillingInterestRate(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await getContext(
+    'billing:settings:manage',
+    true,
+    requestId,
+  );
+  const value = parseInput(billingInterestRateInputSchema, input);
+  return rpc(
+    context,
+    'billing_interest_rate_save',
+    {
+      p_society_id: societyId,
+      p_mode: value.mode,
+      p_rate_basis_points: value.ratePercent,
+      p_effective_on: value.effectiveDate,
+      p_client_request_id: value.clientRequestId,
+      p_request_id: context.requestId,
+    },
+    z.uuid(),
+  );
 }
 
 export async function updateBillingSettings(input: unknown, requestId: string) {
