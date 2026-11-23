@@ -919,7 +919,7 @@ Screens use PRD IDs. Layouts describe structure and priority, not pixel specs.
 
 ### 12.24 Budgets (P41.3, P42.2, P42.5; D-83 approved for local coding 2026-11-23)
 
-P42.5's draft, approval and change screens and P41.3's comparison, cash-flow, downloads and resident summary are implemented and locally verified. P42.2's warnings follow and are not started.
+P42.5's draft, approval and change screens and P41.3's comparison, cash-flow, downloads and resident summary are on beta/testdb. P42.2's warnings and projections are implemented and verified locally.
 
 - **Navigation:** Accounts gains a **Budget** tab (`/admin/expenses/budget`) for admins and committee members, with a financial-year picker. Residents get **Budget** (`/budget`) in their navigation only when Accounts is on. Guards and housekeeping supervisors see nothing.
 - **No budget yet:** the empty state reads "No budget for this year". Admins see **Start a budget**, which offers **Blank** or **Copy last year** with an optional percentage field (no default) and a preview before saving.

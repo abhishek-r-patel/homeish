@@ -232,6 +232,21 @@ export const statusMap = {
     label: 'Approved',
     tone: 'success',
   },
+  'expense_budget.on_track': {
+    icon: '✓',
+    label: 'On track',
+    tone: 'success',
+  },
+  'expense_budget.watch': {
+    icon: '!',
+    label: 'Watch',
+    tone: 'warning',
+  },
+  'expense_budget.over_plan': {
+    icon: '!',
+    label: 'Over plan',
+    tone: 'danger',
+  },
 } as const satisfies Record<string, StatusDefinition>;
 
 export type ProductStatus = keyof typeof statusMap;

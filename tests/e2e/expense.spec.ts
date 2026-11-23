@@ -240,6 +240,13 @@ test('P42 category, mapping and savings controls stay usable on phones', async (
   await expect(
     settingsForm.getByRole('status').filter({ hasText: 'Budget settings' }),
   ).toContainText('Budget settings saved');
+  const warnings = budget.getByRole('region', {
+    name: 'Budget warning summary',
+  });
+  await expect(warnings).toContainText('Watch');
+  await expect(warnings).toContainText('Over plan');
+  await expect(warnings).toContainText('Estimate');
+  await expect(warnings).toContainText('Projected overrun');
 
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });

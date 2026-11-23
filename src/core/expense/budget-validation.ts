@@ -412,7 +412,12 @@ const expenseBudgetReportSummarySchema = z.object({
     'Below budget',
     'Over budget',
   ]),
-  percent_used_bp: z.number().int().nullable(),
+  percent_used_bp: z.number().nullable(),
+  burn_rate_bp: z.number().nullable(),
+  warning: z.enum(['on_track', 'watch', 'over_plan']).nullable(),
+  projected_year_end_paise: z.number().nullable(),
+  projected_overrun_paise: z.number().positive().nullable(),
+  projection_available: z.boolean(),
 });
 
 export const expenseBudgetReportSchema = z.object({

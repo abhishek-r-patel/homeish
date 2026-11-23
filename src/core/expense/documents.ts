@@ -194,7 +194,11 @@ export function expenseBudgetCsv(report: BudgetReport): string {
       'Plan to date (Rs.)',
       'Actual to date (Rs.)',
       'Difference (Rs.)',
-      'Used (%)',
+      'Burn rate / used (%)',
+      'Warning',
+      'Projected year-end (Rs.)',
+      'Projected overrun (Rs.)',
+      'Projection',
       'Money in (Rs.)',
       'Money out (Rs.)',
       'Net (Rs.)',
@@ -213,9 +217,27 @@ export function expenseBudgetCsv(report: BudgetReport): string {
       rupeesFromPaise(row.plan_to_date_paise),
       rupeesFromPaise(row.actual_to_date_paise),
       `${row.difference_label}: ${rupeesFromPaise(row.difference_paise)}`,
-      row.percent_used_bp === null
+      row.burn_rate_bp === null
         ? 'Not available'
-        : (row.percent_used_bp / 100).toFixed(2),
+        : (row.burn_rate_bp / 100).toFixed(2),
+      row.warning === 'on_track'
+        ? 'On track'
+        : row.warning === 'watch'
+          ? 'Watch'
+          : row.warning === 'over_plan'
+            ? 'Over plan'
+            : 'Not available',
+      row.projected_year_end_paise === null
+        ? 'Not available'
+        : rupeesFromPaise(row.projected_year_end_paise),
+      row.projected_overrun_paise === null
+        ? ''
+        : rupeesFromPaise(row.projected_overrun_paise),
+      row.projection_available
+        ? report.as_of === report.to
+          ? 'Actual'
+          : 'Estimate'
+        : 'Not available',
       '',
       '',
       '',
@@ -240,11 +262,21 @@ export function expenseBudgetCsv(report: BudgetReport): string {
         '',
         '',
         '',
+        '',
+        '',
+        '',
+        '',
       ]);
   for (const month of report.cash_flow)
     rows.push([
       'Cash flow',
       month.month,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
       '',
       '',
       '',
@@ -532,8 +564,13 @@ export async function expenseBudgetPdf(
     );
     paragraph(
       writer,
-      `Current ${formatSignedRupees(row.current_paise)}. Plan to date ${formatSignedRupees(row.plan_to_date_paise)}. Actual to date ${formatSignedRupees(row.actual_to_date_paise)}. Used ${row.percent_used_bp === null ? 'Not available' : `${(row.percent_used_bp / 100).toFixed(2)}%`}.`,
+      `Current ${formatSignedRupees(row.current_paise)}. Plan to date ${formatSignedRupees(row.plan_to_date_paise)}. Actual to date ${formatSignedRupees(row.actual_to_date_paise)}. Burn rate ${row.burn_rate_bp === null ? 'Not available' : `${(row.burn_rate_bp / 100).toFixed(2)}%`}. Warning ${row.warning === 'on_track' ? 'On track' : row.warning === 'watch' ? 'Watch' : row.warning === 'over_plan' ? 'Over plan' : 'Not available'}.`,
     );
+    if (row.projected_year_end_paise !== null)
+      paragraph(
+        writer,
+        `Projected year-end ${formatSignedRupees(row.projected_year_end_paise)}. ${report.as_of === report.to ? 'Actual year total.' : 'Estimate.'}${row.projected_overrun_paise === null ? '' : ` Projected overrun ${formatSignedRupees(row.projected_overrun_paise)}.`}`,
+      );
   }
   section(writer, 'Monthly cash flow');
   line(
