@@ -6,7 +6,9 @@ import {
   assignPettyCash,
   activateExpenseFunds,
   acknowledgeExpenseAuditWarning,
+  addExpenseSavingsEvidence,
   cancelStatementItem,
+  changeExpenseSavingsStatus,
   closeExpenseMonth,
   correctExpenseFundAllocation,
   correctExpenseFundOpening,
@@ -28,18 +30,23 @@ import {
   linkExpenseFundWork,
   recordStatementItem,
   reopenExpenseMonth,
+  removeExpensePayeeMapping,
   reverseExpenseEntry,
   reverseExpenseTransfer,
   saveExpenseAccount,
   saveExpenseCategory,
+  saveExpenseCategoryDetails,
   saveExpenseFund,
   saveExpenseFundMapping,
   saveExpenseSettings,
+  saveExpensePayeeMapping,
+  saveExpenseSavings,
   saveExpenseAuditObjection,
   saveExpenseAuditQuery,
   saveExpenseAuditYear,
   saveExpenseAgmDraft,
   saveExpenseAgmSettings,
+  voidExpenseSavingsEvidence,
 } from '@/core/expense/operations';
 
 function input(form: FormData): unknown {
@@ -157,6 +164,48 @@ export async function saveExpenseCategoryAction(form: FormData) {
   return runServerAction('/admin/expenses/setup', async (id) => {
     await saveExpenseCategory(input(form), id);
     return 'Category saved.';
+  });
+}
+export async function saveExpenseCategoryDetailsAction(form: FormData) {
+  return runServerAction('/admin/expenses/setup', async (id) => {
+    await saveExpenseCategoryDetails(input(form), id);
+    return 'Category details saved.';
+  });
+}
+export async function saveExpensePayeeMappingAction(form: FormData) {
+  return runServerAction('/admin/expenses/vendor-spend', async (id) => {
+    await saveExpensePayeeMapping(input(form), id);
+    return 'Payee mapped to vendor.';
+  });
+}
+export async function removeExpensePayeeMappingAction(form: FormData) {
+  return runServerAction('/admin/expenses/vendor-spend', async (id) => {
+    await removeExpensePayeeMapping(input(form), id);
+    return 'Payee mapping removed. Its history is kept.';
+  });
+}
+export async function saveExpenseSavingsAction(form: FormData) {
+  return runServerAction('/admin/expenses/savings', async (id) => {
+    await saveExpenseSavings(input(form), id);
+    return 'Savings initiative saved.';
+  });
+}
+export async function changeExpenseSavingsStatusAction(form: FormData) {
+  return runServerAction('/admin/expenses/savings', async (id) => {
+    await changeExpenseSavingsStatus(input(form), id);
+    return 'Savings status changed.';
+  });
+}
+export async function addExpenseSavingsEvidenceAction(form: FormData) {
+  return runServerAction('/admin/expenses/savings', async (id) => {
+    await addExpenseSavingsEvidence(input(form), id);
+    return 'Savings evidence added.';
+  });
+}
+export async function voidExpenseSavingsEvidenceAction(form: FormData) {
+  return runServerAction('/admin/expenses/savings', async (id) => {
+    await voidExpenseSavingsEvidence(input(form), id);
+    return 'Savings evidence voided. Its history is kept.';
   });
 }
 export async function saveExpenseFundAction(form: FormData) {

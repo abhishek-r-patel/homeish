@@ -22,6 +22,7 @@ import {
   reverseTransferAction,
   saveExpenseAccountAction,
   saveExpenseCategoryAction,
+  saveExpenseCategoryDetailsAction,
   saveExpenseSettingsAction,
 } from '@/app/(admin)/admin/expenses/actions';
 import type {
@@ -471,6 +472,109 @@ export function ExpenseCategoryForm({
         defaultChecked={category?.active ?? true}
       />
     </ModuleActionForm>
+  );
+}
+
+export function ExpenseCategoryDetailsForm({
+  category,
+  groupSuggestions,
+  staff,
+  action = saveExpenseCategoryDetailsAction,
+}: {
+  category: ExpenseCategory;
+  groupSuggestions: readonly string[];
+  staff: ExpenseWorkspace['staff'];
+  action?: ModuleFormAction;
+}) {
+  const { translate: t } = useUiTranslator();
+  const id = useId();
+  return (
+    <div className="mt-space-3 border-t border-rule pt-space-3">
+      <p className="mb-space-3 text-caption text-ink-muted">
+        {t(
+          'Optional reporting details. They never change the category, its history or the books.',
+        )}
+      </p>
+      <ModuleActionForm
+        action={action}
+        idempotent
+        submitLabel={t('Save reporting details')}
+        input={(data) => ({
+          categoryId: category.id,
+          detailGroup: data.get('detailGroup') ?? '',
+          costNature: data.get('costNature') || null,
+          ownerUserId: data.get('ownerUserId') || null,
+          detailDescription: data.get('detailDescription') ?? '',
+          expectedVersion: category.detail_version,
+        })}
+      >
+        <TextInput
+          id={`${id}-group`}
+          label={t('Reporting group')}
+          name="detailGroup"
+          list={`${id}-groups`}
+          maxLength={60}
+          defaultValue={category.detail_group ?? ''}
+        />
+        <datalist id={`${id}-groups`}>
+          {groupSuggestions.map((group) => (
+            <option key={group} value={group} />
+          ))}
+        </datalist>
+        <SelectInput
+          id={`${id}-nature`}
+          label={t('Cost nature')}
+          name="costNature"
+          defaultValue={category.cost_nature ?? ''}
+          options={[
+            { value: '', label: t('Not set') },
+            { value: 'fixed', label: t('Fixed') },
+            { value: 'variable', label: t('Variable') },
+            { value: 'periodic', label: t('Periodic') },
+          ]}
+        />
+        <SelectInput
+          id={`${id}-owner`}
+          label={t('Owner')}
+          name="ownerUserId"
+          defaultValue={category.owner_user_id ?? ''}
+          options={[
+            { value: '', label: t('Not set') },
+            ...staff.map((member) => ({
+              value: member.user_id,
+              label:
+                member.full_name +
+                (member.user_id === category.owner_user_id &&
+                !category.owner_is_current
+                  ? ` ${t('(no longer an admin or committee member)')}`
+                  : ''),
+            })),
+          ]}
+        />
+        {category.owner_user_id && !category.owner_is_current ? (
+          <p className="text-caption text-ink-muted">
+            {t(
+              '{name} is no longer an admin or committee member. This reference stays in history until an admin changes it.',
+              { name: category.owner_name ?? t('The former owner') },
+            )}
+          </p>
+        ) : null}
+        <TextAreaInput
+          id={`${id}-description`}
+          label={t('Description')}
+          name="detailDescription"
+          maxLength={500}
+          defaultValue={category.detail_description ?? ''}
+        />
+        {category.detail_revisions.length ? (
+          <p className="text-caption text-ink-muted">
+            {t('{count} earlier detail change(s) kept.', {
+              count: category.detail_revisions.length,
+            })}
+          </p>
+        ) : null}
+      </ModuleActionForm>
+    </div>
   );
 }
 

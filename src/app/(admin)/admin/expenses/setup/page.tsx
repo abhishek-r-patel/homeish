@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Card } from '@/components/ui/data-display';
 import {
   ExpenseAccountForm,
+  ExpenseCategoryDetailsForm,
   ExpenseCategoryForm,
   ExpenseSettingsForm,
 } from '@/components/expense/controls';
@@ -131,6 +132,12 @@ export default async function ExpenseSetupPage() {
                 {c.active ? '' : ` ${t('(inactive)')}`}
               </summary>
               <ExpenseCategoryForm key={c.updated_at} category={c} />
+              <ExpenseCategoryDetailsForm
+                key={`${c.id}-${c.detail_version}`}
+                category={c}
+                groupSuggestions={w.group_suggestions}
+                staff={w.staff}
+              />
             </details>
           ))}
           <details className="rounded-md border border-rule p-space-3">

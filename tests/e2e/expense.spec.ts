@@ -162,6 +162,59 @@ test('P41 audit warning and AGM draft forms stay usable on phones', async ({
   }
 });
 
+test('P42 category, mapping and savings controls stay usable on phones', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/expense-p42');
+  const category = page.getByRole('region', {
+    name: 'Category reporting details',
+  });
+  await category.getByLabel('Reporting group').fill('Maintenance');
+  await category.getByLabel('Owner').selectOption({
+    label: 'Synthetic Committee',
+  });
+  await category
+    .getByRole('button', { name: 'Save reporting details' })
+    .click();
+  await expect(category.getByRole('status')).toContainText(
+    'Category details saved',
+  );
+
+  const mapping = page.getByRole('region', { name: 'Vendor mapping' });
+  await mapping.getByRole('button', { name: 'Confirm mapping' }).click();
+  await expect(mapping.getByRole('status')).toContainText(
+    'Payee mapped to vendor',
+  );
+
+  const savings = page.getByRole('region', { name: 'Savings controls' });
+  await savings.getByRole('button', { name: 'Save initiative' }).click();
+  await expect(
+    savings.getByRole('status').filter({ hasText: 'Savings initiative' }),
+  ).toContainText('Savings initiative saved');
+  await savings.getByLabel('Status').selectOption('approved');
+  await savings.getByRole('button', { name: 'Change status' }).click();
+  await expect(
+    savings.getByRole('status').filter({ hasText: 'Savings status' }),
+  ).toContainText('Savings status changed');
+  await savings.getByLabel('Realised saving').fill('250');
+  await savings.getByLabel('Evidence note').fill('Synthetic invoice saving');
+  await savings
+    .getByLabel('Source record (optional)')
+    .selectOption('entry:00000000-0000-4000-8000-000000000106');
+  await savings.getByRole('button', { name: 'Add evidence' }).click();
+  await expect(
+    savings.getByRole('status').filter({ hasText: 'Savings evidence' }),
+  ).toContainText('Savings evidence added');
+
+  for (const width of [320, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  }
+});
+
 test('fund opening requires acknowledgement and stays within the Accounts total', async ({
   page,
 }) => {

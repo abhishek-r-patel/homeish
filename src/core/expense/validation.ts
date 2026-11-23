@@ -1,4 +1,4 @@
-// Validate P16/P39/P41 expense inputs, RPC payloads and module settings.
+// Validate P16/P39/P41/P42 expense inputs, RPC payloads and module settings.
 import { z } from 'zod';
 import { nonnegativeRupeesSchema, rupeesSchema } from '../billing/validation';
 
@@ -321,6 +321,20 @@ const categorySchema = z.object({
   id: z.uuid(),
   name: z.string(),
   active: z.boolean(),
+  detail_group: z.string().nullable(),
+  cost_nature: z.enum(['fixed', 'variable', 'periodic']).nullable(),
+  owner_user_id: z.uuid().nullable(),
+  owner_name: z.string().nullable(),
+  owner_is_current: z.boolean().nullable(),
+  detail_description: z.string().nullable(),
+  detail_version: z.number().int().positive(),
+  detail_revisions: z.array(
+    z.object({
+      revision_number: z.number().int().positive(),
+      created_at: timestamp,
+      created_by_name: z.string(),
+    }),
+  ),
   updated_at: timestamp,
 });
 export const expenseWorkspaceSchema = z.object({
@@ -329,6 +343,7 @@ export const expenseWorkspaceSchema = z.object({
   can_manage: z.boolean(),
   can_approve: z.boolean(),
   billing_enabled: z.boolean(),
+  vendor_enabled: z.boolean(),
   settings: z.object({
     approval_threshold_paise: money.nonnegative(),
     billing_income_account_id: z.uuid().nullable(),
@@ -336,6 +351,8 @@ export const expenseWorkspaceSchema = z.object({
   }),
   accounts: z.array(accountSchema),
   categories: z.array(categorySchema),
+  group_suggestions: z.array(z.string()),
+  staff: z.array(z.object({ user_id: z.uuid(), full_name: z.string() })),
   closed_months: z.array(z.iso.date()),
 });
 export const expenseRowSchema = z.object({
@@ -1024,6 +1041,264 @@ export const expenseFundsWorkspaceSchema = z.object({
     .nullable(),
 });
 
+export const expenseCategoryDetailsInputSchema = z
+  .object({
+    categoryId: z.uuid(),
+    detailGroup: z
+      .string()
+      .trim()
+      .max(60)
+      .transform((value) => value || null),
+    costNature: z.enum(['fixed', 'variable', 'periodic']).nullable(),
+    ownerUserId: z.uuid().nullable(),
+    detailDescription: optionalText(500),
+    expectedVersion: z.number().int().positive(),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+
+export const expensePayeeMappingInputSchema = z
+  .object({
+    payee: text(120),
+    vendorId: z.uuid(),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const expensePayeeMappingRemoveInputSchema = z
+  .object({
+    mappingId: z.uuid(),
+    reason: text(500),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+const vendorSpendFiltersSchema = z
+  .object({
+    from: z.iso.date(),
+    to: z.iso.date(),
+    categoryId: z.uuid().nullable().optional(),
+    group: optionalText(60).nullable().optional(),
+    costNature: z.enum(['fixed', 'variable', 'periodic']).nullable().optional(),
+  })
+  .strict()
+  .refine(
+    ({ from, to }) =>
+      from <= to &&
+      (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
+        86_400_000 <=
+        731,
+    'Choose a range of up to 24 months.',
+  );
+export const expenseVendorSpendInputSchema = z.preprocess((value) => {
+  if (!value || typeof value !== 'object') return value;
+  const input = value as Record<string, unknown>;
+  return {
+    ...input,
+    categoryId: input.categoryId || null,
+    group: input.group || null,
+    costNature: input.costNature || null,
+  };
+}, vendorSpendFiltersSchema);
+export const expenseVendorSpendSchema = z.object({
+  from: z.iso.date(),
+  to: z.iso.date(),
+  vendor_enabled: z.boolean(),
+  total_expense_paise: money,
+  accounts_expense_paise: money,
+  reconciles_to_accounts: z.boolean(),
+  rows: z.array(
+    z.object({
+      key: z.string(),
+      vendor_id: z.uuid().nullable(),
+      vendor_name: z.string().nullable(),
+      payee: z.string().nullable(),
+      total_paise: money,
+      share_bp: z.number().int(),
+      high_share: z.boolean(),
+      active_months: z.number().int().nonnegative(),
+      average_per_active_month_paise: money,
+      months: z.array(z.object({ month: z.iso.date(), amount_paise: money })),
+      categories: z.array(
+        z.object({
+          category_id: z.uuid(),
+          category_name: z.string(),
+          amount_paise: money,
+        }),
+      ),
+      approved_quote_paise: money.nullable(),
+    }),
+  ),
+  mapping_suggestions: z.array(
+    z.object({
+      payee: z.string(),
+      payee_key: z.string(),
+      vendor_id: z.uuid(),
+      vendor_name: z.string(),
+    }),
+  ),
+  mappings: z.array(
+    z.object({
+      id: z.uuid(),
+      payee_key: z.string(),
+      vendor_id: z.uuid(),
+      vendor_name: z.string(),
+    }),
+  ),
+  vendors: z.array(z.object({ id: z.uuid(), name: z.string() })),
+  categories: z.array(
+    z.object({
+      id: z.uuid(),
+      name: z.string(),
+      detail_group: z.string().nullable(),
+      cost_nature: z.enum(['fixed', 'variable', 'periodic']).nullable(),
+    }),
+  ),
+});
+
+export const EXPENSE_SAVINGS_KINDS = [
+  'renegotiation',
+  'energy_saving',
+  'reduced_consumption',
+  'vendor_change',
+  'process_change',
+  'other',
+] as const;
+export const EXPENSE_SAVINGS_STATUSES = [
+  'idea',
+  'approved',
+  'implementing',
+  'realised',
+  'dropped',
+] as const;
+export const expenseSavingsInputSchema = z
+  .object({
+    initiativeId: z.uuid().nullable(),
+    title: text(120),
+    description: text(4000),
+    kind: z.enum(EXPENSE_SAVINGS_KINDS),
+    ownerUserId: z.uuid().nullable(),
+    categoryId: z.uuid().nullable(),
+    vendorId: z.uuid().nullable(),
+    baselineAnnualRupees: nonnegativeRupeesSchema,
+    expectedAnnualRupees: nonnegativeRupeesSchema,
+    expectedVersion: z.number().int().positive().nullable(),
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      (value.initiativeId === null && value.expectedVersion !== null) ||
+      (value.initiativeId !== null && value.expectedVersion === null)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['expectedVersion'],
+        message: 'Refresh the initiative before editing.',
+      });
+    }
+  });
+export const expenseSavingsStatusInputSchema = z
+  .object({
+    initiativeId: z.uuid(),
+    status: z.enum(EXPENSE_SAVINGS_STATUSES),
+    reason: optionalText(500),
+    expectedVersion: z.number().int().positive(),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+export const expenseSavingsEvidenceInputSchema = z
+  .object({
+    initiativeId: z.uuid(),
+    amountRupees: rupeesSchema,
+    evidencedOn: z.iso.date(),
+    note: text(2000),
+    entryId: z.uuid().nullable(),
+    vendorBillId: z.uuid().nullable(),
+    vendorContractId: z.uuid().nullable(),
+    filePath: z.string().trim().max(500).nullable(),
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      Number(value.entryId !== null) +
+        Number(value.vendorBillId !== null) +
+        Number(value.vendorContractId !== null) <=
+      1,
+    { message: 'Choose at most one source link.' },
+  );
+export const expenseSavingsEvidenceVoidInputSchema = z
+  .object({
+    evidenceId: z.uuid(),
+    reason: text(500),
+    clientRequestId: z.uuid(),
+  })
+  .strict();
+
+const expenseSavingsItemSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  description: z.string(),
+  kind: z.enum(EXPENSE_SAVINGS_KINDS),
+  owner_user_id: z.uuid().nullable(),
+  owner_name: z.string().nullable(),
+  owner_is_current: z.boolean().nullable(),
+  category_id: z.uuid().nullable(),
+  category_name: z.string().nullable(),
+  vendor_id: z.uuid().nullable(),
+  vendor_name: z.string().nullable(),
+  baseline_annual_paise: money.nonnegative(),
+  expected_annual_paise: money.nonnegative(),
+  status: z.enum(EXPENSE_SAVINGS_STATUSES),
+  version: z.number().int().positive(),
+  realised_to_date_paise: money.nonnegative(),
+  updated_at: timestamp,
+});
+export const expenseSavingsListSchema = z.object({
+  can_manage: z.boolean(),
+  vendor_enabled: z.boolean(),
+  initiatives: z.array(expenseSavingsItemSchema),
+  staff: z.array(z.object({ user_id: z.uuid(), full_name: z.string() })),
+  categories: z.array(z.object({ id: z.uuid(), name: z.string() })),
+  vendors: z.array(z.object({ id: z.uuid(), name: z.string() })),
+  source_choices: z.object({
+    entries: z.array(z.object({ id: z.uuid(), label: z.string() })),
+    vendor_bills: z.array(z.object({ id: z.uuid(), label: z.string() })),
+    vendor_contracts: z.array(z.object({ id: z.uuid(), label: z.string() })),
+  }),
+});
+export const expenseSavingsDetailSchema = expenseSavingsItemSchema
+  .extend({
+    created_at: timestamp,
+    status_events: z.array(
+      z.object({
+        id: z.uuid(),
+        from_status: z.enum(EXPENSE_SAVINGS_STATUSES),
+        to_status: z.enum(EXPENSE_SAVINGS_STATUSES),
+        reason: z.string().nullable(),
+        created_at: timestamp,
+        created_by_name: z.string(),
+      }),
+    ),
+    evidence: z.array(
+      z.object({
+        id: z.uuid(),
+        amount_paise: money.positive(),
+        evidenced_on: z.iso.date(),
+        note: z.string(),
+        entry_id: z.uuid().nullable(),
+        vendor_bill_id: z.uuid().nullable(),
+        vendor_contract_id: z.uuid().nullable(),
+        source_label: z.string().nullable(),
+        file_path: z.string().nullable(),
+        voided_at: timestamp.nullable(),
+        void_reason: z.string().nullable(),
+        created_at: timestamp,
+        created_by_name: z.string(),
+      }),
+    ),
+  })
+  .strict();
+
 // A count above the book is "over"; below is "short" (EXP-10 shows, never posts).
 export function cashDifferenceKind(
   differencePaise: number,
@@ -1070,6 +1345,9 @@ export type ExpenseFinancialPosition = z.infer<
 export type ExpenseMultiYear = z.infer<typeof expenseMultiYearSchema>;
 export type ExpenseAudit = z.infer<typeof expenseAuditSchema>;
 export type ExpenseAgmDraft = z.infer<typeof expenseAgmDraftSchema>;
+export type ExpenseVendorSpend = z.infer<typeof expenseVendorSpendSchema>;
+export type ExpenseSavings = z.infer<typeof expenseSavingsListSchema>;
+export type ExpenseSavingsDetail = z.infer<typeof expenseSavingsDetailSchema>;
 export type Reconciliation = z.infer<typeof reconciliationSchema>;
 export type PettyCashView = z.infer<typeof pettyCashViewSchema>;
 
