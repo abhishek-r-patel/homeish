@@ -114,6 +114,8 @@ const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
   community: 'M4 5h16v10H9l-5 4V5Zm4 4h8m-8 3h5',
   language:
     'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-9 9h18m-9-9a15 15 0 0 1 0 18m0-18a15 15 0 0 0 0 18',
+  major_works:
+    'M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18l3 3 5.3-5.3a5 5 0 0 0 6.4-6.4L15 12l-3-3 2.7-2.7Z',
 };
 
 function isActivePath(pathname: string, href: string) {

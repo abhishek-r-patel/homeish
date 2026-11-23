@@ -66,3 +66,7 @@ export { runMeetingActionRemindersPrivileged } from './meeting';
 export { runEventRemindersPrivileged } from './event';
 export { runNoticeScheduledPublishPrivileged } from './communication';
 export { runDocumentExpiryRemindersPrivileged } from './document';
+export {
+  runMajorWorksAuditRemindersPrivileged,
+  runMajorWorksRetentionPrivileged,
+} from './major-works';

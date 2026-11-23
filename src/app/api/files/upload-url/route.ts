@@ -152,6 +152,18 @@ const issueSchema = z.discriminatedUnion('bucket', [
     .strict(),
   z
     .object({
+      bucket: z.literal('major-works-files'),
+      kind: z.enum(['audit_report', 'quote', 'proposal', 'consent_form']),
+      contentType: z.enum(FILE_CONTENT_TYPES),
+      sizeBytes: z
+        .number()
+        .int()
+        .positive()
+        .max(10 * 1024 * 1024),
+    })
+    .strict(),
+  z
+    .object({
       bucket: z.literal('staff-photos'),
       contentType: z.enum(['image/jpeg', 'image/png']),
       sizeBytes: z.number().int().positive().max(MAX_FILE_BYTES),
@@ -409,6 +421,44 @@ export async function POST(request: Request) {
               cause: error,
             },
           );
+        }
+        return { path, signedUrl: data.signedUrl };
+      }
+      if (input.bucket === 'major-works-files') {
+        authorizeRequest(context, {
+          moduleKey: 'major_works',
+          permission: 'major_works:manage',
+          write: true,
+        });
+        const societyId = context.societyId;
+        if (!societyId) throw new AppError('FORBIDDEN');
+        await enforceRateLimit(
+          'fileUploadUserHourly',
+          context.userId,
+          context.requestId,
+        );
+        const extension =
+          input.contentType === 'image/jpeg'
+            ? 'jpg'
+            : input.contentType === 'image/png'
+              ? 'png'
+              : 'pdf';
+        const directory =
+          input.kind === 'audit_report'
+            ? 'audits'
+            : input.kind === 'quote'
+              ? 'quotes'
+              : input.kind === 'proposal'
+                ? 'proposals'
+                : 'consents';
+        const path = `${societyId}/${context.userId}/${directory}/${crypto.randomUUID()}.${extension}`;
+        const { data, error } = await context.db.storage
+          .from(input.bucket)
+          .createSignedUploadUrl(path);
+        if (error || !data) {
+          throw new Error('Could not issue the major-works upload token.', {
+            cause: error,
+          });
         }
         return { path, signedUrl: data.signedUrl };
       }

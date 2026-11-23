@@ -24,7 +24,8 @@ export type StorageBucket =
   | 'parking-photos'
   | 'patrol-photos'
   | 'metering-photos'
-  | 'poll-dispute-files';
+  | 'poll-dispute-files'
+  | 'major-works-files';
 
 const SOCIETY_LOGO_PATH_PATTERN =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/logos\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png)$/i;
@@ -48,6 +49,7 @@ const STORAGE_BUCKETS: readonly StorageBucket[] = [
   'patrol-photos',
   'metering-photos',
   'poll-dispute-files',
+  'major-works-files',
 ];
 const BUCKET_CONTENT_TYPES: Readonly<
   Record<StorageBucket, readonly FileContentType[]>
@@ -66,6 +68,7 @@ const BUCKET_CONTENT_TYPES: Readonly<
   'patrol-photos': ['image/jpeg', 'image/png'],
   'metering-photos': ['image/jpeg', 'image/png'],
   'poll-dispute-files': FILE_CONTENT_TYPES,
+  'major-works-files': FILE_CONTENT_TYPES,
 };
 
 export function isSocietyLogoPath(path: string, societyId: string): boolean {

@@ -48,6 +48,11 @@ import {
   saveExpenseAgmSettings,
   voidExpenseSavingsEvidence,
 } from '@/core/expense/operations';
+import {
+  archiveExpenseRepairForecastItem,
+  saveExpenseRepairForecastItem,
+  setExpenseRepairForecastFund,
+} from '@/core/expense/repair-forecast-operations';
 
 function input(form: FormData): unknown {
   const raw = form.get('input');
@@ -188,6 +193,24 @@ export async function saveExpenseSavingsAction(form: FormData) {
   return runServerAction('/admin/expenses/savings', async (id) => {
     await saveExpenseSavings(input(form), id);
     return 'Savings initiative saved.';
+  });
+}
+export async function saveExpenseRepairForecastItemAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds/forecast', async (id) => {
+    await saveExpenseRepairForecastItem(input(form), id);
+    return 'Repair forecast item saved.';
+  });
+}
+export async function archiveExpenseRepairForecastItemAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds/forecast', async (id) => {
+    await archiveExpenseRepairForecastItem(input(form), id);
+    return 'Repair forecast item updated. Its history is kept.';
+  });
+}
+export async function setExpenseRepairForecastFundAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds/forecast', async (id) => {
+    await setExpenseRepairForecastFund(input(form), id);
+    return 'Forecast gap fund updated.';
   });
 }
 export async function changeExpenseSavingsStatusAction(form: FormData) {
