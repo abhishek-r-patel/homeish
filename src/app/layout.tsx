@@ -7,6 +7,8 @@ import '@fontsource-variable/quicksand';
 import { createRequestId } from '@/core/errors';
 import { logUnexpectedError } from '@/core/logging/error-logger';
 import { getSavedFontPreference } from '@/core/members/operations';
+import { publicEnvironment } from '@/core/config/public-env';
+import { HomeishWebAnalytics } from '@/components/analytics/web';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
@@ -37,7 +39,12 @@ export default async function RootLayout({
   const fontPreference = await loadFontPreference();
   return (
     <html data-font-preference={fontPreference ?? undefined} lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <HomeishWebAnalytics
+          enabled={publicEnvironment.NEXT_PUBLIC_APP_ENV === 'staging'}
+        />
+      </body>
     </html>
   );
 }
