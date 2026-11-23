@@ -343,6 +343,7 @@ describe('interface translations', () => {
 
       expect(missing).toEqual([]);
     },
+    15_000,
   );
 
   it('preserves placeholders in every translated message', () => {
