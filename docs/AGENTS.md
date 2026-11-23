@@ -98,6 +98,7 @@ Key boundaries still apply:
 - **Small, single-purpose functions** and components. Prefer clear code over clever code; avoid deep nesting; return early.
 - **Keep new source files under about 300 lines; split by job, not by size alone.** Existing larger files are split only as an approved, behaviour-neutral change of its own, never as a side effect of other work. Generated types, translation catalogues, migrations and fixtures are exempt.
 - **No dead code, commented-out code, unused exports, leftover debug output or TODOs without an owner and a reason.**
+- **Deliberate shortcuts are marked**, never hidden: a one-line `shortcut: <the limit>, <when to upgrade>` comment where the simpler code stops being enough (for example a list read without paging). Never shortcut validation, permissions, money, privacy, accessibility or error handling that prevents data loss.
 - **Header comment in every source file:** one or two lines stating the file's purpose. **Inline comments only for non-obvious decisions** (why, never what). Do not write multi-paragraph comments or comments that narrate your change.
 - **Plain-language user text** follows DESIGN Section 1.3 and Section 16 (sentence case, Title Case on primary buttons, no jargon, no emoji). All user-facing strings are kept together per module so they can be translated later (PRD NFR-13).
 - **Money** is integer paise everywhere; dates and times follow API 3.3; time zone rules follow DESIGN DA-01.
