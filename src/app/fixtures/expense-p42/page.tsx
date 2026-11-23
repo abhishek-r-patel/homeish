@@ -5,7 +5,20 @@ import type { ZodType } from 'zod';
 import { Banner } from '@/components/ui/feedback';
 import type { ModuleFormAction } from '@/components/ui/module-action-form';
 import { ExpenseCategoryDetailsForm } from '@/components/expense/controls';
+import {
+  ExpenseBudgetApprovalForm,
+  ExpenseBudgetChangeForm,
+  ExpenseBudgetSettingsForm,
+} from '@/components/expense/budget-change-controls';
+import { ExpenseBudgetDraftForm } from '@/components/expense/budget-draft-controls';
 import { ExpensePayeeMappingForm } from '@/components/expense/vendor-spend-controls';
+import {
+  expenseBudgetApproveInputSchema,
+  expenseBudgetChangeInputSchema,
+  expenseBudgetDraftInputSchema,
+  expenseBudgetSettingsInputSchema,
+  type ExpenseBudget,
+} from '@/core/expense/budget-validation';
 import {
   ExpenseSavingsEvidenceForm,
   ExpenseSavingsForm,
@@ -94,6 +107,118 @@ const savings: ExpenseSavings = {
     vendor_contracts: [],
   },
 };
+const incomeHeads = [
+  ['billing', 'Maintenance collections'],
+  ['donation', 'Donations'],
+  ['interest', 'Interest'],
+  ['other', 'Other income'],
+] as const;
+const draftBudget: ExpenseBudget = {
+  financial_year: 2026,
+  today: '2026-11-23',
+  can_manage: true,
+  settings: {
+    budget_forecast_method: 'budget',
+    budget_watch_percent: 90,
+    budget_resident_summary: true,
+    updated_at: '2026-11-23T00:00:00.000Z',
+  },
+  budget: {
+    id: '00000000-0000-4000-8000-000000000110',
+    financial_year: 2026,
+    status: 'draft',
+    copy_source_year: null,
+    copy_percent_bp: null,
+    approved_body: null,
+    approved_on: null,
+    approval_meeting_id: null,
+    approval_document_id: null,
+    approval_note: null,
+    approved_by: null,
+    approved_at: null,
+    version: 1,
+    created_at: '2026-11-23T00:00:00.000Z',
+    updated_at: '2026-11-23T00:00:00.000Z',
+  },
+  heads: [
+    {
+      category_id: category.id,
+      income_type: null,
+      name: category.name,
+      kind: 'spending',
+    },
+    ...incomeHeads.map(([income_type, name]) => ({
+      category_id: null,
+      income_type,
+      name,
+      kind: 'income' as const,
+    })),
+  ],
+  lines: [
+    {
+      id: '00000000-0000-4000-8000-000000000111',
+      category_id: category.id,
+      income_type: null,
+      name: category.name,
+      phasing: 'equal_monthly',
+      annual_paise: 120000,
+      month_paise: Array.from({ length: 12 }, () => 10000),
+    },
+    ...incomeHeads.map(([income_type, name], index) => ({
+      id: `00000000-0000-4000-8000-0000000001${12 + index}`,
+      category_id: null,
+      income_type,
+      name,
+      phasing: 'equal_monthly' as const,
+      annual_paise: 120000,
+      month_paise: Array.from({ length: 12 }, () => 10000),
+    })),
+  ],
+  changes: [],
+  current_plan: [
+    {
+      category_id: category.id,
+      income_type: null,
+      name: category.name,
+      kind: 'spending',
+      line_id: '00000000-0000-4000-8000-000000000111',
+      original_paise: 120000,
+      changes_paise: 0,
+      current_paise: 120000,
+      original_month_paise: Array.from({ length: 12 }, () => 10000),
+      current_month_paise: Array.from({ length: 12 }, () => 10000),
+    },
+    ...incomeHeads.map(([income_type, name]) => ({
+      category_id: null,
+      income_type,
+      name,
+      kind: 'income' as const,
+      line_id: null,
+      original_paise: 120000,
+      changes_paise: 0,
+      current_paise: 120000,
+      original_month_paise: Array.from({ length: 12 }, () => 10000),
+      current_month_paise: Array.from({ length: 12 }, () => 10000),
+    })),
+  ],
+  approval_choices: {
+    meetings: [],
+    documents: [],
+  },
+};
+const approvedBudget: ExpenseBudget = {
+  ...draftBudget,
+  budget: {
+    ...draftBudget.budget!,
+    id: '00000000-0000-4000-8000-000000000120',
+    status: 'approved',
+    approved_body: 'committee',
+    approved_on: '2026-11-01',
+    approved_by: staff[0]!.user_id,
+    approved_at: '2026-11-01T10:00:00.000Z',
+    version: 2,
+  },
+};
 
 function input(form: FormData): unknown {
   const value = form.get('input');
@@ -174,6 +299,31 @@ export default function ExpenseP42FixturePage() {
           action={accept(
             expenseSavingsEvidenceInputSchema,
             'Savings evidence added.',
+          )}
+        />
+      </section>
+      <section aria-label="Budget controls" className="grid gap-space-5">
+        <h2 className="text-heading font-semibold">Budget controls</h2>
+        <ExpenseBudgetDraftForm
+          workspace={draftBudget}
+          action={accept(expenseBudgetDraftInputSchema, 'Budget draft saved.')}
+        />
+        <ExpenseBudgetApprovalForm
+          workspace={draftBudget}
+          action={accept(expenseBudgetApproveInputSchema, 'Budget approved.')}
+        />
+        <ExpenseBudgetChangeForm
+          workspace={approvedBudget}
+          action={accept(
+            expenseBudgetChangeInputSchema,
+            'Budget change recorded.',
+          )}
+        />
+        <ExpenseBudgetSettingsForm
+          workspace={approvedBudget}
+          action={accept(
+            expenseBudgetSettingsInputSchema,
+            'Budget settings saved.',
           )}
         />
       </section>
