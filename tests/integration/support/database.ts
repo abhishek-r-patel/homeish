@@ -42,6 +42,7 @@ export const hasDatabase = adminUrl !== undefined;
 export type ApiRole = 'anon' | 'authenticated' | 'service_role';
 export interface Claims {
   sub?: string;
+  email?: string;
   role?: string;
   session_id?: string;
   aal?: string;
