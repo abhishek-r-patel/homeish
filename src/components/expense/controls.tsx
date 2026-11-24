@@ -697,12 +697,18 @@ export function ExpenseSettingsForm({
   workspace: Pick<
     ExpenseWorkspace,
     'settings' | 'accounts' | 'billing_enabled'
-  >;
+  > & {
+    settingsAccess?: Readonly<Record<string, boolean>>;
+  };
   action?: ModuleFormAction;
 }) {
   const { translate: t } = useUiTranslator();
   const id = useId();
   const { settings } = workspace;
+  const settingsAccess = workspace.settingsAccess ?? {
+    approval_threshold_paise: true,
+    billing_income_account_id: true,
+  };
   return (
     <ModuleActionForm
       action={action}
@@ -713,33 +719,49 @@ export function ExpenseSettingsForm({
         expectedUpdatedAt: settings.updated_at,
       })}
     >
-      <AmountInput
-        id={`${id}-threshold`}
-        label={t('Approval threshold')}
-        name="thresholdRupees"
-        required
-        defaultValue={rupeesFromPaise(settings.approval_threshold_paise)}
-        helpText={t(
-          'Expenses above this amount need approval from a committee member who did not record them.',
-        )}
-      />
-      <SelectInput
-        id={`${id}-billing`}
-        label={t('Account for billing collections')}
-        name="billingIncomeAccountId"
-        defaultValue={settings.billing_income_account_id ?? ''}
-        options={[
-          { value: '', label: t('Do not post billing collections') },
-          ...workspace.accounts
-            .filter((account) => account.active)
-            .map((account) => ({ value: account.id, label: account.name })),
-        ]}
-        helpText={
-          workspace.billing_enabled
-            ? t('Confirmed billing payments from now on post here as income.')
-            : t('Billing is not enabled for this society.')
-        }
-      />
+      {settingsAccess.approval_threshold_paise ? (
+        <AmountInput
+          id={`${id}-threshold`}
+          label={t('Approval threshold')}
+          name="thresholdRupees"
+          required
+          defaultValue={rupeesFromPaise(settings.approval_threshold_paise)}
+          helpText={t(
+            'Expenses above this amount need approval from a committee member who did not record them.',
+          )}
+        />
+      ) : (
+        <input
+          name="thresholdRupees"
+          type="hidden"
+          value={rupeesFromPaise(settings.approval_threshold_paise)}
+        />
+      )}
+      {settingsAccess.billing_income_account_id ? (
+        <SelectInput
+          id={`${id}-billing`}
+          label={t('Account for billing collections')}
+          name="billingIncomeAccountId"
+          defaultValue={settings.billing_income_account_id ?? ''}
+          options={[
+            { value: '', label: t('Do not post billing collections') },
+            ...workspace.accounts
+              .filter((account) => account.active)
+              .map((account) => ({ value: account.id, label: account.name })),
+          ]}
+          helpText={
+            workspace.billing_enabled
+              ? t('Confirmed billing payments from now on post here as income.')
+              : t('Billing is not enabled for this society.')
+          }
+        />
+      ) : (
+        <input
+          name="billingIncomeAccountId"
+          type="hidden"
+          value={settings.billing_income_account_id ?? ''}
+        />
+      )}
     </ModuleActionForm>
   );
 }

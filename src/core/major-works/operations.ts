@@ -5,6 +5,7 @@ import { AppError, createRequestId } from '../errors';
 import { authorizeRequest } from '../permissions/authorize';
 import { callModuleRpc, parseModuleInput } from '../db/validated-rpc';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { FILE_CONTENT_TYPES, verifyFileAttachment } from '../files/attachments';
 import {
   majorWorksAdminListSchema,
@@ -646,6 +647,10 @@ export async function getMajorWorksConsents(proposalId: string) {
   );
   return {
     ...result,
+    can_edit_settings: await canAdminEditAllModuleSettings(
+      'major_works',
+      context,
+    ),
     records: await Promise.all(
       result.records.map(async (record) => {
         if (!record.signed_form_path) {

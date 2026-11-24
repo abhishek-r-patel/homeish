@@ -10,6 +10,7 @@ import {
   buildRequestContext,
   type RequestContext,
 } from '../tenancy/request-context';
+import { getModuleSettingAccess } from '../modules/setting-access';
 import {
   expenseAccountInputSchema,
   expenseAgmDraftInputSchema,
@@ -151,7 +152,7 @@ function pageOffset(page: number) {
 
 export async function getExpenseWorkspace() {
   const { context, societyId } = await expenseContext('read');
-  const [workspace, pending] = await Promise.all([
+  const [workspace, pending, settingAccess] = await Promise.all([
     callModuleRpc(
       context,
       'expense_workspace',
@@ -171,11 +172,13 @@ export async function getExpenseWorkspace() {
       expensePageSchema,
       'Could not load expenses awaiting approval.',
     ),
+    getModuleSettingAccess('expense', context),
   ]);
   return {
     ...workspace,
     pending: await withReceiptUrls(context, pending.rows),
     pendingTotal: pending.total,
+    settingsAccess: Object.fromEntries(settingAccess),
   };
 }
 

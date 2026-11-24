@@ -278,10 +278,14 @@ describe('tenancy operation boundaries', () => {
       );
       it(`${allowed ? 'allows' : 'denies'} ${role} to ${operation.name}`, async () => {
         mocks.buildRequestContext.mockResolvedValue(context({ roles: [role] }));
-        mocks.invokeUntypedRpc.mockResolvedValue(operation.result);
+        mocks.invokeUntypedRpc.mockImplementation(async (_db, name) =>
+          name === 'module_setting_access_list' ? [] : operation.result,
+        );
         if (allowed) {
           await operation.run();
-          expect(mocks.invokeUntypedRpc).toHaveBeenCalledOnce();
+          expect(mocks.invokeUntypedRpc).toHaveBeenCalledTimes(
+            operation.name === 'workspace' && role === 'admin' ? 2 : 1,
+          );
         } else {
           await expect(operation.run()).rejects.toMatchObject({
             code: 'FORBIDDEN',

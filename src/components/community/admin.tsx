@@ -746,6 +746,7 @@ export function CommunityAdminMutesView({
   members,
   search,
   settings,
+  canEditSettings = true,
   actions,
   basePath = '/admin/community/mutes',
 }: {
@@ -753,6 +754,7 @@ export function CommunityAdminMutesView({
   members: readonly CommunityMemberOption[] | null;
   search: string | null;
   settings: CommunitySettingsResult;
+  canEditSettings?: boolean;
   actions: CommunityAdminActions;
   basePath?: string;
 }) {
@@ -767,10 +769,12 @@ export function CommunityAdminMutesView({
         )}
       />
       <AdminNav basePath="/admin/community" />
-      <CommunityMuteSettingsCard
-        settings={settings}
-        action={actions.saveSettings}
-      />
+      {canEditSettings ? (
+        <CommunityMuteSettingsCard
+          settings={settings}
+          action={actions.saveSettings}
+        />
+      ) : null}
       {mutes.items.length === 0 ? (
         <EmptyState
           title={t('No one is muted')}

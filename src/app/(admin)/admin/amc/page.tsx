@@ -60,7 +60,7 @@ export default async function AmcPage({
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
       <h1 className="text-title font-semibold">{t('AMC contracts')}</h1>
       <Card title={t('AMC expiry windows')}>
-        {w.can_manage ? (
+        {w.can_edit_settings ? (
           <AmcExpirySettingsForm settings={w.settings} />
         ) : (
           <div className="grid gap-space-2">

@@ -350,12 +350,14 @@ function ChargeForm({
 function SocietyBillingPreferencesForm({
   action,
   settings,
+  settingsAccess,
   settingsUpdatedAt,
   onDirtyChange,
   onSaved,
 }: {
   action: SettingsAction;
   settings: BillingSettings;
+  settingsAccess: Readonly<Record<string, boolean>>;
   settingsUpdatedAt: string;
   onDirtyChange: (dirty: boolean) => void;
   onSaved: (message: string) => void;
@@ -407,66 +409,86 @@ function SocietyBillingPreferencesForm({
         <ActionMessage result={result} />
       </div>
       <fieldset className="grid gap-space-4" disabled={pending}>
-        <label
-          className="grid gap-space-1 text-body-strong"
-          htmlFor="billing-due-day"
-        >
-          {t('Monthly due date')}
-          <select
-            className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
-            defaultValue={String(settings.due_day_of_month)}
-            id="billing-due-day"
-            name="dueDay"
+        {settingsAccess.due_day_of_month ? (
+          <label
+            className="grid gap-space-1 text-body-strong"
+            htmlFor="billing-due-day"
           >
-            {Array.from({ length: 31 }, (_, index) => {
-              const day = index + 1;
-              return (
-                <option key={day} value={day}>
-                  {locale === 'hi'
-                    ? t('Day {day} of each month', { day })
-                    : `${ordinal(day)} of each month`}
-                </option>
-              );
-            })}
-            <option value="last_day">{t('Last day of each month')}</option>
-          </select>
-        </label>
-        <label
-          className="grid gap-space-1 text-body-strong"
-          htmlFor="billing-rounding"
-        >
-          {t('Per-square-foot rounding')}
-          <select
-            className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
-            defaultValue={settings.rounding}
-            id="billing-rounding"
-            name="rounding"
-          >
-            <option value="rupee">{t('Nearest rupee, half up')}</option>
-            <option value="paise">{t('Nearest paise, half up')}</option>
-          </select>
-        </label>
-        <label
-          className="flex items-start gap-space-3 text-body-strong"
-          htmlFor="billing-email-on-publish"
-        >
+            {t('Monthly due date')}
+            <select
+              className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+              defaultValue={String(settings.due_day_of_month)}
+              id="billing-due-day"
+              name="dueDay"
+            >
+              {Array.from({ length: 31 }, (_, index) => {
+                const day = index + 1;
+                return (
+                  <option key={day} value={day}>
+                    {locale === 'hi'
+                      ? t('Day {day} of each month', { day })
+                      : `${ordinal(day)} of each month`}
+                  </option>
+                );
+              })}
+              <option value="last_day">{t('Last day of each month')}</option>
+            </select>
+          </label>
+        ) : (
           <input
-            className="mt-space-1 size-5"
-            defaultChecked={settings.bill_email_on_publish}
-            id="billing-email-on-publish"
-            name="billEmailOnPublish"
-            type="checkbox"
-            value="true"
+            name="dueDay"
+            type="hidden"
+            value={String(settings.due_day_of_month)}
           />
-          <span className="grid gap-space-1">
-            {t('Email bill PDF when published')}
-            <span className="text-caption font-normal text-ink-muted">
-              {t(
-                'Email the bill summary and PDF to active unit occupants. Failed delivery is never shown as sent.',
-              )}
+        )}
+        {settingsAccess.rounding ? (
+          <label
+            className="grid gap-space-1 text-body-strong"
+            htmlFor="billing-rounding"
+          >
+            {t('Per-square-foot rounding')}
+            <select
+              className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+              defaultValue={settings.rounding}
+              id="billing-rounding"
+              name="rounding"
+            >
+              <option value="rupee">{t('Nearest rupee, half up')}</option>
+              <option value="paise">{t('Nearest paise, half up')}</option>
+            </select>
+          </label>
+        ) : (
+          <input name="rounding" type="hidden" value={settings.rounding} />
+        )}
+        {settingsAccess.bill_email_on_publish ? (
+          <label
+            className="flex items-start gap-space-3 text-body-strong"
+            htmlFor="billing-email-on-publish"
+          >
+            <input
+              className="mt-space-1 size-5"
+              defaultChecked={settings.bill_email_on_publish}
+              id="billing-email-on-publish"
+              name="billEmailOnPublish"
+              type="checkbox"
+              value="true"
+            />
+            <span className="grid gap-space-1">
+              {t('Email bill PDF when published')}
+              <span className="text-caption font-normal text-ink-muted">
+                {t(
+                  'Email the bill summary and PDF to active unit occupants. Failed delivery is never shown as sent.',
+                )}
+              </span>
             </span>
-          </span>
-        </label>
+          </label>
+        ) : (
+          <input
+            name="billEmailOnPublish"
+            type="hidden"
+            value={String(settings.bill_email_on_publish)}
+          />
+        )}
         <p className="text-caption text-ink-muted">
           {t(
             "A numeric due day past the end of a shorter month falls on that month's last day. These preferences affect future bills only.",
@@ -664,6 +686,7 @@ export type BillingSetupProps = {
   pendingQrPaths: string[];
   qrUrl: string | null;
   settings: BillingSettings;
+  settingsAccess?: Readonly<Record<string, boolean>>;
   settingsUpdatedAt: string;
   interest: BillingInterestSettings;
   societyId: string;
@@ -682,6 +705,11 @@ export function BillingSetup({
   pendingQrPaths,
   qrUrl,
   settings,
+  settingsAccess = {
+    due_day_of_month: true,
+    rounding: true,
+    bill_email_on_publish: true,
+  },
   settingsUpdatedAt,
   interest,
   societyId,
@@ -1013,7 +1041,8 @@ export function BillingSetup({
         {settingsMessage ? (
           <Banner tone="success">{translateFeedback(settingsMessage)}</Banner>
         ) : null}
-        {canManage ? (
+        {canManage &&
+        Object.values(settingsAccess).some((allowed) => allowed) ? (
           <SocietyBillingPreferencesForm
             action={settingsAction}
             key={settingsUpdatedAt}
@@ -1023,6 +1052,7 @@ export function BillingSetup({
               router.refresh();
             }}
             settings={settings}
+            settingsAccess={settingsAccess}
             settingsUpdatedAt={settingsUpdatedAt}
           />
         ) : (

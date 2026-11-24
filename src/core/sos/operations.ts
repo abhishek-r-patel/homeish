@@ -6,6 +6,7 @@ import { AppError, ConflictError, createRequestId } from '../errors';
 import { authorizeRequest } from '../permissions/authorize';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import {
   sosAlertInputSchema,
   sosCloseInputSchema,
@@ -73,13 +74,17 @@ async function withSosLimits<T>(operation: () => Promise<T>): Promise<T> {
 export async function getSosWorkspace(input: unknown = {}) {
   const { context, societyId } = await getContext('sos:list');
   const page = parseModuleInput(sosPageInputSchema, input);
-  return callModuleRpc(
-    context,
-    'sos_workspace',
-    { p_society_id: societyId, p_limit: page.limit, p_offset: page.offset },
-    sosWorkspaceSchema,
-    'Could not load emergency alerts. Refresh and retry, or call an emergency number.',
-  );
+  const [workspace, canEditSettings] = await Promise.all([
+    callModuleRpc(
+      context,
+      'sos_workspace',
+      { p_society_id: societyId, p_limit: page.limit, p_offset: page.offset },
+      sosWorkspaceSchema,
+      'Could not load emergency alerts. Refresh and retry, or call an emergency number.',
+    ),
+    canAdminEditAllModuleSettings('sos', context),
+  ]);
+  return { ...workspace, can_edit_settings: canEditSettings };
 }
 
 export async function raiseSos(input: unknown, requestId: string) {

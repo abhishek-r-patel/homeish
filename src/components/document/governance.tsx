@@ -665,6 +665,7 @@ export function DocumentGovernanceWorkspace({
   canManage,
   writable,
   settings,
+  canEditSettings = true,
   tenancyEnabled,
   meetingEnabled,
   actions = DEFAULT_GOVERNANCE_ACTIONS,
@@ -680,6 +681,7 @@ export function DocumentGovernanceWorkspace({
   canManage: boolean;
   writable: boolean;
   settings: { expiryRemindersEnabled: boolean };
+  canEditSettings?: boolean;
   tenancyEnabled: boolean;
   meetingEnabled: boolean;
   actions?: GovernanceActions;
@@ -948,33 +950,35 @@ export function DocumentGovernanceWorkspace({
               </div>
             </Card>
           ) : null}
-          <Card
-            title={t('Expiry reminders')}
-            description={t(
-              'Off by default. In-app notifications go only to active administrators at 30, 7 and 0 days. No email, SMS or push.',
-            )}
-          >
-            <ModuleActionForm
-              action={actions.settings}
-              submitLabel={t('Save reminder setting')}
-              input={(form) =>
-                documentSettingsInputSchema.parse({
-                  expiryRemindersEnabled:
-                    form.get('expiryRemindersEnabled') === 'on',
-                })
-              }
+          {canEditSettings ? (
+            <Card
+              title={t('Expiry reminders')}
+              description={t(
+                'Off by default. In-app notifications go only to active administrators at 30, 7 and 0 days. No email, SMS or push.',
+              )}
             >
-              <CheckboxInput
-                id={`${id}-reminders`}
-                name="expiryRemindersEnabled"
-                label={t('Enable document-expiry in-app reminders')}
-                defaultChecked={settings.expiryRemindersEnabled}
-                description={t(
-                  'A missed schedule sends one catch-up for the latest crossed milestone. If no active administrator can receive it, it stays pending.',
-                )}
-              />
-            </ModuleActionForm>
-          </Card>
+              <ModuleActionForm
+                action={actions.settings}
+                submitLabel={t('Save reminder setting')}
+                input={(form) =>
+                  documentSettingsInputSchema.parse({
+                    expiryRemindersEnabled:
+                      form.get('expiryRemindersEnabled') === 'on',
+                  })
+                }
+              >
+                <CheckboxInput
+                  id={`${id}-reminders`}
+                  name="expiryRemindersEnabled"
+                  label={t('Enable document-expiry in-app reminders')}
+                  defaultChecked={settings.expiryRemindersEnabled}
+                  description={t(
+                    'A missed schedule sends one catch-up for the latest crossed milestone. If no active administrator can receive it, it stays pending.',
+                  )}
+                />
+              </ModuleActionForm>
+            </Card>
+          ) : null}
         </>
       ) : null}
     </section>

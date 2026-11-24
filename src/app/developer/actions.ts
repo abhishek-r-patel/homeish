@@ -23,12 +23,16 @@ import {
   societyStatusSchema,
   toggleModule,
   updateModuleSettings,
+  updateModuleSettingAccess,
+  updateQuickActionDefaults,
+  resetQuickActionDefaults,
   updateSociety,
   updateSocietyLogo,
   type DeveloperActionResult,
 } from '@/core/developer/console';
 import { logUnexpectedError } from '@/core/logging/error-logger';
 import { MODULE_KEYS } from '@/core/modules';
+import { QUICK_ACTION_KEYS } from '@/core/home/quick-actions';
 
 async function runDeveloperAction(
   route: string,
@@ -126,6 +130,31 @@ const errorStatusSchema = z
 const userErasureSchema = z
   .object({ userId: z.uuid(), confirmation: z.literal('ERASE') })
   .strict();
+const settingAccessSchema = z
+  .object({
+    societyId: societyIdSchema,
+    moduleKey: z.enum(MODULE_KEYS),
+    settingKey: z.string().trim().min(1).max(120),
+    adminCanEdit: z
+      .enum(['true', 'false'])
+      .transform((value) => value === 'true'),
+  })
+  .strict();
+const quickActionDefaultsScopeSchema = z.union([
+  societyIdSchema,
+  z.literal('all'),
+]);
+const quickActionRoleSchema = z.enum([
+  'admin',
+  'committee',
+  'resident',
+  'guard',
+  'hk_supervisor',
+]);
+const quickActionKeysSchema = z
+  .array(z.enum(QUICK_ACTION_KEYS))
+  .min(1, 'Choose at least one action.')
+  .max(12);
 
 export async function createSocietyAction(
   formData: FormData,
@@ -217,6 +246,7 @@ export async function updateModuleSettingsAction(
           settings: 'Enter valid JSON settings.',
         });
       }
+
       try {
         await updateModuleSettings(
           context,
@@ -234,6 +264,76 @@ export async function updateModuleSettingsAction(
       }
       revalidatePath('/developer/modules');
       return { ok: true, message: 'Module settings saved.' };
+    },
+  );
+}
+
+export async function updateModuleSettingAccessAction(
+  formData: FormData,
+): Promise<DeveloperActionResult> {
+  return runDeveloperAction(
+    'developer.modules.updateSettingAccess',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = parseForm(settingAccessSchema, formData);
+      await updateModuleSettingAccess(
+        context,
+        input.societyId,
+        input.moduleKey,
+        input.settingKey,
+        input.adminCanEdit,
+      );
+      revalidatePath('/developer/modules');
+      revalidatePath('/admin/settings');
+      return { ok: true, message: 'Admin edit access saved.' };
+    },
+  );
+}
+
+export async function updateQuickActionDefaultsAction(
+  formData: FormData,
+): Promise<DeveloperActionResult> {
+  return runDeveloperAction(
+    'developer.workspace.updateQuickActionDefaults',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const scope = parseValue(
+        quickActionDefaultsScopeSchema,
+        formData.get('societyId'),
+      );
+      const role = parseValue(quickActionRoleSchema, formData.get('role'));
+      const actionKeys = parseValue(
+        quickActionKeysSchema,
+        formData.getAll('actionKey'),
+      );
+      await updateQuickActionDefaults(
+        context,
+        scope === 'all' ? null : scope,
+        role,
+        actionKeys,
+      );
+      revalidatePath('/developer/modules');
+      revalidatePath('/admin');
+      revalidatePath('/home');
+      return { ok: true, message: 'Quick-action defaults saved.' };
+    },
+  );
+}
+
+export async function resetQuickActionDefaultsAction(
+  formData: FormData,
+): Promise<DeveloperActionResult> {
+  return runDeveloperAction(
+    'developer.workspace.resetQuickActionDefaults',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const societyId = parseValue(societyIdSchema, formData.get('societyId'));
+      const role = parseValue(quickActionRoleSchema, formData.get('role'));
+      await resetQuickActionDefaults(context, societyId, role);
+      revalidatePath('/developer/modules');
+      revalidatePath('/admin');
+      revalidatePath('/home');
+      return { ok: true, message: 'Society override removed.' };
     },
   );
 }

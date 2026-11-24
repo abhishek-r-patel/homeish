@@ -327,11 +327,17 @@ export function ExpenseBudgetSettingsForm({
   workspace,
   action = saveExpenseBudgetSettingsAction,
 }: {
-  workspace: ExpenseBudget;
+  workspace: ExpenseBudget & {
+    settingsAccess?: Readonly<Record<string, boolean>>;
+  };
   action?: ModuleFormAction;
 }) {
   const { translate: t } = useUiTranslator();
   const id = useId();
+  const settingsAccess = workspace.settingsAccess ?? {
+    budget_forecast_method: true,
+    budget_resident_summary: true,
+  };
   return (
     <ModuleActionForm
       action={action}
@@ -343,25 +349,37 @@ export function ExpenseBudgetSettingsForm({
         expectedUpdatedAt: workspace.settings.updated_at,
       })}
     >
-      <SelectInput
-        id={`${id}-forecast`}
-        name="forecastMethod"
-        label={t('Cash-flow forecast')}
-        defaultValue={workspace.settings.budget_forecast_method}
-        options={[
-          { value: 'budget', label: t('Budget') },
-          { value: 'average_3_months', label: t('Average of last 3 months') },
-          { value: 'none', label: t('No forecast') },
-        ]}
-      />
-      <label className="flex min-h-12 items-center gap-space-3">
-        <input
-          type="checkbox"
-          name="residentSummary"
-          defaultChecked={workspace.settings.budget_resident_summary}
+      {settingsAccess.budget_forecast_method ? (
+        <SelectInput
+          id={`${id}-forecast`}
+          name="forecastMethod"
+          label={t('Cash-flow forecast')}
+          defaultValue={workspace.settings.budget_forecast_method}
+          options={[
+            { value: 'budget', label: t('Budget') },
+            { value: 'average_3_months', label: t('Average of last 3 months') },
+            { value: 'none', label: t('No forecast') },
+          ]}
         />
-        {t('Share budget summary with residents')}
-      </label>
+      ) : (
+        <input
+          name="forecastMethod"
+          type="hidden"
+          value={workspace.settings.budget_forecast_method}
+        />
+      )}
+      {settingsAccess.budget_resident_summary ? (
+        <label className="flex min-h-12 items-center gap-space-3">
+          <input
+            type="checkbox"
+            name="residentSummary"
+            defaultChecked={workspace.settings.budget_resident_summary}
+          />
+          {t('Share budget summary with residents')}
+        </label>
+      ) : workspace.settings.budget_resident_summary ? (
+        <input name="residentSummary" type="hidden" value="on" />
+      ) : null}
     </ModuleActionForm>
   );
 }

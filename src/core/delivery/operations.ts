@@ -13,6 +13,7 @@ import {
 import { deliverySettingsSchema } from '../modules';
 import { authorizeRequest } from '../permissions/authorize';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { requireIdentifiedGuard } from '../guards/operations';
 
 const uuid = z.uuid();
@@ -235,7 +236,9 @@ export async function getDeliveryAdminAccess() {
   if (!context.roles.some((role) => ['admin', 'committee'].includes(role))) {
     throw new AppError('FORBIDDEN');
   }
-  return { canManage: context.roles.includes('admin') };
+  return {
+    canManage: await canAdminEditAllModuleSettings('delivery', context),
+  };
 }
 
 export async function requireDeliveryResident() {

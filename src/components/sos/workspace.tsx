@@ -286,7 +286,7 @@ function SosRaiseForm({
   audience,
   action,
 }: {
-  workspace: SosWorkspace;
+  workspace: SosWorkspace & { can_edit_settings?: boolean };
   audience: SosAudience;
   action: ModuleFormAction;
 }) {
@@ -939,7 +939,7 @@ export function SosWorkspaceView({
   actions = DEFAULT_SOS_ACTIONS,
   onPageChange,
 }: {
-  workspace: SosWorkspace;
+  workspace: SosWorkspace & { can_edit_settings?: boolean };
   audience: SosAudience;
   baseHref: string;
   actions?: SosActions;
@@ -1041,7 +1041,9 @@ export function SosWorkspaceView({
         )}
       </Section>
       <SosContactsCard contacts={workspace.contacts} />
-      {audience === 'management' && workspace.can_manage ? (
+      {audience === 'management' &&
+      workspace.can_manage &&
+      workspace.can_edit_settings !== false ? (
         <div className="grid gap-space-5 expanded:grid-cols-2">
           <SosSettingsForm workspace={workspace} action={actions.settings} />
           <SosContactManager contacts={workspace.contacts} actions={actions} />

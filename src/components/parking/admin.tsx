@@ -117,7 +117,7 @@ function AllocateForm({
   actions,
 }: {
   slot: AdminSlot;
-  workspace: ParkingAdminWorkspace;
+  workspace: ParkingAdminWorkspace & { can_edit_settings?: boolean };
   actions: ParkingActions;
 }) {
   const { t } = useParkingCopy();
@@ -329,7 +329,7 @@ export function ParkingAdminView({
   fileRequest,
   now: fixedNow,
 }: {
-  workspace: ParkingAdminWorkspace;
+  workspace: ParkingAdminWorkspace & { can_edit_settings?: boolean };
   summary?: ParkingSummary;
   actions?: ParkingActions;
   fileRequest?: typeof fetch;
@@ -410,7 +410,7 @@ export function ParkingAdminView({
               ))}
             </ul>
           )}
-          {workspace.can_manage ? (
+          {workspace.can_manage && workspace.can_edit_settings !== false ? (
             <details className="grid gap-space-2">
               <summary className="min-h-12 cursor-pointer content-center text-brand underline">
                 {t('Add a slot')}

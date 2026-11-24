@@ -2,11 +2,12 @@
 import { z } from 'zod';
 import { AppError, ValidationError, createRequestId } from '../errors';
 import type { Database, Json } from '../db/database.types';
+import { callModuleRpc } from '../db/validated-rpc';
 import type { RequestContext } from '../tenancy/request-context';
 import { buildRequestContext } from '../tenancy/request-context';
 import { MODULE_KEYS, parseModuleSettings } from '../modules';
 import type { ModuleKey } from '../modules';
-import { isModuleKey } from '../permissions';
+import { isModuleKey, type SocietyRole } from '../permissions';
 import type { DeveloperSocietyStatus } from './status';
 import {
   SOCIETY_LOGO_CONTENT_TYPES,
@@ -14,6 +15,7 @@ import {
 } from '../files/attachments';
 import { runUserErasurePrivileged } from '../privileged';
 import { INDIA_TIME_ZONE } from '../../lib/india-time';
+import { QUICK_ACTION_KEYS } from '../home/quick-actions';
 
 export { societyStatusSchema } from './status';
 export type { DeveloperSocietyStatus } from './status';
@@ -440,6 +442,7 @@ export async function getDeveloperModules(societyId: string) {
       cause: modulesResult.error,
     });
   }
+
   if (configsResult.error) {
     throw new Error('Could not load society module settings.', {
       cause: configsResult.error,
@@ -487,6 +490,100 @@ export async function getDeveloperModules(societyId: string) {
           : null,
       },
     ];
+  });
+}
+
+export async function getDeveloperWorkspaceControls(societyId: string) {
+  const context = await requireDeveloperContext();
+  const parsedSocietyId = z.uuid().safeParse(societyId);
+  if (!parsedSocietyId.success) {
+    throw new ValidationError({ societyId: 'Choose a valid society.' });
+  }
+  const [accessResult, overridesResult, defaultsResult] = await Promise.all([
+    context.db
+      .from('module_setting_access')
+      .select('module_key, setting_key, admin_can_edit')
+      .eq('society_id', societyId)
+      .order('module_key')
+      .order('setting_key'),
+    context.db
+      .from('workspace_quick_action_defaults')
+      .select('role, action_keys')
+      .eq('society_id', societyId),
+    context.db
+      .from('workspace_quick_action_defaults')
+      .select('role, action_keys')
+      .is('society_id', null),
+  ]);
+  if (accessResult.error) {
+    throw new Error('Could not load setting-edit access.', {
+      cause: accessResult.error,
+    });
+  }
+  if (overridesResult.error || defaultsResult.error) {
+    throw new Error('Could not load quick-action defaults.', {
+      cause: overridesResult.error ?? defaultsResult.error,
+    });
+  }
+  const actionKeys = new Set<string>(QUICK_ACTION_KEYS);
+  const parseActions = (
+    rows: readonly { role: string; action_keys: string[] }[],
+  ) =>
+    rows.flatMap((row) => {
+      if (!row.action_keys.every((key) => actionKeys.has(key))) {
+        throw new Error('A stored quick-action key is unsupported.');
+      }
+      return [{ role: row.role, actionKeys: row.action_keys }];
+    });
+  return {
+    settingAccess: accessResult.data,
+    quickActionOverrides: parseActions(overridesResult.data),
+    quickActionDefaults: parseActions(defaultsResult.data),
+  };
+}
+
+export async function updateModuleSettingAccess(
+  context: RequestContext,
+  societyId: string,
+  moduleKey: ModuleKey,
+  settingKey: string,
+  adminCanEdit: boolean,
+) {
+  return rpc(context, 'module_setting_access_set', {
+    p_society_id: societyId,
+    p_module_key: moduleKey,
+    p_setting_key: settingKey,
+    p_admin_can_edit: adminCanEdit,
+  });
+}
+
+export async function updateQuickActionDefaults(
+  context: RequestContext,
+  societyId: string | null,
+  role: SocietyRole,
+  actionKeys: string[],
+) {
+  return callModuleRpc(
+    context,
+    'workspace_quick_action_defaults_save',
+    {
+      p_society_id: societyId,
+      p_role: role,
+      p_action_keys: actionKeys,
+    },
+    z.null(),
+    'Quick-action defaults could not be saved.',
+  );
+}
+
+export async function resetQuickActionDefaults(
+  context: RequestContext,
+  societyId: string,
+  role: SocietyRole,
+) {
+  return rpc(context, 'workspace_quick_action_defaults_reset', {
+    p_society_id: societyId,
+    p_role: role,
   });
 }
 

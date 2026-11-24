@@ -10,8 +10,11 @@ import {
   setErrorStatusAction,
   setSocietyStatusAction,
   toggleModuleAction,
+  updateModuleSettingAccessAction,
   updateModuleSettingsAction,
+  updateQuickActionDefaultsAction,
   updateSocietyAction,
+  resetQuickActionDefaultsAction,
 } from '@/app/developer/actions';
 import type { DeveloperActionResult } from '@/core/developer/console';
 import type { Database } from '@/core/db/database.types';
@@ -26,6 +29,8 @@ import { Banner } from '@/components/ui/feedback';
 import { TextAreaInput } from '@/components/ui/specialized-inputs';
 import { TextInput } from '@/components/ui/text-input';
 import { SocietyLogoUpload } from './society-logo-upload';
+import { QUICK_ACTIONS, type QuickActionKey } from '@/core/home/quick-actions';
+import type { SocietyRole } from '@/core/permissions';
 
 type SocietyRow = Omit<
   Database['public']['Tables']['societies']['Row'],
@@ -433,6 +438,223 @@ export function ModuleSettingsControl({
       <Button disabled={pending} loading={pending} type="submit">
         Save Settings
       </Button>
+    </form>
+  );
+}
+
+export function ModuleSettingAccessControl({
+  societyId,
+  moduleKey,
+  settings,
+}: {
+  societyId: string;
+  moduleKey: ModuleKey;
+  settings: readonly {
+    module_key: string;
+    setting_key: string;
+    admin_can_edit: boolean;
+  }[];
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<DeveloperActionResult | null>(null);
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  const visible = settings.filter(
+    (setting) => setting.module_key === moduleKey,
+  );
+  if (!visible.length) return null;
+
+  function save(settingKey: string, adminCanEdit: boolean) {
+    const formData = new FormData();
+    formData.set('societyId', societyId);
+    formData.set('moduleKey', moduleKey);
+    formData.set('settingKey', settingKey);
+    formData.set('adminCanEdit', String(adminCanEdit));
+    setPendingKey(settingKey);
+    setState(null);
+    startTransition(async () => {
+      const result = await updateModuleSettingAccessAction(formData);
+      setState(result);
+      setPendingKey(null);
+      if (result.ok) router.refresh();
+    });
+  }
+
+  return (
+    <div className="grid gap-space-3 border-t border-rule pt-space-4">
+      <div className="grid gap-space-1">
+        <h3 className="text-body-strong">Admins can edit</h3>
+        <p className="text-caption text-ink-muted">
+          Closed settings stay in this developer console and are refused on the
+          server.
+        </p>
+      </div>
+      {visible.map((setting) => (
+        <label
+          className="flex min-h-12 items-center justify-between gap-space-3 rounded-md border border-rule px-space-3"
+          key={setting.setting_key}
+        >
+          <span className="text-body">
+            {setting.setting_key.replaceAll('_', ' ')}
+          </span>
+          <input
+            aria-label={`Allow admins to edit ${setting.setting_key}`}
+            checked={setting.admin_can_edit}
+            disabled={pendingKey === setting.setting_key}
+            onChange={(event) =>
+              save(setting.setting_key, event.currentTarget.checked)
+            }
+            type="checkbox"
+          />
+        </label>
+      ))}
+      {state ? <ActionMessage state={state} /> : null}
+    </div>
+  );
+}
+
+const QUICK_ACTION_ROLES = [
+  'admin',
+  'committee',
+  'resident',
+  'guard',
+  'hk_supervisor',
+] as const satisfies readonly SocietyRole[];
+
+export function QuickActionDefaultsControls({
+  societyId,
+  defaults,
+  overrides,
+}: {
+  societyId: string;
+  defaults: readonly { role: string; actionKeys: string[] }[];
+  overrides: readonly { role: string; actionKeys: string[] }[];
+}) {
+  const [scope, setScope] = useState<'all' | 'society'>('society');
+  return (
+    <div className="grid gap-space-4">
+      <label className="grid gap-space-1 text-body-strong">
+        Applies to
+        <select
+          className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink"
+          onChange={(event) =>
+            setScope(event.currentTarget.value as 'all' | 'society')
+          }
+          value={scope}
+        >
+          <option value="society">This society</option>
+          <option value="all">All societies</option>
+        </select>
+      </label>
+      {QUICK_ACTION_ROLES.map((role) => {
+        const globalKeys =
+          defaults.find((item) => item.role === role)?.actionKeys ?? [];
+        const overrideKeys =
+          overrides.find((item) => item.role === role)?.actionKeys ?? null;
+        return (
+          <QuickActionRoleEditor
+            initialKeys={
+              scope === 'all' ? globalKeys : (overrideKeys ?? globalKeys)
+            }
+            key={`${scope}-${role}`}
+            role={role}
+            scope={scope}
+            showReset={scope === 'society' && overrideKeys !== null}
+            societyId={societyId}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function QuickActionRoleEditor({
+  initialKeys,
+  role,
+  scope,
+  showReset,
+  societyId,
+}: {
+  initialKeys: string[];
+  role: SocietyRole;
+  scope: 'all' | 'society';
+  showReset: boolean;
+  societyId: string;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<DeveloperActionResult | null>(null);
+  const [pending, startTransition] = useTransition();
+  const roleActions = QUICK_ACTIONS.filter(
+    (action) => action.permissions[role],
+  );
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    formData.set('societyId', scope === 'all' ? 'all' : societyId);
+    formData.set('role', role);
+    setState(null);
+    startTransition(async () => {
+      const result = await updateQuickActionDefaultsAction(formData);
+      setState(result);
+      if (result.ok) router.refresh();
+    });
+  }
+
+  function reset() {
+    const formData = new FormData();
+    formData.set('societyId', societyId);
+    formData.set('role', role);
+    setState(null);
+    startTransition(async () => {
+      const result = await resetQuickActionDefaultsAction(formData);
+      setState(result);
+      if (result.ok) router.refresh();
+    });
+  }
+
+  return (
+    <form
+      className="grid gap-space-3 rounded-md border border-rule p-space-4"
+      onSubmit={submit}
+    >
+      <h3 className="text-body-strong capitalize">
+        {role.replaceAll('_', ' ')}
+      </h3>
+      <div className="grid gap-space-2 medium:grid-cols-2">
+        {roleActions.map((action) => (
+          <label
+            className="flex min-h-11 items-center gap-space-2 rounded-md border border-rule px-space-3 text-body"
+            key={action.key}
+          >
+            <input
+              defaultChecked={initialKeys.includes(
+                action.key as QuickActionKey,
+              )}
+              name="actionKey"
+              type="checkbox"
+              value={action.key}
+            />
+            {action.label}
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-space-2">
+        <Button disabled={pending} loading={pending} type="submit">
+          Save defaults
+        </Button>
+        {showReset ? (
+          <Button
+            disabled={pending}
+            onClick={reset}
+            type="button"
+            variant="secondary"
+          >
+            Reset to all societies
+          </Button>
+        ) : null}
+      </div>
+      {state ? <ActionMessage state={state} /> : null}
     </form>
   );
 }

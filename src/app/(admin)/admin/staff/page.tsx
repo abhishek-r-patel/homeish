@@ -179,11 +179,13 @@ export default async function AdminStaffPage() {
         )}
       </Card>
 
-      <Card title={t('Registration settings')}>
-        <StaffApprovalSetting
-          residentApprovalRequired={settings.residentApprovalRequired}
-        />
-      </Card>
+      {settings.canManage ? (
+        <Card title={t('Registration settings')}>
+          <StaffApprovalSetting
+            residentApprovalRequired={settings.residentApprovalRequired}
+          />
+        </Card>
+      ) : null}
     </section>
   );
 }

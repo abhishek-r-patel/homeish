@@ -15,6 +15,7 @@ import { POLL_INSTRUCTIONS_MAX, POLL_TITLE_MAX } from '../poll/validation';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import {
   copyMinutesToDocuments,
   defaultMinutesFolderId,
@@ -378,7 +379,9 @@ export async function getMeetingSettings() {
   );
   return {
     settings: normalizeMeetingSettings(settings),
-    canManage: context.roles.includes('admin'),
+    canManage:
+      context.roles.includes('admin') &&
+      (await canAdminEditAllModuleSettings('meeting', context)),
   };
 }
 

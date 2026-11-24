@@ -555,7 +555,15 @@ export default async function ExpenseBudgetPage({
               </Card>
             </>
           ) : null}
-          {workspace.can_manage ? (
+          {workspace.can_manage &&
+          workspace.settingsAccess &&
+          Object.entries(workspace.settingsAccess).some(
+            ([key, allowed]) =>
+              allowed &&
+              ['budget_forecast_method', 'budget_resident_summary'].includes(
+                key,
+              ),
+          ) ? (
             <Card title={t('Budget settings')}>
               <ExpenseBudgetSettingsForm workspace={workspace} />
             </Card>
