@@ -49,7 +49,10 @@ export default async function ResidentHomePage() {
         visitorEnabled={data.visitorEnabled}
       />
       <ResidentHome
+        comingUp={data.comingUp}
+        graph={data.graph}
         outstanding={data.outstanding}
+        quickActions={data.quickActions}
         shortcuts={data.shortcuts}
         snapshot={data.snapshot}
         suspended={data.suspended}

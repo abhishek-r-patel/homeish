@@ -1,22 +1,22 @@
 // Verify admin-home sections, role differences, unavailable states and Hindi copy with synthetic data.
 import { expect, test } from './fixtures';
 
-test('shows today, the next meeting, items needing attention and both activity lists', async ({
+test('shows four figures, quick actions, Coming up and both activity lists', async ({
   page,
 }) => {
   await page.goto('/fixtures/admin-home');
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   const today = page.getByRole('region', { name: 'Today' });
-  await expect(today.getByRole('listitem')).toHaveCount(6);
-  await expect(
-    today.getByRole('link', { name: /Still inside/ }),
-  ).toHaveAttribute('href', '/admin/visitors?status=checked_in');
+  await expect(today.getByRole('listitem')).toHaveCount(4);
   await expect(today.getByRole('link', { name: /Outstanding/ })).toContainText(
     '₹12,500.00',
   );
   await expect(
+    page.getByRole('region', { name: 'Quick actions' }),
+  ).toContainText('Post a notice');
+  await expect(
     page
-      .getByRole('region', { name: 'Next meeting' })
+      .getByRole('region', { name: 'Coming up' })
       .getByRole('link', { name: /Annual general meeting/ }),
   ).toHaveAttribute('href', /\/admin\/meetings\/b1d55fc3/);
   const attention = page.getByRole('region', { name: 'Needs attention' });
@@ -61,7 +61,7 @@ test('marks failed sections unavailable with a retry instead of showing zero', a
   await expect(
     today.getByRole('link', { name: /Visitors today/ }),
   ).toContainText('12');
-  for (const name of ['Next meeting', 'Society activity', 'Admin actions']) {
+  for (const name of ['Society activity', 'Admin actions']) {
     await expect(
       page.getByRole('region', { name }).getByRole('link', { name: 'Retry' }),
     ).toBeVisible();
@@ -70,12 +70,12 @@ test('marks failed sections unavailable with a retry instead of showing zero', a
     page
       .getByRole('region', { name: 'Needs attention' })
       .getByRole('link', { name: 'Retry' }),
-  ).toHaveCount(2);
+  ).toHaveCount(3);
 });
 
 test('explains empty, suspended and loading states', async ({ page }) => {
   await page.goto('/fixtures/admin-home?state=empty');
-  await expect(page.getByText('No meeting scheduled')).toBeVisible();
+  await expect(page.getByText('Your week is clear')).toBeVisible();
   await expect(page.getByText('No recent activity')).toBeVisible();
   await expect(page.getByText('No admin actions this week')).toBeVisible();
   await expect(page.getByRole('link', { name: /Visitors today/ })).toHaveCount(

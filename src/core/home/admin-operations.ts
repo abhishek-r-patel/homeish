@@ -9,6 +9,10 @@ import {
   adminHomeSnapshotSchema,
   type AdminHomeAction,
 } from './admin-validation';
+import { getBillingMonthlyCollection } from '../billing/collection-operations';
+import { getComingUp } from './dashboard-reads';
+import { getConfiguredQuickActions } from './workspace-operations';
+import { getManagingBodyName } from '../tenancy/workspace-settings';
 
 export type AdminActionsFeed =
   { status: 'ok'; items: AdminHomeAction[] } | { status: 'unavailable' } | null;
@@ -43,9 +47,23 @@ export async function getAdminHome() {
         )
       : Promise.resolve<AdminActionsFeed>(null),
   ]);
+  const role = context.roles.includes('admin') ? 'admin' : 'committee';
+  const [quickActions, comingUp, collectionGraph, managingBodyName] =
+    await Promise.all([
+      getConfiguredQuickActions(context, role),
+      getComingUp(context),
+      snapshot.billing?.status === 'ok' && context.enabledModules.has('billing')
+        ? getBillingMonthlyCollection('6m', snapshot.timezone)
+        : Promise.resolve(null),
+      getManagingBodyName(context),
+    ]);
   return {
     snapshot,
     actions,
+    quickActions,
+    comingUp,
+    collectionGraph,
+    managingBodyName,
     suspended: context.societyStatus === 'suspended',
   };
 }

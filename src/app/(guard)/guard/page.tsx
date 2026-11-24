@@ -8,6 +8,12 @@ import { isPettyCashCustodian } from '@/core/expense/operations';
 import { Banner } from '@/components/ui/feedback';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage, type MessageValues } from '@/core/i18n/messages';
+import { getComingUp } from '@/core/home/dashboard-reads';
+import { getConfiguredQuickActions } from '@/core/home/workspace-operations';
+import {
+  ComingUp,
+  QuickActionTiles,
+} from '@/components/home/dashboard-sections';
 
 export default async function GuardHomePage() {
   const locale = await getRequestLocale();
@@ -32,13 +38,19 @@ export default async function GuardHomePage() {
       item.moduleKey === 'service_request',
   );
   const showPettyCash = await isPettyCashCustodian(context);
+  const [quickActions, comingUp] = await Promise.all([
+    getConfiguredQuickActions(context, 'guard'),
+    getComingUp(context),
+  ]);
   return (
     <section className="grid gap-space-4">
-      <header className="grid gap-space-2">
-        <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
+      <header className="rounded-lg border border-brand/15 bg-brand-tint p-space-5">
+        <p className="text-caption font-semibold uppercase tracking-wide text-brand">
           {t('Gate')}
         </p>
-        <h1 className="text-heading font-semibold">{t('Gate home')}</h1>
+        <h1 className="text-heading font-semibold">
+          {guard ? t('Hello {name}', { name: guard.name }) : t('Gate home')}
+        </h1>
       </header>
       {guard ? (
         <Banner tone="success">
@@ -82,6 +94,12 @@ export default async function GuardHomePage() {
           {t('Petty cash')}
         </Link>
       ) : null}
+      <QuickActionTiles
+        actions={quickActions.filter(
+          (action) => !gateLinks.some((item) => item.href === action.href),
+        )}
+      />
+      <ComingUp items={comingUp} timezone="Asia/Kolkata" />
     </section>
   );
 }

@@ -10,6 +10,18 @@ vi.mock('server-only', () => ({}));
 vi.mock('../../src/core/tenancy/request-context', () => ({
   buildRequestContext: vi.fn(),
 }));
+vi.mock('../../src/core/billing/collection-operations', () => ({
+  getBillingMonthlyCollection: vi.fn(),
+}));
+vi.mock('../../src/core/home/workspace-operations', () => ({
+  getConfiguredQuickActions: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('../../src/core/home/dashboard-reads', () => ({
+  getComingUp: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('../../src/core/tenancy/workspace-settings', () => ({
+  getManagingBodyName: vi.fn().mockResolvedValue('Association'),
+}));
 
 import { getAdminHome } from '../../src/core/home/admin-operations';
 import {

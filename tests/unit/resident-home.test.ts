@@ -52,6 +52,24 @@ describe('resident home', () => {
           },
         ]);
       }
+      if (urlOf(request).endsWith('/rpc/person_workspace_preferences_get')) {
+        return Response.json([]);
+      }
+      if (urlOf(request).endsWith('/rpc/workspace_quick_action_defaults_get')) {
+        return Response.json(['visitor.preapprove', 'billing.view']);
+      }
+      if (urlOf(request).endsWith('/rpc/workspace_coming_up_get')) {
+        return Response.json([]);
+      }
+      if (urlOf(request).endsWith('/rpc/resident_dashboard_graph_get')) {
+        return Response.json(
+          Array.from({ length: 6 }, (_, index) => ({
+            month_start: `2026-${String(index + 6).padStart(2, '0')}-01`,
+            amount: 0,
+            has_data: false,
+          })),
+        );
+      }
       throw new Error('Unexpected synthetic request.');
     });
     context = {
@@ -93,7 +111,7 @@ describe('resident home', () => {
       result.shortcuts.every(({ href }) => !href.startsWith('/admin')),
     ).toBe(true);
     expect(result.suspended).toBe(false);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(6);
   });
 
   it('does not request or imply a balance when billing is disabled', async () => {
@@ -101,7 +119,7 @@ describe('resident home', () => {
     const result = await getResidentHome();
     expect(result.outstanding).toBeNull();
     expect(result.shortcuts.some(({ href }) => href === '/bills')).toBe(false);
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
   it('denies non-residents before querying household data', async () => {

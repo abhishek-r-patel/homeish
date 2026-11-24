@@ -2,7 +2,6 @@
 'use client';
 
 import Link from 'next/link';
-import { ModuleIcon } from '@/components/app-shells';
 import { primaryLinkClass } from '@/components/billing/styles';
 import { StatusChip, type ProductStatus } from '@/components/ui/data-display';
 import { Banner, EmptyState } from '@/components/ui/feedback';
@@ -21,6 +20,11 @@ import {
   formatLocalizedNumber,
   formatLocalizedTime,
 } from '@/core/i18n/format';
+import {
+  ComingUp,
+  QuickActionTiles,
+  ResidentGraph,
+} from './dashboard-sections';
 
 function activityStatus(
   item: ResidentHomeActivity,
@@ -65,9 +69,13 @@ export function ResidentHome({
   outstanding,
   shortcuts,
   suspended,
-}: Pick<ResidentHomeData, 'snapshot' | 'outstanding' | 'shortcuts'> & {
-  suspended: boolean;
-}) {
+  quickActions,
+  comingUp = [],
+  graph,
+}: Pick<ResidentHomeData, 'snapshot' | 'outstanding' | 'shortcuts'> &
+  Partial<Pick<ResidentHomeData, 'quickActions' | 'comingUp' | 'graph'>> & {
+    suspended: boolean;
+  }) {
   const { locale, translate: t } = useUiTranslator();
   const displayLocale = locale ?? 'en';
   const total =
@@ -89,30 +97,37 @@ export function ResidentHome({
         timeZone: 'UTC',
       })
     : null;
+  const resolvedActions =
+    quickActions ?? shortcuts.map((item) => ({ key: item.href, ...item }));
 
   return (
     <div className="grid min-w-0 gap-space-6">
       <header className="grid gap-space-2">
-        <h1 className="break-words text-display font-semibold">
-          {t('Hello {name}', { name: snapshot.resident_name })}
-        </h1>
-        {snapshot.units.length ? (
-          <p className="text-body text-ink-muted">
-            {t('{unitLabel} {units}', {
-              unitLabel: snapshot.unit_label,
-              units: snapshot.units.map((unit) => unit.number).join(', '),
+        <div className="rounded-lg border border-brand/15 bg-brand-tint p-space-5">
+          <p className="text-micro font-semibold uppercase tracking-wide text-brand">
+            {t('My home')}
+          </p>
+          <h1 className="mt-space-1 break-words text-display font-semibold">
+            {t('Hello {name}', { name: snapshot.resident_name })}
+          </h1>
+          {snapshot.units.length ? (
+            <p className="text-body text-ink-muted">
+              {t('{unitLabel} {units}', {
+                unitLabel: snapshot.unit_label,
+                units: snapshot.units.map((unit) => unit.number).join(', '),
+              })}
+            </p>
+          ) : null}
+          <p className="text-caption text-ink-muted">
+            {t('Updated {time}', {
+              time: formatLocalizedTime(
+                new Date(snapshot.server_now),
+                displayLocale,
+                { timeZone: snapshot.timezone },
+              ),
             })}
           </p>
-        ) : null}
-        <p className="text-caption text-ink-muted">
-          {t('Updated {time}', {
-            time: formatLocalizedTime(
-              new Date(snapshot.server_now),
-              displayLocale,
-              { timeZone: snapshot.timezone },
-            ),
-          })}
-        </p>
+        </div>
       </header>
 
       {suspended ? (
@@ -129,13 +144,15 @@ export function ResidentHome({
         </Banner>
       ) : null}
 
+      <QuickActionTiles actions={resolvedActions} firstFourOnPhone />
+
       {hasDues || hasPending ? (
         <section
           aria-labelledby="home-action-needed"
           className="grid gap-space-3"
         >
           <h2 className="text-heading" id="home-action-needed">
-            {t('Action needed')}
+            {t('Needs attention')}
           </h2>
           {hasDues ? (
             <div className="grid gap-space-4 rounded-lg border border-rule bg-surface p-space-5 medium:p-space-6">
@@ -210,26 +227,9 @@ export function ResidentHome({
         </section>
       ) : null}
 
-      {shortcuts.length ? (
-        <section aria-labelledby="home-shortcuts" className="grid gap-space-3">
-          <h2 className="text-heading" id="home-shortcuts">
-            {t('Quick actions')}
-          </h2>
-          <ul className="grid grid-cols-2 gap-space-3 medium:grid-cols-3 expanded:grid-cols-4">
-            {shortcuts.map((item) => (
-              <li key={item.href}>
-                <Link
-                  className="flex min-h-24 flex-col items-start justify-between gap-space-3 rounded-md border border-rule bg-surface p-space-4 text-body-strong hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                  href={item.href}
-                >
-                  <ModuleIcon moduleKey={item.moduleKey} />
-                  <span>{t(item.label)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {graph ? <ResidentGraph graph={graph} /> : null}
+
+      <ComingUp items={comingUp} timezone={snapshot.timezone} />
 
       <section aria-labelledby="home-activity" className="grid gap-space-3">
         <h2 className="text-heading" id="home-activity">

@@ -137,6 +137,51 @@ function Fixture() {
           ) : (
             <AdminHome
               actions={actions}
+              comingUp={
+                state === 'empty'
+                  ? []
+                  : [
+                      {
+                        source: 'meeting',
+                        item_id: 'b1d55fc3-0751-4b79-86c1-5b3e25942392',
+                        title: 'Annual general meeting',
+                        occurs_at: '2026-11-28T12:30:00Z',
+                        href: '/admin/meetings/b1d55fc3-0751-4b79-86c1-5b3e25942392',
+                      },
+                    ]
+              }
+              collectionGraph={
+                state === 'empty'
+                  ? null
+                  : {
+                      today: '2026-11-20',
+                      rows: Array.from({ length: 6 }, (_, index) => ({
+                        month: `2026-${String(index + 6).padStart(2, '0')}-01`,
+                        bill_count: 1,
+                        billed_paise: '500000',
+                        waived_paise: '0',
+                        net_billed_paise: '500000',
+                        collected_paise: String(250000 + index * 50000),
+                        collection_percent: 50 + index * 10,
+                      })),
+                      period: '6m',
+                      range: {
+                        from: '2026-06-01',
+                        toMonth: '2026-11-01',
+                        to: '2026-11-30',
+                      },
+                    }
+              }
+              managingBodyName="Association"
+              quickActions={[
+                {
+                  key: 'notice.create',
+                  href: '/admin/notices/new',
+                  label: 'Post a notice',
+                  moduleKey: 'notice',
+                  permissions: { admin: 'notice:create' },
+                },
+              ]}
               snapshot={snapshot}
               suspended={state === 'suspended'}
             />
