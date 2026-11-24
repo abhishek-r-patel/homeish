@@ -48,6 +48,17 @@ describe.skipIf(!hasDatabase)('database billing bills and ledger', () => {
          values ($1, 'core', true, '{}'), ($1, 'billing', true, '{}')`,
         [societyId],
       );
+      await client.query(
+        `insert into public.module_setting_access
+           (society_id, module_key, setting_key, admin_can_edit)
+         values
+           ($1, 'billing', 'due_day_of_month', true),
+           ($1, 'billing', 'rounding', true),
+           ($1, 'billing', 'bill_email_on_publish', true)
+         on conflict (society_id, module_key, setting_key)
+         do update set admin_can_edit = true`,
+        [societyId],
+      );
       for (const role of Object.keys(users) as (keyof UserIds)[]) {
         const membership = await client.query<{ id: string }>(
           `insert into public.memberships (society_id, user_id, roles, status)

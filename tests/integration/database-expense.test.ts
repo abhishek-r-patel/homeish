@@ -1753,6 +1753,16 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
           "insert into public.module_configs(society_id,module_key,enabled,settings) values($1,'core',true,'{}'),($1,'billing',true,'{}'),($1,'expense',true,'{}'),($2,'core',true,'{}'),($2,'expense',true,'{}')",
           [societyId, otherSocietyId],
         );
+        await client.query(
+          `insert into public.module_setting_access
+             (society_id, module_key, setting_key, admin_can_edit)
+           values
+             ($1, 'expense', 'approval_threshold_paise', true),
+             ($1, 'expense', 'billing_income_account_id', true)
+           on conflict (society_id, module_key, setting_key)
+           do update set admin_can_edit = true`,
+          [societyId],
+        );
         const dates = (
           await client.query<{
             today: string;
