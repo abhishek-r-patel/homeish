@@ -11,7 +11,9 @@ import {
 import {
   getModuleDefinition,
   getModuleNavigation,
+  getRoleNavigationGroups,
   getRoleNavigation,
+  getRoleTabs,
   MODULE_KEYS,
   MODULE_REGISTRY,
   parseModuleSettings,
@@ -225,6 +227,39 @@ describe('module registry', () => {
         ({ href }) => href,
       ),
     ).toEqual(['/home', '/household', '/action-plans', '/help', '/visitors']);
+  });
+
+  it('keeps primary tabs fixed by role instead of registry order', () => {
+    const staffModules = ['visitor', 'billing', 'service_request'] as const;
+    expect(getRoleTabs('admin', staffModules).map(({ href }) => href)).toEqual([
+      '/admin',
+      '/admin/visitors',
+      '/admin/billing',
+      '/admin/requests',
+    ]);
+    expect(
+      getRoleTabs('committee', staffModules).map(({ href }) => href),
+    ).toEqual(['/admin', '/admin/billing', '/admin/requests']);
+    expect(
+      getRoleTabs('resident', staffModules).map(({ href }) => href),
+    ).toEqual(['/home', '/visitors', '/bills', '/requests']);
+  });
+
+  it('uses deliveries as the fixed resident second tab when visitors is off', () => {
+    expect(
+      getRoleTabs('resident', ['delivery', 'billing', 'service_request']).map(
+        ({ href }) => href,
+      ),
+    ).toEqual(['/home', '/deliveries', '/bills', '/requests']);
+  });
+
+  it('groups every navigation destination without losing empty-safe routes', () => {
+    const groups = getRoleNavigationGroups(['admin'], ['visitor', 'billing']);
+    expect(groups.every((group) => group.items.length > 0)).toBe(true);
+    expect(groups.flatMap((group) => group.items).length).toBe(
+      getRoleNavigation(['admin'], ['visitor', 'billing']).length,
+    );
+    expect(getRoleNavigationGroups(['admin'], [])).not.toEqual([]);
   });
 
   it('exposes enabled directory routes for each permitted role', () => {

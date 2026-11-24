@@ -9,6 +9,7 @@ import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { MAX_RESIDENT_CSV_BYTES, parseResidentsCsv } from './residents-csv';
 import { todayInIndia } from '../../lib/india-time';
+import { readWorkspacePreferences } from '../home/workspace-operations';
 
 const roleSchema = z.enum([
   'admin',
@@ -588,7 +589,28 @@ export async function getProfile() {
     .eq('id', context.userId)
     .single();
   if (error) throw new Error('Could not load your profile.', { cause: error });
-  return { ...data, isHindiEnabled: context.isHindiEnabled };
+  const workspacePreferences = await readWorkspacePreferences(context);
+  const placeOptions = [
+    ...(context.roles.includes('resident')
+      ? [{ value: 'home' as const, label: 'My home' }]
+      : []),
+    ...(context.roles.some((role) => role === 'admin' || role === 'committee')
+      ? [{ value: 'work' as const, label: 'Managing body' }]
+      : []),
+    ...(context.roles.includes('guard')
+      ? [{ value: 'gate' as const, label: 'Gate desk' }]
+      : []),
+    ...(context.roles.includes('hk_supervisor')
+      ? [{ value: 'housekeeping' as const, label: 'Housekeeping' }]
+      : []),
+  ];
+  return {
+    ...data,
+    isHindiEnabled: context.isHindiEnabled,
+    startingPlace: workspacePreferences.startingPlace,
+    placeOptions,
+    hasMultiplePlaces: placeOptions.length > 1,
+  };
 }
 
 export async function updateLanguagePreference(

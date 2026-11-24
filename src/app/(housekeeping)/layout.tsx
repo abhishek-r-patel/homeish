@@ -13,6 +13,8 @@ import {
   type AuthorizationRequirement,
 } from '@/core/permissions/authorize';
 import { LanguageProvider } from '@/components/language-provider';
+import { getShellData } from '@/core/tenancy/shell-data';
+import { switchSocietyAction } from '@/app/(auth)/actions';
 export default async function HousekeepingLayout({
   children,
 }: {
@@ -45,6 +47,7 @@ export default async function HousekeepingLayout({
       : HousekeepingShell;
   const showPettyCash =
     Shell === HousekeepingShell && (await isPettyCashCustodian(context));
+  const shellData = await getShellData(context);
   return (
     <LanguageProvider
       hindiEnabled={context.isHindiEnabled}
@@ -52,8 +55,12 @@ export default async function HousekeepingLayout({
       mode="account"
     >
       <Shell
+        activeSocietyId={shellData.activeSocietyId ?? undefined}
         enabledModules={[...context.enabledModules]}
+        places={shellData.places}
         showPettyCash={showPettyCash}
+        societies={shellData.societies}
+        switchSociety={switchSocietyAction}
       >
         {children}
       </Shell>

@@ -4,18 +4,30 @@ import { GuardShell } from '@/components/app-shells';
 import { HandledByControl } from '@/components/guards/handled-by-control';
 import { LanguageProvider } from '@/components/language-provider';
 import { getGuardDutyState } from '@/core/guards/operations';
+import { buildRequestContext } from '@/core/tenancy/request-context';
+import { createRequestId } from '@/core/errors';
+import { getShellData } from '@/core/tenancy/shell-data';
+import { switchSocietyAction } from '@/app/(auth)/actions';
 
 export default async function GuardLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const guardState = await getGuardDutyState();
+  const shellData = await getShellData(
+    await buildRequestContext(createRequestId()),
+  );
   return (
     <LanguageProvider
       hindiEnabled={guardState.isHindiEnabled}
       initialLocale={guardState.languagePreference}
       mode="account"
     >
-      <GuardShell>
+      <GuardShell
+        activeSocietyId={shellData.activeSocietyId ?? undefined}
+        places={shellData.places}
+        societies={shellData.societies}
+        switchSociety={switchSocietyAction}
+      >
         <HandledByControl state={guardState} />
         {children}
       </GuardShell>

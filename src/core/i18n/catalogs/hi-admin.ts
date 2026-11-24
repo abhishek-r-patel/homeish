@@ -1340,6 +1340,20 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Next meeting': 'अगली बैठक',
   'No meeting scheduled': 'कोई बैठक तय नहीं है',
   'Needs attention': 'ध्यान देने योग्य',
+  'Managing today': 'आज का प्रबंधन',
+  '{name} · Managing today': '{name} · आज का प्रबंधन',
+  Collection: 'वसूली',
+  'Maintenance collected over the last six months.':
+    'पिछले छह महीनों में वसूला गया रखरखाव।',
+  '{amount} collected in six months': 'छह महीनों में {amount} वसूला गया',
+  'Managing body': 'प्रबंध निकाय',
+  'Managing-body name': 'प्रबंध निकाय का नाम',
+  'This name appears in the place picker and society work headings.':
+    'यह नाम जगह चुनने और सोसायटी कार्य शीर्षकों में दिखाई देगा।',
+  'Save name': 'नाम सहेजें',
+  'Managing-body name saved.': 'प्रबंध निकाय का नाम सहेजा गया।',
+  'Use a preset or your own name. This appears in the place picker and society work headings.':
+    'प्रीसेट या अपना नाम दें। यह नाम जगह चुनने और सोसायटी कार्य शीर्षकों में दिखाई देगा।',
   '{count} out of stock': '{count} स्टॉक में नहीं',
   'Society activity': 'सोसायटी गतिविधि',
   'Requests, notices, meetings and registrations from the last 30 days will appear here.':

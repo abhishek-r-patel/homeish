@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import type { FormEvent } from 'react';
 import Link from 'next/link';
-import { updateProfileAction } from '@/app/profile/actions';
+import {
+  saveStartingPlaceAction,
+  updateProfileAction,
+} from '@/app/profile/actions';
 import type { ServerActionResult } from '@/core/actions/server-action';
 import type { getProfile } from '@/core/members/operations';
 import { Card } from '@/components/ui/data-display';
@@ -126,6 +129,72 @@ export function ProfileContent({ profile }: { profile: Profile }) {
       <Card title={translate('Account details')}>
         <ProfileForm profile={profile} />
       </Card>
+      {profile.hasMultiplePlaces ? (
+        <Card title={translate('Starting place')}>
+          <StartingPlaceForm profile={profile} />
+        </Card>
+      ) : null}
     </main>
+  );
+}
+
+function StartingPlaceForm({ profile }: { profile: Profile }) {
+  const { translate } = useLanguage();
+  const { translateFeedback } = useUiTranslator();
+  const router = useRouter();
+  const [result, setResult] = useState<ServerActionResult | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(async () => {
+      const nextResult = await saveStartingPlaceAction(formData);
+      setResult(nextResult);
+      if (nextResult.ok) router.refresh();
+    });
+  }
+
+  return (
+    <form className="grid gap-space-4" onSubmit={submit}>
+      <label
+        className="grid gap-space-1 text-body-strong"
+        htmlFor="starting-place"
+      >
+        {translate('When I sign in, open')}
+        <select
+          className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
+          defaultValue={profile.startingPlace}
+          id="starting-place"
+          name="startingPlace"
+        >
+          <option value="last_used">
+            {translate('Last place used on this device')}
+          </option>
+          {profile.placeOptions.map((place) => (
+            <option key={place.value} value={place.value}>
+              {translate(place.label)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <p className="text-caption text-ink-muted">
+        {translate(
+          'This choice is saved to your account. Each device otherwise remembers its last place.',
+        )}
+      </p>
+      <Button disabled={pending} loading={pending} type="submit">
+        {translate('Save starting place')}
+      </Button>
+      {result?.message ? (
+        <p
+          aria-live="polite"
+          className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
+          role="status"
+        >
+          {translateFeedback(result.message)}
+        </p>
+      ) : null}
+    </form>
   );
 }

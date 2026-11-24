@@ -46,6 +46,7 @@ export interface SessionSnapshot {
     title: string;
     stage: string;
   }[];
+  startingPlace: 'last_used' | 'home' | 'work' | 'gate' | 'housekeeping';
   isDeveloperAccount: boolean;
   mfaVerified: boolean;
 }
@@ -73,15 +74,21 @@ export async function getSession(
   requestId = createRequestId(),
 ): Promise<SessionSnapshot> {
   const context = await buildRequestContext(requestId);
-  const [profileResult, membershipResult, officerResult] = await Promise.all([
-    context.db
-      .from('profiles')
-      .select('email, full_name, status')
-      .eq('id', context.userId)
-      .maybeSingle(),
-    context.db.rpc('session_memberships'),
-    context.db.rpc('poll_election_officer_assignments'),
-  ]);
+  const [profileResult, membershipResult, officerResult, preferenceResult] =
+    await Promise.all([
+      context.db
+        .from('profiles')
+        .select('email, full_name, status')
+        .eq('id', context.userId)
+        .maybeSingle(),
+      context.db.rpc('session_memberships'),
+      context.db.rpc('poll_election_officer_assignments'),
+      context.societyId
+        ? context.db.rpc('person_workspace_preferences_get', {
+            p_society_id: context.societyId,
+          })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
   if (profileResult.error) {
     throw new Error('Could not load the current user profile.', {
       cause: profileResult.error,
@@ -97,9 +104,27 @@ export async function getSession(
       cause: officerResult.error,
     });
   }
+  if (preferenceResult.error) {
+    throw new Error("Could not load the current user's workspace preference.", {
+      cause: preferenceResult.error,
+    });
+  }
   if (!profileResult.data || profileResult.data.status !== 'active') {
     throw new AppError('UNAUTHENTICATED');
   }
+  const startingPlace = z
+    .array(
+      z.object({
+        starting_place: z.enum([
+          'last_used',
+          'home',
+          'work',
+          'gate',
+          'housekeeping',
+        ]),
+      }),
+    )
+    .parse(preferenceResult.data)[0]?.starting_place;
 
   const societies: SessionSociety[] = membershipResult.data.map((row) => {
     if (
@@ -134,6 +159,7 @@ export async function getSession(
     officerAssignments: officerAssignmentsSchema.parse(officerResult.data),
     isDeveloperAccount: context.isDeveloperAccount,
     mfaVerified: context.mfaVerified,
+    startingPlace: startingPlace ?? 'last_used',
   };
 }
 

@@ -51,7 +51,7 @@ describe('application shells', () => {
     expect(markup).toContain('Dashboard');
     expect(markup).toContain('Structure');
     expect(markup).toContain('Jobs');
-    expect(markup).toContain('Operations');
+    expect(markup).toContain('Today');
   });
 
   it('limits compact tabs to four destinations plus More', () => {

@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import {
   signOutAction,
   switchSocietyAction,
@@ -18,6 +18,7 @@ import {
   translateKnownAuthResponse,
 } from '../../core/i18n/catalogs/hi-auth';
 import type { MessageValues } from '../../core/i18n/messages';
+import { resolveStartingPlace } from '../../core/tenancy/starting-place';
 import { useLanguage } from '../language-provider';
 import { Banner } from '../ui/feedback';
 import { Button } from '../ui/button';
@@ -208,6 +209,25 @@ export function CurrentSession({
     translateKnownAuthResponse(locale, source, translate);
   const { chooseSociety, notice, pending, signOut } = useSessionActions();
   const [showSocieties, setShowSocieties] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    let lastUsed: string | null = null;
+    try {
+      lastUsed = window.localStorage.getItem(
+        `homeish:last-place:${activeSociety.id}`,
+      );
+    } catch (error) {
+      console.warn('Could not read the last Homeish place.', error);
+    }
+    router.replace(
+      resolveStartingPlace(
+        activeSociety.roles,
+        session.startingPlace,
+        lastUsed,
+      ),
+    );
+  }, [activeSociety.id, activeSociety.roles, router, session.startingPlace]);
 
   return (
     <div className="grid gap-space-5">

@@ -11,6 +11,7 @@ import {
   updateLanguagePreference,
   updateProfile,
 } from '@/core/members/operations';
+import { saveStartingPlace } from '@/core/home/workspace-operations';
 
 export async function updateProfileAction(formData: FormData) {
   return runServerAction('profile.update', async () => {
@@ -28,6 +29,14 @@ export async function saveLanguagePreferenceAction(input: unknown) {
       return 'Language preference saved.';
     },
   );
+}
+
+export async function saveStartingPlaceAction(formData: FormData) {
+  return runServerAction('profile.updateStartingPlace', async () => {
+    await saveStartingPlace(formData);
+    revalidatePath('/profile');
+    return 'Starting place saved.';
+  });
 }
 
 export async function saveDeviceLanguageAction(input: unknown) {
