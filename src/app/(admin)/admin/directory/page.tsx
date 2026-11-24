@@ -11,6 +11,8 @@ import {
 import { ModuleDisabledPage } from '@/core/modules/module-disabled-page';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
 
 export const metadata = {
   title: 'Resident & vehicle directory | Homeish',
@@ -63,10 +65,14 @@ export default async function AdminDirectoryPage() {
     }
     throw error;
   }
+  const featureTabs = await getFeatureTabs('people');
   return (
-    <DirectoryManagementWorkspace
-      key={JSON.stringify(workspace)}
-      {...workspace}
-    />
+    <div className="grid gap-space-5">
+      <FeatureTabs items={featureTabs} />
+      <DirectoryManagementWorkspace
+        key={JSON.stringify(workspace)}
+        {...workspace}
+      />
+    </div>
   );
 }

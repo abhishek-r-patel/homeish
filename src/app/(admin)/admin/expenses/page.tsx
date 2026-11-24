@@ -28,6 +28,8 @@ import {
 } from '@/core/i18n/format';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
 
 export const metadata = {
   title: 'Accounts | Homeish',
@@ -94,8 +96,10 @@ export default async function ExpensesPage({
     return `/admin/expenses?${params}`;
   };
 
+  const featureTabs = await getFeatureTabs('accounts');
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
+      <FeatureTabs items={featureTabs} />
       <h1 className="text-title font-semibold">{t('Society accounts')}</h1>
       <ExpenseNav current="book" canManage={w.can_manage} locale={locale} />
       {!w.can_manage ? (

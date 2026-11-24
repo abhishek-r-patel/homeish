@@ -16,6 +16,8 @@ import {
 } from '@/core/staff/operations';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
 
 export const metadata = {
   title: 'Staff management | Homeish',
@@ -57,8 +59,10 @@ export default async function AdminStaffPage() {
       .filter(({ status }) => status === 'pending')
       .map((link) => ({ staff, link })),
   );
+  const featureTabs = await getFeatureTabs('people');
   return (
     <section className="grid gap-space-5">
+      <FeatureTabs items={featureTabs} />
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">{t('Staff management')}</h1>
         <p className="text-body text-ink-muted">

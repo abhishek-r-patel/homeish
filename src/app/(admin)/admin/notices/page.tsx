@@ -5,6 +5,8 @@ import { NoticeListItem } from '@/components/notices/notice-list-item';
 import { getNoticeBoard } from '@/core/notices/operations';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
 
 export const metadata = {
   title: 'Notices | Homeish',
@@ -32,8 +34,10 @@ export default async function AdminNoticesPage({
     ['archive', 'Archive', '/admin/notices?tab=archive'],
   ] as const;
 
+  const featureTabs = await getFeatureTabs('meetings-notices');
   return (
     <section className="grid min-w-0 gap-space-5">
+      <FeatureTabs items={featureTabs} />
       <header className="flex flex-wrap items-end justify-between gap-space-3">
         <div className="grid gap-space-2">
           <h1 className="text-title font-semibold">{t('Notice board')}</h1>

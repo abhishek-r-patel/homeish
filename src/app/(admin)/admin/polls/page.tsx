@@ -6,6 +6,8 @@ import { getPollAdminList } from '@/core/poll/operations';
 import { loadPollPage } from '@/core/poll/page-access';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
 
 export const metadata = {
   title: 'Polls | Homeish',
@@ -25,8 +27,10 @@ export default async function AdminPollsPage() {
       />
     );
   }
+  const featureTabs = await getFeatureTabs('meetings-notices');
   return (
     <>
+      <FeatureTabs items={featureTabs} />
       {result.data.canManage ? (
         <nav
           aria-label={t('Poll management')}

@@ -17,6 +17,7 @@ import { translateMessage } from '@/core/i18n/messages';
 import { getDataCleanupRules } from '@/core/compliance/operations';
 import { getManagingBodyName } from '@/core/tenancy/workspace-settings';
 import { ManagingBodyName } from '@/components/society/managing-body-name';
+import { GettingStartedControl } from '@/components/society/getting-started-control';
 
 export const metadata = {
   title: 'Society settings | Homeish',
@@ -101,6 +102,16 @@ export default async function SocietySettingsPage() {
       >
         <ManagingBodyName canManage={canManage} name={managingBodyName} />
       </Card>
+      {canManage ? (
+        <Card
+          description={t(
+            'Return the setup checklist to the dashboard after hiding it.',
+          )}
+          title={t('Getting started')}
+        >
+          <GettingStartedControl />
+        </Card>
+      ) : null}
       {!languageSettings && canManage ? (
         <Card
           description={t(

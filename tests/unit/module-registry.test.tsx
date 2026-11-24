@@ -130,6 +130,8 @@ describe('module registry', () => {
       '/admin/guards',
       '/admin/society-profile',
       '/admin/adoption',
+      '/admin/features',
+      '/admin/calendar',
       '/admin/jobs',
       '/admin/action-plans',
       '/admin/letters',
@@ -147,6 +149,8 @@ describe('module registry', () => {
       '/admin/guards',
       '/admin/society-profile',
       '/admin/adoption',
+      '/admin/features',
+      '/admin/calendar',
       '/admin/action-plans',
       '/admin/letters',
       '/admin/contact-log',
@@ -219,6 +223,7 @@ describe('module registry', () => {
       '/household',
       '/action-plans',
       '/help',
+      '/calendar',
       '/visitors',
       '/bills',
     ]);
@@ -226,7 +231,14 @@ describe('module registry', () => {
       getRoleNavigation(['resident'], ['visitor'], permissionMaps).map(
         ({ href }) => href,
       ),
-    ).toEqual(['/home', '/household', '/action-plans', '/help', '/visitors']);
+    ).toEqual([
+      '/home',
+      '/household',
+      '/action-plans',
+      '/help',
+      '/calendar',
+      '/visitors',
+    ]);
   });
 
   it('keeps primary tabs fixed by role instead of registry order', () => {

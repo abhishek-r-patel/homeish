@@ -1352,6 +1352,12 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
     'यह नाम जगह चुनने और सोसायटी कार्य शीर्षकों में दिखाई देगा।',
   'Save name': 'नाम सहेजें',
   'Managing-body name saved.': 'प्रबंध निकाय का नाम सहेजा गया।',
+  'Return the setup checklist to the dashboard after hiding it.':
+    'छिपाने के बाद सेटअप सूची को डैशबोर्ड पर फिर दिखाएँ।',
+  'Bring back the self-ticking Getting started card on the admin dashboard.':
+    'प्रशासक डैशबोर्ड पर अपने-आप पूरा होने वाला शुरुआती कार्ड वापस दिखाएँ।',
+  'Getting started restored.': 'शुरुआती कार्ड वापस दिखाया गया।',
+  'Show Getting started': 'शुरुआती कार्ड दिखाएँ',
   'Use a preset or your own name. This appears in the place picker and society work headings.':
     'प्रीसेट या अपना नाम दें। यह नाम जगह चुनने और सोसायटी कार्य शीर्षकों में दिखाई देगा।',
   '{count} out of stock': '{count} स्टॉक में नहीं',

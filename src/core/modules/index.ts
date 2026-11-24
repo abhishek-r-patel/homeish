@@ -205,6 +205,18 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Society',
         },
         {
+          href: '/admin/features',
+          label: 'Features',
+          permission: 'adoption:read',
+          section: 'Society',
+        },
+        {
+          href: '/admin/calendar',
+          label: 'Calendar',
+          permission: 'dashboard:read',
+          section: 'Overview',
+        },
+        {
           href: '/admin/jobs',
           label: 'Jobs',
           permission: 'jobs:read',
@@ -283,6 +295,18 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           label: 'Adoption tracker',
           permission: 'adoption:read',
           section: 'Society',
+        },
+        {
+          href: '/admin/features',
+          label: 'Features',
+          permission: 'adoption:read',
+          section: 'Society',
+        },
+        {
+          href: '/admin/calendar',
+          label: 'Calendar',
+          permission: 'dashboard:read',
+          section: 'Overview',
         },
         {
           href: '/admin/action-plans',
@@ -373,6 +397,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           label: 'Help',
           permission: 'help:read',
           section: 'Overview',
+        },
+        {
+          href: '/calendar',
+          label: 'Calendar',
+          permission: 'home:read',
+          section: 'Home',
         },
       ],
     },
@@ -1508,6 +1538,8 @@ export type RoleNavigationItem = ModuleNavigationItem & {
 const ADMIN_TOPIC_BY_HREF: Readonly<Record<string, NavigationTopic>> = {
   '/admin': 'Today',
   '/admin/analytics': 'Today',
+  '/admin/calendar': 'Today',
+  '/admin/features': 'Settings & help',
   '/admin/communication': 'Today',
   '/admin/action-plans': 'Today',
   '/admin/visitors': 'Gate & security',
@@ -1558,6 +1590,7 @@ const RESIDENT_TOPIC_BY_HREF: Readonly<Record<string, NavigationTopic>> = {
   '/documents': 'My home',
   '/tenancy': 'My home',
   '/home-services': 'Get help',
+  '/calendar': 'My home',
   '/sos': 'Get help',
   '/help': 'Get help',
   '/notices': 'Society',
