@@ -490,50 +490,37 @@ homeish/
 ├─ scripts/                       Header and public-environment checks; environment-profile loader (with-env.mjs); hidden DB-password setter (set-db-password.ps1); database commands and migration-name check (db.mjs, check-migrations.mjs); local integration-test runner (test-integration-local.ps1)
 ├─ supabase/
 │  ├─ migrations/                 Forward-only SQL, ordered; sections per module
-│  └─ seed/                       Synthetic seed data
+│  ├─ seed/                       Synthetic seed data
+│  └─ templates/                  Auth email templates
 ├─ public/                        Homeish logo, manifest, icons, service worker
 ├─ src/
 │  ├─ app/                        Next.js routes only (thin)
 │  │  ├─ (auth)/                  S-01..S-04; thin host-aware root entry
 │  │  ├─ (resident)/              R-xx screens, mounted per module
 │  │  ├─ (guard)/                 G-xx screens
-│  │  ├─ (admin)/                 A-xx screens
+│  │  ├─ (housekeeping)/          Housekeeping supervisor screens
+│  │  ├─ (admin)/                 A-xx screens (admin and committee)
 │  │  ├─ developer/               D-xx screens (separate layout/login)
-│  │  └─ api/
-│  │     ├─ jobs/daily/           Secured scheduled job entry
-│  │     ├─ push/                 Subscribe/unsubscribe
-│  │     ├─ client-errors/        Client error ingestion (LOG-1)
-│  │     ├─ files/                Signed URL issuance, PDF downloads
-│  │     └─ health/               Health check (NFR-11)
+│  │  ├─ action-plans/, directory/, elections/, help/, petty-cash/, privacy/, profile/  Shared signed-in pages
+│  │  ├─ fixtures/, icons/        Test-only fixtures and generated icons
+│  │  └─ api/                     health, jobs/daily, push, client-errors, files, exports, billing, analytics,
+│  │                              expense, amc, housekeeping, letters, polls (API.md Section 6)
 │  ├─ instrumentation.ts          Server environment validation on startup
 │  ├─ proxy.ts                    Host allow-list and non-public noindex headers
-│  ├─ core/                       Mandatory platform (cannot be disabled)
-│  │  ├─ auth/                    Session, request context, OTP flow helpers
-│  │  ├─ tenancy/                 Society, membership, active-society handling
-│  │  ├─ website/                 Marketing copy/screens, society-address form, synthetic preview
-│  │  ├─ permissions/             Role types, shared helpers
-│  │  ├─ modules/                 Module registry, enabled-modules lookup, guards
-│  │  ├─ billing/                 P7A setup operations, checked queries and shared money/settings schemas
-│  │  ├─ notifications/           In-app + push dispatch, inbox
-│  │  ├─ logging/                 Error log, audit log, request ID, Sentry adapter
-│  │  ├─ errors/                  Error classes, result type, mapping
-│  │  ├─ jobs/                    Job records and runner helpers
+│  ├─ core/                       Platform services and every domain implementation
+│  │  ├─ auth/, security/, rate-limit/          Session, request context, OTP, abuse limits
+│  │  ├─ society/, structure/, members/, guards/, registration/, developer/  Societies, units, membership, onboarding, developer console
+│  │  ├─ permissions/             Role types and hasPermission
+│  │  ├─ modules/                 Module registry: navigation, settings schemas and per-module permission maps
+│  │  ├─ notifications/, communication/, jobs/, logging/, errors/  Shared platform services
 │  │  ├─ privileged/              Service-role client (restricted, Section 8.4)
-│  │  ├─ db/                      Typed client factories, generated DB types
-│  │  ├─ integrations/            One adapter per external service (Section 13)
-│  │  └─ config/                  Validated public/server environment config
-│  ├─ modules/                    One folder per module key
-│  │  └─ <module>/                visitor, delivery, billing, service_request, ...
-│  │     ├─ module.ts             Registration: key, name, nav items, settings schema, permissions
-│  │     ├─ permissions.ts        Role → capability map
-│  │     ├─ schemas.ts            Zod input/settings schemas
-│  │     ├─ actions.ts            Server Actions (thin)
-│  │     ├─ service.ts            Business rules
-│  │     ├─ queries.ts            Database access
-│  │     ├─ components/          Module composites (per DESIGN.md 6.20)
-│  │     └─ __tests__/
+│  │  ├─ db/, config/, files/, csv/, i18n/, pwa/, actions/, home/, help/, toolkit/, website/  Data access, configuration and shared helpers
+│  │  └─ <domain>/                One folder per feature: visitor, delivery, billing, service-requests, request,
+│  │                              staff, housekeeping, amc, notices, amenity, directory, expense, tenancy, document,
+│  │                              parking, sos, vendor, patrol, metering, asset, home-services, poll, meeting, event,
+│  │                              community, analytics, compliance, letters, major-works
 │  ├─ components/
-│  │  ├─ billing/                 Charge and payment-settings forms, confirmations and private QR upload
+│  │  ├─ <domain>/                Feature UI, folder names matching core/<domain>
 │  │  └─ ui/                      Shared design-system components (DESIGN.md Section 6)
 │  ├─ styles/                     Tailwind theme/tokens
 │  └─ lib/                        Pure utilities (money, dates, formatting)
@@ -547,11 +534,11 @@ homeish/
 └─ vitest.integration.config.ts
 ```
 
-Current phase and validation status is recorded in IMPLEMENTATION_PLAN.md. Authenticated role shells and domain implementations already exist in the current `src/core/` and `src/components/` locations; do not recreate them from the target `src/modules/` diagram. Implemented or locally verified code is not proof of hosted rollout or society enablement.
+Current phase and validation status is recorded in IMPLEMENTATION_PLAN.md. The map above is the real layout. A per-module `src/modules/<module>/` folder (module.ts, permissions.ts, schemas, actions, service, queries, components and tests together) is a target layout only: it does not exist, and code must not be moved into it as cleanup. Implemented or locally verified code is not proof of hosted rollout or society enablement.
 
 Rules:
 
-- `app/` contains routing and layout only; page files import from `modules/*` and `core/*`.
+- `app/` contains routing and layout only; page files import from `core/*` and `components/*`.
 - A module imports from `core` and `components/ui`, **never from another module**. Cross-module links use Core notifications/units or a route link (PRD A-05).
 - Adding a module = adding one folder, one registry line, its migrations, and its nav entries. No other file changes.
 

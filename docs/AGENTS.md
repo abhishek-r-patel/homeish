@@ -179,7 +179,7 @@ Follow ARCHITECTURE 14 and API 3.5, 14.
 - Authorization is enforced on the server and in the database. Hiding a button is only a convenience.
 - Follow the pipeline in API 2.5 for every operation: authenticated → developer MFA (if developer) → society state → module enabled → role → ownership → database rules.
 - Derive identity from the verified session, never from a client-supplied user or society ID. Re-read roles from the database for each request.
-- The permission matrix lives in **one code map per module**; the service checks, the screen visibility and the tests all read from it. Do not duplicate permission logic in screens.
+- The permission matrix lives in **one code map per module**; the service checks, the screen visibility and the tests all read from it. Do not duplicate permission logic in screens. PRD §8.2's full permission map is generated from these maps and `tests/unit/permission-docs.test.ts` fails when they drift; refresh it in the same change.
 - Never use the service-role (privileged) identity outside the isolated privileged module and the cases listed in ARCHITECTURE 8.4. Anything that can run under the user's own session must.
 
 **General**
