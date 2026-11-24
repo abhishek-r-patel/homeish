@@ -1,4 +1,5 @@
 // Generated database types from `npm run db:types`; do not edit by hand.
+
 export type Json =
   | string
   | number
@@ -13118,7 +13119,9 @@ export type Database = {
       person_workspace_preferences: {
         Row: {
           quick_action_pins: string[] | null;
+          resident_all_flats: boolean;
           resident_graph_mode: string;
+          resident_unit_id: string | null;
           society_id: string;
           starting_place: string;
           updated_at: string;
@@ -13127,7 +13130,9 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           quick_action_pins?: string[] | null;
+          resident_all_flats?: boolean;
           resident_graph_mode?: string;
+          resident_unit_id?: string | null;
           society_id: string;
           starting_place?: string;
           updated_at?: string;
@@ -13135,13 +13140,22 @@ export type Database = {
         };
         Update: {
           quick_action_pins?: string[] | null;
+          resident_all_flats?: boolean;
           resident_graph_mode?: string;
+          resident_unit_id?: string | null;
           society_id?: string;
           starting_place?: string;
           updated_at?: string;
           user_id?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'person_workspace_preferences_resident_unit_id_fkey';
+            columns: ['resident_unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'person_workspace_preferences_society_id_fkey';
             columns: ['society_id'];
@@ -16281,6 +16295,55 @@ export type Database = {
           },
         ];
       };
+      society_import_runs: {
+        Row: {
+          actor_id: string;
+          actor_role: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          request_id: string;
+          row_count: number;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id: string;
+          actor_role: string;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          request_id: string;
+          row_count: number;
+          society_id: string;
+        };
+        Update: {
+          actor_id?: string;
+          actor_role?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          request_id?: string;
+          row_count?: number;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_import_runs_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_import_runs_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       society_onboarding_records: {
         Row: {
           agreed_modules: string[];
@@ -16332,6 +16395,50 @@ export type Database = {
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      society_opening_dues_imports: {
+        Row: {
+          import_run_id: string;
+          imported_at: string;
+          imported_by: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          import_run_id: string;
+          imported_at?: string;
+          imported_by: string;
+          society_id: string;
+        };
+        Update: {
+          import_run_id?: string;
+          imported_at?: string;
+          imported_by?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_opening_dues_import_run_fkey';
+            columns: ['society_id', 'import_run_id'];
+            isOneToOne: false;
+            referencedRelation: 'society_import_runs';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'society_opening_dues_imports_imported_by_fkey';
+            columns: ['imported_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_opening_dues_imports_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
             referencedColumns: ['id'];
           },
         ];
@@ -21386,6 +21493,19 @@ export type Database = {
           p_version: string;
         };
         Returns: boolean;
+      };
+      bulk_import_context_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      bulk_import_save: {
+        Args: {
+          p_kind: string;
+          p_request_id: string;
+          p_rows: Json;
+          p_society_id: string;
+        };
+        Returns: string;
       };
       change_member_roles: {
         Args: {
@@ -26507,6 +26627,19 @@ export type Database = {
           has_data: boolean;
           month_start: string;
         }[];
+      };
+      resident_flat_options_get: {
+        Args: { p_society_id: string };
+        Returns: {
+          all_flats: boolean;
+          label: string;
+          selected: boolean;
+          unit_id: string;
+        }[];
+      };
+      resident_flat_selection_save: {
+        Args: { p_all_flats: boolean; p_society_id: string; p_unit_id: string };
+        Returns: undefined;
       };
       resident_home_get: { Args: { p_society_id: string }; Returns: Json };
       rotate_society_join_code: {
