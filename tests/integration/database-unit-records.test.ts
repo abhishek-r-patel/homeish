@@ -404,18 +404,6 @@ describe.skipIf(!hasDatabase)('database unit records', () => {
           ),
         { commit: true },
       );
-      await database.asRole(
-        'authenticated',
-        { sub: admin },
-        (client) =>
-          client.query(
-            `select public.unit_handover_reading_link(
-               $1,$2,$3,$4,'p36-handover-reading'
-             )`,
-            [society, handoverId, reading, randomUUID()],
-          ),
-        { commit: true },
-      );
       const handoverRequest = randomUUID();
       expect(
         await dbError(
@@ -478,6 +466,18 @@ describe.skipIf(!hasDatabase)('database unit records', () => {
         );
       const handoverId = await createHandover();
       expect(await createHandover()).toBe(handoverId);
+      await database.asRole(
+        'authenticated',
+        { sub: admin },
+        (client) =>
+          client.query(
+            `select public.unit_handover_reading_link(
+               $1,$2,$3,$4,'p36-handover-reading'
+             )`,
+            [society, handoverId, reading, randomUUID()],
+          ),
+        { commit: true },
+      );
       const handovers = async (user: string) =>
         database.asRole(
           'authenticated',
