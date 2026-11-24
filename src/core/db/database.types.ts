@@ -13172,6 +13172,39 @@ export type Database = {
           },
         ];
       };
+      platform_website_settings: {
+        Row: {
+          contact_email: string | null;
+          enquiry_hourly_limit: number;
+          id: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          contact_email?: string | null;
+          enquiry_hourly_limit?: number;
+          id?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          contact_email?: string | null;
+          enquiry_hourly_limit?: number;
+          id?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'platform_website_settings_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       poll_candidates: {
         Row: {
           id: string;
@@ -20648,6 +20681,63 @@ export type Database = {
           },
         ];
       };
+      website_enquiries: {
+        Row: {
+          city: string | null;
+          email: string | null;
+          flat_count: number | null;
+          full_name: string;
+          handled_at: string | null;
+          handled_by: string | null;
+          id: string;
+          message: string | null;
+          phone: string | null;
+          request_id: string;
+          society_name: string | null;
+          status: string;
+          submitted_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          city?: string | null;
+          email?: string | null;
+          flat_count?: number | null;
+          full_name: string;
+          handled_at?: string | null;
+          handled_by?: string | null;
+          id?: string;
+          message?: string | null;
+          phone?: string | null;
+          request_id: string;
+          society_name?: string | null;
+          status?: string;
+          submitted_at?: string;
+        };
+        Update: {
+          city?: string | null;
+          email?: string | null;
+          flat_count?: number | null;
+          full_name?: string;
+          handled_at?: string | null;
+          handled_by?: string | null;
+          id?: string;
+          message?: string | null;
+          phone?: string | null;
+          request_id?: string;
+          society_name?: string | null;
+          status?: string;
+          submitted_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'website_enquiries_handled_by_fkey';
+            columns: ['handled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       workspace_quick_action_defaults: {
         Row: {
           action_keys: string[];
@@ -22588,6 +22678,43 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      developer_website_enquiries_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          city: string;
+          email: string;
+          flat_count: number;
+          full_name: string;
+          handled_at: string;
+          id: string;
+          message: string;
+          phone: string;
+          society_name: string;
+          status: string;
+          submitted_at: string;
+        }[];
+      };
+      developer_website_enquiry_delete: {
+        Args: { p_enquiry_id: string };
+        Returns: undefined;
+      };
+      developer_website_enquiry_handle: {
+        Args: { p_enquiry_id: string };
+        Returns: undefined;
+      };
+      developer_website_settings_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          contact_email: string;
+          enquiry_hourly_limit: number;
+          updated_at: string;
+          updated_by: string;
+        }[];
+      };
+      developer_website_settings_save: {
+        Args: { p_contact_email: string; p_enquiry_hourly_limit: number };
+        Returns: undefined;
       };
       directory_emergency_contact_deactivate: {
         Args: { p_contact_id: string; p_society_id: string };
@@ -28381,6 +28508,26 @@ export type Database = {
       visitor_update_settings: {
         Args: { p_request_id: string; p_settings: Json; p_society_id: string };
         Returns: Json;
+      };
+      website_enquiry_create: {
+        Args: {
+          p_city: string;
+          p_email: string;
+          p_flat_count: number;
+          p_full_name: string;
+          p_message: string;
+          p_phone: string;
+          p_request_id: string;
+          p_society_name: string;
+        };
+        Returns: string;
+      };
+      website_public_settings_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          contact_email: string;
+          enquiry_hourly_limit: number;
+        }[];
       };
       workspace_calendar_get: {
         Args: { p_from: string; p_society_id: string; p_to: string };
