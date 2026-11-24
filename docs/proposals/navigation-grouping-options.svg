@@ -1,0 +1,514 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="2140" viewBox="0 0 1200 2140" role="img" aria-labelledby="title description">
+  <title id="title">Homeish menu grouping options</title>
+  <desc id="description">Sample mockups comparing the current admin and resident menus with grouping by topic and grouping by who does the work. Same pages in every option; only headings change.</desc>
+  <rect width="1200" height="2140" fill="#F5F7FA"/>
+  <text x="24" y="44" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="30" font-weight="700" fill="#1B1F23" text-anchor="start">Menu grouping: what it means</text>
+  <text x="24" y="72" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#59606A" text-anchor="start">Sample mockups for discussion · not built · uses the real 41 admin and 24 resident menu links</text>
+  <text x="24" y="94" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#59606A" text-anchor="start">Generated 24 Nov 2026 from src/core/modules/index.ts</text>
+  <rect x="24" y="120" width="1152" height="106" rx="12" fill="#E6EEF8" stroke="#D9E0E8" stroke-width="1"/>
+  <text x="44" y="148" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="15" font-weight="700" fill="#1E4E8C" text-anchor="start">In plain words</text>
+  <text x="44" y="172" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#1B1F23" text-anchor="start">Grouping only decides which heading each menu link sits under. No page or feature is added or removed. Think of a supermarket: the same products, but</text>
+  <text x="44" y="192" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#1B1F23" text-anchor="start">placed in labelled aisles (Dairy, Snacks, Cleaning) instead of one very long shelf. Today almost every admin link sits under one heading, &quot;Operations&quot;,</text>
+  <text x="44" y="212" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#1B1F23" text-anchor="start">so finding Parking means scrolling a list of 30.</text>
+  <circle cx="38" cy="256" r="14" fill="#1E4E8C"/>
+  <text x="38" y="261" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="62" y="262" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="20" font-weight="700" fill="#1B1F23" text-anchor="start">Admin menu on a laptop</text>
+  <text x="62" y="284" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">Same 41 links in each option. Only the headings change.</text>
+  <rect x="24" y="300" width="368" height="970" rx="12" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1.5"/>
+  <rect x="40" y="316" width="44.800000000000004" height="20" rx="6" fill="#E9EDF2"/>
+  <text x="47" y="330" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#59606A" text-anchor="start">Today</text>
+  <text x="40" y="364" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="18" font-weight="700" fill="#1B1F23" text-anchor="start">One long &quot;Operations&quot; list</text>
+  <text x="40" y="386" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">3 headings. Every feature outside the basics</text>
+  <text x="40" y="404" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">falls under Operations.</text>
+  <text x="44" y="442" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="700" fill="#59606A" text-anchor="start">Overview</text>
+  <rect x="50" y="452" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="460.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Dashboard</text>
+  <rect x="50" y="467" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="475.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Analytics</text>
+  <rect x="50" y="482" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="490.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Communication</text>
+  <rect x="50" y="497" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="505.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Help</text>
+  <text x="44" y="526" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="700" fill="#59606A" text-anchor="start">Society</text>
+  <rect x="50" y="536" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="544.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Structure</text>
+  <rect x="50" y="551" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="559.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">People</text>
+  <rect x="50" y="566" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="574.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Registration</text>
+  <rect x="50" y="581" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="589.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Gate &amp; Guards</text>
+  <rect x="50" y="596" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="604.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Society profile</text>
+  <rect x="50" y="611" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="619.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Adoption tracker</text>
+  <rect x="50" y="626" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="634.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Language</text>
+  <text x="44" y="655" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="700" fill="#59606A" text-anchor="start">Operations</text>
+  <rect x="50" y="665" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="673.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Jobs</text>
+  <rect x="50" y="680" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="688.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Action plans</text>
+  <rect x="50" y="695" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="703.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Letters</text>
+  <rect x="50" y="710" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="718.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Contact log</text>
+  <rect x="50" y="725" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="733.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Compliance register</text>
+  <rect x="50" y="740" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="748.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Visitors</text>
+  <rect x="50" y="755" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="763.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Deliveries</text>
+  <rect x="50" y="770" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="778.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Billing</text>
+  <rect x="50" y="785" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="793.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Requests</text>
+  <rect x="50" y="800" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="808.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Staff</text>
+  <rect x="50" y="815" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="823.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Housekeeping</text>
+  <rect x="50" y="830" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="838.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">AMC</text>
+  <rect x="50" y="845" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="853.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Notices</text>
+  <rect x="50" y="860" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="868.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Amenities</text>
+  <rect x="50" y="875" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="883.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Directory</text>
+  <rect x="50" y="890" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="898.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Accounts</text>
+  <rect x="50" y="905" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="913.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Move-in / Move-out</text>
+  <rect x="50" y="920" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="928.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Documents</text>
+  <rect x="40" y="932" width="190" height="15" rx="4" fill="#E6EEF8"/>
+  <rect x="40" y="932" width="3" height="15" rx="0" fill="#1E4E8C"/>
+  <rect x="50" y="935" width="9" height="9" rx="3" fill="#1E4E8C"/>
+  <text x="64" y="943.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="600" fill="#1E4E8C" text-anchor="start">Parking</text>
+  <rect x="50" y="950" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="958.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Emergency</text>
+  <rect x="50" y="965" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="973.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Vendors</text>
+  <rect x="50" y="980" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="988.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Patrol</text>
+  <rect x="50" y="995" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1003.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Meters</text>
+  <rect x="50" y="1010" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1018.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Assets</text>
+  <rect x="50" y="1025" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1033.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Home services</text>
+  <rect x="50" y="1040" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1048.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Polls</text>
+  <rect x="50" y="1055" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1063.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Meetings</text>
+  <rect x="50" y="1070" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1078.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Events</text>
+  <rect x="50" y="1085" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1093.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Community</text>
+  <rect x="50" y="1100" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="64" y="1108.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11.5" font-weight="400" fill="#1B1F23" text-anchor="start">Major works</text>
+  <path d="M244 663 h8 V1109 h-8" fill="none" stroke="#8A4B00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="260" y="868.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="700" fill="#8A4B00" text-anchor="start">30 links under</text>
+  <text x="260" y="886.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="700" fill="#8A4B00" text-anchor="start">one heading</text>
+  <text x="260" y="910.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#59606A" text-anchor="start">Parking is #19</text>
+  <rect x="40" y="1129" width="38.64" height="20" rx="6" fill="#E7F3EA"/>
+  <text x="47" y="1143" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#1E6B3A" text-anchor="start">Good</text>
+  <text x="50" y="1157" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- Nothing to learn; it is what people see now</text>
+  <rect x="40" y="1180" width="69.44" height="20" rx="6" fill="#FBF0DC"/>
+  <text x="47" y="1194" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#8A4B00" text-anchor="start">Watch out</text>
+  <text x="50" y="1208" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- Long scroll on laptop and phone</text>
+  <text x="50" y="1225" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- Headings do not help you find anything</text>
+  <rect x="408" y="300" width="368" height="970" rx="12" fill="#FFFFFF" stroke="#1E4E8C" stroke-width="2"/>
+  <rect x="424" y="316" width="63.28" height="20" rx="6" fill="#E9EDF2"/>
+  <text x="431" y="330" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#59606A" text-anchor="start">Option B</text>
+  <rect x="495.28" y="316" width="81.76" height="20" rx="6" fill="#E7F3EA"/>
+  <text x="502.28" y="330" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#1E6B3A" text-anchor="start">Recommended</text>
+  <text x="424" y="364" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="18" font-weight="700" fill="#1B1F23" text-anchor="start">Group by topic</text>
+  <text x="424" y="386" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">Headings say what the page is about. Groups fold</text>
+  <text x="424" y="404" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">open; yours stays open.</text>
+  <text x="428" y="442" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▾ Today</text>
+  <rect x="706" y="432" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="713" y="445" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">4</text>
+  <rect x="434" y="452" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="460.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Dashboard</text>
+  <rect x="434" y="469" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="477.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Communication</text>
+  <rect x="434" y="486" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="494.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Action plans</text>
+  <rect x="434" y="503" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="511.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Analytics</text>
+  <text x="428" y="534" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▾ Gate &amp; security</text>
+  <rect x="706" y="524" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="713" y="537" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">7</text>
+  <rect x="434" y="544" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="552.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Visitors</text>
+  <rect x="434" y="561" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="569.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Deliveries</text>
+  <rect x="434" y="578" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="586.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Gate &amp; Guards</text>
+  <rect x="434" y="595" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="603.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Staff</text>
+  <rect x="434" y="612" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="620.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Patrol</text>
+  <rect x="424" y="626" width="312" height="17" rx="4" fill="#E6EEF8"/>
+  <rect x="424" y="626" width="3" height="17" rx="0" fill="#1E4E8C"/>
+  <rect x="434" y="629" width="9" height="9" rx="3" fill="#1E4E8C"/>
+  <text x="448" y="637.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="600" fill="#1E4E8C" text-anchor="start">Parking</text>
+  <rect x="434" y="646" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="448" y="654.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Emergency</text>
+  <text x="428" y="677" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Money</text>
+  <rect x="706" y="667" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="713" y="680" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">4</text>
+  <text x="428" y="701" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Residents &amp; homes</text>
+  <rect x="706" y="691" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="713" y="704" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">6</text>
+  <text x="428" y="725" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Upkeep</text>
+  <rect x="706" y="715" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="713" y="728" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">6</text>
+  <text x="428" y="749" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Community &amp; meetings</text>
+  <rect x="706" y="739" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="713" y="752" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">9</text>
+  <text x="428" y="773" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Settings &amp; help</text>
+  <rect x="706" y="763" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="713" y="776" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">5</text>
+  <text x="424" y="799" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="600" fill="#1E4E8C" text-anchor="start">Find Parking: open &quot;Gate &amp; security&quot;, then</text>
+  <text x="424" y="817" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="600" fill="#1E4E8C" text-anchor="start">Parking.</text>
+  <rect x="424" y="845" width="38.64" height="20" rx="6" fill="#E7F3EA"/>
+  <text x="431" y="859" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#1E6B3A" text-anchor="start">Good</text>
+  <text x="434" y="873" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- 7 short headings anyone understands</text>
+  <text x="434" y="890" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- Works the same for admin and committee</text>
+  <text x="434" y="907" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- Matches how the ERP Navigator groups its</text>
+  <text x="434" y="924" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">&quot;suites&quot;</text>
+  <rect x="424" y="947" width="69.44" height="20" rx="6" fill="#FBF0DC"/>
+  <text x="431" y="961" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#8A4B00" text-anchor="start">Watch out</text>
+  <text x="434" y="975" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- A few links could fit two groups (Meters: Money</text>
+  <text x="434" y="992" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">or Upkeep?). We pick one; search finds the rest</text>
+  <rect x="792" y="300" width="368" height="970" rx="12" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1.5"/>
+  <rect x="808" y="316" width="63.28" height="20" rx="6" fill="#E9EDF2"/>
+  <text x="815" y="330" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#59606A" text-anchor="start">Option C</text>
+  <text x="808" y="364" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="18" font-weight="700" fill="#1B1F23" text-anchor="start">Group by who does the work</text>
+  <text x="808" y="386" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">Headings name a job or desk, like rooms in an</text>
+  <text x="808" y="404" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">office.</text>
+  <text x="812" y="442" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▾ Manager&#x27;s desk</text>
+  <rect x="1090" y="432" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1097" y="445" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">5</text>
+  <rect x="818" y="452" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="460.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Dashboard</text>
+  <rect x="818" y="469" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="477.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Communication</text>
+  <rect x="818" y="486" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="494.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Action plans</text>
+  <rect x="818" y="503" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="511.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Jobs</text>
+  <rect x="818" y="520" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="528.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Analytics</text>
+  <text x="812" y="551" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Accounts desk</text>
+  <rect x="1090" y="541" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1097" y="554" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">4</text>
+  <text x="812" y="575" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▾ Security desk</text>
+  <rect x="1090" y="565" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1097" y="578" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">7</text>
+  <rect x="818" y="585" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="593.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Visitors</text>
+  <rect x="818" y="602" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="610.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Deliveries</text>
+  <rect x="818" y="619" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="627.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Gate &amp; Guards</text>
+  <rect x="818" y="636" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="644.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Staff</text>
+  <rect x="818" y="653" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="661.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Patrol</text>
+  <rect x="808" y="667" width="312" height="17" rx="4" fill="#E6EEF8"/>
+  <rect x="808" y="667" width="3" height="17" rx="0" fill="#1E4E8C"/>
+  <rect x="818" y="670" width="9" height="9" rx="3" fill="#1E4E8C"/>
+  <text x="832" y="678.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="600" fill="#1E4E8C" text-anchor="start">Parking</text>
+  <rect x="818" y="687" width="9" height="9" rx="3" fill="#E6EEF8"/>
+  <text x="832" y="695.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">Emergency</text>
+  <text x="812" y="718" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Maintenance desk</text>
+  <rect x="1090" y="708" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1097" y="721" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">6</text>
+  <text x="812" y="742" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Residents office</text>
+  <rect x="1090" y="732" width="25.200000000000003" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1097" y="745" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">10</text>
+  <text x="812" y="766" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Committee room</text>
+  <rect x="1090" y="756" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1097" y="769" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">5</text>
+  <text x="812" y="790" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="700" fill="#1B1F23" text-anchor="start">▸ Settings &amp; help</text>
+  <rect x="1090" y="780" width="19.6" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1097" y="793" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">4</text>
+  <text x="808" y="816" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="600" fill="#1E4E8C" text-anchor="start">Find Parking: open &quot;Security desk&quot;, then</text>
+  <text x="808" y="834" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="600" fill="#1E4E8C" text-anchor="start">Parking.</text>
+  <rect x="808" y="862" width="38.64" height="20" rx="6" fill="#E7F3EA"/>
+  <text x="815" y="876" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#1E6B3A" text-anchor="start">Good</text>
+  <text x="818" y="890" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- Fits big societies with an accountant, a</text>
+  <text x="818" y="907" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">facility manager and a security head</text>
+  <text x="818" y="924" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- Later we could hide desks a person never uses</text>
+  <rect x="808" y="947" width="69.44" height="20" rx="6" fill="#FBF0DC"/>
+  <text x="815" y="961" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#8A4B00" text-anchor="start">Watch out</text>
+  <text x="818" y="975" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- In most societies one manager does everything,</text>
+  <text x="818" y="992" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">so &quot;desks&quot; feel artificial</text>
+  <text x="818" y="1009" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#1B1F23" text-anchor="start">- &quot;Residents office&quot; becomes a big mixed bag</text>
+  <circle cx="38" cy="1314" r="14" fill="#1E4E8C"/>
+  <text x="38" y="1319" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <text x="62" y="1320" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="20" font-weight="700" fill="#1B1F23" text-anchor="start">On a phone: bottom tabs and the More screen</text>
+  <text x="62" y="1342" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="400" fill="#59606A" text-anchor="start">With grouping, More shows a few groups instead of a 20-row list.</text>
+  <rect x="24" y="1362" width="44.800000000000004" height="20" rx="6" fill="#E9EDF2"/>
+  <text x="31" y="1376" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#59606A" text-anchor="start">Today</text>
+  <text x="24" y="1406" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="15" font-weight="700" fill="#1B1F23" text-anchor="start">Resident today</text>
+  <text x="24" y="1426" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#59606A" text-anchor="start">More is one long list</text>
+  <rect x="318" y="1362" width="63.28" height="20" rx="6" fill="#E6EEF8"/>
+  <text x="325" y="1376" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#1E4E8C" text-anchor="start">Option B</text>
+  <text x="318" y="1406" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="15" font-weight="700" fill="#1B1F23" text-anchor="start">Resident, grouped</text>
+  <text x="318" y="1426" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#59606A" text-anchor="start">Daily items are tabs; More has 4 groups</text>
+  <rect x="612" y="1362" width="63.28" height="20" rx="6" fill="#E6EEF8"/>
+  <text x="619" y="1376" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#1E4E8C" text-anchor="start">Option B</text>
+  <text x="612" y="1406" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="15" font-weight="700" fill="#1B1F23" text-anchor="start">Admin, grouped</text>
+  <text x="612" y="1426" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#59606A" text-anchor="start">More lists 7 groups with counts</text>
+  <rect x="906" y="1362" width="63.28" height="20" rx="6" fill="#E6EEF8"/>
+  <text x="913" y="1376" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="600" fill="#1E4E8C" text-anchor="start">Option B</text>
+  <text x="906" y="1406" font-family="Quicksand, &#x27;Segoe UI&#x27;, sans-serif" font-size="15" font-weight="700" fill="#1B1F23" text-anchor="start">Admin, inside a group</text>
+  <text x="906" y="1426" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="400" fill="#59606A" text-anchor="start">A small page per group</text>
+  <rect x="24" y="1442" width="270" height="540" rx="30" fill="#1B1F23"/>
+  <rect x="32" y="1450" width="254" height="524" rx="23" fill="#F5F7FA"/>
+  <rect x="32" y="1464" width="254" height="38" rx="0" fill="#FFFFFF"/>
+  <line x1="32" y1="1502" x2="286" y2="1502" stroke="#D9E0E8" stroke-width="1"/>
+  <text x="46" y="1488" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">More</text>
+  <rect x="32" y="1914" width="254" height="60" rx="0" fill="#FFFFFF"/>
+  <rect x="32" y="1950" width="254" height="24" rx="23" fill="#FFFFFF"/>
+  <line x1="32" y1="1914" x2="286" y2="1914" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="50.4" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="57.4" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Home</text>
+  <rect x="101.19999999999999" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="108.19999999999999" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Household</text>
+  <rect x="152.0" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="159.0" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">My tasks</text>
+  <rect x="202.79999999999998" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="209.79999999999998" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Help</text>
+  <rect x="244.59999999999997" y="1914" width="32" height="3" rx="0" fill="#1E4E8C"/>
+  <rect x="253.59999999999997" y="1924" width="14" height="14" rx="3" fill="#1E4E8C"/>
+  <text x="260.59999999999997" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="700" fill="#1E4E8C" text-anchor="middle">More</text>
+  <rect x="40" y="1508" width="238" height="18" rx="4" fill="#FBF0DC"/>
+  <text x="50" y="1521" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="700" fill="#8A4B00" text-anchor="start">Visitors</text>
+  <text x="266" y="1521" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1527.6" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1540.6" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Deliveries</text>
+  <text x="266" y="1540.6" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1547.1999999999998" width="238" height="18" rx="4" fill="#FBF0DC"/>
+  <text x="50" y="1560.1999999999998" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="700" fill="#8A4B00" text-anchor="start">Bills</text>
+  <text x="266" y="1560.1999999999998" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1566.7999999999997" width="238" height="18" rx="4" fill="#FBF0DC"/>
+  <text x="50" y="1579.7999999999997" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="700" fill="#8A4B00" text-anchor="start">Requests</text>
+  <text x="266" y="1579.7999999999997" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1586.3999999999996" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1599.3999999999996" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Staff</text>
+  <text x="266" y="1599.3999999999996" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1605.9999999999995" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1618.9999999999995" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Notices</text>
+  <text x="266" y="1618.9999999999995" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1625.5999999999995" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1638.5999999999995" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Amenities</text>
+  <text x="266" y="1638.5999999999995" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1645.1999999999994" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1658.1999999999994" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Directory</text>
+  <text x="266" y="1658.1999999999994" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1664.7999999999993" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1677.7999999999993" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Budget</text>
+  <text x="266" y="1677.7999999999993" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1684.3999999999992" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1697.3999999999992" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Move-in / Move-out</text>
+  <text x="266" y="1697.3999999999992" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1703.999999999999" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1716.999999999999" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Documents</text>
+  <text x="266" y="1716.999999999999" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1723.599999999999" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1736.599999999999" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Parking</text>
+  <text x="266" y="1736.599999999999" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1743.199999999999" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1756.199999999999" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Emergency</text>
+  <text x="266" y="1756.199999999999" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1762.7999999999988" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1775.7999999999988" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Meters</text>
+  <text x="266" y="1775.7999999999988" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1782.3999999999987" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1795.3999999999987" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Home services</text>
+  <text x="266" y="1795.3999999999987" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1801.9999999999986" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1814.9999999999986" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Polls</text>
+  <text x="266" y="1814.9999999999986" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1821.5999999999985" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1834.5999999999985" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Meetings</text>
+  <text x="266" y="1834.5999999999985" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1841.1999999999985" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1854.1999999999985" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Events</text>
+  <text x="266" y="1854.1999999999985" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1860.7999999999984" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1873.7999999999984" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Community</text>
+  <text x="266" y="1873.7999999999984" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="40" y="1880.3999999999983" width="238" height="18" rx="4" fill="#FFFFFF"/>
+  <text x="50" y="1893.3999999999983" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#1B1F23" text-anchor="start">Major works</text>
+  <text x="266" y="1893.3999999999983" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12" font-weight="400" fill="#8A9099" text-anchor="start">›</text>
+  <rect x="318" y="1442" width="270" height="540" rx="30" fill="#1B1F23"/>
+  <rect x="326" y="1450" width="254" height="524" rx="23" fill="#F5F7FA"/>
+  <rect x="326" y="1464" width="254" height="38" rx="0" fill="#FFFFFF"/>
+  <line x1="326" y1="1502" x2="580" y2="1502" stroke="#D9E0E8" stroke-width="1"/>
+  <text x="340" y="1488" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">More</text>
+  <rect x="326" y="1914" width="254" height="60" rx="0" fill="#FFFFFF"/>
+  <rect x="326" y="1950" width="254" height="24" rx="23" fill="#FFFFFF"/>
+  <line x1="326" y1="1914" x2="580" y2="1914" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="344.4" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="351.4" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Home</text>
+  <rect x="395.2" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="402.2" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Visitors</text>
+  <rect x="446.0" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="453.0" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Bills</text>
+  <rect x="496.79999999999995" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="503.79999999999995" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Requests</text>
+  <rect x="538.6" y="1914" width="32" height="3" rx="0" fill="#1E4E8C"/>
+  <rect x="547.6" y="1924" width="14" height="14" rx="3" fill="#1E4E8C"/>
+  <text x="554.6" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="700" fill="#1E4E8C" text-anchor="middle">More</text>
+  <text x="340" y="1524" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">My home</text>
+  <rect x="340" y="1532" width="66.92" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1545.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Household</text>
+  <rect x="412.92" y="1532" width="61.040000000000006" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="419.92" y="1545.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">My tasks</text>
+  <rect x="479.96000000000004" y="1532" width="72.80000000000001" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="486.96000000000004" y="1545.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Deliveries</text>
+  <rect x="340" y="1557.5" width="43.400000000000006" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1571.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Staff</text>
+  <rect x="389.4" y="1557.5" width="55.160000000000004" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="396.4" y="1571.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Parking</text>
+  <rect x="450.56" y="1557.5" width="49.28" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="457.56" y="1571.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Meters</text>
+  <rect x="340" y="1583.0" width="66.92" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1596.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Documents</text>
+  <rect x="412.92" y="1583.0" width="119.84" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="419.92" y="1596.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Move-in / Move-out</text>
+  <text x="340" y="1626.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Get help</text>
+  <rect x="340" y="1634.5" width="90.44000000000001" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1648.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Home services</text>
+  <rect x="436.44" y="1634.5" width="66.92" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="443.44" y="1648.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Emergency</text>
+  <rect x="509.36" y="1634.5" width="37.52" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="516.36" y="1648.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Help</text>
+  <text x="340" y="1678.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Society</text>
+  <rect x="340" y="1686.0" width="55.160000000000004" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1699.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Notices</text>
+  <rect x="401.16" y="1686.0" width="49.28" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="408.16" y="1699.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Events</text>
+  <rect x="456.44000000000005" y="1686.0" width="66.92" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="463.44000000000005" y="1699.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Amenities</text>
+  <rect x="340" y="1711.5" width="66.92" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1725.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Community</text>
+  <rect x="412.92" y="1711.5" width="66.92" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="419.92" y="1725.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Directory</text>
+  <rect x="485.84000000000003" y="1711.5" width="49.28" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="492.84000000000003" y="1725.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Budget</text>
+  <rect x="340" y="1737.0" width="78.68" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1750.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Major works</text>
+  <text x="340" y="1780.5" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Have your say</text>
+  <rect x="340" y="1788.5" width="43.400000000000006" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="347" y="1802.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Polls</text>
+  <rect x="389.4" y="1788.5" width="61.040000000000006" height="19.5" rx="6" fill="#E9EDF2"/>
+  <text x="396.4" y="1802.0" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="600" fill="#59606A" text-anchor="start">Meetings</text>
+  <rect x="612" y="1442" width="270" height="540" rx="30" fill="#1B1F23"/>
+  <rect x="620" y="1450" width="254" height="524" rx="23" fill="#F5F7FA"/>
+  <rect x="620" y="1464" width="254" height="38" rx="0" fill="#FFFFFF"/>
+  <line x1="620" y1="1502" x2="874" y2="1502" stroke="#D9E0E8" stroke-width="1"/>
+  <text x="634" y="1488" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">More</text>
+  <rect x="620" y="1914" width="254" height="60" rx="0" fill="#FFFFFF"/>
+  <rect x="620" y="1950" width="254" height="24" rx="23" fill="#FFFFFF"/>
+  <line x1="620" y1="1914" x2="874" y2="1914" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638.4" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="645.4" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Dashboard</text>
+  <rect x="689.1999999999999" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="696.1999999999999" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Visitors</text>
+  <rect x="740.0" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="747.0" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Billing</text>
+  <rect x="790.8" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="797.8" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Requests</text>
+  <rect x="832.6" y="1914" width="32" height="3" rx="0" fill="#1E4E8C"/>
+  <rect x="841.6" y="1924" width="14" height="14" rx="3" fill="#1E4E8C"/>
+  <text x="848.6" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="700" fill="#1E4E8C" text-anchor="middle">More</text>
+  <rect x="628" y="1512" width="238" height="48" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638" y="1524" width="20" height="20" rx="3" fill="#E6EEF8"/>
+  <text x="668" y="1533" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Today</text>
+  <text x="668" y="1549" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="400" fill="#59606A" text-anchor="start">Dashboard, Communication +2</text>
+  <rect x="628" y="1566" width="238" height="48" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638" y="1578" width="20" height="20" rx="3" fill="#E6EEF8"/>
+  <text x="668" y="1587" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Gate &amp; security</text>
+  <text x="668" y="1603" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="400" fill="#59606A" text-anchor="start">Visitors, Deliveries +5</text>
+  <rect x="769.2" y="1574" width="86.80000000000001" height="19" rx="6" fill="#FBF0DC"/>
+  <text x="776.2" y="1587" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#8A4B00" text-anchor="start">3 inside late</text>
+  <rect x="628" y="1620" width="238" height="48" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638" y="1632" width="20" height="20" rx="3" fill="#E6EEF8"/>
+  <text x="668" y="1641" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Money</text>
+  <text x="668" y="1657" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="400" fill="#59606A" text-anchor="start">Billing, Accounts +2</text>
+  <rect x="791.6" y="1628" width="64.4" height="19" rx="6" fill="#FBF0DC"/>
+  <text x="798.6" y="1641" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#8A4B00" text-anchor="start">12 unpaid</text>
+  <rect x="628" y="1674" width="238" height="48" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638" y="1686" width="20" height="20" rx="3" fill="#E6EEF8"/>
+  <text x="668" y="1695" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Residents &amp; homes</text>
+  <text x="668" y="1711" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="400" fill="#59606A" text-anchor="start">People, Registration +4</text>
+  <rect x="628" y="1728" width="238" height="48" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638" y="1740" width="20" height="20" rx="3" fill="#E6EEF8"/>
+  <text x="668" y="1749" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Upkeep</text>
+  <text x="668" y="1765" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="400" fill="#59606A" text-anchor="start">Requests, Housekeeping +4</text>
+  <rect x="808.4" y="1736" width="47.6" height="19" rx="6" fill="#FBF0DC"/>
+  <text x="815.4" y="1749" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#8A4B00" text-anchor="start">7 open</text>
+  <rect x="628" y="1782" width="238" height="48" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638" y="1794" width="20" height="20" rx="3" fill="#E6EEF8"/>
+  <text x="668" y="1803" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Community &amp; meetings</text>
+  <text x="668" y="1819" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="400" fill="#59606A" text-anchor="start">Notices, Events +7</text>
+  <rect x="628" y="1836" width="238" height="48" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="638" y="1848" width="20" height="20" rx="3" fill="#E6EEF8"/>
+  <text x="668" y="1857" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="12.5" font-weight="700" fill="#1B1F23" text-anchor="start">Settings &amp; help</text>
+  <text x="668" y="1873" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10.5" font-weight="400" fill="#59606A" text-anchor="start">Society profile, Language +3</text>
+  <rect x="906" y="1442" width="270" height="540" rx="30" fill="#1B1F23"/>
+  <rect x="914" y="1450" width="254" height="524" rx="23" fill="#F5F7FA"/>
+  <rect x="914" y="1464" width="254" height="38" rx="0" fill="#FFFFFF"/>
+  <line x1="914" y1="1502" x2="1168" y2="1502" stroke="#D9E0E8" stroke-width="1"/>
+  <text x="928" y="1489" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="16" font-weight="700" fill="#1E4E8C" text-anchor="start">←</text>
+  <text x="950" y="1488" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">Money</text>
+  <rect x="914" y="1914" width="254" height="60" rx="0" fill="#FFFFFF"/>
+  <rect x="914" y="1950" width="254" height="24" rx="23" fill="#FFFFFF"/>
+  <line x1="914" y1="1914" x2="1168" y2="1914" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="932.4" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="939.4" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Dashboard</text>
+  <rect x="983.1999999999999" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="990.1999999999999" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Visitors</text>
+  <rect x="1034.0" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="1041.0" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Billing</text>
+  <rect x="1084.8000000000002" y="1924" width="14" height="14" rx="3" fill="#EDF1F6"/>
+  <text x="1091.8000000000002" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="500" fill="#59606A" text-anchor="middle">Requests</text>
+  <rect x="1126.6000000000001" y="1914" width="32" height="3" rx="0" fill="#1E4E8C"/>
+  <rect x="1135.6000000000001" y="1924" width="14" height="14" rx="3" fill="#1E4E8C"/>
+  <text x="1142.6000000000001" y="1954" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="9.5" font-weight="700" fill="#1E4E8C" text-anchor="middle">More</text>
+  <rect x="922" y="1514" width="238" height="70" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="932" y="1528" width="22" height="22" rx="3" fill="#E6EEF8"/>
+  <text x="964" y="1540" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="start">Billing</text>
+  <text x="964" y="1558" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#59606A" text-anchor="start">Raise bills, record payments</text>
+  <rect x="1085.6" y="1524" width="64.4" height="19" rx="6" fill="#FBF0DC"/>
+  <text x="1092.6" y="1537" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#8A4B00" text-anchor="start">12 unpaid</text>
+  <rect x="922" y="1592" width="238" height="70" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="932" y="1606" width="22" height="22" rx="3" fill="#E6EEF8"/>
+  <text x="964" y="1618" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="start">Accounts</text>
+  <text x="964" y="1636" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#59606A" text-anchor="start">Expenses, budget, statements</text>
+  <rect x="1068.8" y="1602" width="81.2" height="19" rx="6" fill="#FBF0DC"/>
+  <text x="1075.8" y="1615" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#8A4B00" text-anchor="start">2 to approve</text>
+  <rect x="922" y="1670" width="238" height="70" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="932" y="1684" width="22" height="22" rx="3" fill="#E6EEF8"/>
+  <text x="964" y="1696" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="start">Vendors</text>
+  <text x="964" y="1714" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#59606A" text-anchor="start">Suppliers and purchase</text>
+  <text x="964" y="1728" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#59606A" text-anchor="start">approvals</text>
+  <rect x="922" y="1748" width="238" height="70" rx="8" fill="#FFFFFF" stroke="#D9E0E8" stroke-width="1"/>
+  <rect x="932" y="1762" width="22" height="22" rx="3" fill="#E6EEF8"/>
+  <text x="964" y="1774" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="start">Meters</text>
+  <text x="964" y="1792" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="11" font-weight="400" fill="#59606A" text-anchor="start">Water and power readings</text>
+  <rect x="1080.0" y="1758" width="70.0" height="19" rx="6" fill="#E9EDF2"/>
+  <text x="1087.0" y="1771" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="10" font-weight="600" fill="#59606A" text-anchor="start">Due 30 Nov</text>
+  <rect x="24" y="2002" width="1152" height="106" rx="12" fill="#FBF0DC" stroke="#8A4B00" stroke-width="1"/>
+  <text x="44" y="2030" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="15" font-weight="700" fill="#8A4B00" text-anchor="start">Found while checking (fixed by either option)</text>
+  <text x="44" y="2054" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#1B1F23" text-anchor="start">Phone tabs today are just the first four menu links. Residents get Home · Household · My tasks · Help, with Visitors, Bills and Requests hidden in More</text>
+  <text x="44" y="2074" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#1B1F23" text-anchor="start">(highlighted above). Admins get Dashboard · Analytics · Communication · Structure. DESIGN.md 5.4 says Home · Visitors · Bills · Requests and Dashboard ·</text>
+  <text x="44" y="2094" font-family="Nunito, &#x27;Segoe UI&#x27;, sans-serif" font-size="14" font-weight="400" fill="#1B1F23" text-anchor="start">Visitors · Billing · Requests.</text>
+</svg>
