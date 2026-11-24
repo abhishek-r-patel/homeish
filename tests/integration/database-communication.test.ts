@@ -525,6 +525,19 @@ describe.skipIf(!hasDatabase)('database communication additions (P53)', () => {
       expect(await notificationCount(draft.id)).toBe(1);
 
       // Publish now, then withdraw: the notice moves to the archive as removed.
+      expect(
+        (
+          await dbError(
+            rpc<NoticeJson>(
+              'committee',
+              `select public.notice_draft_publish(
+                 $1, $2, $3, 'p53-committee-publish-other'
+               ) as result`,
+              [fixture.societyId, adminDraft.id, adminDraft.updated_at],
+            ),
+          )
+        ).code,
+      ).toBe('42501');
       const posted = await rpc<NoticeJson>(
         'admin',
         `select public.notice_draft_publish($1, $2, $3, 'p53-publish') as result`,

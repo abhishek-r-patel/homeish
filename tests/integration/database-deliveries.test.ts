@@ -565,6 +565,64 @@ describe.skipIf(!hasDatabase)('database deliveries', () => {
         status: 'closed',
         decision_source: 'guard_override',
       });
+      const guardEntryId = await database.asRole(
+        'service_role',
+        null,
+        async (client) => {
+          const result = await client.query<{ id: string }>(
+            `select id from public.delivery_create_entry(
+              $1, $2, $3, $4, 'Guard Parcel Co', null, 'parcel', null,
+              $5, 'delivery-guard-permission'
+            )`,
+            [
+              fixture.guardId,
+              fixture.societyId,
+              fixture.unitId,
+              fixture.guardRosterId,
+              crypto.randomUUID(),
+            ],
+          );
+          return result.rows[0]?.id;
+        },
+        { commit: true },
+      );
+      if (!guardEntryId) throw new Error('Guard delivery was not created.');
+      await database.asSuperuser((client) =>
+        client.query(
+          `update public.delivery_entries
+           set respond_by = now() - interval '1 minute'
+           where id = $1`,
+          [guardEntryId],
+        ),
+      );
+      const guarded = await database.asRole(
+        'service_role',
+        null,
+        async (client) => {
+          const overridden = await client.query<{ status: string }>(
+            `select status from public.delivery_override(
+               $1, $2, $3, 'left_at_gate', 'Resident did not answer at the gate',
+               'delivery-guard-override'
+             )`,
+            [fixture.guardId, guardEntryId, fixture.guardRosterId],
+          );
+          const collected = await client.query<{ status: string }>(
+            `select status from public.delivery_mark_collected_guard(
+               $1, $2, $3, 'delivery-guard-collected'
+             )`,
+            [fixture.guardId, guardEntryId, fixture.guardRosterId],
+          );
+          return {
+            overridden: overridden.rows[0]?.status,
+            collected: collected.rows[0]?.status,
+          };
+        },
+        { commit: true },
+      );
+      expect(guarded).toEqual({
+        overridden: 'left_at_gate',
+        collected: 'collected',
+      });
       await database.asSuperuser((client) =>
         client.query(
           `update public.module_configs set enabled = false

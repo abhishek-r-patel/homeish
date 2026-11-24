@@ -1,5 +1,4 @@
 // Generated database types from `npm run db:types`; do not edit by hand.
-
 export type Json =
   | string
   | number
@@ -11649,6 +11648,49 @@ export type Database = {
           },
         ];
       };
+      module_setting_access: {
+        Row: {
+          admin_can_edit: boolean;
+          module_key: string;
+          setting_key: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          admin_can_edit: boolean;
+          module_key: string;
+          setting_key: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          admin_can_edit?: boolean;
+          module_key?: string;
+          setting_key?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'module_setting_access_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'module_setting_access_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       modules: {
         Row: {
           is_core: boolean;
@@ -13067,6 +13109,46 @@ export type Database = {
           {
             foreignKeyName: 'patrol_schedules_updated_by_fkey';
             columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      person_workspace_preferences: {
+        Row: {
+          resident_graph_mode: string;
+          society_id: string;
+          starting_place: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          resident_graph_mode?: string;
+          society_id: string;
+          starting_place?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          resident_graph_mode?: string;
+          society_id?: string;
+          starting_place?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'person_workspace_preferences_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'person_workspace_preferences_user_id_fkey';
+            columns: ['user_id'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
@@ -16159,6 +16241,7 @@ export type Database = {
           last_agm_on: string | null;
           last_election_on: string | null;
           maintenance_rate_reference: string | null;
+          managing_body_name: string | null;
           pan: string | null;
           parking_count: number | null;
           pin_code: string | null;
@@ -16201,6 +16284,7 @@ export type Database = {
           last_agm_on?: string | null;
           last_election_on?: string | null;
           maintenance_rate_reference?: string | null;
+          managing_body_name?: string | null;
           pan?: string | null;
           parking_count?: number | null;
           pin_code?: string | null;
@@ -16242,6 +16326,7 @@ export type Database = {
           last_agm_on?: string | null;
           last_election_on?: string | null;
           maintenance_rate_reference?: string | null;
+          managing_body_name?: string | null;
           pan?: string | null;
           parking_count?: number | null;
           pin_code?: string | null;
@@ -20282,6 +20367,49 @@ export type Database = {
           },
           {
             foreignKeyName: 'visitor_pre_approvals_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workspace_quick_action_defaults: {
+        Row: {
+          action_keys: string[];
+          role: string;
+          scope_key: string | null;
+          society_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          action_keys: string[];
+          role: string;
+          scope_key?: never;
+          society_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          action_keys?: string[];
+          role?: string;
+          scope_key?: never;
+          society_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workspace_quick_action_defaults_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workspace_quick_action_defaults_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -24407,6 +24535,23 @@ export type Database = {
           path: string;
         }[];
       };
+      module_setting_access_list: {
+        Args: { p_society_id: string };
+        Returns: {
+          admin_can_edit: boolean;
+          module_key: string;
+          setting_key: string;
+        }[];
+      };
+      module_setting_access_set: {
+        Args: {
+          p_admin_can_edit: boolean;
+          p_module_key: string;
+          p_setting_key: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
       move_unit_occupant: {
         Args: {
           p_occupant_id: string;
@@ -24848,6 +24993,21 @@ export type Database = {
           p_photo_retention_days: number;
           p_request_id: string;
           p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      person_workspace_preferences_get: {
+        Args: { p_society_id: string };
+        Returns: {
+          resident_graph_mode: string;
+          starting_place: string;
+        }[];
+      };
+      person_workspace_preferences_save: {
+        Args: {
+          p_resident_graph_mode?: string;
+          p_society_id: string;
+          p_starting_place: string;
         };
         Returns: undefined;
       };
@@ -26139,6 +26299,14 @@ export type Database = {
           status: string;
         }[];
       };
+      resident_dashboard_graph_get: {
+        Args: { p_mode: string; p_society_id: string };
+        Returns: {
+          amount: number;
+          has_data: boolean;
+          month_start: string;
+        }[];
+      };
       resident_home_get: { Args: { p_society_id: string }; Returns: Json };
       rotate_society_join_code: {
         Args: { p_request_id: string; p_society_id: string };
@@ -26194,6 +26362,14 @@ export type Database = {
           name: string;
           status: string;
         }[];
+      };
+      society_managing_body_name_get: {
+        Args: { p_society_id: string };
+        Returns: string;
+      };
+      society_managing_body_name_save: {
+        Args: { p_name: string; p_society_id: string };
+        Returns: undefined;
       };
       society_reference_profile_get: {
         Args: { p_society_id: string };
@@ -27845,6 +28021,28 @@ export type Database = {
       visitor_update_settings: {
         Args: { p_request_id: string; p_settings: Json; p_society_id: string };
         Returns: Json;
+      };
+      workspace_coming_up_get: {
+        Args: { p_society_id: string };
+        Returns: {
+          href: string;
+          item_id: string;
+          occurs_at: string;
+          source: string;
+          title: string;
+        }[];
+      };
+      workspace_quick_action_defaults_get: {
+        Args: { p_role: string; p_society_id: string };
+        Returns: string[];
+      };
+      workspace_quick_action_defaults_reset: {
+        Args: { p_role: string; p_society_id: string };
+        Returns: undefined;
+      };
+      workspace_quick_action_defaults_save: {
+        Args: { p_action_keys: string[]; p_role: string; p_society_id: string };
+        Returns: undefined;
       };
     };
     Enums: {
