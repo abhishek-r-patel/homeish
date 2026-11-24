@@ -120,6 +120,17 @@ describe.skipIf(!hasDatabase)('database expense budgets', () => {
            values($1,'core',true,'{}'),($1,'expense',true,'{}')`,
           [society],
         );
+        await client.query(
+          `insert into public.module_setting_access
+             (society_id, module_key, setting_key, admin_can_edit)
+           values
+             ($1, 'expense', 'budget_forecast_method', true),
+             ($1, 'expense', 'budget_watch_percent', true),
+             ($1, 'expense', 'budget_resident_summary', true)
+           on conflict (society_id, module_key, setting_key)
+           do update set admin_can_edit = true`,
+          [society],
+        );
         const categories = await client.query<{ id: string; name: string }>(
           `insert into public.expense_categories(society_id,name,created_by)
            values($1,'Budget repairs',$2),($1,'Budget power',$2),
