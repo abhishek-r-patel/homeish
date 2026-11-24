@@ -14,7 +14,7 @@ import {
 } from '@/core/permissions/authorize';
 import { LanguageProvider } from '@/components/language-provider';
 import { getShellData } from '@/core/tenancy/shell-data';
-import { switchSocietyAction } from '@/app/(auth)/actions';
+import { switchPlaceAction, switchSocietyAction } from '@/app/(auth)/actions';
 import { getAllowedQuickActions } from '@/core/home/workspace-operations';
 export default async function HousekeepingLayout({
   children,
@@ -70,6 +70,7 @@ export default async function HousekeepingLayout({
         quickActions={quickActions}
         showPettyCash={showPettyCash}
         societies={shellData.societies}
+        switchPlace={switchPlaceAction}
         switchSociety={switchSocietyAction}
       >
         {children}

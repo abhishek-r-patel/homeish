@@ -5,7 +5,7 @@ import { buildRequestContext } from '@/core/tenancy/request-context';
 import { AppError, createRequestId } from '@/core/errors';
 import { LanguageProvider } from '@/components/language-provider';
 import { getShellData } from '@/core/tenancy/shell-data';
-import { switchSocietyAction } from '@/app/(auth)/actions';
+import { switchPlaceAction, switchSocietyAction } from '@/app/(auth)/actions';
 import { getAllowedQuickActions } from '@/core/home/workspace-operations';
 
 export default async function AdminLayout({
@@ -35,6 +35,7 @@ export default async function AdminLayout({
         places={shellData.places}
         quickActions={quickActions}
         societies={shellData.societies}
+        switchPlace={switchPlaceAction}
         switchSociety={switchSocietyAction}
       >
         {children}

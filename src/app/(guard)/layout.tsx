@@ -7,7 +7,7 @@ import { getGuardDutyState } from '@/core/guards/operations';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { createRequestId } from '@/core/errors';
 import { getShellData } from '@/core/tenancy/shell-data';
-import { switchSocietyAction } from '@/app/(auth)/actions';
+import { switchPlaceAction, switchSocietyAction } from '@/app/(auth)/actions';
 import { getAllowedQuickActions } from '@/core/home/workspace-operations';
 
 export default async function GuardLayout({
@@ -30,6 +30,7 @@ export default async function GuardLayout({
         places={shellData.places}
         quickActions={quickActions}
         societies={shellData.societies}
+        switchPlace={switchPlaceAction}
         switchSociety={switchSocietyAction}
       >
         <HandledByControl state={guardState} />

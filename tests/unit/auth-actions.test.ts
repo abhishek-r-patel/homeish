@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   verifyCode: vi.fn(),
   signOut: vi.fn(),
   switchSociety: vi.fn(),
+  saveResidentFlatSelection: vi.fn(),
   safeReturnPath: vi.fn((candidate: unknown) =>
     typeof candidate === 'string' ? candidate : null,
   ),
@@ -26,6 +27,9 @@ vi.mock('../../src/core/auth', () => ({
 }));
 vi.mock('../../src/core/tenancy/session', () => ({
   switchSociety: mocks.switchSociety,
+}));
+vi.mock('../../src/core/home/workspace-operations', () => ({
+  saveResidentFlatSelection: mocks.saveResidentFlatSelection,
 }));
 vi.mock('../../src/core/auth/developer', () => ({
   developerSignIn: mocks.developerSignIn,

@@ -9,7 +9,10 @@ import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { MAX_RESIDENT_CSV_BYTES, parseResidentsCsv } from './residents-csv';
 import { todayInIndia } from '../../lib/india-time';
-import { readWorkspacePreferences } from '../home/workspace-operations';
+import {
+  getResidentFlatOptions,
+  readWorkspacePreferences,
+} from '../home/workspace-operations';
 
 const roleSchema = z.enum([
   'admin',
@@ -509,7 +512,26 @@ export async function getHouseholdMembers() {
       cause: occupancyError,
     });
   }
-  const unitIds = [...new Set(occupancy.map(({ unit_id }) => unit_id))];
+  const flatOptions =
+    context.roles.includes('resident') && context.societyId
+      ? await getResidentFlatOptions(context, context.societyId)
+      : [];
+  const showAllFlats = flatOptions.some((option) => option.all_flats);
+  const selectedUnitIds = new Set(
+    flatOptions
+      .filter((option) => showAllFlats || option.selected)
+      .map((option) => option.unit_id)
+      .filter((unitId): unitId is string => unitId !== null),
+  );
+  const unitIds = [
+    ...new Set(
+      occupancy
+        .map(({ unit_id }) => unit_id)
+        .filter(
+          (unitId) => !selectedUnitIds.size || selectedUnitIds.has(unitId),
+        ),
+    ),
+  ];
   if (!unitIds.length) return { households: [] };
   const { data: units, error: unitsError } = await context.db
     .from('units')
@@ -590,6 +612,10 @@ export async function getProfile() {
     .single();
   if (error) throw new Error('Could not load your profile.', { cause: error });
   const workspacePreferences = await readWorkspacePreferences(context);
+  const residentFlats =
+    context.roles.includes('resident') && context.societyId
+      ? await getResidentFlatOptions(context, context.societyId)
+      : [];
   const placeOptions = [
     ...(context.roles.includes('resident')
       ? [{ value: 'home' as const, label: 'My home' }]
@@ -608,6 +634,8 @@ export async function getProfile() {
     ...data,
     isHindiEnabled: context.isHindiEnabled,
     startingPlace: workspacePreferences.startingPlace,
+    residentFlats,
+    residentAllFlats: residentFlats.some((option) => option.all_flats),
     placeOptions,
     hasMultiplePlaces: placeOptions.length > 1,
   };

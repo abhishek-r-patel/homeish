@@ -6,7 +6,7 @@ import { buildRequestContext } from '@/core/tenancy/request-context';
 import { createRequestId } from '@/core/errors';
 import { isPettyCashCustodian } from '@/core/expense/operations';
 import { getShellData } from '@/core/tenancy/shell-data';
-import { switchSocietyAction } from '@/app/(auth)/actions';
+import { switchPlaceAction, switchSocietyAction } from '@/app/(auth)/actions';
 import { getAllowedQuickActions } from '@/core/home/workspace-operations';
 
 export default async function ResidentLayout({
@@ -29,6 +29,7 @@ export default async function ResidentLayout({
         quickActions={quickActions}
         showPettyCash={showPettyCash}
         societies={shellData.societies}
+        switchPlace={switchPlaceAction}
         switchSociety={switchSocietyAction}
       >
         {children}

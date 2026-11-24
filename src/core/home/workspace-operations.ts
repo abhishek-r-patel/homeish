@@ -30,6 +30,24 @@ const actionKeysSchema = z
   .max(12);
 const pinKeysSchema = z.array(z.enum(QUICK_ACTION_KEYS)).max(8);
 const optionalActionKeysSchema = pinKeysSchema.nullable();
+const residentFlatOptionSchema = z.object({
+  unit_id: z.uuid().nullable(),
+  label: z.string().min(1).max(160),
+  selected: z.boolean(),
+  all_flats: z.boolean(),
+});
+const residentFlatSelectionSchema = z
+  .object({
+    societyId: z.uuid(),
+    unitId: z.uuid().nullable(),
+    allFlats: z.boolean(),
+  })
+  .strict()
+  .refine(
+    ({ unitId, allFlats }) =>
+      (allFlats && unitId === null) || (!allFlats && unitId !== null),
+    { message: 'Choose one flat or all of your flats.' },
+  );
 
 export async function readWorkspacePreferences(context?: RequestContext) {
   const resolvedContext =
@@ -194,5 +212,39 @@ export async function resetQuickActionPins() {
     { p_society_id: context.societyId },
     z.null(),
     'Pinned actions could not be reset.',
+  );
+}
+
+export async function getResidentFlatOptions(
+  context: RequestContext,
+  societyId: string,
+) {
+  return callModuleRpc(
+    context,
+    'resident_flat_options_get',
+    { p_society_id: societyId },
+    z.array(residentFlatOptionSchema),
+    'Your flats could not be loaded.',
+  );
+}
+
+export async function saveResidentFlatSelection(input: unknown) {
+  const parsed = residentFlatSelectionSchema.safeParse(input);
+  if (!parsed.success) {
+    throw new ValidationError({
+      flat: 'Choose one of your flats or all of your flats.',
+    });
+  }
+  const context = await buildRequestContext(createRequestId());
+  await callModuleRpc(
+    context,
+    'resident_flat_selection_save',
+    {
+      p_society_id: parsed.data.societyId,
+      p_unit_id: parsed.data.unitId,
+      p_all_flats: parsed.data.allFlats,
+    },
+    z.null(),
+    'Your flat selection could not be saved.',
   );
 }

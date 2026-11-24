@@ -35,6 +35,29 @@ export const HI_COMPONENTS: Readonly<Record<string, string>> = {
   'Log a request': 'अनुरोध दर्ज करें',
   'Housekeeping stock': 'हाउसकीपिंग स्टॉक',
   'Petty cash': 'पेटी कैश',
+  'Choose place: {place}': 'स्थान चुनें: {place}',
+  '{list} CSV file': '{list} की CSV फ़ाइल',
+  'Check rows': 'पंक्तियाँ जाँचें',
+  'Save all': 'सभी सहेजें',
+  'All rows are valid. Nothing is saved until you choose Save all.':
+    'सभी पंक्तियाँ सही हैं। Save all चुनने तक कुछ सहेजा नहीं जाता।',
+  '{count} rows were saved together.': '{count} पंक्तियाँ एक साथ सहेजी गईं।',
+  'View import result': 'आयात परिणाम देखें',
+  'Save all rows': 'सभी पंक्तियाँ सहेजें',
+  'Save all {count} checked rows together? One invalid row or database conflict cancels the whole import.':
+    'जाँची गई सभी {count} पंक्तियाँ एक साथ सहेजें? एक गलत पंक्ति या टकराव पूरा आयात रद्द कर देगा।',
+  'Confirm CSV import': 'CSV आयात की पुष्टि करें',
+  'CSV templates and error messages remain in English.':
+    'CSV नमूने और त्रुटि संदेश अंग्रेज़ी में रहते हैं।',
+  'Default flat view': 'डिफ़ॉल्ट फ्लैट दृश्य',
+  'Show on resident pages': 'निवासी पेज पर दिखाएँ',
+  'All my flats together': 'मेरे सभी फ्लैट एक साथ',
+  'Items from all flats are labelled with their flat. You can switch temporarily from the place picker.':
+    'सभी फ्लैट की वस्तुओं पर उनका फ्लैट लिखा होगा। स्थान चुनने वाले मेनू से अस्थायी रूप से बदल सकते हैं।',
+  'Save flat view': 'फ्लैट दृश्य सहेजें',
+  'Flat preference saved.': 'फ्लैट पसंद सहेजी गई।',
+  'Import saved. Every row was added together.':
+    'आयात सहेजा गया। हर पंक्ति एक साथ जोड़ी गई।',
   'Search Homeish': 'होमिश में खोजें',
   'Quick create': 'तुरंत बनाएँ',
   'Pages, actions or records': 'पेज, कार्रवाई या रिकॉर्ड',

@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react';
 import type { FormEvent } from 'react';
 import Link from 'next/link';
 import {
+  saveDefaultFlatAction,
   saveStartingPlaceAction,
   updateProfileAction,
 } from '@/app/profile/actions';
@@ -134,7 +135,75 @@ export function ProfileContent({ profile }: { profile: Profile }) {
           <StartingPlaceForm profile={profile} />
         </Card>
       ) : null}
+      {profile.residentFlats.length > 1 ? (
+        <Card title={translate('Default flat view')}>
+          <FlatPreferenceForm profile={profile} />
+        </Card>
+      ) : null}
     </main>
+  );
+}
+
+function FlatPreferenceForm({ profile }: { profile: Profile }) {
+  const { translate } = useLanguage();
+  const { translateFeedback } = useUiTranslator();
+  const router = useRouter();
+  const [result, setResult] = useState<ServerActionResult | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    startTransition(async () => {
+      const nextResult = await saveDefaultFlatAction(
+        new FormData(event.currentTarget),
+      );
+      setResult(nextResult);
+      if (nextResult.ok) router.refresh();
+    });
+  }
+
+  return (
+    <form className="grid gap-space-4" onSubmit={submit}>
+      <label className="grid gap-space-1 text-body-strong" htmlFor="flat-scope">
+        {translate('Show on resident pages')}
+        <select
+          className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
+          defaultValue={
+            profile.residentAllFlats
+              ? 'all'
+              : (profile.residentFlats.find((flat) => flat.selected)?.unit_id ??
+                profile.residentFlats[0]?.unit_id ??
+                '')
+          }
+          id="flat-scope"
+          name="flatScope"
+        >
+          {profile.residentFlats.map((flat) => (
+            <option key={flat.unit_id} value={flat.unit_id ?? ''}>
+              {flat.label}
+            </option>
+          ))}
+          <option value="all">{translate('All my flats together')}</option>
+        </select>
+      </label>
+      <p className="text-caption text-ink-muted">
+        {translate(
+          'Items from all flats are labelled with their flat. You can switch temporarily from the place picker.',
+        )}
+      </p>
+      <Button disabled={pending} loading={pending} type="submit">
+        {translate('Save flat view')}
+      </Button>
+      {result?.message ? (
+        <p
+          aria-live="polite"
+          className={`text-caption ${result.ok ? 'text-success' : 'text-danger'}`}
+          role="status"
+        >
+          {translateFeedback(result.message)}
+        </p>
+      ) : null}
+    </form>
   );
 }
 

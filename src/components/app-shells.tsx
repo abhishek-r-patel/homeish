@@ -31,6 +31,11 @@ type SocietyShellProps = {
     ok: boolean;
     message?: string;
   }>;
+  switchPlace?: (input: {
+    societyId: string;
+    unitId?: string | null;
+    allFlats?: boolean;
+  }) => Promise<{ ok: boolean; message?: string }>;
   places?: readonly PlaceOption[];
   quickActions?: readonly WorkspaceQuickAction[];
   workspaceSearchAction?: (
@@ -54,6 +59,9 @@ type PlaceOption = {
   societyName: string;
   href: string;
   label: string;
+  active?: boolean;
+  allFlats?: boolean;
+  unitId?: string | null;
 };
 
 type Translate = (source: string, values?: MessageValues) => string;
@@ -329,6 +337,7 @@ function TopBar({
   onOpenMenu,
   onSocietyChange,
   switchSociety: switchSocietyServer,
+  switchPlace: switchPlaceServer,
   pathname,
   places = [],
   quickActions = [],
@@ -349,6 +358,11 @@ function TopBar({
     ok: boolean;
     message?: string;
   }>;
+  switchPlace?: (input: {
+    societyId: string;
+    unitId?: string | null;
+    allFlats?: boolean;
+  }) => Promise<{ ok: boolean; message?: string }>;
   pathname: string;
   places?: readonly PlaceOption[];
   role: SocietyRole | 'developer';
@@ -381,8 +395,8 @@ function TopBar({
     places.find(
       (place) =>
         place.societyId === activeSocietyId &&
-        (pathname === place.href ||
-          (place.href !== '/' && pathname.startsWith(`${place.href}/`))),
+        (pathname === place.href || pathname.startsWith(`${place.href}/`)) &&
+        (place.active || place.href !== '/home'),
     )?.label ?? (role === 'resident' ? 'My home' : 'Work');
   useEffect(() => {
     const message = window.sessionStorage.getItem('homeish:place-announcement');
@@ -414,19 +428,33 @@ function TopBar({
         `homeish:last-place:${place.societyId}`,
         place.href,
       );
+      if (switchPlaceServer) {
+        const result = await switchPlaceServer({
+          societyId: place.societyId,
+          ...(place.unitId !== undefined
+            ? { unitId: place.unitId, allFlats: place.allFlats ?? false }
+            : {}),
+        });
+        if (!result.ok) {
+          setSwitchError(result.message ?? translate('Society change failed.'));
+          return;
+        }
+      } else if (place.societyId !== activeSocietyId) {
+        onSocietyChange?.(place.societyId);
+        if (!switchSocietyServer) {
+          setSwitchError(translate('Society switching is unavailable.'));
+          return;
+        }
+        const result = await switchSocietyServer(place.societyId);
+        if (!result.ok) {
+          setSwitchError(result.message ?? translate('Society change failed.'));
+          return;
+        }
+      }
       if (place.societyId === activeSocietyId) {
         setAnnouncement(message);
+        router.refresh();
         router.push(place.href);
-        return;
-      }
-      onSocietyChange?.(place.societyId);
-      if (!switchSocietyServer) {
-        setSwitchError(translate('Society switching is unavailable.'));
-        return;
-      }
-      const result = await switchSocietyServer(place.societyId);
-      if (!result.ok) {
-        setSwitchError(result.message ?? translate('Society change failed.'));
         return;
       }
       window.location.assign(place.href);
@@ -488,7 +516,9 @@ function TopBar({
         {role !== 'developer' && places.length > 1 ? (
           <details className="relative hidden expanded:block">
             <summary
-              aria-label={translate('Choose place')}
+              aria-label={translate('Choose place: {place}', {
+                place: `${activePlace}${activeSociety ? ` · ${activeSociety.name}` : ''}`,
+              })}
               className="flex min-h-12 max-w-64 cursor-pointer list-none items-center gap-space-2 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
             >
               <span className="truncate">
@@ -512,7 +542,7 @@ function TopBar({
                       <button
                         className="min-h-11 rounded-sm px-space-3 py-space-2 text-left text-body hover:bg-brand-tint"
                         disabled={switchingSociety}
-                        key={`${place.societyId}-${place.href}`}
+                        key={`${place.societyId}-${place.unitId ?? (place.allFlats ? 'all' : place.href)}`}
                         onClick={() => switchPlace(place)}
                         type="button"
                       >
@@ -795,6 +825,7 @@ function MoreMenu({
   items,
   onSocietyChange,
   switchSociety: switchSocietyServer,
+  switchPlace: switchPlaceServer,
   onOpenChange,
   open,
   places = [],
@@ -811,6 +842,11 @@ function MoreMenu({
     ok: boolean;
     message?: string;
   }>;
+  switchPlace?: (input: {
+    societyId: string;
+    unitId?: string | null;
+    allFlats?: boolean;
+  }) => Promise<{ ok: boolean; message?: string }>;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   places?: readonly PlaceOption[];
@@ -832,22 +868,36 @@ function MoreMenu({
         place: `${place.label} at ${place.societyName}`,
       }),
     );
+    if (switchPlaceServer) {
+      const result = await switchPlaceServer({
+        societyId: place.societyId,
+        ...(place.unitId !== undefined
+          ? { unitId: place.unitId, allFlats: place.allFlats ?? false }
+          : {}),
+      });
+      if (!result.ok) {
+        setSwitchError(result.message ?? translate('Society change failed.'));
+        return;
+      }
+    } else if (place.societyId !== activeSocietyId) {
+      onSocietyChange?.(place.societyId);
+      if (!switchSocietyServer) {
+        setSwitchError(translate('Society switching is unavailable.'));
+        return;
+      }
+      const result = await switchSocietyServer(place.societyId);
+      if (!result.ok) {
+        setSwitchError(result.message ?? translate('Society change failed.'));
+        return;
+      }
+    }
     if (place.societyId === activeSocietyId) {
       onOpenChange(false);
+      router.refresh();
       router.push(place.href);
       return;
     }
-    onSocietyChange?.(place.societyId);
-    if (!switchSocietyServer) {
-      setSwitchError(translate('Society switching is unavailable.'));
-      return;
-    }
-    const result = await switchSocietyServer(place.societyId);
-    if (result.ok) {
-      window.location.assign(place.href);
-      return;
-    }
-    setSwitchError(result.message ?? translate('Society change failed.'));
+    window.location.assign(place.href);
   };
   const menuItemStyle = dark
     ? 'border-dev-label/30 hover:bg-surface/10'
@@ -878,7 +928,7 @@ function MoreMenu({
                 .map((place) => (
                   <button
                     className={`flex min-h-14 items-center justify-between rounded-md border px-space-4 text-left text-body-strong ${menuItemStyle}`}
-                    key={`${place.societyId}-${place.href}`}
+                    key={`${place.societyId}-${place.unitId ?? (place.allFlats ? 'all' : place.href)}`}
                     onClick={() => void switchPlace(place)}
                     type="button"
                   >
@@ -960,6 +1010,7 @@ function SocietyShell({
   quickActions = [],
   workspaceSearchAction,
   switchSociety,
+  switchPlace,
   showPettyCash = false,
   societies = [],
   unreadNotifications,
@@ -1027,6 +1078,7 @@ function SocietyShell({
         pathname={pathname}
         places={places}
         switchSociety={switchSociety}
+        switchPlace={switchPlace}
         quickActions={quickActions}
         workspaceSearchAction={workspaceSearchAction}
         role={role}
@@ -1082,6 +1134,7 @@ function SocietyShell({
         open={moreOpen}
         places={places}
         switchSociety={switchSociety}
+        switchPlace={switchPlace}
         societies={societies}
         title={translate('More')}
         translate={translate}

@@ -4,14 +4,18 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
-import { ValidationError } from '@/core/errors';
+import { AppError, createRequestId, ValidationError } from '@/core/errors';
 import { serverEnvironment } from '@/core/config/server-env';
 import { LANGUAGE_PREFERENCE_COOKIE, isLocale } from '@/core/i18n/locale';
 import {
   updateLanguagePreference,
   updateProfile,
 } from '@/core/members/operations';
-import { saveStartingPlace } from '@/core/home/workspace-operations';
+import {
+  saveResidentFlatSelection,
+  saveStartingPlace,
+} from '@/core/home/workspace-operations';
+import { buildRequestContext } from '@/core/tenancy/request-context';
 
 export async function updateProfileAction(formData: FormData) {
   return runServerAction('profile.update', async () => {
@@ -36,6 +40,26 @@ export async function saveStartingPlaceAction(formData: FormData) {
     await saveStartingPlace(formData);
     revalidatePath('/profile');
     return 'Starting place saved.';
+  });
+}
+
+export async function saveDefaultFlatAction(formData: FormData) {
+  return runServerAction('profile.updateDefaultFlat', async () => {
+    const value = formData.get('flatScope');
+    const allFlats = value === 'all';
+    if (!allFlats && typeof value !== 'string') {
+      throw new ValidationError({ flat: 'Choose one of your flats.' });
+    }
+    const context = await buildRequestContext(createRequestId());
+    if (!context.societyId) throw new AppError('FORBIDDEN');
+    await saveResidentFlatSelection({
+      societyId: context.societyId,
+      unitId: allFlats ? null : value,
+      allFlats,
+    });
+    revalidatePath('/profile');
+    revalidatePath('/home');
+    return 'Flat preference saved.';
   });
 }
 
