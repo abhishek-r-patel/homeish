@@ -529,6 +529,7 @@ export default function ExpenseFixturePage() {
 
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-content-default gap-space-5 px-space-4 py-space-6 text-ink [overflow-wrap:anywhere]">
+      <title>Accounts fixture | Homeish</title>
       <Banner title="Synthetic accounts fixture" tone="info">
         Development-only simulated actions. No database writes. Reload to reset.
       </Banner>
