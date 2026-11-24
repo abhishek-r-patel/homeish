@@ -43,6 +43,9 @@ import {
 } from '@/components/ui/module-action-form';
 import { DatePicker } from '@/components/ui/date-time-inputs';
 import { useTenancyPresentation } from './presentation';
+import { UnitHandoversPanel } from '@/components/structure/unit-handovers';
+import { UnitHandoverSummary } from '@/components/structure/unit-handover-summary';
+import type { UnitHandoverWorkspace } from '@/core/structure/handover-validation';
 import {
   ClearanceAgreementUpload,
   TransferDocumentLink,
@@ -478,6 +481,7 @@ function CloseCaseForm({ detail }: { detail: TransferCaseDetail }) {
           expectedVersion: detail.case.version,
           nextStage: stage,
           reason,
+          overrideOpenHandover: false,
         })
       }
     >
@@ -512,12 +516,14 @@ export function TransferCaseView({
   workspace,
   mode,
   baseHref,
+  unitHandovers,
 }: {
   detail: TransferCaseDetail;
   dues: ClearanceDues | null;
   workspace: TenancyWorkspace;
   mode: 'admin' | 'committee' | 'own';
   baseHref: string;
+  unitHandovers?: UnitHandoverWorkspace;
 }) {
   const { t, date } = useTenancyPresentation();
   const activeParties = detail.parties.filter((party) => party.active);
@@ -572,7 +578,9 @@ export function TransferCaseView({
           <ModuleActionForm
             action={advanceTransferCaseAction}
             confirmMessage={t(
-              'Advance this transfer case to the next stage? The current authoritative dues are checked where required.',
+              next === 'completed'
+                ? 'Complete this transfer case? If a linked unit handover is open, confirming records Complete anyway in the audit log.'
+                : 'Advance this transfer case to the next stage? The current authoritative dues are checked where required.',
             )}
             submitLabel={t('Advance to {stage}', {
               stage: t(
@@ -587,6 +595,7 @@ export function TransferCaseView({
                 expectedVersion: detail.case.version,
                 nextStage: next,
                 reason: null,
+                overrideOpenHandover: next === 'completed',
               })
             }
           >
@@ -737,6 +746,20 @@ export function TransferCaseView({
             ))
           : null}
       </Card>
+      {unitHandovers ? (
+        mode === 'own' ? (
+          <UnitHandoverSummary workspace={unitHandovers} />
+        ) : (
+          <UnitHandoversPanel
+            unitId={detail.case.unit_id}
+            workspace={unitHandovers}
+            startContext={{
+              eventType: 'owner_transfer',
+              transferCaseId: detail.case.id,
+            }}
+          />
+        )
+      ) : null}
       <Card title={t('Numbered certificates')}>
         {detail.certificates.length ? (
           detail.certificates.map((certificate) => (

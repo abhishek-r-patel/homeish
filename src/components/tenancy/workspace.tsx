@@ -51,6 +51,9 @@ import type {
   ClearanceHandoverDetail,
 } from '@/core/tenancy/transfers/validation';
 import { MoveClearancePanel } from './move-clearance';
+import { UnitHandoversPanel } from '@/components/structure/unit-handovers';
+import { UnitHandoverSummary } from '@/components/structure/unit-handover-summary';
+import type { UnitHandoverWorkspace } from '@/core/structure/handover-validation';
 
 export type TenancyAudience = 'resident' | 'management' | 'guard';
 export type TenancyRouteStateKind =
@@ -453,6 +456,7 @@ export function TenancyMoveView({
   certificateAction,
   handovers = [],
   handoverDetails = [],
+  unitHandovers,
 }: {
   detail: TenancyMoveDetail;
   progress: TenancyMoveProgress;
@@ -465,6 +469,7 @@ export function TenancyMoveView({
   certificateAction?: ModuleFormAction;
   handovers?: ClearanceHandover[];
   handoverDetails?: ClearanceHandoverDetail[];
+  unitHandovers?: UnitHandoverWorkspace;
 }) {
   const { t, date, time } = useTenancyPresentation();
   const move = detail.move;
@@ -688,6 +693,21 @@ export function TenancyMoveView({
         issueAction={certificateAction}
         workspace={workspace}
       />
+      {unitHandovers ? (
+        audience === 'resident' ? (
+          <UnitHandoverSummary workspace={unitHandovers} />
+        ) : (
+          <UnitHandoversPanel
+            unitId={move.unit_id}
+            workspace={unitHandovers}
+            startContext={{
+              eventType:
+                move.kind === 'move_in' ? 'tenant_move_in' : 'tenant_move_out',
+              moveId: move.id,
+            }}
+          />
+        )
+      ) : null}
       {move.kind === 'move_in' &&
       (progress.agreement.type || progress.verification_tracking_enabled) ? (
         <Card title={t('Verification and agreement metadata')}>

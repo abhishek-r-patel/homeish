@@ -46,6 +46,12 @@ export {
   type BillingDailyTask,
   type BillingReceiptEmail,
 } from './billing';
+export { runBillingEmailJobsPrivileged } from './billing-email';
+export {
+  runComplianceRemindersPrivileged,
+  runDataCleanupPrivileged,
+  runOfficialCaseRemindersPrivileged,
+} from './compliance';
 export { runRetentionPrivileged } from './retention';
 export { runUserErasurePrivileged } from './user-erasure';
 export {

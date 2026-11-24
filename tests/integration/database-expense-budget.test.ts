@@ -42,6 +42,11 @@ const budgetReportSchema = z
         category_id: z.uuid().nullable(),
         current_paise: z.number(),
         actual_to_date_paise: z.number(),
+        burn_rate_bp: z.number().nullable(),
+        warning: z.enum(['on_track', 'watch', 'over_plan']).nullable(),
+        projected_year_end_paise: z.number().nullable(),
+        projected_overrun_paise: z.number().nullable(),
+        projection_available: z.boolean(),
       }),
     ),
   })
@@ -117,7 +122,8 @@ describe.skipIf(!hasDatabase)('database expense budgets', () => {
         );
         const categories = await client.query<{ id: string; name: string }>(
           `insert into public.expense_categories(society_id,name,created_by)
-           values($1,'Budget repairs',$2),($1,'Budget power',$2) returning id,name`,
+           values($1,'Budget repairs',$2),($1,'Budget power',$2),
+             ($1,'Budget future',$2) returning id,name`,
           [society, users.get('admin')],
         );
         const account = (
@@ -136,6 +142,8 @@ describe.skipIf(!hasDatabase)('database expense budgets', () => {
           repairs: categories.rows.find((row) => row.name === 'Budget repairs')!
             .id,
           power: categories.rows.find((row) => row.name === 'Budget power')!.id,
+          future: categories.rows.find((row) => row.name === 'Budget future')!
+            .id,
         };
       });
       const admin = fixture.users.get('admin')!;
@@ -156,6 +164,13 @@ describe.skipIf(!hasDatabase)('database expense budgets', () => {
           phasing: 'equal_monthly',
           annual_paise: 24000,
           month_paise: Array.from({ length: 12 }, () => 2000),
+        },
+        {
+          category_id: fixture.future,
+          income_type: null,
+          phasing: 'custom',
+          annual_paise: 12000,
+          month_paise: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12000],
         },
         {
           category_id: null,
@@ -375,6 +390,79 @@ describe.skipIf(!hasDatabase)('database expense budgets', () => {
         )?.current_paise,
       ).toBe(18000);
 
+      const boundary = await database.asSuperuser(async (client) => {
+        const result = await client.query<{
+          below: Record<string, unknown>;
+          watch: Record<string, unknown>;
+          full: Record<string, unknown>;
+          over: Record<string, unknown>;
+          extreme: Record<string, unknown>;
+        }>(
+          `select
+             private.expense_budget_warning_row(
+               '{"kind":"spending","budgeted":true,"current_paise":12000,
+                 "plan_to_date_paise":10000,"actual_to_date_paise":8999}',
+               90,false
+             ) as below,
+             private.expense_budget_warning_row(
+               '{"kind":"spending","budgeted":true,"current_paise":12000,
+                 "plan_to_date_paise":10000,"actual_to_date_paise":9000}',
+               90,false
+             ) as watch,
+             private.expense_budget_warning_row(
+               '{"kind":"spending","budgeted":true,"current_paise":12000,
+                 "plan_to_date_paise":10000,"actual_to_date_paise":10000}',
+               90,false
+             ) as full,
+             private.expense_budget_warning_row(
+               '{"kind":"spending","budgeted":true,"current_paise":12000,
+                 "plan_to_date_paise":10000,"actual_to_date_paise":10001}',
+               90,false
+             ) as over,
+             private.expense_budget_warning_row(
+               '{"kind":"spending","budgeted":true,"current_paise":999999999999999,
+                 "plan_to_date_paise":100,
+                 "actual_to_date_paise":9007199254740991}',
+               90,false
+             ) as extreme`,
+        );
+        return result.rows[0]!;
+      });
+      expect(boundary.below).toMatchObject({ warning: 'on_track' });
+      expect(boundary.watch).toMatchObject({ warning: 'watch' });
+      expect(boundary.full).toMatchObject({ warning: 'watch' });
+      expect(boundary.over).toMatchObject({ warning: 'over_plan' });
+      expect(boundary.extreme).toMatchObject({ warning: 'over_plan' });
+      expect(Number.isFinite(boundary.extreme.burn_rate_bp as number)).toBe(
+        true,
+      );
+
+      for (const [categoryId, amount, trace] of [
+        [fixture.repairs, 7200, 'budget-warning-repairs'],
+        [fixture.power, 17600, 'budget-warning-power'],
+      ] as const) {
+        await database.asRole(
+          'authenticated',
+          { sub: admin },
+          (client) =>
+            client.query(
+              `select public.expense_record(
+                 $1,$2,$3,'2026-11-10','Budget warning actual',$4,
+                 'bank',null,null,null,$5,$6
+               )`,
+              [
+                fixture.society,
+                fixture.account,
+                categoryId,
+                amount,
+                crypto.randomUUID(),
+                trace,
+              ],
+            ),
+          { commit: true },
+        );
+      }
+
       const report = budgetReportSchema.parse(
         await database.asRole(
           'authenticated',
@@ -395,7 +483,30 @@ describe.skipIf(!hasDatabase)('database expense budgets', () => {
         report.summary.find((row) => row.category_id === fixture.repairs),
       ).toMatchObject({
         current_paise: 18000,
-        actual_to_date_paise: 0,
+        actual_to_date_paise: 7200,
+        burn_rate_bp: 9000,
+        warning: 'watch',
+        projected_year_end_paise: 16200,
+        projected_overrun_paise: null,
+        projection_available: true,
+      });
+      expect(
+        report.summary.find((row) => row.category_id === fixture.power),
+      ).toMatchObject({
+        burn_rate_bp: 11000,
+        warning: 'over_plan',
+        projected_year_end_paise: 26400,
+        projected_overrun_paise: 2400,
+        projection_available: true,
+      });
+      expect(
+        report.summary.find((row) => row.category_id === fixture.future),
+      ).toMatchObject({
+        burn_rate_bp: null,
+        warning: null,
+        projected_year_end_paise: null,
+        projected_overrun_paise: null,
+        projection_available: false,
       });
 
       const residentSummary = residentSummarySchema.parse(

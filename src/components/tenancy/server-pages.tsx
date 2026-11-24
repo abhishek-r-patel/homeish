@@ -14,6 +14,7 @@ import {
   getClearanceHandover,
   listClearanceHandovers,
 } from '../../core/tenancy/transfers/operations';
+import { getUnitHandoverWorkspace } from '../../core/structure/handover-operations';
 import {
   TenancyMoveView,
   TenancyRouteState,
@@ -134,6 +135,9 @@ export async function TenancyDetailPage({
         const handoverDetails = await Promise.all(
           handovers.items.map((handover) => getClearanceHandover(handover.id)),
         );
+        const unitHandovers = await getUnitHandoverWorkspace(
+          detail.move.unit_id,
+        );
         content = {
           kind: 'ready',
           props: {
@@ -144,6 +148,7 @@ export async function TenancyDetailPage({
             baseHref,
             handovers: handovers.items,
             handoverDetails,
+            unitHandovers,
           },
         };
       }

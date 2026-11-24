@@ -28,6 +28,8 @@ import {
   expenseFundTransferRuleInputSchema,
   expenseFundCorpusInputSchema,
   expenseFundWorkInputSchema,
+  expenseFundTargetInputSchema,
+  expenseStatementBalanceInputSchema,
   type ExpenseEntry,
   type ExpenseReport,
   type ExpenseStatements,
@@ -37,6 +39,7 @@ import {
   expenseReportPdf,
   expenseStatementsCsv,
   expenseStatementsPdf,
+  expenseFundReconciliationCsv,
   formatSignedRupees,
 } from '../../src/core/expense/documents';
 
@@ -387,6 +390,40 @@ describe('expense validation', () => {
       }).reason,
     ).toBe('Bank reconciliation completed');
   });
+
+  it('validates statement edits and target dates without inventing targets', () => {
+    expect(
+      expenseFundTargetInputSchema.safeParse({
+        fundId: id,
+        targetRupees: null,
+        targetDate: '2027-03-31',
+        expectedUpdatedAt: '2026-11-23T00:00:00.000Z',
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseStatementBalanceInputSchema.safeParse({
+        accountId: id,
+        month: '2026-10-01',
+        closingRupees: '-1200.50',
+        note: 'Bank overdraft',
+        reason: '',
+        expectedUpdatedAt: '2026-11-23T00:00:00.000Z',
+        clientRequestId: id,
+      }).success,
+    ).toBe(false);
+    expect(
+      expenseStatementBalanceInputSchema.parse({
+        accountId: id,
+        month: '2026-10-01',
+        closingRupees: '-1200.50',
+        note: 'Bank overdraft',
+        reason: 'Matched closing statement',
+        expectedUpdatedAt: '2026-11-23T00:00:00.000Z',
+        clientRequestId: id,
+      }).closingRupees,
+    ).toBe(-120050);
+  });
 });
 
 describe('P39 accounts additions', () => {
@@ -437,6 +474,49 @@ describe('P39 accounts additions', () => {
 });
 
 describe('expense exports', () => {
+  it('writes reconciliation targets and formula-safe account names', () => {
+    const csv = expenseFundReconciliationCsv({
+      month: '2026-10-01',
+      month_end: '2026-10-31',
+      status: 'needs_review',
+      reasons: ['month_not_closed'],
+      pending_suggested_splits: 0,
+      accounts: [
+        {
+          account_id: id,
+          account_name: '=HYPERLINK("x")',
+          account_type: 'bank',
+          status: 'needs_review',
+          reasons: ['month_not_closed'],
+          book_balance_paise: 10000,
+          statement_closing_paise: 9500,
+          difference_paise: -500,
+          note: 'Statement checked',
+          updated_at: '2026-11-23T00:00:00.000Z',
+        },
+      ],
+      funds: [
+        {
+          fund_id: id,
+          fund_name: 'Reserve',
+          active: true,
+          balance_paise: 5000,
+          target_paise: 10000,
+          target_date: '2027-03-31',
+          target_progress_bp: 5000,
+          target_gap_paise: 5000,
+          estimated_monthly_paise: 1000,
+          target_status: 'below_target',
+          target_updated_at: '2026-11-23T00:00:00.000Z',
+        },
+      ],
+    });
+    expect(csv).toContain('HYPERLINK');
+    expect(csv).toContain(`"'=HYPERLINK`);
+    expect(csv).toContain('Needs review');
+    expect(csv).toContain('below target');
+  });
+
   it('writes entries with separate in and out columns', () => {
     const csv = expenseEntriesCsv([
       entry,
@@ -559,6 +639,9 @@ describe('expense exports', () => {
       accounts_added_opening_paise: 0,
       receipts_paise: 25_000,
       payments_paise: 10_000,
+      held_deposit_receipts_paise: 0,
+      held_deposit_refunds_paise: 0,
+      retained_deposit_income_paise: 0,
       closing_money_paise: 115_000,
       identity_matches: true,
       accounts_added: [],

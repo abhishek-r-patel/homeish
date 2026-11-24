@@ -26,6 +26,8 @@ const expectedBuckets = [
   'community-photos',
   'poll-dispute-files',
   'major-works-files',
+  'handover-photos',
+  'amenity-deposit-evidence',
 ];
 
 describe.skipIf(!hasDatabase)('database private file storage', () => {
@@ -59,6 +61,8 @@ describe.skipIf(!hasDatabase)('database private file storage', () => {
         'document-files',
         'poll-dispute-files',
         'major-works-files',
+        'handover-photos',
+        'amenity-deposit-evidence',
       ]) {
         expect(
           rows.find(({ id }) => id === bucketId)?.allowed_mime_types.toSorted(),

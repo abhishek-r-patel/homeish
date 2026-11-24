@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   dues: vi.fn(),
   certificates: vi.fn(),
   acknowledgement: vi.fn(),
+  unitHandovers: vi.fn(),
   view: vi.fn(() => null),
 }));
 vi.mock('server-only', () => ({}));
@@ -21,6 +22,9 @@ vi.mock('../../src/core/tenancy/transfers/operations', () => ({
   checkClearanceDues: mocks.dues,
   listTenancyCertificates: mocks.certificates,
   getClearanceAcknowledgement: mocks.acknowledgement,
+}));
+vi.mock('../../src/core/structure/handover-operations', () => ({
+  getUnitHandoverWorkspace: mocks.unitHandovers,
 }));
 vi.mock('../../src/components/tenancy/transfer-workspace', () => ({
   TransferWorkspaceView: mocks.view,
@@ -68,6 +72,16 @@ beforeEach(() => {
   mocks.acknowledgement.mockResolvedValue({
     acknowledged: true,
     acknowledged_at: '2026-11-22T10:00:00Z',
+  });
+  mocks.unitHandovers.mockResolvedValue({
+    can_manage: false,
+    today: '2026-11-22',
+    template: { items: [], version: 0, updated_at: null },
+    parties: [],
+    moves: [],
+    transfer_cases: [],
+    readings: [],
+    handovers: [],
   });
 });
 

@@ -204,6 +204,18 @@ export default async function ExpenseStatementsPage({
             ],
             [t('Receipts'), statements.receipts_paise],
             [t('Payments'), -statements.payments_paise],
+            [
+              t('Held amenity deposit receipts'),
+              statements.held_deposit_receipts_paise,
+            ],
+            [
+              t('Held amenity deposit refunds'),
+              -statements.held_deposit_refunds_paise,
+            ],
+            [
+              t('Retained deposit income (non-cash reclassification)'),
+              statements.retained_deposit_income_paise,
+            ],
             [t('Closing money held'), statements.closing_money_paise],
           ].map(([label, value]) => (
             <div

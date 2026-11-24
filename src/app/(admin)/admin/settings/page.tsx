@@ -5,6 +5,7 @@ import { ErrorPanel } from '@/components/ui/feedback';
 import { JoinCodeControls } from '@/components/society/join-code-controls';
 import { LanguageSettingsControls } from '@/components/society/language-settings-controls';
 import { AmenityCalendarSettings } from '@/components/amenity/settings';
+import { DataCleanupControls } from '@/components/compliance/data-cleanup';
 import { AppError, createRequestId } from '@/core/errors';
 import { getAmenityCalendarSettings } from '@/core/amenity/operations';
 import {
@@ -13,6 +14,7 @@ import {
 } from '@/core/society/operations';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { translateMessage } from '@/core/i18n/messages';
+import { getDataCleanupRules } from '@/core/compliance/operations';
 
 export const metadata = {
   title: 'Society settings | Homeish',
@@ -29,16 +31,21 @@ export default async function SocietySettingsPage() {
     context.languagePreference === 'hi' && context.isHindiEnabled ? 'hi' : 'en';
   const t = (source: string) => translateMessage(locale, source);
   const canViewFunds = context.enabledModules.has('expense') && canViewLanguage;
-  const [registrationSettings, languageSettings, amenitySettings] =
-    await Promise.all([
-      canManage ? getJoinCodeSettings(context) : Promise.resolve(null),
-      context.enabledModules.has('language')
-        ? getHindiAvailability(context)
-        : Promise.resolve(null),
-      context.enabledModules.has('amenity')
-        ? getAmenityCalendarSettings()
-        : Promise.resolve(null),
-    ]);
+  const [
+    registrationSettings,
+    languageSettings,
+    amenitySettings,
+    cleanupRules,
+  ] = await Promise.all([
+    canManage ? getJoinCodeSettings(context) : Promise.resolve(null),
+    context.enabledModules.has('language')
+      ? getHindiAvailability(context)
+      : Promise.resolve(null),
+    context.enabledModules.has('amenity')
+      ? getAmenityCalendarSettings()
+      : Promise.resolve(null),
+    getDataCleanupRules(),
+  ]);
   if (!canManage && !languageSettings && !amenitySettings && !canViewFunds) {
     return (
       <ErrorPanel
@@ -121,6 +128,7 @@ export default async function SocietySettingsPage() {
         >
           <AmenityCalendarSettings
             identity={amenitySettings.resident_calendar_identity}
+            depositPolicy={amenitySettings.deposit_confirmation_policy}
             directoryEnabled={amenitySettings.directory_enabled}
             canManage={amenitySettings.can_manage}
           />
@@ -140,6 +148,14 @@ export default async function SocietySettingsPage() {
           </Link>
         </Card>
       ) : null}
+      <Card
+        description={t(
+          'Keep records permanently by default, or opt in to audited age-based deletion.',
+        )}
+        title={t('Data cleanup')}
+      >
+        <DataCleanupControls canManage={canManage} rules={cleanupRules} />
+      </Card>
     </section>
   );
 }

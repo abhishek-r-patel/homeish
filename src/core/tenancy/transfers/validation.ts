@@ -68,6 +68,7 @@ export const advanceTransferCaseInputSchema = z
     expectedVersion: version,
     nextStage: transferStageSchema,
     reason: z.string().trim().max(500).nullable(),
+    overrideOpenHandover: z.boolean().default(false),
   })
   .strict()
   .refine(

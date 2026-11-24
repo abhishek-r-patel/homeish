@@ -89,7 +89,7 @@ function databaseErrorCode(error) {
 }
 
 // Removes only what the migrations create; Supabase-managed schemas, grants and default privileges stay.
-const WIPE_SQL = `
+const WIPE_STORAGE_SQL = `
 DO $wipe$
 DECLARE
   item record;
@@ -107,75 +107,54 @@ BEGIN
   PERFORM set_config('storage.allow_delete_query', 'true', true);
   DELETE FROM storage.buckets;
   PERFORM set_config('storage.allow_delete_query', 'false', true);
-
-  DROP SCHEMA IF EXISTS private CASCADE;
-  FOR item IN
-    SELECT format('%I.%I', n.nspname, c.relname) AS name, c.relkind
-    FROM pg_catalog.pg_class c
-    JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-    WHERE n.nspname = 'public'
-      AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S')
-      AND c.relowner = current_user::regrole
-    ORDER BY c.relkind IN ('r', 'p') DESC
-  LOOP
-    EXECUTE format(
-      'DROP %s IF EXISTS %s CASCADE',
-      CASE item.relkind
-        WHEN 'v' THEN 'VIEW'
-        WHEN 'm' THEN 'MATERIALIZED VIEW'
-        WHEN 'f' THEN 'FOREIGN TABLE'
-        WHEN 'S' THEN 'SEQUENCE'
-        ELSE 'TABLE'
-      END,
-      item.name
-    );
-  END LOOP;
-  FOR item IN
-    SELECT format('%I.%I(%s)', n.nspname, p.proname,
-      pg_catalog.pg_get_function_identity_arguments(p.oid)) AS name, p.prokind
-    FROM pg_catalog.pg_proc p
-    JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public' AND p.proowner = current_user::regrole
-      AND NOT EXISTS (
-        SELECT 1 FROM pg_catalog.pg_depend d
-        WHERE d.classid = 'pg_catalog.pg_proc'::regclass
-          AND d.objid = p.oid AND d.deptype = 'e'
-      )
-  LOOP
-    EXECUTE format(
-      'DROP %s IF EXISTS %s CASCADE',
-      CASE item.prokind
-        WHEN 'p' THEN 'PROCEDURE'
-        WHEN 'a' THEN 'AGGREGATE'
-        ELSE 'FUNCTION'
-      END,
-      item.name
-    );
-  END LOOP;
-  FOR item IN
-    SELECT format('%I.%I', n.nspname, t.typname) AS name, t.typtype
-    FROM pg_catalog.pg_type t
-    JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
-    WHERE n.nspname = 'public' AND t.typowner = current_user::regrole
-      AND t.typtype IN ('e', 'd', 'c', 'r', 'm')
-      AND NOT EXISTS (
-        SELECT 1 FROM pg_catalog.pg_class c
-        WHERE c.reltype = t.oid AND c.relkind <> 'c'
-      )
-  LOOP
-    EXECUTE format(
-      'DROP %s IF EXISTS %s CASCADE',
-      CASE item.typtype WHEN 'd' THEN 'DOMAIN' ELSE 'TYPE' END,
-      item.name
-    );
-  END LOOP;
-
-  DELETE FROM auth.users;
-  IF to_regclass('supabase_migrations.schema_migrations') IS NOT NULL THEN
-    DELETE FROM supabase_migrations.schema_migrations;
-  END IF;
 END
 $wipe$;
+`;
+
+const WIPE_RELATIONS_SQL = `
+SELECT
+  format('%I.%I', n.nspname, c.relname) AS name,
+  c.relkind
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public'
+  AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S')
+  AND c.relowner = current_user::regrole
+ORDER BY c.relkind IN ('r', 'p') DESC, c.oid
+LIMIT 20
+`;
+
+const WIPE_FUNCTIONS_SQL = `
+SELECT
+  format('%I.%I(%s)', n.nspname, p.proname,
+    pg_catalog.pg_get_function_identity_arguments(p.oid)) AS name,
+  p.prokind
+FROM pg_catalog.pg_proc p
+JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public'
+  AND p.proowner = current_user::regrole
+  AND NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_depend d
+    WHERE d.classid = 'pg_catalog.pg_proc'::regclass
+      AND d.objid = p.oid AND d.deptype = 'e'
+  )
+ORDER BY p.oid
+LIMIT 20
+`;
+
+const WIPE_TYPES_SQL = `
+SELECT format('%I.%I', n.nspname, t.typname) AS name, t.typtype
+FROM pg_catalog.pg_type t
+JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE n.nspname = 'public'
+  AND t.typowner = current_user::regrole
+  AND t.typtype IN ('e', 'd', 'c', 'r', 'm')
+  AND NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_class c
+    WHERE c.reltype = t.oid AND c.relkind <> 'c'
+  )
+ORDER BY t.oid
+LIMIT 20
 `;
 
 const LEFTOVERS_SQL = `
@@ -271,22 +250,116 @@ async function inTransaction(client, phase, earlier, work) {
   }
 }
 
-// Hosted servers cap the shared lock table (about 3,800 locks on testdb), so the wipe and each
-// migration commit separately; a failure leaves earlier steps applied.
+async function wipeInBatches(client, phase, query, dropKind, retry) {
+  while (true) {
+    const { rows } = await client.query(query);
+    if (rows.length === 0) return;
+    await inTransaction(
+      client,
+      phase,
+      `Earlier wipe steps stay applied. ${retry}`,
+      async () => {
+        for (const item of rows) {
+          await client.query(
+            `DROP ${dropKind(item)} IF EXISTS ${item.name} CASCADE`,
+          );
+        }
+      },
+    );
+  }
+}
+
+async function wipeDatabase(client, retry) {
+  await inTransaction(
+    client,
+    'wiping testdb',
+    'Nothing was changed.',
+    async () => {
+      await client.query(WIPE_STORAGE_SQL);
+    },
+  );
+  await inTransaction(
+    client,
+    'wiping private schema',
+    `Earlier wipe steps stay applied. ${retry}`,
+    () => client.query('DROP SCHEMA IF EXISTS private CASCADE'),
+  );
+  await wipeInBatches(
+    client,
+    'wiping public relations',
+    WIPE_RELATIONS_SQL,
+    (item) =>
+      ({
+        v: 'VIEW',
+        m: 'MATERIALIZED VIEW',
+        f: 'FOREIGN TABLE',
+        S: 'SEQUENCE',
+      })[item.relkind] ?? 'TABLE',
+    retry,
+  );
+  await wipeInBatches(
+    client,
+    'wiping public functions',
+    WIPE_FUNCTIONS_SQL,
+    (item) =>
+      ({
+        p: 'PROCEDURE',
+        a: 'AGGREGATE',
+      })[item.prokind] ?? 'FUNCTION',
+    retry,
+  );
+  await wipeInBatches(
+    client,
+    'wiping public types',
+    WIPE_TYPES_SQL,
+    (item) => (item.typtype === 'd' ? 'DOMAIN' : 'TYPE'),
+    retry,
+  );
+  await inTransaction(
+    client,
+    'finishing the testdb wipe',
+    `Earlier wipe steps stay applied. ${retry}`,
+    async () => {
+      await client.query('DELETE FROM auth.users');
+      if (
+        await client
+          .query("SELECT to_regclass('supabase_migrations.schema_migrations')")
+          .then(({ rows }) => rows[0]?.to_regclass !== null)
+      ) {
+        await client.query('DELETE FROM supabase_migrations.schema_migrations');
+      }
+    },
+  );
+}
+
+// Hosted servers cap the shared lock table (about 3,800 locks on testdb), so the wipe uses
+// bounded transactions and each migration commits separately; rerunning completes a partial wipe.
 export async function installFresh(client, migrations, { wipe }) {
   const retry = wipe
     ? 'Rerun with --wipe-testdb to start again.'
     : 'Reset the database before retrying.';
-  await inTransaction(
-    client,
-    wipe ? 'wiping testdb' : 'checking that the database is empty',
-    'Nothing was changed.',
-    async () => {
-      if (wipe) await client.query(WIPE_SQL);
-      await assertEmpty(client);
-      await client.query(HISTORY_SQL);
-    },
-  );
+  if (wipe) {
+    await wipeDatabase(client, retry);
+    await inTransaction(
+      client,
+      'checking that testdb is empty',
+      `Earlier wipe steps stay applied. ${retry}`,
+      async () => {
+        await assertEmpty(client);
+        await client.query(HISTORY_SQL);
+      },
+    );
+  } else {
+    await inTransaction(
+      client,
+      'checking that the database is empty',
+      'Nothing was changed.',
+      async () => {
+        await assertEmpty(client);
+        await client.query(HISTORY_SQL);
+      },
+    );
+  }
   let applied = 0;
   for (const migration of migrations) {
     const done = wipe ? 'testdb was wiped' : 'the database was empty';

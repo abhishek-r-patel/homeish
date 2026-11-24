@@ -79,6 +79,42 @@ test('configure a tenant-only percentage charge from an active base', async ({
   await expect(charge.getByText('Tenant-occupied')).toBeVisible();
 });
 
+test('interest starts behind an explicit non-advice acknowledgement', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/billing');
+  await expect(
+    page.getByRole('heading', { name: 'Interest on overdue bills' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      'Interest is not legal, tax or accounting advice. Review the rate and treatment with an accountant before live use.',
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Acknowledge interest warning' }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Yearly interest rate (%)')).toHaveCount(0);
+});
+
+test('bill details offer accessible native and fallback sharing', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto('/fixtures/billing?view=bill');
+  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await expect(
+    page.getByRole('link', { name: 'WhatsApp', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Email', exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+
 test('payment changes require confirmation and retain a visible success outcome', async ({
   page,
 }) => {
@@ -124,6 +160,7 @@ test('society admins can set per-society due day and rounding preferences', asyn
   await page.goto('/fixtures/billing');
   await page.getByLabel('Monthly due date').selectOption('last_day');
   await page.getByLabel('Per-square-foot rounding').selectOption('paise');
+  await page.getByLabel('Email bill PDF when published').uncheck();
   await page
     .getByRole('button', { name: 'Save Society Preferences', exact: true })
     .click();
@@ -136,6 +173,9 @@ test('society admins can set per-society due day and rounding preferences', asyn
   await expect(page.getByLabel('Per-square-foot rounding')).toHaveValue(
     'paise',
   );
+  await expect(
+    page.getByLabel('Email bill PDF when published'),
+  ).not.toBeChecked();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 

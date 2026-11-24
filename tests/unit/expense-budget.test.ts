@@ -104,6 +104,11 @@ describe('expense budgets', () => {
           difference_paise: 20000,
           difference_label: 'Below budget' as const,
           percent_used_bp: 7500,
+          burn_rate_bp: 7500,
+          warning: 'on_track' as const,
+          projected_year_end_paise: 90000,
+          projected_overrun_paise: null,
+          projection_available: true,
         },
       ],
       months: [],
@@ -111,7 +116,12 @@ describe('expense budgets', () => {
       opening_money_paise: 100000,
       accounts_added_opening_paise: 0,
     };
-    expect(expenseBudgetCsv(report)).toContain(`'=Untrusted head`);
+    const csv = expenseBudgetCsv(report);
+    expect(csv).toContain(`'=Untrusted head`);
+    expect(csv).toContain('Burn rate / used (%)');
+    expect(csv).toContain('On track');
+    expect(csv).toContain('900');
+    expect(csv).toContain('Estimate');
     const pdf = await expenseBudgetPdf('Synthetic Society', report);
     expect(new TextDecoder().decode(pdf.subarray(0, 5))).toBe('%PDF-');
   });

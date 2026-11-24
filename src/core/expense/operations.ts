@@ -48,10 +48,14 @@ import {
   expenseFundWorkLinkInputSchema,
   expenseFundWorksSchema,
   expenseFundReportSchema,
+  expenseFundReconciliationInputSchema,
+  expenseFundReconciliationSchema,
+  expenseFundTargetInputSchema,
   expenseFundsActivitySchema,
   expenseFundBillingMappingsSchema,
   expenseBillingCollectionSuggestionsSchema,
   expenseFundsWorkspaceSchema,
+  expenseStatementBalanceInputSchema,
   expenseIncomeInputSchema,
   expenseMonthCloseInputSchema,
   expenseMonthReopenInputSchema,
@@ -1366,6 +1370,92 @@ export async function getExpenseFundReport(range: {
     expenseFundReportSchema,
     'Choose a valid fund report range of up to two years.',
   );
+}
+
+export async function getExpenseFundReconciliation(month: unknown) {
+  const { context, societyId } = await expenseContext('read');
+  const parsed = parseModuleInput(expenseFundReconciliationInputSchema, {
+    month,
+  });
+  return callModuleRpc(
+    context,
+    'expense_fund_reconciliation',
+    { p_society_id: societyId, p_month: parsed.month },
+    expenseFundReconciliationSchema,
+    'Choose a valid fund reconciliation month.',
+  );
+}
+
+export async function saveExpenseFundTarget(input: unknown, requestId: string) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseFundTargetInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_fund_target_save',
+    {
+      p_society_id: societyId,
+      p_fund_id: parsed.fundId,
+      p_target_paise: parsed.targetRupees,
+      p_target_date: parsed.targetDate,
+      p_expected_updated_at: parsed.expectedUpdatedAt,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the fund target amount and date, then refresh the fund if it changed.',
+  );
+}
+
+export async function saveExpenseStatementBalance(
+  input: unknown,
+  requestId: string,
+) {
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseStatementBalanceInputSchema, input);
+  return callModuleRpc(
+    context,
+    'expense_statement_balance_save',
+    {
+      p_society_id: societyId,
+      p_account_id: parsed.accountId,
+      p_month: parsed.month,
+      p_closing_paise: parsed.closingRupees,
+      p_note: parsed.note,
+      p_reason: parsed.reason,
+      p_expected_updated_at: parsed.expectedUpdatedAt,
+      p_client_request_id: parsed.clientRequestId,
+      p_request_trace: requestId,
+    },
+    z.uuid(),
+    'Check the statement balance. Existing values need a reason and fresh version.',
+  );
+}
+
+export async function exportExpenseFundReconciliation(month: unknown) {
+  const requestId = createRequestId();
+  const { context, societyId } = await expenseContext('manage', requestId);
+  const parsed = parseModuleInput(expenseFundReconciliationInputSchema, {
+    month,
+  });
+  await callModuleRpc(
+    context,
+    'expense_fund_reconciliation_export_record',
+    {
+      p_society_id: societyId,
+      p_month: parsed.month,
+      p_request_trace: requestId,
+    },
+    z.null(),
+    'The fund reconciliation export could not be audited.',
+  );
+  const report = await callModuleRpc(
+    context,
+    'expense_fund_reconciliation',
+    { p_society_id: societyId, p_month: parsed.month },
+    expenseFundReconciliationSchema,
+    'Choose a valid fund reconciliation month.',
+  );
+  return report;
 }
 
 export async function recordExpense(input: unknown, requestId: string) {

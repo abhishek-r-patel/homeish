@@ -240,6 +240,13 @@ test('P42 category, mapping and savings controls stay usable on phones', async (
   await expect(
     settingsForm.getByRole('status').filter({ hasText: 'Budget settings' }),
   ).toContainText('Budget settings saved');
+  const warnings = budget.getByRole('region', {
+    name: 'Budget warning summary',
+  });
+  await expect(warnings).toContainText('Watch');
+  await expect(warnings).toContainText('Over plan');
+  await expect(warnings).toContainText('Estimate');
+  await expect(warnings).toContainText('Projected overrun');
 
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
@@ -273,6 +280,24 @@ test('fund opening requires acknowledgement and stays within the Accounts total'
   await expect(activate).toBeEnabled();
   await activate.click();
   await expect(funds).toContainText('Fund tracking is active.');
+  const reconciliation = funds.getByRole('region', {
+    name: 'Fund reconciliation controls',
+  });
+  await reconciliation.getByLabel('Target amount (optional)').fill('200000');
+  await reconciliation.getByLabel('Target date (optional)').fill('2027-03-31');
+  await reconciliation.getByRole('button', { name: 'Save target' }).click();
+  await expect(reconciliation.getByRole('status')).toContainText(
+    'Fund target saved',
+  );
+  await reconciliation.getByLabel('Statement closing balance').fill('100000');
+  await reconciliation
+    .getByRole('button', { name: 'Save statement balance' })
+    .click();
+  await expect(
+    reconciliation.getByRole('status').filter({
+      hasText: 'Statement balance',
+    }),
+  ).toContainText('Statement balance saved');
   const suggestion = funds.getByRole('checkbox', { name: /RV\// });
   await suggestion.locator('..').click();
   await expect(suggestion).toBeChecked();

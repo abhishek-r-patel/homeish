@@ -16,6 +16,8 @@ import {
   ExpenseFundBulkSuggestionsForm,
   ExpenseFundForm,
   ExpenseFundOpeningCorrectionForm,
+  ExpenseFundTargetForm,
+  ExpenseStatementBalanceForm,
 } from '@/components/expense/funds';
 import {
   CashCountForm,
@@ -51,6 +53,8 @@ import {
   expenseFundAllocationInputSchema,
   expenseFundInputSchema,
   expenseFundOpeningCorrectionInputSchema,
+  expenseFundTargetInputSchema,
+  expenseStatementBalanceInputSchema,
   expenseRecordInputSchema,
   expenseReverseInputSchema,
   expenseTransferInputSchema,
@@ -304,6 +308,18 @@ export default function ExpenseFixturePage() {
     );
     setFundReviewRequired(false);
     return { ok: true, message: 'Fund opening corrected and re-confirmed.' };
+  };
+  const saveFundTarget: ModuleFormAction = async (data) => {
+    const parsed = expenseFundTargetInputSchema.safeParse(input(data));
+    return parsed.success
+      ? { ok: true, message: 'Fund target saved.' }
+      : failure(parsed.error.issues[0].message);
+  };
+  const saveStatementBalance: ModuleFormAction = async (data) => {
+    const parsed = expenseStatementBalanceInputSchema.safeParse(input(data));
+    return parsed.success
+      ? { ok: true, message: 'Statement balance saved.' }
+      : failure(parsed.error.issues[0].message);
   };
   const record: ModuleFormAction = async (data) => {
     const parsed = expenseRecordInputSchema.safeParse(input(data));
@@ -728,6 +744,44 @@ export default function ExpenseFixturePage() {
                   />
                 </section>
               ) : null}
+              <section
+                aria-label="Fund reconciliation controls"
+                className="grid gap-space-3"
+              >
+                <ExpenseFundTargetForm
+                  action={saveFundTarget}
+                  fund={{
+                    fund_id: funds[0]!.id,
+                    fund_name: funds[0]!.name,
+                    active: true,
+                    balance_paise: 0,
+                    target_paise: null,
+                    target_date: null,
+                    target_progress_bp: null,
+                    target_gap_paise: null,
+                    estimated_monthly_paise: null,
+                    target_status: null,
+                    target_updated_at: funds[0]!.updated_at,
+                  }}
+                />
+                <ExpenseStatementBalanceForm
+                  action={saveStatementBalance}
+                  month={`${today.slice(0, 8)}01`}
+                  account={{
+                    account_id:
+                      bankAccount?.id ?? '00000000-0000-4000-8000-000000000099',
+                    account_name: bankAccount?.name ?? 'Synthetic bank',
+                    account_type: 'bank',
+                    status: 'needs_review',
+                    reasons: ['month_not_closed'],
+                    book_balance_paise: bankAccount ? balance(bankAccount) : 0,
+                    statement_closing_paise: null,
+                    difference_paise: null,
+                    note: null,
+                    updated_at: null,
+                  }}
+                />
+              </section>
             </>
           ) : (
             <ExpenseFundActivationForm

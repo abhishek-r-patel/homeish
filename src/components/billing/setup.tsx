@@ -18,9 +18,11 @@ import {
   paymentDetailsInputSchema,
   rupeesFromPaise,
   type BillingSettings,
+  type BillingInterestSettings,
   type ChargeType,
   type PaymentDetails,
 } from '@/core/billing/validation';
+import { BillingInterestSettings as InterestSettings } from './interest-settings';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/data-display';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
@@ -444,6 +446,27 @@ function SocietyBillingPreferencesForm({
             <option value="paise">{t('Nearest paise, half up')}</option>
           </select>
         </label>
+        <label
+          className="flex items-start gap-space-3 text-body-strong"
+          htmlFor="billing-email-on-publish"
+        >
+          <input
+            className="mt-space-1 size-5"
+            defaultChecked={settings.bill_email_on_publish}
+            id="billing-email-on-publish"
+            name="billEmailOnPublish"
+            type="checkbox"
+            value="true"
+          />
+          <span className="grid gap-space-1">
+            {t('Email bill PDF when published')}
+            <span className="text-caption font-normal text-ink-muted">
+              {t(
+                'Email the bill summary and PDF to active unit occupants. Failed delivery is never shown as sent.',
+              )}
+            </span>
+          </span>
+        </label>
         <p className="text-caption text-ink-muted">
           {t(
             "A numeric due day past the end of a shorter month falls on that month's last day. These preferences affect future bills only.",
@@ -642,6 +665,7 @@ export type BillingSetupProps = {
   qrUrl: string | null;
   settings: BillingSettings;
   settingsUpdatedAt: string;
+  interest: BillingInterestSettings;
   societyId: string;
   suspended: boolean;
   timezone: string;
@@ -659,6 +683,7 @@ export function BillingSetup({
   qrUrl,
   settings,
   settingsUpdatedAt,
+  interest,
   societyId,
   suspended,
   timezone,
@@ -774,71 +799,76 @@ export function BillingSetup({
   }
 
   const chargesPanel = (
-    <Card
-      description={t(
-        'Configure charges before generating bills. Deactivating a charge keeps its history.',
-      )}
-      title={t('Charge types')}
-    >
-      {savedMessage ? (
-        <Banner tone="success">{translateFeedback(savedMessage)}</Banner>
-      ) : null}
-      {canManage ? (
-        <div className="mb-space-4 flex flex-wrap gap-space-2">
-          <Button onClick={() => setEditing(null)}>
-            {t('Add Charge Type')}
-          </Button>
-          <Button
-            onClick={() => router.push('/admin/billing/generate')}
-            variant="secondary"
-          >
-            {t('Generate Bills')}
-          </Button>
-        </div>
-      ) : null}
-      {charges.length ? (
-        <ul className="grid gap-space-3">
-          {charges.map((charge) => (
-            <li
-              className="flex flex-wrap items-center justify-between gap-space-3 rounded-md border border-rule p-space-4"
-              key={charge.id}
+    <>
+      <Card
+        description={t(
+          'Configure charges before generating bills. Deactivating a charge keeps its history.',
+        )}
+        title={t('Charge types')}
+      >
+        {savedMessage ? (
+          <Banner tone="success">{translateFeedback(savedMessage)}</Banner>
+        ) : null}
+        {canManage ? (
+          <div className="mb-space-4 flex flex-wrap gap-space-2">
+            <Button onClick={() => setEditing(null)}>
+              {t('Add Charge Type')}
+            </Button>
+            <Button
+              onClick={() => router.push('/admin/billing/generate')}
+              variant="secondary"
             >
-              <div className="grid min-w-0 gap-space-1">
-                <h3 className="break-words text-body-strong">{charge.name}</h3>
-                <p className="text-caption text-ink-muted">
-                  {t(methodLabels[charge.method])}
-                  {charge.percent_basis_points !== null
-                    ? ` (${rupeesFromPaise(charge.percent_basis_points)}%)`
-                    : ''}
-                  {charge.amount_paise !== null
-                    ? ` - ${locale === 'hi' ? billingMoney(charge.amount_paise, locale) : `INR ${rupeesFromPaise(charge.amount_paise)}`}`
-                    : ''}
-                </p>
-                <p className="text-caption">
-                  <span>{t(charge.active ? 'Active' : 'Inactive')}</span> ·{' '}
-                  <span>{t(eligibilityLabels[charge.eligibility])}</span>
-                </p>
-              </div>
-              {canManage ? (
-                <Button
-                  aria-label={t('Edit {name}', { name: charge.name })}
-                  onClick={() => setEditing(charge)}
-                  variant="secondary"
-                >
-                  {t('Edit')}
-                </Button>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-body text-ink-muted">
-          {t(
-            "No charge types yet. An administrator can add the society's first charge.",
-          )}
-        </p>
-      )}
-    </Card>
+              {t('Generate Bills')}
+            </Button>
+          </div>
+        ) : null}
+        {charges.length ? (
+          <ul className="grid gap-space-3">
+            {charges.map((charge) => (
+              <li
+                className="flex flex-wrap items-center justify-between gap-space-3 rounded-md border border-rule p-space-4"
+                key={charge.id}
+              >
+                <div className="grid min-w-0 gap-space-1">
+                  <h3 className="break-words text-body-strong">
+                    {charge.name}
+                  </h3>
+                  <p className="text-caption text-ink-muted">
+                    {t(methodLabels[charge.method])}
+                    {charge.percent_basis_points !== null
+                      ? ` (${rupeesFromPaise(charge.percent_basis_points)}%)`
+                      : ''}
+                    {charge.amount_paise !== null
+                      ? ` - ${locale === 'hi' ? billingMoney(charge.amount_paise, locale) : `INR ${rupeesFromPaise(charge.amount_paise)}`}`
+                      : ''}
+                  </p>
+                  <p className="text-caption">
+                    <span>{t(charge.active ? 'Active' : 'Inactive')}</span> ·{' '}
+                    <span>{t(eligibilityLabels[charge.eligibility])}</span>
+                  </p>
+                </div>
+                {canManage ? (
+                  <Button
+                    aria-label={t('Edit {name}', { name: charge.name })}
+                    onClick={() => setEditing(charge)}
+                    variant="secondary"
+                  >
+                    {t('Edit')}
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-body text-ink-muted">
+            {t(
+              "No charge types yet. An administrator can add the society's first charge.",
+            )}
+          </p>
+        )}
+      </Card>
+      <InterestSettings interest={interest} />
+    </>
   );
 
   const paymentPanel = (
@@ -1019,6 +1049,14 @@ export function BillingSetup({
                     ? 'Nearest rupee, half up'
                     : 'Nearest paise, half up',
                 )}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-semibold">
+                {t('Email bill PDF when published')}:{' '}
+              </dt>
+              <dd className="inline">
+                {settings.bill_email_on_publish ? t('Enabled') : t('Disabled')}
               </dd>
             </div>
           </dl>

@@ -6,6 +6,23 @@ import {
   hasDatabase,
   newAuthUser,
 } from './support/database';
+
+type DepositWorkspace = {
+  amenities: { id: string; updated_at: string }[];
+  slots: { id: string }[];
+  bookings: {
+    id: string;
+    status: string;
+    deposit: {
+      current_amount_paise: number;
+      held_paise: number;
+      remaining_paise: number;
+      received_paise: number;
+      refunded_paise: number;
+      deducted_paise: number;
+    } | null;
+  }[];
+};
 describe.skipIf(!hasDatabase)('database amenity booking', () => {
   it.each([
     ['current schema (IST only)', undefined],
@@ -540,6 +557,7 @@ describe.skipIf(!hasDatabase)('database amenity booking', () => {
           );
           expect(calendarSettings.rows[0]!.data).toEqual({
             resident_calendar_identity: 'availability_only',
+            deposit_confirmation_policy: 'per_amenity',
             directory_enabled: false,
             can_manage: false,
           });
@@ -811,4 +829,321 @@ describe.skipIf(!hasDatabase)('database amenity booking', () => {
       }
     },
   );
+
+  it('holds required deposits, confirms on full receipts and reconciles refunds and deductions', async () => {
+    const db = await createTestDatabase();
+    try {
+      const fixture = await db.asSuperuser(async (client) => {
+        const adminId = await newAuthUser(client, 'deposit-admin@example.test');
+        const residentId = await newAuthUser(
+          client,
+          'deposit-resident@example.test',
+        );
+        for (const [id, email, name] of [
+          [adminId, 'deposit-admin@example.test', 'Deposit Admin'],
+          [residentId, 'deposit-resident@example.test', 'Deposit Resident'],
+        ]) {
+          await client.query(
+            'insert into public.profiles(id,email,full_name) values($1,$2,$3)',
+            [id, email, name],
+          );
+        }
+        const societyId = (
+          await client.query<{ id: string }>(
+            "insert into public.societies(name,created_by) values('Deposit Society',$1) returning id",
+            [adminId],
+          )
+        ).rows[0]!.id;
+        const residentMembership = (
+          await client.query<{ id: string }>(
+            "insert into public.memberships(society_id,user_id,roles,status) values($1,$2,'{resident}','active') returning id",
+            [societyId, residentId],
+          )
+        ).rows[0]!.id;
+        await client.query(
+          "insert into public.memberships(society_id,user_id,roles,status) values($1,$2,'{admin}','active')",
+          [societyId, adminId],
+        );
+        await client.query(
+          `insert into public.module_configs(society_id,module_key,enabled,settings)
+           values
+             ($1,'core',true,'{}'),
+             ($1,'amenity',true,'{}'),
+             ($1,'expense',true,'{}'),
+             ($1,'billing',true,'{}')`,
+          [societyId],
+        );
+        const unitId = (
+          await client.query<{ id: string }>(
+            'insert into public.units(society_id,number,created_by) values($1,$2,$3) returning id',
+            [societyId, 'D-1', adminId],
+          )
+        ).rows[0]!.id;
+        await client.query(
+          `insert into public.unit_occupants(
+             society_id,unit_id,membership_id,relationship,is_primary,status,created_by
+           ) values($1,$2,$3,'owner',true,'active',$4)`,
+          [societyId, unitId, residentMembership, adminId],
+        );
+        const accountId = (
+          await client.query<{ id: string }>(
+            `insert into public.expense_accounts(
+               society_id,name,account_type,opening_on,created_by,updated_by
+             ) values($1,'Deposit cash','cash','2026-01-01',$2,$2) returning id`,
+            [societyId, adminId],
+          )
+        ).rows[0]!.id;
+        const dateRow = (
+          await client.query<{ date: string; weekday: number }>(
+            `select (private.housekeeping_local_date($1)+3)::text as date,
+               extract(dow from private.housekeeping_local_date($1)+3)::integer as weekday`,
+            [societyId],
+          )
+        ).rows[0]!;
+        return {
+          accountId,
+          adminId,
+          date: dateRow.date,
+          residentId,
+          societyId,
+          unitId,
+          weekday: dateRow.weekday,
+        };
+      });
+
+      const amenityId = await db.asRole(
+        'authenticated',
+        { sub: fixture.adminId },
+        async (client) =>
+          (
+            await client.query<{ id: string }>(
+              `select public.amenity_save(
+                 $1,null,'Deposit Hall',20,1500,'Keep it clean',true,$2,
+                 null,$3,'deposit-save',5000,true
+               ) as id`,
+              [
+                fixture.societyId,
+                JSON.stringify([
+                  {
+                    weekday: fixture.weekday,
+                    start: '12:00',
+                    end: '13:00',
+                  },
+                ]),
+                crypto.randomUUID(),
+              ],
+            )
+          ).rows[0]!.id,
+        { commit: true },
+      );
+      const workspace = await db.asRole(
+        'authenticated',
+        { sub: fixture.residentId },
+        (client) =>
+          client.query<{ data: DepositWorkspace }>(
+            'select public.amenity_workspace($1,$2) as data',
+            [fixture.societyId, fixture.date],
+          ),
+      );
+      const amenity = workspace.rows[0]!.data.amenities[0];
+      const slot = workspace.rows[0]!.data.slots[0];
+      const bookingId = await db.asRole(
+        'authenticated',
+        { sub: fixture.residentId },
+        async (client) =>
+          (
+            await client.query<{ id: string }>(
+              `select public.amenity_book(
+                 $1,$2,$3,$4,$5,2,true,$6,$7,'deposit-book'
+               ) as id`,
+              [
+                fixture.societyId,
+                amenityId,
+                slot.id,
+                fixture.date,
+                fixture.unitId,
+                amenity.updated_at,
+                crypto.randomUUID(),
+              ],
+            )
+          ).rows[0]!.id,
+        { commit: true },
+      );
+      const booking = await db.asRole(
+        'authenticated',
+        { sub: fixture.residentId },
+        (client) =>
+          client.query<{ data: DepositWorkspace }>(
+            'select public.amenity_workspace($1,$2) as data',
+            [fixture.societyId, fixture.date],
+          ),
+      );
+      expect(booking.rows[0]!.data.bookings[0]).toMatchObject({
+        id: bookingId,
+        status: 'awaiting_deposit',
+        deposit: {
+          current_amount_paise: 5000,
+          held_paise: 0,
+          remaining_paise: 5000,
+        },
+      });
+      const ledgerBefore = await db.asSuperuser((client) =>
+        client.query(
+          'select count(*)::integer as count from public.billing_ledger_entries where society_id=$1',
+          [fixture.societyId],
+        ),
+      );
+      expect(ledgerBefore.rows[0]!.count).toBe(0);
+
+      for (const amount of [2000, 3000]) {
+        await db.asRole(
+          'authenticated',
+          { sub: fixture.adminId },
+          (client) =>
+            client.query(
+              `select public.amenity_deposit_event_record(
+                 $1,$2,'receipt',$3,$4,$5,'receipt-ref',null,null,$6,'deposit-receipt'
+               )`,
+              [
+                fixture.societyId,
+                bookingId,
+                amount,
+                fixture.date,
+                fixture.accountId,
+                crypto.randomUUID(),
+              ],
+            ),
+          { commit: true },
+        );
+      }
+      const confirmed = await db.asRole(
+        'authenticated',
+        { sub: fixture.residentId },
+        (client) =>
+          client.query<{ data: DepositWorkspace }>(
+            'select public.amenity_workspace($1,$2) as data',
+            [fixture.societyId, fixture.date],
+          ),
+      );
+      expect(confirmed.rows[0]!.data.bookings[0]).toMatchObject({
+        status: 'confirmed',
+        deposit: { received_paise: 5000, held_paise: 5000 },
+      });
+      const deductionPath = `${fixture.societyId}/amenity-deposits/${bookingId}/${crypto.randomUUID()}.pdf`;
+      await db.asRole(
+        'authenticated',
+        { sub: fixture.adminId },
+        (client) =>
+          client.query(
+            `select public.amenity_deposit_event_record(
+               $1,$2,'deduction',500,$3,null,null,
+               'Cleaning charge',$4,$5,'deposit-deduction'
+             )`,
+            [
+              fixture.societyId,
+              bookingId,
+              fixture.date,
+              deductionPath,
+              crypto.randomUUID(),
+            ],
+          ),
+        { commit: true },
+      );
+      const evidenceAccess = await db.asRole(
+        'authenticated',
+        { sub: fixture.residentId },
+        (client) =>
+          client.query<{ allowed: boolean }>(
+            'select public.amenity_deposit_file_path_access($1) as allowed',
+            [deductionPath],
+          ),
+      );
+      expect(evidenceAccess.rows[0]!.allowed).toBe(true);
+      expect(
+        (
+          await dbError(
+            db.asSuperuser((client) =>
+              client.query(
+                `update public.module_configs set enabled=false
+                 where society_id=$1 and module_key='expense'`,
+                [fixture.societyId],
+              ),
+            ),
+          )
+        ).code,
+      ).toBe('23514');
+      expect(
+        (
+          await dbError(
+            db.asRole('authenticated', { sub: fixture.adminId }, (client) =>
+              client.query('select public.amenity_cancel($1,$2,$3,$4)', [
+                fixture.societyId,
+                bookingId,
+                'Changed plans',
+                'deposit-cancel',
+              ]),
+            ),
+          )
+        ).code,
+      ).toBe('23514');
+      await db.asRole(
+        'authenticated',
+        { sub: fixture.adminId },
+        (client) =>
+          client.query(
+            `select public.amenity_deposit_event_record(
+               $1,$2,'refund',4500,$3,$4,'refund-ref','Returned deposit',null,$5,
+               'deposit-refund'
+             )`,
+            [
+              fixture.societyId,
+              bookingId,
+              fixture.date,
+              fixture.accountId,
+              crypto.randomUUID(),
+            ],
+          ),
+        { commit: true },
+      );
+      await db.asRole(
+        'authenticated',
+        { sub: fixture.adminId },
+        (client) =>
+          client.query('select public.amenity_cancel($1,$2,$3,$4)', [
+            fixture.societyId,
+            bookingId,
+            'Changed plans',
+            'deposit-cancel',
+          ]),
+        { commit: true },
+      );
+      const final = await db.asRole(
+        'authenticated',
+        { sub: fixture.residentId },
+        (client) =>
+          client.query<{ data: DepositWorkspace }>(
+            'select public.amenity_workspace($1,$2) as data',
+            [fixture.societyId, fixture.date],
+          ),
+      );
+      expect(final.rows[0]!.data.bookings[0]).toMatchObject({
+        status: 'cancelled',
+        deposit: {
+          received_paise: 5000,
+          refunded_paise: 4500,
+          deducted_paise: 500,
+          held_paise: 0,
+        },
+      });
+      const cash = await db.asSuperuser((client) =>
+        client.query<{ balance: string }>(
+          'select private.expense_balance($1,$2,$3) as balance',
+          [fixture.societyId, fixture.accountId, fixture.date],
+        ),
+      );
+      expect(cash.rows[0]!.balance).toBe('500');
+    } finally {
+      await db.drop();
+    }
+  });
 });

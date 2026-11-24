@@ -20,12 +20,28 @@ import { authorisePatrolPhotoView } from '../../../../core/patrol/files';
 import { patrolPhotoPathSchema } from '../../../../core/patrol/validation';
 import { authoriseMeteringPhotoView } from '../../../../core/metering/files';
 import { meteringPhotoPathSchema } from '../../../../core/metering/validation';
+import { authoriseHandoverFileView } from '../../../../core/structure/handover-files';
+import { handoverFilePathSchema } from '../../../../core/structure/handover-validation';
+import { authoriseAmenityDepositEvidenceView } from '../../../../core/amenity/deposit-files';
+import { amenityDepositEvidencePathSchema } from '../../../../core/amenity/validation';
 
 const viewSchema = z.discriminatedUnion('bucket', [
   z
     .object({
       bucket: z.literal('metering-photos'),
       path: meteringPhotoPathSchema,
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('handover-photos'),
+      path: handoverFilePathSchema,
+    })
+    .strict(),
+  z
+    .object({
+      bucket: z.literal('amenity-deposit-evidence'),
+      path: amenityDepositEvidencePathSchema,
     })
     .strict(),
   z
@@ -75,7 +91,9 @@ function parseBody(body: unknown) {
     parsed.data.bucket === 'tenancy-files' ||
     parsed.data.bucket === 'parking-photos' ||
     parsed.data.bucket === 'patrol-photos' ||
-    parsed.data.bucket === 'metering-photos'
+    parsed.data.bucket === 'metering-photos' ||
+    parsed.data.bucket === 'handover-photos' ||
+    parsed.data.bucket === 'amenity-deposit-evidence'
   ) {
     return {
       ...parsed.data,
@@ -141,6 +159,10 @@ export async function POST(request: Request) {
       await authorisePatrolPhotoView(context, input.path);
     } else if (input.bucket === 'metering-photos') {
       await authoriseMeteringPhotoView(context, input.path);
+    } else if (input.bucket === 'handover-photos') {
+      await authoriseHandoverFileView(context, input.path);
+    } else if (input.bucket === 'amenity-deposit-evidence') {
+      await authoriseAmenityDepositEvidenceView(context, input.path);
     } else if (input.bucket === 'tenancy-files') {
       if (input.path.split('/')[1] === 'moves') {
         await authoriseTenancyDocumentView(context, input.path);

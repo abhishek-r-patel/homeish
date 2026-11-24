@@ -3,7 +3,15 @@
 
 import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
-import { submitBillingPayment } from '@/core/billing/operations';
+import {
+  recordBillShare,
+  submitBillingPayment,
+} from '@/core/billing/operations';
+
+function value(formData: FormData, key: string): string {
+  const input = formData.get(key);
+  return typeof input === 'string' ? input : '';
+}
 
 export async function submitBillingPaymentAction(formData: FormData) {
   return runServerAction('billing.payment.submit', async (requestId) => {
@@ -14,6 +22,7 @@ export async function submitBillingPaymentAction(formData: FormData) {
     } catch {
       parsed = null;
     }
+
     const result = await submitBillingPayment(parsed, requestId);
     revalidatePath('/bills');
     revalidatePath('/admin/billing');
@@ -22,5 +31,18 @@ export async function submitBillingPaymentAction(formData: FormData) {
       message:
         'Payment details submitted. The society will confirm after checking its account.',
     };
+  });
+}
+
+export async function recordBillShareAction(formData: FormData) {
+  return runServerAction('billing.bill.share', async (requestId) => {
+    const result = await recordBillShare(
+      {
+        billId: value(formData, 'billId'),
+        channel: value(formData, 'channel'),
+      },
+      requestId,
+    );
+    return { data: result, message: 'Share started.' };
   });
 }

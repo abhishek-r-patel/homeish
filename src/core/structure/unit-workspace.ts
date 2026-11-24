@@ -11,6 +11,7 @@ import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
 import { loadBuildingLayout } from './building-layout-operations';
 import { unitRecordEdit, unitRecordsSchema } from './unit-records';
+import { getUnitHandoverWorkspace } from './handover-operations';
 
 async function optionalSource<T>(load: () => Promise<T>) {
   try {
@@ -48,7 +49,7 @@ export async function getUnitWorkspace(input: unknown, building?: unknown) {
   if (!unit.data) throw new AppError('NOT_FOUND');
   const blockId = unit.data.block_id;
 
-  const [block, occupants, billing, parking, documents, records] =
+  const [block, occupants, billing, parking, documents, records, handovers] =
     await Promise.all([
       blockId === null
         ? null
@@ -92,6 +93,7 @@ export async function getUnitWorkspace(input: unknown, building?: unknown) {
         unitRecordsSchema,
         'Could not load unit records.',
       ),
+      getUnitHandoverWorkspace(unitId),
     ]);
   if (block?.error || occupants.error) {
     throw new Error('Could not load current unit records.', {
@@ -119,6 +121,7 @@ export async function getUnitWorkspace(input: unknown, building?: unknown) {
     parking,
     documents,
     records,
+    handovers,
     layout,
     canWrite:
       context.societyStatus === 'active' || context.societyStatus === 'trial',

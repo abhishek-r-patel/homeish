@@ -19,6 +19,7 @@ import type {
   ExpenseReport,
   ExpenseStatements,
   ExpenseVendorSpend,
+  ExpenseFundReconciliation,
 } from './validation';
 import type { ExpenseBudgetReport as BudgetReport } from './budget-validation';
 
@@ -41,6 +42,7 @@ const SOURCE_LABELS: Record<ExpenseEntry['source'], string> = {
   billing_payment: 'Maintenance collection',
   reversal: 'Reversal',
   transfer: 'Transfer',
+  amenity_deposit: 'Held amenity deposit',
 };
 export function entrySourceLabel(source: ExpenseEntry['source']): string {
   return SOURCE_LABELS[source];
@@ -120,6 +122,24 @@ export function expenseStatementsCsv(statements: ExpenseStatements): string {
       rupeesFromPaise(statements.payments_paise),
     ],
     [
+      'Held deposit detail (included in cash movements)',
+      `${statements.from} to ${statements.to}`,
+      'Amenity deposit receipts',
+      rupeesFromPaise(statements.held_deposit_receipts_paise),
+    ],
+    [
+      'Held deposit detail (included in cash movements)',
+      `${statements.from} to ${statements.to}`,
+      'Amenity deposit refunds',
+      rupeesFromPaise(statements.held_deposit_refunds_paise),
+    ],
+    [
+      'Non-cash reclassification',
+      `${statements.from} to ${statements.to}`,
+      'Retained amenity deposit income',
+      rupeesFromPaise(statements.retained_deposit_income_paise),
+    ],
+    [
       'Receipts and payments',
       statements.to,
       'Closing money held',
@@ -194,7 +214,11 @@ export function expenseBudgetCsv(report: BudgetReport): string {
       'Plan to date (Rs.)',
       'Actual to date (Rs.)',
       'Difference (Rs.)',
-      'Used (%)',
+      'Burn rate / used (%)',
+      'Warning',
+      'Projected year-end (Rs.)',
+      'Projected overrun (Rs.)',
+      'Projection',
       'Money in (Rs.)',
       'Money out (Rs.)',
       'Net (Rs.)',
@@ -213,9 +237,27 @@ export function expenseBudgetCsv(report: BudgetReport): string {
       rupeesFromPaise(row.plan_to_date_paise),
       rupeesFromPaise(row.actual_to_date_paise),
       `${row.difference_label}: ${rupeesFromPaise(row.difference_paise)}`,
-      row.percent_used_bp === null
+      row.burn_rate_bp === null
         ? 'Not available'
-        : (row.percent_used_bp / 100).toFixed(2),
+        : (row.burn_rate_bp / 100).toFixed(2),
+      row.warning === 'on_track'
+        ? 'On track'
+        : row.warning === 'watch'
+          ? 'Watch'
+          : row.warning === 'over_plan'
+            ? 'Over plan'
+            : 'Not available',
+      row.projected_year_end_paise === null
+        ? 'Not available'
+        : rupeesFromPaise(row.projected_year_end_paise),
+      row.projected_overrun_paise === null
+        ? ''
+        : rupeesFromPaise(row.projected_overrun_paise),
+      row.projection_available
+        ? report.as_of === report.to
+          ? 'Actual'
+          : 'Estimate'
+        : 'Not available',
       '',
       '',
       '',
@@ -240,6 +282,10 @@ export function expenseBudgetCsv(report: BudgetReport): string {
         '',
         '',
         '',
+        '',
+        '',
+        '',
+        '',
       ]);
   for (const month of report.cash_flow)
     rows.push([
@@ -253,11 +299,93 @@ export function expenseBudgetCsv(report: BudgetReport): string {
       '',
       '',
       '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
       rupeesFromPaise(month.money_in_paise),
       rupeesFromPaise(month.money_out_paise),
       rupeesFromPaise(month.net_paise),
       rupeesFromPaise(month.running_paise),
       month.is_estimate ? 'Estimate' : '',
+    ]);
+  return toCsv(rows[0], rows.slice(1));
+}
+
+export function expenseFundReconciliationCsv(
+  report: ExpenseFundReconciliation,
+): string {
+  const signedRupees = (paise: number) =>
+    `${paise < 0 ? '-' : ''}${rupeesFromPaise(Math.abs(paise))}`;
+  const rows: string[][] = [
+    [
+      'Section',
+      'Month',
+      'Name',
+      'Status',
+      'Book balance (Rs.)',
+      'Statement closing (Rs.)',
+      'Difference (Rs.)',
+      'Target (Rs.)',
+      'Target date',
+      'Target gap (Rs.)',
+      'Estimated monthly (Rs.)',
+      'Reason or note',
+    ],
+    [
+      'Reconciliation',
+      report.month,
+      '',
+      report.status === 'reconciled' ? 'Reconciled' : 'Needs review',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      report.reasons.join('; '),
+    ],
+  ];
+  for (const account of report.accounts)
+    rows.push([
+      'Account',
+      report.month,
+      account.account_name,
+      account.status === 'reconciled' ? 'Reconciled' : 'Needs review',
+      signedRupees(account.book_balance_paise),
+      account.statement_closing_paise === null
+        ? ''
+        : signedRupees(account.statement_closing_paise),
+      account.difference_paise === null
+        ? ''
+        : signedRupees(account.difference_paise),
+      '',
+      '',
+      '',
+      '',
+      account.note ?? '',
+    ]);
+  for (const fund of report.funds)
+    rows.push([
+      'Fund target',
+      report.month,
+      fund.fund_name,
+      fund.target_status?.replaceAll('_', ' ') ?? '',
+      signedRupees(fund.balance_paise),
+      '',
+      '',
+      fund.target_paise === null ? '' : rupeesFromPaise(fund.target_paise),
+      fund.target_date ?? '',
+      fund.target_gap_paise === null
+        ? ''
+        : rupeesFromPaise(fund.target_gap_paise),
+      fund.estimated_monthly_paise === null
+        ? ''
+        : rupeesFromPaise(fund.estimated_monthly_paise),
+      fund.active ? '' : 'Inactive',
     ]);
   return toCsv(rows[0], rows.slice(1));
 }
@@ -532,8 +660,13 @@ export async function expenseBudgetPdf(
     );
     paragraph(
       writer,
-      `Current ${formatSignedRupees(row.current_paise)}. Plan to date ${formatSignedRupees(row.plan_to_date_paise)}. Actual to date ${formatSignedRupees(row.actual_to_date_paise)}. Used ${row.percent_used_bp === null ? 'Not available' : `${(row.percent_used_bp / 100).toFixed(2)}%`}.`,
+      `Current ${formatSignedRupees(row.current_paise)}. Plan to date ${formatSignedRupees(row.plan_to_date_paise)}. Actual to date ${formatSignedRupees(row.actual_to_date_paise)}. Burn rate ${row.burn_rate_bp === null ? 'Not available' : `${(row.burn_rate_bp / 100).toFixed(2)}%`}. Warning ${row.warning === 'on_track' ? 'On track' : row.warning === 'watch' ? 'Watch' : row.warning === 'over_plan' ? 'Over plan' : 'Not available'}.`,
     );
+    if (row.projected_year_end_paise !== null)
+      paragraph(
+        writer,
+        `Projected year-end ${formatSignedRupees(row.projected_year_end_paise)}. ${report.as_of === report.to ? 'Actual year total.' : 'Estimate.'}${row.projected_overrun_paise === null ? '' : ` Projected overrun ${formatSignedRupees(row.projected_overrun_paise)}.`}`,
+      );
   }
   section(writer, 'Monthly cash flow');
   line(
@@ -580,6 +713,21 @@ export async function expenseStatementsPdf(
   );
   line(writer, 'Receipts', formatSignedRupees(statements.receipts_paise));
   line(writer, 'Payments', formatSignedRupees(statements.payments_paise));
+  line(
+    writer,
+    'Held amenity deposit receipts (included in receipts)',
+    formatSignedRupees(statements.held_deposit_receipts_paise),
+  );
+  line(
+    writer,
+    'Held amenity deposit refunds (included in payments)',
+    formatSignedRupees(statements.held_deposit_refunds_paise),
+  );
+  line(
+    writer,
+    'Retained deposit income (non-cash)',
+    formatSignedRupees(statements.retained_deposit_income_paise),
+  );
   line(
     writer,
     'Closing money held',

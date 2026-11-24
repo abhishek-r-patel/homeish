@@ -17,6 +17,7 @@ import {
   billingCollectionEfficiencySchema,
   chargeFormSchema,
   DEFAULT_BILLING_SETTINGS,
+  billingInterestRateInputSchema,
   paymentDetailsInputSchema,
   rupeesFromPaise,
   rupeesSchema,
@@ -242,6 +243,7 @@ describe('billing money and setup validation', () => {
 
   it('keeps late fees off by default and enforces the approved percentage precision and cap', () => {
     expect(DEFAULT_BILLING_SETTINGS.late_fee).toBeNull();
+    expect(DEFAULT_BILLING_SETTINGS.bill_email_on_publish).toBe(true);
     expect(billingSettingsSchema.parse({})).toEqual({});
     expect(
       billingSettingsSchema.parse({
@@ -280,6 +282,35 @@ describe('billing money and setup validation', () => {
       billingSettingsSchema.safeParse({ upi_id: 'homeish-test@example' })
         .success,
     ).toBe(false);
+  });
+
+  it('bounds yearly simple interest rates and requires them for interest modes', () => {
+    const input = {
+      mode: 'interest',
+      ratePercent: '12.50',
+      effectiveDate: '2026-12-01',
+      clientRequestId: '4a696d6f-774c-41d1-ae47-6254d4a8f4cf',
+    };
+    expect(billingInterestRateInputSchema.parse(input).ratePercent).toBe(1250);
+    expect(
+      billingInterestRateInputSchema.safeParse({
+        ...input,
+        ratePercent: '24.01',
+      }).success,
+    ).toBe(false);
+    expect(
+      billingInterestRateInputSchema.safeParse({
+        ...input,
+        mode: 'late_fee',
+      }).success,
+    ).toBe(false);
+    expect(
+      billingInterestRateInputSchema.safeParse({
+        ...input,
+        mode: 'late_fee',
+        ratePercent: null,
+      }).success,
+    ).toBe(true);
   });
 
   it('validates resident payment submissions and converts rupees exactly', () => {

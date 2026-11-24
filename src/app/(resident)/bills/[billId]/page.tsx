@@ -5,6 +5,7 @@ import { isUuid, todayInTimeZone } from '@/core/billing/format';
 import { getBillingBill, getResidentBilling } from '@/core/billing/operations';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { recordBillShareAction } from '../actions';
 
 export const metadata = {
   title: 'Bill | Homeish',
@@ -30,6 +31,7 @@ export default async function ResidentBillPage({
       backLabel={translateMessage(locale, 'Bills')}
       bill={bill}
       ledgerHref="/bills?tab=ledger"
+      shareAction={recordBillShareAction}
       today={todayInTimeZone(billing.timezone)}
     />
   );

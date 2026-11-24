@@ -14,6 +14,7 @@ import { transferStageSchema } from '../../core/tenancy/transfers/validation';
 import { TenancyAdminTabs, TransferWorkspaceView } from './transfer-workspace';
 import { TenancyRouteState } from './workspace';
 import { TransferCaseView } from './transfer-detail';
+import { getUnitHandoverWorkspace } from '../../core/structure/handover-operations';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -98,6 +99,10 @@ export async function TenancyTransferIndexPage({
       page,
       stage: parsed.stage ?? null,
       workspace,
+      unitHandovers:
+        detail === null
+          ? undefined
+          : await getUnitHandoverWorkspace(detail.case.unit_id),
     };
   } catch (error) {
     return failure(
@@ -127,19 +132,32 @@ export async function TenancyTransferDetailPage({
     detail: Awaited<ReturnType<typeof getTransferCase>>;
     dues: Awaited<ReturnType<typeof checkClearanceDues>> | null;
     workspace: Awaited<ReturnType<typeof getTenancyWorkspace>>;
+    unitHandovers: Awaited<ReturnType<typeof getUnitHandoverWorkspace>>;
   };
   try {
     const workspace = await getTenancyWorkspace(false);
     if (!workspace.can_manage) {
       const detail = await getTransferCase(id.data);
-      content = { detail, dues: null, mode: 'committee', workspace };
+      content = {
+        detail,
+        dues: null,
+        mode: 'committee',
+        workspace,
+        unitHandovers: await getUnitHandoverWorkspace(detail.case.unit_id),
+      };
     } else {
       const [detail, dues, fullWorkspace] = await Promise.all([
         getTransferCase(id.data),
         checkClearanceDues({ moveId: null, caseId: id.data }),
         getTenancyWorkspace(workspace.can_write),
       ]);
-      content = { detail, dues, mode: 'admin', workspace: fullWorkspace };
+      content = {
+        detail,
+        dues,
+        mode: 'admin',
+        workspace: fullWorkspace,
+        unitHandovers: await getUnitHandoverWorkspace(detail.case.unit_id),
+      };
     }
   } catch (error) {
     return failure(error, `/admin/tenancy/transfers/${id.data}`);
@@ -153,6 +171,7 @@ export async function TenancyTransferDetailPage({
         dues={content.dues}
         mode={content.mode}
         workspace={content.workspace}
+        unitHandovers={content.unitHandovers}
       />
     </>
   );

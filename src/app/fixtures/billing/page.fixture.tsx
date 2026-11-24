@@ -4,6 +4,7 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BillingSetup } from '@/components/billing/setup';
+import { BillDetail } from '@/components/billing/bill-detail';
 import { Banner } from '@/components/ui/feedback';
 import {
   billingSettingsUpdateInputSchema,
@@ -37,6 +38,59 @@ function Fixture() {
     '2026-11-10T12:00:00.000Z',
   );
   const readOnly = params.get('role') === 'committee';
+
+  if (params.get('view') === 'bill') {
+    return (
+      <main className="mx-auto min-h-dvh px-space-4 py-space-6">
+        <BillDetail
+          backHref="/fixtures/billing"
+          backLabel="Bills"
+          bill={{
+            id: societyId,
+            society_id: societyId,
+            related_bill_id: null,
+            cancelled_by: null,
+            cancel_reason: null,
+            created_at: '2026-11-10T12:00:00.000Z',
+            created_by: societyId,
+            unit_id: societyId,
+            unit_number: 'A-101',
+            unit_label: 'Unit',
+            kind: 'regular',
+            title: 'Society charges - Nov 2026',
+            period_start: '2026-11-01',
+            due_date: '2026-11-10',
+            total_paise: 250000,
+            paid_paise: 0,
+            waived_paise: 0,
+            status: 'due',
+            cancelled_at: null,
+            outstanding_paise: 250000,
+            society_name: 'Synthetic Society',
+            society_address: 'Synthetic City',
+            lines: [
+              {
+                id: societyId,
+                charge_type_id: null,
+                description: 'Monthly maintenance',
+                amount_paise: 250000,
+              },
+            ],
+          }}
+          shareAction={async () => ({
+            ok: true,
+            data: {
+              bill_id: societyId,
+              text: 'Synthetic bill share.',
+              url: 'https://homeish.test/login',
+            },
+            message: 'Share started.',
+          })}
+          today="2026-11-09"
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto grid min-h-dvh w-full max-w-content-default gap-space-5 px-space-4 py-space-6 text-ink">
@@ -110,18 +164,26 @@ function Fixture() {
         paymentDetails={details}
         pendingQrPaths={[]}
         qrUrl={null}
+        interest={{
+          acknowledged_at: null,
+          can_manage: true,
+          current: null,
+          history: [],
+        }}
         settings={settings}
         settingsUpdatedAt={settingsUpdatedAt}
         settingsAction={async (formData) => {
           const parsed = billingSettingsUpdateInputSchema.parse({
             dueDay: formData.get('dueDay'),
             rounding: formData.get('rounding'),
+            billEmailOnPublish: formData.get('billEmailOnPublish') === 'true',
             expectedUpdatedAt: formData.get('expectedUpdatedAt'),
           });
           const nextSettings = {
             ...settings,
             due_day_of_month: parsed.dueDay,
             rounding: parsed.rounding,
+            bill_email_on_publish: parsed.billEmailOnPublish,
           };
           const updatedAt = new Date().toISOString();
           setSettings(nextSettings);

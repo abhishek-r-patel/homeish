@@ -23,6 +23,7 @@ import {
   tenancyDecisionInputSchema,
   tenancySettingsInputSchema,
   tenancyVersionInputSchema,
+  tenancyCompleteInputSchema,
   type TenancyMoveDetail,
   type TenancyWorkspace,
 } from '@/core/tenancy/moves/validation';
@@ -423,7 +424,7 @@ export function TenancyDecisionControl({
       description:
         detail.move.kind === 'move_in'
           ? 'Confirm the tenant has actually moved in during the approved window. This activates the Core tenant occupancy and household access.'
-          : 'Confirm the tenant has actually moved out during the approved window. This ends the Core tenant occupancy and household access. Positive dues block completion when Billing is enabled.',
+          : 'Confirm the tenant has actually moved out during the approved window. This ends the Core tenant occupancy and household access. Positive dues block completion when Billing is enabled. If a linked unit handover is still open, confirming here records Complete anyway in the audit log.',
     },
     issue: {
       label: 'Issue Move-out NOC',
@@ -445,7 +446,12 @@ export function TenancyDecisionControl({
         };
         return ['approved', 'rejected', 'cancelled'].includes(decision)
           ? tenancyDecisionInputSchema.parse({ ...version, decision, reason })
-          : tenancyVersionInputSchema.parse(version);
+          : decision === 'complete'
+            ? tenancyCompleteInputSchema.parse({
+                ...version,
+                overrideOpenHandover: detail.move.kind === 'move_out',
+              })
+            : tenancyVersionInputSchema.parse(version);
       }}
     />
   );

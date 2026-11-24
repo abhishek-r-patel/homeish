@@ -39,6 +39,7 @@ export const billingSettingsSchema = z
       .strict()
       .optional(),
     pending_confirmation_alert_days: days.min(1).optional(),
+    bill_email_on_publish: z.boolean().optional(),
   })
   .strict();
 
@@ -49,6 +50,7 @@ export const DEFAULT_BILLING_SETTINGS = {
   late_fee: null,
   reminders: { before_due_days: 3, on_due: true, overdue_every_days: 7 },
   pending_confirmation_alert_days: 3,
+  bill_email_on_publish: true,
 } satisfies Required<z.infer<typeof billingSettingsSchema>>;
 
 export const rupeesSchema = z
@@ -266,7 +268,85 @@ export const billingSettingsUpdateInputSchema = z
         value === 'last_day' ? 'last_day' : Number(value),
       ),
     rounding: z.enum(['rupee', 'paise']),
+    billEmailOnPublish: z.boolean(),
     expectedUpdatedAt: timestamp,
+  })
+  .strict();
+
+export const billingInterestRateInputSchema = z
+  .object({
+    mode: z.enum(['late_fee', 'interest', 'both']),
+    ratePercent: z
+      .string()
+      .trim()
+      .max(6)
+      .nullable()
+      .transform((value, context) => {
+        if (value === null || value === '') return null;
+        if (!/^(?:\d{1,2})(?:\.\d{1,2})?$/.test(value)) {
+          context.addIssue({
+            code: 'custom',
+            message: 'Enter a yearly rate up to 24% with at most two decimals.',
+          });
+          return z.NEVER;
+        }
+        const [whole = '', fraction = ''] = value.split('.');
+        const basisPoints =
+          Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+        if (basisPoints <= 0 || basisPoints > 2400) {
+          context.addIssue({
+            code: 'custom',
+            message: 'Enter a yearly rate above 0% and at most 24%.',
+          });
+          return z.NEVER;
+        }
+        return basisPoints;
+      }),
+    effectiveDate: z.iso.date(),
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.mode === 'late_fee' && value.ratePercent !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['ratePercent'],
+        message: 'Leave the interest rate empty when late fees are used alone.',
+      });
+    }
+    if (value.mode !== 'late_fee' && value.ratePercent === null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['ratePercent'],
+        message: 'Enter the yearly interest rate.',
+      });
+    }
+  });
+
+export const billingInterestSettingsSchema = z
+  .object({
+    acknowledged_at: timestamp.nullable(),
+    can_manage: z.boolean(),
+    current: z
+      .object({
+        id: z.uuid(),
+        mode: z.enum(['late_fee', 'interest', 'both']),
+        rate_basis_points: z.number().int().positive().max(2400).nullable(),
+        effective_on: z.iso.date(),
+      })
+      .nullable(),
+    history: z.array(
+      z
+        .object({
+          id: z.uuid(),
+          mode: z.enum(['late_fee', 'interest', 'both']),
+          rate_basis_points: z.number().int().positive().max(2400).nullable(),
+          effective_on: z.iso.date(),
+          created_at: timestamp,
+          created_by_name: z.string(),
+        })
+        .strict(),
+    ),
   })
   .strict();
 
@@ -380,7 +460,7 @@ export const billingBillSchema = z.object({
   id: z.uuid(),
   unit_id: z.uuid(),
   unit_number: z.string().optional(),
-  kind: z.enum(['regular', 'fine', 'late_fee']),
+  kind: z.enum(['regular', 'fine', 'late_fee', 'interest']),
   title: z.string(),
   period_start: z.iso.date(),
   due_date: z.iso.date(),
@@ -991,6 +1071,9 @@ export const billingReceiptSchema = z.object({
 export type ChargeType = z.infer<typeof chargeTypeSchema>;
 export type PaymentDetails = z.infer<typeof paymentDetailsSchema>;
 export type BillingSettings = Required<z.infer<typeof billingSettingsSchema>>;
+export type BillingInterestSettings = z.infer<
+  typeof billingInterestSettingsSchema
+>;
 export type BillingPreviewInput = z.input<typeof billingPreviewInputSchema>;
 export type BillingPreview = z.infer<typeof billingPreviewSchema>;
 export type BillingBill = z.infer<typeof billingBillSchema>;

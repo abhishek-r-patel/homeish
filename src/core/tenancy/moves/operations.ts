@@ -22,6 +22,7 @@ import {
   tenancySettingsInputSchema,
   tenancyVerificationInputSchema,
   tenancyVersionInputSchema,
+  tenancyCompleteInputSchema,
   tenancyWorkspaceSchema,
 } from './validation';
 
@@ -141,7 +142,7 @@ export async function consentTenancyMove(input: unknown, requestId: string) {
     true,
     requestId,
   );
-  const move = parseModuleInput(tenancyVersionInputSchema, input);
+  const move = parseModuleInput(tenancyCompleteInputSchema, input);
   await callModuleRpc(
     context,
     'tenancy_move_consent',
@@ -150,6 +151,7 @@ export async function consentTenancyMove(input: unknown, requestId: string) {
       p_move_id: move.moveId,
       p_expected_version: move.expectedVersion,
       p_request_id: context.requestId,
+      p_override_open_handover: move.overrideOpenHandover,
     },
     z.null(),
     'Could not record owner consent. Check the required proofs and current move status, then retry.',

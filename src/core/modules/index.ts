@@ -208,6 +208,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Operations',
         },
         {
+          href: '/admin/compliance',
+          label: 'Compliance register',
+          permission: 'compliance:read',
+          section: 'Operations',
+        },
+        {
           href: '/help',
           label: 'Help',
           permission: 'help:read',
@@ -273,6 +279,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           href: '/admin/contact-log',
           label: 'Contact log',
           permission: 'contact_log:read',
+          section: 'Operations',
+        },
+        {
+          href: '/admin/compliance',
+          label: 'Compliance register',
+          permission: 'compliance:read',
           section: 'Operations',
         },
         {
@@ -381,6 +393,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'letters:make': ['admin', 'committee'],
       'contact_log:read': ['admin', 'committee'],
       'contact_log:manage': ['admin'],
+      'compliance:read': ['admin', 'committee'],
+      'compliance:manage': ['admin'],
       'communication:read': ['admin', 'committee'],
     },
     settingsAccess: emptySettingsAccess,

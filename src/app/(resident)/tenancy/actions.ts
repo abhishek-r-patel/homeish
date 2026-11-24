@@ -28,6 +28,7 @@ import {
   saveTransferCase,
   supersedeTenancyCertificate,
 } from '@/core/tenancy/transfers/operations';
+import { acknowledgeUnitHandover } from '@/core/structure/handover-operations';
 
 export async function createTenancyAction(form: FormData) {
   return runServerAction<string>('/tenancy', async (requestId) => ({
@@ -96,6 +97,13 @@ export async function acknowledgeClearanceWarningAction(form: FormData) {
   return runServerAction('/admin/tenancy', async (requestId) => {
     await acknowledgeClearanceWarning(readModuleActionInput(form), requestId);
     return 'Clearance warning acknowledged for this society.';
+  });
+}
+
+export async function acknowledgeUnitHandoverAction(form: FormData) {
+  return runServerAction('/tenancy', async (requestId) => {
+    await acknowledgeUnitHandover(readModuleActionInput(form), requestId);
+    return 'Unit handover acknowledged.';
   });
 }
 

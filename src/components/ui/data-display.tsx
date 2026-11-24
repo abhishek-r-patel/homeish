@@ -232,6 +232,51 @@ export const statusMap = {
     label: 'Approved',
     tone: 'success',
   },
+  'expense_budget.on_track': {
+    icon: '✓',
+    label: 'On track',
+    tone: 'success',
+  },
+  'expense_budget.watch': {
+    icon: '!',
+    label: 'Watch',
+    tone: 'warning',
+  },
+  'expense_budget.over_plan': {
+    icon: '!',
+    label: 'Over plan',
+    tone: 'danger',
+  },
+  'fund_reconciliation.reconciled': {
+    icon: '✓',
+    label: 'Reconciled',
+    tone: 'success',
+  },
+  'fund_reconciliation.needs_review': {
+    icon: '!',
+    label: 'Needs review',
+    tone: 'warning',
+  },
+  'fund_target.negative_balance': {
+    icon: '!',
+    label: 'Negative balance',
+    tone: 'danger',
+  },
+  'fund_target.below_target': {
+    icon: '↓',
+    label: 'Below target',
+    tone: 'warning',
+  },
+  'fund_target.target_met': {
+    icon: '✓',
+    label: 'Target met',
+    tone: 'success',
+  },
+  'fund_target.behind_schedule': {
+    icon: '!',
+    label: 'Behind schedule',
+    tone: 'danger',
+  },
 } as const satisfies Record<string, StatusDefinition>;
 
 export type ProductStatus = keyof typeof statusMap;

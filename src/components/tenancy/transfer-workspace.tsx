@@ -33,6 +33,7 @@ import { TextInput } from '@/components/ui/text-input';
 import { Pagination, type PageSize } from '@/components/ui/table-controls';
 import { useTenancyPresentation } from './presentation';
 import { TransferCaseView } from './transfer-detail';
+import type { UnitHandoverWorkspace } from '@/core/structure/handover-validation';
 import { TransferDocumentLink } from './transfer-files';
 import { CERTIFICATE_KIND_LABELS } from '@/core/tenancy/transfers/presentation';
 
@@ -236,6 +237,7 @@ export function TransferWorkspaceView({
   acknowledgement,
   stage: appliedStage = null,
   action = acknowledgeClearanceWarningAction,
+  unitHandovers,
 }: {
   workspace: TenancyWorkspace;
   page: TransferCasesPage;
@@ -257,6 +259,7 @@ export function TransferWorkspaceView({
     | 'withdrawn'
     | null;
   action?: ModuleFormAction;
+  unitHandovers?: UnitHandoverWorkspace;
 }) {
   const { t, date } = useTenancyPresentation();
   const router = useRouter();
@@ -369,6 +372,7 @@ export function TransferWorkspaceView({
           dues={dues}
           mode={mode === 'own' ? 'own' : 'committee'}
           workspace={workspace}
+          unitHandovers={unitHandovers}
         />
       ) : (
         <Card title={t('Cases')}>

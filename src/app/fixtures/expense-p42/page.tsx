@@ -11,6 +11,7 @@ import {
   ExpenseBudgetSettingsForm,
 } from '@/components/expense/budget-change-controls';
 import { ExpenseBudgetDraftForm } from '@/components/expense/budget-draft-controls';
+import { ExpenseBudgetReportTable } from '@/components/expense/budget-report-table';
 import { ExpensePayeeMappingForm } from '@/components/expense/vendor-spend-controls';
 import {
   expenseBudgetApproveInputSchema,
@@ -18,6 +19,7 @@ import {
   expenseBudgetDraftInputSchema,
   expenseBudgetSettingsInputSchema,
   type ExpenseBudget,
+  type ExpenseBudgetReport,
 } from '@/core/expense/budget-validation';
 import {
   ExpenseSavingsEvidenceForm,
@@ -219,6 +221,61 @@ const approvedBudget: ExpenseBudget = {
     version: 2,
   },
 };
+const budgetReport: ExpenseBudgetReport = {
+  financial_year: 2026,
+  from: '2026-04-01',
+  to: '2027-03-31',
+  as_of: '2026-11-23',
+  approved: true,
+  forecast_method: 'budget',
+  months_averaged: 0,
+  summary: [
+    {
+      category_id: category.id,
+      income_type: null,
+      name: category.name,
+      kind: 'spending',
+      budgeted: true,
+      original_paise: 120000,
+      changes_paise: 0,
+      current_paise: 120000,
+      plan_to_date_paise: 80000,
+      actual_to_date_paise: 72000,
+      difference_paise: 8000,
+      difference_label: 'Below budget',
+      percent_used_bp: 9000,
+      burn_rate_bp: 9000,
+      warning: 'watch',
+      projected_year_end_paise: 108000,
+      projected_overrun_paise: null,
+      projection_available: true,
+    },
+    {
+      category_id: '00000000-0000-4000-8000-000000000121',
+      income_type: null,
+      name: 'Security',
+      kind: 'spending',
+      budgeted: true,
+      original_paise: 240000,
+      changes_paise: 0,
+      current_paise: 240000,
+      plan_to_date_paise: 160000,
+      actual_to_date_paise: 176000,
+      difference_paise: -16000,
+      difference_label: 'Over budget',
+      percent_used_bp: 11000,
+      burn_rate_bp: 11000,
+      warning: 'over_plan',
+      projected_year_end_paise: 264000,
+      projected_overrun_paise: 24000,
+      projection_available: true,
+    },
+  ],
+  months: [],
+  cash_flow: [],
+  opening_money_paise: 0,
+  accounts_added_opening_paise: 0,
+};
 
 function input(form: FormData): unknown {
   const value = form.get('input');
@@ -326,6 +383,7 @@ export default function ExpenseP42FixturePage() {
             'Budget settings saved.',
           )}
         />
+        <ExpenseBudgetReportTable locale="en" report={budgetReport} />
       </section>
     </main>
   );

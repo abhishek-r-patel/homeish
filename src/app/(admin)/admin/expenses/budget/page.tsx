@@ -8,6 +8,7 @@ import {
   ExpenseBudgetSettingsForm,
 } from '@/components/expense/budget-change-controls';
 import { ExpenseBudgetDraftForm } from '@/components/expense/budget-draft-controls';
+import { ExpenseBudgetReportTable } from '@/components/expense/budget-report-table';
 import { ExpenseNav } from '@/components/expense/nav';
 import {
   getExpenseBudget,
@@ -378,81 +379,7 @@ export default async function ExpenseBudgetPage({
                     {t('Update report')}
                   </button>
                 </form>
-                <div className="overflow-x-auto">
-                  <table className="min-w-[64rem] w-full border-collapse text-left">
-                    <thead>
-                      <tr className="border-b border-rule">
-                        <th className="sticky left-0 bg-surface p-space-2">
-                          {t('Head')}
-                        </th>
-                        <th className="p-space-2 text-right">
-                          {t('Original')}
-                        </th>
-                        <th className="p-space-2 text-right">{t('Changes')}</th>
-                        <th className="p-space-2 text-right">{t('Current')}</th>
-                        <th className="p-space-2 text-right">
-                          {t('Plan to date')}
-                        </th>
-                        <th className="p-space-2 text-right">
-                          {t('Actual to date')}
-                        </th>
-                        <th className="p-space-2 text-right">
-                          {t('Difference')}
-                        </th>
-                        <th className="p-space-2 text-right">{t('% used')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {report.summary.map((row) => (
-                        <tr
-                          className="border-b border-rule"
-                          key={`${row.category_id}:${row.income_type}`}
-                        >
-                          <th className="sticky left-0 bg-surface p-space-2 font-normal">
-                            {row.name}
-                            {!row.budgeted ? ` · ${t('Not budgeted')}` : ''}
-                          </th>
-                          <td className="p-space-2 text-right">
-                            {formatLocalizedCurrency(
-                              row.original_paise,
-                              locale,
-                            )}
-                          </td>
-                          <td className="p-space-2 text-right">
-                            {formatLocalizedCurrency(row.changes_paise, locale)}
-                          </td>
-                          <td className="p-space-2 text-right">
-                            {formatLocalizedCurrency(row.current_paise, locale)}
-                          </td>
-                          <td className="p-space-2 text-right">
-                            {formatLocalizedCurrency(
-                              row.plan_to_date_paise,
-                              locale,
-                            )}
-                          </td>
-                          <td className="p-space-2 text-right">
-                            {formatLocalizedCurrency(
-                              row.actual_to_date_paise,
-                              locale,
-                            )}
-                          </td>
-                          <td className="p-space-2 text-right">
-                            {t(row.difference_label)} ·{' '}
-                            {formatLocalizedCurrency(
-                              row.difference_paise,
-                              locale,
-                            )}
-                          </td>
-                          <td className="p-space-2 text-right">
-                            {row.percent_used_bp === null
-                              ? t('Not available')
-                              : `${(row.percent_used_bp / 100).toFixed(2)}%`}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ExpenseBudgetReportTable locale={locale} report={report} />
                 <div className="mt-space-3 flex flex-wrap gap-space-4">
                   <a
                     className="text-brand underline"

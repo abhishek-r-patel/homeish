@@ -46,6 +46,8 @@ import {
   saveExpenseCategoryDetails,
   saveExpenseFund,
   saveExpenseFundMapping,
+  saveExpenseFundTarget,
+  saveExpenseStatementBalance,
   saveExpenseSettings,
   saveExpensePayeeMapping,
   saveExpenseSavings,
@@ -279,6 +281,18 @@ export async function saveExpenseFundAction(form: FormData) {
   return runServerAction('/admin/expenses/funds', async (id) => {
     await saveExpenseFund(input(form), id);
     return 'Fund saved.';
+  });
+}
+export async function saveExpenseFundTargetAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseFundTarget(input(form), id);
+    return 'Fund target saved.';
+  });
+}
+export async function saveExpenseStatementBalanceAction(form: FormData) {
+  return runServerAction('/admin/expenses/funds', async (id) => {
+    await saveExpenseStatementBalance(input(form), id);
+    return 'Statement balance saved.';
   });
 }
 export async function activateExpenseFundsAction(form: FormData) {

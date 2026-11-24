@@ -21,6 +21,7 @@ import {
 import { createComponentTranslator } from '@/core/i18n/catalogs/hi-components';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { AmenityDepositControls } from './deposit-controls';
 
 function amenityFee(paise: number, locale: 'en' | 'hi') {
   return locale === 'hi'
@@ -112,6 +113,16 @@ export async function AmenityWorkspace({
               })}
               {!a.active ? ` · ${t('Inactive')}` : ''}
             </p>
+            {a.deposit_paise !== null ? (
+              <p>
+                {t('Refundable deposit {amount}', {
+                  amount: amenityFee(a.deposit_paise, locale),
+                })}
+                {a.deposit_required_before_confirmation
+                  ? ` · ${t('Required before confirmation')}`
+                  : ` · ${t('Outstanding after immediate confirmation')}`}
+              </p>
+            ) : null}
             {w.can_manage ? (
               <details>
                 <summary className="cursor-pointer">
@@ -189,6 +200,11 @@ export async function AmenityWorkspace({
                   </details>
                 ) : null}
                 {b.cancel_reason ? <p>{b.cancel_reason}</p> : null}
+                <AmenityDepositControls
+                  accounts={w.expense_accounts}
+                  admin={w.can_manage}
+                  booking={b}
+                />
                 {b.can_cancel ? (
                   <AmenityCancellationForm booking={b} admin={w.can_manage} />
                 ) : null}

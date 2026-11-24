@@ -21,6 +21,15 @@ import {
   placeBuildingUnit,
   saveBuildingLayout,
 } from '@/core/structure/building-layout-operations';
+import {
+  addUnitHandoverPhoto,
+  acknowledgeUnitHandover,
+  closeUnitHandover,
+  createUnitHandover,
+  linkUnitHandoverReading,
+  saveUnitHandoverItems,
+  saveUnitHandoverTemplate,
+} from '@/core/structure/handover-operations';
 
 export async function saveBuildingLayoutAction(
   blockId: string | null,
@@ -61,6 +70,91 @@ export async function saveUnitRecordAction(
     await saveUnitRecord(unitId, clientRequestId, payload, requestId);
     revalidatePath(`/admin/structure/units/${unitId}`);
     return 'Unit record saved.';
+  });
+}
+
+export async function saveUnitHandoverTemplateAction(
+  unitId: string,
+  payload: unknown,
+) {
+  return runServerAction(
+    'structure.handover.template.save',
+    async (requestId) => {
+      await saveUnitHandoverTemplate(payload, requestId);
+      revalidatePath(`/admin/structure/units/${unitId}`);
+      return 'Handover checklist saved.';
+    },
+  );
+}
+
+export async function createUnitHandoverAction(
+  unitId: string,
+  payload: unknown,
+) {
+  return runServerAction<string>(
+    'structure.handover.create',
+    async (requestId) => {
+      const id = await createUnitHandover(payload, requestId);
+      revalidatePath(`/admin/structure/units/${unitId}`);
+      return { data: id, message: 'Unit handover created.' };
+    },
+  );
+}
+
+export async function saveUnitHandoverItemsAction(
+  unitId: string,
+  payload: unknown,
+) {
+  return runServerAction('structure.handover.items.save', async (requestId) => {
+    await saveUnitHandoverItems(payload, requestId);
+    revalidatePath(`/admin/structure/units/${unitId}`);
+    return 'Handover checklist saved.';
+  });
+}
+
+export async function linkUnitHandoverReadingAction(
+  unitId: string,
+  payload: unknown,
+) {
+  return runServerAction(
+    'structure.handover.reading.link',
+    async (requestId) => {
+      await linkUnitHandoverReading(payload, requestId);
+      revalidatePath(`/admin/structure/units/${unitId}`);
+      return 'Meter reading linked.';
+    },
+  );
+}
+
+export async function addUnitHandoverPhotoAction(
+  unitId: string,
+  payload: unknown,
+) {
+  return runServerAction('structure.handover.photo.add', async (requestId) => {
+    await addUnitHandoverPhoto(payload, requestId);
+    revalidatePath(`/admin/structure/units/${unitId}`);
+    return 'Handover file attached.';
+  });
+}
+
+export async function acknowledgeUnitHandoverAction(payload: unknown) {
+  return runServerAction(
+    'structure.handover.acknowledge',
+    async (requestId) => {
+      await acknowledgeUnitHandover(payload, requestId);
+      return 'Handover acknowledged.';
+    },
+  );
+}
+
+export async function closeUnitHandoverAction(
+  unitId: string,
+  payload: unknown,
+) {
+  return runServerAction('structure.handover.close', async (requestId) => {
+    await closeUnitHandover(payload, requestId);
+    revalidatePath(`/admin/structure/units/${unitId}`);
+    return 'Unit handover closed.';
   });
 }
 

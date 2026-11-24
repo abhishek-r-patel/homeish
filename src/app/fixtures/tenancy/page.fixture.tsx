@@ -42,6 +42,9 @@ const STORAGE_BASE = publicEnvironment.NEXT_PUBLIC_SUPABASE_URL.replace(
   '',
 );
 const STORAGE_UPLOAD_PATH = `${new URL(STORAGE_BASE).pathname.replace(/\/$/, '')}/storage/v1/object/upload/sign/tenancy-files/`;
+const tenancyCompleteInputSchema = tenancyVersionInputSchema.extend({
+  overrideOpenHandover: z.boolean().default(false),
+});
 
 const requestFiles: typeof fetch = async (resource, options) => {
   if (
@@ -293,7 +296,7 @@ export default function TenancyFixturePage() {
   };
 
   function current(data: FormData) {
-    const version = tenancyVersionInputSchema.parse(input(data));
+    const version = tenancyCompleteInputSchema.parse(input(data));
     const record = moves.find((move) => move.move.id === version.moveId);
     if (!record || record.move.version !== version.expectedVersion)
       throw new Error('The synthetic request changed. Reload the fixture.');
@@ -609,6 +612,7 @@ export default function TenancyFixturePage() {
   const routeState = ROUTE_STATES.find((state) => state === scenario);
   return (
     <>
+      <title>Tenancy fixture | Homeish</title>
       <header className="mx-auto grid w-full max-w-content-default gap-space-4 px-space-4 pt-space-5">
         <Banner title="Synthetic tenancy fixture" tone="info">
           Development-only records and injected actions. No hosted Auth or

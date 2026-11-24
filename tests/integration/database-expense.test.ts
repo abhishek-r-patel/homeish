@@ -152,6 +152,8 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
           'expense_fund_receipt_links',
           'expense_fund_works',
           'expense_fund_work_links',
+          'expense_statement_balances',
+          'expense_statement_balance_revisions',
         ]) {
           expect(
             await dbError(
@@ -392,6 +394,8 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
           'expense_funds',
           'expense_fund_openings',
           'expense_fund_opening_allocations',
+          'expense_statement_balances',
+          'expense_statement_balance_revisions',
         ]) {
           expect(
             await dbError(
@@ -551,6 +555,210 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
           activationRequest,
         ),
       ).toBe(activated[0]);
+
+      const targetWorkspace = await call<{
+        funds: { id: string; updated_at: string }[];
+      }>('admin', 'public.expense_funds_workspace($1,null)', [
+        fixture.societyA,
+      ]);
+      const reserveUpdatedAt = targetWorkspace.funds.find(
+        (fund) => fund.id === reserve,
+      )!.updated_at;
+      await call(
+        'admin',
+        `public.expense_fund_target_save(
+           $1,$2,200000,$3,$4,$5,'fund-target-test'
+         )`,
+        [
+          fixture.societyA,
+          reserve,
+          `${Number(fixture.month_start.slice(0, 4)) + 1}-12-31`,
+          reserveUpdatedAt,
+          crypto.randomUUID(),
+        ],
+      );
+      const savedStatement = await call<string>(
+        'admin',
+        `public.expense_statement_balance_save(
+           $1,$2,$3,105000,'First statement',null,null,$4,
+           'statement-balance-create'
+         )`,
+        [
+          fixture.societyA,
+          fixture.accountA,
+          fixture.month_start,
+          crypto.randomUUID(),
+        ],
+      );
+      expect(savedStatement).toMatch(/^[0-9a-f-]{36}$/);
+      expect(
+        await code(
+          call(
+            'admin',
+            `public.expense_statement_balance_save(
+               $1,$2,$3,104900,'Edited statement',
+               'Corrected from statement','2026-01-01T00:00:00Z',
+               $4,'statement-balance-stale'
+             )`,
+            [
+              fixture.societyA,
+              fixture.accountA,
+              fixture.month_start,
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('23505');
+      const reconciliation = await call<{
+        status: string;
+        reasons: string[];
+        pending_suggested_splits: number;
+        accounts: {
+          account_id: string;
+          statement_closing_paise: number | null;
+        }[];
+        funds: {
+          fund_id: string;
+          target_paise: number | null;
+          target_status: string | null;
+        }[];
+      }>('committee', 'public.expense_fund_reconciliation($1,$2)', [
+        fixture.societyA,
+        fixture.month_start,
+      ]);
+      expect(reconciliation).toMatchObject({
+        status: 'needs_review',
+        pending_suggested_splits: 0,
+      });
+      expect(reconciliation.reasons).toContain('month_not_closed');
+      expect(
+        reconciliation.accounts.find(
+          (account) => account.account_id === fixture.accountA,
+        ),
+      ).toMatchObject({ statement_closing_paise: 105000 });
+      expect(
+        reconciliation.funds.find((fund) => fund.fund_id === reserve),
+      ).toMatchObject({
+        target_paise: 200000,
+        target_status: 'below_target',
+      });
+      expect(reconciliation.accounts[0]).toMatchObject({
+        status: 'needs_review',
+        reasons: expect.arrayContaining(['month_not_closed']),
+      });
+      const savedStatementRow = await db.asSuperuser(async (client) => {
+        const result = await client.query<{
+          updated_at: string;
+        }>(
+          `select updated_at::text from public.expense_statement_balances
+           where id=$1`,
+          [savedStatement],
+        );
+        return result.rows[0]!;
+      });
+      await call(
+        'admin',
+        `public.expense_statement_balance_save(
+           $1,$2,$3,105100,'Updated statement',
+           'Matched revised statement',$4,$5,'statement-balance-edit'
+         )`,
+        [
+          fixture.societyA,
+          fixture.accountA,
+          fixture.month_start,
+          savedStatementRow.updated_at,
+          crypto.randomUUID(),
+        ],
+      );
+      const revision = await db.asSuperuser(async (client) => {
+        const result = await client.query<{
+          previous_closing_paise: string;
+          previous_version: number;
+          reason: string;
+        }>(
+          `select previous_closing_paise,previous_version,reason
+           from public.expense_statement_balance_revisions
+           where statement_balance_id=$1`,
+          [savedStatement],
+        );
+        return result.rows;
+      });
+      expect(revision).toEqual([
+        {
+          previous_closing_paise: '105000',
+          previous_version: 1,
+          reason: 'Matched revised statement',
+        },
+      ]);
+      expect(
+        await code(
+          call(
+            'committee',
+            `public.expense_fund_target_save(
+               $1,$2,200000,$3,$4,$5,'committee-target'
+             )`,
+            [
+              fixture.societyA,
+              reserve,
+              `${Number(fixture.month_start.slice(0, 4)) + 1}-12-31`,
+              reserveUpdatedAt,
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('42501');
+      expect(
+        await code(
+          call(
+            'committee',
+            'public.expense_fund_reconciliation_export_record($1,$2,$3)',
+            [fixture.societyA, fixture.month_start, 'committee-export'],
+          ),
+        ),
+      ).toBe('42501');
+      expect(
+        await code(
+          call(
+            'admin',
+            `public.expense_statement_balance_save(
+               $1,$2,$3,1,null,null,null,$4,'wrong-society-account'
+             )`,
+            [
+              fixture.societyA,
+              fixture.accountB,
+              fixture.month_start,
+              crypto.randomUUID(),
+            ],
+          ),
+        ),
+      ).toBe('22023');
+      await call(
+        'admin',
+        'public.expense_fund_reconciliation_export_record($1,$2,$3)',
+        [fixture.societyA, fixture.month_start, 'admin-export'],
+      );
+      const exports = await db.asSuperuser(
+        async (client) =>
+          (
+            await client.query<{ count: number }>(
+              `select count(*)::integer as count from public.audit_logs
+             where society_id=$1
+               and action='expense.fund_reconciliation.export'`,
+              [fixture.societyA],
+            )
+          ).rows[0]!.count,
+      );
+      expect(exports).toBe(1);
+      expect(
+        await dbError(
+          db.asSuperuser((client) =>
+            client.query(
+              'delete from public.expense_statement_balances where id=$1',
+              [savedStatement],
+            ),
+          ),
+        ),
+      ).toMatchObject({ code: '55000' });
       const incomeEntry = await call<string>(
         'admin',
         "public.expense_income_record($1,$2,$3,'donation','Synthetic member',10000,null,null,$4,'fund-test')",
@@ -1438,6 +1646,60 @@ describe.skipIf(!hasDatabase)('database expense foundation', () => {
           ]),
         ),
       ).toBe('22023');
+      await db.asSuperuser(async (client) => {
+        const depositAccount = (
+          await client.query<{ id: string }>(
+            `insert into public.expense_accounts(
+               society_id,name,account_type,opening_balance_paise,
+               opening_on,created_by
+             ) values($1,'Synthetic FD','deposit',20000,$2,$3) returning id`,
+            [fixture.societyA, fixture.month_start, fixture.users.get('admin')],
+          )
+        ).rows[0]!.id;
+        const predecessor = (
+          await client.query<{ id: string }>(
+            `insert into public.expense_fixed_deposits(
+               society_id,fund_id,account_id,bank_name,principal_paise,
+               deposit_on,maturity_on,created_by
+             ) values(
+               $1,$2,$3,'Synthetic bank',10000,$4,$5,$6
+             ) returning id`,
+            [
+              fixture.societyA,
+              reserve,
+              depositAccount,
+              fixture.previous_month,
+              fixture.month_start,
+              fixture.users.get('admin'),
+            ],
+          )
+        ).rows[0]!.id;
+        await client.query(
+          `insert into public.expense_fixed_deposits(
+             society_id,fund_id,account_id,predecessor_id,bank_name,
+             principal_paise,deposit_on,maturity_on,created_by
+           ) values(
+             $1,$2,$3,$4,'Synthetic bank',20000,$5,$6,$7
+           )`,
+          [
+            fixture.societyA,
+            reserve,
+            depositAccount,
+            predecessor,
+            fixture.month_start,
+            `${Number(fixture.month_start.slice(0, 4)) + 1}-12-31`,
+            fixture.users.get('admin'),
+          ],
+        );
+      });
+      const renewedDepositReport = await call<{ reasons: string[] }>(
+        'committee',
+        'public.expense_fund_reconciliation($1,$2)',
+        [fixture.societyA, fixture.month_start],
+      );
+      expect(renewedDepositReport.reasons).not.toContain(
+        'fixed_deposits_need_review',
+      );
       await db.asSuperuser((client) =>
         client.query(
           "update public.module_configs set enabled=false where society_id=$1 and module_key='expense'",

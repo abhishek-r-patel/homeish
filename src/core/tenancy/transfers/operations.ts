@@ -138,6 +138,7 @@ export async function advanceTransferCase(input: unknown, requestId: string) {
       p_next_stage: values.nextStage,
       p_reason: values.reason,
       p_request_id: requestContext.requestId,
+      p_override_open_handover: values.overrideOpenHandover,
     },
     transferStageSchema,
     'The transfer stage was not saved. Refresh the case and check the required decision and dues.',

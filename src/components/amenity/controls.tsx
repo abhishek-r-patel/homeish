@@ -89,6 +89,8 @@ export function AmenityForm({
         name: data.get('name'),
         capacity: Number(data.get('capacity')),
         feeRupees: data.get('feeRupees'),
+        depositRupees: data.get('depositRupees') || '0',
+        depositRequired: data.get('depositRequired') === 'on',
         rules: data.get('rules'),
         active: data.get('active') === 'on',
         slots: rows.map((r) => ({
@@ -124,6 +126,23 @@ export function AmenityForm({
         inputMode="decimal"
         defaultValue={rupeesFromPaise(amenity?.fee_paise ?? 0)}
       />
+      <TextInput
+        id={`${prefix}-deposit`}
+        label={t('Refundable deposit in rupees (0 to turn off)')}
+        name="depositRupees"
+        inputMode="decimal"
+        defaultValue={rupeesFromPaise(amenity?.deposit_paise ?? 0)}
+      />
+      <label className="flex min-h-12 items-center gap-space-2">
+        <input
+          defaultChecked={
+            amenity?.deposit_required_before_confirmation ?? false
+          }
+          name="depositRequired"
+          type="checkbox"
+        />
+        {t('Require the full deposit before confirmation')}
+      </label>
       <div className="grid min-w-0 gap-space-2">
         <label htmlFor={`${prefix}-rules`}>{t('Amenity rules')}</label>
         <textarea
@@ -288,8 +307,11 @@ export function AmenityBookingForm({
       ) : null}
       <p className="text-caption text-ink-muted">
         {t(
-          'Fee: {amount}. Confirmed immediately; any fee is charged to your unit ledger. Cancel before the slot starts for a full ledger credit.',
-          { amount: amenityFee(amenity.fee_paise, locale) },
+          'Usage fee: {fee}. Deposit: {deposit}. A required deposit keeps the slot reserved until the administrator records the full amount; usage fees are charged only on confirmation.',
+          {
+            fee: amenityFee(amenity.fee_paise, locale),
+            deposit: amenityFee(amenity.deposit_paise ?? 0, locale),
+          },
         )}
       </p>
     </ModuleActionForm>

@@ -132,6 +132,7 @@ describe('module registry', () => {
       '/admin/action-plans',
       '/admin/letters',
       '/admin/contact-log',
+      '/admin/compliance',
       '/help',
     ]);
     expect(
@@ -147,6 +148,7 @@ describe('module registry', () => {
       '/admin/action-plans',
       '/admin/letters',
       '/admin/contact-log',
+      '/admin/compliance',
       '/help',
     ]);
     expect(hasPermission(['committee'], 'core', 'contact_log:manage')).toBe(

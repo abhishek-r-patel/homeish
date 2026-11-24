@@ -398,6 +398,7 @@ export const expenseEntrySchema = z.object({
     'billing_payment',
     'reversal',
     'transfer',
+    'amenity_deposit',
   ]),
   transfer_pair_id: z.uuid().nullable(),
   transfer_account_name: z.string().nullable(),
@@ -603,6 +604,9 @@ export const expenseStatementsSchema = z.object({
   receipts_paise: money,
   payments_paise: money,
   closing_money_paise: money,
+  held_deposit_receipts_paise: money,
+  held_deposit_refunds_paise: money,
+  retained_deposit_income_paise: money,
   identity_matches: z.boolean(),
   accounts_added: z.array(
     z.object({
@@ -1825,3 +1829,114 @@ export const expenseFundReportSchema = z.object({
   missing_data: z.boolean(),
 });
 export type ExpenseFundReport = z.infer<typeof expenseFundReportSchema>;
+
+export const expenseFundTargetInputSchema = z
+  .object({
+    fundId: z.uuid(),
+    targetRupees: nonnegativeRupeesSchema.nullable(),
+    targetDate: z.iso.date().nullable(),
+    expectedUpdatedAt: timestamp,
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .refine(
+    (value) => value.targetDate === null || value.targetRupees !== null,
+    'Set a target amount before setting a target date.',
+  );
+
+export const expenseStatementBalanceInputSchema = z
+  .object({
+    accountId: z.uuid(),
+    month: z.iso
+      .date()
+      .refine(
+        (value) => value.endsWith('-01'),
+        'Choose the first day of a month.',
+      ),
+    closingRupees: signedRupeesSchema,
+    note: optionalText(500),
+    reason: optionalText(500),
+    expectedUpdatedAt: timestamp.nullable(),
+    clientRequestId: z.uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      value.expectedUpdatedAt !== null &&
+      (value.reason === null || value.reason.length < 5)
+    )
+      context.addIssue({
+        code: 'custom',
+        path: ['reason'],
+        message: 'Give a reason for changing this statement balance.',
+      });
+  });
+
+export const expenseFundReconciliationInputSchema = z
+  .object({ month: z.iso.date() })
+  .strict()
+  .refine(
+    ({ month }) => month.endsWith('-01'),
+    'Choose the first day of a month.',
+  );
+
+const expenseFundReconciliationAccountSchema = z.object({
+  account_id: z.uuid(),
+  account_name: z.string(),
+  account_type: z.literal('bank'),
+  status: z.enum(['reconciled', 'needs_review']),
+  reasons: z.array(
+    z.enum([
+      'month_not_closed',
+      'opening_needs_review',
+      'pending_suggested_splits',
+      'fixed_deposits_need_review',
+    ]),
+  ),
+  book_balance_paise: money,
+  statement_closing_paise: money.nullable(),
+  difference_paise: money.nullable(),
+  note: z.string().nullable(),
+  updated_at: timestamp.nullable(),
+});
+
+export const expenseFundReconciliationSchema = z.object({
+  month: z.iso.date(),
+  month_end: z.iso.date(),
+  status: z.enum(['reconciled', 'needs_review']),
+  reasons: z.array(
+    z.enum([
+      'month_not_closed',
+      'opening_needs_review',
+      'pending_suggested_splits',
+      'fixed_deposits_need_review',
+    ]),
+  ),
+  pending_suggested_splits: z.number().int().nonnegative(),
+  accounts: z.array(expenseFundReconciliationAccountSchema),
+  funds: z.array(
+    z.object({
+      fund_id: z.uuid(),
+      fund_name: z.string(),
+      active: z.boolean(),
+      balance_paise: money,
+      target_paise: money.nullable(),
+      target_date: z.iso.date().nullable(),
+      target_progress_bp: z.number().nullable(),
+      target_gap_paise: money.nullable(),
+      estimated_monthly_paise: money.nullable(),
+      target_status: z
+        .enum([
+          'negative_balance',
+          'below_target',
+          'target_met',
+          'behind_schedule',
+        ])
+        .nullable(),
+      target_updated_at: timestamp,
+    }),
+  ),
+});
+export type ExpenseFundReconciliation = z.infer<
+  typeof expenseFundReconciliationSchema
+>;

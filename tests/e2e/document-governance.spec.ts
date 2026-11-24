@@ -1,5 +1,26 @@
 // Exercise P44's synthetic create, locked publication and committee read-only journeys.
 import { expect, test } from './fixtures';
+import AxeBuilder from '@axe-core/playwright';
+
+test('official case log stays admin-only and accessible on phones', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto('/fixtures/document');
+  await expect(
+    page.getByRole('heading', { name: 'Official correspondence and cases' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('These records are not legal advice or certification.'),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Official correspondence', { exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
 
 test('creates a factual governance record from paginated local sources', async ({
   page,
@@ -32,7 +53,7 @@ test('keeps house-rule publication locked and committee controls read-only', asy
   ).toBeVisible();
   await expect(page.getByText(/Qualified legal review/)).toBeVisible();
 
-  await page.getByLabel('Viewer').selectOption('committee');
+  await page.getByLabel('Viewer', { exact: true }).selectOption('committee');
   await expect(
     page.getByRole('heading', { name: 'Add governance record' }),
   ).toHaveCount(0);
