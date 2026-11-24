@@ -22,6 +22,13 @@ import {
   formatLocalizedNumber,
   formatLocalizedTime,
 } from '@/core/i18n/format';
+import {
+  CollectionGraph,
+  ComingUp,
+  GettingStartedCard,
+  QuickActionTiles,
+} from './dashboard-sections';
+import type { ServerActionResult } from '@/core/actions/server-action';
 
 const RETRY_HREF = '/admin';
 const rowClass =
@@ -88,37 +95,21 @@ function todayTiles(
   const { visitors, requests, billing } = snapshot;
   if (visitors) {
     const value = ok(visitors);
-    tiles.push(
-      {
-        key: 'visitors-today',
-        label: 'Visitors today',
-        href: '/admin/visitors',
-        value: value ? count(value.today) : null,
-      },
-      {
-        key: 'visitors-inside',
-        label: 'Still inside',
-        href: '/admin/visitors?status=checked_in',
-        value: value ? count(value.inside) : null,
-      },
-    );
+    tiles.push({
+      key: 'visitors-today',
+      label: 'Visitors today',
+      href: '/admin/visitors',
+      value: value ? count(value.today) : null,
+    });
   }
   if (requests) {
     const value = ok(requests);
-    tiles.push(
-      {
-        key: 'requests-open',
-        label: 'Open requests',
-        href: '/admin/requests',
-        value: value ? count(value.open) : null,
-      },
-      {
-        key: 'requests-overdue',
-        label: 'Overdue requests',
-        href: '/admin/requests',
-        value: value ? count(value.overdue) : null,
-      },
-    );
+    tiles.push({
+      key: 'requests-open',
+      label: 'Open requests',
+      href: '/admin/requests',
+      value: value ? count(value.open) : null,
+    });
   }
   if (billing) {
     const value = ok(billing);
@@ -142,7 +133,15 @@ function todayTiles(
 
 function attentionRows(snapshot: Snapshot): AttentionRow[] {
   const rows: AttentionRow[] = [];
-  const { billing, amc, stock, tenancy, registrations } = snapshot;
+  const { billing, amc, stock, tenancy, registrations, requests } = snapshot;
+  if (requests) {
+    rows.push({
+      key: 'requests-overdue',
+      label: 'Overdue requests',
+      href: '/admin/requests?status=overdue',
+      count: ok(requests)?.overdue ?? null,
+    });
+  }
   if (billing) {
     const value = ok(billing);
     rows.push(
@@ -259,7 +258,41 @@ function AdminActions({
   );
 }
 
-export function AdminHome({ snapshot, actions, suspended }: AdminHomeData) {
+export function AdminHome({
+  snapshot,
+  actions,
+  suspended,
+  quickActions = [],
+  allQuickActions = quickActions,
+  comingUp = [],
+  collectionGraph = null,
+  managingBodyName = 'Association',
+  gettingStarted = null,
+  savePinsAction,
+  resetPinsAction,
+}: Omit<
+  AdminHomeData,
+  | 'quickActions'
+  | 'allQuickActions'
+  | 'comingUp'
+  | 'collectionGraph'
+  | 'managingBodyName'
+  | 'gettingStarted'
+> &
+  Partial<
+    Pick<
+      AdminHomeData,
+      | 'quickActions'
+      | 'allQuickActions'
+      | 'comingUp'
+      | 'collectionGraph'
+      | 'managingBodyName'
+      | 'gettingStarted'
+    >
+  > & {
+    savePinsAction?: (keys: string[]) => Promise<ServerActionResult>;
+    resetPinsAction?: () => Promise<ServerActionResult>;
+  }) {
   const { locale, translate: t } = useUiTranslator();
   const displayLocale = locale ?? 'en';
   const money = (paise: string) =>
@@ -273,13 +306,20 @@ export function AdminHome({ snapshot, actions, suspended }: AdminHomeData) {
     });
   const tiles = todayTiles(snapshot, money, count);
   const attention = attentionRows(snapshot);
-  const { meeting, activity, stock } = snapshot;
+  const { activity, stock } = snapshot;
   const outOfStock = stock?.status === 'ok' ? stock.out : 0;
 
   return (
     <div className="grid min-w-0 gap-space-6">
       <header className="grid gap-space-2">
-        <h1 className="text-display font-semibold">{t('Dashboard')}</h1>
+        <div className="rounded-lg border border-brand/15 bg-brand-tint p-space-5">
+          <p className="text-micro font-semibold uppercase tracking-wide text-brand">
+            {t('{name} · Managing today', { name: managingBodyName })}
+          </p>
+          <h1 className="mt-space-1 text-display font-semibold">
+            {t('Dashboard')}
+          </h1>
+        </div>
         <p className="text-caption text-ink-muted">
           {t('Updated {time}', {
             time: formatLocalizedTime(
@@ -299,7 +339,7 @@ export function AdminHome({ snapshot, actions, suspended }: AdminHomeData) {
 
       {tiles.length ? (
         <Section id="admin-home-today" title={t('Today')}>
-          <ul className="grid grid-cols-2 gap-space-3 medium:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-space-3 medium:grid-cols-4">
             {tiles.map((tile) => (
               <li key={tile.key}>
                 <StatTile
@@ -316,43 +356,14 @@ export function AdminHome({ snapshot, actions, suspended }: AdminHomeData) {
         </Section>
       ) : null}
 
-      {meeting ? (
-        <Section id="admin-home-meeting" title={t('Next meeting')}>
-          <div className="rounded-md border border-rule bg-surface">
-            {meeting.status === 'unavailable' ? (
-              <UnavailableRow label={t('Next meeting')} />
-            ) : meeting.next ? (
-              <Link
-                className={rowClass}
-                href={`/admin/meetings/${meeting.next.id}`}
-              >
-                <span className="grid min-w-0 gap-space-1">
-                  <span className="break-words text-body-strong">
-                    {meeting.next.title}
-                  </span>
-                  <time
-                    className="text-caption text-ink-muted"
-                    dateTime={meeting.next.starts_at}
-                  >
-                    {dateTime(meeting.next.starts_at)}
-                  </time>
-                  {meeting.next.venue ? (
-                    <span className="break-words text-caption text-ink-muted">
-                      {meeting.next.venue}
-                    </span>
-                  ) : null}
-                </span>
-                <span aria-hidden="true">→</span>
-              </Link>
-            ) : (
-              <Link className={rowClass} href="/admin/meetings">
-                <span className="text-body">{t('No meeting scheduled')}</span>
-                <span aria-hidden="true">→</span>
-              </Link>
-            )}
-          </div>
-        </Section>
-      ) : null}
+      <GettingStartedCard setup={gettingStarted} />
+
+      <QuickActionTiles
+        actions={quickActions}
+        availableActions={allQuickActions}
+        savePinsAction={savePinsAction}
+        resetPinsAction={resetPinsAction}
+      />
 
       {attention.length ? (
         <Section id="admin-home-attention" title={t('Needs attention')}>
@@ -384,6 +395,12 @@ export function AdminHome({ snapshot, actions, suspended }: AdminHomeData) {
           </ul>
         </Section>
       ) : null}
+
+      {collectionGraph ? (
+        <CollectionGraph points={collectionGraph.rows} />
+      ) : null}
+
+      <ComingUp items={comingUp} timezone={snapshot.timezone} />
 
       {activity ? (
         <Section id="admin-home-activity" title={t('Society activity')}>

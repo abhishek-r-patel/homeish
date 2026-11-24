@@ -161,7 +161,7 @@ export function TenancyWorkspaceView({
   onPageChange,
   getMoveHref,
 }: {
-  workspace: TenancyWorkspace;
+  workspace: TenancyWorkspace & { can_edit_settings?: boolean };
   page: TenancyPage;
   status: TenancyStatus | null;
   audience: TenancyAudience;
@@ -385,7 +385,8 @@ export function TenancyWorkspaceView({
       </Card>
       {audience === 'management' &&
       workspace.can_manage &&
-      workspace.can_write ? (
+      workspace.can_write &&
+      workspace.can_edit_settings !== false ? (
         <TenancySettingsControl
           key={String(workspace.police_verification_required)}
           workspace={workspace}

@@ -11,10 +11,8 @@ import {
   updateBlock,
   updateUnit,
 } from '@/core/structure/operations';
-import {
-  confirmUnitsImport,
-  previewUnitsImport,
-} from '@/core/structure/units-csv';
+import { saveBulkImport } from '@/core/csv/bulk-import-operations';
+import { previewUnitsImport } from '@/core/structure/units-csv';
 import { ValidationError } from '@/core/errors';
 import { saveUnitRecord } from '@/core/structure/unit-workspace';
 import {
@@ -216,11 +214,11 @@ export async function previewUnitsImportAction(csv: string) {
 }
 
 export async function confirmUnitsImportAction(csv: string) {
-  return runServerAction('structure.units.importConfirm', async (requestId) => {
+  return runServerAction('structure.units.importConfirm', async () => {
     if (typeof csv !== 'string') {
       throw new ValidationError({ file: 'Choose a CSV file to import.' });
     }
-    const jobId = await confirmUnitsImport(csv, requestId);
+    const jobId = await saveBulkImport({ kind: 'units', csv });
     revalidatePath('/admin/structure');
     revalidatePath('/admin/jobs');
     return {

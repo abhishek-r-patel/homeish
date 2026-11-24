@@ -369,6 +369,20 @@ describe.skipIf(!hasDatabase)('database notice board', () => {
         ),
       );
       expect(committeeWithdraw.code).toBe('42501');
+      expect(
+        (
+          await dbError(
+            asUser('committee', (query) =>
+              query(
+                `select public.notice_set_pinned(
+                   $1, $2, true, 'committee-pin-other'
+                 )`,
+                [fixture.societyId, everyone.id],
+              ),
+            ),
+          )
+        ).code,
+      ).toBe('42501');
       expect((await get('committee', everyone.id)).can_manage).toBe(false);
       expect((await get('committee', blockNotice.id)).can_manage).toBe(true);
 
@@ -395,6 +409,22 @@ describe.skipIf(!hasDatabase)('database notice board', () => {
               )
             ).rows[0]!.result as NoticeJson,
         );
+      expect(
+        (
+          await dbError(
+            asUser('committee', (query) =>
+              query(
+                `select public.notice_update(
+                   $1, $2, 'Committee attempt', 'Not the owner',
+                   'everyone', NULL::uuid[], NULL, NULL,
+                   $3, 'committee-update-other'
+                 )`,
+                [fixture.societyId, everyone.id, everyone.updated_at],
+              ),
+            ),
+          )
+        ).code,
+      ).toBe('42501');
       const notificationCount = async () =>
         Number(
           (

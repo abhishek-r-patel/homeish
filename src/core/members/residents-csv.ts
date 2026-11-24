@@ -2,7 +2,7 @@
 import { parseCsvRecords } from '../csv/parse';
 
 export const MAX_RESIDENT_CSV_BYTES = 512 * 1024;
-export const MAX_RESIDENT_CSV_ROWS = 1000;
+export const MAX_RESIDENT_CSV_ROWS = 2000;
 
 export type ResidentImportRow = {
   rowNumber: number;

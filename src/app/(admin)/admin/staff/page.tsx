@@ -16,6 +16,9 @@ import {
 } from '@/core/staff/operations';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
+import { BulkImportControl } from '@/components/home/bulk-import';
 
 export const metadata = {
   title: 'Staff management | Homeish',
@@ -57,8 +60,10 @@ export default async function AdminStaffPage() {
       .filter(({ status }) => status === 'pending')
       .map((link) => ({ staff, link })),
   );
+  const featureTabs = await getFeatureTabs('people');
   return (
     <section className="grid gap-space-5">
+      <FeatureTabs items={featureTabs} />
       <header className="grid gap-space-2">
         <h1 className="text-title font-semibold">{t('Staff management')}</h1>
         <p className="text-body text-ink-muted">
@@ -75,6 +80,14 @@ export default async function AdminStaffPage() {
         title={t('Add staff')}
       >
         <StaffAdminProfileForm units={workspace.units} />
+      </Card>
+      <Card
+        title={t('Import staff from CSV')}
+        description={t(
+          'Preview every row, then save all staff records together or save none.',
+        )}
+      >
+        <BulkImportControl kind="staff" />
       </Card>
 
       <Card title={t('Resident registration approvals')}>
@@ -179,11 +192,13 @@ export default async function AdminStaffPage() {
         )}
       </Card>
 
-      <Card title={t('Registration settings')}>
-        <StaffApprovalSetting
-          residentApprovalRequired={settings.residentApprovalRequired}
-        />
-      </Card>
+      {settings.canManage ? (
+        <Card title={t('Registration settings')}>
+          <StaffApprovalSetting
+            residentApprovalRequired={settings.residentApprovalRequired}
+          />
+        </Card>
+      ) : null}
     </section>
   );
 }

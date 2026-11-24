@@ -1,5 +1,14 @@
 // Hindi translations for admin and committee screens; expanded with P33 screen work.
 export const HI_ADMIN: Readonly<Record<string, string>> = {
+  'Import opening dues from CSV': 'CSV से शुरुआती बकाया आयात करें',
+  'Opening dues can be imported once. Preview every row before saving all bills together.':
+    'शुरुआती बकाया एक बार आयात हो सकता है। सभी बिल एक साथ सहेजने से पहले हर पंक्ति जाँचें।',
+  'Import vehicles from CSV': 'CSV से वाहन आयात करें',
+  'Preview every row, then save all vehicles together or save none.':
+    'हर पंक्ति जाँचें, फिर सभी वाहन एक साथ सहेजें या कुछ भी न सहेजें।',
+  'Import staff from CSV': 'CSV से कर्मचारी आयात करें',
+  'Preview every row, then save all staff records together or save none.':
+    'हर पंक्ति जाँचें, फिर सभी कर्मचारी रिकॉर्ड एक साथ सहेजें या कुछ भी न सहेजें।',
   '(inactive)': '(निष्क्रिय)',
   '{amount} · {count} bills since {date}': '{date} से {count} बिल · {amount}',
   '{amount} waived': '{amount} माफ़',
@@ -1152,10 +1161,10 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Poll management': 'मतदान प्रबंधन',
   'Poll settings': 'मतदान सेटिंग',
   Posted: 'दर्ज',
-  'Preview every row before importing. Maximum file size is 512 KB and 1,000 rows.':
-    'आयात से पहले हर पंक्ति का पूर्वावलोकन करें। फ़ाइल अधिकतम 512 KB और 1,000 पंक्तियों की हो सकती है।',
-  'Preview is read-only. Imports create invitations and report any row-level failures in a job.':
-    'पूर्वावलोकन केवल पढ़ने के लिए है। आयात आमंत्रण बनाता है और किसी जॉब में पंक्ति-स्तर की विफलताएँ दिखाता है।',
+  'Preview every row before importing. Maximum file size is 512 KB and 2,000 rows.':
+    'आयात से पहले हर पंक्ति का पूर्वावलोकन करें। फ़ाइल अधिकतम 512 KB और 2,000 पंक्तियों की हो सकती है।',
+  'Preview is read-only. Every valid invitation is saved together; one error cancels the whole import.':
+    'पूर्वावलोकन केवल पढ़ने के लिए है। हर सही निमंत्रण एक साथ सहेजा जाता है; एक त्रुटि पूरा आयात रद्द करती है।',
   Progress: 'प्रगति',
   'Publish a notice to keep residents informed.':
     'निवासियों को जानकारी देने के लिए सूचना प्रकाशित करें।',
@@ -1340,6 +1349,26 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'Next meeting': 'अगली बैठक',
   'No meeting scheduled': 'कोई बैठक तय नहीं है',
   'Needs attention': 'ध्यान देने योग्य',
+  'Managing today': 'आज का प्रबंधन',
+  '{name} · Managing today': '{name} · आज का प्रबंधन',
+  Collection: 'वसूली',
+  'Maintenance collected over the last six months.':
+    'पिछले छह महीनों में वसूला गया रखरखाव।',
+  '{amount} collected in six months': 'छह महीनों में {amount} वसूला गया',
+  'Managing body': 'प्रबंध निकाय',
+  'Managing-body name': 'प्रबंध निकाय का नाम',
+  'This name appears in the place picker and society work headings.':
+    'यह नाम जगह चुनने और सोसायटी कार्य शीर्षकों में दिखाई देगा।',
+  'Save name': 'नाम सहेजें',
+  'Managing-body name saved.': 'प्रबंध निकाय का नाम सहेजा गया।',
+  'Return the setup checklist to the dashboard after hiding it.':
+    'छिपाने के बाद सेटअप सूची को डैशबोर्ड पर फिर दिखाएँ।',
+  'Bring back the self-ticking Getting started card on the admin dashboard.':
+    'प्रशासक डैशबोर्ड पर अपने-आप पूरा होने वाला शुरुआती कार्ड वापस दिखाएँ।',
+  'Getting started restored.': 'शुरुआती कार्ड वापस दिखाया गया।',
+  'Show Getting started': 'शुरुआती कार्ड दिखाएँ',
+  'Use a preset or your own name. This appears in the place picker and society work headings.':
+    'प्रीसेट या अपना नाम दें। यह नाम जगह चुनने और सोसायटी कार्य शीर्षकों में दिखाई देगा।',
   '{count} out of stock': '{count} स्टॉक में नहीं',
   'Society activity': 'सोसायटी गतिविधि',
   'Requests, notices, meetings and registrations from the last 30 days will appear here.':

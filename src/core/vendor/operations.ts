@@ -6,6 +6,7 @@ import { AppError, createRequestId } from '../errors';
 import { authorizeRequest } from '../permissions/authorize';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import {
   vendorActiveInputSchema,
   vendorApproveResultSchema,
@@ -66,13 +67,17 @@ export async function getVendorContext(
 
 export async function getVendorWorkspace() {
   const { context, societyId } = await getVendorContext('vendor:list');
-  return callModuleRpc(
-    context,
-    'vendor_workspace_get',
-    { p_society_id: societyId },
-    vendorWorkspaceSchema,
-    'Could not load vendors and purchases. Refresh and retry.',
-  );
+  const [workspace, canEditSettings] = await Promise.all([
+    callModuleRpc(
+      context,
+      'vendor_workspace_get',
+      { p_society_id: societyId },
+      vendorWorkspaceSchema,
+      'Could not load vendors and purchases. Refresh and retry.',
+    ),
+    canAdminEditAllModuleSettings('vendor', context),
+  ]);
+  return { ...workspace, can_edit_settings: canEditSettings };
 }
 
 export async function getVendorDetail(vendorId: string) {

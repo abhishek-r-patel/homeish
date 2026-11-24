@@ -460,7 +460,7 @@ export const billingBillSchema = z.object({
   id: z.uuid(),
   unit_id: z.uuid(),
   unit_number: z.string().optional(),
-  kind: z.enum(['regular', 'fine', 'late_fee', 'interest']),
+  kind: z.enum(['regular', 'fine', 'late_fee', 'interest', 'opening_dues']),
   title: z.string(),
   period_start: z.iso.date(),
   due_date: z.iso.date(),

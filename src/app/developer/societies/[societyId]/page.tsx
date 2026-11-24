@@ -2,15 +2,18 @@
 import Link from 'next/link';
 import {
   FirstAdminForm,
+  DeveloperOnboardingForm,
   SocietyForm,
   SocietyStatusControl,
 } from '@/components/developer/console-controls';
 import { Card } from '@/components/ui/data-display';
 import {
   getDeveloperSociety,
+  getDeveloperOnboarding,
   societyStatusSchema,
 } from '@/core/developer/console';
 import { ErrorPanel } from '@/components/ui/feedback';
+import { BulkImportControl } from '@/components/home/bulk-import';
 
 export const metadata = {
   title: 'Society configuration | Developer Console | Homeish',
@@ -37,7 +40,10 @@ export default async function SocietyDetailPage({
       />
     );
   }
-  const society = await getDeveloperSociety(societyId);
+  const [society, onboarding] = await Promise.all([
+    getDeveloperSociety(societyId),
+    getDeveloperOnboarding(societyId),
+  ]);
   const status = societyStatusSchema.safeParse(society.status);
   if (!status.success) {
     throw new Error('The society has an unsupported status.');
@@ -54,6 +60,38 @@ export default async function SocietyDetailPage({
         </Link>
         <h1 className="text-title font-semibold">{society.name}</h1>
       </header>
+      <Card
+        title="Onboarding record"
+        description="Developer-only agreement, contact, stage and read-only admin progress. Contact details are never copied into audit text."
+      >
+        <DeveloperOnboardingForm record={onboarding} societyId={society.id} />
+      </Card>
+      <Card
+        title="Bulk import"
+        description="Use the same atomic CSV flow as society administrators. These imports are audited as developer actions."
+      >
+        <div className="grid gap-space-5">
+          {(
+            [
+              ['units', 'Units'],
+              ['residents', 'Residents'],
+              ['opening_dues', 'Opening dues'],
+              ['vehicles', 'Vehicles'],
+              ['staff', 'Staff'],
+              ['assets', 'Assets'],
+            ] as const
+          ).map(([kind, title]) => (
+            <section className="grid gap-space-3" key={kind}>
+              <h3 className="text-body-strong">{title}</h3>
+              <BulkImportControl
+                auditHref="/developer/audit?run="
+                kind={kind}
+                societyId={society.id}
+              />
+            </section>
+          ))}
+        </div>
+      </Card>
       <Card
         title="Society status"
         description="Suspension makes this society read-only. Archiving blocks access but keeps its data."

@@ -14,6 +14,9 @@ vi.mock('../../src/components/language-provider', () => ({
     translate: (source: string) => source,
   }),
 }));
+vi.mock('../../src/app/workspace-actions', () => ({
+  searchWorkspaceAction: vi.fn(),
+}));
 
 import {
   AdminShell,
@@ -51,7 +54,7 @@ describe('application shells', () => {
     expect(markup).toContain('Dashboard');
     expect(markup).toContain('Structure');
     expect(markup).toContain('Jobs');
-    expect(markup).toContain('Operations');
+    expect(markup).toContain('Today');
   });
 
   it('limits compact tabs to four destinations plus More', () => {

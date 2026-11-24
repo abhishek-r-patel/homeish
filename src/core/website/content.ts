@@ -1,17 +1,38 @@
-// Public website copy and synthetic examples, separate from product workflows.
-// Static imports keep image optimization on the host-independent framework asset path.
+// Public P57 website copy, topic-grouped registry evidence and synthetic preview assets.
 import billingPreview from '../../../public/homeish-billing-preview.jpg';
-import serviceRequestPreview from '../../../public/homeish-service-request-preview.jpg';
-import amenityPreview from '../../../public/homeish-amenity-preview.jpg';
+import adminPreview from '../../../public/homeish-admin-preview.png';
+import committeePreview from '../../../public/homeish-committee-preview.png';
+import guardPreview from '../../../public/homeish-guard-preview.png';
+import housekeepingPreview from '../../../public/homeish-housekeeping-preview.png';
+import residentPreview from '../../../public/homeish-resident-preview.png';
+import {
+  getRoleNavigationGroups,
+  MODULE_KEYS,
+  MODULE_REGISTRY,
+} from '../modules';
+
+const moduleGroups = getRoleNavigationGroups(['admin'], MODULE_KEYS).map(
+  (group) => ({
+    name: group.topic,
+    modules: [
+      ...new Set(
+        group.items.map((item) => MODULE_REGISTRY[item.moduleKey].name),
+      ),
+    ],
+  }),
+);
+
+const moduleCount = MODULE_KEYS.length - 1;
 
 export const websiteContent = {
   metadataDescription:
-    'Society management for committees, admins and residents. See Homeish features released for testing, synthetic product screenshots and the planned roadmap. Demo coming soon.',
+    'Homeish brings society work, role-based access and maintenance records into one installable web app. Explore current modules, synthetic product previews and owner-led setup.',
   navigation: [
     { href: '#features', label: 'Features' },
+    { href: '#roles', label: 'For every role' },
     { href: '#product-preview', label: 'Product preview' },
-    { href: '#roadmap', label: 'Planned modules' },
-    { href: '#how-it-works', label: 'How it works' },
+    { href: '#how-it-works', label: 'Setup' },
+    { href: '#enquiry', label: 'Talk to us' },
   ],
   labels: {
     skip: 'Skip to content',
@@ -26,14 +47,25 @@ export const websiteContent = {
   eyebrow: 'For society committees and admins',
   headline: 'A clearer day for your committee. A calmer day for everyone.',
   introduction:
-    'Bring your gate records, maintenance dues, service requests and daily work into one place. Give your committee a clearer view and residents less to chase.',
+    'Keep society records, daily work and resident communication in one role-based place, with each society choosing the modules it needs.',
   availability:
-    'Built in stages. Released features are still for testing, not live society use. Onboarding is not open yet.',
+    'Released features are for testing while owner checks and live activation continue. Society onboarding is not open as self-service.',
+  facts: [
+    `${moduleCount} switchable feature modules`,
+    'Five society role views',
+    'Modules switched on per society',
+    'Works on a phone or laptop browser',
+    'UPI payments go directly to the society',
+  ],
   demo: {
     action: 'Try demo',
     notice: 'Demo coming soon',
     description:
-      'The separate demo will be connected when the product is ready. For now, explore the synthetic screenshots below.',
+      'The separate connected demo is not open yet. Explore synthetic still images below.',
+  },
+  contact: {
+    action: 'Talk to us',
+    enquiryAction: 'Send an enquiry',
   },
   heroCaption:
     'Sharing payment details is not a payment confirmation. Your admin checks the payment first.',
@@ -46,179 +78,132 @@ export const websiteContent = {
     {
       name: 'Separate society spaces',
       description:
-        'Society access is checked on the server and in the database. Live rollout still needs pilot checks and approval.',
+        'Each society keeps its own records, settings and enabled modules.',
     },
     {
       name: 'Access shaped by role',
       description:
-        'Residents, guards, admins and committee members have different permissions. Modules are enabled per society.',
+        'Residents, guards, committee members, admins and housekeeping supervisors see only the work allowed for them.',
     },
     {
       name: 'Synthetic public examples',
       description:
-        'These previews use invented data, not real resident records. This website does not publish a society directory.',
+        'Public screenshots use invented data. No real resident names, contacts, vehicles or society directory are published.',
     },
   ],
-  featuresTitle: 'Built for the work that fills your day.',
+  featuresTitle: 'Features grouped the same way as the app.',
   featuresDescription:
-    'These modules have been released for testing. Owner checks and live activation are still pending; they are not open for live society use.',
+    'These modules are released for testing. Owner review and live activation are still separate, and every society uses only the modules switched on for it.',
   testingLabel: 'Released for testing',
-  modules: [
-    {
-      name: 'Visitors',
-      description:
-        'Resident approvals, gate records and visitor codes in one place.',
-    },
-    {
-      name: 'Deliveries',
-      description:
-        'Record arrivals and track parcels still waiting at the gate.',
-    },
-    {
-      name: 'Dues and payments',
-      description:
-        'Issue maintenance bills, record UPI details and confirm payments.',
-    },
-    {
-      name: 'Service requests',
-      description: 'Keep reported issues, updates and follow-ups together.',
-    },
-    {
-      name: 'Notice board',
-      description: 'Share society updates with the right audience.',
-    },
-    {
-      name: 'Staff',
-      description: 'Keep staff registration and attendance organised.',
-    },
-    {
-      name: 'Housekeeping',
-      description: 'Track supplies, stock movements and low-stock reminders.',
-    },
-    {
-      name: 'Maintenance contracts',
-      description:
-        'Keep AMC service visits, renewals and contract history together.',
-    },
-    {
-      name: 'Amenities',
-      description: 'Manage exclusive slots, bookings and cancellation credits.',
-    },
-  ],
-  developmentTitle: 'More work taking shape.',
-  developmentDescription:
-    'Built and checked locally, but not released to beta or approved for live societies.',
-  developmentLabel: 'In development',
-  development: [
-    {
-      name: 'Expenses and accounts',
-      description:
-        'Society expenses, committee approvals, cash and bank books, and reports.',
-    },
-    {
-      name: 'Resident and vehicle directory',
-      description:
-        'Resident privacy choices, household vehicles and role-based access to directory details.',
-    },
-  ],
-  peopleTitle: 'One society. Clearer roles.',
+  moduleGroups,
+  peopleTitle: 'One app. The right view for every role.',
   peopleDescription:
-    'The tools a person sees depend on their role and the modules enabled for their society.',
+    'Each role gets a focused workspace built from the same permissions and switched-on modules.',
   people: [
+    {
+      name: 'Residents',
+      description:
+        'See your own bills, notices, bookings, visitors and requests with flat-aware navigation.',
+      image: residentPreview,
+      alt: 'Synthetic resident Homeish dashboard with quick actions, visitor requests and upcoming dates.',
+    },
+    {
+      name: 'Guards',
+      description:
+        'Keep gate actions first, with big visitor and delivery controls and no unrelated society data.',
+      image: guardPreview,
+      alt: 'Synthetic guard dashboard with visitor, delivery, round and vehicle actions.',
+    },
     {
       name: 'Committee members',
       description:
-        'Review records and follow the work without chasing every update.',
+        'Review society work, meetings and reports with clear read-only limits where required.',
+      image: committeePreview,
+      alt: 'Synthetic committee dashboard with society figures, quick actions and upcoming work.',
     },
     {
       name: 'Admins',
       description:
-        'Keep bills, society records and everyday follow-through together.',
+        'Manage bills, requests, people and everyday follow-through from one grouped workspace.',
+      image: adminPreview,
+      alt: 'Synthetic administrator dashboard with four figures and grouped society actions.',
     },
     {
-      name: 'Residents',
+      name: 'Housekeeping supervisors',
       description:
-        'Find your dues, notices and request updates with less back-and-forth.',
-    },
-    {
-      name: 'Guards',
-      description: 'Focus on visitor and delivery decisions at the gate.',
+        'Record stock, log issues and follow daily work without seeing unrelated society areas.',
+      image: housekeepingPreview,
+      alt: 'Synthetic housekeeping dashboard with inventory, request and daily-check actions.',
     },
   ],
-  previewsTitle: 'A look inside Homeish.',
+  previewsTitle: 'A look at the new Homeish design.',
   previewsDescription:
-    'Actual product screens captured from development-only fixtures with invented data. These are still images, not a connected demo.',
+    'Still images captured from development-only fixtures with invented data. They are not a connected demo.',
   previews: [
     {
-      title: 'Report an issue with context',
+      title: 'Calm admin overview',
       description:
-        'Choose a category, describe the issue and give your society team the details it needs.',
-      image: serviceRequestPreview,
-      alt: 'Synthetic common-area plumbing request form with an issue description, priority and optional photos.',
+        'A grouped workspace with four figures, quick actions and the next society dates.',
+      image: adminPreview,
+      alt: 'Synthetic administrator overview using the new Homeish grouped navigation and dashboard.',
     },
     {
-      title: 'Check the rules before booking',
+      title: 'Resident-first Home',
       description:
-        'Review the rules, guest count and fee before confirming an exclusive amenity booking.',
-      image: amenityPreview,
-      alt: 'Synthetic resident booking form showing a guest count, rules acknowledgement and a free exclusive booking.',
+        'Quick actions and coming work stay focused on the person’s selected flat.',
+      image: residentPreview,
+      alt: 'Synthetic resident Home screen using the new quick-action layout.',
+    },
+    {
+      title: 'Focused housekeeping work',
+      description:
+        'Supervisors see stock and daily tasks without unrelated society controls.',
+      image: housekeepingPreview,
+      alt: 'Synthetic housekeeping supervisor dashboard with stock and request actions.',
     },
   ],
-  roadmapTitle: 'Planned modules',
-  roadmapDescription:
-    'Roadmap ideas, not usable features. Details depend on future phase decisions; no release dates are promised.',
-  roadmap: [
+  nextTitle: 'What comes next',
+  nextDescription:
+    'A short list of separately approved or demand-gated work. Nothing here is usable yet.',
+  next: [
     {
-      name: 'Everyday essentials',
-      modules: [
-        'Move-in, move-out and tenancy',
-        'Document repository',
-        'Parking management',
-        'Emergency and SOS',
-      ],
+      name: 'Connected role demos',
+      description:
+        'Available only after a separately approved demo is set up, checked and reset safely.',
     },
     {
-      name: 'Better coordination',
-      modules: [
-        'Polls and voting',
-        'Meetings and AGM',
-        'Vendors and purchase approvals',
-        'Guard patrol and incident logs',
-        'Utility metering',
-        'Committee analytics',
-      ],
-    },
-    {
-      name: 'Community and more',
-      modules: [
-        'Asset register',
-        'Community and marketplace',
-        'Events and RSVPs',
-        'Home-services directory',
-        'Service-request escalation',
-        'More languages',
-      ],
+      name: 'More regional languages',
+      description:
+        'Possible future Pro languages, only if demand and willingness to pay are clear.',
     },
   ],
-  stepsTitle: 'When your society is ready.',
+  stepsTitle: 'How setup works.',
   stepsDescription:
-    'Onboarding is not open yet. Setup will be owner-led after pilot checks, not a self-service sign-up.',
+    'Setup is owner-led. There is no self-service society sign-up.',
   steps: [
     {
-      name: 'Set up your society',
+      name: 'Set up the society',
       description:
-        'Prepare your society address, units and members in a separate society space.',
+        'The developer creates the society, agrees the modules and imports flats and residents in bulk.',
     },
     {
-      name: 'Enable what you need',
+      name: 'Switch on the agreed tools',
       description:
-        'Enable approved modules for your society. Planned modules are not included until they are built and verified.',
+        'The developer enables only the modules agreed for that society.',
     },
     {
-      name: 'Give each role its view',
+      name: 'Complete the admin checklist',
       description:
-        'Residents, guards, admins and committee members use the tools allowed for their role.',
+        'The admin follows the self-ticking Getting started card for society details, people and payment setup.',
     },
+  ],
+  rightForYouTitle: 'Is Homeish right for you?',
+  rightForYou: [
+    'Homeish is a web app, not a native phone download.',
+    'An internet connection is needed for society workflows.',
+    'Homeish never holds society money.',
+    'Homeish is not accounting or legal advice.',
+    'Modules that are not switched on are not included for that society.',
   ],
   societyTitle: 'Already have a society address?',
   societyDescription:
@@ -228,42 +213,40 @@ export const websiteContent = {
     {
       question: 'Can we use Homeish for our society today?',
       answer:
-        'Not yet. Released modules are for testing, and live society onboarding is not open. Owner testing, pilot checks and live activation must be completed first.',
+        'Not yet as self-service onboarding. Released modules are for testing, and owner checks, pilot checks and live activation remain separate steps.',
     },
     {
       question: 'Why is Try demo unavailable?',
       answer:
-        'The separate demo is not set up yet. We will connect it after the product is ready and verify its synthetic-data and reset boundaries. Until then, the button stays disabled and the screenshots are not an interactive demo.',
+        'The connected demo is not set up yet. The button stays disabled, and the public screenshots remain still images.',
     },
     {
-      question: 'Does Homeish collect our maintenance payments?',
+      question: 'Does Homeish collect maintenance payments?',
       answer:
-        'No. The payment flow sends money directly to your society through its UPI details. You submit the reference, then your admin checks and confirms the payment in Homeish. Submitting details alone does not confirm a payment. Homeish does not hold society funds.',
+        'No. Money goes directly to the society through its UPI details. A resident submits a reference, then an admin checks and confirms it.',
     },
     {
-      question: 'Will every society need every module?',
+      question: 'Will every society get every module?',
       answer:
-        'No. Modules are enabled per society. A disabled module does not appear in that society, and a roadmap entry does not make it available.',
+        'No. The developer switches on the modules agreed for that society, and roles still limit who may use them.',
     },
     {
-      question: 'Who can see society information?',
+      question: 'Who can see an enquiry?',
       answer:
-        'Access depends on society membership, role and the enabled modules. This public website uses invented examples only; it does not expose a real society or resident directory. Live rollout still requires privacy checks and approval.',
+        'Only the Homeish developer can view or delete public enquiries. The form does not expose them to societies, residents or admins.',
     },
     {
       question: 'Do residents need to install an app?',
       answer:
-        'Homeish is a web app that can be added to your home screen. A network connection is required for society workflows; society records are not stored for offline use.',
-    },
-    {
-      question: 'What is the beta website?',
-      answer:
-        'Beta is a separate testing environment. It uses synthetic data only and is neither the public demo nor a place for real society information.',
+        'No. Homeish is an installable web app that works in a phone or laptop browser and can be added to the home screen. It requires a network connection.',
     },
   ],
+  enquiryTitle: 'Talk to us.',
+  enquiryDescription:
+    'Tell us about your society. Enter an email address or phone number so the Homeish developer can reply.',
   closingTitle: 'Less chasing. More clarity.',
   closingDescription:
-    'Built to help your committee keep society life moving. The demo will be connected here when it is ready.',
+    'Built to help each society role keep work moving, without hiding limits or pretending that planned work is available.',
   tagline: 'Homeish. A little more like home.',
   footerAvailability: 'Not open for live society use.',
 } as const;

@@ -88,6 +88,27 @@ export type ModuleNavigationItem = {
   section?: string;
 };
 
+export const ADMIN_NAVIGATION_TOPICS = [
+  'Today',
+  'Gate & security',
+  'Money',
+  'Residents & homes',
+  'Upkeep',
+  'Community & meetings',
+  'Settings & help',
+] as const;
+
+export const RESIDENT_NAVIGATION_TOPICS = [
+  'My home',
+  'Get help',
+  'Society',
+  'Have your say',
+] as const;
+
+export type NavigationTopic =
+  | (typeof ADMIN_NAVIGATION_TOPICS)[number]
+  | (typeof RESIDENT_NAVIGATION_TOPICS)[number];
+
 export type ModuleDefinition = {
   core: boolean;
   defaultSettings: Readonly<Record<string, unknown>>;
@@ -184,6 +205,18 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Society',
         },
         {
+          href: '/admin/features',
+          label: 'Features',
+          permission: 'adoption:read',
+          section: 'Society',
+        },
+        {
+          href: '/admin/calendar',
+          label: 'Calendar',
+          permission: 'dashboard:read',
+          section: 'Overview',
+        },
+        {
           href: '/admin/jobs',
           label: 'Jobs',
           permission: 'jobs:read',
@@ -262,6 +295,18 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           label: 'Adoption tracker',
           permission: 'adoption:read',
           section: 'Society',
+        },
+        {
+          href: '/admin/features',
+          label: 'Features',
+          permission: 'adoption:read',
+          section: 'Society',
+        },
+        {
+          href: '/admin/calendar',
+          label: 'Calendar',
+          permission: 'dashboard:read',
+          section: 'Overview',
         },
         {
           href: '/admin/action-plans',
@@ -352,6 +397,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           label: 'Help',
           permission: 'help:read',
           section: 'Overview',
+        },
+        {
+          href: '/calendar',
+          label: 'Calendar',
+          permission: 'home:read',
+          section: 'Home',
         },
       ],
     },
@@ -1481,7 +1532,104 @@ const ROLE_MODULE_ORDER: Readonly<Record<SocietyRole, readonly ModuleKey[]>> = {
 
 export type RoleNavigationItem = ModuleNavigationItem & {
   moduleKey: ModuleKey;
+  topic: NavigationTopic;
 };
+
+const ADMIN_TOPIC_BY_HREF: Readonly<Record<string, NavigationTopic>> = {
+  '/admin': 'Today',
+  '/admin/analytics': 'Today',
+  '/admin/calendar': 'Today',
+  '/admin/features': 'Settings & help',
+  '/admin/communication': 'Today',
+  '/admin/action-plans': 'Today',
+  '/admin/visitors': 'Gate & security',
+  '/admin/deliveries': 'Gate & security',
+  '/admin/guards': 'Gate & security',
+  '/admin/staff': 'Gate & security',
+  '/admin/patrol': 'Gate & security',
+  '/admin/parking': 'Gate & security',
+  '/sos': 'Gate & security',
+  '/admin/billing': 'Money',
+  '/admin/expenses': 'Money',
+  '/admin/vendors': 'Money',
+  '/admin/metering': 'Money',
+  '/admin/members': 'Residents & homes',
+  '/admin/settings': 'Residents & homes',
+  '/admin/structure': 'Residents & homes',
+  '/admin/directory': 'Residents & homes',
+  '/admin/tenancy': 'Residents & homes',
+  '/admin/documents': 'Residents & homes',
+  '/admin/requests': 'Upkeep',
+  '/admin/housekeeping': 'Upkeep',
+  '/admin/amc': 'Upkeep',
+  '/admin/assets': 'Upkeep',
+  '/admin/home-services': 'Upkeep',
+  '/admin/major-works': 'Upkeep',
+  '/admin/notices': 'Community & meetings',
+  '/admin/events': 'Community & meetings',
+  '/admin/amenities': 'Community & meetings',
+  '/admin/polls': 'Community & meetings',
+  '/admin/meetings': 'Community & meetings',
+  '/admin/community': 'Community & meetings',
+  '/admin/letters': 'Community & meetings',
+  '/admin/contact-log': 'Community & meetings',
+  '/admin/compliance': 'Community & meetings',
+  '/admin/society-profile': 'Settings & help',
+  '/admin/adoption': 'Settings & help',
+  '/admin/jobs': 'Settings & help',
+  '/help': 'Settings & help',
+};
+
+const RESIDENT_TOPIC_BY_HREF: Readonly<Record<string, NavigationTopic>> = {
+  '/household': 'My home',
+  '/action-plans': 'My home',
+  '/deliveries': 'My home',
+  '/staff': 'My home',
+  '/parking': 'My home',
+  '/metering': 'My home',
+  '/documents': 'My home',
+  '/tenancy': 'My home',
+  '/home-services': 'Get help',
+  '/calendar': 'My home',
+  '/sos': 'Get help',
+  '/help': 'Get help',
+  '/notices': 'Society',
+  '/events': 'Society',
+  '/amenities': 'Society',
+  '/community': 'Society',
+  '/directory': 'Society',
+  '/budget': 'Society',
+  '/major-works': 'Society',
+  '/polls': 'Have your say',
+  '/elections': 'Have your say',
+  '/meetings': 'Have your say',
+};
+
+const FIXED_TAB_HREFS: Readonly<Record<SocietyRole, readonly string[]>> = {
+  resident: ['/home', '/visitors', '/bills', '/requests'],
+  admin: ['/admin', '/admin/visitors', '/admin/billing', '/admin/requests'],
+  committee: ['/admin', '/admin/billing', '/admin/requests'],
+  guard: [],
+  hk_supervisor: [],
+};
+
+function topicFor(
+  role: SocietyRole,
+  item: ModuleNavigationItem,
+): NavigationTopic {
+  if (role === 'admin' || role === 'committee') {
+    return (
+      ADMIN_TOPIC_BY_HREF[item.href.split('?')[0] ?? item.href] ??
+      (item.section === 'Overview' ? 'Today' : 'Settings & help')
+    );
+  }
+  if (role === 'resident') {
+    return (
+      RESIDENT_TOPIC_BY_HREF[item.href.split('?')[0] ?? item.href] ?? 'Society'
+    );
+  }
+  return 'Society';
+}
 
 export function getRoleNavigation(
   roles: readonly SocietyRole[],
@@ -1491,7 +1639,7 @@ export function getRoleNavigation(
   const enabled = new Set<ModuleKey>(['core', ...enabledModules]);
   const destinations = new Map<
     string,
-    RoleNavigationItem & { order: number }
+    ModuleNavigationItem & { moduleKey: ModuleKey; order: number }
   >();
 
   for (const role of roles) {
@@ -1518,7 +1666,44 @@ export function getRoleNavigation(
       href: item.href,
       label: item.label,
       moduleKey: item.moduleKey,
+      topic: topicFor(roles[0] ?? 'admin', item),
       permission: item.permission,
       section: item.section,
     }));
+}
+
+export function getRoleNavigationGroups(
+  roles: readonly SocietyRole[],
+  enabledModules: readonly ModuleKey[],
+  permissionMaps?: PermissionMaps,
+) {
+  const items = getRoleNavigation(roles, enabledModules, permissionMaps);
+  const role = roles[0];
+  const topicOrder =
+    role === 'resident' ? RESIDENT_NAVIGATION_TOPICS : ADMIN_NAVIGATION_TOPICS;
+  return topicOrder.flatMap((topic) => {
+    const groupItems = items.filter((item) => item.topic === topic);
+    return groupItems.length ? [{ topic, items: groupItems }] : [];
+  });
+}
+
+export function getRoleTabs(
+  role: SocietyRole,
+  enabledModules: readonly ModuleKey[],
+  permissionMaps?: PermissionMaps,
+) {
+  const items = getRoleNavigation([role], enabledModules, permissionMaps);
+  const selected: RoleNavigationItem[] = [];
+  for (const href of FIXED_TAB_HREFS[role]) {
+    const item = items.find((candidate) => candidate.href === href);
+    if (item) selected.push(item);
+  }
+  if (
+    role === 'resident' &&
+    !selected.some((item) => item.href === '/visitors')
+  ) {
+    const deliveries = items.find((item) => item.href === '/deliveries');
+    if (deliveries) selected.splice(1, 0, deliveries);
+  }
+  return selected;
 }

@@ -8,6 +8,7 @@ import {
   rotateJoinCode,
   updateHindiAvailability,
 } from '@/core/society/operations';
+import { saveManagingBodyName } from '@/core/tenancy/workspace-settings';
 
 export async function rotateJoinCodeAction() {
   return runServerAction<string>(
@@ -43,4 +44,13 @@ export async function updateHindiAvailabilityAction(formData: FormData) {
       return { message: 'Language settings saved.', data: settings };
     },
   );
+}
+
+export async function saveManagingBodyNameAction(formData: FormData) {
+  return runServerAction('society.updateManagingBodyName', async () => {
+    await saveManagingBodyName(formData.get('name'));
+    revalidatePath('/admin/settings');
+    revalidatePath('/admin');
+    return 'Managing-body name saved.';
+  });
 }

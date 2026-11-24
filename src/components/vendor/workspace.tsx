@@ -194,7 +194,7 @@ function SettingsForm({
   workspace,
   actions,
 }: {
-  workspace: VendorWorkspace;
+  workspace: VendorWorkspace & { can_edit_settings?: boolean };
   actions: VendorActions;
 }) {
   const { t } = useVendorPresentation();
@@ -437,7 +437,7 @@ export function VendorWorkspaceView({
   registers,
   actions = VENDOR_ACTIONS,
 }: {
-  workspace: VendorWorkspace;
+  workspace: VendorWorkspace & { can_edit_settings?: boolean };
   registers?: VendorRegisterLoads;
   actions?: VendorActions;
 }) {
@@ -504,12 +504,16 @@ export function VendorWorkspaceView({
               onSaved={(id) => router.push(`${VENDOR_BASE_HREF}/${id}`)}
             />
           </Card>
-          <Card
-            title={t('Approval settings')}
-            description={t('Changes apply to requests submitted from now on.')}
-          >
-            <SettingsForm workspace={workspace} actions={actions} />
-          </Card>
+          {workspace.can_edit_settings !== false ? (
+            <Card
+              title={t('Approval settings')}
+              description={t(
+                'Changes apply to requests submitted from now on.',
+              )}
+            >
+              <SettingsForm workspace={workspace} actions={actions} />
+            </Card>
+          ) : null}
         </>
       ) : null}
       {registers ? (

@@ -48,12 +48,14 @@ export default async function ExpenseSetupPage() {
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
       <h1 className="text-title font-semibold">{t('Accounts setup')}</h1>
       <ExpenseNav current="setup" canManage locale={locale} />
-      <Card title={t('Approval and collections')}>
-        <ExpenseSettingsForm
-          key={w.settings.updated_at ?? 'new'}
-          workspace={w}
-        />
-      </Card>
+      {Object.values(w.settingsAccess).some(Boolean) ? (
+        <Card title={t('Approval and collections')}>
+          <ExpenseSettingsForm
+            key={w.settings.updated_at ?? 'new'}
+            workspace={w}
+          />
+        </Card>
+      ) : null}
       <Card
         title={t('AGM report sections')}
         description={t(

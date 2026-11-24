@@ -340,6 +340,7 @@ export function DocumentWorkspaceView({
     decisionSources: DocumentGovernanceSource[];
     selection: GovernanceSelection;
     settings: { expiryRemindersEnabled: boolean };
+    canEditSettings?: boolean;
     tenancyEnabled: boolean;
     meetingEnabled: boolean;
     actions?: GovernanceActions;
@@ -664,6 +665,7 @@ export function DocumentWorkspaceView({
           canManage={workspace.can_manage}
           writable={workspace.writable}
           settings={governance.settings}
+          canEditSettings={governance.canEditSettings ?? true}
           tenancyEnabled={governance.tenancyEnabled}
           meetingEnabled={governance.meetingEnabled}
           actions={governance.actions}

@@ -3,10 +3,13 @@ import Link from 'next/link';
 import {
   getDeveloperModules,
   getDeveloperSocieties,
+  getDeveloperWorkspaceControls,
 } from '@/core/developer/console';
 import {
   ModuleSettingsControl,
+  ModuleSettingAccessControl,
   ModuleToggleControl,
+  QuickActionDefaultsControls,
 } from '@/components/developer/console-controls';
 import { Card, StatusChip } from '@/components/ui/data-display';
 import { EmptyState, ErrorPanel } from '@/components/ui/feedback';
@@ -109,7 +112,10 @@ export default async function DeveloperModulesPage({
       />
     );
   }
-  const modules = await getDeveloperModules(societyId);
+  const [modules, workspaceControls] = await Promise.all([
+    getDeveloperModules(societyId),
+    getDeveloperWorkspaceControls(societyId),
+  ]);
 
   return (
     <section className="grid gap-space-5">
@@ -194,12 +200,27 @@ export default async function DeveloperModulesPage({
                         settings={module.settings}
                         societyId={societyId}
                       />
+                      <ModuleSettingAccessControl
+                        moduleKey={module.key}
+                        settings={workspaceControls.settingAccess}
+                        societyId={societyId}
+                      />
                     </div>
                   </details>
                 </li>
               ))}
           </ul>
         )}
+      </Card>
+      <Card
+        description="Society overrides win over the all-society list. Missing permissions and switched-off modules are filtered at runtime."
+        title="Dashboard quick actions"
+      >
+        <QuickActionDefaultsControls
+          defaults={workspaceControls.quickActionDefaults}
+          overrides={workspaceControls.quickActionOverrides}
+          societyId={societyId}
+        />
       </Card>
     </section>
   );

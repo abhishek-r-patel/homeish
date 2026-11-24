@@ -75,9 +75,8 @@ export default async function HomePage() {
       <SocietyUnavailablePage society={society} websiteOrigin={websiteOrigin} />
     );
   }
-  return surface === 'website' ? (
-    <MarketingPage websiteOrigin={websiteOrigin} />
-  ) : (
-    <EnvironmentPage surface={surface} websiteOrigin={websiteOrigin} />
-  );
+  if (surface === 'website') {
+    return <MarketingPage websiteOrigin={websiteOrigin} />;
+  }
+  return <EnvironmentPage surface={surface} websiteOrigin={websiteOrigin} />;
 }

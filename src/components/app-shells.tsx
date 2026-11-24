@@ -2,10 +2,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState, useTransition } from 'react';
 import type { ReactNode } from 'react';
-import { getRoleNavigation } from '../core/modules';
+import { getRoleNavigation, getRoleTabs } from '../core/modules';
 import type { ModuleKey, RoleNavigationItem } from '../core/modules';
 import type { PermissionMaps } from '../core/permissions';
 import type { SocietyRole } from '../core/permissions';
@@ -15,12 +15,32 @@ import { NotificationBell } from './notifications/notification-bell';
 import { SosAlertBanner } from './sos/alert-banner';
 import { useLanguage } from './language-provider';
 import { LanguageSelector } from './language-selector';
+import {
+  WorkspaceTools,
+  type WorkspaceQuickAction,
+} from './home/workspace-tools';
+import type { WorkspaceSearchResult } from '../core/home/workspace-discovery';
+import type { ServerActionResult } from '../core/actions/server-action';
 
 type SocietyShellProps = {
   activeSocietyId?: string;
   children: ReactNode;
   enabledModules?: readonly ModuleKey[];
   onSocietyChange?: (societyId: string) => void;
+  switchSociety?: (societyId: string) => Promise<{
+    ok: boolean;
+    message?: string;
+  }>;
+  switchPlace?: (input: {
+    societyId: string;
+    unitId?: string | null;
+    allFlats?: boolean;
+  }) => Promise<{ ok: boolean; message?: string }>;
+  places?: readonly PlaceOption[];
+  quickActions?: readonly WorkspaceQuickAction[];
+  workspaceSearchAction?: (
+    input: unknown,
+  ) => Promise<ServerActionResult<WorkspaceSearchResult>>;
   permissionMaps?: PermissionMaps;
   role: SocietyRole;
   // Petty-cash custody is per person (P39), so it is not a role navigation item.
@@ -32,6 +52,16 @@ type SocietyShellProps = {
 type SocietyOption = {
   id: string;
   name: string;
+};
+
+type PlaceOption = {
+  societyId: string;
+  societyName: string;
+  href: string;
+  label: string;
+  active?: boolean;
+  allFlats?: boolean;
+  unitId?: string | null;
 };
 
 type Translate = (source: string, values?: MessageValues) => string;
@@ -239,7 +269,8 @@ function NavigationIcon({ item }: { item: ShellNavigationItem }) {
 }
 
 function normalizeRoleNavigation(
-  items: readonly Omit<RoleNavigationItem, 'permission'>[],
+  items: readonly (Omit<RoleNavigationItem, 'permission' | 'topic'> &
+    Partial<Pick<RoleNavigationItem, 'topic'>>)[],
   role: SocietyRole,
   translate: Translate,
 ): ShellNavigationItem[] {
@@ -248,14 +279,7 @@ function normalizeRoleNavigation(
     icon: item.moduleKey,
     label: translate(item.label),
     moduleKey: item.moduleKey,
-    section: translate(
-      item.section ??
-        (item.moduleKey === 'core'
-          ? 'Overview'
-          : role === 'resident'
-            ? 'Home'
-            : 'Operations'),
-    ),
+    section: translate(item.topic ?? item.section ?? 'Other'),
   }));
 }
 
@@ -312,7 +336,12 @@ function TopBar({
   menuOpen = false,
   onOpenMenu,
   onSocietyChange,
+  switchSociety: switchSocietyServer,
+  switchPlace: switchPlaceServer,
   pathname,
+  places = [],
+  quickActions = [],
+  workspaceSearchAction,
   role,
   translate,
   societies = [],
@@ -325,12 +354,30 @@ function TopBar({
   menuOpen?: boolean;
   onOpenMenu?: () => void;
   onSocietyChange?: (societyId: string) => void;
+  switchSociety?: (societyId: string) => Promise<{
+    ok: boolean;
+    message?: string;
+  }>;
+  switchPlace?: (input: {
+    societyId: string;
+    unitId?: string | null;
+    allFlats?: boolean;
+  }) => Promise<{ ok: boolean; message?: string }>;
   pathname: string;
+  places?: readonly PlaceOption[];
   role: SocietyRole | 'developer';
   translate: Translate;
   societies?: readonly SocietyOption[];
+  quickActions?: readonly WorkspaceQuickAction[];
+  workspaceSearchAction?: (
+    input: unknown,
+  ) => Promise<ServerActionResult<WorkspaceSearchResult>>;
   unreadNotifications?: number;
 }) {
+  const router = useRouter();
+  const [switchError, setSwitchError] = useState('');
+  const [announcement, setAnnouncement] = useState('');
+  const [switchingSociety, startSocietySwitch] = useTransition();
   const segments = pathname.split('/').filter(Boolean);
   const pageTitle = translateRouteLabel(segments.at(-1) ?? 'home', translate);
   const backHref =
@@ -341,6 +388,78 @@ function TopBar({
   const menuColor = dark
     ? 'text-dev-label hover:bg-surface/10'
     : 'text-brand hover:bg-brand-tint';
+  const activeSociety = societies.find(
+    (society) => society.id === activeSocietyId,
+  );
+  const activePlace =
+    places.find(
+      (place) =>
+        place.societyId === activeSocietyId &&
+        (pathname === place.href || pathname.startsWith(`${place.href}/`)) &&
+        (place.active || place.href !== '/home'),
+    )?.label ?? (role === 'resident' ? 'My home' : 'Work');
+  useEffect(() => {
+    const message = window.sessionStorage.getItem('homeish:place-announcement');
+    if (message) {
+      queueMicrotask(() => setAnnouncement(message));
+      window.sessionStorage.removeItem('homeish:place-announcement');
+    }
+    const place = places.find(
+      (candidate) =>
+        candidate.societyId === activeSocietyId &&
+        (pathname === candidate.href ||
+          pathname.startsWith(`${candidate.href}/`)),
+    );
+    if (place) {
+      window.localStorage.setItem(
+        `homeish:last-place:${place.societyId}`,
+        place.href,
+      );
+    }
+  }, [activeSocietyId, pathname, places]);
+  const switchPlace = (place: PlaceOption) => {
+    setSwitchError('');
+    startSocietySwitch(async () => {
+      const message = translate('Now viewing {place}', {
+        place: `${place.label} at ${place.societyName}`,
+      });
+      window.sessionStorage.setItem('homeish:place-announcement', message);
+      window.localStorage.setItem(
+        `homeish:last-place:${place.societyId}`,
+        place.href,
+      );
+      if (switchPlaceServer) {
+        const result = await switchPlaceServer({
+          societyId: place.societyId,
+          ...(place.unitId !== undefined
+            ? { unitId: place.unitId, allFlats: place.allFlats ?? false }
+            : {}),
+        });
+        if (!result.ok) {
+          setSwitchError(result.message ?? translate('Society change failed.'));
+          return;
+        }
+      } else if (place.societyId !== activeSocietyId) {
+        onSocietyChange?.(place.societyId);
+        if (!switchSocietyServer) {
+          setSwitchError(translate('Society switching is unavailable.'));
+          return;
+        }
+        const result = await switchSocietyServer(place.societyId);
+        if (!result.ok) {
+          setSwitchError(result.message ?? translate('Society change failed.'));
+          return;
+        }
+      }
+      if (place.societyId === activeSocietyId) {
+        setAnnouncement(message);
+        router.refresh();
+        router.push(place.href);
+        return;
+      }
+      window.location.assign(place.href);
+    });
+  };
 
   return (
     <header className={`sticky top-0 z-20 border-b ${barColor}`}>
@@ -384,8 +503,7 @@ function TopBar({
           <p className="hidden truncate text-body-strong expanded:block">
             {role === 'developer'
               ? 'Developer Console'
-              : (societies.find((society) => society.id === activeSocietyId)
-                  ?.name ?? 'Homeish')}
+              : (activeSociety?.name ?? 'Homeish')}
           </p>
           {role === 'admin' ||
           role === 'committee' ||
@@ -395,23 +513,62 @@ function TopBar({
           ) : null}
         </div>
 
-        {societies.length > 1 ? (
-          <label className="hidden expanded:block">
-            <span className="sr-only">{translate('Switch society')}</span>
-            <select
-              aria-label={translate('Switch society')}
-              className="min-h-12 max-w-56 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink"
-              disabled={!onSocietyChange}
-              onChange={(event) => onSocietyChange?.(event.currentTarget.value)}
-              value={activeSocietyId ?? societies[0]?.id ?? ''}
+        {role !== 'developer' && places.length > 1 ? (
+          <details className="relative hidden expanded:block">
+            <summary
+              aria-label={translate('Choose place: {place}', {
+                place: `${activePlace}${activeSociety ? ` · ${activeSociety.name}` : ''}`,
+              })}
+              className="flex min-h-12 max-w-64 cursor-pointer list-none items-center gap-space-2 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink focus-visible:outline-2 focus-visible:outline-focus"
             >
-              {societies.map((society) => (
-                <option key={society.id} value={society.id}>
-                  {society.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <span className="truncate">
+                {activePlace}
+                {activeSociety ? ` · ${activeSociety.name}` : ''}
+              </span>
+              <span aria-hidden="true">⌄</span>
+            </summary>
+            <div className="absolute right-0 top-full z-30 mt-space-2 grid min-w-72 gap-space-4 rounded-md border border-rule bg-surface p-space-4 text-ink shadow-overlay">
+              {societies.map((society) => {
+                const societyPlaces = places.filter(
+                  (place) => place.societyId === society.id,
+                );
+                if (!societyPlaces.length) return null;
+                return (
+                  <div className="grid gap-space-2" key={society.id}>
+                    <p className="text-micro font-semibold uppercase tracking-wide text-ink-muted">
+                      {society.name}
+                    </p>
+                    {societyPlaces.map((place) => (
+                      <button
+                        className="min-h-11 rounded-sm px-space-3 py-space-2 text-left text-body hover:bg-brand-tint"
+                        disabled={switchingSociety}
+                        key={`${place.societyId}-${place.unitId ?? (place.allFlats ? 'all' : place.href)}`}
+                        onClick={() => switchPlace(place)}
+                        type="button"
+                      >
+                        {translate(place.label)}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
+              {switchError ? (
+                <p className="text-caption text-danger" role="alert">
+                  {switchError}
+                </p>
+              ) : null}
+            </div>
+          </details>
+        ) : null}
+        <span aria-live="polite" className="sr-only">
+          {announcement}
+        </span>
+
+        {role !== 'developer' ? (
+          <WorkspaceTools
+            quickActions={quickActions}
+            searchAction={workspaceSearchAction}
+          />
         ) : null}
 
         <NotificationBell
@@ -460,6 +617,7 @@ function SideNavigation({
   pathname,
   collapsed = false,
   onToggle,
+  topicHref,
   desktopOnly = false,
   translate,
 }: {
@@ -468,6 +626,7 @@ function SideNavigation({
   pathname: string;
   collapsed?: boolean;
   onToggle?: () => void;
+  topicHref?: (topic: string) => string;
   desktopOnly?: boolean;
   translate: Translate;
 }) {
@@ -506,12 +665,39 @@ function SideNavigation({
         aria-label={translate('Sections')}
       >
         {sections.map((section) => (
-          <div className="mb-space-4" key={section}>
-            <h2
-              className={`px-space-3 py-space-2 text-micro font-semibold uppercase tracking-wide ${dark ? 'text-dev-label' : 'text-ink-muted'} ${collapsed ? 'medium:sr-only expanded:not-sr-only' : ''}`}
+          <details
+            className="group mb-space-4"
+            key={section}
+            onToggle={(event) => {
+              const containsCurrentPage = items.some(
+                (item) =>
+                  item.section === section && isActivePath(pathname, item.href),
+              );
+              if (containsCurrentPage && !event.currentTarget.open) {
+                event.currentTarget.open = true;
+              }
+            }}
+            open
+          >
+            <summary
+              className={`flex cursor-pointer list-none items-center justify-between px-space-3 py-space-2 text-micro font-semibold uppercase tracking-wide ${dark ? 'text-dev-label' : 'text-ink-muted'} ${collapsed ? 'medium:sr-only expanded:not-sr-only' : ''}`}
             >
-              {section}
-            </h2>
+              <h2>{section}</h2>
+              <span
+                aria-hidden="true"
+                className="transition-transform group-open:rotate-180"
+              >
+                ▾
+              </span>
+            </summary>
+            {topicHref ? (
+              <Link
+                className={`mx-space-3 mb-space-1 block text-caption underline-offset-2 hover:underline ${dark ? 'text-dev-label' : 'text-brand'}`}
+                href={topicHref(section)}
+              >
+                {translate('Open {section}', { section })}
+              </Link>
+            ) : null}
             <ul className="grid gap-space-1">
               {items
                 .filter((item) => item.section === section)
@@ -521,7 +707,6 @@ function SideNavigation({
                     <li key={item.href}>
                       <Link
                         aria-current={active ? 'page' : undefined}
-                        aria-label={item.label}
                         className={`relative flex min-h-12 items-center gap-space-3 rounded-md px-space-3 text-body-strong outline-none focus-visible:outline-2 focus-visible:outline-focus ${collapsed ? 'medium:justify-center medium:px-space-2 expanded:justify-start expanded:px-space-3' : ''} ${active ? (dark ? 'bg-surface/10 text-dev-label' : 'bg-brand-tint text-brand') : dark ? 'hover:bg-surface/10' : 'hover:bg-surface-sunken'}`}
                         href={item.href}
                         title={collapsed ? item.label : undefined}
@@ -547,7 +732,7 @@ function SideNavigation({
                   );
                 })}
             </ul>
-          </div>
+          </details>
         ))}
       </nav>
     </aside>
@@ -567,14 +752,9 @@ function BottomNavigation({
   moreOpen: boolean;
   translate: Translate;
 }) {
-  const visible = items.slice(0, 4);
-  const hasMore = items.length > visible.length;
-  const columnCount = Math.min(5, visible.length + Number(hasMore));
-  const moreActive =
-    hasMore &&
-    items
-      .slice(visible.length)
-      .some((item) => isActivePath(pathname, item.href));
+  const hasMore = true;
+  const columnCount = items.length + 1;
+  const moreActive = !items.some((item) => isActivePath(pathname, item.href));
 
   return (
     <nav
@@ -587,7 +767,7 @@ function BottomNavigation({
           gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
         }}
       >
-        {visible.map((item) => {
+        {items.map((item) => {
           const active = isActivePath(pathname, item.href);
           return (
             <li key={item.href}>
@@ -643,8 +823,11 @@ function MoreMenu({
   dark = false,
   items,
   onSocietyChange,
+  switchSociety: switchSocietyServer,
+  switchPlace: switchPlaceServer,
   onOpenChange,
   open,
+  places = [],
   societies = [],
   showAccountActions = true,
   title = 'More',
@@ -654,13 +837,67 @@ function MoreMenu({
   dark?: boolean;
   items: readonly ShellNavigationItem[];
   onSocietyChange?: (societyId: string) => void;
+  switchSociety?: (societyId: string) => Promise<{
+    ok: boolean;
+    message?: string;
+  }>;
+  switchPlace?: (input: {
+    societyId: string;
+    unitId?: string | null;
+    allFlats?: boolean;
+  }) => Promise<{ ok: boolean; message?: string }>;
   onOpenChange: (open: boolean) => void;
   open: boolean;
+  places?: readonly PlaceOption[];
   societies?: readonly SocietyOption[];
   showAccountActions?: boolean;
   title?: string;
   translate: Translate;
 }) {
+  const router = useRouter();
+  const [switchError, setSwitchError] = useState('');
+  const switchPlace = async (place: PlaceOption) => {
+    window.localStorage.setItem(
+      `homeish:last-place:${place.societyId}`,
+      place.href,
+    );
+    window.sessionStorage.setItem(
+      'homeish:place-announcement',
+      translate('Now viewing {place}', {
+        place: `${place.label} at ${place.societyName}`,
+      }),
+    );
+    if (switchPlaceServer) {
+      const result = await switchPlaceServer({
+        societyId: place.societyId,
+        ...(place.unitId !== undefined
+          ? { unitId: place.unitId, allFlats: place.allFlats ?? false }
+          : {}),
+      });
+      if (!result.ok) {
+        setSwitchError(result.message ?? translate('Society change failed.'));
+        return;
+      }
+    } else if (place.societyId !== activeSocietyId) {
+      onSocietyChange?.(place.societyId);
+      if (!switchSocietyServer) {
+        setSwitchError(translate('Society switching is unavailable.'));
+        return;
+      }
+      const result = await switchSocietyServer(place.societyId);
+      if (!result.ok) {
+        setSwitchError(result.message ?? translate('Society change failed.'));
+        return;
+      }
+    }
+    if (place.societyId === activeSocietyId) {
+      onOpenChange(false);
+      router.refresh();
+      router.push(place.href);
+      return;
+    }
+    window.location.assign(place.href);
+  };
   const menuItemStyle = dark
     ? 'border-dev-label/30 hover:bg-surface/10'
     : 'border-rule hover:bg-surface-sunken';
@@ -678,43 +915,62 @@ function MoreMenu({
       open={open}
       title={title}
     >
-      <ul className="grid gap-space-2">
-        {items.map((item) => (
-          <li key={item.href}>
-            <Link
-              className={`flex min-h-14 items-center gap-space-3 rounded-md border px-space-4 text-body-strong focus-visible:outline-2 focus-visible:outline-focus ${menuItemStyle}`}
-              href={item.href}
-              onClick={() => onOpenChange(false)}
-            >
-              <NavigationIcon item={item} />
-              {item.label}
-            </Link>
-          </li>
-        ))}
-        {societies.length > 1 ? (
-          <li>
-            <label
-              className={`grid min-h-14 gap-space-2 rounded-md border px-space-4 py-space-2 text-body-strong ${menuItemStyle}`}
-            >
-              <span>{translate('Switch Society')}</span>
-              <select
-                aria-label={translate('Switch society')}
-                className="min-h-10 rounded-md border border-rule-strong bg-surface px-space-3 text-body text-ink"
-                disabled={!onSocietyChange}
-                onChange={(event) =>
-                  onSocietyChange?.(event.currentTarget.value)
-                }
-                value={activeSocietyId ?? societies[0]?.id ?? ''}
-              >
-                {societies.map((society) => (
-                  <option key={society.id} value={society.id}>
-                    {society.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+      <ul className="grid gap-space-5">
+        {places.length > 1 ? (
+          <li className="grid gap-space-2">
+            <h3 className="px-space-1 text-micro font-semibold uppercase tracking-wide text-ink-muted">
+              {translate('Place')}
+            </h3>
+            {societies.flatMap((society) =>
+              places
+                .filter((place) => place.societyId === society.id)
+                .map((place) => (
+                  <button
+                    className={`flex min-h-14 items-center justify-between rounded-md border px-space-4 text-left text-body-strong ${menuItemStyle}`}
+                    key={`${place.societyId}-${place.unitId ?? (place.allFlats ? 'all' : place.href)}`}
+                    onClick={() => void switchPlace(place)}
+                    type="button"
+                  >
+                    <span className="grid gap-space-1">
+                      <span>{translate(place.label)}</span>
+                      <span className="text-caption font-normal text-ink-muted">
+                        {society.name}
+                      </span>
+                    </span>
+                    <span aria-hidden="true">›</span>
+                  </button>
+                )),
+            )}
           </li>
         ) : null}
+        {switchError ? (
+          <li className="text-caption text-danger" role="alert">
+            {switchError}
+          </li>
+        ) : null}
+        {[...new Set(items.map((item) => item.section))].map((section) => (
+          <li className="grid gap-space-2" key={section}>
+            <h3 className="px-space-1 text-micro font-semibold uppercase tracking-wide text-ink-muted">
+              {section}
+            </h3>
+            <ul className="grid gap-space-2">
+              {items
+                .filter((item) => item.section === section)
+                .map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      className={`flex min-h-14 items-center gap-space-3 rounded-md border px-space-4 text-body-strong focus-visible:outline-2 focus-visible:outline-focus ${menuItemStyle}`}
+                      href={item.href}
+                      onClick={() => onOpenChange(false)}
+                    >
+                      <NavigationIcon item={item} />
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </li>
+        ))}
         {showAccountActions ? (
           <>
             <li>
@@ -747,8 +1003,13 @@ function SocietyShell({
   children,
   enabledModules = ['core'],
   onSocietyChange,
+  places = [],
   permissionMaps,
   role,
+  quickActions = [],
+  workspaceSearchAction,
+  switchSociety,
+  switchPlace,
   showPettyCash = false,
   societies = [],
   unreadNotifications,
@@ -777,6 +1038,11 @@ function SocietyShell({
     role,
     translate,
   );
+  const tabHrefs = new Set(
+    getRoleTabs(role, enabledModules, permissionMaps).map((item) => item.href),
+  );
+  const tabs = navigation.filter((item) => tabHrefs.has(item.href));
+  const moreItems = navigation.filter((item) => !tabHrefs.has(item.href));
   const showSidebar = isResident || isStaff;
   const rootHref = isResident ? '/home' : isGuard ? '/guard' : '/admin';
   const shellMainClasses = isResident
@@ -809,6 +1075,11 @@ function SocietyShell({
         homeHref={rootHref}
         onSocietyChange={onSocietyChange}
         pathname={pathname}
+        places={places}
+        switchSociety={switchSociety}
+        switchPlace={switchPlace}
+        quickActions={quickActions}
+        workspaceSearchAction={workspaceSearchAction}
         role={role}
         translate={translate}
         societies={societies}
@@ -824,6 +1095,12 @@ function SocietyShell({
               : () => setRailExpanded((expanded) => !expanded)
           }
           pathname={pathname}
+          topicHref={
+            role === 'admin' || role === 'committee'
+              ? (topic) =>
+                  `/admin/groups/${encodeURIComponent(topic.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-'))}`
+              : undefined
+          }
           desktopOnly={isResident}
           translate={translate}
         />
@@ -841,7 +1118,7 @@ function SocietyShell({
       </div>
       {!isGuard ? (
         <BottomNavigation
-          items={navigation}
+          items={tabs}
           onOpenMore={() => setMoreOpen(true)}
           pathname={pathname}
           moreOpen={moreOpen}
@@ -850,10 +1127,13 @@ function SocietyShell({
       ) : null}
       <MoreMenu
         activeSocietyId={activeSocietyId}
-        items={navigation.slice(4)}
+        items={moreItems}
         onSocietyChange={onSocietyChange}
         onOpenChange={setMoreOpen}
         open={moreOpen}
+        places={places}
+        switchSociety={switchSociety}
+        switchPlace={switchPlace}
         societies={societies}
         title={translate('More')}
         translate={translate}

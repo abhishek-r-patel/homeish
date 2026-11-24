@@ -88,7 +88,7 @@ export default async function MajorWorksProposalPage({
               : t('Admin-recorded consent only'),
         })}
       >
-        {proposals.can_manage ? (
+        {proposals.can_manage && consent.can_edit_settings ? (
           <MajorWorksConsentMethodForm data={consent} />
         ) : null}
       </Card>

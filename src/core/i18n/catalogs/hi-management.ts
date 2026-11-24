@@ -1409,8 +1409,8 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'CSV format is invalid.': 'CSV का फ़ॉर्मैट सही नहीं है।',
   'Add a header and at least one resident row.':
     'शीर्षक पंक्ति और कम से कम एक निवासी की पंक्ति जोड़ें।',
-  'Import no more than 1000 resident rows at a time.':
-    'एक बार में अधिकतम 1,000 निवासियों की पंक्तियाँ आयात करें।',
+  'Import no more than 2000 resident rows at a time.':
+    'एक बार में अधिकतम 2,000 निवासियों की पंक्तियाँ आयात करें।',
   'Use the template columns: block, unit, email, relationship, primary, approver.':
     'नमूने के कॉलम इस्तेमाल करें: block, unit, email, relationship, primary, approver।',
   'This row has a different number of columns than the header.':
@@ -1459,8 +1459,8 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'Could not update the unit.': 'यूनिट बदली नहीं जा सकी।',
   'Add a header and at least one unit row.':
     'शीर्षक पंक्ति और कम से कम एक यूनिट की पंक्ति जोड़ें।',
-  'Import no more than 1000 unit rows at a time.':
-    'एक बार में अधिकतम 1,000 यूनिट की पंक्तियाँ आयात करें।',
+  'Import no more than 2000 unit rows at a time.':
+    'एक बार में अधिकतम 2,000 यूनिट की पंक्तियाँ आयात करें।',
   'Unit number must be 1–20 characters.': 'यूनिट नंबर 1–20 अक्षरों का होना चाहिए।',
   'Unit number already exists in this block.': 'इस ब्लॉक में यूनिट नंबर पहले से है।',
   'Floor must be a whole number.': 'मंज़िल पूरी संख्या में होनी चाहिए।',
@@ -1474,7 +1474,7 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
     'आयात के लिए मौजूदा यूनिट लोड नहीं हो सकीं।',
   'Fix every row error before confirming the import.':
     'आयात की पुष्टि से पहले हर पंक्ति की त्रुटि ठीक करें।',
-  'The import must contain 1–1000 rows.': 'आयात में 1–1000 पंक्तियाँ होनी चाहिए।',
+  'The import must contain 1–2000 rows.': 'आयात में 1–2000 पंक्तियाँ होनी चाहिए।',
   'Could not create the units import job.':
     'यूनिट आयात का काम बनाया नहीं जा सका।',
   'The units import job did not return an identifier.':

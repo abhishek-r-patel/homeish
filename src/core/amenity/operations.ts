@@ -7,6 +7,7 @@ import { authorizeRequest } from '../permissions/authorize';
 import { buildRequestContext } from '../tenancy/request-context';
 import { todayInTimeZone } from '../billing/format';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
+import { getModuleSettingAccess } from '../modules/setting-access';
 import {
   amenityActivityInputSchema,
   amenityCalendarSchema,
@@ -169,13 +170,17 @@ export async function getAmenityCalendarMonth(month?: string) {
 
 export async function getAmenityCalendarSettings() {
   const { context, societyId } = await contextFor();
-  return callModuleRpc(
-    context,
-    'amenity_calendar_settings_get',
-    { p_society_id: societyId },
-    amenityCalendarSettingsSchema,
-    'Could not load amenity calendar settings.',
-  );
+  const [settings, settingAccess] = await Promise.all([
+    callModuleRpc(
+      context,
+      'amenity_calendar_settings_get',
+      { p_society_id: societyId },
+      amenityCalendarSettingsSchema,
+      'Could not load amenity calendar settings.',
+    ),
+    getModuleSettingAccess('amenity', context),
+  ]);
+  return { ...settings, settingsAccess: Object.fromEntries(settingAccess) };
 }
 
 export async function saveAmenityCalendarVisibility(

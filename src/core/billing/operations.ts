@@ -14,6 +14,7 @@ import { authorizeRequest } from '../permissions/authorize';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { sendBillingReceiptEmailPrivileged } from '../privileged';
 import { buildRequestContext } from '../tenancy/request-context';
+import { getModuleSettingAccess } from '../modules/setting-access';
 import {
   billingRpc as rpc,
   readBillingPaymentDetails,
@@ -168,6 +169,7 @@ export async function getBillingSetup() {
       throw new Error('The society QR image could not be loaded.');
     qrUrl = data.signedUrl;
   }
+  const settingAccess = await getModuleSettingAccess('billing', context);
   return {
     charges,
     paymentDetails,
@@ -182,6 +184,7 @@ export async function getBillingSetup() {
     settingsUpdatedAt: settingsResult.data.updated_at,
     interest,
     canManage,
+    settingsAccess: Object.fromEntries(settingAccess),
     suspended: context.societyStatus === 'suspended',
   };
 }
@@ -783,7 +786,7 @@ type BillingContext = Awaited<ReturnType<typeof getContext>>['context'];
 const billingBillMutationSchema = z.object({
   id: z.uuid(),
   unit_id: z.uuid(),
-  kind: z.enum(['regular', 'fine', 'late_fee']),
+  kind: z.enum(['regular', 'fine', 'late_fee', 'interest', 'opening_dues']),
   title: z.string(),
   outstanding_paise: z.number().int().nonnegative(),
 });

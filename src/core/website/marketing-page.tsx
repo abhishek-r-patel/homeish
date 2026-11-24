@@ -1,8 +1,11 @@
-// Public homepage with evidenced availability, synthetic screenshots and a deferred demo action.
+// Public P57 homepage: evidence-based modules, role previews and a private enquiry flow.
 import Image from 'next/image';
 import Link from 'next/link';
 import { Brand } from '@/components/ui/brand';
 import { Button } from '@/components/ui/button';
+import { WebsiteEnquiryForm } from '@/components/website/enquiry-form';
+import { WebsiteContactActions } from '@/components/website/contact-actions';
+import type { ServerActionResult } from '@/core/actions/server-action';
 import { websiteContent as copy } from './content';
 import { SocietyEntry } from './society-entry';
 
@@ -17,9 +20,21 @@ function DemoAction() {
   );
 }
 
-export function MarketingPage({ websiteOrigin }: { websiteOrigin: string }) {
+export function MarketingPage({
+  websiteOrigin,
+  enquiryAction,
+  contactSettingsAction,
+}: {
+  websiteOrigin: string;
+  enquiryAction?: (formData: FormData) => Promise<ServerActionResult>;
+  contactSettingsAction?: () => Promise<
+    ServerActionResult<{
+      contactEmail: string | null;
+      enquiryHourlyLimit: number;
+    }>
+  >;
+}) {
   const paymentPreview = copy.heroPreview;
-
   return (
     <>
       <a
@@ -85,8 +100,22 @@ export function MarketingPage({ websiteOrigin }: { websiteOrigin: string }) {
             <p className="mt-space-5 text-heading text-ink-muted">
               {copy.introduction}
             </p>
-            <div className="mt-space-6">
+            <ul className="mt-space-6 grid gap-space-3 medium:grid-cols-2">
+              {copy.facts.map((fact) => (
+                <li
+                  className="flex min-h-12 items-center gap-space-2 rounded-md border border-rule bg-surface px-space-4"
+                  key={fact}
+                >
+                  <span aria-hidden="true" className="text-brand">
+                    ✓
+                  </span>
+                  {fact}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-space-6 flex flex-wrap items-start gap-space-5">
               <DemoAction />
+              <WebsiteContactActions settingsAction={contactSettingsAction} />
             </div>
             <p className="mt-space-4 text-caption text-ink-muted">
               {copy.demo.description}
@@ -148,83 +177,92 @@ export function MarketingPage({ websiteOrigin }: { websiteOrigin: string }) {
           <p className="mt-space-4 max-w-content-default text-ink-muted">
             {copy.featuresDescription}
           </p>
-          <div className="mt-space-7 grid gap-space-6 medium:grid-cols-2 expanded:grid-cols-3">
-            {copy.modules.map((module) => (
+          <div className="mt-space-7 grid gap-space-6 expanded:grid-cols-2">
+            {copy.moduleGroups.map((group) => (
               <article
-                className="border-t border-rule pt-space-5"
-                key={module.name}
+                className="rounded-lg border border-rule bg-surface p-space-5"
+                key={group.name}
               >
-                <h3 className="text-heading font-semibold">{module.name}</h3>
-                <p className="mt-space-3 text-ink-muted">
-                  {module.description}
-                </p>
-                <p className="mt-space-4 text-caption font-semibold text-ink-muted">
-                  {copy.testingLabel}
-                </p>
+                <h3 className="text-heading font-semibold">{group.name}</h3>
+                <ul className="mt-space-4 grid gap-space-2 text-body">
+                  {group.modules.map((module) => (
+                    <li
+                      className="border-t border-rule pt-space-2"
+                      key={module}
+                    >
+                      {module}
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
+          <section
+            aria-labelledby="next-title"
+            className="mt-space-8 rounded-lg border border-rule bg-surface-sunken p-space-5"
+          >
+            <h3 className="text-heading font-semibold" id="next-title">
+              {copy.nextTitle}
+            </h3>
+            <p className="mt-space-2 text-ink-muted">{copy.nextDescription}</p>
+            <div className="mt-space-4 grid gap-space-4 medium:grid-cols-2">
+              {copy.next.map((item) => (
+                <div
+                  className="border-t border-rule pt-space-3"
+                  key={item.name}
+                >
+                  <p className="font-semibold">{item.name}</p>
+                  <p className="mt-space-1 text-caption text-ink-muted">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
         </section>
         <section
-          aria-labelledby="development-title"
-          className="border-y border-rule bg-surface"
+          aria-labelledby="people-title"
+          className="scroll-mt-space-5 border-y border-rule bg-surface"
+          id="roles"
         >
-          <div className="mx-auto max-w-content-marketing px-space-5 py-space-7">
-            <p className="text-caption font-semibold text-ink-muted">
-              {copy.developmentLabel}
-            </p>
-            <h2
-              className="mt-space-3 text-display font-bold"
-              id="development-title"
-            >
-              {copy.developmentTitle}
+          <div className="mx-auto max-w-content-marketing px-space-5 py-space-8">
+            <h2 className="text-display font-bold" id="people-title">
+              {copy.peopleTitle}
             </h2>
             <p className="mt-space-4 text-ink-muted">
-              {copy.developmentDescription}
+              {copy.peopleDescription}
             </p>
-            <div className="mt-space-6 grid gap-space-6 medium:grid-cols-2">
-              {copy.development.map((module) => (
+            <div className="mt-space-7 grid gap-space-6 medium:grid-cols-2 expanded:grid-cols-3">
+              {copy.people.map((person) => (
                 <article
-                  className="border-t border-rule pt-space-5"
-                  key={module.name}
+                  className="overflow-hidden rounded-lg border border-rule bg-paper"
+                  key={person.name}
                 >
-                  <h3 className="text-heading font-semibold">{module.name}</h3>
-                  <p className="mt-space-3 text-ink-muted">
-                    {module.description}
-                  </p>
-                  <p className="mt-space-4 text-caption font-semibold text-ink-muted">
-                    {copy.developmentLabel}
-                  </p>
+                  <Image
+                    alt={person.alt}
+                    className="h-auto w-full border-b border-rule"
+                    sizes="(min-width: 1200px) 368px, (min-width: 600px) 50vw, 100vw"
+                    src={person.image}
+                  />
+                  <div className="p-space-5">
+                    <p className="text-caption font-semibold text-ink-muted">
+                      {copy.labels.screenshot}
+                    </p>
+                    <h3 className="mt-space-2 text-heading font-semibold">
+                      {person.name}
+                    </h3>
+                    <p className="mt-space-3 text-ink-muted">
+                      {person.description}
+                    </p>
+                  </div>
                 </article>
               ))}
             </div>
           </div>
         </section>
         <section
-          aria-labelledby="people-title"
-          className="mx-auto max-w-content-marketing px-space-5 py-space-8"
-        >
-          <h2 className="text-display font-bold" id="people-title">
-            {copy.peopleTitle}
-          </h2>
-          <p className="mt-space-4 text-ink-muted">{copy.peopleDescription}</p>
-          <div className="mt-space-7 grid gap-space-6 medium:grid-cols-2 expanded:grid-cols-4">
-            {copy.people.map((person) => (
-              <article
-                className="border-t border-rule pt-space-5"
-                key={person.name}
-              >
-                <h3 className="text-heading font-semibold">{person.name}</h3>
-                <p className="mt-space-3 text-ink-muted">
-                  {person.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-        <section
           aria-labelledby="previews-title"
-          className="scroll-mt-space-5 border-y border-rule bg-surface"
+          className="scroll-mt-space-5"
           id="product-preview"
         >
           <div className="mx-auto max-w-content-marketing px-space-5 py-space-8">
@@ -240,59 +278,29 @@ export function MarketingPage({ websiteOrigin }: { websiteOrigin: string }) {
             <p className="mt-space-4 max-w-content-default text-ink-muted">
               {copy.previewsDescription}
             </p>
-            <div className="mt-space-7 grid items-start gap-space-6 medium:grid-cols-2">
+            <div className="mt-space-7 grid items-start gap-space-6 expanded:grid-cols-3">
               {copy.previews.map((preview) => (
                 <figure
                   className="min-w-0 overflow-hidden rounded-lg border border-rule bg-paper"
-                  key={preview.image.src}
+                  key={preview.title}
                 >
-                  <figcaption className="border-b border-rule p-space-5">
+                  <Image
+                    alt={preview.alt}
+                    className="h-auto w-full border-b border-rule"
+                    sizes="(min-width: 1200px) 368px, (min-width: 768px) 50vw, 100vw"
+                    src={preview.image}
+                  />
+                  <figcaption className="p-space-5">
                     <h3 className="text-heading font-semibold">
                       {preview.title}
                     </h3>
                     <p className="mt-space-3 text-ink-muted">
                       {preview.description}
                     </p>
-                    <p className="mt-space-4 text-caption font-semibold text-ink-muted">
-                      {copy.labels.screenshot}
-                    </p>
                   </figcaption>
-                  <Image
-                    alt={preview.alt}
-                    className="h-auto w-full"
-                    sizes="(min-width: 1200px) 552px, (min-width: 600px) 50vw, 100vw"
-                    src={preview.image}
-                  />
                 </figure>
               ))}
             </div>
-          </div>
-        </section>
-        <section
-          aria-labelledby="roadmap-title"
-          className="mx-auto max-w-content-marketing scroll-mt-space-5 px-space-5 py-space-8"
-          id="roadmap"
-        >
-          <h2 className="text-display font-bold" id="roadmap-title">
-            {copy.roadmapTitle}
-          </h2>
-          <p className="mt-space-4 max-w-content-default text-ink-muted">
-            {copy.roadmapDescription}
-          </p>
-          <div className="mt-space-7 grid gap-space-6 expanded:grid-cols-3">
-            {copy.roadmap.map((group) => (
-              <article
-                className="border-t border-rule pt-space-5"
-                key={group.name}
-              >
-                <h3 className="text-heading font-semibold">{group.name}</h3>
-                <ul className="mt-space-4 list-disc space-y-space-3 pl-space-5 text-ink-muted">
-                  {group.modules.map((name) => (
-                    <li key={name}>{name}</li>
-                  ))}
-                </ul>
-              </article>
-            ))}
           </div>
         </section>
         <section
@@ -326,8 +334,26 @@ export function MarketingPage({ websiteOrigin }: { websiteOrigin: string }) {
           </div>
         </section>
         <section
+          aria-labelledby="right-for-you-title"
+          className="mx-auto max-w-content-default px-space-5 py-space-8"
+        >
+          <h2 className="text-display font-bold" id="right-for-you-title">
+            {copy.rightForYouTitle}
+          </h2>
+          <ul className="mt-space-6 grid gap-space-3">
+            {copy.rightForYou.map((item) => (
+              <li
+                className="rounded-md border border-rule bg-surface p-space-4"
+                key={item}
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section
           aria-labelledby="society-title"
-          className="mx-auto grid max-w-content-marketing scroll-mt-space-5 gap-space-6 px-space-5 py-space-8 expanded:grid-cols-2"
+          className="mx-auto grid max-w-content-marketing scroll-mt-space-5 gap-space-6 border-y border-rule px-space-5 py-space-8 expanded:grid-cols-2"
           id="your-society"
         >
           <div>
@@ -342,7 +368,7 @@ export function MarketingPage({ websiteOrigin }: { websiteOrigin: string }) {
         </section>
         <section
           aria-labelledby="questions-title"
-          className="border-y border-rule bg-surface"
+          className="border-b border-rule bg-surface"
         >
           <div className="mx-auto max-w-content-default px-space-5 py-space-8">
             <h2 className="text-display font-bold" id="questions-title">
@@ -361,18 +387,35 @@ export function MarketingPage({ websiteOrigin }: { websiteOrigin: string }) {
           </div>
         </section>
         <section
-          aria-labelledby="closing-title"
-          className="mx-auto grid max-w-content-marketing items-center gap-space-6 px-space-5 py-space-8 expanded:grid-cols-2"
+          aria-labelledby="enquiry-title"
+          className="mx-auto grid max-w-content-default scroll-mt-space-5 gap-space-6 px-space-5 py-space-8"
+          id="enquiry"
         >
-          <div>
-            <h2 className="text-display font-bold" id="closing-title">
-              {copy.closingTitle}
+          <header className="max-w-content-narrow">
+            <h2 className="text-display font-bold" id="enquiry-title">
+              {copy.enquiryTitle}
             </h2>
             <p className="mt-space-4 text-ink-muted">
-              {copy.closingDescription}
+              {copy.enquiryDescription}
             </p>
+          </header>
+          <WebsiteEnquiryForm submitAction={enquiryAction} />
+        </section>
+        <section
+          aria-labelledby="closing-title"
+          className="border-y border-rule bg-surface"
+        >
+          <div className="mx-auto grid max-w-content-marketing items-center gap-space-6 px-space-5 py-space-8 expanded:grid-cols-2">
+            <div>
+              <h2 className="text-display font-bold" id="closing-title">
+                {copy.closingTitle}
+              </h2>
+              <p className="mt-space-4 text-ink-muted">
+                {copy.closingDescription}
+              </p>
+            </div>
+            <DemoAction />
           </div>
-          <DemoAction />
         </section>
       </main>
       <footer className="border-t border-rule">

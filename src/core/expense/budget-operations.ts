@@ -5,6 +5,7 @@ import { callModuleRpc, parseModuleInput } from '../db/validated-rpc';
 import { AppError, createRequestId } from '../errors';
 import { authorizeRequest } from '../permissions/authorize';
 import { buildRequestContext } from '../tenancy/request-context';
+import { getModuleSettingAccess } from '../modules/setting-access';
 import {
   expenseBudgetApproveInputSchema,
   expenseBudgetChangeInputSchema,
@@ -44,13 +45,17 @@ export async function getExpenseBudget(financialYear: unknown) {
     expenseBudgetFinancialYearSchema,
     financialYear,
   );
-  return callModuleRpc(
-    context,
-    'expense_budget_get',
-    { p_society_id: societyId, p_financial_year: parsed },
-    expenseBudgetSchema,
-    'Could not load the budget.',
-  );
+  const [budget, settingAccess] = await Promise.all([
+    callModuleRpc(
+      context,
+      'expense_budget_get',
+      { p_society_id: societyId, p_financial_year: parsed },
+      expenseBudgetSchema,
+      'Could not load the budget.',
+    ),
+    getModuleSettingAccess('expense', context),
+  ]);
+  return { ...budget, settingsAccess: Object.fromEntries(settingAccess) };
 }
 
 export async function getExpenseBudgetCopyPreview(input: unknown) {

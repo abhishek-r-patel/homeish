@@ -261,7 +261,7 @@ export function PatrolAdminView({
   actions = PATROL_ACTIONS,
   fileRequest,
 }: {
-  workspace: PatrolAdminWorkspace;
+  workspace: PatrolAdminWorkspace & { can_edit_settings?: boolean };
   actions?: PatrolActions;
   fileRequest?: typeof fetch;
 }) {
@@ -694,7 +694,7 @@ export function PatrolAdminView({
           'Incident photos are deleted automatically after this many days.',
         )}
       >
-        {manage ? (
+        {manage && workspace.can_edit_settings !== false ? (
           <ModuleActionForm
             action={actions.saveSettings}
             submitLabel={t('Save retention')}

@@ -34,6 +34,7 @@ export default async function AdminCommunityMutesPage({
       members={result.data.members}
       search={result.data.search}
       settings={result.data.settings}
+      canEditSettings={result.data.canEditSettings}
       actions={communityAdminActions}
     />
   );

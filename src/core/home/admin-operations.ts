@@ -9,6 +9,14 @@ import {
   adminHomeSnapshotSchema,
   type AdminHomeAction,
 } from './admin-validation';
+import { getBillingMonthlyCollection } from '../billing/collection-operations';
+import { getComingUp } from './dashboard-reads';
+import {
+  getAllowedQuickActions,
+  getConfiguredQuickActions,
+} from './workspace-operations';
+import { getManagingBodyName } from '../tenancy/workspace-settings';
+import { getGettingStarted } from './workspace-discovery';
 
 export type AdminActionsFeed =
   { status: 'ok'; items: AdminHomeAction[] } | { status: 'unavailable' } | null;
@@ -43,9 +51,33 @@ export async function getAdminHome() {
         )
       : Promise.resolve<AdminActionsFeed>(null),
   ]);
+  const role = context.roles.includes('admin') ? 'admin' : 'committee';
+  const [
+    quickActions,
+    allQuickActions,
+    comingUp,
+    collectionGraph,
+    managingBodyName,
+    gettingStarted,
+  ] = await Promise.all([
+    getConfiguredQuickActions(context, role),
+    getAllowedQuickActions(context, role),
+    getComingUp(context),
+    snapshot.billing?.status === 'ok' && context.enabledModules.has('billing')
+      ? getBillingMonthlyCollection('6m', snapshot.timezone)
+      : Promise.resolve(null),
+    getManagingBodyName(context),
+    role === 'admin' ? getGettingStarted() : Promise.resolve(null),
+  ]);
   return {
     snapshot,
     actions,
+    quickActions,
+    allQuickActions,
+    comingUp,
+    collectionGraph,
+    managingBodyName,
+    gettingStarted,
     suspended: context.societyStatus === 'suspended',
   };
 }

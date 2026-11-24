@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { callModuleRpc, parseModuleInput } from '../db/validated-rpc';
 import { AppError, createRequestId } from '../errors';
 import { authorizeRequest } from '../permissions/authorize';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
 import {
@@ -71,13 +72,17 @@ export async function getParkingResidentWorkspace() {
 
 export async function getParkingAdminWorkspace() {
   const { context, societyId } = await getContext('parking:list');
-  return callModuleRpc(
-    context,
-    'parking_admin_workspace',
-    { p_society_id: societyId },
-    parkingAdminWorkspaceSchema,
-    'Could not load society parking. Refresh and retry.',
-  );
+  const [workspace, canEditSettings] = await Promise.all([
+    callModuleRpc(
+      context,
+      'parking_admin_workspace',
+      { p_society_id: societyId },
+      parkingAdminWorkspaceSchema,
+      'Could not load society parking. Refresh and retry.',
+    ),
+    canAdminEditAllModuleSettings('parking', context),
+  ]);
+  return { ...workspace, can_edit_settings: canEditSettings };
 }
 
 export async function getParkingSummary() {

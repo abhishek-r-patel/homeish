@@ -163,6 +163,7 @@ export async function DocumentIndexPage({
         decisionSources,
         selection: governanceSelection,
         settings: governanceRecords.settings,
+        canEditSettings: governanceRecords.canEditSettings,
         tenancyEnabled: governanceRecords.tenancyEnabled,
         meetingEnabled: governanceRecords.meetingEnabled,
       };

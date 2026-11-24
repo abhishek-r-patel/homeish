@@ -121,6 +121,12 @@ export const RATE_LIMIT_POLICIES = {
     windowSeconds: 60,
     failureMode: 'open',
   },
+  publicWebsiteEnquiryIpHourly: {
+    key: 'website:enquiry:ip-hourly',
+    limit: 5,
+    windowSeconds: 3600,
+    failureMode: 'closed',
+  },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES;
@@ -182,6 +188,7 @@ export async function enforceRateLimit(
   policyName: RateLimitPolicyName,
   identifier: string,
   requestId: string,
+  limitOverride?: number,
 ): Promise<void> {
   const policy = RATE_LIMIT_POLICIES[policyName];
   if (!identifier.trim() || identifier.length > 512) {
@@ -189,13 +196,21 @@ export async function enforceRateLimit(
       'Rate-limit identity must be a non-empty short string.',
     );
   }
+  if (
+    limitOverride !== undefined &&
+    (!Number.isInteger(limitOverride) ||
+      limitOverride < 1 ||
+      limitOverride > 100)
+  ) {
+    throw new TypeError('Rate-limit override must be between 1 and 100.');
+  }
 
   let result: Awaited<ReturnType<typeof consumeRateLimitKey>>;
   try {
     const key = await hashIdentifier(policy.key, identifier);
     result = await consumeRateLimitKey(
       key,
-      effectiveLimit(policyName),
+      limitOverride ?? effectiveLimit(policyName),
       policy.windowSeconds,
     );
   } catch {

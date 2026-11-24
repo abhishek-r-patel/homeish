@@ -15,6 +15,8 @@ import {
 } from '@/core/i18n/format';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
 export const metadata = {
   title: 'AMC | Homeish',
   robots: { index: false, follow: false },
@@ -56,11 +58,13 @@ export default async function AmcPage({
       (entry): entry is [string, string] => typeof entry[1] === 'string',
     ),
   );
+  const featureTabs = await getFeatureTabs('upkeep');
   return (
     <section className="grid min-w-0 gap-space-5 [overflow-wrap:anywhere]">
+      <FeatureTabs items={featureTabs} />
       <h1 className="text-title font-semibold">{t('AMC contracts')}</h1>
       <Card title={t('AMC expiry windows')}>
-        {w.can_manage ? (
+        {w.can_edit_settings ? (
           <AmcExpirySettingsForm settings={w.settings} />
         ) : (
           <div className="grid gap-space-2">

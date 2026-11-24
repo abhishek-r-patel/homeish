@@ -4,6 +4,8 @@ import { MeetingAdminListView } from '@/components/meeting/admin';
 import { getMeetingAdminList } from '@/core/meeting/operations';
 import { loadMeetingPage } from '@/core/meeting/page-access';
 import { meetingListFilterSchema } from '@/core/meeting/validation';
+import { FeatureTabs } from '@/components/home/feature-tabs';
+import { getFeatureTabs } from '@/core/home/feature-tabs';
 
 export const metadata = {
   title: 'Meetings | Homeish',
@@ -31,5 +33,11 @@ export default async function AdminMeetingsPage({
       />
     );
   }
-  return <MeetingAdminListView workspace={result.data} status={status} />;
+  const featureTabs = await getFeatureTabs('meetings-notices');
+  return (
+    <div className="grid gap-space-5">
+      <FeatureTabs items={featureTabs} />
+      <MeetingAdminListView workspace={result.data} status={status} />
+    </div>
+  );
 }

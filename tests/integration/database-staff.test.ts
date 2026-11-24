@@ -43,6 +43,14 @@ describe.skipIf(!hasDatabase)('database staff management', () => {
                   ($1, 'staff', true, '{}'::jsonb)`,
           [societyId],
         );
+        await client.query(
+          `insert into public.module_setting_access
+             (society_id, module_key, setting_key, admin_can_edit)
+           values ($1, 'staff', 'resident_approval_required', true)
+           on conflict (society_id, module_key, setting_key)
+           do update set admin_can_edit = true`,
+          [societyId],
+        );
         const memberships = (
           await client.query<{ id: string; user_id: string }>(
             `insert into public.memberships (society_id, user_id, roles, status)

@@ -29,7 +29,7 @@ test('does not advertise disabled modules or invent a balance', async ({
 }) => {
   await page.goto('/fixtures/home?state=disabled');
   await expect(
-    page.getByRole('heading', { name: 'Action needed' }),
+    page.getByRole('heading', { name: 'Needs attention' }),
   ).toHaveCount(0);
   await expect(page.getByText('Amount due')).toHaveCount(0);
   const shortcuts = page.getByRole('region', { name: 'Quick actions' });
@@ -46,7 +46,7 @@ test('does not advertise disabled modules or invent a balance', async ({
 test('explains empty, unlinked and suspended states', async ({ page }) => {
   await page.goto('/fixtures/home?state=empty');
   await expect(
-    page.getByRole('heading', { name: 'Action needed' }),
+    page.getByRole('heading', { name: 'Needs attention' }),
   ).toHaveCount(0);
   await expect(page.getByText('No activity yet')).toBeVisible();
   await page.goto('/fixtures/home?state=no-unit');
@@ -67,7 +67,7 @@ test('translates new home copy and preserves the Hindi font', async ({
 }) => {
   await page.goto('/fixtures/home?locale=hi');
   await expect(
-    page.getByRole('heading', { name: 'आपकी कार्रवाई ज़रूरी है' }),
+    page.getByRole('heading', { name: 'ध्यान देने योग्य' }),
   ).toBeVisible();
   await expect(
     page.getByRole('heading', { name: 'हाल की गतिविधि' }),

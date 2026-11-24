@@ -9,6 +9,7 @@ import { enforceRateLimit } from '../../rate-limit';
 import { attestTenancyNocPrivileged } from '../../privileged';
 import { buildRequestContext } from '../request-context';
 import { storePreparedTenancyNoc } from './files';
+import { canAdminEditAllModuleSettings } from '../../modules/setting-access';
 import {
   tenancyAgreementMetadataInputSchema,
   tenancyDecisionInputSchema,
@@ -59,13 +60,17 @@ async function getReadContext() {
 export async function getTenancyWorkspace(includeTargets = true) {
   const { context, societyId } = await getReadContext();
   const include = parseModuleInput(z.boolean(), includeTargets);
-  return callModuleRpc(
-    context,
-    'tenancy_workspace_get',
-    { p_society_id: societyId, p_include_targets: include },
-    tenancyWorkspaceSchema,
-    'Could not load moving access and eligible tenants. Refresh and retry.',
-  );
+  const [workspace, canEditSettings] = await Promise.all([
+    callModuleRpc(
+      context,
+      'tenancy_workspace_get',
+      { p_society_id: societyId, p_include_targets: include },
+      tenancyWorkspaceSchema,
+      'Could not load moving access and eligible tenants. Refresh and retry.',
+    ),
+    canAdminEditAllModuleSettings('tenancy', context),
+  ]);
+  return { ...workspace, can_edit_settings: canEditSettings };
 }
 
 export async function listTenancyMoves(input: unknown = {}) {

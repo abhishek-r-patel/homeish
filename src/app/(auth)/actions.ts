@@ -2,9 +2,11 @@
 'use server';
 
 import { headers } from 'next/headers';
+import { z } from 'zod';
 import {
   AppError,
   ERROR_MESSAGES,
+  ValidationError,
   requestIdFromHeaders,
   type ErrorCode,
 } from '../../core/errors';
@@ -23,6 +25,7 @@ import {
 import { logUnexpectedError } from '../../core/logging/error-logger';
 import { clientIpFromHeaders } from '../../core/request/client-ip';
 import { switchSociety } from '../../core/tenancy/session';
+import { saveResidentFlatSelection } from '../../core/home/workspace-operations';
 
 export type AuthActionState =
   | {
@@ -136,6 +139,35 @@ export async function switchSocietyAction(
   return runAuthAction('session.switchSociety', async () => {
     await switchSociety({ societyId });
     return { message: 'Society changed.' };
+  });
+}
+
+export async function switchPlaceAction(input: unknown) {
+  return runAuthAction('session.switchPlace', async () => {
+    const parsed = z
+      .object({
+        societyId: z.uuid(),
+        unitId: z.uuid().nullable().optional(),
+        allFlats: z.boolean().optional(),
+      })
+      .strict()
+      .safeParse(input);
+    if (!parsed.success) {
+      throw new ValidationError({
+        place: 'Choose a valid society or flat.',
+      });
+    }
+    if (
+      parsed.data.unitId !== undefined ||
+      parsed.data.allFlats !== undefined
+    ) {
+      await saveResidentFlatSelection({
+        societyId: parsed.data.societyId,
+        unitId: parsed.data.unitId ?? null,
+        allFlats: parsed.data.allFlats ?? false,
+      });
+    }
+    await switchSociety({ societyId: parsed.data.societyId });
   });
 }
 

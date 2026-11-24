@@ -15,6 +15,7 @@ import {
 import { loadPollPage } from '@/core/poll/page-access';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { canAdminEditAllModuleSettings } from '@/core/modules/setting-access';
 
 export const metadata = {
   title: 'Official elections | Homeish',
@@ -37,9 +38,10 @@ export default async function PollElectionsPage() {
       />
     );
   }
-  const settings = result.data.can_manage
-    ? await getPollElectionSettings()
-    : null;
+  const settings =
+    result.data.can_manage && (await canAdminEditAllModuleSettings('poll'))
+      ? await getPollElectionSettings()
+      : null;
   const documents = result.data.can_manage
     ? await getPollElectionDocumentOptions()
     : [];

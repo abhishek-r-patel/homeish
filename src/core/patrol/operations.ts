@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { callModuleRpc, parseModuleInput } from '../db/validated-rpc';
 import { AppError, createRequestId } from '../errors';
 import { authorizeRequest } from '../permissions/authorize';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
 import {
@@ -66,13 +67,17 @@ async function getContext(
 
 export async function getPatrolAdminWorkspace() {
   const { context, societyId } = await getContext('patrol:list');
-  return callModuleRpc(
-    context,
-    'patrol_admin_workspace',
-    { p_society_id: societyId },
-    patrolAdminWorkspaceSchema,
-    'Could not load patrol records. Refresh and retry.',
-  );
+  const [workspace, canEditSettings] = await Promise.all([
+    callModuleRpc(
+      context,
+      'patrol_admin_workspace',
+      { p_society_id: societyId },
+      patrolAdminWorkspaceSchema,
+      'Could not load patrol records. Refresh and retry.',
+    ),
+    canAdminEditAllModuleSettings('patrol', context),
+  ]);
+  return { ...workspace, can_edit_settings: canEditSettings };
 }
 
 export async function getPatrolGuardWorkspace() {

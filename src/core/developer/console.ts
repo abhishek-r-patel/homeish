@@ -2,11 +2,12 @@
 import { z } from 'zod';
 import { AppError, ValidationError, createRequestId } from '../errors';
 import type { Database, Json } from '../db/database.types';
+import { callModuleRpc } from '../db/validated-rpc';
 import type { RequestContext } from '../tenancy/request-context';
 import { buildRequestContext } from '../tenancy/request-context';
 import { MODULE_KEYS, parseModuleSettings } from '../modules';
 import type { ModuleKey } from '../modules';
-import { isModuleKey } from '../permissions';
+import { isModuleKey, type SocietyRole } from '../permissions';
 import type { DeveloperSocietyStatus } from './status';
 import {
   SOCIETY_LOGO_CONTENT_TYPES,
@@ -14,6 +15,7 @@ import {
 } from '../files/attachments';
 import { runUserErasurePrivileged } from '../privileged';
 import { INDIA_TIME_ZONE } from '../../lib/india-time';
+import { QUICK_ACTION_KEYS } from '../home/quick-actions';
 
 export { societyStatusSchema } from './status';
 export type { DeveloperSocietyStatus } from './status';
@@ -422,6 +424,122 @@ export async function getDeveloperSociety(societyId: string) {
   return data;
 }
 
+const onboardingSchema = z.object({
+  stage: z.enum(['agreed', 'setting_up', 'live', 'paused']),
+  agreed_modules: z.array(z.enum(MODULE_KEYS)),
+  go_live_on: z.iso.date().nullable(),
+  contact_name: z.string().nullable(),
+  contact_phone: z.string().nullable(),
+  contact_email: z.string().nullable(),
+  notes: z.string().nullable(),
+  progress: z.object({
+    dismissed: z.boolean(),
+    residents_joined_percent: z.number().int(),
+    total_units: z.number().int(),
+    joined_units: z.number().int(),
+    steps: z.array(
+      z.object({
+        key: z.string(),
+        module_key: z.string(),
+        title: z.string(),
+        href: z.string(),
+        complete: z.boolean(),
+      }),
+    ),
+  }),
+});
+const developerFeatureRequestSchema = z.object({
+  id: z.uuid(),
+  society_id: z.uuid(),
+  society_name: z.string(),
+  module_key: z.enum(MODULE_KEYS),
+  note: z.string().nullable(),
+  status: z.enum(['new', 'agreed', 'declined']),
+  requested_by: z.string(),
+  created_at: z.iso.datetime({ offset: true }),
+});
+
+export async function getDeveloperOnboarding(societyId: string) {
+  const context = await requireDeveloperContext();
+  return callModuleRpc(
+    context,
+    'developer_onboarding_record_get',
+    { p_society_id: z.uuid().parse(societyId) },
+    onboardingSchema,
+    'The onboarding record could not be loaded.',
+  );
+}
+
+export async function saveDeveloperOnboarding(
+  context: RequestContext,
+  input: {
+    societyId: string;
+    stage: 'agreed' | 'setting_up' | 'live' | 'paused';
+    agreedModules: string[];
+    goLiveOn: string | null;
+    contactName: string | null;
+    contactPhone: string | null;
+    contactEmail: string | null;
+    notes: string | null;
+  },
+) {
+  return callModuleRpc(
+    context,
+    'developer_onboarding_record_save',
+    {
+      p_society_id: input.societyId,
+      p_stage: input.stage,
+      p_agreed_modules: input.agreedModules,
+      p_go_live_on: input.goLiveOn,
+      p_contact_name: input.contactName,
+      p_contact_phone: input.contactPhone,
+      p_contact_email: input.contactEmail,
+      p_notes: input.notes,
+    },
+    z.null(),
+    'The onboarding record could not be saved.',
+  );
+}
+
+export async function getDeveloperFeatureRequests() {
+  const context = await requireDeveloperContext();
+  return callModuleRpc(
+    context,
+    'developer_feature_requests_get',
+    {},
+    z.array(developerFeatureRequestSchema),
+    'Feature requests could not be loaded.',
+  );
+}
+
+export async function setDeveloperFeatureRequestStatus(
+  context: RequestContext,
+  requestId: string,
+  status: 'new' | 'agreed' | 'declined',
+) {
+  return callModuleRpc(
+    context,
+    'developer_feature_request_status_set',
+    { p_request_id: requestId, p_status: status },
+    z.null(),
+    'The feature request status could not be saved.',
+  );
+}
+
+export async function setResidentsJoinedPercent(
+  context: RequestContext,
+  societyId: string,
+  percent: number,
+) {
+  return callModuleRpc(
+    context,
+    'society_residents_joined_percent_set',
+    { p_society_id: societyId, p_percent: percent },
+    z.null(),
+    'The residents-joined threshold could not be saved.',
+  );
+}
+
 export async function getDeveloperModules(societyId: string) {
   const context = await requireDeveloperContext();
   const client = context.db;
@@ -440,6 +558,7 @@ export async function getDeveloperModules(societyId: string) {
       cause: modulesResult.error,
     });
   }
+
   if (configsResult.error) {
     throw new Error('Could not load society module settings.', {
       cause: configsResult.error,
@@ -487,6 +606,100 @@ export async function getDeveloperModules(societyId: string) {
           : null,
       },
     ];
+  });
+}
+
+export async function getDeveloperWorkspaceControls(societyId: string) {
+  const context = await requireDeveloperContext();
+  const parsedSocietyId = z.uuid().safeParse(societyId);
+  if (!parsedSocietyId.success) {
+    throw new ValidationError({ societyId: 'Choose a valid society.' });
+  }
+  const [accessResult, overridesResult, defaultsResult] = await Promise.all([
+    context.db
+      .from('module_setting_access')
+      .select('module_key, setting_key, admin_can_edit')
+      .eq('society_id', societyId)
+      .order('module_key')
+      .order('setting_key'),
+    context.db
+      .from('workspace_quick_action_defaults')
+      .select('role, action_keys')
+      .eq('society_id', societyId),
+    context.db
+      .from('workspace_quick_action_defaults')
+      .select('role, action_keys')
+      .is('society_id', null),
+  ]);
+  if (accessResult.error) {
+    throw new Error('Could not load setting-edit access.', {
+      cause: accessResult.error,
+    });
+  }
+  if (overridesResult.error || defaultsResult.error) {
+    throw new Error('Could not load quick-action defaults.', {
+      cause: overridesResult.error ?? defaultsResult.error,
+    });
+  }
+  const actionKeys = new Set<string>(QUICK_ACTION_KEYS);
+  const parseActions = (
+    rows: readonly { role: string; action_keys: string[] }[],
+  ) =>
+    rows.flatMap((row) => {
+      if (!row.action_keys.every((key) => actionKeys.has(key))) {
+        throw new Error('A stored quick-action key is unsupported.');
+      }
+      return [{ role: row.role, actionKeys: row.action_keys }];
+    });
+  return {
+    settingAccess: accessResult.data,
+    quickActionOverrides: parseActions(overridesResult.data),
+    quickActionDefaults: parseActions(defaultsResult.data),
+  };
+}
+
+export async function updateModuleSettingAccess(
+  context: RequestContext,
+  societyId: string,
+  moduleKey: ModuleKey,
+  settingKey: string,
+  adminCanEdit: boolean,
+) {
+  return rpc(context, 'module_setting_access_set', {
+    p_society_id: societyId,
+    p_module_key: moduleKey,
+    p_setting_key: settingKey,
+    p_admin_can_edit: adminCanEdit,
+  });
+}
+
+export async function updateQuickActionDefaults(
+  context: RequestContext,
+  societyId: string | null,
+  role: SocietyRole,
+  actionKeys: string[],
+) {
+  return callModuleRpc(
+    context,
+    'workspace_quick_action_defaults_save',
+    {
+      p_society_id: societyId,
+      p_role: role,
+      p_action_keys: actionKeys,
+    },
+    z.null(),
+    'Quick-action defaults could not be saved.',
+  );
+}
+
+export async function resetQuickActionDefaults(
+  context: RequestContext,
+  societyId: string,
+  role: SocietyRole,
+) {
+  return rpc(context, 'workspace_quick_action_defaults_reset', {
+    p_society_id: societyId,
+    p_role: role,
   });
 }
 

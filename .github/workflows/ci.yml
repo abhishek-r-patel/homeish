@@ -39,9 +39,14 @@ jobs:
       - run: npm run check
       - run: npm run build
 
-  database:
+  database-shard:
+    name: database shard ${{ matrix.shard }}/4
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     # Disposable PostgreSQL that matches Supabase's major version. Tests add a stand-in for
     # Supabase's auth schema and roles; no real database credential exists in CI.
     services:
@@ -68,9 +73,16 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Apply migrations and run integration tests on disposable PostgreSQL 17
-        run: npm run test:integration
+        run: npm run test:integration -- --shard=${{ matrix.shard }}/4
         env:
           INTEGRATION_DATABASE_URL: postgres://supabase_admin@127.0.0.1:5432/postgres
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: database-shard
+    steps:
+      - run: echo "All database integration shards passed."
 
   e2e:
     runs-on: ubuntu-latest

@@ -17,6 +17,7 @@ import {
 import { visitorSettingsSchema } from '../modules';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { requireIdentifiedGuard } from '../guards/operations';
 
 const uuid = z.uuid();
@@ -235,7 +236,9 @@ export async function getVisitorAdminAccess() {
   if (!context.roles.some((role) => ['admin', 'committee'].includes(role))) {
     throw new AppError('FORBIDDEN');
   }
-  return { canManage: context.roles.includes('admin') };
+  return {
+    canManage: await canAdminEditAllModuleSettings('visitor', context),
+  };
 }
 
 export async function requireVisitorResident() {

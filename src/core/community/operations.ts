@@ -11,6 +11,7 @@ import {
 import { authorizeRequest } from '../permissions/authorize';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { enforceRateLimit } from '../rate-limit';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { buildRequestContext } from '../tenancy/request-context';
 import { issueCommunityPhotoUpload, signCommunityPhotos } from './photos';
 import {
@@ -701,7 +702,7 @@ export async function getCommunityAdminGroups() {
 export async function getCommunityAdminMutes(search: string | null) {
   const { context, societyId } = await getContext('community:moderate');
   const term = search?.trim().slice(0, COMMUNITY_SEARCH_MAX) || null;
-  const [mutes, members, settings] = await Promise.all([
+  const [mutes, members, settings, canEditSettings] = await Promise.all([
     callCommunityRpc(
       context,
       'community_admin_mutes',
@@ -725,8 +726,15 @@ export async function getCommunityAdminMutes(search: string | null) {
       communitySettingsResultSchema,
       'Could not load the muted-resident settings. Refresh and retry.',
     ),
+    canAdminEditAllModuleSettings('community', context),
   ]);
-  return { mutes, members: members?.items ?? null, search: term, settings };
+  return {
+    mutes,
+    members: members?.items ?? null,
+    search: term,
+    settings,
+    canEditSettings,
+  };
 }
 
 // Administrator writes

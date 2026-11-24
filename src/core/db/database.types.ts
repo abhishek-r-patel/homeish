@@ -11649,6 +11649,49 @@ export type Database = {
           },
         ];
       };
+      module_setting_access: {
+        Row: {
+          admin_can_edit: boolean;
+          module_key: string;
+          setting_key: string;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          admin_can_edit: boolean;
+          module_key: string;
+          setting_key: string;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          admin_can_edit?: boolean;
+          module_key?: string;
+          setting_key?: string;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'module_setting_access_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'module_setting_access_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       modules: {
         Row: {
           is_core: boolean;
@@ -13066,6 +13109,95 @@ export type Database = {
           },
           {
             foreignKeyName: 'patrol_schedules_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      person_workspace_preferences: {
+        Row: {
+          quick_action_pins: string[] | null;
+          resident_all_flats: boolean;
+          resident_graph_mode: string;
+          resident_unit_id: string | null;
+          society_id: string;
+          starting_place: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          quick_action_pins?: string[] | null;
+          resident_all_flats?: boolean;
+          resident_graph_mode?: string;
+          resident_unit_id?: string | null;
+          society_id: string;
+          starting_place?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          quick_action_pins?: string[] | null;
+          resident_all_flats?: boolean;
+          resident_graph_mode?: string;
+          resident_unit_id?: string | null;
+          society_id?: string;
+          starting_place?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'person_workspace_preferences_resident_unit_id_fkey';
+            columns: ['resident_unit_id'];
+            isOneToOne: false;
+            referencedRelation: 'units';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'person_workspace_preferences_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'person_workspace_preferences_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      platform_website_settings: {
+        Row: {
+          contact_email: string | null;
+          enquiry_hourly_limit: number;
+          id: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          contact_email?: string | null;
+          enquiry_hourly_limit?: number;
+          id?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          contact_email?: string | null;
+          enquiry_hourly_limit?: number;
+          id?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'platform_website_settings_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -16137,6 +16269,213 @@ export type Database = {
           },
         ];
       };
+      society_feature_requests: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          id: string;
+          module_key: string;
+          note: string | null;
+          society_id: string;
+          status: string;
+          status_updated_at: string;
+          status_updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          id?: string;
+          module_key: string;
+          note?: string | null;
+          society_id: string;
+          status?: string;
+          status_updated_at?: string;
+          status_updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          id?: string;
+          module_key?: string;
+          note?: string | null;
+          society_id?: string;
+          status?: string;
+          status_updated_at?: string;
+          status_updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_feature_requests_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_feature_requests_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_feature_requests_status_updated_by_fkey';
+            columns: ['status_updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      society_import_runs: {
+        Row: {
+          actor_id: string;
+          actor_role: string;
+          created_at: string;
+          id: string;
+          kind: string;
+          request_id: string;
+          row_count: number;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor_id: string;
+          actor_role: string;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          request_id: string;
+          row_count: number;
+          society_id: string;
+        };
+        Update: {
+          actor_id?: string;
+          actor_role?: string;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          request_id?: string;
+          row_count?: number;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_import_runs_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_import_runs_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      society_onboarding_records: {
+        Row: {
+          agreed_modules: string[];
+          contact_email: string | null;
+          contact_name: string | null;
+          contact_phone: string | null;
+          go_live_on: string | null;
+          notes: string | null;
+          society_id: string;
+          stage: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          agreed_modules?: string[];
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          go_live_on?: string | null;
+          notes?: string | null;
+          society_id: string;
+          stage?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          agreed_modules?: string[];
+          contact_email?: string | null;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          go_live_on?: string | null;
+          notes?: string | null;
+          society_id?: string;
+          stage?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_onboarding_records_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_onboarding_records_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      society_opening_dues_imports: {
+        Row: {
+          import_run_id: string;
+          imported_at: string;
+          imported_by: string;
+          society_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          import_run_id: string;
+          imported_at?: string;
+          imported_by: string;
+          society_id: string;
+        };
+        Update: {
+          import_run_id?: string;
+          imported_at?: string;
+          imported_by?: string;
+          society_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_opening_dues_import_run_fkey';
+            columns: ['society_id', 'import_run_id'];
+            isOneToOne: false;
+            referencedRelation: 'society_import_runs';
+            referencedColumns: ['society_id', 'id'];
+          },
+          {
+            foreignKeyName: 'society_opening_dues_imports_imported_by_fkey';
+            columns: ['imported_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_opening_dues_imports_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       society_reference_profiles: {
         Row: {
           arrears_interest_reference: string | null;
@@ -16159,6 +16498,7 @@ export type Database = {
           last_agm_on: string | null;
           last_election_on: string | null;
           maintenance_rate_reference: string | null;
+          managing_body_name: string | null;
           pan: string | null;
           parking_count: number | null;
           pin_code: string | null;
@@ -16201,6 +16541,7 @@ export type Database = {
           last_agm_on?: string | null;
           last_election_on?: string | null;
           maintenance_rate_reference?: string | null;
+          managing_body_name?: string | null;
           pan?: string | null;
           parking_count?: number | null;
           pin_code?: string | null;
@@ -16242,6 +16583,7 @@ export type Database = {
           last_agm_on?: string | null;
           last_election_on?: string | null;
           maintenance_rate_reference?: string | null;
+          managing_body_name?: string | null;
           pan?: string | null;
           parking_count?: number | null;
           pin_code?: string | null;
@@ -16279,6 +16621,56 @@ export type Database = {
           },
           {
             foreignKeyName: 'society_reference_profiles_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      society_workspace_settings: {
+        Row: {
+          getting_started_dismissed_at: string | null;
+          getting_started_dismissed_by: string | null;
+          residents_joined_percent: number;
+          society_id: string;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          getting_started_dismissed_at?: string | null;
+          getting_started_dismissed_by?: string | null;
+          residents_joined_percent?: number;
+          society_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          getting_started_dismissed_at?: string | null;
+          getting_started_dismissed_by?: string | null;
+          residents_joined_percent?: number;
+          society_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'society_workspace_settings_getting_started_dismissed_by_fkey';
+            columns: ['getting_started_dismissed_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_workspace_settings_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: true;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'society_workspace_settings_updated_by_fkey';
             columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
@@ -20289,6 +20681,106 @@ export type Database = {
           },
         ];
       };
+      website_enquiries: {
+        Row: {
+          city: string | null;
+          email: string | null;
+          flat_count: number | null;
+          full_name: string;
+          handled_at: string | null;
+          handled_by: string | null;
+          id: string;
+          message: string | null;
+          phone: string | null;
+          request_id: string;
+          society_name: string | null;
+          status: string;
+          submitted_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          city?: string | null;
+          email?: string | null;
+          flat_count?: number | null;
+          full_name: string;
+          handled_at?: string | null;
+          handled_by?: string | null;
+          id?: string;
+          message?: string | null;
+          phone?: string | null;
+          request_id: string;
+          society_name?: string | null;
+          status?: string;
+          submitted_at?: string;
+        };
+        Update: {
+          city?: string | null;
+          email?: string | null;
+          flat_count?: number | null;
+          full_name?: string;
+          handled_at?: string | null;
+          handled_by?: string | null;
+          id?: string;
+          message?: string | null;
+          phone?: string | null;
+          request_id?: string;
+          society_name?: string | null;
+          status?: string;
+          submitted_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'website_enquiries_handled_by_fkey';
+            columns: ['handled_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      workspace_quick_action_defaults: {
+        Row: {
+          action_keys: string[];
+          role: string;
+          scope_key: string | null;
+          society_id: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          action_keys: string[];
+          role: string;
+          scope_key?: never;
+          society_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          action_keys?: string[];
+          role?: string;
+          scope_key?: never;
+          society_id?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'workspace_quick_action_defaults_society_id_fkey';
+            columns: ['society_id'];
+            isOneToOne: false;
+            referencedRelation: 'societies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'workspace_quick_action_defaults_updated_by_fkey';
+            columns: ['updated_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -21091,6 +21583,19 @@ export type Database = {
           p_version: string;
         };
         Returns: boolean;
+      };
+      bulk_import_context_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      bulk_import_save: {
+        Args: {
+          p_kind: string;
+          p_request_id: string;
+          p_rows: Json;
+          p_society_id: string;
+        };
+        Returns: string;
       };
       change_member_roles: {
         Args: {
@@ -21909,9 +22414,43 @@ export type Database = {
         };
         Returns: string;
       };
+      developer_feature_request_status_set: {
+        Args: { p_request_id: string; p_status: string };
+        Returns: undefined;
+      };
+      developer_feature_requests_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          created_at: string;
+          id: string;
+          module_key: string;
+          note: string;
+          requested_by: string;
+          society_id: string;
+          society_name: string;
+          status: string;
+        }[];
+      };
       developer_health_summary: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
+      };
+      developer_onboarding_record_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      developer_onboarding_record_save: {
+        Args: {
+          p_agreed_modules: string[];
+          p_contact_email: string;
+          p_contact_name: string;
+          p_contact_phone: string;
+          p_go_live_on: string;
+          p_notes: string;
+          p_society_id: string;
+          p_stage: string;
+        };
+        Returns: undefined;
       };
       developer_set_error_status: {
         Args: {
@@ -22139,6 +22678,43 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      developer_website_enquiries_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          city: string;
+          email: string;
+          flat_count: number;
+          full_name: string;
+          handled_at: string;
+          id: string;
+          message: string;
+          phone: string;
+          society_name: string;
+          status: string;
+          submitted_at: string;
+        }[];
+      };
+      developer_website_enquiry_delete: {
+        Args: { p_enquiry_id: string };
+        Returns: undefined;
+      };
+      developer_website_enquiry_handle: {
+        Args: { p_enquiry_id: string };
+        Returns: undefined;
+      };
+      developer_website_settings_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          contact_email: string;
+          enquiry_hourly_limit: number;
+          updated_at: string;
+          updated_by: string;
+        }[];
+      };
+      developer_website_settings_save: {
+        Args: { p_contact_email: string; p_enquiry_hourly_limit: number };
+        Returns: undefined;
       };
       directory_emergency_contact_deactivate: {
         Args: { p_contact_id: string; p_society_id: string };
@@ -24407,6 +24983,23 @@ export type Database = {
           path: string;
         }[];
       };
+      module_setting_access_list: {
+        Args: { p_society_id: string };
+        Returns: {
+          admin_can_edit: boolean;
+          module_key: string;
+          setting_key: string;
+        }[];
+      };
+      module_setting_access_set: {
+        Args: {
+          p_admin_can_edit: boolean;
+          p_module_key: string;
+          p_setting_key: string;
+          p_society_id: string;
+        };
+        Returns: undefined;
+      };
       move_unit_occupant: {
         Args: {
           p_occupant_id: string;
@@ -24848,6 +25441,21 @@ export type Database = {
           p_photo_retention_days: number;
           p_request_id: string;
           p_society_id: string;
+        };
+        Returns: undefined;
+      };
+      person_workspace_preferences_get: {
+        Args: { p_society_id: string };
+        Returns: {
+          resident_graph_mode: string;
+          starting_place: string;
+        }[];
+      };
+      person_workspace_preferences_save: {
+        Args: {
+          p_resident_graph_mode?: string;
+          p_society_id: string;
+          p_starting_place: string;
         };
         Returns: undefined;
       };
@@ -26139,6 +26747,27 @@ export type Database = {
           status: string;
         }[];
       };
+      resident_dashboard_graph_get: {
+        Args: { p_mode: string; p_society_id: string };
+        Returns: {
+          amount: number;
+          has_data: boolean;
+          month_start: string;
+        }[];
+      };
+      resident_flat_options_get: {
+        Args: { p_society_id: string };
+        Returns: {
+          all_flats: boolean;
+          label: string;
+          selected: boolean;
+          unit_id: string;
+        }[];
+      };
+      resident_flat_selection_save: {
+        Args: { p_all_flats: boolean; p_society_id: string; p_unit_id: string };
+        Returns: undefined;
+      };
       resident_home_get: { Args: { p_society_id: string }; Returns: Json };
       rotate_society_join_code: {
         Args: { p_request_id: string; p_society_id: string };
@@ -26187,6 +26816,28 @@ export type Database = {
         Args: { p_society_id: string };
         Returns: Json;
       };
+      society_feature_request_create: {
+        Args: { p_module_key: string; p_note: string; p_society_id: string };
+        Returns: string;
+      };
+      society_feature_requests_get: {
+        Args: { p_society_id: string };
+        Returns: {
+          created_at: string;
+          id: string;
+          module_key: string;
+          note: string;
+          status: string;
+        }[];
+      };
+      society_getting_started_dismiss: {
+        Args: { p_dismissed: boolean; p_society_id: string };
+        Returns: undefined;
+      };
+      society_getting_started_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
       society_host_lookup: {
         Args: { p_slug: string };
         Returns: {
@@ -26194,6 +26845,14 @@ export type Database = {
           name: string;
           status: string;
         }[];
+      };
+      society_managing_body_name_get: {
+        Args: { p_society_id: string };
+        Returns: string;
+      };
+      society_managing_body_name_save: {
+        Args: { p_name: string; p_society_id: string };
+        Returns: undefined;
       };
       society_reference_profile_get: {
         Args: { p_society_id: string };
@@ -26207,6 +26866,10 @@ export type Database = {
           p_values: Json;
         };
         Returns: Json;
+      };
+      society_residents_joined_percent_set: {
+        Args: { p_percent: number; p_society_id: string };
+        Returns: undefined;
       };
       sos_acknowledge: {
         Args: {
@@ -27845,6 +28508,80 @@ export type Database = {
       visitor_update_settings: {
         Args: { p_request_id: string; p_settings: Json; p_society_id: string };
         Returns: Json;
+      };
+      website_enquiry_create: {
+        Args: {
+          p_city: string;
+          p_email: string;
+          p_flat_count: number;
+          p_full_name: string;
+          p_message: string;
+          p_phone: string;
+          p_request_id: string;
+          p_society_name: string;
+        };
+        Returns: string;
+      };
+      website_public_settings_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          contact_email: string;
+          enquiry_hourly_limit: number;
+        }[];
+      };
+      workspace_calendar_get: {
+        Args: { p_from: string; p_society_id: string; p_to: string };
+        Returns: {
+          href: string;
+          item_id: string;
+          occurs_at: string;
+          source: string;
+          title: string;
+        }[];
+      };
+      workspace_coming_up_get: {
+        Args: { p_society_id: string };
+        Returns: {
+          href: string;
+          item_id: string;
+          occurs_at: string;
+          source: string;
+          title: string;
+        }[];
+      };
+      workspace_quick_action_defaults_get: {
+        Args: { p_role: string; p_society_id: string };
+        Returns: string[];
+      };
+      workspace_quick_action_defaults_reset: {
+        Args: { p_role: string; p_society_id: string };
+        Returns: undefined;
+      };
+      workspace_quick_action_defaults_save: {
+        Args: { p_action_keys: string[]; p_role: string; p_society_id: string };
+        Returns: undefined;
+      };
+      workspace_quick_action_pins_get: {
+        Args: { p_society_id: string };
+        Returns: string[];
+      };
+      workspace_quick_action_pins_reset: {
+        Args: { p_society_id: string };
+        Returns: undefined;
+      };
+      workspace_quick_action_pins_save: {
+        Args: { p_action_keys: string[]; p_society_id: string };
+        Returns: string[];
+      };
+      workspace_search_records: {
+        Args: { p_query: string; p_society_id: string };
+        Returns: {
+          href: string;
+          kind: string;
+          record_id: string;
+          subtitle: string;
+          title: string;
+        }[];
       };
     };
     Enums: {

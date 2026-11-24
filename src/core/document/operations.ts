@@ -6,6 +6,7 @@ import { AppError, createRequestId } from '../errors';
 import { authorizeRequest } from '../permissions/authorize';
 import { enforceRateLimit } from '../rate-limit';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import {
   documentArchiveInputSchema,
   documentCreateInputSchema,
@@ -285,19 +286,23 @@ export async function listGovernanceSources(input: unknown) {
 export async function listGovernanceRecords(input: unknown) {
   const { context, societyId } = await getDocumentContext('document:list');
   const page = parseModuleInput(documentGovernanceListInputSchema, input);
-  return callModuleRpc(
-    context,
-    'document_governance_list',
-    {
-      p_society_id: societyId,
-      p_kind: page.kind,
-      p_include_archived: page.includeArchived,
-      p_limit: page.limit,
-      p_offset: page.offset,
-    },
-    documentGovernanceListSchema,
-    'Could not load governance records. Refresh and retry.',
-  );
+  const [records, canEditSettings] = await Promise.all([
+    callModuleRpc(
+      context,
+      'document_governance_list',
+      {
+        p_society_id: societyId,
+        p_kind: page.kind,
+        p_include_archived: page.includeArchived,
+        p_limit: page.limit,
+        p_offset: page.offset,
+      },
+      documentGovernanceListSchema,
+      'Could not load governance records. Refresh and retry.',
+    ),
+    canAdminEditAllModuleSettings('document', context),
+  ]);
+  return { ...records, canEditSettings };
 }
 
 export async function getGovernanceRecord(recordId: unknown) {

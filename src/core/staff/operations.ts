@@ -5,6 +5,7 @@ import { AppError, createRequestId, ValidationError } from '../errors';
 import { MAX_FILE_BYTES, verifyFileAttachment } from '../files/attachments';
 import { authorizeRequest } from '../permissions/authorize';
 import { buildRequestContext } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { requireIdentifiedGuard } from '../guards/operations';
 import {
   readGateStaff,
@@ -222,6 +223,7 @@ export async function getStaffSettings() {
     residentApprovalRequired:
       settings.resident_approval_required ??
       DEFAULT_STAFF_SETTINGS.resident_approval_required,
+    canManage: await canAdminEditAllModuleSettings('staff', context),
   };
 }
 

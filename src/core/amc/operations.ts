@@ -9,6 +9,7 @@ import {
   buildRequestContext,
   type RequestContext,
 } from '../tenancy/request-context';
+import { canAdminEditAllModuleSettings } from '../modules/setting-access';
 import { toCsv } from '../csv/serialize';
 import {
   amcExpirySettingsInputSchema,
@@ -79,7 +80,14 @@ export async function getAmcWorkspace() {
       })),
     ),
   ]);
-  return { ...workspace, contracts, visits };
+  return {
+    ...workspace,
+    contracts,
+    visits,
+    can_edit_settings:
+      workspace.can_manage &&
+      (await canAdminEditAllModuleSettings('amc', context)),
+  };
 }
 export async function saveAmcExpirySettings(input: unknown, requestId: string) {
   const { context, societyId } = await amcContext(true, requestId);

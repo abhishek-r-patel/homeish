@@ -9,6 +9,10 @@ import { invokeUntypedRpc } from '../db/untyped-rpc';
 import { sendNotificationPushesForRequest } from '../privileged/notification-delivery';
 import { MAX_RESIDENT_CSV_BYTES, parseResidentsCsv } from './residents-csv';
 import { todayInIndia } from '../../lib/india-time';
+import {
+  getResidentFlatOptions,
+  readWorkspacePreferences,
+} from '../home/workspace-operations';
 
 const roleSchema = z.enum([
   'admin',
@@ -508,7 +512,26 @@ export async function getHouseholdMembers() {
       cause: occupancyError,
     });
   }
-  const unitIds = [...new Set(occupancy.map(({ unit_id }) => unit_id))];
+  const flatOptions =
+    context.roles.includes('resident') && context.societyId
+      ? await getResidentFlatOptions(context, context.societyId)
+      : [];
+  const showAllFlats = flatOptions.some((option) => option.all_flats);
+  const selectedUnitIds = new Set(
+    flatOptions
+      .filter((option) => showAllFlats || option.selected)
+      .map((option) => option.unit_id)
+      .filter((unitId): unitId is string => unitId !== null),
+  );
+  const unitIds = [
+    ...new Set(
+      occupancy
+        .map(({ unit_id }) => unit_id)
+        .filter(
+          (unitId) => !selectedUnitIds.size || selectedUnitIds.has(unitId),
+        ),
+    ),
+  ];
   if (!unitIds.length) return { households: [] };
   const { data: units, error: unitsError } = await context.db
     .from('units')
@@ -588,7 +611,34 @@ export async function getProfile() {
     .eq('id', context.userId)
     .single();
   if (error) throw new Error('Could not load your profile.', { cause: error });
-  return { ...data, isHindiEnabled: context.isHindiEnabled };
+  const workspacePreferences = await readWorkspacePreferences(context);
+  const residentFlats =
+    context.roles.includes('resident') && context.societyId
+      ? await getResidentFlatOptions(context, context.societyId)
+      : [];
+  const placeOptions = [
+    ...(context.roles.includes('resident')
+      ? [{ value: 'home' as const, label: 'My home' }]
+      : []),
+    ...(context.roles.some((role) => role === 'admin' || role === 'committee')
+      ? [{ value: 'work' as const, label: 'Managing body' }]
+      : []),
+    ...(context.roles.includes('guard')
+      ? [{ value: 'gate' as const, label: 'Gate desk' }]
+      : []),
+    ...(context.roles.includes('hk_supervisor')
+      ? [{ value: 'housekeeping' as const, label: 'Housekeeping' }]
+      : []),
+  ];
+  return {
+    ...data,
+    isHindiEnabled: context.isHindiEnabled,
+    startingPlace: workspacePreferences.startingPlace,
+    residentFlats,
+    residentAllFlats: residentFlats.some((option) => option.all_flats),
+    placeOptions,
+    hasMultiplePlaces: placeOptions.length > 1,
+  };
 }
 
 export async function updateLanguagePreference(

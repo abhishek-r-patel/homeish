@@ -210,6 +210,16 @@ describe.skipIf(!hasDatabase)('database resident home', () => {
         [societyId, categoryId, residentId, neighbourId],
       );
     });
+    await database.asRole(
+      'authenticated',
+      { sub: residentId },
+      (client) =>
+        client.query(
+          'select public.resident_flat_selection_save($1, null, true)',
+          [societyId],
+        ),
+      { commit: true },
+    );
   });
 
   afterAll(async () => {

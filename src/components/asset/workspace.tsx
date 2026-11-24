@@ -15,6 +15,7 @@ import {
   type AssetWorkspace,
 } from '@/core/asset/validation';
 import { Card } from '@/components/ui/data-display';
+import { BulkImportControl } from '@/components/home/bulk-import';
 import { EmptyState } from '@/components/ui/feedback';
 import { SelectInput } from '@/components/ui/select-input';
 import { FilterBar } from '@/components/ui/table-controls';
@@ -91,6 +92,16 @@ export function AssetWorkspaceView({
           </a>
         </nav>
       </header>
+      {workspace.can_manage ? (
+        <Card
+          title={t('Import assets from CSV')}
+          description={t(
+            'Preview every row, then save all asset records together or save none.',
+          )}
+        >
+          <BulkImportControl kind="assets" />
+        </Card>
+      ) : null}
       <Card
         title={t('Assets')}
         description={t(

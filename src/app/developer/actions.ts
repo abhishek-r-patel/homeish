@@ -19,16 +19,28 @@ import {
   requireDeveloperContext,
   setErrorStatus,
   setSocietyStatus,
+  setDeveloperFeatureRequestStatus,
+  saveDeveloperOnboarding,
+  setResidentsJoinedPercent,
   societyInputSchema,
   societyStatusSchema,
   toggleModule,
   updateModuleSettings,
+  updateModuleSettingAccess,
+  updateQuickActionDefaults,
+  resetQuickActionDefaults,
   updateSociety,
   updateSocietyLogo,
   type DeveloperActionResult,
 } from '@/core/developer/console';
 import { logUnexpectedError } from '@/core/logging/error-logger';
 import { MODULE_KEYS } from '@/core/modules';
+import { QUICK_ACTION_KEYS } from '@/core/home/quick-actions';
+import {
+  deleteDeveloperWebsiteEnquiry,
+  handleDeveloperWebsiteEnquiry,
+  saveDeveloperWebsiteSettings,
+} from '@/core/website/enquiries';
 
 async function runDeveloperAction(
   route: string,
@@ -126,6 +138,93 @@ const errorStatusSchema = z
 const userErasureSchema = z
   .object({ userId: z.uuid(), confirmation: z.literal('ERASE') })
   .strict();
+const onboardingInputSchema = z
+  .object({
+    societyId: societyIdSchema,
+    stage: z.enum(['agreed', 'setting_up', 'live', 'paused']),
+    agreedModules: z.array(z.enum(MODULE_KEYS)),
+    goLiveOn: z
+      .string()
+      .trim()
+      .transform((value) => value || null)
+      .pipe(z.iso.date().nullable()),
+    contactName: z
+      .string()
+      .trim()
+      .max(120)
+      .transform((value) => value || null),
+    contactPhone: z
+      .string()
+      .trim()
+      .transform((value) => value || null)
+      .pipe(
+        z
+          .string()
+          .regex(/^\+?[0-9]{10,15}$/)
+          .nullable(),
+      ),
+    contactEmail: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .transform((value) => value || null)
+      .pipe(z.email().nullable()),
+    notes: z
+      .string()
+      .trim()
+      .max(1000)
+      .transform((value) => value || null),
+  })
+  .strict();
+const featureStatusSchema = z
+  .object({
+    requestId: z.uuid(),
+    status: z.enum(['new', 'agreed', 'declined']),
+  })
+  .strict();
+const joinedPercentSchema = z
+  .object({
+    societyId: societyIdSchema,
+    percent: z.coerce.number().int().min(1).max(100),
+  })
+  .strict();
+const settingAccessSchema = z
+  .object({
+    societyId: societyIdSchema,
+    moduleKey: z.enum(MODULE_KEYS),
+    settingKey: z.string().trim().min(1).max(120),
+    adminCanEdit: z
+      .enum(['true', 'false'])
+      .transform((value) => value === 'true'),
+  })
+  .strict();
+const quickActionDefaultsScopeSchema = z.union([
+  societyIdSchema,
+  z.literal('all'),
+]);
+const quickActionRoleSchema = z.enum([
+  'admin',
+  'committee',
+  'resident',
+  'guard',
+  'hk_supervisor',
+]);
+const quickActionKeysSchema = z
+  .array(z.enum(QUICK_ACTION_KEYS))
+  .min(1, 'Choose at least one action.')
+  .max(12);
+const websiteSettingsSchema = z
+  .object({
+    contactEmail: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .transform((value) => value || null)
+      .pipe(z.email().nullable()),
+    enquiryHourlyLimit: z.coerce.number().int().min(1).max(100),
+  })
+  .strict();
+const enquiryIdSchema = z.object({ enquiryId: z.uuid() }).strict();
 
 export async function createSocietyAction(
   formData: FormData,
@@ -136,6 +235,36 @@ export async function createSocietyAction(
     const societyId = await createSociety(context, input);
     revalidatePath('/developer');
     return { ok: true, message: 'Society created.', societyId };
+  });
+}
+
+export async function saveDeveloperWebsiteSettingsAction(formData: FormData) {
+  return runDeveloperAction('developer.website.settings.save', async () => {
+    await saveDeveloperWebsiteSettings(
+      parseForm(websiteSettingsSchema, formData),
+    );
+    revalidatePath('/');
+    revalidatePath('/privacy');
+    revalidatePath('/developer');
+    return { ok: true, message: 'Website settings saved.' };
+  });
+}
+
+export async function handleWebsiteEnquiryAction(formData: FormData) {
+  return runDeveloperAction('developer.website.enquiry.handle', async () => {
+    const { enquiryId } = parseForm(enquiryIdSchema, formData);
+    await handleDeveloperWebsiteEnquiry(enquiryId);
+    revalidatePath('/developer');
+    return { ok: true, message: 'Enquiry marked as handled.' };
+  });
+}
+
+export async function deleteWebsiteEnquiryAction(formData: FormData) {
+  return runDeveloperAction('developer.website.enquiry.delete', async () => {
+    const { enquiryId } = parseForm(enquiryIdSchema, formData);
+    await deleteDeveloperWebsiteEnquiry(enquiryId);
+    revalidatePath('/developer');
+    return { ok: true, message: 'Enquiry deleted.' };
   });
 }
 
@@ -217,6 +346,7 @@ export async function updateModuleSettingsAction(
           settings: 'Enter valid JSON settings.',
         });
       }
+
       try {
         await updateModuleSettings(
           context,
@@ -234,6 +364,132 @@ export async function updateModuleSettingsAction(
       }
       revalidatePath('/developer/modules');
       return { ok: true, message: 'Module settings saved.' };
+    },
+  );
+}
+
+export async function updateModuleSettingAccessAction(
+  formData: FormData,
+): Promise<DeveloperActionResult> {
+  return runDeveloperAction(
+    'developer.modules.updateSettingAccess',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = parseForm(settingAccessSchema, formData);
+      await updateModuleSettingAccess(
+        context,
+        input.societyId,
+        input.moduleKey,
+        input.settingKey,
+        input.adminCanEdit,
+      );
+      revalidatePath('/developer/modules');
+      revalidatePath('/admin/settings');
+      return { ok: true, message: 'Admin edit access saved.' };
+    },
+  );
+}
+
+export async function updateQuickActionDefaultsAction(
+  formData: FormData,
+): Promise<DeveloperActionResult> {
+  return runDeveloperAction(
+    'developer.workspace.updateQuickActionDefaults',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const scope = parseValue(
+        quickActionDefaultsScopeSchema,
+        formData.get('societyId'),
+      );
+      const role = parseValue(quickActionRoleSchema, formData.get('role'));
+      const actionKeys = parseValue(
+        quickActionKeysSchema,
+        formData.getAll('actionKey'),
+      );
+      await updateQuickActionDefaults(
+        context,
+        scope === 'all' ? null : scope,
+        role,
+        actionKeys,
+      );
+      revalidatePath('/developer/modules');
+      revalidatePath('/admin');
+      revalidatePath('/home');
+      return { ok: true, message: 'Quick-action defaults saved.' };
+    },
+  );
+}
+
+export async function resetQuickActionDefaultsAction(
+  formData: FormData,
+): Promise<DeveloperActionResult> {
+  return runDeveloperAction(
+    'developer.workspace.resetQuickActionDefaults',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const societyId = parseValue(societyIdSchema, formData.get('societyId'));
+      const role = parseValue(quickActionRoleSchema, formData.get('role'));
+      await resetQuickActionDefaults(context, societyId, role);
+      revalidatePath('/developer/modules');
+      revalidatePath('/admin');
+      revalidatePath('/home');
+      return { ok: true, message: 'Society override removed.' };
+    },
+  );
+}
+
+export async function saveDeveloperOnboardingAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.society.saveOnboarding',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = onboardingInputSchema.parse({
+        societyId: formData.get('societyId'),
+        stage: formData.get('stage'),
+        agreedModules: formData.getAll('agreedModule'),
+        goLiveOn: formData.get('goLiveOn'),
+        contactName: formData.get('contactName'),
+        contactPhone: formData.get('contactPhone'),
+        contactEmail: formData.get('contactEmail'),
+        notes: formData.get('notes'),
+      });
+      await saveDeveloperOnboarding(context, input);
+      revalidatePath(`/developer/societies/${input.societyId}`);
+      return { ok: true, message: 'Onboarding record saved.' };
+    },
+  );
+}
+
+export async function setDeveloperFeatureRequestStatusAction(
+  formData: FormData,
+) {
+  return runDeveloperAction(
+    'developer.featureRequest.setStatus',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = parseForm(featureStatusSchema, formData);
+      await setDeveloperFeatureRequestStatus(
+        context,
+        input.requestId,
+        input.status,
+      );
+      revalidatePath('/developer');
+      revalidatePath('/admin/features');
+      return { ok: true, message: 'Feature request status saved.' };
+    },
+  );
+}
+
+export async function setResidentsJoinedPercentAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.workspace.residentsJoinedPercent',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = parseForm(joinedPercentSchema, formData);
+      await setResidentsJoinedPercent(context, input.societyId, input.percent);
+      revalidatePath(`/developer/societies/${input.societyId}`);
+      revalidatePath('/admin');
+      return { ok: true, message: 'Residents-joined threshold saved.' };
     },
   );
 }
