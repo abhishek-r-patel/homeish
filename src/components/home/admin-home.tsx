@@ -25,8 +25,10 @@ import {
 import {
   CollectionGraph,
   ComingUp,
+  GettingStartedCard,
   QuickActionTiles,
 } from './dashboard-sections';
+import type { ServerActionResult } from '@/core/actions/server-action';
 
 const RETRY_HREF = '/admin';
 const rowClass =
@@ -261,19 +263,36 @@ export function AdminHome({
   actions,
   suspended,
   quickActions = [],
+  allQuickActions = quickActions,
   comingUp = [],
   collectionGraph = null,
   managingBodyName = 'Association',
+  gettingStarted = null,
+  savePinsAction,
+  resetPinsAction,
 }: Omit<
   AdminHomeData,
-  'quickActions' | 'comingUp' | 'collectionGraph' | 'managingBodyName'
+  | 'quickActions'
+  | 'allQuickActions'
+  | 'comingUp'
+  | 'collectionGraph'
+  | 'managingBodyName'
+  | 'gettingStarted'
 > &
   Partial<
     Pick<
       AdminHomeData,
-      'quickActions' | 'comingUp' | 'collectionGraph' | 'managingBodyName'
+      | 'quickActions'
+      | 'allQuickActions'
+      | 'comingUp'
+      | 'collectionGraph'
+      | 'managingBodyName'
+      | 'gettingStarted'
     >
-  >) {
+  > & {
+    savePinsAction?: (keys: string[]) => Promise<ServerActionResult>;
+    resetPinsAction?: () => Promise<ServerActionResult>;
+  }) {
   const { locale, translate: t } = useUiTranslator();
   const displayLocale = locale ?? 'en';
   const money = (paise: string) =>
@@ -337,7 +356,14 @@ export function AdminHome({
         </Section>
       ) : null}
 
-      <QuickActionTiles actions={quickActions} />
+      <GettingStartedCard setup={gettingStarted} />
+
+      <QuickActionTiles
+        actions={quickActions}
+        availableActions={allQuickActions}
+        savePinsAction={savePinsAction}
+        resetPinsAction={resetPinsAction}
+      />
 
       {attention.length ? (
         <Section id="admin-home-attention" title={t('Needs attention')}>

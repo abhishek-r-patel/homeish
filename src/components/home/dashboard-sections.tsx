@@ -4,6 +4,11 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { saveResidentGraphModeAction } from '@/app/(resident)/home/actions';
+import {
+  resetQuickActionPinsAction,
+  saveQuickActionPinsAction,
+  setGettingStartedDismissedAction,
+} from '@/app/workspace-actions';
 import { ModuleIcon } from '@/components/app-shells';
 import { EmptyState } from '@/components/ui/feedback';
 import { useUiTranslator } from '@/components/ui/language';
@@ -12,10 +17,14 @@ import type {
   ComingUpItem,
   ResidentDashboardGraph,
 } from '@/core/home/dashboard-reads';
+import type { GettingStarted } from '@/core/home/workspace-discovery';
+import type { ServerActionResult } from '@/core/actions/server-action';
 import {
   formatLocalizedCurrency,
   formatLocalizedDateTime,
 } from '@/core/i18n/format';
+import { Dialog } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 type QuickAction = {
   key: string;
@@ -23,6 +32,80 @@ type QuickAction = {
   label: string;
   moduleKey: ModuleKey;
 };
+
+export function GettingStartedCard({
+  setup,
+}: {
+  setup: GettingStarted | null;
+}) {
+  const { translate: t, translateFeedback } = useUiTranslator();
+  const [pending, startTransition] = useTransition();
+  const [message, setMessage] = useState('');
+  if (!setup || setup.dismissed) return null;
+  const completed = setup.steps.filter((step) => step.complete).length;
+  if (completed === setup.steps.length) return null;
+
+  function dismiss() {
+    setMessage('');
+    startTransition(async () => {
+      const result = await setGettingStartedDismissedAction(true);
+      setMessage(result.message ?? t('Getting started hidden.'));
+    });
+  }
+
+  return (
+    <section className="grid gap-space-4 rounded-lg border border-rule bg-surface p-space-5 shadow-card">
+      <header className="flex items-start justify-between gap-space-3">
+        <div className="grid gap-space-1">
+          <p className="text-micro font-semibold uppercase tracking-wide text-brand">
+            {t('Getting started')}
+          </p>
+          <h2 className="text-heading">
+            {t('{done} of {total} setup steps complete', {
+              done: completed,
+              total: setup.steps.length,
+            })}
+          </h2>
+        </div>
+        <button
+          className="min-h-10 text-caption text-brand underline"
+          disabled={pending}
+          onClick={dismiss}
+          type="button"
+        >
+          {t('Hide for now')}
+        </button>
+      </header>
+      <progress
+        className="h-2 w-full accent-brand"
+        max={setup.steps.length}
+        value={completed}
+      />
+      <ul className="grid gap-space-2">
+        {setup.steps.map((step) => (
+          <li key={step.key}>
+            <Link
+              className="flex min-h-12 items-center justify-between gap-space-3 rounded-md border border-rule px-space-4 hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-focus"
+              href={step.href}
+            >
+              <span>{t(step.title)}</span>
+              <span
+                className={`text-caption ${step.complete ? 'text-success' : 'text-ink-muted'}`}
+              >
+                {step.complete ? t('Complete') : t('Open')} →
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {message ? (
+        <p className="text-caption text-danger" role="alert">
+          {translateFeedback(message)}
+        </p>
+      ) : null}
+    </section>
+  );
+}
 
 const SOURCE_LABELS: Readonly<Record<ComingUpItem['source'], string>> = {
   meeting: 'Meeting',
@@ -35,17 +118,80 @@ const SOURCE_LABELS: Readonly<Record<ComingUpItem['source'], string>> = {
 
 export function QuickActionTiles({
   actions,
+  availableActions = actions,
+  savePinsAction = saveQuickActionPinsAction,
+  resetPinsAction = resetQuickActionPinsAction,
   firstFourOnPhone = false,
 }: {
   actions: readonly QuickAction[];
+  availableActions?: readonly QuickAction[];
+  savePinsAction?: (keys: string[]) => Promise<ServerActionResult>;
+  resetPinsAction?: () => Promise<ServerActionResult>;
   firstFourOnPhone?: boolean;
 }) {
-  const { translate: t } = useUiTranslator();
+  const { translate: t, translateFeedback } = useUiTranslator();
+  const [editing, setEditing] = useState(false);
+  const [selected, setSelected] = useState(() =>
+    actions.map((action) => action.key),
+  );
+  const [message, setMessage] = useState('');
+  const [pending, startTransition] = useTransition();
+
+  function toggle(key: string) {
+    setMessage('');
+    setSelected((current) => {
+      if (current.includes(key)) return current.filter((item) => item !== key);
+      if (current.length >= 8) {
+        setMessage(t('You can pin up to 8 actions.'));
+        return current;
+      }
+      return [...current, key];
+    });
+  }
+
+  function move(key: string, direction: -1 | 1) {
+    setSelected((current) => {
+      const index = current.indexOf(key);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target]!, next[index]!];
+      return next;
+    });
+  }
+
+  function save() {
+    setMessage('');
+    startTransition(async () => {
+      const result = await savePinsAction(selected);
+      setMessage(result.message ?? t('Quick actions could not be saved.'));
+      if (result.ok) setEditing(false);
+    });
+  }
+
+  function reset() {
+    setMessage('');
+    startTransition(async () => {
+      const result = await resetPinsAction();
+      setMessage(result.message ?? t('Quick actions could not be reset.'));
+      if (result.ok) setEditing(false);
+    });
+  }
+
   return (
     <section className="grid gap-space-3" aria-labelledby="quick-actions-title">
-      <h2 className="text-heading" id="quick-actions-title">
-        {t('Quick actions')}
-      </h2>
+      <div className="flex items-end justify-between gap-space-3">
+        <h2 className="text-heading" id="quick-actions-title">
+          {t('Quick actions')}
+        </h2>
+        <button
+          className="min-h-10 text-body-strong text-brand underline"
+          onClick={() => setEditing(true)}
+          type="button"
+        >
+          {t('Edit actions')}
+        </button>
+      </div>
       {actions.length ? (
         <ul className="grid grid-cols-2 gap-space-3 medium:grid-cols-3 expanded:grid-cols-4">
           {actions.map((action, index) => (
@@ -73,6 +219,99 @@ export function QuickActionTiles({
           title={t('No quick actions available')}
         />
       )}
+      <Dialog
+        description={t(
+          'Choose and reorder up to 8 actions. Unavailable actions stay hidden without using a slot.',
+        )}
+        id="quick-action-editor"
+        onOpenChange={setEditing}
+        open={editing}
+        title={t('Edit quick actions')}
+      >
+        <div className="grid gap-space-3">
+          <ol className="grid gap-space-2">
+            {selected.map((key, index) => {
+              const action = availableActions.find((item) => item.key === key);
+              if (!action) return null;
+              return (
+                <li
+                  className="flex min-h-12 items-center gap-space-2 rounded-md border border-rule bg-surface px-space-3"
+                  key={key}
+                >
+                  <span className="flex-1 text-body-strong">
+                    {t(action.label)}
+                  </span>
+                  <button
+                    aria-label={t('Move {action} up', {
+                      action: t(action.label),
+                    })}
+                    className="min-h-10 min-w-10 rounded-sm hover:bg-surface-sunken"
+                    disabled={pending || index === 0}
+                    onClick={() => move(key, -1)}
+                    type="button"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    aria-label={t('Move {action} down', {
+                      action: t(action.label),
+                    })}
+                    className="min-h-10 min-w-10 rounded-sm hover:bg-surface-sunken"
+                    disabled={pending || index === selected.length - 1}
+                    onClick={() => move(key, 1)}
+                    type="button"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    aria-label={t('Remove {action}', {
+                      action: t(action.label),
+                    })}
+                    className="min-h-10 min-w-10 rounded-sm text-danger hover:bg-danger-tint"
+                    disabled={pending}
+                    onClick={() => toggle(key)}
+                    type="button"
+                  >
+                    ×
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+          <div className="grid gap-space-2">
+            <h3 className="text-body-strong">{t('Available actions')}</h3>
+            {availableActions
+              .filter((action) => !selected.includes(action.key))
+              .map((action) => (
+                <label
+                  className="flex min-h-12 items-center gap-space-3 rounded-md border border-rule px-space-3 text-body"
+                  key={action.key}
+                >
+                  <input
+                    checked={false}
+                    disabled={pending}
+                    onChange={() => toggle(action.key)}
+                    type="checkbox"
+                  />
+                  {t(action.label)}
+                </label>
+              ))}
+          </div>
+          {message ? (
+            <p className="text-caption text-danger" role="alert">
+              {translateFeedback(message)}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-space-2">
+            <Button disabled={pending} loading={pending} onClick={save}>
+              {t('Save actions')}
+            </Button>
+            <Button disabled={pending} onClick={reset} variant="secondary">
+              {t('Reset to default')}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </section>
   );
 }

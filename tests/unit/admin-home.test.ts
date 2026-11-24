@@ -15,6 +15,10 @@ vi.mock('../../src/core/billing/collection-operations', () => ({
 }));
 vi.mock('../../src/core/home/workspace-operations', () => ({
   getConfiguredQuickActions: vi.fn().mockResolvedValue([]),
+  getAllowedQuickActions: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('../../src/core/home/workspace-discovery', () => ({
+  getGettingStarted: vi.fn().mockResolvedValue(null),
 }));
 vi.mock('../../src/core/home/dashboard-reads', () => ({
   getComingUp: vi.fn().mockResolvedValue([]),

@@ -15,6 +15,12 @@ import { NotificationBell } from './notifications/notification-bell';
 import { SosAlertBanner } from './sos/alert-banner';
 import { useLanguage } from './language-provider';
 import { LanguageSelector } from './language-selector';
+import {
+  WorkspaceTools,
+  type WorkspaceQuickAction,
+} from './home/workspace-tools';
+import type { WorkspaceSearchResult } from '../core/home/workspace-discovery';
+import type { ServerActionResult } from '../core/actions/server-action';
 
 type SocietyShellProps = {
   activeSocietyId?: string;
@@ -26,6 +32,10 @@ type SocietyShellProps = {
     message?: string;
   }>;
   places?: readonly PlaceOption[];
+  quickActions?: readonly WorkspaceQuickAction[];
+  workspaceSearchAction?: (
+    input: unknown,
+  ) => Promise<ServerActionResult<WorkspaceSearchResult>>;
   permissionMaps?: PermissionMaps;
   role: SocietyRole;
   // Petty-cash custody is per person (P39), so it is not a role navigation item.
@@ -321,6 +331,8 @@ function TopBar({
   switchSociety: switchSocietyServer,
   pathname,
   places = [],
+  quickActions = [],
+  workspaceSearchAction,
   role,
   translate,
   societies = [],
@@ -342,6 +354,10 @@ function TopBar({
   role: SocietyRole | 'developer';
   translate: Translate;
   societies?: readonly SocietyOption[];
+  quickActions?: readonly WorkspaceQuickAction[];
+  workspaceSearchAction?: (
+    input: unknown,
+  ) => Promise<ServerActionResult<WorkspaceSearchResult>>;
   unreadNotifications?: number;
 }) {
   const router = useRouter();
@@ -517,6 +533,13 @@ function TopBar({
         <span aria-live="polite" className="sr-only">
           {announcement}
         </span>
+
+        {role !== 'developer' ? (
+          <WorkspaceTools
+            quickActions={quickActions}
+            searchAction={workspaceSearchAction}
+          />
+        ) : null}
 
         <NotificationBell
           dark={dark}
@@ -934,6 +957,8 @@ function SocietyShell({
   places = [],
   permissionMaps,
   role,
+  quickActions = [],
+  workspaceSearchAction,
   switchSociety,
   showPettyCash = false,
   societies = [],
@@ -1002,6 +1027,8 @@ function SocietyShell({
         pathname={pathname}
         places={places}
         switchSociety={switchSociety}
+        quickActions={quickActions}
+        workspaceSearchAction={workspaceSearchAction}
         role={role}
         translate={translate}
         societies={societies}

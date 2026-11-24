@@ -127,7 +127,51 @@ function Fixture() {
       initialLocale={params.get('locale') === 'hi' ? 'hi' : 'en'}
       mode="device"
     >
-      <Shell enabledModules={enabledModules}>
+      <Shell
+        enabledModules={enabledModules}
+        quickActions={[
+          {
+            key: 'notice.create',
+            href: '/admin/notices/new',
+            label: 'Post a notice',
+            moduleKey: 'notice',
+          },
+        ]}
+        workspaceSearchAction={async (input) => ({
+          ok: true,
+          data: {
+            query: String(input),
+            pages: [
+              {
+                kind: 'page',
+                href: '/admin/billing',
+                label: 'Billing',
+                moduleKey: 'billing',
+                topic: 'Money',
+              },
+            ],
+            actions: [
+              {
+                kind: 'action',
+                key: 'notice.create',
+                href: '/admin/notices/new',
+                label: 'Post a notice',
+                moduleKey: 'notice',
+                permissions: { admin: 'notice:create' },
+              },
+            ],
+            records: [
+              {
+                kind: 'flat',
+                record_id: 'd1d55fc3-0751-4b79-86c1-5b3e25942392',
+                title: 'A-101',
+                subtitle: 'Flat',
+                href: '/admin/structure',
+              },
+            ],
+          },
+        })}
+      >
         <div className="grid gap-space-5">
           <Banner tone="info">
             Synthetic dashboard preview; no real society data.
@@ -173,6 +217,44 @@ function Fixture() {
                     }
               }
               managingBodyName="Association"
+              gettingStarted={{
+                dismissed: false,
+                residents_joined_percent: 75,
+                total_units: 20,
+                joined_units: 10,
+                steps: [
+                  {
+                    key: 'society_details',
+                    module_key: 'core',
+                    title: 'Add society details',
+                    href: '/admin/society-profile',
+                    complete: true,
+                  },
+                  {
+                    key: 'units',
+                    module_key: 'core',
+                    title: 'Add towers and flats',
+                    href: '/admin/structure',
+                    complete: false,
+                  },
+                ],
+              }}
+              allQuickActions={[
+                {
+                  key: 'notice.create',
+                  href: '/admin/notices/new',
+                  label: 'Post a notice',
+                  moduleKey: 'notice',
+                  permissions: { admin: 'notice:create' },
+                },
+                {
+                  key: 'billing.generate',
+                  href: '/admin/billing/generate',
+                  label: 'Generate monthly bills',
+                  moduleKey: 'billing',
+                  permissions: { admin: 'billing:charges:manage' },
+                },
+              ]}
               quickActions={[
                 {
                   key: 'notice.create',
@@ -182,6 +264,14 @@ function Fixture() {
                   permissions: { admin: 'notice:create' },
                 },
               ]}
+              resetPinsAction={async () => ({
+                ok: true,
+                message: 'Dashboard actions reset.',
+              })}
+              savePinsAction={async () => ({
+                ok: true,
+                message: 'Dashboard actions saved.',
+              })}
               snapshot={snapshot}
               suspended={state === 'suspended'}
             />

@@ -5,7 +5,10 @@ import {
 } from '@/components/housekeeping/workspace';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { createRequestId } from '@/core/errors';
-import { getConfiguredQuickActions } from '@/core/home/workspace-operations';
+import {
+  getAllowedQuickActions,
+  getConfiguredQuickActions,
+} from '@/core/home/workspace-operations';
 import { getComingUp } from '@/core/home/dashboard-reads';
 import {
   ComingUp,
@@ -21,8 +24,9 @@ export default async function HousekeepingPage({
   searchParams: Promise<InventorySearch>;
 }) {
   const context = await buildRequestContext(createRequestId());
-  const [quickActions, comingUp, search] = await Promise.all([
+  const [quickActions, allQuickActions, comingUp, search] = await Promise.all([
     getConfiguredQuickActions(context, 'hk_supervisor'),
+    getAllowedQuickActions(context, 'hk_supervisor'),
     getComingUp(context),
     searchParams,
   ]);
@@ -34,7 +38,11 @@ export default async function HousekeepingPage({
         </p>
         <h1 className="text-heading font-semibold">Today’s work</h1>
       </header>
-      <QuickActionTiles actions={quickActions} firstFourOnPhone />
+      <QuickActionTiles
+        actions={quickActions}
+        availableActions={allQuickActions}
+        firstFourOnPhone
+      />
       <ComingUp items={comingUp} timezone="Asia/Kolkata" />
       <InventoryWorkspace search={search} />
     </section>

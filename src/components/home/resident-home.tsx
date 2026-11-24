@@ -70,10 +70,16 @@ export function ResidentHome({
   shortcuts,
   suspended,
   quickActions,
+  allQuickActions,
   comingUp = [],
   graph,
 }: Pick<ResidentHomeData, 'snapshot' | 'outstanding' | 'shortcuts'> &
-  Partial<Pick<ResidentHomeData, 'quickActions' | 'comingUp' | 'graph'>> & {
+  Partial<
+    Pick<
+      ResidentHomeData,
+      'quickActions' | 'allQuickActions' | 'comingUp' | 'graph'
+    >
+  > & {
     suspended: boolean;
   }) {
   const { locale, translate: t } = useUiTranslator();
@@ -144,7 +150,11 @@ export function ResidentHome({
         </Banner>
       ) : null}
 
-      <QuickActionTiles actions={resolvedActions} firstFourOnPhone />
+      <QuickActionTiles
+        actions={resolvedActions}
+        availableActions={allQuickActions ?? resolvedActions}
+        firstFourOnPhone
+      />
 
       {hasDues || hasPending ? (
         <section

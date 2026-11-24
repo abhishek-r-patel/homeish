@@ -53,6 +53,7 @@ export default async function ResidentHomePage() {
         graph={data.graph}
         outstanding={data.outstanding}
         quickActions={data.quickActions}
+        allQuickActions={data.allQuickActions}
         shortcuts={data.shortcuts}
         snapshot={data.snapshot}
         suspended={data.suspended}

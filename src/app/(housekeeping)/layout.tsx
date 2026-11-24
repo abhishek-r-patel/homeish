@@ -15,6 +15,7 @@ import {
 import { LanguageProvider } from '@/components/language-provider';
 import { getShellData } from '@/core/tenancy/shell-data';
 import { switchSocietyAction } from '@/app/(auth)/actions';
+import { getAllowedQuickActions } from '@/core/home/workspace-operations';
 export default async function HousekeepingLayout({
   children,
 }: {
@@ -48,6 +49,14 @@ export default async function HousekeepingLayout({
   const showPettyCash =
     Shell === HousekeepingShell && (await isPettyCashCustodian(context));
   const shellData = await getShellData(context);
+  const quickActions = await getAllowedQuickActions(
+    context,
+    context.roles.includes('hk_supervisor')
+      ? 'hk_supervisor'
+      : context.roles.includes('admin')
+        ? 'admin'
+        : 'committee',
+  );
   return (
     <LanguageProvider
       hindiEnabled={context.isHindiEnabled}
@@ -58,6 +67,7 @@ export default async function HousekeepingLayout({
         activeSocietyId={shellData.activeSocietyId ?? undefined}
         enabledModules={[...context.enabledModules]}
         places={shellData.places}
+        quickActions={quickActions}
         showPettyCash={showPettyCash}
         societies={shellData.societies}
         switchSociety={switchSocietyAction}

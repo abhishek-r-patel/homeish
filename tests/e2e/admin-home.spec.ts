@@ -6,6 +6,9 @@ test('shows four figures, quick actions, Coming up and both activity lists', asy
 }) => {
   await page.goto('/fixtures/admin-home');
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await expect(
+    page.getByText('Getting started', { exact: true }),
+  ).toBeVisible();
   const today = page.getByRole('region', { name: 'Today' });
   await expect(today.getByRole('listitem')).toHaveCount(4);
   await expect(today.getByRole('link', { name: /Outstanding/ })).toContainText(
@@ -48,6 +51,34 @@ test('hides the admin actions feed from committee members', async ({
   await expect(page.getByRole('region', { name: 'Admin actions' })).toHaveCount(
     0,
   );
+});
+
+test('searches and opens quick-create and personal action editing', async ({
+  page,
+}) => {
+  await page.goto('/fixtures/admin-home');
+  await page.getByRole('button', { name: 'Search Homeish' }).click();
+  const searchDialog = page.getByRole('dialog', { name: 'Search Homeish' });
+  await searchDialog.getByRole('searchbox').fill('billing');
+  await searchDialog.getByRole('searchbox').press('Enter');
+  await expect(
+    searchDialog.getByRole('link', { name: /Billing/ }),
+  ).toBeVisible();
+  await expect(searchDialog.getByRole('link', { name: /A-101/ })).toBeVisible();
+  await searchDialog.getByRole('button', { name: 'Close dialog' }).click();
+
+  await page.getByRole('button', { name: 'Quick create' }).click();
+  const createDialog = page.getByRole('dialog', { name: 'Quick create' });
+  await expect(
+    createDialog.getByRole('link', { name: 'Post a notice' }),
+  ).toBeVisible();
+  await createDialog.getByRole('button', { name: 'Close dialog' }).click();
+
+  await page.getByRole('button', { name: 'Edit actions' }).click();
+  const editDialog = page.getByRole('dialog', { name: 'Edit quick actions' });
+  await expect(editDialog.getByText('Generate monthly bills')).toBeVisible();
+  await editDialog.getByRole('button', { name: 'Save actions' }).click();
+  await expect(editDialog).not.toBeVisible();
 });
 
 test('marks failed sections unavailable with a retry instead of showing zero', async ({

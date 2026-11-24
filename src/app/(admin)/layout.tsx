@@ -6,6 +6,7 @@ import { AppError, createRequestId } from '@/core/errors';
 import { LanguageProvider } from '@/components/language-provider';
 import { getShellData } from '@/core/tenancy/shell-data';
 import { switchSocietyAction } from '@/app/(auth)/actions';
+import { getAllowedQuickActions } from '@/core/home/workspace-operations';
 
 export default async function AdminLayout({
   children,
@@ -15,7 +16,13 @@ export default async function AdminLayout({
     throw new AppError('FORBIDDEN');
   }
   const Shell = context.roles.includes('admin') ? AdminShell : CommitteeShell;
-  const shellData = await getShellData(context);
+  const [shellData, quickActions] = await Promise.all([
+    getShellData(context),
+    getAllowedQuickActions(
+      context,
+      context.roles.includes('admin') ? 'admin' : 'committee',
+    ),
+  ]);
   return (
     <LanguageProvider
       hindiEnabled={context.isHindiEnabled}
@@ -26,6 +33,7 @@ export default async function AdminLayout({
         activeSocietyId={shellData.activeSocietyId ?? undefined}
         enabledModules={[...context.enabledModules]}
         places={shellData.places}
+        quickActions={quickActions}
         societies={shellData.societies}
         switchSociety={switchSocietyAction}
       >

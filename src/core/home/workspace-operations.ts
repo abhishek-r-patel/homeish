@@ -7,7 +7,7 @@ import {
   buildRequestContext,
   type RequestContext,
 } from '../tenancy/request-context';
-import { resolveQuickActions } from './quick-actions';
+import { QUICK_ACTION_KEYS, resolveQuickActions } from './quick-actions';
 import type { SocietyRole } from '../permissions';
 
 const startingPlaceSchema = z.enum([
@@ -28,6 +28,8 @@ const actionKeysSchema = z
   .array(z.string().trim().min(1).max(80))
   .min(1)
   .max(12);
+const pinKeysSchema = z.array(z.enum(QUICK_ACTION_KEYS)).max(8);
+const optionalActionKeysSchema = pinKeysSchema.nullable();
 
 export async function readWorkspacePreferences(context?: RequestContext) {
   const resolvedContext =
@@ -109,12 +111,88 @@ export async function getConfiguredQuickActions(
   const societyId = context.societyId;
   if (!societyId) throw new AppError('FORBIDDEN');
   if (!context.roles.includes(role)) throw new AppError('FORBIDDEN');
-  const keys = await callModuleRpc(
-    context,
-    'workspace_quick_action_defaults_get',
-    { p_society_id: societyId, p_role: role },
-    actionKeysSchema,
-    'Quick actions could not be loaded.',
+  const [keys, pins] = await Promise.all([
+    callModuleRpc(
+      context,
+      'workspace_quick_action_defaults_get',
+      { p_society_id: societyId, p_role: role },
+      actionKeysSchema,
+      'Quick actions could not be loaded.',
+    ),
+    callModuleRpc(
+      context,
+      'workspace_quick_action_pins_get',
+      { p_society_id: societyId },
+      optionalActionKeysSchema,
+      'Pinned actions could not be loaded.',
+    ),
+  ]);
+  const selectedKeys = pins ?? keys;
+  return resolveQuickActions(role, [...context.enabledModules], selectedKeys);
+}
+
+export async function getAllowedQuickActions(
+  context: RequestContext,
+  requestedRole?: SocietyRole,
+) {
+  const roles = context.roles;
+  const role =
+    requestedRole ??
+    (roles.includes('resident')
+      ? 'resident'
+      : roles.includes('admin')
+        ? 'admin'
+        : roles.includes('committee')
+          ? 'committee'
+          : roles.includes('guard')
+            ? 'guard'
+            : roles.includes('hk_supervisor')
+              ? 'hk_supervisor'
+              : null);
+  if (!role) throw new AppError('FORBIDDEN');
+  if (!roles.includes(role)) throw new AppError('FORBIDDEN');
+  return resolveQuickActions(
+    role,
+    [...context.enabledModules],
+    QUICK_ACTION_KEYS,
   );
-  return resolveQuickActions(role, [...context.enabledModules], keys);
+}
+
+export async function saveQuickActionPins(input: unknown) {
+  const parsed = z.array(z.enum(QUICK_ACTION_KEYS)).max(8).safeParse(input);
+  if (!parsed.success) {
+    throw new ValidationError({
+      actions: 'Choose up to 8 supported actions, with each action shown once.',
+    });
+  }
+  if (new Set(parsed.data).size !== parsed.data.length) {
+    throw new ValidationError({ actions: 'Pin each action only once.' });
+  }
+  const context = await buildRequestContext(createRequestId());
+  if (!context.societyId) throw new AppError('FORBIDDEN');
+  const valid = new Set(
+    (await getAllowedQuickActions(context)).map((action) => action.key),
+  );
+  if (parsed.data.some((key) => !valid.has(key))) {
+    throw new AppError('FORBIDDEN');
+  }
+  return callModuleRpc(
+    context,
+    'workspace_quick_action_pins_save',
+    { p_society_id: context.societyId, p_action_keys: parsed.data },
+    pinKeysSchema,
+    'Pinned actions could not be saved.',
+  );
+}
+
+export async function resetQuickActionPins() {
+  const context = await buildRequestContext(createRequestId());
+  if (!context.societyId) throw new AppError('FORBIDDEN');
+  return callModuleRpc(
+    context,
+    'workspace_quick_action_pins_reset',
+    { p_society_id: context.societyId },
+    z.null(),
+    'Pinned actions could not be reset.',
+  );
 }

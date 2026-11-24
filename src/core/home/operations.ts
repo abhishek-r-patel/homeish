@@ -7,7 +7,10 @@ import { authorizeRequest } from '../permissions/authorize';
 import { buildRequestContext } from '../tenancy/request-context';
 import { residentHomeSnapshotSchema } from './validation';
 import { getComingUp, getResidentDashboardGraph } from './dashboard-reads';
-import { getConfiguredQuickActions } from './workspace-operations';
+import {
+  getAllowedQuickActions,
+  getConfiguredQuickActions,
+} from './workspace-operations';
 
 export async function getResidentHome() {
   const context = await buildRequestContext(createRequestId());
@@ -28,8 +31,9 @@ export async function getResidentHome() {
       cause: { code: result.error.code ?? 'unknown' },
     });
   }
-  const [quickActions, comingUp, graph] = await Promise.all([
+  const [quickActions, allQuickActions, comingUp, graph] = await Promise.all([
     getConfiguredQuickActions(context, 'resident'),
+    getAllowedQuickActions(context, 'resident'),
     getComingUp(context),
     getResidentDashboardGraph(context),
   ]);
@@ -37,6 +41,7 @@ export async function getResidentHome() {
     snapshot: residentHomeSnapshotSchema.parse(result.data),
     outstanding,
     quickActions,
+    allQuickActions,
     comingUp,
     graph,
     shortcuts: getRoleNavigation(['resident'], [...context.enabledModules])

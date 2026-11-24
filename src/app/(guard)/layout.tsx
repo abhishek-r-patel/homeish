@@ -8,14 +8,17 @@ import { buildRequestContext } from '@/core/tenancy/request-context';
 import { createRequestId } from '@/core/errors';
 import { getShellData } from '@/core/tenancy/shell-data';
 import { switchSocietyAction } from '@/app/(auth)/actions';
+import { getAllowedQuickActions } from '@/core/home/workspace-operations';
 
 export default async function GuardLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const guardState = await getGuardDutyState();
-  const shellData = await getShellData(
-    await buildRequestContext(createRequestId()),
-  );
+  const context = await buildRequestContext(createRequestId());
+  const [shellData, quickActions] = await Promise.all([
+    getShellData(context),
+    getAllowedQuickActions(context, 'guard'),
+  ]);
   return (
     <LanguageProvider
       hindiEnabled={guardState.isHindiEnabled}
@@ -25,6 +28,7 @@ export default async function GuardLayout({
       <GuardShell
         activeSocietyId={shellData.activeSocietyId ?? undefined}
         places={shellData.places}
+        quickActions={quickActions}
         societies={shellData.societies}
         switchSociety={switchSocietyAction}
       >

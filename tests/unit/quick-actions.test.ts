@@ -33,4 +33,14 @@ describe('dashboard quick actions', () => {
       ).map(({ key }) => key),
     ).toEqual(['request.create', 'visitor.preapprove', 'billing.view']);
   });
+
+  it('keeps the stored pin order and drops a pin that becomes unavailable', () => {
+    expect(
+      resolveQuickActions(
+        'resident',
+        ['billing', 'service_request'],
+        ['request.create', 'visitor.preapprove', 'billing.view'],
+      ).map(({ key }) => key),
+    ).toEqual(['request.create', 'billing.view']);
+  });
 });

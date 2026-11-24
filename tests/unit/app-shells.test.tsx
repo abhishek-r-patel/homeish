@@ -14,6 +14,9 @@ vi.mock('../../src/components/language-provider', () => ({
     translate: (source: string) => source,
   }),
 }));
+vi.mock('../../src/app/workspace-actions', () => ({
+  searchWorkspaceAction: vi.fn(),
+}));
 
 import {
   AdminShell,

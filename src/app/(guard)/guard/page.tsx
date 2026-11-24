@@ -9,7 +9,10 @@ import { Banner } from '@/components/ui/feedback';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage, type MessageValues } from '@/core/i18n/messages';
 import { getComingUp } from '@/core/home/dashboard-reads';
-import { getConfiguredQuickActions } from '@/core/home/workspace-operations';
+import {
+  getAllowedQuickActions,
+  getConfiguredQuickActions,
+} from '@/core/home/workspace-operations';
 import {
   ComingUp,
   QuickActionTiles,
@@ -38,8 +41,9 @@ export default async function GuardHomePage() {
       item.moduleKey === 'service_request',
   );
   const showPettyCash = await isPettyCashCustodian(context);
-  const [quickActions, comingUp] = await Promise.all([
+  const [quickActions, allQuickActions, comingUp] = await Promise.all([
     getConfiguredQuickActions(context, 'guard'),
+    getAllowedQuickActions(context, 'guard'),
     getComingUp(context),
   ]);
   return (
@@ -96,6 +100,9 @@ export default async function GuardHomePage() {
       ) : null}
       <QuickActionTiles
         actions={quickActions.filter(
+          (action) => !gateLinks.some((item) => item.href === action.href),
+        )}
+        availableActions={allQuickActions.filter(
           (action) => !gateLinks.some((item) => item.href === action.href),
         )}
       />
