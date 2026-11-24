@@ -18,6 +18,9 @@ import {
   saveDeveloperOnboardingAction,
   setDeveloperFeatureRequestStatusAction,
   setResidentsJoinedPercentAction,
+  deleteWebsiteEnquiryAction,
+  handleWebsiteEnquiryAction,
+  saveDeveloperWebsiteSettingsAction,
 } from '@/app/developer/actions';
 import type { DeveloperActionResult } from '@/core/developer/console';
 import type { Database } from '@/core/db/database.types';
@@ -834,6 +837,7 @@ export function DeveloperFeatureRequests({
       if (result.ok) router.refresh();
     });
   }
+
   if (!requests.length) {
     return <p className="text-body text-ink-muted">No feature requests.</p>;
   }
@@ -875,6 +879,187 @@ export function DeveloperFeatureRequests({
       </ul>
       {state ? <ActionMessage state={state} /> : null}
     </div>
+  );
+}
+
+type WebsiteSettings = Awaited<
+  ReturnType<
+    typeof import('@/core/website/enquiries').getDeveloperWebsiteSettings
+  >
+>;
+type WebsiteEnquiry = Awaited<
+  ReturnType<
+    typeof import('@/core/website/enquiries').getDeveloperWebsiteEnquiries
+  >
+>[number];
+
+export function DeveloperWebsiteSettings({
+  settings,
+  saveAction = saveDeveloperWebsiteSettingsAction,
+}: {
+  settings: WebsiteSettings;
+  saveAction?: (formData: FormData) => Promise<DeveloperActionResult>;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<DeveloperActionResult | null>(null);
+  const [pending, startTransition] = useTransition();
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    startTransition(async () => {
+      const result = await saveAction(new FormData(event.currentTarget));
+      setState(result);
+      if (result.ok) router.refresh();
+    });
+  }
+  return (
+    <form className="grid gap-space-4" onSubmit={submit}>
+      <TextInput
+        defaultValue={settings.contactEmail ?? ''}
+        helpText="When empty, the Talk to us link is hidden on the public website."
+        id="website-contact-email"
+        label="Public contact email"
+        maxLength={254}
+        name="contactEmail"
+        type="email"
+      />
+      <TextInput
+        defaultValue={settings.enquiryHourlyLimit}
+        helpText="Valid enquiries allowed from one network address per hour."
+        id="website-enquiry-hourly-limit"
+        inputMode="numeric"
+        label="Enquiries per network per hour"
+        max={100}
+        min={1}
+        name="enquiryHourlyLimit"
+        required
+        type="number"
+      />
+      <Button disabled={pending} loading={pending} type="submit">
+        Save website settings
+      </Button>
+      <ActionMessage state={state} />
+    </form>
+  );
+}
+
+function WebsiteEnquiryRow({
+  enquiry,
+  handleAction = handleWebsiteEnquiryAction,
+  deleteAction = deleteWebsiteEnquiryAction,
+}: {
+  enquiry: WebsiteEnquiry;
+  handleAction?: (formData: FormData) => Promise<DeveloperActionResult>;
+  deleteAction?: (formData: FormData) => Promise<DeveloperActionResult>;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<DeveloperActionResult | null>(null);
+  const [pending, startTransition] = useTransition();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  function handle(action: 'handle' | 'delete') {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('enquiryId', enquiry.id);
+      const result =
+        action === 'handle'
+          ? await handleAction(formData)
+          : await deleteAction(formData);
+      setState(result);
+      if (result.ok) router.refresh();
+      if (action === 'delete') setDeleteOpen(false);
+    });
+  }
+
+  return (
+    <li className="grid gap-space-3 rounded-md border border-rule p-space-4">
+      <div className="flex flex-wrap items-start justify-between gap-space-3">
+        <div className="grid gap-space-1">
+          <h3 className="text-body-strong">{enquiry.full_name}</h3>
+          <p className="text-caption text-ink-muted">
+            {enquiry.society_name ?? 'Society not supplied'} ·{' '}
+            {enquiry.city ?? 'City not supplied'}
+          </p>
+        </div>
+        <span className="rounded-sm bg-brand-tint px-space-2 py-space-1 text-micro font-semibold text-brand">
+          {enquiry.status === 'new' ? 'New' : 'Handled'}
+        </span>
+      </div>
+      <dl className="grid gap-space-1 text-caption">
+        <div>
+          <dt className="inline font-semibold">Email: </dt>
+          <dd className="inline">{enquiry.email ?? 'Not supplied'}</dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold">Phone: </dt>
+          <dd className="inline">{enquiry.phone ?? 'Not supplied'}</dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold">Flats: </dt>
+          <dd className="inline">{enquiry.flat_count ?? 'Not supplied'}</dd>
+        </div>
+      </dl>
+      {enquiry.message ? (
+        <p className="whitespace-pre-wrap text-body">{enquiry.message}</p>
+      ) : null}
+      <div className="flex flex-wrap gap-space-2">
+        {enquiry.status === 'new' ? (
+          <Button
+            disabled={pending}
+            onClick={() => handle('handle')}
+            type="button"
+            variant="secondary"
+          >
+            Mark handled
+          </Button>
+        ) : null}
+        <Button
+          disabled={pending}
+          onClick={() => setDeleteOpen(true)}
+          type="button"
+          variant="destructive"
+        >
+          Delete
+        </Button>
+      </div>
+      <ActionMessage state={state} />
+      <ConfirmDialog
+        actionLabel="Delete enquiry"
+        description="Delete this enquiry and its contact details permanently? The deletion is audit-logged without copying the details."
+        id={`delete-website-enquiry-${enquiry.id}`}
+        loading={pending}
+        onConfirm={() => handle('delete')}
+        onOpenChange={setDeleteOpen}
+        open={deleteOpen}
+        title="Delete enquiry"
+        variant="destructive"
+      />
+    </li>
+  );
+}
+
+export function DeveloperWebsiteEnquiries({
+  enquiries,
+  handleAction,
+  deleteAction,
+}: {
+  enquiries: WebsiteEnquiry[];
+  handleAction?: (formData: FormData) => Promise<DeveloperActionResult>;
+  deleteAction?: (formData: FormData) => Promise<DeveloperActionResult>;
+}) {
+  if (!enquiries.length) {
+    return <p className="text-body text-ink-muted">No website enquiries.</p>;
+  }
+  return (
+    <ul className="grid gap-space-4">
+      {enquiries.map((enquiry) => (
+        <WebsiteEnquiryRow
+          deleteAction={deleteAction}
+          enquiry={enquiry}
+          handleAction={handleAction}
+          key={enquiry.id}
+        />
+      ))}
+    </ul>
   );
 }
 

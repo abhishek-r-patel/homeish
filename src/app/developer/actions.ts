@@ -36,6 +36,11 @@ import {
 import { logUnexpectedError } from '@/core/logging/error-logger';
 import { MODULE_KEYS } from '@/core/modules';
 import { QUICK_ACTION_KEYS } from '@/core/home/quick-actions';
+import {
+  deleteDeveloperWebsiteEnquiry,
+  handleDeveloperWebsiteEnquiry,
+  saveDeveloperWebsiteSettings,
+} from '@/core/website/enquiries';
 
 async function runDeveloperAction(
   route: string,
@@ -208,6 +213,18 @@ const quickActionKeysSchema = z
   .array(z.enum(QUICK_ACTION_KEYS))
   .min(1, 'Choose at least one action.')
   .max(12);
+const websiteSettingsSchema = z
+  .object({
+    contactEmail: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .transform((value) => value || null)
+      .pipe(z.email().nullable()),
+    enquiryHourlyLimit: z.coerce.number().int().min(1).max(100),
+  })
+  .strict();
+const enquiryIdSchema = z.object({ enquiryId: z.uuid() }).strict();
 
 export async function createSocietyAction(
   formData: FormData,
@@ -218,6 +235,36 @@ export async function createSocietyAction(
     const societyId = await createSociety(context, input);
     revalidatePath('/developer');
     return { ok: true, message: 'Society created.', societyId };
+  });
+}
+
+export async function saveDeveloperWebsiteSettingsAction(formData: FormData) {
+  return runDeveloperAction('developer.website.settings.save', async () => {
+    await saveDeveloperWebsiteSettings(
+      parseForm(websiteSettingsSchema, formData),
+    );
+    revalidatePath('/');
+    revalidatePath('/privacy');
+    revalidatePath('/developer');
+    return { ok: true, message: 'Website settings saved.' };
+  });
+}
+
+export async function handleWebsiteEnquiryAction(formData: FormData) {
+  return runDeveloperAction('developer.website.enquiry.handle', async () => {
+    const { enquiryId } = parseForm(enquiryIdSchema, formData);
+    await handleDeveloperWebsiteEnquiry(enquiryId);
+    revalidatePath('/developer');
+    return { ok: true, message: 'Enquiry marked as handled.' };
+  });
+}
+
+export async function deleteWebsiteEnquiryAction(formData: FormData) {
+  return runDeveloperAction('developer.website.enquiry.delete', async () => {
+    const { enquiryId } = parseForm(enquiryIdSchema, formData);
+    await deleteDeveloperWebsiteEnquiry(enquiryId);
+    revalidatePath('/developer');
+    return { ok: true, message: 'Enquiry deleted.' };
   });
 }
 

@@ -707,7 +707,6 @@ function SideNavigation({
                     <li key={item.href}>
                       <Link
                         aria-current={active ? 'page' : undefined}
-                        aria-label={item.label}
                         className={`relative flex min-h-12 items-center gap-space-3 rounded-md px-space-3 text-body-strong outline-none focus-visible:outline-2 focus-visible:outline-focus ${collapsed ? 'medium:justify-center medium:px-space-2 expanded:justify-start expanded:px-space-3' : ''} ${active ? (dark ? 'bg-surface/10 text-dev-label' : 'bg-brand-tint text-brand') : dark ? 'hover:bg-surface/10' : 'hover:bg-surface-sunken'}`}
                         href={item.href}
                         title={collapsed ? item.label : undefined}

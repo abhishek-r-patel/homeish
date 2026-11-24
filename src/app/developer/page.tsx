@@ -8,7 +8,15 @@ import {
 import { SocietyList } from '@/components/developer/society-list';
 import { ErrorPanel } from '@/components/ui/feedback';
 import { Card } from '@/components/ui/data-display';
-import { DeveloperFeatureRequests } from '@/components/developer/console-controls';
+import {
+  DeveloperFeatureRequests,
+  DeveloperWebsiteEnquiries,
+  DeveloperWebsiteSettings,
+} from '@/components/developer/console-controls';
+import {
+  getDeveloperWebsiteEnquiries,
+  getDeveloperWebsiteSettings,
+} from '@/core/website/enquiries';
 
 export const metadata = {
   title: 'Societies | Developer Console | Homeish',
@@ -36,10 +44,13 @@ export default async function DeveloperHomePage({
     );
   }
 
-  const [result, featureRequests] = await Promise.all([
-    getDeveloperSocieties(parsedPage.data.page, parsedPage.data.pageSize),
-    getDeveloperFeatureRequests(),
-  ]);
+  const [result, featureRequests, websiteSettings, enquiries] =
+    await Promise.all([
+      getDeveloperSocieties(parsedPage.data.page, parsedPage.data.pageSize),
+      getDeveloperFeatureRequests(),
+      getDeveloperWebsiteSettings(),
+      getDeveloperWebsiteEnquiries(),
+    ]);
   return (
     <section className="grid gap-space-5">
       <header className="flex flex-wrap items-start justify-between gap-space-3">
@@ -69,6 +80,18 @@ export default async function DeveloperHomePage({
         title="Feature requests"
       >
         <DeveloperFeatureRequests requests={featureRequests} />
+      </Card>
+      <Card
+        description="Control the public contact address and per-network enquiry limit."
+        title="Website settings"
+      >
+        <DeveloperWebsiteSettings settings={websiteSettings} />
+      </Card>
+      <Card
+        description={`${enquiries.filter(({ status }) => status === 'new').length} new enquiries`}
+        title="Website enquiries"
+      >
+        <DeveloperWebsiteEnquiries enquiries={enquiries} />
       </Card>
       <SocietyList result={result} />
     </section>

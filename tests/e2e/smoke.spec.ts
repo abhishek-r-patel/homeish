@@ -25,27 +25,15 @@ test('explains homepage availability and keeps the unconfigured demo disabled', 
   await expect(page.locator('a[href*="demo."]')).toHaveCount(0);
 
   const testing = page.getByRole('region', {
-    name: 'Built for the work that fills your day.',
+    name: 'Features grouped the same way as the app.',
   });
-  await expect(testing).toContainText('not open for live society use');
+  await expect(testing).toContainText('live activation are still separate');
   await expect(
-    testing.getByRole('heading', { name: 'Dues and payments' }),
+    testing.getByText('Maintenance, Fines & Payments', { exact: true }),
   ).toBeVisible();
-  const development = page.getByRole('region', {
-    name: 'More work taking shape.',
-  });
-  await expect(development).toContainText('not released to beta');
-  await expect(
-    development.getByRole('heading', {
-      name: 'Resident and vehicle directory',
-    }),
-  ).toBeVisible();
-  const roadmap = page.getByRole('region', { name: 'Planned modules' });
-  await expect(roadmap).toContainText('not usable features');
-  await expect(roadmap).toContainText('Move-in, move-out and tenancy');
-  await expect(
-    roadmap.getByRole('heading', { name: 'Dues and payments' }),
-  ).toHaveCount(0);
+  const next = page.getByRole('region', { name: 'What comes next' });
+  await expect(next).toContainText('Nothing here is usable yet.');
+  await expect(next).toContainText('Connected role demos');
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations).toEqual([]);
@@ -55,10 +43,12 @@ test('loads synthetic screenshots and resolves every homepage section link', asy
   page,
 }) => {
   await page.goto('/');
-  const gallery = page.getByRole('region', { name: 'A look inside Homeish.' });
-  await expect(gallery).toContainText('still images, not a connected demo');
+  const gallery = page.getByRole('region', {
+    name: 'A look at the new Homeish design.',
+  });
+  await expect(gallery).toContainText('not a connected demo');
   const previews = page.getByRole('main').getByRole('img');
-  await expect(previews).toHaveCount(3);
+  await expect(previews).toHaveCount(9);
   for (const preview of await previews.all()) {
     await preview.scrollIntoViewIfNeeded();
     await expect(preview).toHaveAttribute('alt', /^Synthetic /);
