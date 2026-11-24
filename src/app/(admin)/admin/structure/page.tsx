@@ -6,8 +6,8 @@ import {
   CreateBlockForm,
   CreateUnitForm,
   StructureRows,
-  UnitImportControl,
 } from '@/components/structure/structure-controls';
+import { BulkImportControl } from '@/components/home/bulk-import';
 import { getBuildingLayout } from '@/core/structure/building-layout-operations';
 import { getStructure } from '@/core/structure/operations';
 import { AppError } from '@/core/errors';
@@ -74,10 +74,10 @@ export default async function StructurePage({
           <Card
             title={t('Import units from CSV')}
             description={t(
-              'Preview every row before importing. Maximum file size is 512 KB and 1,000 rows.',
+              'Preview every row before importing. Maximum file size is 512 KB and 2,000 rows.',
             )}
           >
-            <UnitImportControl />
+            <BulkImportControl kind="units" />
           </Card>
           <Card title={t('Current structure')}>
             <StructureRows blocks={structure.blocks} units={structure.units} />

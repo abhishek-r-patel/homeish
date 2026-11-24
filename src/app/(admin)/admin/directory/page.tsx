@@ -13,6 +13,8 @@ import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
 import { FeatureTabs } from '@/components/home/feature-tabs';
 import { getFeatureTabs } from '@/core/home/feature-tabs';
+import { BulkImportControl } from '@/components/home/bulk-import';
+import { Card } from '@/components/ui/data-display';
 
 export const metadata = {
   title: 'Resident & vehicle directory | Homeish',
@@ -73,6 +75,16 @@ export default async function AdminDirectoryPage() {
         key={JSON.stringify(workspace)}
         {...workspace}
       />
+      {workspace.canManage ? (
+        <Card
+          title={t('Import vehicles from CSV')}
+          description={t(
+            'Preview every row, then save all vehicles together or save none.',
+          )}
+        >
+          <BulkImportControl kind="vehicles" />
+        </Card>
+      ) : null}
     </div>
   );
 }

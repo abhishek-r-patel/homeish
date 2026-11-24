@@ -5,7 +5,7 @@ import {
   MemberDirectory,
   InviteResidentForm,
 } from '@/components/members/member-controls';
-import { ResidentsImportControl } from '@/components/members/residents-import-control';
+import { BulkImportControl } from '@/components/home/bulk-import';
 import { PendingRegistrations } from '@/components/members/registration-controls';
 import { AppError } from '@/core/errors';
 import { listSocietyMembers } from '@/core/members/operations';
@@ -77,11 +77,11 @@ export default async function MembersPage() {
           </Card>
           <Card
             description={t(
-              'Preview is read-only. Imports create invitations and report any row-level failures in a job.',
+              'Preview is read-only. Every valid invitation is saved together; one error cancels the whole import.',
             )}
             title={t('Import residents from CSV')}
           >
-            <ResidentsImportControl />
+            <BulkImportControl kind="residents" />
           </Card>
         </>
       ) : null}

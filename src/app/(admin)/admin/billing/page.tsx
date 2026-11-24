@@ -55,6 +55,7 @@ import { getRequestLocale } from '@/core/i18n/request-locale';
 import { FeatureTabs } from '@/components/home/feature-tabs';
 import { getFeatureTabs } from '@/core/home/feature-tabs';
 import { translateMessage } from '@/core/i18n/messages';
+import { BulkImportControl } from '@/components/home/bulk-import';
 
 export const metadata = {
   title: 'Billing | Homeish',
@@ -670,6 +671,16 @@ export default async function BillingPage({
             ? t('This society is suspended. Billing information is read-only.')
             : t('Read-only access. Only administrators can change billing.')}
         </Banner>
+      ) : null}
+      {admin.canManage ? (
+        <Card
+          title={t('Import opening dues from CSV')}
+          description={t(
+            'Opening dues can be imported once. Preview every row before saving all bills together.',
+          )}
+        >
+          <BulkImportControl kind="opening_dues" />
+        </Card>
       ) : null}
       {tab === 'reports' && rangeReset ? (
         <Banner tone="warning">

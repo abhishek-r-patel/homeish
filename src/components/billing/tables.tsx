@@ -19,6 +19,7 @@ const KIND_LABELS = {
   fine: 'Fine',
   late_fee: 'Late fee',
   interest: 'Interest',
+  opening_dues: 'Opening dues',
 } as const;
 
 function billingDate(value: string, locale: 'en' | 'hi') {

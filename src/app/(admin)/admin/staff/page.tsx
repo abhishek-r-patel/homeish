@@ -18,6 +18,7 @@ import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
 import { FeatureTabs } from '@/components/home/feature-tabs';
 import { getFeatureTabs } from '@/core/home/feature-tabs';
+import { BulkImportControl } from '@/components/home/bulk-import';
 
 export const metadata = {
   title: 'Staff management | Homeish',
@@ -79,6 +80,14 @@ export default async function AdminStaffPage() {
         title={t('Add staff')}
       >
         <StaffAdminProfileForm units={workspace.units} />
+      </Card>
+      <Card
+        title={t('Import staff from CSV')}
+        description={t(
+          'Preview every row, then save all staff records together or save none.',
+        )}
+      >
+        <BulkImportControl kind="staff" />
       </Card>
 
       <Card title={t('Resident registration approvals')}>

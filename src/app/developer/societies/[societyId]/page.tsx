@@ -13,6 +13,7 @@ import {
   societyStatusSchema,
 } from '@/core/developer/console';
 import { ErrorPanel } from '@/components/ui/feedback';
+import { BulkImportControl } from '@/components/home/bulk-import';
 
 export const metadata = {
   title: 'Society configuration | Developer Console | Homeish',
@@ -64,6 +65,32 @@ export default async function SocietyDetailPage({
         description="Developer-only agreement, contact, stage and read-only admin progress. Contact details are never copied into audit text."
       >
         <DeveloperOnboardingForm record={onboarding} societyId={society.id} />
+      </Card>
+      <Card
+        title="Bulk import"
+        description="Use the same atomic CSV flow as society administrators. These imports are audited as developer actions."
+      >
+        <div className="grid gap-space-5">
+          {(
+            [
+              ['units', 'Units'],
+              ['residents', 'Residents'],
+              ['opening_dues', 'Opening dues'],
+              ['vehicles', 'Vehicles'],
+              ['staff', 'Staff'],
+              ['assets', 'Assets'],
+            ] as const
+          ).map(([kind, title]) => (
+            <section className="grid gap-space-3" key={kind}>
+              <h3 className="text-body-strong">{title}</h3>
+              <BulkImportControl
+                auditHref="/developer/audit?run="
+                kind={kind}
+                societyId={society.id}
+              />
+            </section>
+          ))}
+        </div>
       </Card>
       <Card
         title="Society status"

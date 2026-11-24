@@ -8,7 +8,6 @@ import {
   assignOccupant,
   approveSocietyRegistration,
   changeMemberRoles,
-  confirmResidentsImport,
   deactivateMember,
   endOccupancy,
   inviteResident,
@@ -16,6 +15,7 @@ import {
   previewResidentsImport,
   rejectSocietyRegistration,
 } from '@/core/members/operations';
+import { saveBulkImport } from '@/core/csv/bulk-import-operations';
 
 export async function inviteResidentAction(formData: FormData) {
   return runServerAction('members.invite', async (requestId) => {
@@ -93,13 +93,13 @@ export async function previewResidentsImportAction(csv: string) {
 }
 
 export async function confirmResidentsImportAction(csv: string) {
-  return runServerAction('members.importConfirm', async (requestId) => {
+  return runServerAction('members.importConfirm', async () => {
     if (typeof csv !== 'string') {
       throw new ValidationError({
         file: 'Choose a resident CSV file to import.',
       });
     }
-    const jobId = await confirmResidentsImport(csv, requestId);
+    const jobId = await saveBulkImport({ kind: 'residents', csv });
     revalidatePath('/admin/members');
     revalidatePath('/admin/jobs');
     return {

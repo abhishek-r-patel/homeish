@@ -786,7 +786,7 @@ type BillingContext = Awaited<ReturnType<typeof getContext>>['context'];
 const billingBillMutationSchema = z.object({
   id: z.uuid(),
   unit_id: z.uuid(),
-  kind: z.enum(['regular', 'fine', 'late_fee']),
+  kind: z.enum(['regular', 'fine', 'late_fee', 'interest', 'opening_dues']),
   title: z.string(),
   outstanding_paise: z.number().int().nonnegative(),
 });

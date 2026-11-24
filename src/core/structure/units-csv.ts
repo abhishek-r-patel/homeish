@@ -299,7 +299,7 @@ export async function confirmUnitsImport(csv: string, requestId: string) {
     },
   );
   if (error?.code === '22023') {
-    throw new ValidationError({ csv: 'The import must contain 1–1000 rows.' });
+    throw new ValidationError({ csv: 'The import must contain 1–2000 rows.' });
   }
   if (error)
     throw new Error('Could not create the units import job.', { cause: error });
