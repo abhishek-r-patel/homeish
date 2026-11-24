@@ -15,10 +15,13 @@ import {
   updateQuickActionDefaultsAction,
   updateSocietyAction,
   resetQuickActionDefaultsAction,
+  saveDeveloperOnboardingAction,
+  setDeveloperFeatureRequestStatusAction,
+  setResidentsJoinedPercentAction,
 } from '@/app/developer/actions';
 import type { DeveloperActionResult } from '@/core/developer/console';
 import type { Database } from '@/core/db/database.types';
-import type { ModuleKey } from '@/core/modules';
+import { MODULE_KEYS, type ModuleKey } from '@/core/modules';
 import {
   societyStatusSchema,
   type DeveloperSocietyStatus,
@@ -540,6 +543,7 @@ export function QuickActionDefaultsControls({
           onChange={(event) =>
             setScope(event.currentTarget.value as 'all' | 'society')
           }
+
           value={scope}
         >
           <option value="society">This society</option>
@@ -656,6 +660,221 @@ function QuickActionRoleEditor({
       </div>
       {state ? <ActionMessage state={state} /> : null}
     </form>
+  );
+}
+
+type OnboardingRecord = Awaited<
+  ReturnType<typeof import('@/core/developer/console').getDeveloperOnboarding>
+>;
+
+export function DeveloperOnboardingForm({
+  societyId,
+  record,
+}: {
+  societyId: string;
+  record: OnboardingRecord;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<DeveloperActionResult | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    formData.set('societyId', societyId);
+    setState(null);
+    startTransition(async () => {
+      const result = await saveDeveloperOnboardingAction(formData);
+      setState(result);
+      if (result.ok) router.refresh();
+    });
+  }
+
+  function savePercent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    formData.set('societyId', societyId);
+    startTransition(async () => {
+      const result = await setResidentsJoinedPercentAction(formData);
+      setState(result);
+      if (result.ok) router.refresh();
+    });
+  }
+
+  return (
+    <div className="grid gap-space-5">
+      <div className="rounded-md border border-rule bg-surface p-space-4">
+        <p className="text-body-strong">Admin setup progress</p>
+        <p className="text-caption text-ink-muted">
+          {record.progress.steps.filter((step) => step.complete).length} of{' '}
+          {record.progress.steps.length} complete
+        </p>
+        <ul className="mt-space-3 grid gap-space-1 text-caption">
+          {record.progress.steps.map((step) => (
+            <li key={step.key}>
+              {step.complete ? 'Complete' : 'Open'} · {step.title}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <form className="grid gap-space-4" onSubmit={submit}>
+        <label className="grid gap-space-1 text-body-strong">
+          Stage
+          <select
+            className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+            defaultValue={record.stage}
+            name="stage"
+          >
+            <option value="agreed">Agreed</option>
+            <option value="setting_up">Setting up</option>
+            <option value="live">Live</option>
+            <option value="paused">Paused</option>
+          </select>
+        </label>
+        <TextInput
+          defaultValue={record.go_live_on ?? ''}
+          id={`onboarding-go-live-${societyId}`}
+          label="Go-live date"
+          name="goLiveOn"
+          type="date"
+        />
+        <fieldset className="grid gap-space-2">
+          <legend className="text-body-strong">Agreed modules</legend>
+          {MODULE_KEYS.filter((key) => key !== 'core').map((key) => (
+            <label className="flex min-h-10 items-center gap-space-2" key={key}>
+              <input
+                defaultChecked={record.agreed_modules.includes(key)}
+                name="agreedModule"
+                type="checkbox"
+                value={key}
+              />
+              {key}
+            </label>
+          ))}
+        </fieldset>
+        <TextInput
+          defaultValue={record.contact_name ?? ''}
+          id={`onboarding-contact-name-${societyId}`}
+          label="Contact name"
+          maxLength={120}
+          name="contactName"
+        />
+        <TextInput
+          defaultValue={record.contact_phone ?? ''}
+          id={`onboarding-contact-phone-${societyId}`}
+          label="Contact phone"
+          maxLength={16}
+          name="contactPhone"
+        />
+        <TextInput
+          defaultValue={record.contact_email ?? ''}
+          id={`onboarding-contact-email-${societyId}`}
+          label="Contact email"
+          maxLength={254}
+          name="contactEmail"
+          type="email"
+        />
+        <TextAreaInput
+          defaultValue={record.notes ?? ''}
+          id={`onboarding-notes-${societyId}`}
+          label="Private notes"
+          maxLength={1000}
+          name="notes"
+          rows={4}
+        />
+        <Button disabled={pending} loading={pending} type="submit">
+          Save onboarding
+        </Button>
+      </form>
+      <form
+        className="flex flex-wrap items-end gap-space-3"
+        onSubmit={savePercent}
+      >
+        <TextInput
+          defaultValue={record.progress.residents_joined_percent}
+          id={`onboarding-percent-${societyId}`}
+          inputMode="numeric"
+          label="Residents-joined target (%)"
+          max={100}
+          min={1}
+          name="percent"
+          type="number"
+        />
+        <Button disabled={pending} type="submit" variant="secondary">
+          Save threshold
+        </Button>
+      </form>
+      {state ? <ActionMessage state={state} /> : null}
+    </div>
+  );
+}
+
+export function DeveloperFeatureRequests({
+  requests,
+}: {
+  requests: Awaited<
+    ReturnType<
+      typeof import('@/core/developer/console').getDeveloperFeatureRequests
+    >
+  >;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<DeveloperActionResult | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  function save(requestId: string, status: string) {
+    const formData = new FormData();
+    formData.set('requestId', requestId);
+    formData.set('status', status);
+    setPendingId(requestId);
+    startTransition(async () => {
+      const result = await setDeveloperFeatureRequestStatusAction(formData);
+      setState(result);
+      setPendingId(null);
+      if (result.ok) router.refresh();
+    });
+  }
+  if (!requests.length) {
+    return <p className="text-body text-ink-muted">No feature requests.</p>;
+  }
+  return (
+    <div className="grid gap-space-3">
+      <ul className="grid gap-space-3">
+        {requests.map((request) => (
+          <li
+            className="grid gap-space-2 rounded-md border border-rule p-space-4"
+            key={request.id}
+          >
+            <p className="text-body-strong">
+              {request.society_name} · {request.module_key}
+            </p>
+            {request.note ? (
+              <p className="text-body text-ink-muted">{request.note}</p>
+            ) : null}
+            <p className="text-caption text-ink-muted">
+              {request.requested_by} ·{' '}
+              {new Date(request.created_at).toLocaleString('en-IN')}
+            </p>
+            <label className="grid gap-space-1 text-body-strong">
+              Status
+              <select
+                className="min-h-12 rounded-md border border-rule-strong bg-surface px-space-3"
+                disabled={pendingId === request.id}
+                onChange={(event) =>
+                  save(request.id, event.currentTarget.value)
+                }
+                value={request.status}
+              >
+                <option value="new">New</option>
+                <option value="agreed">Agreed</option>
+                <option value="declined">Declined</option>
+              </select>
+            </label>
+          </li>
+        ))}
+      </ul>
+      {state ? <ActionMessage state={state} /> : null}
+    </div>
   );
 }
 

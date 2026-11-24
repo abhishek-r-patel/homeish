@@ -19,6 +19,9 @@ import {
   requireDeveloperContext,
   setErrorStatus,
   setSocietyStatus,
+  setDeveloperFeatureRequestStatus,
+  saveDeveloperOnboarding,
+  setResidentsJoinedPercent,
   societyInputSchema,
   societyStatusSchema,
   toggleModule,
@@ -129,6 +132,56 @@ const errorStatusSchema = z
   .strict();
 const userErasureSchema = z
   .object({ userId: z.uuid(), confirmation: z.literal('ERASE') })
+  .strict();
+const onboardingInputSchema = z
+  .object({
+    societyId: societyIdSchema,
+    stage: z.enum(['agreed', 'setting_up', 'live', 'paused']),
+    agreedModules: z.array(z.enum(MODULE_KEYS)),
+    goLiveOn: z
+      .string()
+      .trim()
+      .transform((value) => value || null)
+      .pipe(z.iso.date().nullable()),
+    contactName: z
+      .string()
+      .trim()
+      .max(120)
+      .transform((value) => value || null),
+    contactPhone: z
+      .string()
+      .trim()
+      .transform((value) => value || null)
+      .pipe(
+        z
+          .string()
+          .regex(/^\+?[0-9]{10,15}$/)
+          .nullable(),
+      ),
+    contactEmail: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .transform((value) => value || null)
+      .pipe(z.email().nullable()),
+    notes: z
+      .string()
+      .trim()
+      .max(1000)
+      .transform((value) => value || null),
+  })
+  .strict();
+const featureStatusSchema = z
+  .object({
+    requestId: z.uuid(),
+    status: z.enum(['new', 'agreed', 'declined']),
+  })
+  .strict();
+const joinedPercentSchema = z
+  .object({
+    societyId: societyIdSchema,
+    percent: z.coerce.number().int().min(1).max(100),
+  })
   .strict();
 const settingAccessSchema = z
   .object({
@@ -334,6 +387,62 @@ export async function resetQuickActionDefaultsAction(
       revalidatePath('/admin');
       revalidatePath('/home');
       return { ok: true, message: 'Society override removed.' };
+    },
+  );
+}
+
+export async function saveDeveloperOnboardingAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.society.saveOnboarding',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = onboardingInputSchema.parse({
+        societyId: formData.get('societyId'),
+        stage: formData.get('stage'),
+        agreedModules: formData.getAll('agreedModule'),
+        goLiveOn: formData.get('goLiveOn'),
+        contactName: formData.get('contactName'),
+        contactPhone: formData.get('contactPhone'),
+        contactEmail: formData.get('contactEmail'),
+        notes: formData.get('notes'),
+      });
+      await saveDeveloperOnboarding(context, input);
+      revalidatePath(`/developer/societies/${input.societyId}`);
+      return { ok: true, message: 'Onboarding record saved.' };
+    },
+  );
+}
+
+export async function setDeveloperFeatureRequestStatusAction(
+  formData: FormData,
+) {
+  return runDeveloperAction(
+    'developer.featureRequest.setStatus',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = parseForm(featureStatusSchema, formData);
+      await setDeveloperFeatureRequestStatus(
+        context,
+        input.requestId,
+        input.status,
+      );
+      revalidatePath('/developer');
+      revalidatePath('/admin/features');
+      return { ok: true, message: 'Feature request status saved.' };
+    },
+  );
+}
+
+export async function setResidentsJoinedPercentAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.workspace.residentsJoinedPercent',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const input = parseForm(joinedPercentSchema, formData);
+      await setResidentsJoinedPercent(context, input.societyId, input.percent);
+      revalidatePath(`/developer/societies/${input.societyId}`);
+      revalidatePath('/admin');
+      return { ok: true, message: 'Residents-joined threshold saved.' };
     },
   );
 }

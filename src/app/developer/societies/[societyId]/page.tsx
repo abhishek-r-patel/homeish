@@ -2,12 +2,14 @@
 import Link from 'next/link';
 import {
   FirstAdminForm,
+  DeveloperOnboardingForm,
   SocietyForm,
   SocietyStatusControl,
 } from '@/components/developer/console-controls';
 import { Card } from '@/components/ui/data-display';
 import {
   getDeveloperSociety,
+  getDeveloperOnboarding,
   societyStatusSchema,
 } from '@/core/developer/console';
 import { ErrorPanel } from '@/components/ui/feedback';
@@ -37,7 +39,10 @@ export default async function SocietyDetailPage({
       />
     );
   }
-  const society = await getDeveloperSociety(societyId);
+  const [society, onboarding] = await Promise.all([
+    getDeveloperSociety(societyId),
+    getDeveloperOnboarding(societyId),
+  ]);
   const status = societyStatusSchema.safeParse(society.status);
   if (!status.success) {
     throw new Error('The society has an unsupported status.');
@@ -54,6 +59,12 @@ export default async function SocietyDetailPage({
         </Link>
         <h1 className="text-title font-semibold">{society.name}</h1>
       </header>
+      <Card
+        title="Onboarding record"
+        description="Developer-only agreement, contact, stage and read-only admin progress. Contact details are never copied into audit text."
+      >
+        <DeveloperOnboardingForm record={onboarding} societyId={society.id} />
+      </Card>
       <Card
         title="Society status"
         description="Suspension makes this society read-only. Archiving blocks access but keeps its data."

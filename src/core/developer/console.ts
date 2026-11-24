@@ -424,6 +424,122 @@ export async function getDeveloperSociety(societyId: string) {
   return data;
 }
 
+const onboardingSchema = z.object({
+  stage: z.enum(['agreed', 'setting_up', 'live', 'paused']),
+  agreed_modules: z.array(z.enum(MODULE_KEYS)),
+  go_live_on: z.iso.date().nullable(),
+  contact_name: z.string().nullable(),
+  contact_phone: z.string().nullable(),
+  contact_email: z.string().nullable(),
+  notes: z.string().nullable(),
+  progress: z.object({
+    dismissed: z.boolean(),
+    residents_joined_percent: z.number().int(),
+    total_units: z.number().int(),
+    joined_units: z.number().int(),
+    steps: z.array(
+      z.object({
+        key: z.string(),
+        module_key: z.string(),
+        title: z.string(),
+        href: z.string(),
+        complete: z.boolean(),
+      }),
+    ),
+  }),
+});
+const developerFeatureRequestSchema = z.object({
+  id: z.uuid(),
+  society_id: z.uuid(),
+  society_name: z.string(),
+  module_key: z.enum(MODULE_KEYS),
+  note: z.string().nullable(),
+  status: z.enum(['new', 'agreed', 'declined']),
+  requested_by: z.string(),
+  created_at: z.iso.datetime({ offset: true }),
+});
+
+export async function getDeveloperOnboarding(societyId: string) {
+  const context = await requireDeveloperContext();
+  return callModuleRpc(
+    context,
+    'developer_onboarding_record_get',
+    { p_society_id: z.uuid().parse(societyId) },
+    onboardingSchema,
+    'The onboarding record could not be loaded.',
+  );
+}
+
+export async function saveDeveloperOnboarding(
+  context: RequestContext,
+  input: {
+    societyId: string;
+    stage: 'agreed' | 'setting_up' | 'live' | 'paused';
+    agreedModules: string[];
+    goLiveOn: string | null;
+    contactName: string | null;
+    contactPhone: string | null;
+    contactEmail: string | null;
+    notes: string | null;
+  },
+) {
+  return callModuleRpc(
+    context,
+    'developer_onboarding_record_save',
+    {
+      p_society_id: input.societyId,
+      p_stage: input.stage,
+      p_agreed_modules: input.agreedModules,
+      p_go_live_on: input.goLiveOn,
+      p_contact_name: input.contactName,
+      p_contact_phone: input.contactPhone,
+      p_contact_email: input.contactEmail,
+      p_notes: input.notes,
+    },
+    z.null(),
+    'The onboarding record could not be saved.',
+  );
+}
+
+export async function getDeveloperFeatureRequests() {
+  const context = await requireDeveloperContext();
+  return callModuleRpc(
+    context,
+    'developer_feature_requests_get',
+    {},
+    z.array(developerFeatureRequestSchema),
+    'Feature requests could not be loaded.',
+  );
+}
+
+export async function setDeveloperFeatureRequestStatus(
+  context: RequestContext,
+  requestId: string,
+  status: 'new' | 'agreed' | 'declined',
+) {
+  return callModuleRpc(
+    context,
+    'developer_feature_request_status_set',
+    { p_request_id: requestId, p_status: status },
+    z.null(),
+    'The feature request status could not be saved.',
+  );
+}
+
+export async function setResidentsJoinedPercent(
+  context: RequestContext,
+  societyId: string,
+  percent: number,
+) {
+  return callModuleRpc(
+    context,
+    'society_residents_joined_percent_set',
+    { p_society_id: societyId, p_percent: percent },
+    z.null(),
+    'The residents-joined threshold could not be saved.',
+  );
+}
+
 export async function getDeveloperModules(societyId: string) {
   const context = await requireDeveloperContext();
   const client = context.db;
