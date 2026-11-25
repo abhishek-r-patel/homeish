@@ -55,6 +55,17 @@ There are **no magic links**: the email template contains only the six-digit cod
 
 For `signin`, the server checks `public.has_signin_access(email)` through the service-role boundary; that function returns only a boolean and is not callable by clients. After code verification, the authenticated session calls `public.claim_memberships()` to activate and link eligible invitations before loading the request context. Both eligible and ineligible addresses receive the same request-code response; provisioning or delivery failures are logged without changing that response. Malformed input and rate limits remain explicit errors.
 
+**Planned for P61 — "Try as" demo sign-in (PRD D-97, DEMO-4; not built):**
+
+- **`demo.tryAs` (role, society):** `role` is one of `admin`, `committee`, `resident_owner`, `tenant`, `guard` or `housekeeping_supervisor`; `society` is one of the two demo societies, defaulting to Green Meadows Residency.
+- **Where it works:** only on a demo host (ARCHITECTURE AD-15). Anywhere else it returns `NOT_FOUND`.
+- **What it does:** the server picks the fixed reserved `@demo.homeish.invalid` account for that role and society, and creates its session through the privileged module (ARCHITECTURE 8.4 item 8). No email is sent and no code is typed.
+- **Checks:** it refuses any account that is not reserved, is not in a demo-labelled society, or is a developer.
+- **Guard role:** a guard session lands on the gate screen. In the shared-gate society it starts at the roster pick (2.4).
+- **Session:** it lasts until the next reset, when every demo session is revoked. `auth.signOut` works as usual.
+- **Audit:** each call writes a platform audit row (role, society, time; no network address).
+- **Other sign-in:** email-code sign-in for demo accounts is not offered. Their addresses cannot receive mail.
+
 ### 2.2 Developer sign-in
 
 `auth.developerSignIn` (email + password) followed by `auth.developerVerifyMfa` (authenticator code) on a separate screen/route (S-05). Enrollment is available only after password authentication for an existing developer account. Developer access is bound to the Supabase session ID, expires four hours after that session was created, and requires TOTP verification within the previous 15 minutes; otherwise it fails with `MFA_REQUIRED`. Developer accounts are created only by a database administrator (ARCHITECTURE 8.1).
@@ -77,6 +88,11 @@ For `signin`, the server checks `public.has_signin_access(email)` through the se
 - P56 CSV preview is read-only and uses the existing RFC-4180 parser with a 512 KiB file bound and 2,000-row limit. `bulk_import_context_get` supplies society-scoped reference values. `bulk_import_save` reparses and canonicalises the CSV on the server, then atomically saves units, residents, opening dues, vehicles, staff or assets. Admin imports stay in the active society; developer imports require an explicit target society and MFA. Opening-dues save refuses a second run for the same society.
 - P57 `website_public_settings_get` exposes only the configured public contact email and developer-owned enquiry limit. The public enquiry Server Action validates a name, optional society/city/flats, message and at least one email or phone; a filled hidden trap is silently dropped. Before insert it applies a hashed-network-address fixed-window limit using the configured 1–100 default range. `website_enquiry_create` stores the enquiry by request ID, then the existing transactional email sender sends the developer copy on a best-effort basis; email failure never reverses the saved enquiry.
 - Developer MFA operations use `developer_website_settings_save`, `developer_website_enquiries_get`, `developer_website_enquiry_handle` and `developer_website_enquiry_delete`. Admin and society sessions never receive enquiry rows. Deletion removes the details and records a status-only audit entry.
+- P59 `audit_history_access_get` is same-society admin/committee read-only or verified-developer read-only; it returns only `isAdmin`, `canView` and the committee switch state. `audit_history_get` is admin-only by default and committee-only when that switch is on. It accepts bounded date/category filters and returns action, module category, actor name/role, time, redacted settings values and an undo-eligibility flag—never entity IDs, reasons or operational payloads. Routes are `/admin/history` and admin-only `/admin/role-preview`.
+- P60 `developer_resident_visibility_set` lets verified developers show or hide each optional module from resident sessions independently; Core is always visible. Resident UI discovery and `private.module_enabled` use the same flag, while staff roles remain unaffected. `GET /admin/reports` filters the fixed existing-report catalogue by role and enabled modules.
+- `developer_platform_updates_get` and `developer_platform_update_save` / `withdraw` are verified-developer operations for What's new. Admin/committee `platform_updates_get` returns only published, unwithdrawn notes plus the caller's read marker; `platform_update_mark_read` marks one row. No email or push is sent, and links must stay within an in-app `/...` path.
+- `developer_usage_overview_get` is verified-developer only and returns counts per society in this Homeish copy: joined people, 30-day visitors/requests/bills/notices and modules switched on. It returns no names, phones or flat numbers and does not create new activity tracking.
+- `audit_setting_undo` is admin-only. It restores supported admin-editable settings only through the existing module-specific save RPC, within 30 days, and refuses a later settings write, a developer-controlled changed key, a nonmatching current value or `billing.paymentDetails.update`. `developer_committee_history_set` is verified-developer only, is audited, and defaults committee visibility off. The developer audit viewer has no all-societies read and shows rows only after a society is selected.
 - After session expiry, the return path is restricted to local `/session`, `/resident`, `/guard`, `/admin`, or `/developer` routes. External and unsupported destinations are discarded.
 
 ### 2.4 Shared gate account: guard identity (PRD CORE-16)
@@ -225,6 +241,7 @@ Edit operations on data several people can change (requests, resident records, c
 | `auth.verifyCode`                                 | Anyone                       | Check the code and start a session                                      | Links invited memberships                                                                                                                  |
 | `auth.signOut`                                    | Signed in                    | End session                                                             |                                                                                                                                            |
 | `auth.developerSignIn`, `auth.developerVerifyMfa` | D                            | Developer sign-in with MFA                                              | Separate route                                                                                                                             |
+| `demo.tryAs`                                      | Anyone, demo hosts only      | Sign in as a reserved demo account for one role (planned, P61)          | Section 2.1 "Try as"; `NOT_FOUND` elsewhere; rate limited per network address                                                              |
 | `session.get`                                     | Signed in                    | Current user, active/pending societies, roles and enabled modules       | Includes the current user's unread notification count                                                                                      |
 | `session.switchSociety`                           | Signed in                    | Change active society                                                   | Validated against memberships                                                                                                              |
 | `profile.update`                                  | Signed in                    | Change own name, phone, photo, font preference                          | Direct on own row; `manrope_sora` selects the current Homeish fonts; `device_default` selects device fonts                                 |
@@ -297,6 +314,9 @@ All require MFA (2.2). All actions are audited.
 | `developer.errors.resolve` / `ignore`         | Change error status with optional note      | The record and its detail view are refreshed after the audited update                                                     |
 | `developer.audit.list`                        | Cross-society audit                         | Filters include society, actor, action, entity type and IST date range; shows before/after values                         |
 | `developer.health.summary`                    | Counts by severity, society and route       | Built from errors logged in the last 24 hours                                                                             |
+| `developer.demo.getSettings`                  | Show demo reset settings and last run       | Planned, P61 (PRD DEMO-7). Only on a demo host                                                                            |
+| `developer.demo.updateSchedule`               | Turn the schedule on/off and pick weekdays  | Planned, P61. Public demo host only (`homeish-demo`); audited                                                             |
+| `developer.demo.resetNow`                     | Rebuild demo data now                       | Planned, P61. Standard confirmation; refused if a reset is already running; audited; testdb and `homeish-demo`            |
 
 ### 5.5 Visitor (`visitor`)
 
@@ -411,19 +431,20 @@ Routes: admins and committee keep `/admin/requests` (new **Report** and **Daily 
 
 ### 5.9 Notice board (`notice`, P11)
 
-| Operation          | Who                            | Purpose                                    | Notes                                                                                             |
-| ------------------ | ------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `notice.list`      | A, C (all); R (their audience) | Current board: pinned first, then newest   | `view: archive` (withdrawn and expired) for A and C only                                          |
-| `notice.get`       | A, C; R in the audience        | Detail with a five-minute attachment link  | Managers also get `read_count` and `audience_count`                                               |
-| `notice.create`    | A, C                           | Publish to all, chosen blocks or owners    | `clientRequestId`; optional expiry and attachment; notifies the audience in the app and by push   |
-| `notice.update`    | A (any), C (own)               | Edit title, body, audience, expiry or file | `expectedUpdatedAt`; shows "Edited"; no new notification; a replaced or removed file is deleted   |
-| `notice.setPinned` | A (any), C (own)               | Pin or unpin                               | No pin limit                                                                                      |
-| `notice.withdraw`  | A (any), C (own)               | Remove from the board                      | Kept in the archive; never deleted                                                                |
-| `notice.markRead`  | Anyone who can see the notice  | Record a read receipt                      | Called when the resident detail page opens; counts audience members only; clears the in-app alert |
+| Operation           | Who                            | Purpose                                    | Notes                                                                                             |
+| ------------------- | ------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `notice.list`       | A, C (all); R (their audience) | Current board: pinned first, then newest   | `view: archive` (withdrawn and expired) for A and C only                                          |
+| `notice.get`        | A, C; R in the audience        | Detail with a five-minute attachment link  | Managers also get `read_count` and `audience_count`                                               |
+| `notice.reach.read` | A, C                           | Count the current form audience            | Distinct active resident people and flats only; `as of now` for schedules; no names returned      |
+| `notice.create`     | A, C                           | Publish to all, chosen blocks or owners    | `clientRequestId`; optional expiry and attachment; notifies the audience in the app and by push   |
+| `notice.update`     | A (any), C (own)               | Edit title, body, audience, expiry or file | `expectedUpdatedAt`; shows "Edited"; no new notification; a replaced or removed file is deleted   |
+| `notice.setPinned`  | A (any), C (own)               | Pin or unpin                               | No pin limit                                                                                      |
+| `notice.withdraw`   | A (any), C (own)               | Remove from the board                      | Kept in the archive; never deleted                                                                |
+| `notice.markRead`   | Anyone who can see the notice  | Record a read receipt                      | Called when the resident detail page opens; counts audience members only; clears the in-app alert |
 
 P53.1 adds drafts, scheduling and planning fields (Section 5.31); `notice.update` now edits published notices only.
 
-Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members use `/admin/notices` (Current, Planned and Archive tabs), `/admin/notices/new`, `/admin/notices/{noticeId}` and `/admin/notices/{noticeId}/edit`. Guards have no notice access.
+Residents use `/notices` and `/notices/{noticeId}`. Admins and committee members use `/admin/notices` (Current, Planned and Archive tabs), `/admin/notices/new`, `/admin/notices/{noticeId}`, `/admin/notices/{noticeId}/edit` and the post-publish `/done` result address. Bill generation uses `/admin/billing/generate/{jobId}/complete` as a refresh-safe result address. Guards have no notice access.
 
 ### 5.10 Staff management (`staff`, P12)
 
@@ -1039,6 +1060,7 @@ synthetic scenarios and does not call production services.
 | ------------------------------------------- | ------------ | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/api/health`                               | GET          | Uptime monitor                 | None                                                                                                                             | Returns `ok` when the app and database respond, otherwise 503. **No** version, credentials or internals (NFR-11)                                                                                                                  |
 | `/api/jobs/daily`                           | GET, POST    | Platform scheduler or operator | Secret bearer token (`CRON_SECRET`, compared in constant time); anything else is rejected with 401 and logged                    | Runs the daily jobs (below). Returns only counts per job                                                                                                                                                                          |
+| `/api/jobs/demo-reset`                      | GET, POST    | Platform scheduler or operator | Same as `/api/jobs/daily`                                                                                                        | Planned, P61 (PRD DEMO-6). Runs only on the `homeish` project against `homeish-demo`, when the schedule is on and today (IST) is a chosen weekday; one run per IST date; elsewhere returns a skipped count. Returns only counts   |
 | `/api/push/subscriptions`                   | POST, DELETE | Signed-in browser              | Session                                                                                                                          | Save or remove this device's push subscription; max 10 per user; validated; keys stored server-side only                                                                                                                          |
 | `/api/client-errors`                        | POST         | Browser (may be signed out)    | Same-origin, session optional; rate limited                                                                                      | Receives only message, stack, path and device summary; body ≤ 8 KB; strict schema; scrubbed; stored in the error log; returns the `referenceId` shown to the user                                                                 |
 | `/api/files/upload-url`                     | POST, DELETE | Signed-in browser              | Session + the owning module's permission and current parent-record access; developer scope applies only where explicitly allowed | Issues validated owner-scoped upload links; deletes only allowed unreferenced files. Tenancy accepts proofs only and has no client delete or NOC upload; parking accepts report photos only; metering accepts reading photos only |
@@ -1059,7 +1081,7 @@ synthetic scenarios and does not call production services.
 Rules for all routes:
 
 - Same-origin only: no cross-origin access is allowed and no CORS headers are sent.
-- Browser-originated state-changing routes require a session and reject missing/foreign origins. The authenticated daily-job GET and POST are server-to-server scheduler/manual exceptions.
+- Browser-originated state-changing routes require a session and reject missing/foreign origins. The authenticated daily-job and demo-reset GET and POST are server-to-server scheduler/manual exceptions.
 - Inputs are validated (3.4); responses never contain stack traces; errors use the envelope (3.2) with the status codes in 3.5.
 - Binary responses carry `no-store` cache headers and a safe download name (no personal data in the file name).
 
@@ -1220,6 +1242,7 @@ Counters live in the database (`rate_limits`, ARCHITECTURE AD-05) with hashed ke
 | `auth.requestCode`                  | 20 per hour                                             | IP                             |
 | `auth.verifyCode`                   | 5 wrong tries per code (code then invalid); 10 per hour | Email; plus 30 per hour per IP |
 | `auth.developerSignIn` / MFA        | 5 attempts per 15 min                                   | Email + IP                     |
+| `demo.tryAs` (planned, P61)         | 10 per 10 min; 60 per day                               | IP                             |
 | `guards.identify` (PIN)             | 5 failures then 15-minute lock                          | Roster guard                   |
 | `visitor.preApproval.validate`      | 10 failures per 10 min; 30 per 10 min                   | Guard session; society         |
 | `registration.lookupSociety`        | 10 per hour; 30 per day                                 | IP                             |
@@ -1271,16 +1294,18 @@ Names only; values are kept in the host's secret store and never committed (ARCH
 | `CRON_SECRET`                                                                        | **Server secret**                                            | Authenticates the scheduler on `/api/jobs/daily`                                                                                               | Staging, production         |
 | `GUARD_SESSION_SECRET`                                                               | **Server secret**                                            | Signs the on-duty guard cookie                                                                                                                 | All                         |
 | `RATE_LIMIT_HASH_SALT`                                                               | **Server secret**                                            | Hashes rate-limit keys                                                                                                                         | All                         |
+| `DEMO_SUPABASE_URL`, `DEMO_SUPABASE_ANON_KEY` (planned, P61; names fixed at coding)  | Server (handed to the browser per host at request time)      | `homeish-demo` address and public key, used only when the request host is the public demo host (ARCHITECTURE AD-15)                            | `homeish` project only      |
+| `DEMO_SUPABASE_SERVICE_ROLE_KEY` (planned, P61)                                      | **Server secret**                                            | Privileged `homeish-demo` identity for try-as and the demo reset only (ARCHITECTURE 8.4 item 8)                                                | `homeish` project only      |
 
 Notes:
 
 - **Brevo SMTP credentials** for sign-in codes are entered in the Supabase project settings, not in this application's environment.
 - Limits, retention periods and defaults are constants in code and per-society settings in the database, not environment variables **[APA-03]** (this supersedes the "Feature" row in ARCHITECTURE 16.2).
 - Startup validates this list with a schema; a missing or malformed value fails fast with a clear message (names only, never values).
-- Local, preview and staging share the non-production `homeish-testdb` Supabase project and its keys (ARCHITECTURE AD-13); the demo uses `homeish-demo` keys only in the `demo-homeish` deployment; production uses `homeish-live`, whose keys live only in the host secret stores and are never used elsewhere (AD-14).
+- Local, preview and staging share the non-production `homeish-testdb` Supabase project and its keys (ARCHITECTURE AD-13); the demo uses `homeish-demo` keys only in the `demo-homeish` deployment; production uses `homeish-live`, whose keys live only in the host secret stores and are never used elsewhere (AD-14). **Planned 2026-11-25 (PRD D-97, ARCHITECTURE AD-15; P61):** there is no `demo-homeish` deployment. The `homeish` project holds the `homeish-demo` keys under the `DEMO_*` names above and uses them only for the public demo host; the beta demo host on `beta-homeish` uses the testdb keys it already has. Live keys are never used for a demo host.
 - The public website/entry scaffold makes no backend calls. Hosted scaffolds may use `preview` with nonfunctional `.invalid` backend URLs and placeholder keys, never real society credentials. Do not treat this as staging/production readiness. Full demo and beta backends remain unconfigured.
 - D-34 host routing adds no authenticated operations, public society lookup API or reset endpoint. Server-side page rendering resolves an `active` society host through the service-role-only `society_host_lookup(slug)` RPC (id, name, status; archived societies are hidden); onboarding uses the developer RPCs `developer_create_society_with_slug`, `developer_set_society_slug` and `developer_society_onboarding_status` (OPERATIONS "Society onboarding"). Unknown hosts return 404; non-marketing hosts carry `X-Robots-Tag: noindex, nofollow`; host-routed pages are private/no-store. The reserved Maplewood host serves only a disabled `/` placeholder; its other paths return 404, and onboarding and login remain unavailable. An `active` society host serves sign-in and the app, but never `/developer`. A hostname is not a society authorization credential.
-- Homepage H1/H2 adds no operations, routes, enquiry submission or data collection. **Owner decision D-49 (2026-11-15):** the public homepage renders disabled **Try demo** buttons with **Demo coming soon**, no URL and no inline demo. Demo hosting and CTA connection require a later authorised, verified setup after product readiness. Existing demo-host routing and browser-only resets remain unchanged.
+- Homepage H1/H2 adds no operations, routes, enquiry submission or data collection. **Owner decision D-49 (2026-11-15):** the public homepage renders disabled **Try demo** buttons with **Demo coming soon**, no URL and no inline demo. Demo hosting and CTA connection require a later authorised, verified setup after product readiness. Existing demo-host routing and browser-only resets remain unchanged. **Planned 2026-11-25 (PRD D-97; P61):** the buttons open the demo host and its role picker, the browser-only illustration is retired, and the demo hosts gain `demo.tryAs` and the demo-reset route above.
 - The owner approved resuming scaffold hosting on `homeish.vercel.app` and `beta-homeish.vercel.app`: `beta` deploys to `beta-homeish`, then verified beta merges into `main` to deploy `homeish`. Both projects use their Production target with automatic domain assignment; feature-branch Preview tracking is disabled. `APP_BASE_DOMAIN` remains `homeish.vercel.app`; nested demo/beta example domains are not yet attached. Each project's `NEXT_PUBLIC_APP_URL` must match its approved canonical address before connected workflows are enabled. Scaffold deployment does not provision real integrations or change any API contract.
 
 ---
@@ -1298,6 +1323,8 @@ Notes:
 | `request.*`                                                    | R (own), A (manage), C (read), assignee                                    | Active society | Module on                          |
 | `developer.*`                                                  | D only                                                                     | Any society    | MFA; audited                       |
 | `/api/jobs/daily`                                              | Scheduler                                                                  | All societies  | Secret token                       |
+| `/api/jobs/demo-reset` (planned, P61)                          | Scheduler or operator                                                      | Demo societies | Secret token; `homeish` only       |
+| `demo.tryAs` (planned, P61)                                    | Anyone on a demo host (rate limited)                                       | Demo societies | Reserved accounts only             |
 | `/api/health`                                                  | Anyone                                                                     | None           | Status only                        |
 
 ---
@@ -1405,11 +1432,12 @@ Every operation and route logs: request ID, society ID, user ID, operation name,
 
 ### 16.2 Decisions
 
-| ID    | Decision                                                                                                                             | Status                  |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------- |
-| APD-1 | Self-registration uses a **society code** shared by the admin (rotatable, can be switched off); unknown people cannot list societies | **Approved 2026-11-09** |
-| APD-2 | Offset paging with exact totals for all lists in MVP (matches DESIGN); cursor paging only if logs grow very large                    | Recommended, low risk   |
-| APD-3 | `clientRequestId` on user-created records to prevent double entries                                                                  | Recommended, low risk   |
+| ID    | Decision                                                                                                                                                                                                                                      | Status                  |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| APD-1 | Self-registration uses a **society code** shared by the admin (rotatable, can be switched off); unknown people cannot list societies                                                                                                          | **Approved 2026-11-09** |
+| APD-2 | Offset paging with exact totals for all lists in MVP (matches DESIGN); cursor paging only if logs grow very large                                                                                                                             | Recommended, low risk   |
+| APD-3 | `clientRequestId` on user-created records to prevent double entries                                                                                                                                                                           | Recommended, low risk   |
+| APD-4 | Demo hosts get a no-code **Try as** sign-in for reserved demo accounts only, plus a secret-protected demo-reset route (PRD D-97; P61). This is a deliberate exception to email-code-only sign-in; it never reaches real or developer accounts | **Approved 2026-11-25** |
 
 ### 16.3 Changes this file requires elsewhere (already applied)
 
@@ -1426,5 +1454,5 @@ Every operation and route logs: request ID, society ID, user ID, operation name,
 - Server-to-server sync with accounting or other systems
 - Offline queues and background sync
 - SMS or WhatsApp sending
-- Developer impersonation of users
+- Developer impersonation of users (the planned P61 demo **Try as** sign-in is not impersonation: it opens only reserved made-up demo accounts, APD-4)
 - Self-service data export or deletion endpoints for residents

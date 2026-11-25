@@ -1,16 +1,16 @@
 # Homeish — Implementation Plan (IMPLEMENTATION_PLAN.md)
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Product    | Homeish (PRD D-01 approved 2026-11-09)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Version    | 0.30 (redesign P54–P56 locally implemented and verified under PRD D-91–D-93; all of B1–B7 that is not deferred or gated is on beta/testdb, including the B7 additions merged 2026-11-24)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Date       | 2026-11-24 (first draft 2026-11-09)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Depends on | [PRD.md](./PRD.md), [DESIGN.md](./DESIGN.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [AGENTS.md](./AGENTS.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Scope      | MVP: Core, Visitor, Delivery, Billing, Service Request (PRD D-02, approved). Post-MVP modules (P11–P15) and the approved expansion phases P16–P34 (PRD D-38) follow P10. Accepted M25 housing-toolkit additions are planned in P35, M03 unit/ownership additions in P36, M08 billing additions in P37, M09 dues additions in P38, M11 accounts additions in P39, M10 funds additions in P40, M12 financial-report additions in P41, M13 expense-control additions in P42, M01 command-center additions in P43, M04 registration/governing-document additions in P44, M06 agenda additions in P45, and M07 election-governance/gated official-voting additions in P46, M14 vendor/contract/AMC additions in P47, M15 non-pay staff-record additions in P48, M16 helpdesk additions in P49, M17 repairs/redevelopment additions in P50, M18 transfer/clearance additions in P51, M19 tenant/parking/facility additions in P52, and M23 communication additions in P53 and P35.13; M24 insurance/legal items were all rejected; M06's meeting-summary addition extends P43.5, and M20 audit/compliance additions extend P41/P43/P44. Budget management remains out of MVP; D-83's P42.5, P41.3 and P42.2 are on beta/testdb. The navigation and dashboard redesign (PRD D-91, DESIGN DD-10) has P54–P56 locally implemented and verified. |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product    | Homeish (PRD D-01 approved 2026-11-09)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Version    | 0.32 (P61 working demo, UAT data and scheduled reset planned under PRD D-97; P58–P60 planned under PRD D-96; redesign P54–P56 locally implemented and verified under PRD D-91–D-93; all of B1–B7 that is not deferred or gated is on beta/testdb, including the B7 additions merged 2026-11-24)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Date       | 2026-11-25 (first draft 2026-11-09)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Depends on | [PRD.md](./PRD.md), [DESIGN.md](./DESIGN.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [DATABASE.md](./DATABASE.md), [API.md](./API.md), [AGENTS.md](./AGENTS.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Scope      | MVP: Core, Visitor, Delivery, Billing, Service Request (PRD D-02, approved). Post-MVP modules (P11–P15) and the approved expansion phases P16–P34 (PRD D-38) follow P10. Accepted M25 housing-toolkit additions are planned in P35, M03 unit/ownership additions in P36, M08 billing additions in P37, M09 dues additions in P38, M11 accounts additions in P39, M10 funds additions in P40, M12 financial-report additions in P41, M13 expense-control additions in P42, M01 command-center additions in P43, M04 registration/governing-document additions in P44, M06 agenda additions in P45, and M07 election-governance/gated official-voting additions in P46, M14 vendor/contract/AMC additions in P47, M15 non-pay staff-record additions in P48, M16 helpdesk additions in P49, M17 repairs/redevelopment additions in P50, M18 transfer/clearance additions in P51, M19 tenant/parking/facility additions in P52, and M23 communication additions in P53 and P35.13; M24 insurance/legal items were all rejected; M06's meeting-summary addition extends P43.5, and M20 audit/compliance additions extend P41/P43/P44. Budget management remains out of MVP; D-83's P42.5, P41.3 and P42.2 are on beta/testdb. The navigation and dashboard redesign (PRD D-91, DESIGN DD-10) has P54–P56 locally implemented and verified. Everyday polish and admin confidence (PRD D-96, DESIGN DD-11) are planned as P58–P60. The working demo, shared UAT data and scheduled reset (PRD D-97, DESIGN DD-12) are planned as P61. |
 
 ## Quick navigation
 
-- **Phase overviews:** [MVP (P0–P10)](#overview-mvp) · [Post-MVP and expansion (P11–P34)](#overview-expansion) · [Toolkit additions (P35–P53)](#overview-toolkit) · [Redesign (P54–P56)](#overview-redesign)
+- **Phase overviews:** [MVP (P0–P10)](#overview-mvp) · [Post-MVP and expansion (P11–P34)](#overview-expansion) · [Toolkit additions (P35–P53)](#overview-toolkit) · [Redesign (P54–P56)](#overview-redesign) · [Polish and admin confidence (P58–P60)](#overview-polish) · [Working demo (P61)](#overview-demo)
 - **Planning and delivery:** [How to read this plan](#how-to-read-this-plan) · [Rules that apply to every phase](#2-rules-that-apply-to-every-phase) · [Build batches](#build-batches) · [Current next steps](#current-next-steps)
 - **Reference:** [Future Android app](#future-android-app) · [Documents to write](#documents-to-write-alongside-the-build) · [Assumptions and decisions](#plan-decisions) · [Toolkit review decisions](#toolkit-review-decisions)
 
@@ -277,7 +277,43 @@ flowchart LR
 | [P56](#p56) | Multiple flats and bulk import | Core units, occupants and households; billing charges  | CORE-36, CORE-43; D-91, D-93 approved                                | 1 S, 1 M, 3 L  | 12     | P54 place picker; P4B/P4C units and people; P36 unit records; existing CSV imports                         | D-91        | 🟡 Verified locally  |
 | [P57](#p57) | Public homepage refresh 2      | Public website (`src/core/website/`); developer portal | WEB-1–WEB-8; D-95 approved                                           | 2 S, 3 M, 1 L  | 11     | P54 topic groups and new look; P55/P56 setup features; P0.9 homepage; rate limiter and transactional email | D-95        | 🟡 P57.1–.5 verified |
 
-Redesign totals: 29 tasks, about 60 blocks, estimates like the Section 1.2 sizes (S = 1, M = 2, L = 3 blocks). P54–P56 are locally implemented and verified. P57.1–P57.5 are also locally implemented and verified; P57.6 remains blocked until the separately approved demo exists. They are not part of the 125 toolkit tasks or 240 blocks above. Build order, branch and release rules are in Section 2.7.
+Redesign totals: 29 tasks, about 60 blocks, estimates like the Section 1.2 sizes (S = 1, M = 2, L = 3 blocks). P54–P56 are locally implemented and verified. P57.1–P57.5 are also locally implemented and verified; P57.6 remains blocked until the separately approved demo exists; it is now built as [P61.7](#p61-7). They are not part of the 125 toolkit tasks or 240 blocks above. Build order, branch and release rules are in Section 2.7.
+
+<a id="overview-polish"></a>
+
+### 1.4 Everyday polish and admin confidence (P58–P60)
+
+The owner approved these phases for planning on 2026-11-25 (PRD D-96; DESIGN DD-11) after a third comparison with Multi School ERP, AcadLynk and MHM Studios, using proposal Samples 1–3 in [docs/proposals](./proposals/). They add small features around the existing modules; they add no module key and do not change who switches modules on or off (MOD-1, MOD-7).
+
+```mermaid
+flowchart LR
+  P57[P57 Public homepage refresh 2] --> P58[P58 Everyday polish] --> P59[P59 Admin confidence] --> P60[P60 More ways in]
+```
+
+| Phase       | Step             | Key                                                     | PRD                                            | Size          | Blocks | Builds on                                                                   | Source      | Status              |
+| ----------- | ---------------- | ------------------------------------------------------- | ---------------------------------------------- | ------------- | ------ | --------------------------------------------------------------------------- | ----------- | ------------------- |
+| [P58](#p58) | Everyday polish  | Core group pages; `notice`; `billing`; public website   | CORE-44, CORE-45, NTC-6, WEB-9–WEB-11; D-96    | 3 S, 3 M      | 9      | P54.4 group pages, P11/P53 notices, P7 bill generation, P57 homepage        | D-96, DD-11 | 🟡 Verified locally |
+| [P59](#p59) | Admin confidence | Core audit log, settings and registry; developer portal | LOG-9, CORE-46, CORE-47; D-96                  | 2 S, 1 M, 2 L | 10     | `audit_logs`, P54.14 admin-editable settings, P54.1–P54.2 registry and tabs | D-96, DD-11 | 🟡 Verified locally |
+| [P60](#p60) | More ways in     | Core registry and app shells; developer portal          | CORE-48, CORE-49, CORE-50, MOD-9, LOG-10; D-96 | 4 M, 1 L      | 11     | Existing reports, MOD-1–MOD-8, P55 **+** menu, P54.2 tabs                   | D-96, DD-11 | 🟡 Verified locally |
+
+Totals: 16 tasks, about 30 blocks (S = 1, M = 2, L = 3). They are separate from the totals above. Build order, branch and release rules are in Section 2.8.
+
+<a id="overview-demo"></a>
+
+### 1.5 Working demo, UAT data and scheduled reset (P61)
+
+The owner approved this phase for planning on 2026-11-25 (PRD D-97; ARCHITECTURE AD-15; DESIGN DD-12). It builds the made-up data that UAT and the public demo share, one-click "Try as" sign-in, and a reset the developer schedules from the portal. Coding starts only when the owner asks, after the module build is complete.
+
+```mermaid
+flowchart LR
+  M[All modules built] --> P61[P61 Working demo] --> T[testdb UAT on beta] --> D[homeish-demo public demo]
+```
+
+| Phase       | Step         | Key                                                         | PRD                  | Size          | Blocks | Builds on                                                        | Source             | Status     |
+| ----------- | ------------ | ----------------------------------------------------------- | -------------------- | ------------- | ------ | ---------------------------------------------------------------- | ------------------ | ---------- |
+| [P61](#p61) | Working demo | Core platform, developer portal, public website, operations | DEMO-1–DEMO-8, WEB-8 | 2 S, 6 M, 2 L | 20     | Every module, P10.7 UAT script, daily jobs, D-34 hosts, P57 site | D-97, AD-15, DD-12 | ⬜ Planned |
+
+Totals: 10 tasks, about 20 blocks. They are separate from the totals above. Rules are in Section 2.9.
 
 ---
 
@@ -308,19 +344,19 @@ A module is **done** only when all of the following are true:
 
 ### 2.3 Owner decisions needed along the way
 
-| Needed before         | Item                                                                                                                                                                                                   | Status                                                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| P0                    | Accounts created (GitHub, Supabase, Vercel, Sentry, Brevo)                                                                                                                                             | Owner action                                                                                                              |
-| P0.4                  | Docker Desktop cannot be installed; one free Supabase project `homeish-testdb` is used for development, testing and staging (synthetic data only)                                                      | **Approved and created 2026-11-09 (ARCHITECTURE AD-13)**                                                                  |
-| P0.4                  | Three Supabase projects (`homeish-testdb`, `homeish-demo`, `homeish-live`), demo and live paused until needed; separate Vercel project `demo-homeish` for the demo                                     | **Approved and Supabase projects created 2026-11-09 (ARCHITECTURE AD-14)**; `demo-homeish` Vercel project not yet created |
-| P0.7                  | Connect beta Vercel variables to `homeish-testdb` now or wait until backend work begins                                                                                                                | **Owner chose to defer until P1 on 2026-11-09**                                                                           |
-| P3                    | How development sign-in emails are read without the local mail catcher (Docker-only)                                                                                                                   | Open; decide before P3.3                                                                                                  |
-| P2                    | Product logo (DESIGN DD-07; Homeish wordmark + concept-15 mark)                                                                                                                                        | **Approved 2026-11-09:** selected logo asset added                                                                        |
-| P3 (staging)          | Your own domain with email sender verification (SPF/DKIM) so login emails are not marked as spam                                                                                                       | Owner action                                                                                                              |
-| P7                    | A pilot society's UPI ID and payee name for testing (a test UPI ID is fine until the real one is entered by the society's admin)                                                                       | Owner action                                                                                                              |
-| P10                   | Production accounts; `homeish-live` resumed for go-live and upgraded to the paid plan when the first society starts paying (AD-06 amended); the first-ten no-subscription offer does not cover hosting | Owner action                                                                                                              |
-| Before society eleven | Homeish subscription price and offer terms after the first ten free societies                                                                                                                          | Open                                                                                                                      |
-| P10                   | Pilot society and admin contact                                                                                                                                                                        | Owner action                                                                                                              |
+| Needed before         | Item                                                                                                                                                                                                   | Status                                                                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0                    | Accounts created (GitHub, Supabase, Vercel, Sentry, Brevo)                                                                                                                                             | Owner action                                                                                                                                                                                             |
+| P0.4                  | Docker Desktop cannot be installed; one free Supabase project `homeish-testdb` is used for development, testing and staging (synthetic data only)                                                      | **Approved and created 2026-11-09 (ARCHITECTURE AD-13)**                                                                                                                                                 |
+| P0.4                  | Three Supabase projects (`homeish-testdb`, `homeish-demo`, `homeish-live`), demo and live paused until needed; separate Vercel project `demo-homeish` for the demo                                     | **Approved and Supabase projects created 2026-11-09 (ARCHITECTURE AD-14)**; `demo-homeish` Vercel project not yet created; **replaced 2026-11-25 by ARCHITECTURE AD-15 (P61): no separate demo project** |
+| P0.7                  | Connect beta Vercel variables to `homeish-testdb` now or wait until backend work begins                                                                                                                | **Owner chose to defer until P1 on 2026-11-09**                                                                                                                                                          |
+| P3                    | How development sign-in emails are read without the local mail catcher (Docker-only)                                                                                                                   | Open; decide before P3.3                                                                                                                                                                                 |
+| P2                    | Product logo (DESIGN DD-07; Homeish wordmark + concept-15 mark)                                                                                                                                        | **Approved 2026-11-09:** selected logo asset added                                                                                                                                                       |
+| P3 (staging)          | Your own domain with email sender verification (SPF/DKIM) so login emails are not marked as spam                                                                                                       | Owner action                                                                                                                                                                                             |
+| P7                    | A pilot society's UPI ID and payee name for testing (a test UPI ID is fine until the real one is entered by the society's admin)                                                                       | Owner action                                                                                                                                                                                             |
+| P10                   | Production accounts; `homeish-live` resumed for go-live and upgraded to the paid plan when the first society starts paying (AD-06 amended); the first-ten no-subscription offer does not cover hosting | Owner action                                                                                                                                                                                             |
+| Before society eleven | Homeish subscription price and offer terms after the first ten free societies                                                                                                                          | Open                                                                                                                                                                                                     |
+| P10                   | Pilot society and admin contact                                                                                                                                                                        | Owner action                                                                                                                                                                                             |
 
 ### 2.4 Post-MVP and expansion phases (P11–P34)
 
@@ -425,6 +461,42 @@ B1–B7 hold 233 blocks and the Pro version 7, matching the 240 proposed blocks 
 | <a id="batch-b11"></a>B11 | [P57](#p57) | P57.1–P57.6  | 11     |
 
 B8–B10 hold about 60 blocks, matching Section 1.3, and are separate from the B1–B7 totals. B11 (P57) adds about 11 blocks after them.
+
+<a id="polish-rules"></a>
+
+### 2.8 Everyday polish and admin confidence phases (P58–P60)
+
+- **What they are:** the additions approved in PRD D-96 and DESIGN DD-11. They add no module key. They change rules only where D-96 says so: group pages may show a status line (amends CORE-34), admins (and, where switched on, committee members) get a filtered change history (LOG-9), and the developer may hide a module from residents (MOD-9).
+- **Developer and admin settings stay apart (MOD-7):** the committee history switch, the residents-can-see switch, What's new posts and the usage overview live only in the developer portal; admins never get a developer control.
+- **Order:** P58 → P59 → P60, after P57. Each phase follows the Section 2.6 working rules: planning slice with kickoff questions answered, owner go-ahead before code, one lead worker for the registry and migrations, approval before commits.
+- **Branch and release:** built and checked locally first; beta/testdb release needs separate owner approval and green gates; `main` follows the redesign promotion rule in Section 2.7.
+- **Safety:** P59 and P60.2–P60.4 change who can read what, so each needs a database-safety review before release. Before coding a phase, its new tables and functions are added to DATABASE and API as forward-only migrations with row-level security.
+- **Checks:** no feature is lost from menus, permission and module filtering stay identical except where D-96 changes them, and the Section 2.2 accessibility, phone/laptop and browser checks run on every changed screen.
+
+| Batch                     | Order       | Tasks       | Blocks |
+| ------------------------- | ----------- | ----------- | ------ |
+| <a id="batch-b12"></a>B12 | [P58](#p58) | P58.1–P58.6 | 9      |
+| <a id="batch-b13"></a>B13 | [P59](#p59) | P59.1–P59.5 | 10     |
+| <a id="batch-b14"></a>B14 | [P60](#p60) | P60.1–P60.5 | 11     |
+
+B12–B14 hold about 30 blocks, matching Section 1.4.
+
+<a id="demo-rules"></a>
+
+### 2.9 Working demo phase (P61)
+
+- **What it is:** the work approved in PRD D-97. It adds no module key. It changes earlier rules only where D-97 says so:
+  - email-code-only sign-in gets the demo try-as exception (APD-4);
+  - append-only records may be deleted by the demo reset, for demo societies only (DBD-6);
+  - the `homeish` project may hold demo keys (AD-14 amended, AD-15).
+- **When:** after the module build is complete, and only when the owner asks. It follows the Section 2.6 working rules: owner go-ahead before code, one lead worker for migrations, approval before commits.
+- **Hosted data:** seeding or resetting testdb or `homeish-demo` by hand, resuming or pausing projects and adding Vercel variables each need the owner's approval. Live is never touched.
+- **Branch and release:** built and checked locally first; the beta demo goes out with a normal beta release; the public demo opens only with the redesign promotion to `main` (Section 2.7).
+- **Safety:** database-safety review for P61.1 and P61.3; security review for P61.4 and P61.5.
+
+| Batch                     | Order       | Tasks        | Blocks |
+| ------------------------- | ----------- | ------------ | ------ |
+| <a id="batch-b15"></a>B15 | [P61](#p61) | P61.1–P61.10 | 20     |
 
 ---
 
@@ -1010,7 +1082,7 @@ DATABASE 15.2.
 | P10.4                   | Failure drills: database unreachable, realtime down, email/push failure, scheduler missed, duplicate submissions, concurrent decisions; confirm the documented behavior                                                                                                                                                                                  | M    | ✅                                                     |
 | <a id="p10-5"></a>P10.5 | Production setup: resume `homeish-live` (AD-14); paid plan with backups once the first society pays, with the own nightly off-site copy verified before the first society (AD-06 amended); Vercel plan per the owner's decision, your domain and sender verification, production secrets set, regions chosen (API APA-04), Sentry and uptime alerts live | M    | ⬜                                                     |
 | P10.6                   | Restore drill from the production-like backup; integrity checks pass                                                                                                                                                                                                                                                                                     | M    | ⛔ testdb drills ✅; production repeat waits for P10.5 |
-| P10.7                   | Seed a demo/test society (synthetic) and run the full UAT script per module with the owner                                                                                                                                                                                                                                                               | M    | ⛔ Script ready; waits for owner UAT run on beta       |
+| P10.7                   | Seed a demo/test society (synthetic) and run the full UAT script per module with the owner. **Planned 2026-11-25:** the seed and the all-module script are built in [P61](#p61) (P61.2, P61.8, P61.9)                                                                                                                                                    | M    | ⛔ Script ready; waits for owner UAT run on beta       |
 | <a id="p10-8"></a>P10.8 | Go-live: create the pilot society, enable modules one at a time (visitor, delivery, billing, requests) as each passes UAT, onboard the admin, monitor errors daily                                                                                                                                                                                       | M    | ⬜                                                     |
 | <a id="p10-9"></a>P10.9 | Pilot review against PRD success criteria (PRD 14.4) and a prioritised list of fixes and post-MVP items                                                                                                                                                                                                                                                  | S    | ⬜                                                     |
 
@@ -1026,7 +1098,7 @@ DATABASE 15.2.
 | P10.4 | Done; see OPERATIONS.md "Failure drills". Five fixes made.                                                                                                                                                                                                                      |
 | P10.5 | Not started (production; waits for the first society).                                                                                                                                                                                                                          |
 | P10.6 | Local drill from a testdb dump and the guarded GitHub drill both passed (OPERATIONS.md "Restore drill results"). Repeat from the production backup during P10.5.                                                                                                                |
-| P10.7 | Script ready ([UAT_SCRIPT.md](UAT_SCRIPT.md)); the owner runs it on Beta.                                                                                                                                                                                                       |
+| P10.7 | Script ready ([UAT_SCRIPT.md](UAT_SCRIPT.md)); the owner runs it on Beta. P61 replaces its manual setup with the seeded demo societies and extends it to every module.                                                                                                          |
 | P10.8 | Not started. Onboarding script ready (`npm run society:create`, OPERATIONS.md "Society onboarding").                                                                                                                                                                            |
 | P10.9 | Not started.                                                                                                                                                                                                                                                                    |
 
@@ -1795,7 +1867,7 @@ The profile and availability migrations, locally regenerated types, account/devi
 
 **Status:** ⏸ deferred to the future on 2026-11-17 (PRD D-65). The owner is not sure it is needed. Not planned, not estimated, no tasks. The number stays reserved so earlier references still make sense.
 
-The scope options (existing-admin overview, outside operator accounts, read-only admin screens), their rough effort, the figures the owner had selected and the open questions are kept in [deferred-features.md](roadmap/deferred-features.md#multi-society-overview-and-operators-was-p34). Users with several society memberships keep using the existing society switcher. Bring it back only on an explicit owner decision, then re-plan it at kickoff.
+The scope options (existing-admin overview, outside operator accounts, read-only admin screens), their rough effort, the figures the owner had selected and the open questions are kept in [deferred-features.md](roadmap/deferred-features.md#multi-society-overview-and-operators-was-p34). Users with several society memberships keep using the existing society switcher. Bring it back only on an explicit owner decision, then re-plan it at kickoff. A separate developer-only usage overview (counts per society, per copy of Homeish) is planned as [P60.4](#p60) under D-96; it is not this admin-facing overview.
 
 ---
 
@@ -3297,14 +3369,14 @@ P51.1 grows to L because it now carries the warning acknowledgement, parties and
 
 **Tasks:**
 
-| ID                      | Task                                                                                                                                                                                                      | Size | Depends on                              | Sources                    | Status     |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | --------------------------------------- | -------------------------- | ---------- |
-| <a id="p57-1"></a>P57.1 | Content refresh: five facts, modules grouped by the registry's topic groups with correct availability labels, a short real planned list, setup steps, "right for you?", updated FAQs and page description | M    | P54.1, P55, P56                         | WEB-1, WEB-2, WEB-4, WEB-5 | 🟡         |
-| <a id="p57-2"></a>P57.2 | Role cards for five roles and a small new-design gallery, from synthetic development fixtures, with alt text and captions                                                                                 | M    | P54.5, P54.6, P54.15                    | WEB-3, DESIGN 18           | 🟡         |
-| <a id="p57-3"></a>P57.3 | Developer-portal setting for the public contact email address (developer-only write, audited) and the **Talk to us** link, hidden when unset                                                              | S    | None                                    | WEB-6, MOD-7               | 🟡         |
-| <a id="p57-4"></a>P57.4 | Public enquiry form: fields and checks, trap field, per-network-address limit, save, email to the configured address, purpose note; privacy policy update                                                 | L    | P57.3                                   | WEB-7                      | 🟡         |
-| <a id="p57-5"></a>P57.5 | Developer-portal enquiries list: view, mark handled, delete with audit                                                                                                                                    | M    | P57.4                                   | WEB-7, MOD-7               | 🟡         |
-| <a id="p57-6"></a>P57.6 | "Try as resident / guard / admin" buttons, added only after the demo is set up and verified                                                                                                               | S    | Separately authorised demo setup (D-49) | WEB-8                      | ⛔ Blocked |
+| ID                      | Task                                                                                                                                                                                                      | Size | Depends on                                                   | Sources                    | Status     |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------ | -------------------------- | ---------- |
+| <a id="p57-1"></a>P57.1 | Content refresh: five facts, modules grouped by the registry's topic groups with correct availability labels, a short real planned list, setup steps, "right for you?", updated FAQs and page description | M    | P54.1, P55, P56                                              | WEB-1, WEB-2, WEB-4, WEB-5 | 🟡         |
+| <a id="p57-2"></a>P57.2 | Role cards for five roles and a small new-design gallery, from synthetic development fixtures, with alt text and captions                                                                                 | M    | P54.5, P54.6, P54.15                                         | WEB-3, DESIGN 18           | 🟡         |
+| <a id="p57-3"></a>P57.3 | Developer-portal setting for the public contact email address (developer-only write, audited) and the **Talk to us** link, hidden when unset                                                              | S    | None                                                         | WEB-6, MOD-7               | 🟡         |
+| <a id="p57-4"></a>P57.4 | Public enquiry form: fields and checks, trap field, per-network-address limit, save, email to the configured address, purpose note; privacy policy update                                                 | L    | P57.3                                                        | WEB-7                      | 🟡         |
+| <a id="p57-5"></a>P57.5 | Developer-portal enquiries list: view, mark handled, delete with audit                                                                                                                                    | M    | P57.4                                                        | WEB-7, MOD-7               | 🟡         |
+| <a id="p57-6"></a>P57.6 | "Try as resident / guard / admin" buttons, added only after the demo is set up and verified                                                                                                               | S    | Separately authorised demo setup (D-49); now [P61.7](#p61-7) | WEB-8                      | ⛔ Blocked |
 
 ### Acceptance by task
 
@@ -3313,7 +3385,7 @@ P51.1 grows to L because it now carries the warning acknowledgement, parties and
 - **P57.3:** only the developer can set or clear the address; admins and the public cannot change it; changes are audited; with no address the link is not shown.
 - **P57.4:** missing name, or missing both email and phone, is refused with a clear message and the typed text kept; a filled trap field is silently dropped; the limit refuses repeated sends from one network address with a clear message; a saved enquiry stays saved even if the email fails; the privacy policy explains the purpose and who can see enquiries before the form goes live; keyboard, screen reader, 320px and 200% zoom checks pass.
 - **P57.5:** only the developer can read, mark or delete enquiries; no admin or society member ever sees them; each deletion is audited and the deleted details are gone.
-- **P57.6:** buttons appear only after the demo's own authorised setup and checks; until then the D-49 disabled demo button stays.
+- **P57.6:** buttons appear only after the demo's own authorised setup and checks; until then the D-49 disabled demo button stays. Planned 2026-11-25: the buttons are built in [P61.7](#p61-7) (PRD D-97).
 
 **Database and API changes (documented in DATABASE and API before coding; forward-only, row-level security):** a platform contact-settings record (developer writes, public read of the address only through a function); an enquiries table with no public or society read, developer-only read, update and delete, and an audit entry for deletion; one public server action for the form.
 
@@ -3323,7 +3395,308 @@ P51.1 grows to L because it now carries the warning acknowledgement, parties and
 
 **Build batch:** B11 (Section 2.7).
 
-**Status:** 🟡 P57.1–P57.5 implemented and locally verified on 2026-11-24. P57 unit, disposable-database, homepage/developer browser, accessibility and production-build checks passed. The full Playwright run passed 258 tests in one pass plus the isolated retry of its unrelated meeting-fixture title failure. P57.6 remains separately ⛔ blocked until the demo is approved and verified. Commit, beta/testdb release and owner UAT remain separate. P57.6 waits for the separately authorised demo setup.
+**Status:** 🟡 P57.1–P57.5 implemented and locally verified on 2026-11-24. P57 unit, disposable-database, homepage/developer browser, accessibility and production-build checks passed. The full Playwright run passed 258 tests in one pass plus the isolated retry of its unrelated meeting-fixture title failure. P57.6 remains separately ⛔ blocked until the demo is approved and verified. Commit, beta/testdb release and owner UAT remain separate. P57.6 waits for the separately authorised demo setup, now planned as [P61](#p61).
+
+---
+
+<a id="p58"></a>
+
+# Phase P58 — Everyday Polish: Status Lines, Done Screens, Notice Reach and Homepage Additions
+
+[Back to phase overview](#overview-polish)
+
+**Goal:** Small changes that tell people more at a glance and after they act: one status line per feature on admin group pages, a proper done screen after publishing a notice or generating bills, a "will reach" count on the notice form, and three more homepage sections.
+
+**Prerequisites:** P54.4 group pages (`src/app/(admin)/admin/groups/[group]/page.tsx`), the notice form (`src/components/notices/notice-form.tsx`) and publish action (redirects to `/admin/notices/{id}` today), bill generation (`src/app/(admin)/admin/billing/actions.ts`, which today shows "{count} bills generated."), the P57 homepage (`src/core/website/content.ts`) and its fixture screenshots. **Planning estimate:** about 9 blocks (3 S, 3 M).
+
+**Source and approval:** PRD D-96, CORE-44, CORE-45, NTC-6, WEB-9–WEB-11; DESIGN DD-11, 5.3, 6.11, 12.4, 18; [sample-1-in-app-recommended.png](./proposals/sample-1-in-app-recommended.png) and [sample-3-homepage-fits-rules.png](./proposals/sample-3-homepage-fits-rules.png). Approved for planning by the owner on 2026-11-25. Kickoff questions below must be answered before coding.
+
+**Planning notes:** Status lines reuse the read functions each feature page already calls (for example the monthly collection report, `admin_home_get`) so they never show a figure the person cannot already see; a failed or switched-off source leaves the line out. Done screens use the existing Result screen pattern (DESIGN 6.11) at their own address so a page refresh does not repeat the action. The reach count uses a read-only function counting active residents and flats for the chosen audience (all, chosen blocks, owners only); it never returns names. The notice form's current text says everyone is notified; replace it. Homepage sections follow the P57 rules: invented data only, static images with reserved sizes, no carousel. New on-screen text gets Hindi catalog entries where the page already has them.
+
+**Phase decisions (owner-approved 2026-11-25, PRD D-96):**
+
+- **Status lines:** one per feature tile on admin group pages; the waiting count stays.
+- **Done screens:** only after "Admin publishes a notice" and "Admin generates bills". Other candidates are listed in the [deferred-features register](./roadmap/deferred-features.md).
+- **Reach count:** "Will reach N people in M flats" only, no phone-notification count.
+- **Homepage:** crossed-out problems with a "Before" label, "One day in your society" with five new synthetic close-ups, and one FAQ kept general because admin-editable settings differ per society (MOD-8).
+
+**Tasks:**
+
+| ID                      | Task                                                                                                                                   | Size | Depends on     | Sources              | Status |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---- | -------------- | -------------------- | ------ |
+| <a id="p58-1"></a>P58.1 | Group-page status lines: one short line per feature from existing read functions, permission- and module-filtered, left out on failure | M    | P54.4          | CORE-44, DESIGN 5.3  | 🟡     |
+| <a id="p58-2"></a>P58.2 | Done screens after publishing (or scheduling) a notice and after generating bills, with summary and next steps                         | M    | None           | CORE-45, DESIGN 6.11 | 🟡     |
+| <a id="p58-3"></a>P58.3 | Notice reach count on the form, updating with the audience; "as of now" for scheduled notices; replace the "notifies everyone" text    | S    | None           | NTC-6, DESIGN 12.4   | 🟡     |
+| <a id="p58-4"></a>P58.4 | Homepage "Problems Homeish solves" with crossed-out problems, visible "Before" and "With Homeish" labels                               | S    | None           | WEB-9, DESIGN 18     | 🟡     |
+| <a id="p58-5"></a>P58.5 | Homepage "One day in your society": five time-labelled steps with five new synthetic close-up screenshots from development fixtures    | M    | P57.2 fixtures | WEB-10, DESIGN 18    | 🟡     |
+| <a id="p58-6"></a>P58.6 | Homepage FAQ "Can our society change how a module works?" with the general answer                                                      | S    | None           | WEB-11, MOD-7, MOD-8 | 🟡     |
+
+### Acceptance by task
+
+- **P58.1:** every line matches the figure on that feature's own page; a committee member never sees a figure their role cannot open; a switched-off module or failed read shows no line, never zero or an error; waiting counts are unchanged.
+- **P58.2:** refreshing or going Back from a done screen never publishes or generates again; the bill summary matches the generated bills; a scheduled notice shows its time; focus moves to the heading and the outcome is announced.
+- **P58.3:** the count matches active residents and flats in the audience; it updates when blocks or "owners only" change; guards are never counted; no names are returned.
+- **P58.4–P58.6:** each listed problem is solved by a released module; meaning does not depend on strikethrough or colour; images hold no real names, phones, vehicles or flats and have reserved sizes and alt text; the FAQ names no setting that differs per society; 320px, 200% zoom, keyboard and screen-reader checks pass.
+
+**Database and API changes (documented in DATABASE and API before coding; forward-only, row-level security):** one read-only notice reach function (admin and committee of that society). No new table. Status lines and done screens reuse existing functions.
+
+**Tests:** unit tests for status-line formatting and the reach-count text; a database test that the reach function counts only the chosen audience and refuses non-managers; browser tests for both done screens (including refresh), the reach count and the new homepage sections, added to the accessibility sweep.
+
+**Completion criteria:** contracts match what was built; Section 2.2 checks and the listed tests pass; owner review of homepage copy and screenshots on beta.
+
+**Build batch:** B12 (Section 2.8).
+
+**Kickoff questions (with recommendations):**
+
+1. **Which status line for each group-page feature?** Recommendation: one plain fact per feature from data the page already shows (for example Billing "₹X collected this month", Notices "Last notice N days ago", Visitors "N inside now"); a feature with no useful fact gets no line.
+2. **Done screen for a scheduled notice:** same screen with "Will go out on …"? Recommendation: yes.
+3. **Bill done screen "Share reminder" button:** keep only if a reminder action already exists; otherwise show View bills and Back to Billing only. Recommendation: no new reminder feature in P58.
+4. **Problems list:** owner approves the exact four to six problems and answers before build.
+
+**Status:** 🟡 Verified locally on 2026-11-25. Kickoff decisions are recorded: status lines start with Billing, Notices and Visitors, scheduled notices use the result screen, bill completion uses no new reminder action, and five homepage problem/answer pairs are approved. `npm run check` passed 995 unit tests; the focused disposable-PostgreSQL notice suite, focused P58 browser suite and production build passed. The full browser run's four contention timeouts and one updated image-count assertion all passed when rerun serially. Other useful group-page status lines are retained as future release work. Owner UAT and beta/testdb release remain separate.
+
+---
+
+<a id="p59"></a>
+
+# Phase P59 — Admin Confidence: Change History, Undo and Role Preview
+
+[Back to phase overview](#overview-polish)
+
+**Goal:** Let admins see who changed what in their society, undo a recent settings mistake, and check what other roles see, without opening the developer's audit tools to them.
+
+**Prerequisites:** `audit_logs` (DATABASE 3.13) and the existing writers for settings, roles and people, payment confirmations and bill runs; the developer audit page (`src/app/developer/audit/page.tsx`, optional society filter today); per-society admin-editable settings (MOD-8, P54.14); the registry, permission maps and phone tabs (`src/core/modules/index.ts`, `src/components/app-shells.tsx`). **Planning estimate:** about 10 blocks (2 S, 1 M, 2 L).
+
+**Source and approval:** PRD D-96, LOG-9, CORE-46, CORE-47; DESIGN DD-11, 12.4, 12.5; [sample-1-in-app-recommended.png](./proposals/sample-1-in-app-recommended.png). Approved for planning by the owner on 2026-11-25. Kickoff questions below must be answered before coding.
+
+**Planning notes:** Today the database already lets admins and committee members of a society read that society's raw `audit_logs` rows (policy `audit_logs_read_admin_or_developer`), although only the developer has a screen. The owner has approved closing that direct read: tenant roles will reach audit information only through one function with a fixed allow-list and redaction, so hidden fields never leave the database and committee access can be enforced. Before changing the policy, check every current reader, including `admin_home_admin_actions`, and preserve any needed behavior through a narrow function. Undo needs the old value: `audit_logs.before` holds only changed fields, so each undoable setting is checked to have a complete old value in its audit entry; a setting without one is not undoable. Undo calls the setting's existing save function, so MOD-8 and the normal checks still apply, and writes its own audit entry. Role preview builds the picture from the same registry and permission maps used for real navigation, for the admin's own society and switched-on modules, with no data from any real person. Developer-portal writes go through the existing developer access check (MOD-7). This phase changes security rules, so a database-safety review is required before release.
+
+**Phase decisions (owner-approved 2026-11-25, PRD D-96):**
+
+- **Who sees change history:** admins always (own society, cannot be switched off); committee members only when the developer switches it on per society (off by default).
+- **What it shows:** settings, roles and people, payment confirmations and bill runs; ID numbers, private notes, phone numbers and email addresses hidden.
+- **Raw audit-log access:** approved to close direct tenant-role reads; admins and committee members use only the filtered history function. The developer retains raw access. Audit all current readers first.
+- **Developer:** sees every society but must pick one first.
+- **Undo:** 30 days, admin settings only; never money, bills, messages already sent, people or roles, or modules.
+- **Role preview:** Guard, Resident, Committee member, Housekeeping supervisor; read-only picture of menu, tabs and actions; nothing can be opened or done.
+
+**Tasks:**
+
+| ID                      | Task                                                                                                                                                      | Size | Depends on    | Sources                    | Status |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------- | -------------------------- | ------ |
+| <a id="p59-1"></a>P59.1 | Change history page for admins (and committee when switched on): allow-listed, redacted read function; filters; name, role and time per row               | L    | None          | LOG-9, DESIGN 12.4         | 🟡     |
+| <a id="p59-2"></a>P59.2 | Developer portal "Committee can see change history" switch per society, default off, developer-only write, audited                                        | S    | P59.1         | LOG-9, MOD-7, DESIGN 12.5  | 🟡     |
+| <a id="p59-3"></a>P59.3 | Developer audit viewer asks for one society before showing entries                                                                                        | S    | None          | LOG-9, D-06, DESIGN 12.5   | 🟡     |
+| <a id="p59-4"></a>P59.4 | Undo for admin-editable settings within 30 days: latest change only, nothing changed since, still editable (MOD-8), through the normal save; audited      | L    | P59.1, P54.14 | CORE-46, DESIGN 12.4, 11.4 | 🟡     |
+| <a id="p59-5"></a>P59.5 | Role preview: picker for four roles and a framed, read-only picture of Home, tabs, menu groups and available actions, with a text list for screen readers | M    | P54.1, P54.2  | CORE-47, DESIGN 12.4       | 🟡     |
+
+### Acceptance by task
+
+- **P59.1:** only allow-listed actions appear; hidden fields never reach the browser; residents, guards and housekeeping supervisors are refused; committee members are refused unless switched on; no row from another society ever appears; admin and committee database sessions cannot select raw `audit_logs` rows directly.
+- **P59.2:** only the developer can change the switch; admins see its state only as its effect; each change is audited.
+- **P59.3:** no entries are listed until a society is picked; filters keep working within that society.
+- **P59.4:** undo is offered only on the latest change to an admin-editable setting, within 30 days, when nothing changed it since and the admin may still edit it; anything else is refused on the server with a clear reason; excluded areas never show Undo; each undo is audited and appears in the history.
+- **P59.5:** the picture matches what each role really sees for that society's switched-on modules and permissions; nothing inside can be focused, opened or saved; no real person's data appears; the admin is never signed in as another role.
+
+**Database and API changes (documented in DATABASE and API before coding; forward-only, row-level security):** a change-history read function (allow-list and redaction; admin always, committee when switched on); a per-society committee-visibility flag with developer-only write; an undo function that checks the 30-day window, latest-change and MOD-8 rules and calls the setting's existing save path; remove direct `audit_logs` SELECT access for admin and committee roles while preserving developer access and any required dashboard behavior through a separately scoped reader. Role preview needs no database change.
+
+**Tests:** database tests for the allow-list, redaction, role and switch checks, cross-society refusal, refusal of direct raw-log reads for admin and committee, retained developer access and every undo refusal; unit tests for the role-preview builder against the real permission maps; browser tests for the history, undo confirmation and role preview, added to the accessibility sweep.
+
+**Completion criteria:** contracts match what was built; database-safety review passed; Section 2.2 checks and the listed tests pass; owner UAT on beta.
+
+**Build batch:** B13 (Section 2.8).
+
+**Kickoff questions (with recommendations):**
+
+1. **Is UPI and payment-detail settings undoable?** Recommendation: no; a wrong UPI ID restored by mistake can send residents' money to the wrong place, so these stay change-only.
+2. **Undo of an undo?** Recommendation: allowed, as it is simply the latest change, within the same rules.
+3. **Can committee members open role preview?** Recommendation: admins only.
+4. **Exact allow-list of actions and redacted fields:** confirm the list drafted at kickoff from the current audit actions.
+
+**Status:** 🟡 Verified locally on 2026-11-25. Kickoff decisions are recorded: UPI/payment details are never undoable; undoing an undo is allowed; only admins get role preview; the owner intentionally expands history to all current audit actions, grouped by module, while preserving complete private-field redaction and the tenant direct-log access ban. `npm run check` passed 996 unit tests and the production build passed. The disposable database sweep accounted for all 114 files; 109 files passed in the full run, and the three stale raw-audit assertions in two files passed when updated to superuser inspection. The final database safety review reported no High or Medium findings. The full Playwright run accounted for all 265 tests; 262 passed in parallel and the three Expense contention timeouts passed serially. Owner UAT and beta/testdb release remain separate.
+
+---
+
+<a id="p60"></a>
+
+# Phase P60 — More Ways In: Reports Hub, Resident Visibility, What's New, Usage Overview and Phone "+"
+
+[Back to phase overview](#overview-polish)
+
+**Goal:** One place for every report, a developer switch to hide a module from residents, short release notes for admins, a developer usage overview per society, and the quick-create **+** closer to the thumb on phones.
+
+**Prerequisites:** existing reports and exports (billing collection, dues follow-up, as-of collection, expenses, CSV exports), the registry and module toggles (MOD-1–MOD-8), the developer portal home (`src/app/developer/page.tsx`), the top-bar **+** (P55) and phone tabs (P54.2). **Planning estimate:** about 11 blocks (4 M, 1 L).
+
+**Source and approval:** PRD D-96, CORE-48, MOD-9, CORE-49, LOG-10, CORE-50, D-08, D-09; DESIGN DD-11, 5.2, 5.3, 12.4, 12.5; [sample-2-in-app-later.png](./proposals/sample-2-in-app-later.png). Approved for planning by the owner on 2026-11-25. Kickoff questions below must be answered before coding.
+
+**Planning notes:** The reports hub links to existing pages only and lists each report from one list kept next to the registry, filtered by permission and module. Hiding a module from residents is enforced on the server in the same place as the module-disabled check (MOD-2), for resident reads and actions only, and also removes resident search results, Home tiles, Coming up and calendar items. What's new posts are platform-wide, written in the developer portal and read in-app; read state is per person. The usage overview counts per society in this copy's database only; it reads counts through a developer-only function and never returns names or flat numbers. Whether "active in the last 7/30 days" can be counted depends on whether sign-in or activity times are recorded today (kickoff question 3). Moving the phone **+** touches the shared app shells for every role; guards and housekeeping supervisors keep the top-bar **+**. Developer-portal writes go through the existing developer access check (MOD-7). New on-screen text gets Hindi catalog entries.
+
+**Phase decisions (owner-approved 2026-11-25, PRD D-96):**
+
+- **Reports hub:** links to existing reports only; no new report.
+- **Hide from residents:** the developer decides per society in the portal; default is visible.
+- **What's new:** developer writes, in-app only.
+- **Usage overview:** developer portal, per copy (live, demo), counts only; the admin "my societies" overview stays deferred (D-65).
+- **Phone "+":** in the tab bar on phones, top bar on laptops.
+
+**Tasks:**
+
+| ID                      | Task                                                                                                                                        | Size | Depends on | Sources                          | Status |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---------- | -------------------------------- | ------ |
+| <a id="p60-1"></a>P60.1 | Reports hub page under Today: every existing report and export as a card with description and link, filtered by permission and module       | M    | P54.1      | CORE-48, DESIGN 12.4             | 🟡     |
+| <a id="p60-2"></a>P60.2 | Developer "Residents can see" switch per society and module; server refusal of resident reads and actions; hidden from all resident entries | L    | None       | MOD-9, MOD-2, MOD-7, DESIGN 12.5 | 🟡     |
+| <a id="p60-3"></a>P60.3 | What's new: developer posts (create, edit, withdraw, audited) and an in-app list with unread state for admins (and committee if confirmed)  | M    | None       | CORE-49, D-09, DESIGN 12.4–12.5  | 🟡     |
+| <a id="p60-4"></a>P60.4 | Developer usage overview: one row per society in this copy, counts only, Unavailable on failure                                             | M    | None       | LOG-10, D-08, DESIGN 12.5        | 🟡     |
+| <a id="p60-5"></a>P60.5 | Phone **+** in the bottom tab bar for residents, admins and committee, opening the same action sheet; laptops keep the top-bar **+**        | M    | P54.2, P55 | CORE-50, DESIGN 5.2–5.3          | 🟡     |
+
+### Acceptance by task
+
+- **P60.1:** every listed report opens its existing page; no report the person cannot open, or in a switched-off module, is listed; nothing is lost from current menus.
+- **P60.2:** with the switch off, residents see no menu item, tab, tile, search result, Coming up or calendar entry for that module and every resident read or action is refused on the server; staff roles are unaffected; only the developer can change it; each change is audited; modules not approved for the switch never show it.
+- **P60.3:** only the developer writes posts; the intended roles see published posts with a correct unread state; withdrawn posts disappear; no push or email is sent.
+- **P60.4:** only the developer sees the page; counts match the database for each society; no names, phones or flat numbers appear; nothing is read from another copy.
+- **P60.5:** on phones the **+** is in the tab bar with a visible label and 48px target and opens the same actions; on laptops it stays in the top bar; guards and housekeeping supervisors are unchanged; keyboard and screen-reader order is sensible.
+
+**Database and API changes (documented in DATABASE and API before coding; forward-only, row-level security):** a per-society, per-module resident-visibility flag (developer-only write) checked by the module access helpers; a What's new posts table (developer write, member read of published posts) and a per-person read marker; a developer-only usage-count function. The reports hub and phone **+** need no database change.
+
+**Tests:** database tests for resident refusal when hidden, developer-only writes, What's new read rules and the usage function's developer-only access; unit tests for the reports list filter and the tab-bar layout per role; browser tests for each new page and the phone **+**, added to the accessibility sweep and phone/laptop checks.
+
+**Completion criteria:** contracts match what was built; database-safety review passed for P60.2–P60.4; Section 2.2 checks and the listed tests pass; owner UAT on beta.
+
+**Build batch:** B14 (Section 2.8).
+
+**Kickoff questions (with recommendations):**
+
+1. **Which modules may be hidden from residents?** Recommendation: only view-type modules (for example notices, events, directory, budget, major works, documents); never visitors, deliveries, billing or requests, where residents must act.
+2. **Who sees What's new?** Recommendation: admins and committee members; not residents, guards or housekeeping supervisors.
+3. **Which usage counts?** Recommendation: people joined, people active in the last 7 and 30 days (only if sign-in times are already recorded; otherwise left out rather than adding tracking), visitors, requests, bills and notices in the last 30 days, and modules switched on.
+4. **Phone tab bar with the +:** six slots (four tabs, +, More) or replace one tab? Recommendation: keep the four tabs and More, and put the + in the centre as a sixth, slightly raised button, after checking it fits at 320px; if it does not fit, drop the fourth tab into More.
+
+**Status:** 🟡 Verified locally on 2026-11-25. Kickoff decisions are recorded: every optional module may be hidden from residents independently with no forced package; What's new is visible to admins and committee members; usage counts use existing joined/30-day operational data without new activity tracking; and compact navigation keeps three direct tabs, moves the fourth into More, and gives the freed slot to **New**. `npm run check` passed 997 unit tests and the production build passed. The full disposable database sweep accounted for all 115 files; 109 files passed in the full run, and the three compatibility failures (Notice/Poll outside roles plus the Expense check) passed together after narrowing the visibility rule to resident-only sessions. The final database safety review reported no High or Medium findings. The complete Playwright suite passed all 268 tests. Owner UAT and beta/testdb release remain separate.
+
+---
+
+<a id="p61"></a>
+
+# Phase P61 — Working Demo, UAT Data and Scheduled Reset
+
+[Back to phase overview](#overview-demo)
+
+**Goal:** a working demo full of made-up data that covers every UAT case. The same data serves UAT on beta (testdb) and the public demo (`homeish-demo`). Visitors sign in with one click as any of six roles, and the data resets on a schedule the developer controls from the portal.
+
+**Prerequisites:** every module planned for release is built. The owner starts this phase after the module work is done, because the seed must cover each module's records and statuses. Also needed: the P10.7 UAT script, the daily-job route and `CRON_SECRET` handling, the developer portal, the society host routing (D-34) and the P57 homepage. **Planning estimate:** about 20 blocks (2 S, 6 M, 2 L).
+
+**Source and approval:** PRD D-97, DEMO-1–DEMO-8, WEB-8, D-49; ARCHITECTURE AD-14 (amended), AD-15, 6.3, 8.4 item 8, 16.1; DATABASE 3.3, 14.3, DBD-6; API 2.1, 5.1, 5.4, 6, 10, 11, APD-4; DESIGN 12.5 (D-10), 18, DD-12; OPERATIONS "Demo data reset"; DEPLOYMENT 1 and 5; LOCAL_SETUP 6. Approved for planning by the owner on 2026-11-25. All kickoff questions are answered.
+
+**Planning notes:**
+
+- **Order of databases:** build and test against a throwaway local database first. Then seed testdb, which starts empty for UAT, and run UAT on beta. When the owner passes UAT, move to `homeish-demo`. Live is never touched; the scripts accept only local, testdb or demo.
+- **Demo data only:** testdb may later hold other test data, so every demo action works only on societies with `is_demo` and accounts ending `@demo.homeish.invalid`. Nothing else is read, changed or deleted.
+- **Seed:**
+  - It writes through the app's own SQL functions where they exist, so the data obeys the real rules.
+  - Dates are counted back from the reset day, so "this month" always has data.
+  - It covers every role, every status of every module record, English and Hindi text, and both gate-login modes.
+  - It sends no email or push.
+- **Hosting (AD-15):**
+  - Each project chooses the database on the server from a fixed host list. The browser receives its public address and key for that host from the server, because `NEXT_PUBLIC_*` values are fixed at build time.
+  - Check at build time whether nested `vercel.app` names are allowed. If not, use the fallback names in DEPLOYMENT 1.
+- **`vercel.json` is a protected file:** adding the demo-reset cron needs the owner's OK when P61.6 is coded. The cron fires on both projects, but only `homeish` acts.
+- **Safety:**
+  - P61.1, P61.3, P61.4 and P61.5 each need a database-safety or security review before release.
+  - Try-as, the reset and the host switch are new privileged paths (ARCHITECTURE 8.4 item 8).
+- **Text:** new on-screen text gets Hindi catalog entries.
+
+**Phase decisions (owner-approved 2026-11-25, PRD D-97):**
+
+- **Flow:** testdb first for setup and UAT, then `homeish-demo`. testdb starts empty.
+- **Societies:**
+  - Green Meadows Residency: 50 flats, every released module, English first.
+  - Gulmohar Apartments: 30 flats, core modules plus Language Support (Hindi needs it, D-67; owner confirmed 2026-11-25), Hindi first.
+- **Try as:**
+  - Roles: Admin, Committee member, Resident (owner), Tenant, Guard and Housekeeping supervisor.
+  - The homepage shows "Try as resident / guard / admin". The demo host shows all six roles.
+  - It works on beta and the public demo, for demo societies only.
+  - A session lasts until the next reset.
+- **Uploads:** allowed everywhere; deleted at each reset (accepted risk).
+- **Reset:**
+  - Deletes all demo data, including normally permanent records (DBD-6).
+  - Public demo: Monday at about 5:00 AM IST by default. The developer portal can switch the schedule on or off, choose weekdays and press **Reset now**.
+  - testdb: **Reset now** only.
+- **Hosting:** no separate demo Vercel project. `homeish` serves the public demo and `beta-homeish` serves the beta demo (AD-15, owner accepted the risk).
+- **Old browser-only demo:** retired.
+
+**Tasks:**
+
+| ID                        | Task                                                                                                                                                                                         | Size | Depends on   | Sources                                    | Status |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------------ | ------------------------------------------ | ------ |
+| <a id="p61-1"></a>P61.1   | Migrations: `societies.is_demo`, `demo_settings`, reserved-account check, demo exclusion from daily jobs and usage overview, and the append-only reset exception; database tests             | M    | None         | DEMO-1, DEMO-6, DATABASE 3.3, DBD-6        | ⬜     |
+| <a id="p61-2"></a>P61.2   | Seed generator: two societies, 80 flats, every role and every module status, English and Hindi text, relative dates, invented UPI details, no email or push                                  | L    | P61.1        | DEMO-2, DEMO-3, DATABASE 14.3              | ⬜     |
+| <a id="p61-3"></a>P61.3   | Reset function and script: delete demo rows, files and sessions, then reseed in one run; keep old data on failure; audit row; dry run and `--apply`; refuses live and unknown databases      | M    | P61.1, P61.2 | DEMO-6, DBD-6, LOCAL_SETUP 6               | ⬜     |
+| <a id="p61-4"></a>P61.4   | Host-based database choice on `homeish` and `beta-homeish`: fixed host list, server-chosen keys, browser config per host, demo-only variables; tests that no other host can reach demo keys  | L    | None         | AD-15, API 11, DEPLOYMENT 1 and 5          | ⬜     |
+| <a id="p61-5"></a>P61.5   | Try-as sign-in, demo-host role picker and demo notice banner; reserved accounts only; rate limit; audit                                                                                      | M    | P61.2, P61.4 | DEMO-4, API 2.1, APD-4, DESIGN 18, DD-12   | ⬜     |
+| <a id="p61-6"></a>P61.6   | Scheduled reset route, `vercel.json` cron entry (owner OK needed) and the developer-portal Demo data card (schedule, weekdays, Reset now, last run)                                          | M    | P61.3        | DEMO-6, DEMO-7, API 5.4 and 6, DESIGN 12.5 | ⬜     |
+| <a id="p61-7"></a>P61.7   | Homepage: live **Try demo** links and "Try as resident / guard / admin" buttons (takes over P57.6); retire the browser-only illustration                                                     | S    | P61.5        | WEB-8, DEMO-5, DESIGN 18                   | ⬜     |
+| <a id="p61-8"></a>P61.8   | Extend [UAT_SCRIPT.md](UAT_SCRIPT.md) to every released module and role, each step naming the seeded record it uses                                                                          | M    | P61.2        | DEMO-8, P10.7                              | ⬜     |
+| <a id="p61-9"></a>P61.9   | Seed testdb (owner approval), assistant browser UAT pass on the beta demo, then owner UAT and fixes                                                                                          | M    | P61.1–P61.8  | DEMO-8, P10.7                              | ⬜     |
+| <a id="p61-10"></a>P61.10 | Move to `homeish-demo`: pause testdb, resume demo, apply migrations, seed, add the demo-only variables to `homeish`, check the public demo host; opens with the redesign promotion to `main` | S    | P61.9        | DEMO-1, OPERATIONS "Demo data reset"       | ⬜     |
+
+### Acceptance by task
+
+- **P61.1:** only the seed function can set `is_demo`, and it never changes later. Reserved accounts can belong only to demo societies. Daily jobs and the usage overview skip demo societies. Append-only tables still refuse deletes from every caller except the reset function, and the reset function can delete only demo society rows.
+- **P61.2:**
+  - Both societies have every role and both languages.
+  - Every module record status listed in the PRD appears at least once in Green Meadows.
+  - Gulmohar has the core modules plus Language Support only.
+  - All dates fall in a sensible window around the reset day.
+  - No real names, phone numbers or email addresses are used.
+- **P61.3:** a reset leaves the same record counts each time and touches nothing outside demo societies. A forced failure leaves the old data. The script refuses live and unknown addresses, and the dry run changes nothing.
+- **P61.4:**
+  - Demo hosts reach only their demo database.
+  - Every other host on `homeish` still reaches live, and its responses and browser code never contain demo keys.
+  - The beta project is unchanged except for the beta demo host.
+- **P61.5:**
+  - Each role card signs in as the right reserved account and opens that role's home screen.
+  - Try-as is unavailable on any other host and refuses real or developer accounts.
+  - The rate limit works, and the banner shows the next reset day.
+- **P61.6:**
+  - The schedule runs once on a chosen weekday and skips other days.
+  - Switching it off stops it.
+  - **Reset now** asks for confirmation and refuses to start while a reset is running.
+  - The last run shows the result.
+  - The beta host shows **Reset now** only.
+- **P61.7:** the homepage buttons open the demo, the "coming soon" note is gone and the illustration code is removed with its tests.
+- **P61.8:** every released module and role has steps, and each step names its seeded record and expected result.
+- **P61.9:** the assistant's pass records Pass or Fail for each step with screenshots. The owner signs off UAT.
+- **P61.10:** the public demo works with seeded data, the schedule is on, testdb is paused, and live is untouched.
+
+**Database and API changes (already documented in DATABASE and API; forward-only, row-level security):**
+
+- **Database:** `societies.is_demo`, the `demo_settings` singleton, a reserved-account check, demo exclusions and the DBD-6 reset exception.
+- **API:** `demo.tryAs`, `developer.demo.getSettings/updateSchedule/resetNow`, the `/api/jobs/demo-reset` route and the `DEMO_*` variables.
+- Exact names are fixed when the code is written.
+
+**Tests:**
+
+- **Database:** demo label rules, the reset exception (allowed only inside the reset function and only for demo rows) and the exclusions.
+- **Unit:** host-to-database choice, try-as checks, schedule weekday and IST date logic, and the seed's status coverage.
+- **Browser:** role picker, try-as for all six roles, demo banner, Demo data card and homepage buttons, added to the accessibility sweep and phone/laptop checks.
+
+**Completion criteria:**
+
+- Contracts match what was built.
+- Database-safety and security reviews passed for P61.1, P61.3, P61.4 and P61.5.
+- Section 2.2 checks and the listed tests pass.
+- Owner UAT passed on the beta demo.
+- The public demo is checked after P61.10.
+
+**Build batch:** B15 (Section 2.9).
+
+**Kickoff questions:** none left; all were answered on 2026-11-25 (PRD D-97). Two details are checked while coding, not asked:
+
+- whether nested `vercel.app` names work;
+- the owner's OK for the protected `vercel.json` edit.
+
+**Status:** ⬜ Planned. Coding starts when the owner asks, after the module build is complete.
 
 ---
 
@@ -3694,6 +4067,8 @@ Future batches extend this register for every Accept/Reject/Defer. Rejected conf
 
 - **Redesign P54–P56 (D-91–D-93, DD-10):** P54–P56 are locally implemented and verified; commit/release and owner UAT remain separate. `main` keeps the existing app until the owner confirms the redesign is complete.
 - **Public homepage refresh 2 — P57 (D-95, WEB-1–WEB-8):** 🟡 P57.1–P57.5 locally verified. P57.6 role demo buttons remain ⛔ blocked on the separately authorised demo setup (D-49).
+- **Working demo, UAT data and scheduled reset — P61 (D-97, DEMO-1–DEMO-8):** ⬜ planned 2026-11-25; every question answered. Coding starts when the owner asks, after the module build is complete. It takes over P57.6 and the P10.7 seed.
+- **Everyday polish and admin confidence — P58–P60 (D-96, DD-11):** 🟡 P58, P59 and P60 verified locally. Owner UAT and beta/testdb release remain separate.
 - **B4 and P44:** P39.5/P39.7, the approved P40 scope, P43.1/P43.2/P43.3/P43.5 and P44's earlier scope are on beta/testdb. P43.4 and P44.5 are now on beta/testdb under D-86. Next needs owner UAT and the still-open compatibility-only rollback reader; rule publication stays locked pending qualified legal review.
 - **P45:** D-76/MTG-6/7 are implemented, verified and on beta/testdb in the `meeting` module, with the current PRD, design, database and API contracts updated. Owner UAT and main/live release remain separate; P43.5 is separate and not a P45 prerequisite.
 - **P41 (B5/B7):** D-77 and EXP-21–EXP-26 are implemented, verified and on beta/testdb for P41.1, P41.2 and P41.4–P41.7. P41.3 is also on beta/testdb with P42.5, CI and CodeQL green. Owner UAT and main/live release remain separate.

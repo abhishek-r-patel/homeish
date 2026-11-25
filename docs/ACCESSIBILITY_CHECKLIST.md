@@ -67,7 +67,7 @@ Homepage/P18–P21 changes are local-only until an approved release. Use the syn
 ## Homepage refresh (H1/H2)
 
 - [ ] Read the committee-first heading, availability limits and screenshot alternatives in a sensible order.
-- [ ] Understand that **Try demo** is disabled and **Demo coming soon** is an explanatory note, not a working link.
+- [ ] Understand that **Try demo** is disabled and **Demo coming soon** is an explanatory note, not a working link. (Planned P61, PRD D-97: once the working demo ships, this item becomes "open the demo, choose a role card and hear the demo notice banner".)
 - [ ] Reach the main content through the skip link; use the section links, utility sign-in and privacy policy.
 - [ ] Expand and collapse FAQs with keyboard and both screen readers.
 - [ ] At actual 200% browser zoom and enlarged phone text, check for clipped text, overlapping sections or lost controls; repeat at 320px.

@@ -122,6 +122,51 @@ Beta email, 2026-11-11:
    escalation is not lost. Escalation email uses the same transactional email
    setup as the other alerts.
 
+### Demo data reset (planned, PRD D-97; IMPLEMENTATION_PLAN P61)
+
+Not built yet. This is the intended runbook.
+
+- **Where the demo lives.**
+  - The beta demo uses the demo-labelled societies in `homeish-testdb` and is
+    served by `beta-homeish`.
+  - The public demo uses `homeish-demo` and is served by the `homeish`
+    project (ARCHITECTURE AD-15).
+  - Real society data never mixes in: only societies with `is_demo` and
+    accounts ending `@demo.homeish.invalid` are touched.
+- **Schedule (public demo only).**
+  - A daily scheduler call reaches `/api/jobs/demo-reset`. It resets only
+    when the developer portal switch is On and today (IST) is a chosen
+    weekday; the default is Monday at about 5:00 AM IST.
+  - The scheduler may run up to an hour late. One reset runs per IST date.
+  - Pause it with the switch in the developer portal's Demo data card on the
+    demo host. testdb has no schedule.
+- **Reset now.** Use the Demo data card (both demo hosts), or run the reset
+  script against local, testdb or demo. The script refuses any other database,
+  including live.
+- **What a reset does.** It deletes every demo society's records and files,
+  including normally permanent ones (DATABASE DBD-6), and signs out all demo
+  sessions. It then rebuilds both societies with dates counted back from
+  today. Demo sign-in accounts are kept.
+- **If a reset fails.**
+  - The old demo data stays, and a `critical` error is logged with a
+    reference ID.
+  - Open Error Logs and fix the cause, then use **Reset now**.
+  - Do not delete the run key to force a scheduled retry; use **Reset now**
+    instead.
+- **Moving from testdb to `homeish-demo`** (P61.10, after owner UAT passes):
+  1. Pause testdb and resume `homeish-demo`. The free plan keeps only two
+     projects running, and live is one of them.
+  2. Apply migrations to `homeish-demo`.
+  3. Run the seed.
+  4. Add the demo-only variables to the `homeish` project.
+  5. Check the public demo host.
+
+  After go-live, testdb and `homeish-demo` cannot both be active. Plan any
+  beta UAT for a time when the public demo can be paused.
+
+- **Abuse.** Visitors can upload files to the demo. They are deleted at the
+  next reset. If something harmful is uploaded before then, run **Reset now**.
+
 ## Database backups and restore
 
 Google Drive replaces the disabled R2 implementation. The encrypted

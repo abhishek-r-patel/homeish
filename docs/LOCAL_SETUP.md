@@ -37,7 +37,7 @@ substitute. Keep `verify-full` enabled.
 | Project          | Ref                    | Use                                                       | State  |
 | ---------------- | ---------------------- | --------------------------------------------------------- | ------ |
 | `homeish-testdb` | `oqyagsabodaueghtrocv` | Development, manual Auth checks, staging/beta (synthetic) | Active |
-| `homeish-demo`   | `iauusmylbymplqtheinp` | Synthetic showcase data only                              | Paused |
+| `homeish-demo`   | `iauusmylbymplqtheinp` | Synthetic showcase data only; planned public demo (P61)   | Paused |
 | `homeish-live`   | `yhwadldjeyirkgbmoctb` | All onboarded societies — real data; changes only via CI  | Paused |
 
 All are in South Asia (Mumbai). Paused projects must be resumed before 14 Dec 2027 (AD-14).
@@ -86,6 +86,14 @@ set to the Supabase root certificate (the repository variable
 | `npm run check:migrations`                                | Checks migration file names (also part of `npm run check`)             |
 
 Database commands load `.env.testdb.local` and run against the address in it. To target the demo project once it is resumed: `npm run env -- demo node scripts/db.mjs push`. They refuse `homeish-live` and an unset password, and hide database addresses in their output.
+
+**Planned demo data commands (PRD D-97; IMPLEMENTATION_PLAN P61.2–P61.3; not built, names fixed at coding):**
+
+- **Seed:** a demo seed command creates Green Meadows Residency (50 flats) and Gulmohar Apartments (30 flats).
+- **Reset:** a reset command deletes and rebuilds only demo-labelled data.
+- **Where they run:** both accept only a throwaway local database, `testdb` or `demo`. They refuse live or any unknown address.
+- **Dry run:** both print a plan first and change data only with `--apply`.
+- **Approval:** running them on testdb or demo is a hosted data change, so it needs the owner's approval each time until the scheduled reset is live.
 
 ### Database integration tests
 
