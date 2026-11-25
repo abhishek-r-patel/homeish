@@ -90,9 +90,10 @@ export function siteOrigin(
     parsed &&
     (['localhost', '127.0.0.1', '[::1]'].includes(parsed.hostname) ||
       parsed.hostname.endsWith('.localhost'));
-  const prefix = surface === 'website' ? '' : `${surface}.`;
   if (isLocal) {
+    const prefix = surface === 'website' ? '' : `${surface}.`;
     return `http://${prefix}localhost${parsed.port ? `:${parsed.port}` : ''}`;
   }
+  const prefix = surface === 'website' ? '' : `${surface}-`;
   return `https://${prefix}${configuration.APP_BASE_DOMAIN}`;
 }
