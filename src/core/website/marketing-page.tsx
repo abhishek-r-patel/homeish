@@ -22,10 +22,12 @@ function DemoAction() {
 
 export function MarketingPage({
   websiteOrigin,
+  isBeta = false,
   enquiryAction,
   contactSettingsAction,
 }: {
   websiteOrigin: string;
+  isBeta?: boolean;
   enquiryAction?: (formData: FormData) => Promise<ServerActionResult>;
   contactSettingsAction?: () => Promise<
     ServerActionResult<{
@@ -45,13 +47,20 @@ export function MarketingPage({
       </a>
       <header className="border-b border-rule">
         <div className="mx-auto flex max-w-content-marketing flex-wrap items-center justify-between gap-space-5 px-space-5 py-space-5">
-          <Link
-            aria-label={copy.labels.home}
-            className="inline-flex min-h-12 items-center"
-            href="/"
-          >
-            <Brand />
-          </Link>
+          <div className="flex items-center gap-space-3">
+            <Link
+              aria-label={copy.labels.home}
+              className="inline-flex min-h-12 items-center"
+              href="/"
+            >
+              <Brand />
+            </Link>
+            {isBeta && (
+              <span className="rounded-sm bg-warning-tint px-space-3 py-space-2 text-caption font-semibold text-warning">
+                Beta
+              </span>
+            )}
+          </div>
           <nav
             aria-label={copy.labels.navigation}
             className="flex flex-wrap gap-x-space-5 gap-y-space-2"

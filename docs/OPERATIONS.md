@@ -128,19 +128,20 @@ Not built yet. This is the intended runbook.
 
 - **Where the demo lives.**
   - The beta demo uses the demo-labelled societies in `homeish-testdb` and is
-    served by `beta-homeish`.
-  - The public demo uses `homeish-demo` and is served by the `homeish`
-    project (ARCHITECTURE AD-15).
+    served by `beta-homeish` at `demo-beta-homeish.vercel.app`.
+  - The public demo uses `homeish-demo` and is served by its own project,
+    `demo-homeish`, at `demo-homeish.vercel.app` (ARCHITECTURE AD-15).
   - Real society data never mixes in: only societies with `is_demo` and
     accounts ending `@demo.homeish.invalid` are touched.
-- **Schedule (public demo only).**
+- **Schedule (both demos).**
   - A daily scheduler call reaches `/api/jobs/demo-reset`. It resets only
-    when the developer portal switch is On and today (IST) is a chosen
+    when that demo's developer portal switch is On and today (IST) is a chosen
     weekday; the default is Monday at about 5:00 AM IST.
   - The scheduler may run up to an hour late. One reset runs per IST date.
-  - Pause it with the switch in the developer portal's Demo data card on the
-    demo host. testdb has no schedule.
-- **Reset now.** Use the Demo data card (both demo hosts), or run the reset
+  - Pause it with the switch in the developer portal's Demo data card: on
+    `demo-homeish.vercel.app/developer` for the public demo, and in beta's
+    developer portal for the beta demo. Each demo has its own settings.
+- **Reset now.** Use the Demo data card in either portal, or run the reset
   script against local, testdb or demo. The script refuses any other database,
   including live.
 - **What a reset does.** It deletes every demo society's records and files,
@@ -153,16 +154,18 @@ Not built yet. This is the intended runbook.
   - Open Error Logs and fix the cause, then use **Reset now**.
   - Do not delete the run key to force a scheduled retry; use **Reset now**
     instead.
-- **Moving from testdb to `homeish-demo`** (P61.10, after owner UAT passes):
-  1. Pause testdb and resume `homeish-demo`. The free plan keeps only two
-     projects running, and live is one of them.
+- **Opening the public demo** (P61.10, after owner UAT passes):
+  1. Resume `homeish-demo`. The free plan keeps only two projects running; before
+     go-live that is testdb and demo, and live stays paused.
   2. Apply migrations to `homeish-demo`.
   3. Run the seed.
-  4. Add the demo-only variables to the `homeish` project.
-  5. Check the public demo host.
+  4. Connect the `demo-homeish` Vercel project to Git (branch `main`) and add
+     its variables with `homeish-demo` values (DEPLOYMENT 5).
+  5. Check `demo-homeish.vercel.app`.
 
-  After go-live, testdb and `homeish-demo` cannot both be active. Plan any
-  beta UAT for a time when the public demo can be paused.
+  After go-live, testdb and `homeish-demo` cannot both be active on the free
+  plan. Plan any beta UAT for a time when the public demo can be paused, or
+  upgrade Supabase (a billing change only; no app settings change).
 
 - **Abuse.** Visitors can upload files to the demo. They are deleted at the
   next reset. If something harmful is uploaded before then, run **Reset now**.
@@ -322,7 +325,10 @@ passed on 2026-11-12.
 ## Society onboarding
 
 A real society gets its own host, `<slug>.<APP_BASE_DOMAIN>`, on the shared
-`homeish` deployment (PRD D-34). Beta never serves society hosts. Onboarding has
+`homeish` deployment (PRD D-34). **Planned (P61.4):** Vercel refuses new nested
+free addresses, so this becomes `<slug>-homeish.vercel.app` until a custom
+domain exists (PRD §4.0). P61.4 must be released before the first society is
+onboarded. Beta never serves society hosts. Onboarding has
 two halves, and the host opens only when both are done:
 
 1. **Database:** the society row with the matching `slug`, plus an invited
@@ -371,7 +377,9 @@ first-admin email.
    `Asia/Kolkata`, also the default), `--currency` (default `INR`), `--unit-label` (default
    `Unit`), `--plan` and `--society-id`. Run with `--help` to list them. Slugs
    are 1–63 lowercase letters, digits or hyphens. `www`, `demo`, `beta`,
-   `admin` and `api` are reserved. A slug cannot be changed once it is set.
+   `admin` and `api` are reserved (P61.4 adds `demo-beta`, because flat
+   addresses would make it the beta demo's address). A slug cannot be changed
+   once it is set.
 
 2. Add `--apply` and enter your password and authenticator code when prompted.
    Check the printed summary: society created, reused or adopted; admin invited
@@ -383,10 +391,12 @@ first-admin email.
    homeish-live target that lacks `--confirm-live`.
 4. Make the code change that the script prints. Add the entry, or change an
    existing reserved entry such as Maplewood from `status: 'disabled'` to
-   `status: 'active'`. In the `homeish` Vercel project, confirm that the host
-   is attached as a domain, the same way the `demo` host is. Release through
+   `status: 'active'`. In the `homeish` Vercel project, add the society's
+   address as a domain (after P61.4, `<slug>-homeish.vercel.app`; claim it
+   early, because free names are first come, first served). Release through
    beta → main as described in the commit and release workflow in `AGENTS.md`.
-5. After the main deployment, open `https://<slug>.<APP_BASE_DOMAIN>/` and check
+5. After the main deployment, open `https://<slug>.<APP_BASE_DOMAIN>/` (after
+   P61.4, `https://<slug>-homeish.vercel.app/`) and check
    that it shows the society name and **Sign in**. The first admin signs in with
    an email code on that host and continues the onboarding journey: blocks and
    units, guards, then residents (PRD §5 flow 1).

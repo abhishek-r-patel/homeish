@@ -293,6 +293,7 @@ Update documents **in the same task** as the code, without being asked.
 | Working rules                                                           | This file                                   |
 
 - Keep document tables consistent: IDs (A-nn, D-nn, DD-nn, AA-nn, AD-nn, DBA-nn, DBD-nn, APA-nn, APD-nn) are never reused; approved decisions are marked **Approved** with the date; open ones stay visibly open.
+- In documents other than the decision's source, refer to approvals by a descriptive link such as `[D-61: Meetings and AGM](./PRD.md#d-61)`, not by date alone. Keep the date in the source decision entry. When a decision changes, give the new decision a plain-language title, state exactly what it replaces and link the old decision; add a reciprocal “Replaced by” note to the old entry and update affected documents.
 - After a decision change, search all documents for stale wording and fix it.
 - **Do not create new markdown files** to describe changes. Update the existing documents. Create a new document only when the user asks.
 - Do not claim a feature is implemented, tested or approved unless it is. Do not fabricate approvals, test results or measurements.

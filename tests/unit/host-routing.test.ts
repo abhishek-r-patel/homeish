@@ -147,7 +147,10 @@ describe('host routing', () => {
 
   it('builds canonical public links and preserves local ports', () => {
     expect(siteOrigin('demo', 'homeish-abc-team.vercel.app', shared)).toBe(
-      'https://demo.homeish.vercel.app',
+      'https://demo-homeish.vercel.app',
+    );
+    expect(siteOrigin('beta', 'beta-homeish.vercel.app', beta)).toBe(
+      'https://beta-homeish.vercel.app',
     );
     expect(siteOrigin('website', 'maplewood.homeish.vercel.app', shared)).toBe(
       'https://homeish.vercel.app',
