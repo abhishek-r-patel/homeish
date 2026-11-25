@@ -185,7 +185,7 @@ Daily jobs discover trial and active society IDs through the service-role-only `
 
 - **Demo label:** `societies.is_demo boolean not null default false`. It can be set only when a society is created by the demo seed's privileged function, and never changed afterwards; a trigger rejects any update. No API role can write it.
 - **Demo settings:** a singleton `demo_settings` table with no API grants, read and written only through developer-only functions, each change audited:
-  - `schedule_enabled` (default `true` in `homeish-demo`, always `false` on testdb);
+  - `schedule_enabled` (default `true`);
   - `schedule_weekdays` (ISO weekday numbers, default Monday only);
   - `last_run_at`, `last_run_result` (`succeeded`, `failed` or `stopped`) and a short `last_run_message` without personal data.
 - **Reset run key:** one row per IST date in `job_run_keys` (global, demo task name), so a scheduled reset never runs twice in a day.

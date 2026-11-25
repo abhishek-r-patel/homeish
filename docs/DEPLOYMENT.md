@@ -11,19 +11,30 @@ Hosting decisions are in [ARCHITECTURE.md](./ARCHITECTURE.md) Section 16.
 
 ## 1. Environments
 
-| Environment | Vercel project          | Git branch | Supabase project                       | `NEXT_PUBLIC_APP_ENV` | `APP_DEPLOYMENT` | Data                         |
-| ----------- | ----------------------- | ---------- | -------------------------------------- | --------------------- | ---------------- | ---------------------------- |
-| Local       | none                    | any        | `homeish-testdb` (`.env.testdb.local`) | `local`               | `shared`         | Synthetic                    |
-| Beta        | `beta-homeish`          | `beta`     | `homeish-testdb`                       | `staging`             | `beta`           | Synthetic only               |
-| Production  | `homeish`               | `main`     | `homeish-live` (paused)                | `production`          | `shared`         | Real societies; never copied |
-| Demo        | `demo-homeish` (future) | —          | `homeish-demo` (paused)                | —                     | —                | Synthetic, resettable        |
+| Environment | Vercel project                  | Git branch   | Supabase project                       | `NEXT_PUBLIC_APP_ENV` | `APP_DEPLOYMENT` | Data                         |
+| ----------- | ------------------------------- | ------------ | -------------------------------------- | --------------------- | ---------------- | ---------------------------- |
+| Local       | none                            | any          | `homeish-testdb` (`.env.testdb.local`) | `local`               | `shared`         | Synthetic                    |
+| Beta        | `beta-homeish`                  | `beta`       | `homeish-testdb`                       | `staging`             | `beta`           | Synthetic only               |
+| Production  | `homeish`                       | `main`       | `homeish-live` (paused)                | `production`          | `shared`         | Real societies; never copied |
+| Demo        | `demo-homeish` (created, empty) | `main` (P61) | `homeish-demo` (paused)                | set in P61            | `demo` (P61)     | Synthetic, resettable        |
 
-**Planned 2026-11-25 (PRD D-97, ARCHITECTURE AD-15; P61):** the Demo row above is replaced by two demo hosts with no separate Vercel project:
+**Planned 2026-11-25 (PRD D-97, ARCHITECTURE AD-15; P61):** two demos, each holding only one database's keys:
 
-- **Beta demo:** served by `beta-homeish` from the demo-labelled societies in `homeish-testdb`. It needs no new keys.
-- **Public demo:** served by `homeish` from `homeish-demo`. It uses demo-only variables (section 5) and opens only with the redesign promotion to `main`.
+- **Public demo:** the `demo-homeish` project builds `main` against `homeish-demo` and serves `demo-homeish.vercel.app`. It shows what live societies have. It opens only with the redesign promotion to `main`.
+- **Beta demo:** the `beta-homeish` project also serves `demo-beta-homeish.vercel.app`, using the demo-labelled societies in `homeish-testdb`. It shows new features to existing societies before release and needs no new keys.
 
-Each project picks the database from the request host on the server, using a fixed host list. The addresses are planned as `demo.homeish.vercel.app` / `demo.beta.homeish.vercel.app`. Nested `vercel.app` names are probably not allowed; if so, use `demo-homeish.vercel.app` / `demo-beta-homeish.vercel.app` until a custom domain exists. The free plan keeps only two databases running, so after go-live testdb and `homeish-demo` take turns (OPERATIONS "Demo data reset").
+Merging to `beta` updates beta and the beta demo; merging to `main` updates the website, live societies and the public demo. Both demos are seeded by the same scripts, so they match whenever the branches match.
+
+**Addresses (checked 2026-11-25):** Vercel refuses new nested free addresses (`demo.homeish.vercel.app` and `beta.demo-homeish.vercel.app` were both refused, even on the owning project), so every address is a flat `-homeish.vercel.app` name until a custom domain exists. Societies get `<slug>-homeish.vercel.app`, claimed in the `homeish` project when the society is onboarded (OPERATIONS "Society onboarding"). Already claimed:
+
+- `demo-homeish.vercel.app` on `demo-homeish` (no deployment yet, so it returns 404);
+- `demo-beta-homeish.vercel.app` on `beta-homeish`, as a temporary 307 redirect to `beta-homeish.vercel.app`. P61 changes it to serve the beta demo. It is a redirect, not a production address, so beta's own address does not change.
+
+The owner approved claiming `maplewood-homeish.vercel.app`; it is attached to `homeish`. The current app still needs P61's flat host routing before that address serves Maplewood's disabled placeholder.
+
+Vercel's project settings currently show `iad1` for `homeish`, `beta-homeish` and `demo-homeish`. The owner approved Mumbai for all Homeish server-side functions; `vercel.json` now sets `regions: ["bom1"]`. Vercel requires a new deployment for this setting to take effect, so the existing deployments remain in `iad1` until redeployed. When `demo-homeish` is connected to Git (P61.10), it will use the shared region setting. Static assets remain on Vercel's global network. All three Supabase projects are already in South Asia/Mumbai (`ap-south-1`); create any future Homeish Supabase project in that region too. Supabase does not support changing an existing project's region in place.
+
+The free plan keeps only two databases running, so after go-live testdb and `homeish-demo` take turns until Supabase is upgraded (OPERATIONS "Demo data reset"). Upgrading to Supabase Pro is a billing change only: project addresses and keys stay the same, so no variable here changes.
 
 Rules that never change:
 
@@ -156,19 +167,20 @@ target), GitHub Actions secrets, or ignored local profile files. Names are in
 `.env.example`; never commit values. Beta and production have **separate**
 values for every secret.
 
-| Variable                                                                                                     | Beta              | Production            | Notes                                                              |
-| ------------------------------------------------------------------------------------------------------------ | ----------------- | --------------------- | ------------------------------------------------------------------ |
-| `NEXT_PUBLIC_APP_ENV`                                                                                        | `staging`         | `production`          | Controls secure cookies and production-only limits                 |
-| `APP_DEPLOYMENT`, `APP_BASE_DOMAIN`                                                                          | yes               | yes                   | `beta` / `shared`; parent host for society subdomains              |
-| `NEXT_PUBLIC_APP_URL`, `APP_VERSION`                                                                         | yes               | yes                   |                                                                    |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                  | testdb            | live                  | Public                                                             |
-| `SUPABASE_SERVICE_ROLE_KEY`                                                                                  | testdb            | live                  | Server only; used by the strict privileged list (ARCHITECTURE 8.4) |
-| `SUPABASE_DB_URL`                                                                                            | GitHub/local only | operator session only | Never set in Vercel                                                |
-| `BREVO_API_KEY`, `BREVO_DAILY_EMAIL_QUOTA`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`, `DEVELOPER_ALERT_EMAIL` | yes               | yes                   | Sender verified per environment                                    |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`                                         | yes               | yes                   | Separate key pairs                                                 |
-| `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`                                                  | yes               | yes                   | Separate Sentry environments                                       |
-| `CRON_SECRET`, `GUARD_SESSION_SECRET`, `RATE_LIMIT_HASH_SALT`                                                | yes               | yes                   | Random, at least 32 bytes each                                     |
-| `DEMO_SUPABASE_URL`, `DEMO_SUPABASE_ANON_KEY`, `DEMO_SUPABASE_SERVICE_ROLE_KEY` (planned, P61)               | no                | `homeish-demo`        | Used only for the public demo host (API 11; ARCHITECTURE AD-15)    |
+| Variable                                                                                                     | Beta              | Production            | Notes                                                                                      |
+| ------------------------------------------------------------------------------------------------------------ | ----------------- | --------------------- | ------------------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_APP_ENV`                                                                                        | `staging`         | `production`          | Controls secure cookies and production-only limits                                         |
+| `APP_DEPLOYMENT`, `APP_BASE_DOMAIN`                                                                          | yes               | yes                   | `beta` / `shared` (P61 adds `demo` for `demo-homeish`); parent host for society subdomains |
+| `NEXT_PUBLIC_APP_URL`, `APP_VERSION`                                                                         | yes               | yes                   |                                                                                            |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                  | testdb            | live                  | Public                                                                                     |
+| `SUPABASE_SERVICE_ROLE_KEY`                                                                                  | testdb            | live                  | Server only; used by the strict privileged list (ARCHITECTURE 8.4)                         |
+| `SUPABASE_DB_URL`                                                                                            | GitHub/local only | operator session only | Never set in Vercel                                                                        |
+| `BREVO_API_KEY`, `BREVO_DAILY_EMAIL_QUOTA`, `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`, `DEVELOPER_ALERT_EMAIL` | yes               | yes                   | Sender verified per environment                                                            |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`                                         | yes               | yes                   | Separate key pairs                                                                         |
+| `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`                                                  | yes               | yes                   | Separate Sentry environments                                                               |
+| `CRON_SECRET`, `GUARD_SESSION_SECRET`, `RATE_LIMIT_HASH_SALT`                                                | yes               | yes                   | Random, at least 32 bytes each                                                             |
+
+The `demo-homeish` project (P61) uses the same variable names with its own values: `homeish-demo` keys and its own random secrets. It never holds live or testdb values.
 
 The app validates configuration at start-up and fails fast if a value is missing
 or malformed (`src/core/config`). Changing a variable needs a redeploy
