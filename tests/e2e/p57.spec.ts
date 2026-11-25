@@ -23,7 +23,7 @@ test('shows the refreshed homepage and saves a public enquiry accessibly', async
       name: 'One app. The right view for every role.',
     }),
   ).toBeVisible();
-  await expect(page.getByRole('main').getByRole('img')).toHaveCount(9);
+  await expect(page.getByRole('main').getByRole('img')).toHaveCount(14);
 
   await page.getByLabel('Your name (required)').fill('Synthetic Sender');
   await page

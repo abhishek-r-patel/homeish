@@ -5,6 +5,11 @@ import committeePreview from '../../../public/homeish-committee-preview.png';
 import guardPreview from '../../../public/homeish-guard-preview.png';
 import housekeepingPreview from '../../../public/homeish-housekeeping-preview.png';
 import residentPreview from '../../../public/homeish-resident-preview.png';
+import dayVisitorPreview from '../../../public/homeish-day-visitor-approved.png';
+import dayDeliveryPreview from '../../../public/homeish-day-delivery-recorded.png';
+import dayBillPreview from '../../../public/homeish-day-bill-available.png';
+import dayRequestPreview from '../../../public/homeish-day-request-resolved.png';
+import dayNoticePreview from '../../../public/homeish-day-notice-read.png';
 import {
   getRoleNavigationGroups,
   MODULE_KEYS,
@@ -91,6 +96,31 @@ export const websiteContent = {
         'Public screenshots use invented data. No real resident names, contacts, vehicles or society directory are published.',
     },
   ],
+  problemsTitle: 'Problems Homeish solves.',
+  problemsDescription:
+    'Everyday society work becomes easier to find, follow and close.',
+  problems: [
+    {
+      before: 'Paper visitor registers',
+      after: 'Visitor records stay linked to the right home.',
+    },
+    {
+      before: 'Chasing dues on WhatsApp',
+      after: 'Bills and payment checks stay together in Billing.',
+    },
+    {
+      before: 'Lost complaints',
+      after: 'Service requests stay visible from report to resolution.',
+    },
+    {
+      before: 'Missed delivery handovers',
+      after: 'Gate staff record parcels and residents can respond.',
+    },
+    {
+      before: 'Scattered notices',
+      after: 'Residents find selected society notices in one notice board.',
+    },
+  ],
   featuresTitle: 'Features grouped the same way as the app.',
   featuresDescription:
     'These modules are released for testing. Owner review and live activation are still separate, and every society uses only the modules switched on for it.',
@@ -134,6 +164,51 @@ export const websiteContent = {
         'Record stock, log issues and follow daily work without seeing unrelated society areas.',
       image: housekeepingPreview,
       alt: 'Synthetic housekeeping dashboard with inventory, request and daily-check actions.',
+    },
+  ],
+  dayTitle: 'One day in your society.',
+  dayDescription:
+    'Five small moments, from the morning gate to the evening notice board.',
+  day: [
+    {
+      time: '8:00 AM',
+      title: 'A guest is expected',
+      description:
+        'The resident approves the visitor, and the guard sees the right arrival at the gate.',
+      image: dayVisitorPreview,
+      alt: 'Synthetic close-up showing an approved visitor expected at one flat.',
+    },
+    {
+      time: '11:30 AM',
+      title: 'A parcel is recorded',
+      description:
+        'The delivery stays traceable until the resident responds and the gate closes the handover.',
+      image: dayDeliveryPreview,
+      alt: 'Synthetic close-up showing a courier delivery recorded for one resident.',
+    },
+    {
+      time: '2:00 PM',
+      title: 'A bill is ready',
+      description:
+        'The resident sees the society bill and submits payment details for the admin to check.',
+      image: dayBillPreview,
+      alt: 'Synthetic close-up showing a monthly society bill available to view.',
+    },
+    {
+      time: '5:00 PM',
+      title: 'A request is resolved',
+      description:
+        'The repair moves from reported work to a clear resolved state without a separate chase thread.',
+      image: dayRequestPreview,
+      alt: 'Synthetic close-up showing a resolved society maintenance request.',
+    },
+    {
+      time: '7:00 PM',
+      title: 'A notice is read',
+      description:
+        'The chosen audience can open the notice and managers can see the aggregate read count.',
+      image: dayNoticePreview,
+      alt: 'Synthetic close-up showing a society notice opened by its intended audience.',
     },
   ],
   previewsTitle: 'A look at the new Homeish design.',
@@ -229,6 +304,11 @@ export const websiteContent = {
       question: 'Will every society get every module?',
       answer:
         'No. The developer switches on the modules agreed for that society, and roles still limit who may use them.',
+    },
+    {
+      question: 'Can our society change how a module works?',
+      answer:
+        'The society admin can change some settings in Settings. Other settings and switching modules on or off are agreed with Homeish and changed by the developer, and the admin-editable settings can differ between societies.',
     },
     {
       question: 'Who can see an enquiry?',

@@ -3,6 +3,7 @@
 
 import { useUiTranslator } from '@/components/ui/language';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   publishNoticeDraftAction,
   setNoticePinnedAction,
@@ -22,6 +23,7 @@ export function NoticeManageControls({
   updatedAt: string;
 }) {
   const { translate: t } = useUiTranslator();
+  const router = useRouter();
   if (status === 'withdrawn') {
     return (
       <p className="text-body text-ink-muted">
@@ -43,9 +45,10 @@ export function NoticeManageControls({
           action={publishNoticeDraftAction}
           className="grid gap-space-2"
           confirmMessage={t(
-            'Publish this notice now? Everyone in the audience is notified.',
+            'Publish this notice now? In-app alerts and available push notifications will be sent to the audience.',
           )}
           input={() => ({ noticeId, expectedUpdatedAt: updatedAt })}
+          onSuccess={() => router.push(`/admin/notices/${noticeId}/done`)}
           submitLabel={t('Publish now')}
         />
       ) : (

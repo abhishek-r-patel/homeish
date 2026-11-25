@@ -236,6 +236,41 @@ describe.skipIf(!hasDatabase)('database notice board', () => {
         names.map((name) => fixture.users[name]).sort();
 
       const clientRequestId = crypto.randomUUID();
+      const reach = (
+        user: User,
+        audience: 'all' | 'blocks' | 'owners',
+        blocks: string[] = [],
+      ) =>
+        asUser(
+          user,
+          async (query) =>
+            (
+              await query(
+                `select public.notice_reach_get($1, $2, $3::uuid[]) as result`,
+                [fixture.societyId, audience, blocks],
+              )
+            ).rows[0]!.result as { people: number; flats: number },
+        );
+
+      await expect(reach('admin', 'all')).resolves.toEqual({
+        people: 3,
+        flats: 2,
+      });
+      await expect(reach('committee', 'owners')).resolves.toEqual({
+        people: 1,
+        flats: 1,
+      });
+      await expect(reach('admin', 'blocks', [fixture.blockA])).resolves.toEqual(
+        { people: 2, flats: 1 },
+      );
+      await expect(reach('admin', 'blocks', [fixture.blockB])).resolves.toEqual(
+        { people: 1, flats: 1 },
+      );
+      expect((await dbError(reach('guard', 'all'))).code).toBe('42501');
+      expect(
+        (await dbError(reach('admin', 'blocks', [fixture.otherBlock]))).code,
+      ).toBe('22023');
+
       const everyone = await createNotice('admin', {
         title: 'Water shutdown',
         clientRequestId,

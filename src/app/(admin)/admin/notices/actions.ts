@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { runServerAction } from '@/core/actions/server-action';
 import {
   createNotice,
+  getNoticeReach,
   publishNoticeDraft,
   saveNoticeDraft,
   saveNoticePlan,
@@ -40,6 +41,12 @@ export async function createNoticeAction(formData: FormData) {
     refreshNoticeViews(result.id);
     return { data: result, message: 'The notice was published.' };
   });
+}
+
+export async function getNoticeReachAction(formData: FormData) {
+  return runServerAction('notice.reach.read', async () => ({
+    data: await getNoticeReach(parseInput(formData)),
+  }));
 }
 
 export async function updateNoticeAction(formData: FormData) {

@@ -164,6 +164,40 @@ export function MarketingPage({
           </div>
         </section>
         <section
+          aria-labelledby="problems-title"
+          className="mx-auto max-w-content-default px-space-5 py-space-8"
+        >
+          <h2 className="text-display font-bold" id="problems-title">
+            {copy.problemsTitle}
+          </h2>
+          <p className="mt-space-4 text-ink-muted">
+            {copy.problemsDescription}
+          </p>
+          <ul className="mt-space-6 grid gap-space-4">
+            {copy.problems.map((item) => (
+              <li
+                className="grid gap-space-4 rounded-lg border border-rule bg-surface p-space-5 medium:grid-cols-2"
+                key={item.before}
+              >
+                <div>
+                  <p className="text-caption font-semibold uppercase tracking-wide text-ink-muted">
+                    Before
+                  </p>
+                  <p className="mt-space-2 text-ink-muted line-through">
+                    {item.before}
+                  </p>
+                </div>
+                <div className="border-t border-rule pt-space-4 medium:border-l medium:border-t-0 medium:pl-space-5 medium:pt-0">
+                  <p className="text-caption font-semibold uppercase tracking-wide text-brand">
+                    With Homeish
+                  </p>
+                  <p className="mt-space-2">{item.after}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section
           aria-labelledby="features-title"
           className="mx-auto max-w-content-marketing scroll-mt-space-5 px-space-5 py-space-8"
           id="features"
@@ -259,6 +293,41 @@ export function MarketingPage({
               ))}
             </div>
           </div>
+        </section>
+        <section
+          aria-labelledby="day-title"
+          className="mx-auto max-w-content-marketing scroll-mt-space-5 px-space-5 py-space-8"
+        >
+          <h2 className="text-display font-bold" id="day-title">
+            {copy.dayTitle}
+          </h2>
+          <p className="mt-space-4 text-ink-muted">{copy.dayDescription}</p>
+          <ol className="mt-space-7 grid gap-space-6 expanded:grid-cols-2">
+            {copy.day.map((moment) => (
+              <li
+                className="overflow-hidden rounded-lg border border-rule bg-surface"
+                key={moment.time}
+              >
+                <Image
+                  alt={moment.alt}
+                  className="h-auto w-full border-b border-rule"
+                  sizes="(min-width: 1200px) 552px, (min-width: 1024px) 50vw, 100vw"
+                  src={moment.image}
+                />
+                <div className="p-space-5">
+                  <p className="text-caption font-semibold text-brand">
+                    {moment.time}
+                  </p>
+                  <h3 className="mt-space-2 text-heading font-semibold">
+                    {moment.title}
+                  </h3>
+                  <p className="mt-space-3 text-ink-muted">
+                    {moment.description}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
         <section
           aria-labelledby="previews-title"

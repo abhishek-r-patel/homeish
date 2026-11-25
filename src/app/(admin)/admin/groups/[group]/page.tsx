@@ -9,6 +9,7 @@ import {
 } from '@/core/modules';
 import { buildRequestContext } from '@/core/tenancy/request-context';
 import { getAdminHome } from '@/core/home/admin-operations';
+import { getAdminGroupStatus } from '@/core/home/group-status';
 
 export const metadata = {
   title: 'Workspace section | Homeish',
@@ -74,6 +75,7 @@ export default async function AdminGroupPage({
         <ul className="grid gap-space-3 medium:grid-cols-2 expanded:grid-cols-3">
           {items.map((item) => {
             const count = waitingCount(item.href);
+            const status = getAdminGroupStatus(item.href, snapshot);
             return (
               <li key={item.href}>
                 <Link
@@ -90,8 +92,15 @@ export default async function AdminGroupPage({
                       </span>
                     ) : null}
                   </span>
-                  <span className="text-caption text-ink-muted">
-                    {getModuleDefinition(item.moduleKey).name}
+                  <span className="grid gap-space-1">
+                    <span className="text-caption text-ink-muted">
+                      {getModuleDefinition(item.moduleKey).name}
+                    </span>
+                    {status ? (
+                      <span className="text-caption text-ink-muted">
+                        {status}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="text-body-strong text-brand">Open →</span>
                 </Link>

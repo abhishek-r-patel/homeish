@@ -5,6 +5,7 @@ import { NoticeForm } from '@/components/notices/notice-form';
 import { getNoticeComposeOptions } from '@/core/notices/operations';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { getNoticeReachAction } from '../actions';
 
 export const metadata = {
   title: 'New notice | Homeish',
@@ -25,7 +26,7 @@ export default async function NewNoticePage() {
         <h1 className="text-title font-semibold">{t('New notice')}</h1>
       </header>
       <Card className="min-w-0">
-        <NoticeForm blocks={blocks} />
+        <NoticeForm blocks={blocks} reachAction={getNoticeReachAction} />
       </Card>
     </section>
   );

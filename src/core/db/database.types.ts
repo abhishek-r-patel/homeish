@@ -25105,6 +25105,14 @@ export type Database = {
         };
         Returns: Json;
       };
+      notice_reach_get: {
+        Args: {
+          p_audience: string;
+          p_block_ids: string[];
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       notice_scheduled_publish_run: {
         Args: {
           p_request_trace: string;

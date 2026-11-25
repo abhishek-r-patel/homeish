@@ -28,6 +28,8 @@ import {
   noticePlanProposalSchema,
   noticePlanProposalsSchema,
   noticePlanReviewInputSchema,
+  noticeReachInputSchema,
+  noticeReachSchema,
   type Notice,
 } from './validation';
 
@@ -136,6 +138,21 @@ export async function getNoticeComposeOptions() {
     });
   }
   return { blocks: data };
+}
+
+export async function getNoticeReach(input: unknown) {
+  const parsed = parseInput(noticeReachInputSchema, input);
+  const { context, societyId } = await getContext('notice:create');
+  return noticeRpc(
+    context,
+    'notice_reach_get',
+    {
+      p_society_id: societyId,
+      p_audience: parsed.audience,
+      p_block_ids: parsed.blockIds,
+    },
+    noticeReachSchema,
+  );
 }
 
 export async function getNoticeDetail(noticeId: string) {

@@ -175,10 +175,14 @@ export function BillingGenerator({
         const next = await generateAction(formData);
         setResult(next);
         if (next.ok) {
-          setPreview(null);
-          setInput(null);
-          setStep(1);
-          router.refresh();
+          if (next.data) {
+            router.push(`/admin/billing/generate/${next.data.job_id}/complete`);
+          } else {
+            setPreview(null);
+            setInput(null);
+            setStep(1);
+            router.refresh();
+          }
         } else {
           setStep(3);
         }

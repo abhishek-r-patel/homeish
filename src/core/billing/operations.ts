@@ -32,6 +32,7 @@ import {
   billingReportSummarySchema,
   billingFineInputSchema,
   billingGenerationResultSchema,
+  billingGenerationCompletionSchema,
   billingInterestRateInputSchema,
   billingInterestSettingsSchema,
   billingLedgerEntrySchema,
@@ -484,6 +485,30 @@ export async function generateBillingBills(
   );
   await sendNotificationPushesForRequest(context.requestId);
   return result;
+}
+
+export async function getBillingGenerationCompletion(jobId: string) {
+  const id = parseInput(z.uuid(), jobId);
+  const { context, societyId } = await getContext('billing:bills:manage');
+  const { data, error } = await context.db
+    .from('jobs')
+    .select('id,status,summary')
+    .eq('id', id)
+    .eq('society_id', societyId)
+    .eq('type', 'bill_generation')
+    .maybeSingle();
+  if (error) {
+    throw new Error('The bill generation result could not be loaded.', {
+      cause: error,
+    });
+  }
+  if (!data || data.status !== 'succeeded') return null;
+  return parseInput(billingGenerationCompletionSchema, {
+    id: data.id,
+    ...(typeof data.summary === 'object' && data.summary !== null
+      ? data.summary
+      : {}),
+  });
 }
 
 export async function listBillingBills(page: number, pageSize: number) {
