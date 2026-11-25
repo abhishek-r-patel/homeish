@@ -153,7 +153,7 @@ export async function submitWebsiteEnquiry(
 
   if (!settings.contactEmail) return;
   const result = await sendTransactionalEmail({
-    to: { email: settings.contactEmail, name: 'Homeish developer' },
+    to: { email: settings.contactEmail, name: 'Homeish team' },
     subject: `Homeish enquiry from ${parsed.data.fullName}`,
     textContent: [
       `Name: ${parsed.data.fullName}`,

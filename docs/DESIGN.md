@@ -1125,6 +1125,8 @@ The enquiry form uses the shared form fields and error pattern (DESIGN 12). It h
 
 The existing demo-host illustration remains labelled synthetic, with browser-memory interactions, manual reset and an automatic reset every 15 minutes while open. It is not a visitor module or a connected database; its presence in code is not proof of a hosted demo. No real society entry is provisioned by this refresh. An active society host shows the society name and a sign-in link. The reserved Maplewood host shows only "Maplewood is not open yet" with a link back to the website, no form, button or sign-in. Unconfigured society hosts return 404. Beta stays testing-only, never production society data. Non-marketing hosts are not indexed.
 
+Public marketing and enquiry copy uses customer-facing terms: **Homeish team** for platform operations, **features** for modules, **society administrator** for the society admin, and **the right view for each person** instead of role-based wording. Technical documents and authenticated platform screens may keep the internal terms.
+
 **Working demo (planned, PRD D-97, DEMO-1–DEMO-10, DD-12; P61):** this replaces the illustration above and the disabled demo state (D-49) when P61 ships.
 
 - **Beta website (DEMO-9):** the beta address shows the same marketing page as the live website, with a **Beta** chip next to the logo in the header (text, not colour alone). Its **Try demo** and role buttons open the beta demo. Everything else matches the live page.

@@ -31,10 +31,10 @@ const moduleCount = MODULE_KEYS.length - 1;
 
 export const websiteContent = {
   metadataDescription:
-    'Homeish brings society work, role-based access and maintenance records into one installable web app. Explore current modules, synthetic product previews and owner-led setup.',
+    'Homeish brings society records, daily work and resident communication into one installable web app. Explore its features, sample previews and guided setup.',
   navigation: [
     { href: '#features', label: 'Features' },
-    { href: '#roles', label: 'For every role' },
+    { href: '#roles', label: 'For every person' },
     { href: '#product-preview', label: 'Product preview' },
     { href: '#how-it-works', label: 'Setup' },
     { href: '#enquiry', label: 'Talk to us' },
@@ -47,18 +47,18 @@ export const websiteContent = {
     society: 'Your society',
     signIn: 'Sign in',
     privacy: 'Privacy policy',
-    screenshot: 'Synthetic screenshot',
+    screenshot: 'Sample preview',
   },
-  eyebrow: 'For society committees and admins',
+  eyebrow: 'For societies and their managing committees',
   headline: 'A clearer day for your committee. A calmer day for everyone.',
   introduction:
-    'Keep society records, daily work and resident communication in one role-based place, with each society choosing the modules it needs.',
+    'Keep society records, daily work and resident communication in one simple place, with the features your society chooses.',
   availability:
-    'Released features are for testing while owner checks and live activation continue. Society onboarding is not open as self-service.',
+    'Homeish is currently in beta. New societies join through guided setup while testing and go-live checks continue.',
   facts: [
-    `${moduleCount} switchable feature modules`,
-    'Five society role views',
-    'Modules switched on per society',
+    `${moduleCount} society features to choose from`,
+    'The right view for every person',
+    'Features chosen for your society',
     'Works on a phone or laptop browser',
     'UPI payments go directly to the society',
   ],
@@ -73,7 +73,7 @@ export const websiteContent = {
     enquiryAction: 'Send an enquiry',
   },
   heroCaption:
-    'Sharing payment details is not a payment confirmation. Your admin checks the payment first.',
+    'Sharing payment details is not a payment confirmation. Your society administrator checks the payment first.',
   heroPreview: {
     image: billingPreview,
     alt: 'Synthetic payment-details form showing Rs. 2,500 and fields for a UPI reference and payment date.',
@@ -83,15 +83,15 @@ export const websiteContent = {
     {
       name: 'Separate society spaces',
       description:
-        'Each society keeps its own records, settings and enabled modules.',
+        'Each society keeps its own records, settings and selected features.',
     },
     {
-      name: 'Access shaped by role',
+      name: 'Access shaped by responsibility',
       description:
-        'Residents, guards, committee members, admins and housekeeping supervisors see only the work allowed for them.',
+        'Residents, guards, committee members, administrators and housekeeping supervisors see only the work meant for them.',
     },
     {
-      name: 'Synthetic public examples',
+      name: 'Examples using fictional data',
       description:
         'Public screenshots use invented data. No real resident names, contacts, vehicles or society directory are published.',
     },
@@ -121,14 +121,14 @@ export const websiteContent = {
       after: 'Residents find selected society notices in one notice board.',
     },
   ],
-  featuresTitle: 'Features grouped the same way as the app.',
+  featuresTitle: 'Features grouped around everyday society work.',
   featuresDescription:
-    'These modules are released for testing. Owner review and live activation are still separate, and every society uses only the modules switched on for it.',
+    'These features are available for beta testing. Go-live checks are separate, and each society uses only the features selected for it.',
   testingLabel: 'Released for testing',
   moduleGroups,
-  peopleTitle: 'One app. The right view for every role.',
+  peopleTitle: 'One app. The right view for every person.',
   peopleDescription:
-    'Each role gets a focused workspace built from the same permissions and switched-on modules.',
+    'Each person gets a focused workspace with the information and actions they need.',
   people: [
     {
       name: 'Residents',
@@ -152,9 +152,9 @@ export const websiteContent = {
       alt: 'Synthetic committee dashboard with society figures, quick actions and upcoming work.',
     },
     {
-      name: 'Admins',
+      name: 'Society administrators',
       description:
-        'Manage bills, requests, people and everyday follow-through from one grouped workspace.',
+        'Manage bills, requests, people and everyday follow-through from one organized workspace.',
       image: adminPreview,
       alt: 'Synthetic administrator dashboard with four figures and grouped society actions.',
     },
@@ -190,7 +190,7 @@ export const websiteContent = {
       time: '2:00 PM',
       title: 'A bill is ready',
       description:
-        'The resident sees the society bill and submits payment details for the admin to check.',
+        'The resident sees the society bill and submits payment details for the society administrator to check.',
       image: dayBillPreview,
       alt: 'Synthetic close-up showing a monthly society bill available to view.',
     },
@@ -213,10 +213,10 @@ export const websiteContent = {
   ],
   previewsTitle: 'A look at the new Homeish design.',
   previewsDescription:
-    'Still images captured from development-only fixtures with invented data. They are not a connected demo.',
+    'Sample previews use fictional data. They are not a connected demo.',
   previews: [
     {
-      title: 'Calm admin overview',
+      title: 'Calm administrator overview',
       description:
         'A grouped workspace with four figures, quick actions and the next society dates.',
       image: adminPreview,
@@ -239,10 +239,10 @@ export const websiteContent = {
   ],
   nextTitle: 'What comes next',
   nextDescription:
-    'A short list of separately approved or demand-gated work. Nothing here is usable yet.',
+    'A short list of work being considered or prepared. It is not available yet.',
   next: [
     {
-      name: 'Connected role demos',
+      name: 'Try Homeish by person',
       description:
         'Available only after a separately approved demo is set up, checked and reset safely.',
     },
@@ -254,22 +254,22 @@ export const websiteContent = {
   ],
   stepsTitle: 'How setup works.',
   stepsDescription:
-    'Setup is owner-led. There is no self-service society sign-up.',
+    'Setup is guided by the Homeish team. New societies are not opened through open sign-up.',
   steps: [
     {
       name: 'Set up the society',
       description:
-        'The developer creates the society, agrees the modules and imports flats and residents in bulk.',
+        'The Homeish team works with your committee to understand the society, flats and required features.',
     },
     {
       name: 'Switch on the agreed tools',
       description:
-        'The developer enables only the modules agreed for that society.',
+        'Your committee and the Homeish team agree which features and settings are needed.',
     },
     {
-      name: 'Complete the admin checklist',
+      name: 'Complete the administrator checklist',
       description:
-        'The admin follows the self-ticking Getting started card for society details, people and payment setup.',
+        'The society administrator follows the Getting started checklist for society details, people and payment setup.',
     },
   ],
   rightForYouTitle: 'Is Homeish right for you?',
@@ -278,17 +278,17 @@ export const websiteContent = {
     'An internet connection is needed for society workflows.',
     'Homeish never holds society money.',
     'Homeish is not accounting or legal advice.',
-    'Modules that are not switched on are not included for that society.',
+    'Features not selected for your society do not appear.',
   ],
   societyTitle: 'Already have a society address?',
   societyDescription:
-    'Use the address shared by your society admin. This does not register a new society or open an unconfigured one.',
+    'Use the address shared by your society administrator. This does not register a new society or open an unconfigured one.',
   questionsTitle: 'A few things worth knowing',
   questions: [
     {
       question: 'Can we use Homeish for our society today?',
       answer:
-        'Not yet as self-service onboarding. Released modules are for testing, and owner checks, pilot checks and live activation remain separate steps.',
+        'Not yet through open sign-up. Homeish is currently in beta, and testing, guided setup and go-live checks remain separate steps.',
     },
     {
       question: 'Why is Try demo unavailable?',
@@ -298,22 +298,22 @@ export const websiteContent = {
     {
       question: 'Does Homeish collect maintenance payments?',
       answer:
-        'No. Money goes directly to the society through its UPI details. A resident submits a reference, then an admin checks and confirms it.',
+        'No. Money goes directly to the society through its UPI details. A resident submits a reference, then the society administrator checks and confirms it.',
     },
     {
-      question: 'Will every society get every module?',
+      question: 'Will every society get every feature?',
       answer:
-        'No. The developer switches on the modules agreed for that society, and roles still limit who may use them.',
+        'No. Each society chooses the features it needs, and people still see only the information and actions meant for them.',
     },
     {
-      question: 'Can our society change how a module works?',
+      question: 'Can our society change how a feature works?',
       answer:
-        'The society admin can change some settings in Settings. Other settings and switching modules on or off are agreed with Homeish and changed by the developer, and the admin-editable settings can differ between societies.',
+        'Society administrators can change everyday settings. Broader setup choices are agreed with the Homeish team because requirements can differ between societies.',
     },
     {
       question: 'Who can see an enquiry?',
       answer:
-        'Only the Homeish developer can view or delete public enquiries. The form does not expose them to societies, residents or admins.',
+        'Only authorized Homeish team members can view or delete public enquiries. The form does not expose them to societies, residents or administrators.',
     },
     {
       question: 'Do residents need to install an app?',
@@ -323,10 +323,10 @@ export const websiteContent = {
   ],
   enquiryTitle: 'Talk to us.',
   enquiryDescription:
-    'Tell us about your society. Enter an email address or phone number so the Homeish developer can reply.',
+    'Tell us about your society. Enter an email address or phone number so the Homeish team can reply.',
   closingTitle: 'Less chasing. More clarity.',
   closingDescription:
-    'Built to help each society role keep work moving, without hiding limits or pretending that planned work is available.',
+    'Built to help every part of a society keep work moving, with clear limits and no claims about work that is not available yet.',
   tagline: 'Homeish. A little more like home.',
   footerAvailability: 'Not open for live society use.',
 } as const;

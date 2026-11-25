@@ -25,15 +25,16 @@ test('explains homepage availability and keeps the unconfigured demo disabled', 
   await expect(page.locator('a[href*="demo."]')).toHaveCount(0);
 
   const testing = page.getByRole('region', {
-    name: 'Features grouped the same way as the app.',
+    name: 'Features grouped around everyday society work.',
   });
-  await expect(testing).toContainText('live activation are still separate');
+  await expect(testing).toContainText('Go-live checks are separate');
   await expect(
     testing.getByText('Maintenance, Fines & Payments', { exact: true }),
   ).toBeVisible();
   const next = page.getByRole('region', { name: 'What comes next' });
-  await expect(next).toContainText('Nothing here is usable yet.');
-  await expect(next).toContainText('Connected role demos');
+  await expect(next).toContainText('It is not available yet.');
+  await expect(next).toContainText('Try Homeish by person');
+  await expect(page.getByRole('main')).not.toContainText('Homeish developer');
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(accessibility.violations).toEqual([]);
