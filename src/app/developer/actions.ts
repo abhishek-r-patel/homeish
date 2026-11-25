@@ -28,6 +28,7 @@ import {
   toggleModule,
   updateModuleSettings,
   updateModuleSettingAccess,
+  setResidentModuleVisibility,
   updateQuickActionDefaults,
   resetQuickActionDefaults,
   updateSociety,
@@ -42,6 +43,10 @@ import {
   handleDeveloperWebsiteEnquiry,
   saveDeveloperWebsiteSettings,
 } from '@/core/website/enquiries';
+import {
+  saveDeveloperPlatformUpdate,
+  withdrawDeveloperPlatformUpdate,
+} from '@/core/updates/operations';
 
 async function runDeveloperAction(
   route: string,
@@ -387,6 +392,67 @@ export async function updateModuleSettingAccessAction(
       revalidatePath('/developer/modules');
       revalidatePath('/admin/settings');
       return { ok: true, message: 'Admin edit access saved.' };
+    },
+  );
+}
+
+export async function setResidentModuleVisibilityAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.modules.residentVisibility',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const societyId = parseValue(z.uuid(), formData.get('societyId'));
+      const moduleKey = parseValue(
+        z.enum(MODULE_KEYS),
+        formData.get('moduleKey'),
+      );
+      const residentsVisible = formData.get('residentsVisible') === 'true';
+      await setResidentModuleVisibility(
+        context,
+        societyId,
+        moduleKey,
+        residentsVisible,
+      );
+      revalidatePath('/developer/modules');
+      return { ok: true, message: 'Resident visibility saved.' };
+    },
+  );
+}
+
+export async function savePlatformUpdateAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.platformUpdate.save',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      await saveDeveloperPlatformUpdate(context, {
+        updateId: String(formData.get('updateId') ?? '') || null,
+        title: String(formData.get('title') ?? ''),
+        body: String(formData.get('body') ?? ''),
+        href: String(formData.get('href') ?? '').trim() || null,
+        publish: formData.get('publish') === 'true',
+        expectedUpdatedAt:
+          String(formData.get('expectedUpdatedAt') ?? '') || null,
+      });
+      revalidatePath('/developer/whats-new');
+      revalidatePath('/admin/whats-new');
+      return { ok: true, message: 'Release note saved.' };
+    },
+  );
+}
+
+export async function withdrawPlatformUpdateAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.platformUpdate.withdraw',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      await withdrawDeveloperPlatformUpdate(
+        context,
+        String(formData.get('updateId') ?? ''),
+        String(formData.get('expectedUpdatedAt') ?? ''),
+      );
+      revalidatePath('/developer/whats-new');
+      revalidatePath('/admin/whats-new');
+      return { ok: true, message: 'Release note withdrawn.' };
     },
   );
 }

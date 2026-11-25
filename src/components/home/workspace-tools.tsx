@@ -21,9 +21,13 @@ export type WorkspaceQuickAction = {
 };
 
 export function WorkspaceTools({
+  createOpen,
+  onCreateOpenChange,
   quickActions,
   searchAction = searchWorkspaceAction,
 }: {
+  createOpen: boolean;
+  onCreateOpenChange: (open: boolean) => void;
   quickActions: readonly WorkspaceQuickAction[];
   searchAction?: (
     input: unknown,
@@ -32,7 +36,6 @@ export function WorkspaceTools({
   const { translate: t } = useUiTranslator();
   const id = useId();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<WorkspaceSearchResult | null>(null);
   const [error, setError] = useState('');
@@ -94,8 +97,8 @@ export function WorkspaceTools({
       <button
         aria-label={t('Quick create')}
         aria-haspopup="dialog"
-        className="flex min-h-12 min-w-10 items-center justify-center rounded-md bg-brand px-space-2 text-title text-on-brand focus-visible:outline-2 focus-visible:outline-focus expanded:min-w-12 expanded:px-space-3"
-        onClick={() => setCreateOpen(true)}
+        className="hidden min-h-12 min-w-10 items-center justify-center rounded-md bg-brand px-space-2 text-title text-on-brand focus-visible:outline-2 focus-visible:outline-focus expanded:flex expanded:min-w-12 expanded:px-space-3"
+        onClick={() => onCreateOpenChange(true)}
         type="button"
       >
         <span aria-hidden="true">+</span>
@@ -179,7 +182,7 @@ export function WorkspaceTools({
           'Every action shown here is available for your role and enabled modules.',
         )}
         id={`${id}-create-dialog`}
-        onOpenChange={setCreateOpen}
+        onOpenChange={onCreateOpenChange}
         open={createOpen}
         title={t('Quick create')}
       >
@@ -190,7 +193,7 @@ export function WorkspaceTools({
                 <Link
                   className="flex min-h-14 items-center justify-between gap-space-3 rounded-md border border-rule px-space-4 text-body-strong hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-focus"
                   href={action.href}
-                  onClick={() => setCreateOpen(false)}
+                  onClick={() => onCreateOpenChange(false)}
                 >
                   <span>{t(action.label)}</span>
                   <span aria-hidden="true">→</span>

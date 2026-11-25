@@ -1065,6 +1065,61 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   From: 'से',
   'Change history': 'बदलाव का इतिहास',
   'Role preview': 'भूमिका का पूर्वावलोकन',
+  "What's new": 'नया क्या है',
+  'Open report': 'रिपोर्ट खोलें',
+  'Open existing reports and exports available for your role and enabled modules.':
+    'अपनी भूमिका और चालू मॉड्यूल के लिए उपलब्ध रिपोर्ट और निर्यात खोलें।',
+  'No reports are available for the enabled modules.':
+    'चालू मॉड्यूल के लिए कोई रिपोर्ट उपलब्ध नहीं है।',
+  Money: 'धन',
+  'Gate & security': 'गेट और सुरक्षा',
+  Upkeep: 'रखरखाव',
+  Community: 'समुदाय',
+  'Billing reports': 'बिलिंग रिपोर्ट',
+  'Collection totals and CSV/PDF maintenance exports.':
+    'वसूली के कुल और CSV/PDF रखरखाव निर्यात।',
+  'Outstanding bills and the next follow-up list.':
+    'बकाया बिल और अगली फ़ॉलो-अप सूची।',
+  'As-of paid, waived and unallocated collection figures.':
+    'चुनी गई तारीख तक भुगतान, माफी और अवंटित वसूली के आँकड़े।',
+  'Society income, expenditure and account statements.':
+    'सोसाइटी की आय, खर्च और खाता विवरण।',
+  'Vendor requests, quotes and linked Accounts spend.':
+    'विक्रेता अनुरोध, कोटेशन और जुड़े खाते का खर्च।',
+  'Budget report': 'बजट रिपोर्ट',
+  'Budget, forecast and actual comparison for the financial year.':
+    'वित्तीय वर्ष के लिए बजट, अनुमान और वास्तविक तुलना।',
+  'AGM report': 'वार्षिक आम सभा रिपोर्ट',
+  'The audited annual report, figures and committee selections.':
+    'ऑडिट किया गया वार्षिक रिपोर्ट, आँकड़े और समिति चयन।',
+  'Account statements': 'खाता विवरण',
+  'Bank and cash statement items, matching and reconciliation.':
+    'बैंक और नकद विवरण की मदें, मिलान और समाधान।',
+  'Savings register': 'बचत रजिस्टर',
+  'Savings records, evidence and related account links.':
+    'बचत रिकॉर्ड, प्रमाण और जुड़े खाते।',
+  'Analytics export': 'विश्लेषण निर्यात',
+  'Export the selected society metrics as CSV or PDF.':
+    'चुने हुए सोसाइटी आँकड़े CSV या PDF में निर्यात करें।',
+  'Request reports': 'अनुरोध रिपोर्ट',
+  'Resolution, repeat-request and daily-check summaries.':
+    'समाधान, बार-बार अनुरोध और दैनिक जाँच का सारांश।',
+  'Attendance, action completion and meeting activity.':
+    'उपस्थिति, कार्रवाई पूर्णता और बैठक गतिविधि।',
+  'Structural audit register': 'संरचनात्मक ऑडिट रजिस्टर',
+  'Private audit reports, due reminders and linked projects.':
+    'निजी ऑडिट रिपोर्ट, देय अनुस्मारक और जुड़े प्रोजेक्ट।',
+  'Metering reports': 'मीटरिंग रिपोर्ट',
+  'Consumption, pending readings and utility billing state.':
+    'खपत, लंबित रीडिंग और उपयोगिता बिलिंग स्थिति।',
+  'Product notes from the Homeish developer. There are no email or push alerts.':
+    'Homeish डेवलपर के उत्पाद नोट। ईमेल या पुश अलर्ट नहीं भेजे जाते।',
+  'Published developer release notes will appear here.':
+    'प्रकाशित डेवलपर रिलीज़ नोट यहाँ दिखेंगे।',
+  'Nothing new yet': 'अभी कुछ नया नहीं',
+  'Release note marked read.': 'रिलीज़ नोट पढ़ा हुआ चिह्नित किया गया।',
+  'Open related page': 'जुड़ा पृष्ठ खोलें',
+  'Mark as read': 'पढ़ा हुआ चिह्नित करें',
   'Review society changes. Private values are hidden; only reversible settings may show Undo.':
     'सोसाइटी के बदलाव देखें। निजी मान छिपे रहते हैं; केवल वापस किए जा सकने वाले सेटिंग बदलाव पर Undo दिखता है।',
   Filters: 'फ़िल्टर',

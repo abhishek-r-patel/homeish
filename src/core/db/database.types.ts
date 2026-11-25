@@ -11603,6 +11603,7 @@ export type Database = {
         Row: {
           enabled: boolean;
           module_key: string;
+          residents_visible: boolean;
           settings: NonNullable<Json>;
           society_id: string;
           updated_at: string;
@@ -11612,6 +11613,7 @@ export type Database = {
         Insert: {
           enabled?: boolean;
           module_key: string;
+          residents_visible?: boolean;
           settings?: NonNullable<Json>;
           society_id: string;
           updated_at?: string;
@@ -11620,6 +11622,7 @@ export type Database = {
         Update: {
           enabled?: boolean;
           module_key?: string;
+          residents_visible?: boolean;
           settings?: NonNullable<Json>;
           society_id?: string;
           updated_at?: string;
@@ -13166,6 +13169,95 @@ export type Database = {
           {
             foreignKeyName: 'person_workspace_preferences_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      platform_update_reads: {
+        Row: {
+          read_at: string;
+          update_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          read_at?: string;
+          update_id: string;
+          user_id: string;
+        };
+        Update: {
+          read_at?: string;
+          update_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'platform_update_reads_update_id_fkey';
+            columns: ['update_id'];
+            isOneToOne: false;
+            referencedRelation: 'platform_updates';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'platform_update_reads_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      platform_updates: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string;
+          href: string | null;
+          id: string;
+          published_at: string | null;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          withdrawn_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by: string;
+          href?: string | null;
+          id?: string;
+          published_at?: string | null;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string;
+          href?: string | null;
+          id?: string;
+          published_at?: string | null;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'platform_updates_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'platform_updates_updated_by_fkey';
+            columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
@@ -22486,6 +22578,39 @@ export type Database = {
         };
         Returns: undefined;
       };
+      developer_platform_update_save: {
+        Args: {
+          p_body: string;
+          p_expected_updated_at: string;
+          p_href: string;
+          p_publish: boolean;
+          p_request_id: string;
+          p_title: string;
+          p_update_id: string;
+        };
+        Returns: Json;
+      };
+      developer_platform_update_withdraw: {
+        Args: {
+          p_expected_updated_at: string;
+          p_request_id: string;
+          p_update_id: string;
+        };
+        Returns: undefined;
+      };
+      developer_platform_updates_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      developer_resident_visibility_set: {
+        Args: {
+          p_module_key: string;
+          p_request_id: string;
+          p_residents_visible: boolean;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       developer_set_error_status: {
         Args: {
           p_error_id: string;
@@ -22599,6 +22724,7 @@ export type Database = {
         Returns: {
           enabled: boolean;
           module_key: string;
+          residents_visible: boolean;
           settings: NonNullable<Json>;
           society_id: string;
           updated_at: string;
@@ -22621,6 +22747,7 @@ export type Database = {
         Returns: {
           enabled: boolean;
           module_key: string;
+          residents_visible: boolean;
           settings: NonNullable<Json>;
           society_id: string;
           updated_at: string;
@@ -22712,6 +22839,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      developer_usage_overview_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       developer_website_enquiries_get: {
         Args: Record<PropertyKey, never>;
@@ -25501,6 +25632,11 @@ export type Database = {
         };
         Returns: undefined;
       };
+      platform_update_mark_read: {
+        Args: { p_update_id: string };
+        Returns: undefined;
+      };
+      platform_updates_get: { Args: Record<PropertyKey, never>; Returns: Json };
       poll_activate: {
         Args: {
           p_expected_revision: number;

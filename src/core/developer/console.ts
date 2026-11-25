@@ -424,6 +424,28 @@ export async function getDeveloperSociety(societyId: string) {
   return data;
 }
 
+const developerUsageRowSchema = z.object({
+  societyId: z.uuid(),
+  societyName: z.string().min(1).max(120),
+  peopleJoined: z.number().int().nonnegative(),
+  visitors30d: z.number().int().nonnegative(),
+  requests30d: z.number().int().nonnegative(),
+  bills30d: z.number().int().nonnegative(),
+  notices30d: z.number().int().nonnegative(),
+  modulesOn: z.number().int().nonnegative(),
+});
+
+export async function getDeveloperUsageOverview() {
+  const context = await requireDeveloperContext();
+  return callModuleRpc(
+    context,
+    'developer_usage_overview_get',
+    {},
+    z.array(developerUsageRowSchema),
+    'Usage figures could not be loaded.',
+  );
+}
+
 export async function getDeveloperCommitteeHistorySetting(societyId: string) {
   const context = await requireDeveloperContext();
   const { data, error } = await context.db
@@ -583,7 +605,9 @@ export async function getDeveloperModules(societyId: string) {
       .order('sort_order', { ascending: true }),
     client
       .from('module_configs')
-      .select('module_key, enabled, settings, updated_at, updated_by')
+      .select(
+        'module_key, enabled, residents_visible, settings, updated_at, updated_by',
+      )
       .eq('society_id', societyId),
   ]);
   if (modulesResult.error) {
@@ -631,6 +655,7 @@ export async function getDeveloperModules(societyId: string) {
         ...module,
         key: moduleKey,
         enabled: module.is_core || (config?.enabled ?? false),
+        residentsVisible: module.is_core || (config?.residents_visible ?? true),
         settings: parseModuleSettings(moduleKey, config?.settings ?? {}),
         updatedAt: config?.updated_at ?? null,
         updatedBy: config?.updated_by ?? null,
@@ -704,6 +729,26 @@ export async function updateModuleSettingAccess(
     p_setting_key: settingKey,
     p_admin_can_edit: adminCanEdit,
   });
+}
+
+export async function setResidentModuleVisibility(
+  context: RequestContext,
+  societyId: string,
+  moduleKey: ModuleKey,
+  residentsVisible: boolean,
+) {
+  return callModuleRpc(
+    context,
+    'developer_resident_visibility_set',
+    {
+      p_society_id: z.uuid().parse(societyId),
+      p_module_key: moduleKey,
+      p_residents_visible: residentsVisible,
+      p_request_id: context.requestId,
+    },
+    z.object({ residentsVisible: z.boolean() }),
+    'Resident module visibility could not be saved.',
+  );
 }
 
 export async function updateQuickActionDefaults(

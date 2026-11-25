@@ -1189,11 +1189,13 @@ How to read it:
 | `core`            | `audit:read`                     | ✓     | ✓         | –     | –             | –        |
 | `core`            | `audit:undo`                     | ✓     | –         | –     | –             | –        |
 | `core`            | `role_preview:read`             | ✓     | –         | –     | –             | –        |
+| `core`            | `updates:read`                  | ✓     | ✓         | –     | –             | –        |
 | `core`            | `home:read`                      | –     | –         | ✓     | –             | ✓        |
 | `core`            | `dashboard:read`                 | ✓     | ✓         | –     | –             | –        |
 | `core`            | `analytics:read`                 | ✓     | ✓         | –     | –             | –        |
 | `core`            | `analytics:manage`               | ✓     | –         | –     | –             | –        |
 | `core`            | `analytics:export`               | ✓     | –         | –     | –             | –        |
+| `core`            | `reports:read`                  | ✓     | ✓         | –     | –             | –        |
 | `core`            | `society_profile:read`           | ✓     | ✓         | –     | –             | –        |
 | `core`            | `society_profile:manage`         | ✓     | –         | –     | –             | –        |
 | `core`            | `adoption:read`                  | ✓     | ✓         | –     | –             | –        |

@@ -10,6 +10,7 @@ import {
   ModuleSettingAccessControl,
   ModuleToggleControl,
   QuickActionDefaultsControls,
+  ResidentModuleVisibilityControl,
 } from '@/components/developer/console-controls';
 import { Card, StatusChip } from '@/components/ui/data-display';
 import { EmptyState, ErrorPanel } from '@/components/ui/feedback';
@@ -190,6 +191,11 @@ export default async function DeveloperModulesPage({
                       societyId={societyId}
                     />
                   </div>
+                  <ResidentModuleVisibilityControl
+                    moduleKey={module.key}
+                    residentsVisible={module.residentsVisible}
+                    societyId={societyId}
+                  />
                   <details className="w-full">
                     <summary className="min-h-10 cursor-pointer text-body text-brand underline">
                       Edit settings

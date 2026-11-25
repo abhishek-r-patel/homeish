@@ -163,6 +163,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Overview',
         },
         {
+          href: '/admin/reports',
+          label: 'Reports',
+          permission: 'reports:read',
+          section: 'Overview',
+        },
+        {
           href: '/admin/communication',
           label: 'Communication',
           permission: 'communication:read',
@@ -253,6 +259,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Settings',
         },
         {
+          href: '/admin/whats-new',
+          label: "What's new",
+          permission: 'updates:read',
+          section: 'Settings',
+        },
+        {
           href: '/admin/role-preview',
           label: 'Role preview',
           permission: 'role_preview:read',
@@ -276,6 +288,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           href: '/admin/analytics',
           label: 'Analytics',
           permission: 'analytics:read',
+          section: 'Overview',
+        },
+        {
+          href: '/admin/reports',
+          label: 'Reports',
+          permission: 'reports:read',
           section: 'Overview',
         },
         {
@@ -348,6 +366,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           href: '/admin/history',
           label: 'Change history',
           permission: 'audit:read',
+          section: 'Settings',
+        },
+        {
+          href: '/admin/whats-new',
+          label: "What's new",
+          permission: 'updates:read',
           section: 'Settings',
         },
         {
@@ -442,11 +466,13 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'audit:read': ['admin', 'committee'],
       'audit:undo': ['admin'],
       'role_preview:read': ['admin'],
+      'updates:read': ['admin', 'committee'],
       'home:read': ['guard', 'resident'],
       'dashboard:read': ['admin', 'committee'],
       'analytics:read': ['admin', 'committee'],
       'analytics:manage': ['admin'],
       'analytics:export': ['admin'],
+      'reports:read': ['admin', 'committee'],
       'society_profile:read': ['admin', 'committee'],
       'society_profile:manage': ['admin'],
       'adoption:read': ['admin', 'committee'],

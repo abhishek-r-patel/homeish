@@ -57,7 +57,7 @@ describe('application shells', () => {
     expect(markup).toContain('Today');
   });
 
-  it('limits compact tabs to four destinations plus More', () => {
+  it('keeps three compact destinations plus New and More', () => {
     const markup = renderToStaticMarkup(
       <ResidentShell
         enabledModules={['visitor', 'billing', 'service_request', 'delivery']}
@@ -74,6 +74,8 @@ describe('application shells', () => {
     );
 
     expect(markup).toContain('More');
+    expect(markup).toContain('aria-label="New"');
+    expect(markup).toContain('New</span>');
     expect(markup).toContain('Deliveries');
     expect(markup).toContain('aria-label="Notifications, 101 unread"');
     expect(markup).toContain('99+');

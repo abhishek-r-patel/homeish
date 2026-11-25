@@ -154,7 +154,7 @@ export async function buildRequestContext(
         .maybeSingle(),
       client
         .from('module_configs')
-        .select('module_key')
+        .select('module_key, residents_visible')
         .eq('society_id', activeMembership.societyId)
         .eq('enabled', true),
     ]);
@@ -173,11 +173,26 @@ export async function buildRequestContext(
         throw new Error('The active society has an unsupported status.');
       }
       societyStatus = societyResult.data.status;
-      for (const { module_key: moduleKey } of moduleConfigsResult.data) {
+      const activeRoles = activeMembership.roles;
+      const residentOnly =
+        activeRoles.includes('resident') &&
+        !activeRoles.some(
+          (role) =>
+            role === 'admin' ||
+            role === 'committee' ||
+            role === 'guard' ||
+            role === 'hk_supervisor',
+        );
+      for (const {
+        module_key: moduleKey,
+        residents_visible: residentsVisible,
+      } of moduleConfigsResult.data) {
         if (!isModuleKey(moduleKey)) {
           throw new Error('The active society has an unsupported module.');
         }
-        enabledModules.add(moduleKey);
+        if (!residentOnly || residentsVisible) {
+          enabledModules.add(moduleKey);
+        }
       }
       isHindiEnabled =
         societyResult.data.hindi_available && enabledModules.has('language');
