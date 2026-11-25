@@ -10,6 +10,7 @@ import {
 } from '@/core/notices/operations';
 import { getRequestLocale } from '@/core/i18n/request-locale';
 import { translateMessage } from '@/core/i18n/messages';
+import { getNoticeReachAction } from '../../actions';
 
 export const metadata = {
   title: 'Edit notice | Homeish',
@@ -57,7 +58,11 @@ export default async function EditNoticePage({
         <h1 className="text-title font-semibold">{t('Edit notice')}</h1>
       </header>
       <Card className="min-w-0">
-        <NoticeForm blocks={blocks} notice={notice} />
+        <NoticeForm
+          blocks={blocks}
+          notice={notice}
+          reachAction={getNoticeReachAction}
+        />
       </Card>
     </section>
   );

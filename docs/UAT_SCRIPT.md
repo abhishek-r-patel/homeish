@@ -7,6 +7,17 @@ screenshot) or Not run.
 
 ## Setup
 
+> **Planned replacement (PRD D-97, DEMO-8; IMPLEMENTATION_PLAN P61.8):** once
+> P61 is built, setup becomes "reset the demo data on testdb, then use
+> **Try as** on the beta demo host" — no onboarding run, plus-addresses or
+> manual structure. The seeded societies are Green Meadows Residency (50
+> flats, every released module, English) and Gulmohar Apartments (30 flats,
+> core modules plus Language Support, Hindi). This script will then be
+> extended to every released module and role, with each step naming the
+> seeded record it uses. Steps that need real email (sign-in codes,
+> receipts) stay on a separate real-address society. Until P61 ships, use
+> the setup below.
+
 1. **Society.** Create a fresh UAT society with the onboarding script
    (OPERATIONS.md "Society onboarding"): run it once without `--apply` to
    review the plan, then with `--apply`. Enable Visitors, Deliveries, Billing

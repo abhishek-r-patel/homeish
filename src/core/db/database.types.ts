@@ -11603,6 +11603,7 @@ export type Database = {
         Row: {
           enabled: boolean;
           module_key: string;
+          residents_visible: boolean;
           settings: NonNullable<Json>;
           society_id: string;
           updated_at: string;
@@ -11612,6 +11613,7 @@ export type Database = {
         Insert: {
           enabled?: boolean;
           module_key: string;
+          residents_visible?: boolean;
           settings?: NonNullable<Json>;
           society_id: string;
           updated_at?: string;
@@ -11620,6 +11622,7 @@ export type Database = {
         Update: {
           enabled?: boolean;
           module_key?: string;
+          residents_visible?: boolean;
           settings?: NonNullable<Json>;
           society_id?: string;
           updated_at?: string;
@@ -13166,6 +13169,95 @@ export type Database = {
           {
             foreignKeyName: 'person_workspace_preferences_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      platform_update_reads: {
+        Row: {
+          read_at: string;
+          update_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          read_at?: string;
+          update_id: string;
+          user_id: string;
+        };
+        Update: {
+          read_at?: string;
+          update_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'platform_update_reads_update_id_fkey';
+            columns: ['update_id'];
+            isOneToOne: false;
+            referencedRelation: 'platform_updates';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'platform_update_reads_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      platform_updates: {
+        Row: {
+          body: string;
+          created_at: string;
+          created_by: string;
+          href: string | null;
+          id: string;
+          published_at: string | null;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          withdrawn_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: string;
+          created_at?: string;
+          created_by: string;
+          href?: string | null;
+          id?: string;
+          published_at?: string | null;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          created_by?: string;
+          href?: string | null;
+          id?: string;
+          published_at?: string | null;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          withdrawn_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'platform_updates_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'platform_updates_updated_by_fkey';
+            columns: ['updated_by'];
             isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
@@ -16630,6 +16722,7 @@ export type Database = {
       };
       society_workspace_settings: {
         Row: {
+          committee_change_history_enabled: boolean;
           getting_started_dismissed_at: string | null;
           getting_started_dismissed_by: string | null;
           residents_joined_percent: number;
@@ -16639,6 +16732,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          committee_change_history_enabled?: boolean;
           getting_started_dismissed_at?: string | null;
           getting_started_dismissed_by?: string | null;
           residents_joined_percent?: number;
@@ -16647,6 +16741,7 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          committee_change_history_enabled?: boolean;
           getting_started_dismissed_at?: string | null;
           getting_started_dismissed_by?: string | null;
           residents_joined_percent?: number;
@@ -21173,6 +21268,29 @@ export type Database = {
         };
         Returns: string;
       };
+      audit_history_access_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      audit_history_get: {
+        Args: {
+          p_before: string;
+          p_category: string;
+          p_from: string;
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      audit_setting_undo: {
+        Args: {
+          p_audit_id: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       billing_bill_email_payload: {
         Args: { p_bill_id: string; p_society_id: string };
         Returns: Json;
@@ -22360,6 +22478,14 @@ export type Database = {
         Args: { p_request_id: string; p_settings: Json; p_society_id: string };
         Returns: Json;
       };
+      developer_committee_history_set: {
+        Args: {
+          p_enabled: boolean;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       developer_create_first_admin: {
         Args: { p_email: string; p_request_id: string; p_society_id: string };
         Returns: {
@@ -22451,6 +22577,39 @@ export type Database = {
           p_stage: string;
         };
         Returns: undefined;
+      };
+      developer_platform_update_save: {
+        Args: {
+          p_body: string;
+          p_expected_updated_at: string;
+          p_href: string;
+          p_publish: boolean;
+          p_request_id: string;
+          p_title: string;
+          p_update_id: string;
+        };
+        Returns: Json;
+      };
+      developer_platform_update_withdraw: {
+        Args: {
+          p_expected_updated_at: string;
+          p_request_id: string;
+          p_update_id: string;
+        };
+        Returns: undefined;
+      };
+      developer_platform_updates_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      developer_resident_visibility_set: {
+        Args: {
+          p_module_key: string;
+          p_request_id: string;
+          p_residents_visible: boolean;
+          p_society_id: string;
+        };
+        Returns: Json;
       };
       developer_set_error_status: {
         Args: {
@@ -22565,6 +22724,7 @@ export type Database = {
         Returns: {
           enabled: boolean;
           module_key: string;
+          residents_visible: boolean;
           settings: NonNullable<Json>;
           society_id: string;
           updated_at: string;
@@ -22587,6 +22747,7 @@ export type Database = {
         Returns: {
           enabled: boolean;
           module_key: string;
+          residents_visible: boolean;
           settings: NonNullable<Json>;
           society_id: string;
           updated_at: string;
@@ -22678,6 +22839,10 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      developer_usage_overview_get: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       developer_website_enquiries_get: {
         Args: Record<PropertyKey, never>;
@@ -25105,6 +25270,14 @@ export type Database = {
         };
         Returns: Json;
       };
+      notice_reach_get: {
+        Args: {
+          p_audience: string;
+          p_block_ids: string[];
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       notice_scheduled_publish_run: {
         Args: {
           p_request_trace: string;
@@ -25459,6 +25632,11 @@ export type Database = {
         };
         Returns: undefined;
       };
+      platform_update_mark_read: {
+        Args: { p_update_id: string };
+        Returns: undefined;
+      };
+      platform_updates_get: { Args: Record<PropertyKey, never>; Returns: Json };
       poll_activate: {
         Args: {
           p_expected_revision: number;

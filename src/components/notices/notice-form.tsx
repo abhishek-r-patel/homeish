@@ -20,6 +20,7 @@ import { validateNoticeSchedule } from '@/core/notices/validation';
 import { ValidationError } from '@/core/errors';
 import { NoticeActionForm, type NoticeFormAction } from './action-form';
 import { NoticeAttachmentUpload } from './attachment-upload';
+import { NoticeReach, type NoticeReachAction } from './notice-reach';
 
 type Block = { id: string; name: string };
 type PostMode = 'now' | 'draft' | 'schedule';
@@ -60,6 +61,7 @@ export function NoticeForm({
   blocks,
   notice,
   onSaved,
+  reachAction,
 }: {
   /** Overrides the server action; fixtures pass an in-memory action. */
   action?: NoticeFormAction;
@@ -67,6 +69,7 @@ export function NoticeForm({
   notice?: Notice;
   /** Replaces the default navigation to the saved notice. */
   onSaved?: (data: unknown) => void;
+  reachAction?: NoticeReachAction;
 }) {
   const { translate: t } = useUiTranslator();
   const router = useRouter();
@@ -76,7 +79,9 @@ export function NoticeForm({
   const [expiresOn, setExpiresOn] = useState(
     noticeExpiryDate(notice?.expires_at ?? null),
   );
-  const selectedBlocks = new Set(notice?.blocks.map(({ id }) => id) ?? []);
+  const [selectedBlockIds, setSelectedBlockIds] = useState(
+    notice?.blocks.map(({ id }) => id) ?? [],
+  );
   const today = IST_DATE.format(new Date());
   const published = notice?.status === 'published';
   const [postMode, setPostMode] = useState<PostMode>(
@@ -191,9 +196,19 @@ export function NoticeForm({
           typeof data === 'object' && data !== null && 'id' in data
             ? String(data.id)
             : notice?.id;
-        if (id) router.push(`/admin/notices/${id}`);
+        const status =
+          typeof data === 'object' && data !== null && 'status' in data
+            ? String(data.status)
+            : null;
+        if (id) {
+          router.push(
+            !published && (status === 'published' || status === 'scheduled')
+              ? `/admin/notices/${id}/done`
+              : `/admin/notices/${id}`,
+          );
+        }
       }}
-      refresh={!onSaved}
+      refresh={false}
       submitLabel={submitLabel}
     >
       <label
@@ -259,8 +274,16 @@ export function NoticeForm({
                 key={block.id}
               >
                 <input
-                  defaultChecked={selectedBlocks.has(block.id)}
+                  checked={selectedBlockIds.includes(block.id)}
                   name="blockIds"
+                  onChange={(event) => {
+                    const checked = event.currentTarget.checked;
+                    setSelectedBlockIds((current) =>
+                      checked
+                        ? [...current, block.id]
+                        : current.filter((id) => id !== block.id),
+                    );
+                  }}
                   type="checkbox"
                   value={block.id}
                 />
@@ -270,6 +293,12 @@ export function NoticeForm({
           )}
         </fieldset>
       ) : null}
+      <NoticeReach
+        action={reachAction}
+        audience={audience}
+        blockIds={selectedBlockIds}
+        scheduled={postMode === 'schedule'}
+      />
       <div className="grid min-w-0 gap-space-1">
         <DatePicker
           helpText={t('Residents stop seeing the notice after this day ends.')}
@@ -359,7 +388,7 @@ export function NoticeForm({
       ) : postMode === 'now' ? (
         <p className="text-caption text-ink-muted">
           {t(
-            'Publishing notifies everyone in the audience by push and in the app.',
+            'Publishing sends in-app alerts and available push notifications to this audience.',
           )}
         </p>
       ) : (

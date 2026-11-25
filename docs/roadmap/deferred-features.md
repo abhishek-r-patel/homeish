@@ -62,6 +62,19 @@ Owner's decisions so far: an earlier answer chose B, C and D together ("both, wi
 
 **Guardrails if revived:** reuse the existing memberships and switcher; check access separately for each society on every read; do not bypass tenant isolation with privileged database access; get a database-safety review before release.
 
+**Related, not a revival (D-96, 2026-11-25):** a developer-only usage overview with counts per society, shown separately in each copy of Homeish (live, demo), is planned as P60.4 (PRD LOG-10). It gives admins nothing and does not answer the questions above.
+
+### More "done" screens (from P58)
+
+**Status:** deferred 2026-11-25 (PRD D-96). P58.2 adds done screens only after an admin publishes a notice and after an admin generates bills. The owner will decide later whether these other actions also get one:
+
+- a resident approves a visitor;
+- an admin records a payment;
+- a resident raises a request;
+- a resident submits a payment reference.
+
+Reconsider after owner review of the two P58 done screens on beta. Each would use the same Result screen pattern (DESIGN 6.11) and must not repeat the action on refresh.
+
 ## Existing implementation requiring a decision
 
 Web Push conflicts with the current pilot boundary because it was implemented under the earlier product decision. The Phase 1 audit records the overlap in [pilot-readiness-audit.md](../audits/pilot-readiness-audit.md). Until the owner decides otherwise, do not extend it or remove its working functionality.

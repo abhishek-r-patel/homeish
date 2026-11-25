@@ -4,7 +4,7 @@
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Product  | Homeish                                                                                                                                |
 | Version  | 0.2 (living document)                                                                                                                  |
-| Date     | 2026-11-24 (first draft 2026-11-09)                                                                                                    |
+| Date     | 2026-11-25 (first draft 2026-11-09)                                                                                                    |
 | Status   | Living document — each decision in Section 17 carries its own approval date and status; items marked Open or proposed are not approved |
 | Audience | Product owner, coding agent (source of truth)                                                                                          |
 
@@ -122,9 +122,9 @@ Platform enhancements in the same waves (not separate modules): committee analyt
 
 **Approved 2026-11-09:** `homeish.vercel.app` is the public marketing website, not a login screen. `demo.homeish.vercel.app` is a public interactive synthetic demo, periodically reset. Future societies use their own configured subdomains of the same application, not separate branches. **Owner clarification:** Maplewood is a real society: its address is prepared but disabled (placeholder page only). Do not onboard it now; the owner will do that with the create-society script (`scripts/create-society.mjs`, see OPERATIONS "Society onboarding") once MVP is ready.
 
-`beta.homeish.vercel.app` belongs to a separate Vercel project deploying the `beta` branch for testing and later new features. Verified changes are normally merged into `main` for the shared website/society deployment. For the current redesign, keep `main` on the existing app until the owner confirms the new design and its new phases are complete and separately approves promotion. Beta must never use real society data or the production database. **Database projects (2026-11-09, ARCHITECTURE AD-14):** `homeish-testdb` for development/testing/beta, `homeish-demo` for the synthetic demo, and `homeish-live` for all onboarded societies; the database-backed demo will move to its own Vercel project `demo-homeish` so the main deployment never holds demo credentials. This preserves D-24: live societies share a database with enforced society isolation; it does not copy Civic Pulse's per-society database model.
+`beta.homeish.vercel.app` belongs to a separate Vercel project deploying the `beta` branch for testing and later new features. Verified changes are normally merged into `main` for the shared website/society deployment. For the current redesign, keep `main` on the existing app until the owner confirms the new design and its new phases are complete and separately approves promotion. Beta must never use real society data or the production database. **Database projects (2026-11-09, ARCHITECTURE AD-14):** `homeish-testdb` for development/testing/beta, `homeish-demo` for the synthetic demo, and `homeish-live` for all onboarded societies; the database-backed demo will move to its own Vercel project `demo-homeish` so the main deployment never holds demo credentials (**amended 2026-11-25 by D-97:** no separate demo project; the `homeish` project holds the demo keys and chooses the database from the address, and beta's demo uses testdb). This preserves D-24: live societies share a database with enforced society isolation; it does not copy Civic Pulse's per-society database model.
 
-Current delivery is the marketing page, host allow-list, beta entry and a browser-only synthetic demo illustration (manual and 15-minute resets). Authentication, actual modules, isolated backend provisioning and database-backed demo resets remain prerequisites for a full working demo or any real society activation. Maplewood's reserved host shows a disabled "not open yet" page; all other society hosts fail closed as unconfigured. No society directory is published.
+Current delivery is the marketing page, host allow-list, beta entry and a browser-only synthetic demo illustration (manual and 15-minute resets). Authentication, actual modules, isolated backend provisioning and database-backed demo resets remain prerequisites for a full working demo or any real society activation. **Planned 2026-11-25 (D-97, §4.0.2):** the working demo replaces the illustration and is served by the `homeish` project (public demo, `homeish-demo`) and the `beta-homeish` project (beta demo, testdb). This replaces the earlier plan for a separate `demo-homeish` Vercel project. Maplewood's reserved host shows a disabled "not open yet" page; all other society hosts fail closed as unconfigured. No society directory is published.
 
 **Hosting approval, 2026-11-09:** Vercel reported the originally requested product address is assigned to another project, so the owner chose the name Homeish (D-01). `homeish.vercel.app` is attached to `homeish` and `beta-homeish.vercel.app` to `beta-homeish`, under team `arp-dev`. After a temporary pause, the owner approved resuming both scaffold projects and automatic deployment: merge a feature branch into `beta` to deploy `beta-homeish`, verify it, then merge `beta` into `main` to deploy `homeish`. The owner also approved committing/pushing and performing this initial release sequence. `vercel.json` enables only the two release branches; the project build gate isolates them. Preview branch tracking stays disabled and Production domain assignment is automatic. This does not activate authentication, backends, modules or real societies. The nested demo/beta example URLs above are not confirmed live addresses; current hosted beta testing uses `beta-homeish.vercel.app`.
 
@@ -159,8 +159,62 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `WEB-5` **Is Homeish right for you?** An honest list of limits: a web app with no native app, an internet connection is needed, Homeish never holds society money, it is not accounting or legal advice, and modules not switched on are not included.
 - `WEB-6` **Three ways to get in touch:** the **Try demo** button (still disabled until the demo exists, D-49), a **Talk to us** email link, and an enquiry form. The email address is set by the developer in the developer portal, never in code; if none is set, the link is hidden.
 - `WEB-7` **Enquiry form:** fields are name (required), society name, city, number of flats, email, phone and message; at least one of email or phone is required. Each enquiry is saved in Homeish, visible and deletable only in the developer portal, and also emailed to the configured address when one is set. Enquiries are kept until the developer deletes them, and every deletion is audited. Spam protection uses a hidden trap field and a per-network-address limit configurable by the developer from 1–100 valid submissions per hour (default 5), with no outside captcha service. A short note under the form says why the details are collected, and the privacy policy is updated before the form goes live.
-- `WEB-8` **Role demo buttons:** "Try as resident / guard / admin" buttons are added only when the separate demo is set up and verified in its own authorised task (D-49); until then they are not shown.
+- `WEB-8` **Role demo buttons:** "Try as resident / guard / admin" buttons are added only when the separate demo is set up and verified in its own authorised task (D-49); until then they are not shown. **Planned 2026-11-25 (D-97):** they are built in P61 with the working demo and sign in straight away (DEMO-4).
 - **Not included:** no price wording (prices are deferred to a future Pro decision; D-33 is unchanged), no customer counts, testimonials, uptime or security guarantees, app downloads or AI claims, and no copied text, images or layout from the reference sites.
+
+**Homepage additions — P58 (D-96, approved 2026-11-25; implemented locally):** three more sections, all within the guardrails above.
+
+- `WEB-9` **Problems Homeish solves:** a short list of everyday society problems (for example paper visitor registers, chasing dues on WhatsApp, lost complaints), each shown crossed out with the Homeish answer beside it. A visible "Before" text label goes with the crossed-out text, because screen readers do not announce strikethrough. Only problems that a released module really solves are listed.
+- `WEB-10` **One day in your society:** a short morning-to-evening story (for example guest at the gate, parcel, bill reminder, request fixed, notice read) with five new close-up screenshots made with invented data only.
+- `WEB-11` **One more FAQ answer:** "Can our society change how a module works?" The answer stays general: the society's admin changes some settings in Settings, other settings and switching modules on or off are agreed with Homeish and changed by the developer (MOD-7, MOD-8), and which settings are admin-editable can differ between societies.
+
+#### 4.0.2 Working demo, UAT data and scheduled reset (D-97, P61)
+
+**Approved for planning 2026-11-25; coding waits until every planned module is built, and needs the owner's go-ahead.** This replaces the browser-only illustration with the real app running on made-up data. The same data set is used for the owner's user acceptance testing (UAT).
+
+- `DEMO-1` **Where it runs, and in what order:**
+  - The seed and reset are built and tested on a throwaway local PostgreSQL database first.
+  - They are then run on `homeish-testdb`, which starts empty, for UAT on beta. The beta Vercel project serves the demo address for beta (planned `demo.beta.homeish.vercel.app`) using the demo societies in testdb, so no new keys are needed.
+  - After UAT passes, testdb is paused, `homeish-demo` is resumed and the same scripts run there. The shared `homeish` Vercel project (branch `main`) serves the public demo address (planned `demo.homeish.vercel.app`) from `homeish-demo`, choosing the database from the address (ARCHITECTURE AD-15).
+  - The public demo therefore opens only when `main` carries the new design, after the owner approves that promotion.
+  - Vercel may not allow two-level `vercel.app` names. If so, flat names attached to the same projects are used (for example `demo-homeish.vercel.app` and `demo-beta-homeish.vercel.app`) until a custom domain exists.
+  - `homeish-live` is never touched; every script and the reset refuse any database other than local, testdb or demo.
+- `DEMO-2` **Only demo data is ever touched:**
+  - Demo societies carry a permanent demo label that only the seed can set; no screen or other function can add or remove it.
+  - Every demo account uses a reserved address ending in `@demo.homeish.invalid`, which can never receive email.
+  - The seed and reset read, change and delete only labelled societies, their records and files, and reserved-address accounts. Anything else in testdb (for example future UAT or test data) is never touched.
+  - If a demo society contains any account without a reserved address, the reset stops before deleting anything and reports the problem to the developer.
+- `DEMO-3` **Made-up content covering every UAT case:**
+  - **Green Meadows Residency:** 50 flats, every released module switched on, English first.
+  - **Gulmohar Apartments:** 30 flats, only the MVP modules (Visitors, Deliveries, Billing, Service requests) plus Language Support, which Hindi needs (D-67). Hindi first, so switched-off features can be shown.
+  - **People:** every role (admin, committee member, resident owner, tenant, family member, guard, housekeeping supervisor). One society uses individual gate sign-in and the other uses the shared gate account (CORE-16).
+  - **Records:** every status of every module, several months of history with dates counted back from the reset day, and English and Hindi text in notices, requests, comments and similar records.
+  - **Privacy cases:** hidden phone numbers, people who opted out of the directory, private files, and approvals waiting.
+  - All names, phone numbers, vehicles and flats are invented. Each UAT script step names the society and role to use.
+- `DEMO-4` **"Try as" sign-in:**
+  - One tap signs in to a ready-made demo account, with no email code.
+  - The roles offered are admin, committee member, resident (owner), tenant, guard and housekeeping supervisor, in either society.
+  - The public homepage shows **Try as resident / guard / admin** (WEB-8). The demo address opens a role picker listing all six roles.
+  - "Try as" works only on the two demo addresses and only for reserved demo accounts. It never works on the live society hosts, the main website or for any other account.
+  - The developer portal is never reachable through "Try as".
+  - A "Try as" sign-in lasts until the next reset, which signs everyone out.
+  - **Accepted risk (owner, 2026-11-25):** visitors share the same accounts, so anyone can see and change what others did until the next reset. This is acceptable because all the data is made up.
+- `DEMO-5` **Shared-sandbox behaviour:**
+  - Every demo screen shows a short notice: made-up data, shared with other visitors, and when the next reset is due.
+  - Photo and file uploads are allowed everywhere, and every uploaded file is deleted at each reset. **Accepted risk (owner, 2026-11-25):** an offensive upload stays visible to other visitors until the developer uses **Reset now** or the next scheduled reset runs.
+  - No email or phone push message is ever sent from demo data; notifications stay in-app. UPI details are invented, and no real payment can be made.
+- `DEMO-6` **Scheduled reset:**
+  - A reset deletes all demo data and rebuilds it fresh.
+  - On the public demo the default is every Monday at about 5:00 AM IST. The free scheduler runs once a day and may start up to an hour late, so a reset happens between about 5:00 and 6:00 AM.
+  - In the developer portal on the demo address, the developer can switch the schedule on or off, choose the weekdays, press **Reset now** (after a confirmation that states the consequence) and see the last run's time and result.
+  - On beta (testdb) the schedule is not available; only **Reset now** is offered, in the beta developer portal.
+  - Every setting change and every reset is recorded in the platform audit log, which is not removed by the reset. A failed reset leaves the previous demo data in place and is logged as critical.
+  - **Owner choice (2026-11-25):** the reset may permanently delete records that the app normally keeps forever (money history, audit entries and similar), but only for demo-labelled societies and only inside the reset (DATABASE DBD-6).
+- `DEMO-7` **The old browser-only illustration** is removed once the working demo is checked and open. Until then it stays as it is. At that point the **Try demo** button is switched on and points to the demo address, which meets the D-49 condition.
+- `DEMO-8` **UAT:**
+  - [UAT_SCRIPT.md](./UAT_SCRIPT.md) is extended from the MVP modules to every released module and role, using the demo societies and "Try as" sign-in.
+  - The assistant runs a browser pass of the whole script on beta/testdb and reports Pass, Fail or Not run with screenshots.
+  - The owner then does the acceptance run and sign-off. A pass on beta is not a live-society approval.
 
 ### 4.1 Features and Functional Requirements
 
@@ -208,6 +262,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `MOD-6` Society-level feature flags are stored as data, not code branches per society.
 - `MOD-7` (D-92) **Who decides what.** Anything the developer agrees offline with a society (onboarding, which modules are switched on, developer-only module settings under MOD-3) is changed only in the developer portal. Anything a society decides for itself is changed only in that society's admin Settings pages. Admin and committee screens may show which modules are on or off (CORE-22, CORE-38), but never offer a developer control, and every developer change is refused on the server for anyone who is not the developer. The developer portal may reuse the app's look and components, but not admin functionality.
 - `MOD-8` (D-93, P54.14) **Per-society choice of admin-editable settings.** For each society, the developer chooses in the developer portal which MOD-3 module settings that society's admins may edit. Every society starts with today's choices (for example visitor rules, photo retention, amenity calendar name and consent method are admin-editable; settings such as request auto-close days stay developer-only). The choice is stored as data (MOD-6), audit-logged (MOD-5) and enforced on the server: a setting not opened to admins is refused for them even if a screen shows it. An opened setting then appears only on that society's admin Settings pages (MOD-7).
+- `MOD-9` (D-96, P60.2) **Hide a module from residents.** For each society and each switched-on module that is approved for this switch, the developer can choose in the developer portal whether residents see it. When hidden, the module disappears from resident menus, tabs, search, Home tiles, Coming up and the calendar, and resident server actions and reads for it are refused; admins, committee, guards and housekeeping keep their access. It is off by default (residents see every switched-on module), stored as data (MOD-6) and audit-logged (MOD-5). Which modules may be hidden is a kickoff question; modules where residents must act (visitors, deliveries, billing, requests) are expected to be excluded.
 
 **Platform Subscription (SaaS)**
 
@@ -225,6 +280,8 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 - `LOG-6` Log retention: **[A-09]** error logs 90 days, audit logs 2 years (configurable by developer).
 - `LOG-7` Critical-severity errors trigger an alert to developer by email. **[D-09 — Approved 2026-11-09]** Use Sentry plus an app-level log table for tenant-specific audit; do not build an alerting engine.
 - `LOG-8` Request ID propagated across client → server → third-party calls for tracing.
+- `LOG-9` (D-96, P59.1–P59.3) **Change history for a society.** Admins always see a read-only change history for their own society; it cannot be switched off. Committee members see it only when the developer switches committee viewing on for that society in the developer portal (off by default; the switch is audit-logged). At P59 kickoff the owner expanded the history beyond the original four categories to all current society audit actions, grouped by module. Non-settings events return no operational details; settings events return only redacted before/after values. Identity-document numbers, private notes, phone numbers, email addresses, messages and other sensitive keys are hidden. Tenant roles cannot select raw audit-log rows directly; their access is only through the filtered, redacted function. The developer retains raw access. The separate developer audit viewer (D-06) asks for one society before showing entries.
+- `LOG-10` (D-96, P60.4) **Developer usage overview.** The developer portal shows one row per society with usage counts only: for example people joined, people active in the last 7 and 30 days, visitors, requests, bills and notices in the last 30 days, and modules switched on. No names, phone numbers or flat numbers. Each copy of Homeish (live, demo) shows only its own societies in its own portal; figures are never combined across copies. Admins do not see this page; the admin-facing "my societies" overview stays deferred (D-65).
 
 **Data Export**
 
@@ -506,6 +563,7 @@ Current delivery is the marketing page, host allow-list, beta entry and a browse
 
 - `NTC-4` Drafts remain available separately from the two posting actions: Publish now and Schedule. Scheduling requires a future date and time in India time, checked by both the form and server. Like polls, due notices become published automatically on access, with daily catch-up; push delivery may wait for the daily job. The optional expiry is entered separately. Late processing preserves the scheduled publication time and original expiry: an already-expired notice stays in the archive without an outdated alert, never returning to draft. Withdrawing a draft or scheduled notice moves it to the archive.
 - `NTC-5` Planning fields: prepared by, notice-board location, priority and next action/date remain admin/committee-visible only. Admins set the official fields on any notice; committee members submit in-app proposals, which an admin accepts or rejects before the official fields change. The planning status is Draft, Scheduled, Posted or Removed. P11 audience, pinning, expiry, attachment, read counts and archive are unchanged.
+- `NTC-6` (D-96, P58.3) **Reach count before posting.** While choosing the audience, the notice form shows "Will reach N people in M flats", counted from active residents in the chosen audience at that moment, and updates when the audience changes. It does not count phone notifications. For a scheduled notice it says the count is as of now and may change by the scheduled time. Guards are never counted (they never see notices). The form text no longer claims that everyone is notified.
 
 ### 5.9 Amenity Booking (`amenity`) — P2-5
 
@@ -932,7 +990,7 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 **P33 owner decisions (2026-11-17, D-66; approved scope, not implementation):**
 
-- **Boundaries:** developer console and technical logs, public marketing/privacy pages and the synthetic demo remain English. Stored in-app notification text, push messages, emails including authentication emails, PDFs, CSV exports and printed documents remain English in this build. Translate surrounding controls and explain English-only outputs where needed; never rewrite historical messages or documents.
+- **Boundaries:** developer console and technical logs, public marketing/privacy pages and the browser-only synthetic demo illustration remain English. The working demo (D-97) follows the normal language rules above, and its made-up records include Hindi text. Stored in-app notification text, push messages, emails including authentication emails, PDFs, CSV exports and printed documents remain English in this build. Translate surrounding controls and explain English-only outputs where needed; never rewrite historical messages or documents.
 - **Selection:** default English, with no automatic browser-language switching. A visible selector before login and in account settings offers English and, when allowed by D-67, Hindi. Save a signed-in person's preference to their profile across devices, roles and societies. Keep an explicit signed-out/shared-gate device choice separately; it must not overwrite another guard's account preference. Keep the current page; confirm before switching with unsaved form changes. If saving fails, retain the previous language and show a clear error.
 - **Formatting:** use 0-9 digits, Indian number grouping, INR/rupee amounts, translated month names and a 12-hour clock. Preserve existing society time-zone rules, calculations, stored values, identifiers and technical error/reference codes.
 - **Translation and resources:** locally AI-drafted, plain Hindi is approved for local/beta review, not professionally reviewed or approved for live societies. Use typed dictionaries and existing React/Intl tools, a forward-only profile-preference migration and existing settings/routes. Official locally bundled Noto Sans Devanagari font files with their SIL Open Font License 1.1 are approved. No new npm dependency, translation vendor, paid service or route structure is approved. Missing translations must fail checks, not silently fall back to English.
@@ -968,7 +1026,7 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 
 **Navigation and workspace consolidation (D-91 approved 2026-11-24, details D-93; P54–P56 locally implemented, not released):**
 
-- `CORE-34` Menus are grouped by topic (DESIGN 5.3): seven admin groups and, after the four phone tabs, four resident groups. Phone tabs are fixed per role (resident Home, Visitors, Bills, Requests; admin Dashboard, Visitors, Billing, Requests), not the first four menu entries. Grouping changes no page, permission or module setting; disabled or unpermitted pages and empty groups are hidden. Each admin group has a group page listing its switched-on features; a feature shows a count only when something is waiting for action (for example payments to confirm), never a plain total.
+- `CORE-34` Menus are grouped by topic (DESIGN 5.3): seven admin groups and, after the four phone tabs, four resident groups. Phone tabs are fixed per role (resident Home, Visitors, Bills, Requests; admin Dashboard, Visitors, Billing, Requests), not the first four menu entries. Grouping changes no page, permission or module setting; disabled or unpermitted pages and empty groups are hidden. Each admin group has a group page listing its switched-on features; a feature shows a count only when something is waiting for action (for example payments to confirm), never a plain total. _Amended by D-96 (CORE-44): each feature may also show one short status line._
 - `CORE-35` A person who is a resident and also an admin or committee member in the same society switches between "My home" and the society work area with one place picker in the top bar. The work-area entry uses the society's own name for its managing body (CORE-40). The same picker replaces the separate society switcher for people in several societies, so there is one switch for society, place and flat. After sign-in a person lands where they were last on that device; the first time, people with a work role land in the work area. Each person can set a fixed starting place in their profile instead. People with only one of these roles and one society never see the switch. Switching never merges data: resident pages show only their own flat's records, society pages show the society's.
 - `CORE-36` (P56) A resident linked to two or more flats sees one flat at a time by default and switches flats in the same place picker. Every resident page tied to a flat follows the chosen flat: bills, payments, visitors, deliveries, requests, household, vehicles and meters. In their profile they can change this default to "all my flats together", where each item is labelled with its flat. The choice belongs to the person, not the society.
 - `CORE-37` Dashboards and resident Home show quick-action tiles. Default tiles per role (admin, committee, resident) are set by the developer in the developer portal for all societies, and the developer may override them for one society (P54.12). The starting admin defaults are Post a notice, Record a payment, Generate monthly bills, Add an expense and Create a poll; the resident defaults are Pre-approve a guest, Pay or view my bill, Raise a request and My household. Changing a default never changes the tiles of a person who has pinned their own. Each person can pin up to 8 tiles, remove, reorder and reset to the default (P55.3); phones show the first 4. Tiles show only actions the person is allowed to do in enabled modules; a pinned action that later becomes unavailable is hidden, not shown disabled. The same list feeds the top-bar **+** quick-create menu, which lists every action the person may do.
@@ -981,6 +1039,16 @@ A native Homeish module ported from the Civic Pulse voting design (D-40). Civic 
 - `CORE-41` (P55.1) A search box in the top bar finds pages and actions for everyone, filtered by permission and switched-on modules. Admins and committee members can also find people, flats and vehicles by name or number. Guards can find flats and vehicle numbers only, never phone numbers. Residents search pages and actions only. Record results follow the same access rules as the pages they open and never reach across societies.
 - `CORE-42` (P55.7) A read-only society **calendar** appears in both My home and the work area. It shows only dates already held by meetings, events, amenity bookings and bill due dates, so nothing is entered twice. Residents see society-wide dates plus only their own bookings and dues. Each date opens its source record.
 - `CORE-43` (P56) **Bulk import** uses one shared flow: download a CSV template, upload, preview every row with its errors, then save all rows or none. Each upload is recorded in the audit log and limited to 2,000 rows. CSV is the only file type; Excel users choose "Save as CSV". Imports cover flats/units and residents (upgrading today's CSV imports), opening dues, vehicles, staff and assets. Each opening-dues row becomes one charge on that flat named "Opening dues as on <date>", payable and waivable with a reason like other charges (BIL-4), and shown as its own line in reports rather than as that month's billing; a society can import opening dues only once, then that import locks. Admins import from their own pages. The developer can also import for any society from the developer portal through the portal's own server actions (not admin screens, MOD-7), and these imports are recorded as the developer's in the audit log.
+
+**Everyday polish and admin confidence (D-96 approved 2026-11-25; P58/P59 verified locally, P60 implemented locally):**
+
+- `CORE-44` (P58.1) Each feature tile on an admin group page may show **one short status line** under its name, for example "₹42,000 collected this month", "Last notice 2 days ago" or "3 visitors inside now". The waiting-for-action count from CORE-34 stays. A status line uses only figures the person may already see on that feature's own page, respects switched-on modules and permissions, and is left out (not shown as zero or an error) when the figure cannot be read. P58 starts with Billing, Notices and Visitors; other useful lines remain future release work.
+- `CORE-45` (P58.2) **Done screens.** After two actions, the person sees a result screen (DESIGN 6.11) instead of a plain message: **Admin publishes a notice** (what was posted, who it reaches, and View notice, Post another and Back to Notices) and **Admin generates bills** (how many bills, for which month, total amount, and View bills and Back to Billing). A scheduled notice says when it will go out. No new Share reminder action is added. Other candidates are recorded for later in the deferred-features register.
+- `CORE-46` (P59.4) **Undo a settings change.** For 30 days, an admin can undo a change to an admin-editable society setting from the change history (LOG-9): only the latest change to that setting, only when nothing changed it since, and only when the admin may still edit that setting (MOD-8). Undo restores the previous value through the existing module-specific settings function and writes a normal audit event. Undoing an undo is allowed under the same rules. Undo never applies to money, payments, bills, messages or notifications already sent, people or roles, modules, or UPI/payment details; the latter are history-only to avoid sending money to a previously used destination.
+- `CORE-47` (P59.5) **Role preview.** An admin can open a read-only picture of what a Guard, a Resident, a Committee member or a Housekeeping supervisor sees in their society: the menu, phone tabs, Home tiles and which actions are available, built from the same registry, permission maps and switched-on modules. It shows no real person's data and nothing in it can be opened, pressed or saved. It never signs the admin in as anyone else.
+- `CORE-48` (P60.1) **Reports hub.** One page in the admin work area lists every existing report and export (for example monthly collection, dues follow-up, as-of collection, expenses, visitor log, CSV exports) with a one-line description, each linking to its existing page. Only reports the person may open in switched-on modules are listed. It adds no new report.
+- `CORE-49` (P60.3) **What's new.** The developer writes short release notes in the developer portal (title, a few lines, optional link to the related page, publish date). Admins and committee members see them in-app on a What's new page with an unread dot; no push notification and no email. Posts can be edited, withdrawn and explicitly republished by the developer; every title/body/link/publish change is audit-logged.
+- `CORE-50` (P60.5) **"+" on phones.** On phones, the quick-create **+** (CORE-37) moves from the top bar into the bottom tab bar for roles that have a tab bar; on laptops it stays in the top bar. The compact bar keeps the first three fixed role tabs, places **New** in the freed fourth slot and puts the former fourth tab into More. Guards and housekeeping supervisors, who have no tab bar, keep it where it is today.
 
 #### 5.10.14 Major Repairs & Redevelopment (`major_works`) — P50
 
@@ -1170,179 +1238,183 @@ How to read it:
 
 <!-- permission-map:start -->
 
-| Module            | Permission                       | Admin | Committee | Guard | HK supervisor | Resident |
-| ----------------- | -------------------------------- | ----- | --------- | ----- | ------------- | -------- |
-| `core`            | `society:read`                   | ✓     | ✓         | ✓     | –             | –        |
-| `core`            | `structure:read`                 | ✓     | ✓         | ✓     | –             | ✓        |
-| `core`            | `structure:manage`               | ✓     | –         | –     | –             | –        |
-| `core`            | `structure:layout:read`          | ✓     | ✓         | –     | –             | –        |
-| `core`            | `jobs:read`                      | ✓     | –         | –     | –             | –        |
-| `core`            | `membership:read`                | ✓     | ✓         | –     | –             | –        |
-| `core`            | `membership:manage`              | ✓     | –         | –     | –             | –        |
-| `core`            | `guards:read`                    | ✓     | ✓         | ✓     | –             | –        |
-| `core`            | `guards:manage`                  | ✓     | –         | –     | –             | –        |
-| `core`            | `gate:settings`                  | ✓     | –         | –     | –             | –        |
-| `core`            | `guard:identify`                 | –     | –         | ✓     | –             | –        |
-| `core`            | `contacts:read`                  | ✓     | –         | ✓     | –             | –        |
-| `core`            | `household:read`                 | –     | –         | –     | –             | ✓        |
-| `core`            | `household:manage`               | –     | –         | –     | –             | ✓        |
-| `core`            | `audit:read`                     | ✓     | ✓         | –     | –             | –        |
-| `core`            | `home:read`                      | –     | –         | ✓     | –             | ✓        |
-| `core`            | `dashboard:read`                 | ✓     | ✓         | –     | –             | –        |
-| `core`            | `analytics:read`                 | ✓     | ✓         | –     | –             | –        |
-| `core`            | `analytics:manage`               | ✓     | –         | –     | –             | –        |
-| `core`            | `analytics:export`               | ✓     | –         | –     | –             | –        |
-| `core`            | `society_profile:read`           | ✓     | ✓         | –     | –             | –        |
-| `core`            | `society_profile:manage`         | ✓     | –         | –     | –             | –        |
-| `core`            | `adoption:read`                  | ✓     | ✓         | –     | –             | –        |
-| `core`            | `adoption:manage`                | ✓     | –         | –     | –             | –        |
-| `core`            | `action_plan:manage`             | ✓     | ✓         | –     | –             | –        |
-| `core`            | `action_plan:delete_task`        | ✓     | –         | –     | –             | –        |
-| `core`            | `action_plan:own`                | ✓     | ✓         | ✓     | ✓             | ✓        |
-| `core`            | `help:read`                      | ✓     | ✓         | ✓     | ✓             | ✓        |
-| `core`            | `letters:make`                   | ✓     | ✓         | –     | –             | –        |
-| `core`            | `contact_log:read`               | ✓     | ✓         | –     | –             | –        |
-| `core`            | `contact_log:manage`             | ✓     | –         | –     | –             | –        |
-| `core`            | `compliance:read`                | ✓     | ✓         | –     | –             | –        |
-| `core`            | `compliance:manage`              | ✓     | –         | –     | –             | –        |
-| `core`            | `communication:read`             | ✓     | ✓         | –     | –             | –        |
-| `visitor`         | `visitor:list`                   | ✓     | ✓         | ✓     | –             | ✓        |
-| `visitor`         | `visitor:create`                 | ✓     | –         | ✓     | –             | –        |
-| `visitor`         | `visitor:decide`                 | –     | –         | –     | –             | ✓        |
-| `visitor`         | `visitor:override`               | –     | –         | ✓     | –             | –        |
-| `visitor`         | `visitor:check_in`               | ✓     | –         | ✓     | –             | –        |
-| `visitor`         | `visitor:preapproval:create`     | –     | –         | –     | –             | ✓        |
-| `visitor`         | `visitor:preapproval:cancel`     | ✓     | ✓         | –     | –             | ✓        |
-| `visitor`         | `visitor:frequent:manage`        | –     | –         | –     | –             | ✓        |
-| `visitor`         | `visitor:blacklist:read`         | ✓     | ✓         | ✓     | –             | –        |
-| `visitor`         | `visitor:blacklist:manage`       | ✓     | –         | –     | –             | –        |
-| `visitor`         | `visitor:settings:manage`        | ✓     | –         | –     | –             | –        |
-| `delivery`        | `delivery:list`                  | ✓     | ✓         | ✓     | –             | ✓        |
-| `delivery`        | `delivery:create`                | ✓     | –         | ✓     | –             | –        |
-| `delivery`        | `delivery:respond`               | –     | –         | –     | –             | ✓        |
-| `delivery`        | `delivery:override`              | –     | –         | ✓     | –             | –        |
-| `delivery`        | `delivery:collect`               | –     | –         | ✓     | –             | ✓        |
-| `delivery`        | `delivery:preference:read`       | ✓     | ✓         | –     | –             | ✓        |
-| `delivery`        | `delivery:preference:manage`     | –     | –         | –     | –             | ✓        |
-| `delivery`        | `delivery:announce`              | –     | –         | –     | –             | ✓        |
-| `delivery`        | `delivery:settings:manage`       | ✓     | –         | –     | –             | –        |
-| `billing`         | `billing:charges:read`           | ✓     | ✓         | –     | –             | –        |
-| `billing`         | `billing:charges:manage`         | ✓     | –         | –     | –             | –        |
-| `billing`         | `billing:settings:manage`        | ✓     | –         | –     | –             | –        |
-| `billing`         | `billing:bills:read`             | ✓     | ✓         | –     | –             | ✓        |
-| `billing`         | `billing:bills:manage`           | ✓     | –         | –     | –             | –        |
-| `billing`         | `billing:ledger:read`            | ✓     | ✓         | –     | –             | ✓        |
-| `billing`         | `billing:payments:read`          | ✓     | ✓         | –     | –             | ✓        |
-| `billing`         | `billing:payments:manage`        | ✓     | –         | –     | –             | –        |
-| `billing`         | `billing:payments:submit`        | –     | –         | –     | –             | ✓        |
-| `billing`         | `billing:payment_details:read`   | ✓     | ✓         | ✓     | ✓             | ✓        |
-| `billing`         | `billing:payment_details:manage` | ✓     | –         | –     | –             | –        |
-| `billing`         | `billing:monthly_report:export`  | ✓     | –         | –     | –             | –        |
-| `billing`         | `billing:dues_follow_up:read`    | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:list`                   | ✓     | ✓         | –     | –             | ✓        |
-| `service_request` | `request:create`                 | ✓     | –         | –     | –             | ✓        |
-| `service_request` | `request:categories:manage`      | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:assign`                 | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:update`                 | ✓     | ✓         | –     | –             | ✓        |
-| `service_request` | `request:reject`                 | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:close`                  | –     | –         | –     | –             | ✓        |
-| `service_request` | `request:rate`                   | –     | –         | –     | –             | ✓        |
-| `service_request` | `request:upvote`                 | –     | –         | –     | –             | ✓        |
-| `service_request` | `request:comment`                | ✓     | ✓         | –     | –             | ✓        |
-| `service_request` | `request:assignees:list`         | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:report`                 | ✓     | ✓         | –     | –             | –        |
-| `service_request` | `request:log`                    | ✓     | –         | –     | ✓             | –        |
-| `service_request` | `request:hold`                   | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:priority`               | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:rounds`                 | ✓     | –         | ✓     | ✓             | –        |
-| `service_request` | `request:rounds:manage`          | ✓     | –         | –     | –             | –        |
-| `service_request` | `request:escalation:respond`     | ✓     | ✓         | –     | –             | –        |
-| `staff`           | `staff:list`                     | ✓     | –         | –     | –             | ✓        |
-| `staff`           | `staff:manage`                   | ✓     | –         | –     | –             | –        |
-| `staff`           | `staff:review`                   | ✓     | –         | –     | –             | –        |
-| `staff`           | `staff:settings:manage`          | ✓     | –         | –     | –             | –        |
-| `staff`           | `staff:register`                 | –     | –         | –     | –             | ✓        |
-| `staff`           | `staff:attendance`               | ✓     | –         | –     | –             | ✓        |
-| `staff`           | `staff:day_block`                | –     | –         | –     | –             | ✓        |
-| `staff`           | `staff:gate`                     | –     | –         | ✓     | –             | –        |
-| `staff`           | `staff:notes:read`               | ✓     | ✓         | –     | –             | –        |
-| `staff`           | `staff:notes:manage`             | ✓     | –         | –     | –             | –        |
-| `housekeeping`    | `stock:list`                     | ✓     | ✓         | –     | ✓             | –        |
-| `housekeeping`    | `stock:manage`                   | ✓     | –         | –     | ✓             | –        |
-| `amc`             | `amc:list`                       | ✓     | ✓         | –     | –             | –        |
-| `amc`             | `amc:manage`                     | ✓     | –         | –     | –             | –        |
-| `notice`          | `notice:list`                    | ✓     | ✓         | –     | –             | ✓        |
-| `notice`          | `notice:create`                  | ✓     | ✓         | –     | –             | –        |
-| `notice`          | `notice:manage`                  | ✓     | ✓         | –     | –             | –        |
-| `notice`          | `notice:plan`                    | ✓     | –         | –     | –             | –        |
-| `notice`          | `notice:propose_plan`            | –     | ✓         | –     | –             | –        |
-| `notice`          | `notice:archive`                 | ✓     | ✓         | –     | –             | –        |
-| `amenity`         | `amenity:list`                   | ✓     | ✓         | –     | –             | ✓        |
-| `amenity`         | `amenity:manage`                 | ✓     | –         | –     | –             | –        |
-| `amenity`         | `amenity:book`                   | ✓     | –         | –     | –             | ✓        |
-| `amenity`         | `amenity:cancel`                 | ✓     | –         | –     | –             | ✓        |
-| `directory`       | `directory:list`                 | ✓     | ✓         | –     | –             | ✓        |
-| `directory`       | `directory:manage`               | ✓     | –         | –     | –             | –        |
-| `directory`       | `directory:manage_household`     | –     | –         | –     | –             | ✓        |
-| `directory`       | `directory:lookup_vehicle`       | –     | –         | ✓     | –             | –        |
-| `expense`         | `expense:list`                   | ✓     | ✓         | –     | –             | –        |
-| `expense`         | `expense:manage`                 | ✓     | –         | –     | –             | –        |
-| `expense`         | `expense:approve`                | –     | ✓         | –     | –             | –        |
-| `expense`         | `expense:budget:read`            | –     | –         | –     | –             | ✓        |
-| `tenancy`         | `tenancy:list`                   | ✓     | ✓         | –     | –             | ✓        |
-| `tenancy`         | `tenancy:create`                 | ✓     | –         | –     | –             | ✓        |
-| `tenancy`         | `tenancy:consent`                | –     | –         | –     | –             | ✓        |
-| `tenancy`         | `tenancy:manage`                 | ✓     | –         | –     | –             | –        |
-| `tenancy`         | `tenancy:files`                  | ✓     | –         | –     | –             | ✓        |
-| `tenancy`         | `tenancy:guard`                  | –     | –         | ✓     | –             | –        |
-| `document`        | `document:list`                  | ✓     | ✓         | –     | –             | ✓        |
-| `document`        | `document:manage`                | ✓     | –         | –     | –             | –        |
-| `parking`         | `parking:list`                   | ✓     | ✓         | –     | –             | ✓        |
-| `parking`         | `parking:manage`                 | ✓     | –         | –     | –             | –        |
-| `parking`         | `parking:request`                | –     | –         | –     | –             | ✓        |
-| `parking`         | `parking:visitor_pass`           | –     | –         | –     | –             | ✓        |
-| `parking`         | `parking:report`                 | –     | –         | ✓     | –             | ✓        |
-| `parking`         | `parking:guard`                  | –     | –         | ✓     | –             | –        |
-| `sos`             | `sos:raise`                      | –     | –         | ✓     | –             | ✓        |
-| `sos`             | `sos:list`                       | ✓     | ✓         | ✓     | –             | ✓        |
-| `sos`             | `sos:respond`                    | ✓     | ✓         | ✓     | –             | –        |
-| `sos`             | `sos:manage`                     | ✓     | –         | –     | –             | –        |
-| `vendor`          | `vendor:list`                    | ✓     | ✓         | –     | –             | –        |
-| `vendor`          | `vendor:manage`                  | ✓     | –         | –     | –             | –        |
-| `vendor`          | `vendor:request`                 | ✓     | ✓         | –     | –             | –        |
-| `vendor`          | `vendor:approve`                 | ✓     | ✓         | –     | –             | –        |
-| `vendor`          | `vendor:rate`                    | ✓     | ✓         | –     | –             | –        |
-| `patrol`          | `patrol:list`                    | ✓     | ✓         | –     | –             | –        |
-| `patrol`          | `patrol:manage`                  | ✓     | –         | –     | –             | –        |
-| `patrol`          | `patrol:guard`                   | –     | –         | ✓     | –             | –        |
-| `metering`        | `metering:list`                  | ✓     | ✓         | –     | –             | ✓        |
-| `metering`        | `metering:manage`                | ✓     | –         | –     | –             | –        |
-| `metering`        | `metering:record`                | ✓     | –         | ✓     | –             | –        |
-| `metering`        | `metering:submit`                | –     | –         | –     | –             | ✓        |
-| `asset`           | `asset:list`                     | ✓     | ✓         | –     | –             | –        |
-| `asset`           | `asset:manage`                   | ✓     | –         | –     | –             | –        |
-| `home_services`   | `home_services:list`             | ✓     | ✓         | –     | –             | ✓        |
-| `home_services`   | `home_services:manage`           | ✓     | –         | –     | –             | –        |
-| `home_services`   | `home_services:suggest`          | –     | ✓         | –     | –             | –        |
-| `home_services`   | `home_services:rate`             | –     | –         | –     | –             | ✓        |
-| `poll`            | `poll:vote`                      | –     | –         | –     | –             | ✓        |
-| `poll`            | `poll:list`                      | ✓     | ✓         | –     | –             | –        |
-| `poll`            | `poll:manage`                    | ✓     | –         | –     | –             | –        |
-| `meeting`         | `meeting:attend`                 | –     | –         | –     | –             | ✓        |
-| `meeting`         | `meeting:list`                   | ✓     | ✓         | –     | –             | –        |
-| `meeting`         | `meeting:minutes`                | ✓     | ✓         | –     | –             | –        |
-| `meeting`         | `meeting:manage`                 | ✓     | –         | –     | –             | –        |
-| `event`           | `event:attend`                   | –     | –         | –     | –             | ✓        |
-| `event`           | `event:list`                     | ✓     | ✓         | –     | –             | –        |
-| `event`           | `event:manage`                   | ✓     | ✓         | –     | –             | –        |
-| `community`       | `community:participate`          | –     | –         | –     | –             | ✓        |
-| `community`       | `community:moderate`             | ✓     | –         | –     | –             | –        |
-| `language`        | `language:read`                  | ✓     | ✓         | –     | –             | –        |
-| `language`        | `language:manage`                | ✓     | –         | –     | –             | –        |
-| `major_works`     | `major_works:list`               | ✓     | ✓         | –     | –             | –        |
-| `major_works`     | `major_works:manage`             | ✓     | –         | –     | –             | –        |
-| `major_works`     | `major_works:score`              | ✓     | ✓         | –     | –             | –        |
-| `major_works`     | `major_works:resident_read`      | –     | –         | –     | –             | ✓        |
+| Module | Permission | Admin | Committee | Guard | HK supervisor | Resident |
+| --- | --- | --- | --- | --- | --- | --- |
+| `core` | `society:read` | ✓ | ✓ | ✓ | – | – |
+| `core` | `structure:read` | ✓ | ✓ | ✓ | – | ✓ |
+| `core` | `structure:manage` | ✓ | – | – | – | – |
+| `core` | `structure:layout:read` | ✓ | ✓ | – | – | – |
+| `core` | `jobs:read` | ✓ | – | – | – | – |
+| `core` | `membership:read` | ✓ | ✓ | – | – | – |
+| `core` | `membership:manage` | ✓ | – | – | – | – |
+| `core` | `guards:read` | ✓ | ✓ | ✓ | – | – |
+| `core` | `guards:manage` | ✓ | – | – | – | – |
+| `core` | `gate:settings` | ✓ | – | – | – | – |
+| `core` | `guard:identify` | – | – | ✓ | – | – |
+| `core` | `contacts:read` | ✓ | – | ✓ | – | – |
+| `core` | `household:read` | – | – | – | – | ✓ |
+| `core` | `household:manage` | – | – | – | – | ✓ |
+| `core` | `audit:read` | ✓ | ✓ | – | – | – |
+| `core` | `audit:undo` | ✓ | – | – | – | – |
+| `core` | `role_preview:read` | ✓ | – | – | – | – |
+| `core` | `updates:read` | ✓ | ✓ | – | – | – |
+| `core` | `home:read` | – | – | ✓ | – | ✓ |
+| `core` | `dashboard:read` | ✓ | ✓ | – | – | – |
+| `core` | `analytics:read` | ✓ | ✓ | – | – | – |
+| `core` | `analytics:manage` | ✓ | – | – | – | – |
+| `core` | `analytics:export` | ✓ | – | – | – | – |
+| `core` | `reports:read` | ✓ | ✓ | – | – | – |
+| `core` | `society_profile:read` | ✓ | ✓ | – | – | – |
+| `core` | `society_profile:manage` | ✓ | – | – | – | – |
+| `core` | `adoption:read` | ✓ | ✓ | – | – | – |
+| `core` | `adoption:manage` | ✓ | – | – | – | – |
+| `core` | `action_plan:manage` | ✓ | ✓ | – | – | – |
+| `core` | `action_plan:delete_task` | ✓ | – | – | – | – |
+| `core` | `action_plan:own` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `core` | `help:read` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `core` | `letters:make` | ✓ | ✓ | – | – | – |
+| `core` | `contact_log:read` | ✓ | ✓ | – | – | – |
+| `core` | `contact_log:manage` | ✓ | – | – | – | – |
+| `core` | `compliance:read` | ✓ | ✓ | – | – | – |
+| `core` | `compliance:manage` | ✓ | – | – | – | – |
+| `core` | `communication:read` | ✓ | ✓ | – | – | – |
+| `visitor` | `visitor:list` | ✓ | ✓ | ✓ | – | ✓ |
+| `visitor` | `visitor:create` | ✓ | – | ✓ | – | – |
+| `visitor` | `visitor:decide` | – | – | – | – | ✓ |
+| `visitor` | `visitor:override` | – | – | ✓ | – | – |
+| `visitor` | `visitor:check_in` | ✓ | – | ✓ | – | – |
+| `visitor` | `visitor:preapproval:create` | – | – | – | – | ✓ |
+| `visitor` | `visitor:preapproval:cancel` | ✓ | ✓ | – | – | ✓ |
+| `visitor` | `visitor:frequent:manage` | – | – | – | – | ✓ |
+| `visitor` | `visitor:blacklist:read` | ✓ | ✓ | ✓ | – | – |
+| `visitor` | `visitor:blacklist:manage` | ✓ | – | – | – | – |
+| `visitor` | `visitor:settings:manage` | ✓ | – | – | – | – |
+| `delivery` | `delivery:list` | ✓ | ✓ | ✓ | – | ✓ |
+| `delivery` | `delivery:create` | ✓ | – | ✓ | – | – |
+| `delivery` | `delivery:respond` | – | – | – | – | ✓ |
+| `delivery` | `delivery:override` | – | – | ✓ | – | – |
+| `delivery` | `delivery:collect` | – | – | ✓ | – | ✓ |
+| `delivery` | `delivery:preference:read` | ✓ | ✓ | – | – | ✓ |
+| `delivery` | `delivery:preference:manage` | – | – | – | – | ✓ |
+| `delivery` | `delivery:announce` | – | – | – | – | ✓ |
+| `delivery` | `delivery:settings:manage` | ✓ | – | – | – | – |
+| `billing` | `billing:charges:read` | ✓ | ✓ | – | – | – |
+| `billing` | `billing:charges:manage` | ✓ | – | – | – | – |
+| `billing` | `billing:settings:manage` | ✓ | – | – | – | – |
+| `billing` | `billing:bills:read` | ✓ | ✓ | – | – | ✓ |
+| `billing` | `billing:bills:manage` | ✓ | – | – | – | – |
+| `billing` | `billing:ledger:read` | ✓ | ✓ | – | – | ✓ |
+| `billing` | `billing:payments:read` | ✓ | ✓ | – | – | ✓ |
+| `billing` | `billing:payments:manage` | ✓ | – | – | – | – |
+| `billing` | `billing:payments:submit` | – | – | – | – | ✓ |
+| `billing` | `billing:payment_details:read` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `billing` | `billing:payment_details:manage` | ✓ | – | – | – | – |
+| `billing` | `billing:monthly_report:export` | ✓ | – | – | – | – |
+| `billing` | `billing:dues_follow_up:read` | ✓ | – | – | – | – |
+| `service_request` | `request:list` | ✓ | ✓ | – | – | ✓ |
+| `service_request` | `request:create` | ✓ | – | – | – | ✓ |
+| `service_request` | `request:categories:manage` | ✓ | – | – | – | – |
+| `service_request` | `request:assign` | ✓ | – | – | – | – |
+| `service_request` | `request:update` | ✓ | ✓ | – | – | ✓ |
+| `service_request` | `request:reject` | ✓ | – | – | – | – |
+| `service_request` | `request:close` | – | – | – | – | ✓ |
+| `service_request` | `request:rate` | – | – | – | – | ✓ |
+| `service_request` | `request:upvote` | – | – | – | – | ✓ |
+| `service_request` | `request:comment` | ✓ | ✓ | – | – | ✓ |
+| `service_request` | `request:assignees:list` | ✓ | – | – | – | – |
+| `service_request` | `request:report` | ✓ | ✓ | – | – | – |
+| `service_request` | `request:log` | ✓ | – | – | ✓ | – |
+| `service_request` | `request:hold` | ✓ | – | – | – | – |
+| `service_request` | `request:priority` | ✓ | – | – | – | – |
+| `service_request` | `request:rounds` | ✓ | – | ✓ | ✓ | – |
+| `service_request` | `request:rounds:manage` | ✓ | – | – | – | – |
+| `service_request` | `request:escalation:respond` | ✓ | ✓ | – | – | – |
+| `staff` | `staff:list` | ✓ | – | – | – | ✓ |
+| `staff` | `staff:manage` | ✓ | – | – | – | – |
+| `staff` | `staff:review` | ✓ | – | – | – | – |
+| `staff` | `staff:settings:manage` | ✓ | – | – | – | – |
+| `staff` | `staff:register` | – | – | – | – | ✓ |
+| `staff` | `staff:attendance` | ✓ | – | – | – | ✓ |
+| `staff` | `staff:day_block` | – | – | – | – | ✓ |
+| `staff` | `staff:gate` | – | – | ✓ | – | – |
+| `staff` | `staff:notes:read` | ✓ | ✓ | – | – | – |
+| `staff` | `staff:notes:manage` | ✓ | – | – | – | – |
+| `housekeeping` | `stock:list` | ✓ | ✓ | – | ✓ | – |
+| `housekeeping` | `stock:manage` | ✓ | – | – | ✓ | – |
+| `amc` | `amc:list` | ✓ | ✓ | – | – | – |
+| `amc` | `amc:manage` | ✓ | – | – | – | – |
+| `notice` | `notice:list` | ✓ | ✓ | – | – | ✓ |
+| `notice` | `notice:create` | ✓ | ✓ | – | – | – |
+| `notice` | `notice:manage` | ✓ | ✓ | – | – | – |
+| `notice` | `notice:plan` | ✓ | – | – | – | – |
+| `notice` | `notice:propose_plan` | – | ✓ | – | – | – |
+| `notice` | `notice:archive` | ✓ | ✓ | – | – | – |
+| `amenity` | `amenity:list` | ✓ | ✓ | – | – | ✓ |
+| `amenity` | `amenity:manage` | ✓ | – | – | – | – |
+| `amenity` | `amenity:book` | ✓ | – | – | – | ✓ |
+| `amenity` | `amenity:cancel` | ✓ | – | – | – | ✓ |
+| `directory` | `directory:list` | ✓ | ✓ | – | – | ✓ |
+| `directory` | `directory:manage` | ✓ | – | – | – | – |
+| `directory` | `directory:manage_household` | – | – | – | – | ✓ |
+| `directory` | `directory:lookup_vehicle` | – | – | ✓ | – | – |
+| `expense` | `expense:list` | ✓ | ✓ | – | – | – |
+| `expense` | `expense:manage` | ✓ | – | – | – | – |
+| `expense` | `expense:approve` | – | ✓ | – | – | – |
+| `expense` | `expense:budget:read` | – | – | – | – | ✓ |
+| `tenancy` | `tenancy:list` | ✓ | ✓ | – | – | ✓ |
+| `tenancy` | `tenancy:create` | ✓ | – | – | – | ✓ |
+| `tenancy` | `tenancy:consent` | – | – | – | – | ✓ |
+| `tenancy` | `tenancy:manage` | ✓ | – | – | – | – |
+| `tenancy` | `tenancy:files` | ✓ | – | – | – | ✓ |
+| `tenancy` | `tenancy:guard` | – | – | ✓ | – | – |
+| `document` | `document:list` | ✓ | ✓ | – | – | ✓ |
+| `document` | `document:manage` | ✓ | – | – | – | – |
+| `parking` | `parking:list` | ✓ | ✓ | – | – | ✓ |
+| `parking` | `parking:manage` | ✓ | – | – | – | – |
+| `parking` | `parking:request` | – | – | – | – | ✓ |
+| `parking` | `parking:visitor_pass` | – | – | – | – | ✓ |
+| `parking` | `parking:report` | – | – | ✓ | – | ✓ |
+| `parking` | `parking:guard` | – | – | ✓ | – | – |
+| `sos` | `sos:raise` | – | – | ✓ | – | ✓ |
+| `sos` | `sos:list` | ✓ | ✓ | ✓ | – | ✓ |
+| `sos` | `sos:respond` | ✓ | ✓ | ✓ | – | – |
+| `sos` | `sos:manage` | ✓ | – | – | – | – |
+| `vendor` | `vendor:list` | ✓ | ✓ | – | – | – |
+| `vendor` | `vendor:manage` | ✓ | – | – | – | – |
+| `vendor` | `vendor:request` | ✓ | ✓ | – | – | – |
+| `vendor` | `vendor:approve` | ✓ | ✓ | – | – | – |
+| `vendor` | `vendor:rate` | ✓ | ✓ | – | – | – |
+| `patrol` | `patrol:list` | ✓ | ✓ | – | – | – |
+| `patrol` | `patrol:manage` | ✓ | – | – | – | – |
+| `patrol` | `patrol:guard` | – | – | ✓ | – | – |
+| `metering` | `metering:list` | ✓ | ✓ | – | – | ✓ |
+| `metering` | `metering:manage` | ✓ | – | – | – | – |
+| `metering` | `metering:record` | ✓ | – | ✓ | – | – |
+| `metering` | `metering:submit` | – | – | – | – | ✓ |
+| `asset` | `asset:list` | ✓ | ✓ | – | – | – |
+| `asset` | `asset:manage` | ✓ | – | – | – | – |
+| `home_services` | `home_services:list` | ✓ | ✓ | – | – | ✓ |
+| `home_services` | `home_services:manage` | ✓ | – | – | – | – |
+| `home_services` | `home_services:suggest` | – | ✓ | – | – | – |
+| `home_services` | `home_services:rate` | – | – | – | – | ✓ |
+| `poll` | `poll:vote` | – | – | – | – | ✓ |
+| `poll` | `poll:list` | ✓ | ✓ | – | – | – |
+| `poll` | `poll:manage` | ✓ | – | – | – | – |
+| `meeting` | `meeting:attend` | – | – | – | – | ✓ |
+| `meeting` | `meeting:list` | ✓ | ✓ | – | – | – |
+| `meeting` | `meeting:minutes` | ✓ | ✓ | – | – | – |
+| `meeting` | `meeting:manage` | ✓ | – | – | – | – |
+| `event` | `event:attend` | – | – | – | – | ✓ |
+| `event` | `event:list` | ✓ | ✓ | – | – | – |
+| `event` | `event:manage` | ✓ | ✓ | – | – | – |
+| `community` | `community:participate` | – | – | – | – | ✓ |
+| `community` | `community:moderate` | ✓ | – | – | – | – |
+| `language` | `language:read` | ✓ | ✓ | – | – | – |
+| `language` | `language:manage` | ✓ | – | – | – | – |
+| `major_works` | `major_works:list` | ✓ | ✓ | – | – | – |
+| `major_works` | `major_works:manage` | ✓ | – | – | – | – |
+| `major_works` | `major_works:score` | ✓ | ✓ | – | – | – |
+| `major_works` | `major_works:resident_read` | – | – | – | – | ✓ |
 
 <!-- permission-map:end -->
 
@@ -1390,8 +1462,11 @@ The web portal remains the complete product for every role. The Android app is n
 | D-03 | **Society Config → Modules** (toggle per module, module settings)         |
 | D-04 | Society users & roles (create first admin)                                |
 | D-05 | **Error Log Viewer** + detail                                             |
-| D-06 | Audit log viewer                                                          |
+| D-06 | Audit log viewer (pick one society first, D-96)                           |
 | D-07 | Platform health summary (error counts by society/module, recent critical) |
+| D-08 | Usage overview, counts per society for this copy only (LOG-10, P60.4)     |
+| D-09 | What's new posts (CORE-49, P60.3)                                         |
+| D-10 | Demo data: reset schedule, Reset now, last run (DEMO-6, P61)              |
 
 ### 9.4 Admin / Committee
 
@@ -1413,6 +1488,10 @@ The web portal remains the complete product for every role. The Android app is n
 | A-14 | Dues additions: payment-plan tracker, internal recovery follow-ups and as-of collection report (P38)                                                                                                         |
 | A-15 | Society reference profile, capability-adoption tracker and committee action plans (P35)                                                                                                                      |
 | A-16 | Searchable app help and authorized correspondence preview/download (P35)                                                                                                                                     |
+| A-17 | Change history with 30-day settings undo (LOG-9, CORE-46; P59)                                                                                                                                               |
+| A-18 | Role preview (CORE-47, P59)                                                                                                                                                                                  |
+| A-19 | Reports hub (CORE-48, P60)                                                                                                                                                                                   |
+| A-20 | What's new (CORE-49, P60)                                                                                                                                                                                    |
 
 ### 9.5 Guard
 
@@ -1740,7 +1819,7 @@ Items marked **High** block design/build of the affected module; resolve them be
 | D-46 | Emergency-contact visibility                      | **Approved 2026-11-14:** active household, admin and committee may view contacts; guards cannot view contacts                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Closed   |
 | D-47 | P17 directory follow-up policies                  | **Approved 2026-11-14:** admin/committee may see verified phone data despite resident-directory opt-out; committee is read-only; Core occupancy end deactivates directory access immediately and the one-year purge clock uses recorded `ended_at`; use the standard authenticated-action lookup rate limit; add database-side pagination because maximum society size is unknown                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Closed   |
 | D-48 | Directory records on an in-society unit move      | **Approved 2026-11-14:** transfer active vehicles and emergency contacts to the new unit with audited changes; clear vehicle verification for re-verification; keep visibility preferences attached to the person                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Closed   |
-| D-49 | Homepage delivery and deferred demo connection    | **Approved 2026-11-15:** implement H1 and H2 locally; defer separate demo setup until the product is ready, then connect it in a separately authorised task. Until then, show a disabled **Try demo** button with **Demo coming soon**, no demo URL and no inline substitute. Preserve host boundaries. Owner subsequently approved the delivered copy and three synthetic screenshots; real-device/manual acceptance and release remain pending.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Closed   |
+| D-49 | Homepage delivery and deferred demo connection    | **Approved 2026-11-15:** implement H1 and H2 locally; defer separate demo setup until the product is ready, then connect it in a separately authorised task. Until then, show a disabled **Try demo** button with **Demo coming soon**, no demo URL and no inline substitute. Preserve host boundaries. Owner subsequently approved the delivered copy and three synthetic screenshots; real-device/manual acceptance and release remain pending. **2026-11-25:** the demo connection is planned in P61 under D-97.                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Closed   |
 | D-50 | P18 tenancy workflow, privacy and five-hour scope | **Approved 2026-11-15:** T1 first, then complete verified P18 slices within five hours, local only. Rental agreement required; police proof configurable/off by default; no government ID copies; private 5 MiB PDF/JPG/PNG with the access/retention policy in §5.10.3. Admin approval schedules; admin actual completion changes Core occupancy. Any one active owner consents to move-in, no bypass; no separate consent for move-out. No move fees/deposits. Positive dues block completion/NOC with Billing enabled, no override; disabled Billing is explicitly not checked. Approve the NOC template and 30/7/0-day in-app expiry reminders above. **D-78 (2026-11-22; on beta/testdb with P51):** allows an admin-approved conditional handover and permanent numbered certificates for new issues only (TEN-9–TEN-11)                                                                                                                                                  | Closed   |
 | D-51 | P19 document repository kickoff decisions         | **Approved 2026-11-15:** see §5.10.4. Seeded admin-managed folders with per-folder audience; PDF/JPEG/PNG up to 5 MB; every download audited; no resident uploads; unit documents for all occupants or owners only; tenancy NOCs read-only; versions kept, archive never delete; signed links.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Closed   |
 | D-52 | P20 parking kickoff decisions                     | **Approved 2026-11-15:** see §5.10.5. Car/two-wheeler/visitor/EV slots; unlimited allocation, no fees; FIFO waitlist per type with audited skip reason; optional directory vehicle links under the capacity rule; visitor passes up to 24 hours linked to visitor entries; reports notify the matched unit and admins; photos kept 3 days by default (1–90).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Closed   |
@@ -1901,6 +1980,56 @@ No permission was changed by this decision. Any later code change refreshes the 
 - role demo buttons only once the demo exists.
 
 This replaces the 2026-11-14 choice of a demo-only call to action and the deferred enquiry destination. There is no price wording; prices are deferred to a future Pro decision and D-33 is unchanged. D-49 still governs the demo. The privacy policy must be updated before the form goes live. This decision does not approve hosted migrations, release to main or live use.
+
+**D-96 — Everyday polish, admin confidence and homepage additions: P58–P60 (Approved for planning 2026-11-25; P58 and P59 verified locally, P60 implemented locally):** After a third look at Multi School ERP, AcadLynk and MHM Studios, the owner picked ideas from proposal Samples 1–3 in [docs/proposals](./proposals/) and asked for them as three new phases, all to be built:
+
+- **P58, quick wins:** group-page status lines (CORE-44), done screens for publishing a notice and generating bills only (CORE-45), the notice reach count (NTC-6) and three homepage sections (WEB-9 to WEB-11).
+- **P59, admin confidence:** change history (LOG-9), settings undo for 30 days (CORE-46) and role preview for Guard, Resident, Committee member and Housekeeping supervisor (CORE-47).
+- **P60, more ways in:** reports hub (CORE-48), developer switch to hide a module from residents (MOD-9), What's new posts (CORE-49), developer usage overview (LOG-10, D-08) and the phone **+** in the tab bar (CORE-50).
+
+**P60 kickoff decisions recorded 2026-11-25:** every optional module can be hidden from residents independently; no package/dependency is forced and Core stays available. What's new is visible to admins and committee members. Usage includes joined people, visitors/requests/bills/notices in the last 30 days and modules switched on; active-in-7/30 is omitted because no existing activity timestamp is tracked. Compact navigation keeps three direct tabs, moves the fourth into More and uses that slot for New.
+
+The owner's answers, recorded so that they are not reopened:
+
+- **Change history:** admins always see their own society's history; the developer may switch committee viewing on per society (off by default). It covers settings, roles and people, payment confirmations and bill runs, with ID numbers, private notes, phone numbers and email addresses hidden. The developer can see every society but picks one society first.
+- **Raw audit-log access:** admins and committee members cannot read raw `audit_logs` rows directly. Their access is only through the filtered, redacted change-history function; the developer retains full access. P59 must check all existing readers before removing this direct access.
+- **Undo:** 30 days, admin settings only; never money, bills, messages already sent or modules.
+- **Role preview:** a read-only picture; nothing can be opened or done from it.
+- **Done screens:** only the two actions above for now; the other candidates are listed in the deferred-features register.
+- **Reach count:** people and flats only, no phone-notification count.
+- **Hide a module from residents:** decided by the developer in the portal.
+- **Usage overview:** in the developer portal, per copy of Homeish, counts only. It is not the admin "my societies" overview, which stays deferred under D-65.
+- **Phone "+":** in the tab bar on phones, in the top bar on laptops.
+- **Homepage:** five new close-up screenshots with invented data. The "how your society runs" idea (#14) was dropped because P57 already covers it.
+
+**Earlier rules this changes, by owner choice:**
+
+- CORE-34 and D-93 said group pages show only waiting counts and never plain totals; CORE-44 now also allows one status line per tile.
+- D-06 and LOG-4 kept the audit log developer-only; LOG-9 opens a narrower, allow-listed and redacted view to admins (and to committee members where switched on). The developer audit viewer now asks for a society first.
+- The dashboard's **Admin actions** list keeps its rule of action, role and time only, never names. The separate change-history page, opened deliberately by the owner's choice, shows who made each change in that society.
+
+Kickoff questions, with recommendations, are listed in each phase of the [implementation plan](./IMPLEMENTATION_PLAN.md#p58). This decision does not approve hosted migrations, release to beta or main, or live use.
+
+**D-97 — Working demo, UAT data and scheduled reset: P61 (Approved for planning 2026-11-25; coding after every planned module is built):** The owner asked for UAT and a working demo with as much made-up data as possible, covering every UAT case. Requirements are DEMO-1 to DEMO-8 in §4.0.2. The owner's answers, recorded so that they are not reopened:
+
+- **Order:** build and test locally, seed testdb (empty at the start) for UAT on beta, then pause testdb, resume `homeish-demo` and run the same scripts there. Live is never touched.
+- **Only demo data:** a permanent demo label on demo societies plus reserved `@demo.homeish.invalid` accounts. Scripts and resets touch nothing else, so testdb can later hold other data safely.
+- **Hosting:** no separate demo Vercel project. The `homeish` project (`main`) serves the public demo from `homeish-demo`, choosing the database from the address. The `beta-homeish` project serves the beta demo from testdb's demo societies. This reverses the AD-14 rule that the main project never holds demo keys; the owner accepted that risk on 2026-11-25 (ARCHITECTURE AD-15).
+- **Data:** Green Meadows Residency (50 flats, every released module, English first) and Gulmohar Apartments (30 flats, MVP modules plus Language Support, Hindi first). The owner first chose "core modules only, Hindi first". Because D-67 shows Hindi only when Language Support is on, the owner confirmed on 2026-11-25 that Gulmohar also gets Language Support; every other extra module stays off.
+- **Sign-in:** "Try as" buttons that sign in straight away, for admin, committee member, resident (owner), tenant, guard and housekeeping supervisor. They work on both demo addresses, only for demo accounts, and last until the next reset.
+- **Uploads:** allowed everywhere and deleted at every reset.
+- **Reset:** every Monday at about 5:00 AM IST on the public demo, switched on or off and with weekdays chosen in the developer portal, plus **Reset now**. On testdb there is **Reset now** only. A reset may delete normally permanent records, but only in demo-labelled societies.
+- **Old illustration:** removed once the working demo is checked and open.
+
+**Earlier rules this changes, by owner choice:**
+
+- AD-14's "demo seed/reset scripts refuse to run unless the target is `homeish-demo`" now also allows local and testdb, limited to demo-labelled data. Its separate `demo-homeish` project is replaced by AD-15.
+- D-49 and WEB-8: the **Try demo** and role buttons are built in P61 and switched on only after the working demo is checked.
+- CORE-1's email-code-only sign-in gains one demo-only exception (DEMO-4). Developer impersonation stays forbidden (D-27): "Try as" signs in to made-up accounts only.
+- DBD-2 and the append-only rules gain one narrow exception for demo-labelled societies inside the reset (DATABASE DBD-6).
+- The P33 language boundary (§5.10.13, D-66) now applies only to the browser-only illustration.
+
+The free plan keeps only two databases running at once. Once live runs, testdb and `homeish-demo` cannot both be up, so the beta demo and the public demo cannot run at the same time on the free plan. This decision does not approve coding, hosted migrations, release to beta or main, or live use. P61 holds the tasks; every planning question is answered, so only coding remains.
 
 ## 18. Glossary
 

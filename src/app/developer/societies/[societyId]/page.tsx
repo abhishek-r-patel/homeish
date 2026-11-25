@@ -5,11 +5,13 @@ import {
   DeveloperOnboardingForm,
   SocietyForm,
   SocietyStatusControl,
+  CommitteeHistoryControl,
 } from '@/components/developer/console-controls';
 import { Card } from '@/components/ui/data-display';
 import {
   getDeveloperSociety,
   getDeveloperOnboarding,
+  getDeveloperCommitteeHistorySetting,
   societyStatusSchema,
 } from '@/core/developer/console';
 import { ErrorPanel } from '@/components/ui/feedback';
@@ -40,9 +42,10 @@ export default async function SocietyDetailPage({
       />
     );
   }
-  const [society, onboarding] = await Promise.all([
+  const [society, onboarding, committeeHistoryEnabled] = await Promise.all([
     getDeveloperSociety(societyId),
     getDeveloperOnboarding(societyId),
+    getDeveloperCommitteeHistorySetting(societyId),
   ]);
   const status = societyStatusSchema.safeParse(society.status);
   if (!status.success) {
@@ -98,6 +101,15 @@ export default async function SocietyDetailPage({
       >
         <SocietyStatusControl
           currentStatus={status.data}
+          societyId={society.id}
+        />
+      </Card>
+      <Card
+        title="Committee change history"
+        description="Admins always see their society history. Turn committee access on only when agreed for this society."
+      >
+        <CommitteeHistoryControl
+          enabled={committeeHistoryEnabled}
           societyId={society.id}
         />
       </Card>

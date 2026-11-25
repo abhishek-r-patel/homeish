@@ -288,6 +288,14 @@ export const HI_MANAGEMENT: Readonly<Record<string, string>> = {
   'A billing period is one calendar month.': 'बिल की अवधि एक कैलेंडर महीना है।',
   '1. Choose a billing period': '1. बिल की अवधि चुनें',
   'Billing month': 'बिल का महीना',
+  'View bills': 'बिल देखें',
+  'Back to Billing': 'बिलिंग पर वापस',
+  'Total amount': 'कुल राशि',
+  'No new bills generated': 'कोई नया बिल नहीं बना',
+  '{count} bill was generated for the selected billing period.':
+    'चुने गए बिल अवधि के लिए {count} बिल बनाया गया।',
+  '{count} bills were generated for the selected billing period.':
+    'चुने गए बिल अवधि के लिए {count} बिल बनाए गए।',
   'Choose Units and Charges': 'यूनिट और शुल्क चुनें',
   'Select active units and charge types. Custom charges need an amount for each selected unit.':
     'सक्रिय यूनिट और शुल्क के प्रकार चुनें। अलग शुल्क के लिए हर चुनी यूनिट की राशि भरनी होगी।',

@@ -88,6 +88,18 @@ const DEVELOPER_NAVIGATION: readonly ShellNavigationItem[] = [
     section: 'Platform',
   },
   {
+    href: '/developer/whats-new',
+    icon: 'N',
+    label: "What's new",
+    section: 'Platform',
+  },
+  {
+    href: '/developer/usage',
+    icon: 'U',
+    label: 'Usage',
+    section: 'Platform',
+  },
+  {
     href: '/developer/errors',
     icon: 'E',
     label: 'Error Logs',
@@ -346,6 +358,8 @@ function TopBar({
   translate,
   societies = [],
   unreadNotifications = 0,
+  createOpen,
+  onCreateOpenChange,
 }: {
   activeSocietyId?: string;
   dark?: boolean;
@@ -373,6 +387,8 @@ function TopBar({
     input: unknown,
   ) => Promise<ServerActionResult<WorkspaceSearchResult>>;
   unreadNotifications?: number;
+  createOpen?: boolean;
+  onCreateOpenChange?: (open: boolean) => void;
 }) {
   const router = useRouter();
   const [switchError, setSwitchError] = useState('');
@@ -566,6 +582,8 @@ function TopBar({
 
         {role !== 'developer' ? (
           <WorkspaceTools
+            createOpen={createOpen ?? false}
+            onCreateOpenChange={onCreateOpenChange ?? (() => {})}
             quickActions={quickActions}
             searchAction={workspaceSearchAction}
           />
@@ -598,6 +616,14 @@ function TopBar({
             >
               {translate('Profile')}
             </Link>
+            {role === 'admin' || role === 'committee' ? (
+              <Link
+                className={`rounded-sm px-space-3 py-space-2 ${dark ? 'hover:bg-surface/10' : 'hover:bg-brand-tint'}`}
+                href="/admin/whats-new"
+              >
+                {translate("What's new")}
+              </Link>
+            ) : null}
             <Link
               className={`rounded-sm px-space-3 py-space-2 ${dark ? 'hover:bg-surface/10' : 'hover:bg-brand-tint'}`}
               href="/login"
@@ -741,19 +767,21 @@ function SideNavigation({
 
 function BottomNavigation({
   items,
+  onOpenCreate,
   onOpenMore,
   pathname,
   moreOpen,
   translate,
 }: {
   items: readonly ShellNavigationItem[];
+  onOpenCreate: () => void;
   onOpenMore: () => void;
   pathname: string;
   moreOpen: boolean;
   translate: Translate;
 }) {
   const hasMore = true;
-  const columnCount = items.length + 1;
+  const columnCount = items.length + 2;
   const moreActive = !items.some((item) => isActivePath(pathname, item.href));
 
   return (
@@ -788,6 +816,25 @@ function BottomNavigation({
             </li>
           );
         })}
+        {hasMore ? (
+          <li>
+            <button
+              aria-haspopup="dialog"
+              aria-label={translate('New')}
+              className="flex min-h-14 w-full flex-col items-center justify-center gap-space-1 px-space-1 text-micro font-semibold text-brand focus-visible:outline-2 focus-visible:outline-focus"
+              onClick={onOpenCreate}
+              type="button"
+            >
+              <span
+                aria-hidden="true"
+                className="flex size-8 items-center justify-center rounded-full bg-brand text-body-strong text-on-brand"
+              >
+                +
+              </span>
+              <span>{translate('New')}</span>
+            </button>
+          </li>
+        ) : null}
         {hasMore ? (
           <li>
             <button
@@ -1017,6 +1064,7 @@ function SocietyShell({
   const { locale, translate } = useLanguage();
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [railExpanded, setRailExpanded] = useState(false);
   const isResident = role === 'resident';
   const isGuard = role === 'guard';
@@ -1038,9 +1086,8 @@ function SocietyShell({
     role,
     translate,
   );
-  const tabHrefs = new Set(
-    getRoleTabs(role, enabledModules, permissionMaps).map((item) => item.href),
-  );
+  const fixedTabs = getRoleTabs(role, enabledModules, permissionMaps);
+  const tabHrefs = new Set(fixedTabs.slice(0, 3).map((item) => item.href));
   const tabs = navigation.filter((item) => tabHrefs.has(item.href));
   const moreItems = navigation.filter((item) => !tabHrefs.has(item.href));
   const showSidebar = isResident || isStaff;
@@ -1084,6 +1131,8 @@ function SocietyShell({
         translate={translate}
         societies={societies}
         unreadNotifications={unreadNotifications}
+        createOpen={createOpen}
+        onCreateOpenChange={setCreateOpen}
       />
       {showSidebar ? (
         <SideNavigation
@@ -1119,6 +1168,7 @@ function SocietyShell({
       {!isGuard ? (
         <BottomNavigation
           items={tabs}
+          onOpenCreate={() => setCreateOpen(true)}
           onOpenMore={() => setMoreOpen(true)}
           pathname={pathname}
           moreOpen={moreOpen}

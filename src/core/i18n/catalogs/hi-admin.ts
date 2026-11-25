@@ -1063,6 +1063,102 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
     'जुर्माना तुरंत बिल में जोड़ा जाता है और यूनिट के निवासियों को सूचना दी जाती है।',
   Finished: 'पूरा हुआ',
   From: 'से',
+  'Change history': 'बदलाव का इतिहास',
+  'Role preview': 'भूमिका का पूर्वावलोकन',
+  "What's new": 'नया क्या है',
+  'Open report': 'रिपोर्ट खोलें',
+  'Open existing reports and exports available for your role and enabled modules.':
+    'अपनी भूमिका और चालू मॉड्यूल के लिए उपलब्ध रिपोर्ट और निर्यात खोलें।',
+  'No reports are available for the enabled modules.':
+    'चालू मॉड्यूल के लिए कोई रिपोर्ट उपलब्ध नहीं है।',
+  Money: 'धन',
+  'Gate & security': 'गेट और सुरक्षा',
+  Upkeep: 'रखरखाव',
+  Community: 'समुदाय',
+  'Billing reports': 'बिलिंग रिपोर्ट',
+  'Collection totals and CSV/PDF maintenance exports.':
+    'वसूली के कुल और CSV/PDF रखरखाव निर्यात।',
+  'Outstanding bills and the next follow-up list.':
+    'बकाया बिल और अगली फ़ॉलो-अप सूची।',
+  'As-of paid, waived and unallocated collection figures.':
+    'चुनी गई तारीख तक भुगतान, माफी और अवंटित वसूली के आँकड़े।',
+  'Society income, expenditure and account statements.':
+    'सोसाइटी की आय, खर्च और खाता विवरण।',
+  'Vendor requests, quotes and linked Accounts spend.':
+    'विक्रेता अनुरोध, कोटेशन और जुड़े खाते का खर्च।',
+  'Budget report': 'बजट रिपोर्ट',
+  'Budget, forecast and actual comparison for the financial year.':
+    'वित्तीय वर्ष के लिए बजट, अनुमान और वास्तविक तुलना।',
+  'AGM report': 'वार्षिक आम सभा रिपोर्ट',
+  'The audited annual report, figures and committee selections.':
+    'ऑडिट किया गया वार्षिक रिपोर्ट, आँकड़े और समिति चयन।',
+  'Account statements': 'खाता विवरण',
+  'Bank and cash statement items, matching and reconciliation.':
+    'बैंक और नकद विवरण की मदें, मिलान और समाधान।',
+  'Savings register': 'बचत रजिस्टर',
+  'Savings records, evidence and related account links.':
+    'बचत रिकॉर्ड, प्रमाण और जुड़े खाते।',
+  'Analytics export': 'विश्लेषण निर्यात',
+  'Export the selected society metrics as CSV or PDF.':
+    'चुने हुए सोसाइटी आँकड़े CSV या PDF में निर्यात करें।',
+  'Request reports': 'अनुरोध रिपोर्ट',
+  'Resolution, repeat-request and daily-check summaries.':
+    'समाधान, बार-बार अनुरोध और दैनिक जाँच का सारांश।',
+  'Attendance, action completion and meeting activity.':
+    'उपस्थिति, कार्रवाई पूर्णता और बैठक गतिविधि।',
+  'Structural audit register': 'संरचनात्मक ऑडिट रजिस्टर',
+  'Private audit reports, due reminders and linked projects.':
+    'निजी ऑडिट रिपोर्ट, देय अनुस्मारक और जुड़े प्रोजेक्ट।',
+  'Metering reports': 'मीटरिंग रिपोर्ट',
+  'Consumption, pending readings and utility billing state.':
+    'खपत, लंबित रीडिंग और उपयोगिता बिलिंग स्थिति।',
+  'Product notes from the Homeish developer. There are no email or push alerts.':
+    'Homeish डेवलपर के उत्पाद नोट। ईमेल या पुश अलर्ट नहीं भेजे जाते।',
+  'Published developer release notes will appear here.':
+    'प्रकाशित डेवलपर रिलीज़ नोट यहाँ दिखेंगे।',
+  'Nothing new yet': 'अभी कुछ नया नहीं',
+  'Release note marked read.': 'रिलीज़ नोट पढ़ा हुआ चिह्नित किया गया।',
+  'Open related page': 'जुड़ा पृष्ठ खोलें',
+  'Mark as read': 'पढ़ा हुआ चिह्नित करें',
+  'Review society changes. Private values are hidden; only reversible settings may show Undo.':
+    'सोसाइटी के बदलाव देखें। निजी मान छिपे रहते हैं; केवल वापस किए जा सकने वाले सेटिंग बदलाव पर Undo दिखता है।',
+  Filters: 'फ़िल्टर',
+  Before: 'पहले',
+  'Apply filters': 'फ़िल्टर लागू करें',
+  '{count} recent changes': 'हाल के {count} बदलाव',
+  'No changes match these filters.': 'इन फ़िल्टर से कोई बदलाव नहीं मिला।',
+  'View changed values': 'बदले गए मान देखें',
+  After: 'बाद में',
+  'Not recorded': 'दर्ज नहीं',
+  'Undo change': 'बदलाव वापस लें',
+  'Undo this setting change?': 'इस सेटिंग बदलाव को वापस लें?',
+  'Choose a change to undo.': 'वापस करने के लिए बदलाव चुनें।',
+  'The change could not be undone.': 'बदलाव वापस नहीं लिया जा सका।',
+  'The setting change was undone.': 'सेटिंग बदलाव वापस लिया गया।',
+  'Admin access is required.': 'एडमिन पहुँच ज़रूरी है।',
+  'UPI and payment details cannot be undone.':
+    'UPI और भुगतान विवरण वापस नहीं बदले जा सकते।',
+  'This change is not an undoable setting.':
+    'यह बदलाव वापस किया जा सकने वाला सेटिंग बदलाव नहीं है।',
+  'This change is older than 30 days.': 'यह बदलाव 30 दिन से पुराना है।',
+  'This setting is no longer eligible for undo.':
+    'यह सेटिंग अब Undo के लिए योग्य नहीं है।',
+  'Check what another role can navigate to in this society. No real person is signed in.':
+    'देखें कि इस सोसाइटी में दूसरी भूमिका क्या खोल सकती है। किसी असली व्यक्ति के रूप में साइन इन नहीं किया गया है।',
+  Role: 'भूमिका',
+  'Preview role': 'भूमिका देखें',
+  'Preview only': 'केवल पूर्वावलोकन',
+  'Nothing inside the frame can be opened, pressed or saved.':
+    'फ़्रेम के भीतर कुछ भी खोला, दबाया या सहेजा नहीं जा सकता।',
+  'Synthetic role preview': 'कृत्रिम भूमिका पूर्वावलोकन',
+  '{role} phone preview': '{role} का फ़ोन पूर्वावलोकन',
+  '{role} Home': '{role} होम',
+  'Accessible text list': 'पहुंच योग्य टेक्स्ट सूची',
+  'Phone tabs': 'फ़ोन टैब',
+  'No tabs for this role': 'इस भूमिका के लिए कोई टैब नहीं',
+  'Available actions': 'उपलब्ध कार्रवाइयाँ',
+  'No quick actions': 'कोई त्वरित कार्रवाई नहीं',
+  'Review change history': 'बदलाव का इतिहास देखें',
   'Gate and guards': 'गेट और सुरक्षा कर्मी',
   'Generate Bills': 'बिल बनाएँ',
   'Import residents from CSV': 'CSV से निवासी आयात करें',
@@ -1565,7 +1661,6 @@ export const HI_ADMIN: Readonly<Record<string, string>> = {
   'No objections recorded.': 'कोई आपत्ति दर्ज नहीं है।',
   'Edit objection': 'आपत्ति संपादित करें',
   'Add objection': 'आपत्ति जोड़ें',
-  'Change history': 'बदलाव का इतिहास',
   'No changes yet.': 'अभी कोई बदलाव नहीं है।',
   revision: 'संशोधन',
   'Year not started': 'वर्ष शुरू नहीं किया गया',

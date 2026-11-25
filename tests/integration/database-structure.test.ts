@@ -235,18 +235,22 @@ describe.skipIf(!hasDatabase)('database society structure', () => {
              where society_id = $1 and number = '102'`,
             [firstSocietyId],
           );
-          const audit = await client.query(
-            `select id from public.audit_logs
-             where action = 'structure.units.importConfirm'
-               and entity_id = $1`,
-            [importedJobId],
-          );
           return {
             job: job.rows[0],
             importedUnitCount: importedUnit.rowCount,
-            auditCount: audit.rowCount,
           };
         },
+      );
+      const auditCount = await database.asSuperuser(
+        async (client) =>
+          (
+            await client.query(
+              `select id from public.audit_logs
+             where action = 'structure.units.importConfirm'
+               and entity_id = $1`,
+              [importedJobId],
+            )
+          ).rowCount,
       );
       expect(importResult.job).toMatchObject({
         status: 'partial',
@@ -259,7 +263,7 @@ describe.skipIf(!hasDatabase)('database society structure', () => {
       });
       expect(importResult.job?.summary.errors).toHaveLength(2);
       expect(importResult.importedUnitCount).toBe(1);
-      expect(importResult.auditCount).toBe(1);
+      expect(auditCount).toBe(1);
 
       const unauthorizedImport = await dbError(
         database.asRole(

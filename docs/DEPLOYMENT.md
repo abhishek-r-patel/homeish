@@ -18,6 +18,13 @@ Hosting decisions are in [ARCHITECTURE.md](./ARCHITECTURE.md) Section 16.
 | Production  | `homeish`               | `main`     | `homeish-live` (paused)                | `production`          | `shared`         | Real societies; never copied |
 | Demo        | `demo-homeish` (future) | —          | `homeish-demo` (paused)                | —                     | —                | Synthetic, resettable        |
 
+**Planned 2026-11-25 (PRD D-97, ARCHITECTURE AD-15; P61):** the Demo row above is replaced by two demo hosts with no separate Vercel project:
+
+- **Beta demo:** served by `beta-homeish` from the demo-labelled societies in `homeish-testdb`. It needs no new keys.
+- **Public demo:** served by `homeish` from `homeish-demo`. It uses demo-only variables (section 5) and opens only with the redesign promotion to `main`.
+
+Each project picks the database from the request host on the server, using a fixed host list. The addresses are planned as `demo.homeish.vercel.app` / `demo.beta.homeish.vercel.app`. Nested `vercel.app` names are probably not allowed; if so, use `demo-homeish.vercel.app` / `demo-beta-homeish.vercel.app` until a custom domain exists. The free plan keeps only two databases running, so after go-live testdb and `homeish-demo` take turns (OPERATIONS "Demo data reset").
+
 Rules that never change:
 
 - Beta never connects to `homeish-live`, and production data is never copied to
@@ -161,6 +168,7 @@ values for every secret.
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`                                         | yes               | yes                   | Separate key pairs                                                 |
 | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`                                                  | yes               | yes                   | Separate Sentry environments                                       |
 | `CRON_SECRET`, `GUARD_SESSION_SECRET`, `RATE_LIMIT_HASH_SALT`                                                | yes               | yes                   | Random, at least 32 bytes each                                     |
+| `DEMO_SUPABASE_URL`, `DEMO_SUPABASE_ANON_KEY`, `DEMO_SUPABASE_SERVICE_ROLE_KEY` (planned, P61)               | no                | `homeish-demo`        | Used only for the public demo host (API 11; ARCHITECTURE AD-15)    |
 
 The app validates configuration at start-up and fails fast if a value is missing
 or malformed (`src/core/config`). Changing a variable needs a redeploy

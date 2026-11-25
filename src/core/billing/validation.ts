@@ -455,6 +455,14 @@ export const billingGenerationResultSchema = z.object({
   already_generated_count: z.number().int().nonnegative(),
   total_paise: z.string().regex(/^\d+$/),
 });
+export const billingGenerationCompletionSchema = z.object({
+  id: z.uuid(),
+  period_start: z.iso.date(),
+  generated_bill_count: z.number().int().nonnegative(),
+  generated_line_count: z.number().int().nonnegative(),
+  already_generated_count: z.number().int().nonnegative(),
+  total_paise: z.string().regex(/^\d+$/),
+});
 
 export const billingBillSchema = z.object({
   id: z.uuid(),

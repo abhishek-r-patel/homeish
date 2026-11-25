@@ -23,6 +23,34 @@ const isoDate = z.iso.date();
 export const noticeAudienceSchema = z.enum(['all', 'blocks', 'owners']);
 export type NoticeAudience = z.infer<typeof noticeAudienceSchema>;
 
+export const noticeReachInputSchema = z
+  .object({
+    audience: noticeAudienceSchema,
+    blockIds: z.array(uuid).max(NOTICE_BLOCKS_MAX).default([]),
+  })
+  .strict()
+  .superRefine((input, context) => {
+    if (input.audience === 'blocks' && input.blockIds.length === 0) {
+      context.addIssue({
+        code: 'custom',
+        path: ['blockIds'],
+        message: 'Choose at least one block.',
+      });
+    }
+    if (input.audience !== 'blocks' && input.blockIds.length > 0) {
+      context.addIssue({
+        code: 'custom',
+        path: ['blockIds'],
+        message: 'Blocks can be chosen only for a block audience.',
+      });
+    }
+  });
+export const noticeReachSchema = z.object({
+  people: z.number().int().nonnegative(),
+  flats: z.number().int().nonnegative(),
+});
+export type NoticeReach = z.infer<typeof noticeReachSchema>;
+
 export const noticePlanningStatusSchema = z.enum([
   'draft',
   'scheduled',

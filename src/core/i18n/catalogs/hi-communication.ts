@@ -121,13 +121,24 @@ export const HI_COMMUNICATION: Readonly<Record<string, string>> = {
     'इस महीने वापस ली गई या समाप्त हुई पोस्ट की गई सूचनाएं।',
   'Posting day': 'पोस्ट करने का दिन',
   'Posts on {date}': '{date} को पोस्ट होगी',
+  'Counting the current audience…': 'मौजूदा दर्शकों की गिनती हो रही है…',
+  'The reach count will appear after an audience is chosen.':
+    'दर्शक चुनने के बाद पहुँच की गिनती दिखाई देगी।',
+  'The audience count could not be loaded. Change it or retry.':
+    'दर्शकों की गिनती लोड नहीं हुई। चयन बदलें या फिर कोशिश करें।',
+  'Will reach {people} people in {flats} flats':
+    '{people} लोगों तक {flats} फ्लैट में पहुँचेगी',
+  'Will reach {people} people in {flats} flats (as of now)':
+    'अभी तक की स्थिति में {people} लोगों तक {flats} फ्लैट में पहुँचेगी',
   'Prepared by (optional)': 'किसने तैयार किया (वैकल्पिक)',
   'Prepared by:': 'किसने तैयार किया:',
   'Priority (optional)': 'प्राथमिकता (वैकल्पिक)',
   'Priority:': 'प्राथमिकता:',
   'Publish now': 'अभी प्रकाशित करें',
-  'Publish this notice now? Everyone in the audience is notified.':
-    'यह सूचना अभी प्रकाशित करें? सभी चुने गए सदस्यों को सूचित किया जाएगा।',
+  'Publish this notice now? In-app alerts and available push notifications will be sent to the audience.':
+    'यह सूचना अभी प्रकाशित करें? इन-ऐप अलर्ट और उपलब्ध पुश सूचनाएँ चुने गए दर्शकों को भेजी जाएँगी।',
+  'Publishing sends in-app alerts and available push notifications to this audience.':
+    'प्रकाशित करने पर इन-ऐप अलर्ट और उपलब्ध पुश सूचनाएँ इस दर्शक समूह को भेजी जाती हैं।',
   Query: 'पूछताछ',
   'Record queries, complaints and other contacts with members that happen outside Homeish, and follow them up until they are closed.':
     'Homeish के बाहर सदस्यों से हुई पूछताछ, शिकायतें और अन्य संपर्क दर्ज करें, और बंद होने तक उनका फ़ॉलो-अप करें।',
@@ -152,6 +163,17 @@ export const HI_COMMUNICATION: Readonly<Record<string, string>> = {
   'The notice is posted early that morning and everyone in the audience is notified.':
     'सूचना उस दिन सुबह जल्दी पोस्ट होती है और सभी चुने गए सदस्यों को सूचित किया जाता है।',
   'The notice was scheduled.': 'सूचना तय की गई।',
+  'Notice scheduled': 'सूचना तय की गई',
+  '“{title}” will go out on {date}.': '“{title}” {date} को जाएगी।',
+  '“{title}” is now available to the selected audience.':
+    '“{title}” अब चुने हुए दर्शकों के लिए उपलब्ध है।',
+  Audience: 'दर्शक',
+  Reach: 'पहुँच',
+  '{count} residents': '{count} निवासी',
+  Published: 'प्रकाशित',
+  'View notice': 'सूचना देखें',
+  'Post another': 'एक और सूचना पोस्ट करें',
+  'Back to Notices': 'सूचनाओं पर वापस',
   'The planning details were saved.': 'योजना की जानकारी सहेजी गई।',
   'To the member': 'सदस्य को',
   'Use at most 80 characters.': 'अधिकतम 80 अक्षर लिखें।',

@@ -48,7 +48,7 @@ test('loads synthetic screenshots and resolves every homepage section link', asy
   });
   await expect(gallery).toContainText('not a connected demo');
   const previews = page.getByRole('main').getByRole('img');
-  await expect(previews).toHaveCount(9);
+  await expect(previews).toHaveCount(14);
   for (const preview of await previews.all()) {
     await preview.scrollIntoViewIfNeeded();
     await expect(preview).toHaveAttribute('alt', /^Synthetic /);

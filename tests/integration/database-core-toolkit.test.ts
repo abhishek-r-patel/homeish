@@ -282,7 +282,7 @@ describe.skipIf(!hasDatabase)('database core toolkit (P35)', () => {
       city: 'Pune',
     });
 
-    const audit = await as('committee', (client) =>
+    const audit = await database.asSuperuser((client) =>
       client.query<{ after: Record<string, unknown> }>(
         `select "after" from public.audit_logs
          where society_id = $1 and action = 'core.society_profile.create'`,
@@ -619,7 +619,7 @@ describe.skipIf(!hasDatabase)('database core toolkit (P35)', () => {
     );
     expect(deletion.code).toBe('55000');
 
-    const audit = await as('admin', (client) =>
+    const audit = await database.asSuperuser((client) =>
       client.query<{ action: string }>(
         `select action from public.audit_logs
          where society_id = $1 and entity_id = $2 order by id`,

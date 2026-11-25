@@ -58,12 +58,16 @@ test('manager publishes a pinned block notice that tops the board', async ({
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   }
   await page.setViewportSize({ width: 390, height: 900 });
+  await expect(page.getByText('Will reach 6 people in 4 flats')).toBeVisible();
 
   await page.getByLabel('Title').fill('Lift maintenance');
   await page
     .getByLabel('Notice', { exact: true })
     .fill('The lifts in your block will be serviced on Saturday.');
   await page.getByLabel('Residents of chosen blocks').check();
+  await expect(
+    page.getByText('The reach count will appear after an audience is chosen.'),
+  ).toBeVisible();
 
   // Choosing blocks is required for a block notice.
   await page.getByRole('button', { name: 'Publish notice' }).click();
@@ -72,6 +76,7 @@ test('manager publishes a pinned block notice that tops the board', async ({
   ).toContainText('Choose at least one block.');
 
   await page.getByLabel('A', { exact: true }).check();
+  await expect(page.getByText('Will reach 2 people in 1 flats')).toBeVisible();
   await page.getByLabel('Pin to the top as important').check();
 
   await mockUpload(page);

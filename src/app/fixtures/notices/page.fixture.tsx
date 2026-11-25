@@ -261,7 +261,29 @@ export default function NoticesFixturePage() {
       </label>
       <h1 className="text-title font-semibold">Notice board</h1>
       <Card className="min-w-0" title="New notice">
-        <NoticeForm action={createAction} blocks={blocks} onSaved={() => {}} />
+        <NoticeForm
+          action={createAction}
+          blocks={blocks}
+          onSaved={() => {}}
+          reachAction={async (formData) => {
+            const input = JSON.parse(String(formData.get('input'))) as {
+              audience: 'all' | 'blocks' | 'owners';
+              blockIds: string[];
+            };
+            return {
+              ok: true,
+              data:
+                input.audience === 'owners'
+                  ? { people: 2, flats: 2 }
+                  : input.audience === 'blocks'
+                    ? {
+                        people: input.blockIds.length === 2 ? 4 : 2,
+                        flats: input.blockIds.length,
+                      }
+                    : { people: 6, flats: 4 },
+            };
+          }}
+        />
       </Card>
       {role === 'admin' ? (
         <Card className="min-w-0" title="Planning details">

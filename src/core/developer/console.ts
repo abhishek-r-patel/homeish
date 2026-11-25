@@ -424,6 +424,61 @@ export async function getDeveloperSociety(societyId: string) {
   return data;
 }
 
+const developerUsageRowSchema = z.object({
+  societyId: z.uuid(),
+  societyName: z.string().min(1).max(120),
+  peopleJoined: z.number().int().nonnegative(),
+  visitors30d: z.number().int().nonnegative(),
+  requests30d: z.number().int().nonnegative(),
+  bills30d: z.number().int().nonnegative(),
+  notices30d: z.number().int().nonnegative(),
+  modulesOn: z.number().int().nonnegative(),
+});
+
+export async function getDeveloperUsageOverview() {
+  const context = await requireDeveloperContext();
+  return callModuleRpc(
+    context,
+    'developer_usage_overview_get',
+    {},
+    z.array(developerUsageRowSchema),
+    'Usage figures could not be loaded.',
+  );
+}
+
+export async function getDeveloperCommitteeHistorySetting(societyId: string) {
+  const context = await requireDeveloperContext();
+  const { data, error } = await context.db
+    .from('society_workspace_settings')
+    .select('committee_change_history_enabled')
+    .eq('society_id', societyId)
+    .maybeSingle();
+  if (error) {
+    throw new Error('Could not load committee history access.', {
+      cause: error,
+    });
+  }
+  return data?.committee_change_history_enabled ?? false;
+}
+
+export async function setDeveloperCommitteeHistorySetting(
+  context: RequestContext,
+  societyId: string,
+  enabled: boolean,
+) {
+  return callModuleRpc(
+    context,
+    'developer_committee_history_set',
+    {
+      p_society_id: z.uuid().parse(societyId),
+      p_enabled: enabled,
+      p_request_id: context.requestId,
+    },
+    z.object({ enabled: z.boolean() }),
+    'Committee change-history access could not be saved.',
+  );
+}
+
 const onboardingSchema = z.object({
   stage: z.enum(['agreed', 'setting_up', 'live', 'paused']),
   agreed_modules: z.array(z.enum(MODULE_KEYS)),
@@ -550,7 +605,9 @@ export async function getDeveloperModules(societyId: string) {
       .order('sort_order', { ascending: true }),
     client
       .from('module_configs')
-      .select('module_key, enabled, settings, updated_at, updated_by')
+      .select(
+        'module_key, enabled, residents_visible, settings, updated_at, updated_by',
+      )
       .eq('society_id', societyId),
   ]);
   if (modulesResult.error) {
@@ -598,6 +655,7 @@ export async function getDeveloperModules(societyId: string) {
         ...module,
         key: moduleKey,
         enabled: module.is_core || (config?.enabled ?? false),
+        residentsVisible: module.is_core || (config?.residents_visible ?? true),
         settings: parseModuleSettings(moduleKey, config?.settings ?? {}),
         updatedAt: config?.updated_at ?? null,
         updatedBy: config?.updated_by ?? null,
@@ -671,6 +729,26 @@ export async function updateModuleSettingAccess(
     p_setting_key: settingKey,
     p_admin_can_edit: adminCanEdit,
   });
+}
+
+export async function setResidentModuleVisibility(
+  context: RequestContext,
+  societyId: string,
+  moduleKey: ModuleKey,
+  residentsVisible: boolean,
+) {
+  return callModuleRpc(
+    context,
+    'developer_resident_visibility_set',
+    {
+      p_society_id: z.uuid().parse(societyId),
+      p_module_key: moduleKey,
+      p_residents_visible: residentsVisible,
+      p_request_id: context.requestId,
+    },
+    z.object({ residentsVisible: z.boolean() }),
+    'Resident module visibility could not be saved.',
+  );
 }
 
 export async function updateQuickActionDefaults(
