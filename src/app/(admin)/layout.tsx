@@ -7,6 +7,8 @@ import { LanguageProvider } from '@/components/language-provider';
 import { getShellData } from '@/core/tenancy/shell-data';
 import { switchPlaceAction, switchSocietyAction } from '@/app/(auth)/actions';
 import { getAllowedQuickActions } from '@/core/home/workspace-operations';
+import { getAuditHistoryAccess } from '@/core/audit/history';
+import { PERMISSION_MAPS } from '@/core/permissions';
 
 export default async function AdminLayout({
   children,
@@ -16,12 +18,13 @@ export default async function AdminLayout({
     throw new AppError('FORBIDDEN');
   }
   const Shell = context.roles.includes('admin') ? AdminShell : CommitteeShell;
-  const [shellData, quickActions] = await Promise.all([
+  const [shellData, quickActions, auditAccess] = await Promise.all([
     getShellData(context),
     getAllowedQuickActions(
       context,
       context.roles.includes('admin') ? 'admin' : 'committee',
     ),
+    getAuditHistoryAccess(),
   ]);
   return (
     <LanguageProvider
@@ -32,6 +35,17 @@ export default async function AdminLayout({
       <Shell
         activeSocietyId={shellData.activeSocietyId ?? undefined}
         enabledModules={[...context.enabledModules]}
+        permissionMaps={
+          context.roles.includes('committee') && !auditAccess.canView
+            ? {
+                ...PERMISSION_MAPS,
+                core: {
+                  ...PERMISSION_MAPS.core,
+                  'audit:read': [],
+                },
+              }
+            : undefined
+        }
         places={shellData.places}
         quickActions={quickActions}
         societies={shellData.societies}

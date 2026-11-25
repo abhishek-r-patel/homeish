@@ -16630,6 +16630,7 @@ export type Database = {
       };
       society_workspace_settings: {
         Row: {
+          committee_change_history_enabled: boolean;
           getting_started_dismissed_at: string | null;
           getting_started_dismissed_by: string | null;
           residents_joined_percent: number;
@@ -16639,6 +16640,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          committee_change_history_enabled?: boolean;
           getting_started_dismissed_at?: string | null;
           getting_started_dismissed_by?: string | null;
           residents_joined_percent?: number;
@@ -16647,6 +16649,7 @@ export type Database = {
           updated_by?: string | null;
         };
         Update: {
+          committee_change_history_enabled?: boolean;
           getting_started_dismissed_at?: string | null;
           getting_started_dismissed_by?: string | null;
           residents_joined_percent?: number;
@@ -21173,6 +21176,29 @@ export type Database = {
         };
         Returns: string;
       };
+      audit_history_access_get: {
+        Args: { p_society_id: string };
+        Returns: Json;
+      };
+      audit_history_get: {
+        Args: {
+          p_before: string;
+          p_category: string;
+          p_from: string;
+          p_limit?: number;
+          p_offset?: number;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
+      audit_setting_undo: {
+        Args: {
+          p_audit_id: number;
+          p_request_id: string;
+          p_society_id: string;
+        };
+        Returns: Json;
+      };
       billing_bill_email_payload: {
         Args: { p_bill_id: string; p_society_id: string };
         Returns: Json;
@@ -22358,6 +22384,14 @@ export type Database = {
       delivery_settings_get: { Args: { p_society_id: string }; Returns: Json };
       delivery_settings_update: {
         Args: { p_request_id: string; p_settings: Json; p_society_id: string };
+        Returns: Json;
+      };
+      developer_committee_history_set: {
+        Args: {
+          p_enabled: boolean;
+          p_request_id: string;
+          p_society_id: string;
+        };
         Returns: Json;
       };
       developer_create_first_admin: {

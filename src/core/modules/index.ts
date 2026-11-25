@@ -247,6 +247,18 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           section: 'Operations',
         },
         {
+          href: '/admin/history',
+          label: 'Change history',
+          permission: 'audit:read',
+          section: 'Settings',
+        },
+        {
+          href: '/admin/role-preview',
+          label: 'Role preview',
+          permission: 'role_preview:read',
+          section: 'Settings',
+        },
+        {
           href: '/help',
           label: 'Help',
           permission: 'help:read',
@@ -331,6 +343,12 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
           label: 'Compliance register',
           permission: 'compliance:read',
           section: 'Operations',
+        },
+        {
+          href: '/admin/history',
+          label: 'Change history',
+          permission: 'audit:read',
+          section: 'Settings',
         },
         {
           href: '/help',
@@ -422,6 +440,8 @@ export const MODULE_REGISTRY: Readonly<Record<ModuleKey, ModuleDefinition>> = {
       'household:read': ['resident'],
       'household:manage': ['resident'],
       'audit:read': ['admin', 'committee'],
+      'audit:undo': ['admin'],
+      'role_preview:read': ['admin'],
       'home:read': ['guard', 'resident'],
       'dashboard:read': ['admin', 'committee'],
       'analytics:read': ['admin', 'committee'],

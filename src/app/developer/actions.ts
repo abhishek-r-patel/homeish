@@ -22,6 +22,7 @@ import {
   setDeveloperFeatureRequestStatus,
   saveDeveloperOnboarding,
   setResidentsJoinedPercent,
+  setDeveloperCommitteeHistorySetting,
   societyInputSchema,
   societyStatusSchema,
   toggleModule,
@@ -490,6 +491,25 @@ export async function setResidentsJoinedPercentAction(formData: FormData) {
       revalidatePath(`/developer/societies/${input.societyId}`);
       revalidatePath('/admin');
       return { ok: true, message: 'Residents-joined threshold saved.' };
+    },
+  );
+}
+
+export async function setDeveloperCommitteeHistoryAction(formData: FormData) {
+  return runDeveloperAction(
+    'developer.society.committeeHistory',
+    async (requestId) => {
+      const context = await requireDeveloperContext(requestId);
+      const societyId = z.uuid().parse(String(formData.get('societyId') ?? ''));
+      const enabled = String(formData.get('enabled') ?? '') === 'true';
+      await setDeveloperCommitteeHistorySetting(context, societyId, enabled);
+      revalidatePath(`/developer/societies/${societyId}`);
+      return {
+        ok: true,
+        message: enabled
+          ? 'Committee members can now see change history.'
+          : 'Committee change-history access is off.',
+      };
     },
   );
 }

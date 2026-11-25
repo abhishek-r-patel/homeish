@@ -424,6 +424,39 @@ export async function getDeveloperSociety(societyId: string) {
   return data;
 }
 
+export async function getDeveloperCommitteeHistorySetting(societyId: string) {
+  const context = await requireDeveloperContext();
+  const { data, error } = await context.db
+    .from('society_workspace_settings')
+    .select('committee_change_history_enabled')
+    .eq('society_id', societyId)
+    .maybeSingle();
+  if (error) {
+    throw new Error('Could not load committee history access.', {
+      cause: error,
+    });
+  }
+  return data?.committee_change_history_enabled ?? false;
+}
+
+export async function setDeveloperCommitteeHistorySetting(
+  context: RequestContext,
+  societyId: string,
+  enabled: boolean,
+) {
+  return callModuleRpc(
+    context,
+    'developer_committee_history_set',
+    {
+      p_society_id: z.uuid().parse(societyId),
+      p_enabled: enabled,
+      p_request_id: context.requestId,
+    },
+    z.object({ enabled: z.boolean() }),
+    'Committee change-history access could not be saved.',
+  );
+}
+
 const onboardingSchema = z.object({
   stage: z.enum(['agreed', 'setting_up', 'live', 'paused']),
   agreed_modules: z.array(z.enum(MODULE_KEYS)),

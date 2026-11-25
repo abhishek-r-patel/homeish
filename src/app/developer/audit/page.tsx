@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { AuditList } from '@/components/developer/audit-list';
 import { QueryPagination } from '@/components/developer/query-pagination';
 import { Card } from '@/components/ui/data-display';
+import { DeveloperAuditSocietyPrompt } from '@/components/developer/audit-society-prompt';
 import { ErrorPanel } from '@/components/ui/feedback';
 import {
   auditFilterSchema,
@@ -38,10 +39,10 @@ export default async function DeveloperAuditPage({
     );
   }
 
-  const [result, societyList] = await Promise.all([
-    listDeveloperAudit(filters.data),
-    getDeveloperSocieties(1, 100),
-  ]);
+  const societyList = await getDeveloperSocieties(1, 100);
+  const result = filters.data.societyId
+    ? await listDeveloperAudit(filters.data)
+    : null;
   const queryFilters = Object.fromEntries(
     Object.entries(filters.data)
       .filter(
@@ -83,7 +84,7 @@ export default async function DeveloperAuditPage({
               id="audit-society"
               name="societyId"
             >
-              <option value="">All societies</option>
+              <option value="">Choose a society</option>
               {societyList.societies.map((society) => (
                 <option key={society.id} value={society.id}>
                   {society.name}
@@ -173,21 +174,25 @@ export default async function DeveloperAuditPage({
           </div>
         </form>
       </Card>
-      <Card
-        title="Recent changes"
-        description={`${result.total} matching audit record${result.total === 1 ? '' : 's'}`}
-      >
-        <AuditList rows={result.rows} />
-        <div className="mt-space-4">
-          <QueryPagination
-            filters={queryFilters}
-            href="/developer/audit"
-            page={filters.data.page}
-            pageSize={filters.data.pageSize}
-            total={result.total}
-          />
-        </div>
-      </Card>
+      {result ? (
+        <Card
+          title="Recent changes"
+          description={`${result.total} matching audit record${result.total === 1 ? '' : 's'}`}
+        >
+          <AuditList rows={result.rows} />
+          <div className="mt-space-4">
+            <QueryPagination
+              filters={queryFilters}
+              href="/developer/audit"
+              page={filters.data.page}
+              pageSize={filters.data.pageSize}
+              total={result.total}
+            />
+          </div>
+        </Card>
+      ) : (
+        <DeveloperAuditSocietyPrompt />
+      )}
     </section>
   );
 }

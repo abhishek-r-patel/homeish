@@ -21,6 +21,7 @@ import {
   deleteWebsiteEnquiryAction,
   handleWebsiteEnquiryAction,
   saveDeveloperWebsiteSettingsAction,
+  setDeveloperCommitteeHistoryAction,
 } from '@/app/developer/actions';
 import type { DeveloperActionResult } from '@/core/developer/console';
 import type { Database } from '@/core/db/database.types';
@@ -63,6 +64,51 @@ function ActionMessage({ state }: { state: DeveloperActionResult | null }) {
         </ul>
       ) : null}
     </Banner>
+  );
+}
+
+export function CommitteeHistoryControl({
+  action = setDeveloperCommitteeHistoryAction,
+  enabled,
+  societyId,
+}: {
+  action?: (formData: FormData) => Promise<DeveloperActionResult>;
+  enabled: boolean;
+  societyId: string;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<DeveloperActionResult | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    startTransition(async () => {
+      const result = await action(new FormData(event.currentTarget));
+      setState(result);
+      if (result.ok) router.refresh();
+    });
+  }
+
+  return (
+    <form className="grid gap-space-3" onSubmit={submit}>
+      <input name="societyId" type="hidden" value={societyId} />
+      <ActionMessage state={state} />
+      <label className="flex min-h-12 items-center gap-space-3">
+        <input
+          defaultChecked={enabled}
+          name="enabled"
+          type="checkbox"
+          value="true"
+        />
+        <span>Committee can see change history</span>
+      </label>
+      <p className="text-caption text-ink-muted">
+        Current state: {enabled ? 'On' : 'Off'}. Admin access stays on.
+      </p>
+      <Button disabled={pending} loading={pending} type="submit">
+        Save history access
+      </Button>
+    </form>
   );
 }
 

@@ -1187,6 +1187,8 @@ How to read it:
 | `core`            | `household:read`                 | –     | –         | –     | –             | ✓        |
 | `core`            | `household:manage`               | –     | –         | –     | –             | ✓        |
 | `core`            | `audit:read`                     | ✓     | ✓         | –     | –             | –        |
+| `core`            | `audit:undo`                     | ✓     | –         | –     | –             | –        |
+| `core`            | `role_preview:read`             | ✓     | –         | –     | –             | –        |
 | `core`            | `home:read`                      | –     | –         | ✓     | –             | ✓        |
 | `core`            | `dashboard:read`                 | ✓     | ✓         | –     | –             | –        |
 | `core`            | `analytics:read`                 | ✓     | ✓         | –     | –             | –        |
