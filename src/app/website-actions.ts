@@ -34,6 +34,6 @@ export async function submitWebsiteEnquiryAction(formData: FormData) {
       clientIpFromHeaders(requestHeaders),
       requestId,
     );
-    return 'Thanks. Your enquiry was saved for the Homeish developer.';
+    return 'Thanks. Your enquiry was saved for the Homeish team.';
   });
 }

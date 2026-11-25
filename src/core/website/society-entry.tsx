@@ -31,7 +31,8 @@ export function SocietyEntry({ websiteOrigin }: { websiteOrigin: string }) {
         Society address name
       </label>
       <p className="mt-space-2 text-caption text-ink-muted" id="society-help">
-        Use the name shared by your society admin. Do not enter a society code.
+        Use the name shared by your society administrator. Do not enter a
+        society code.
       </p>
       <div className="mt-space-3 flex flex-wrap gap-space-3">
         <input

@@ -102,8 +102,8 @@ export function WebsiteEnquiryForm({
         />
       </div>
       <p className="text-caption text-ink-muted">
-        We collect these details only to reply to your enquiry. The Homeish
-        developer can view them until they delete the enquiry.{' '}
+        We collect these details only to reply to your enquiry. An authorized
+        Homeish team member can view them until the enquiry is deleted.{' '}
         <Link className="underline" href="/privacy">
           Read the privacy policy
         </Link>

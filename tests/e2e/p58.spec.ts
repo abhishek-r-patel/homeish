@@ -20,7 +20,7 @@ test('shows the approved P58 homepage additions accessibly', async ({
   await expect(day).toBeVisible();
   await expect(day.getByRole('img')).toHaveCount(5);
   await expect(
-    page.getByText('Can our society change how a module works?'),
+    page.getByText('Can our society change how a feature works?'),
   ).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });

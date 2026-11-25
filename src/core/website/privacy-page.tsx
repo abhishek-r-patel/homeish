@@ -65,7 +65,7 @@ function sections(contactEmail: string | null): {
         'Error logs and job records: deleted after 90 days. Audit logs: deleted after 2 years.',
         'Bills, payments and receipts: kept as financial records.',
         'Encrypted database backups: deleted after 30 days.',
-        'Public enquiries: kept until the Homeish developer deletes them.',
+        'Public enquiries: kept until an authorized Homeish team member deletes them.',
       ],
     },
     {
@@ -85,7 +85,7 @@ function sections(contactEmail: string | null): {
     {
       title: 'Security',
       paragraphs: [
-        'Data is encrypted in transit and at rest by our providers. Files are stored privately and shared only through short-lived links. Access is limited by role, and administrative actions are recorded in an audit log.',
+        'Data is encrypted in transit and at rest by our providers. Files are stored privately and shared only through short-lived links. Access follows each person’s responsibilities, and administrative actions are recorded in an audit log.',
       ],
     },
     {

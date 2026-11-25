@@ -28,8 +28,7 @@ function Preview() {
             }
           : {
               ok: true,
-              message:
-                'Thanks. Your enquiry was saved for the Homeish developer.',
+              message: 'Thanks. Your enquiry was saved for the Homeish team.',
             }
       }
       websiteOrigin="http://127.0.0.1:3000"

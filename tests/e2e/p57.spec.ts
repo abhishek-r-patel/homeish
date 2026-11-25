@@ -12,7 +12,9 @@ test('shows the refreshed homepage and saves a public enquiry accessibly', async
       name: 'A clearer day for your committee. A calmer day for everyone.',
     }),
   ).toBeVisible();
-  await expect(page.getByText('26 switchable feature modules')).toBeVisible();
+  await expect(
+    page.getByText('26 society features to choose from'),
+  ).toBeVisible();
   await expect(
     page
       .getByRole('main')
@@ -20,7 +22,7 @@ test('shows the refreshed homepage and saves a public enquiry accessibly', async
   ).toHaveAttribute('href', 'mailto:hello@example.test');
   await expect(
     page.getByRole('region', {
-      name: 'One app. The right view for every role.',
+      name: 'One app. The right view for every person.',
     }),
   ).toBeVisible();
   await expect(page.getByRole('main').getByRole('img')).toHaveCount(14);
@@ -35,7 +37,7 @@ test('shows the refreshed homepage and saves a public enquiry accessibly', async
     .fill('Please contact our committee.');
   await page.getByRole('button', { name: 'Send enquiry' }).click();
   await expect(
-    page.getByText('Thanks. Your enquiry was saved for the Homeish developer.'),
+    page.getByText('Thanks. Your enquiry was saved for the Homeish team.'),
   ).toBeVisible();
   await expect(page.getByLabel('Your name (required)')).toHaveValue('');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
