@@ -19,6 +19,8 @@ This register records capabilities that are outside the current pilot scope. Do 
 
 These are scope decisions, not a commitment to implement later. Reconsider an item only when pilot evidence shows a concrete need and the owner approves the scope, privacy/security impact, operational burden, and any cost.
 
+**Competitor check (PRD D-98, 2026-11-26):** MyGate, NoBrokerHood and ADDA all offer in-app bill payment, phone push and SMS or WhatsApp messages, and MyGate offers an offline guard app. The owner kept all of these deferred. In-app payment is the one competitors lean on most; revisit it first after the pilot, with a cost estimate and a free alternative. The small gaps that fit the current rules (guest pass sharing, light/dark choice, call gate) are planned in IMPLEMENTATION_PLAN P62.
+
 The approved expansion modules (PRD D-38, Section 5.10; IMPLEMENTATION_PLAN P16–P33) are designed within these boundaries. For example, SOS uses in-app and Realtime alerts only, and expenses, events and the marketplace do not move money.
 
 ## Deferred product ideas
@@ -63,6 +65,12 @@ Owner's decisions so far: an earlier answer chose B, C and D together ("both, wi
 **Guardrails if revived:** reuse the existing memberships and switcher; check access separately for each society on every read; do not bypass tenant isolation with privileged database access; get a database-safety review before release.
 
 **Related, not a revival (D-96, 2026-11-25):** a developer-only usage overview with counts per society, shown separately in each copy of Homeish (live, demo), is planned as P60.4 (PRD LOG-10). It gives admins nothing and does not answer the questions above.
+
+### Child exit alert
+
+**Status:** removed from the plan 2026-11-26 (PRD D-98). The owner is not sure it is useful. Nothing is built, and no database table, route or setting exists for it. MyGate and NoBrokerHood offer it.
+
+The idea: a parent lists a child of the flat and turns on "Tell me when they leave"; when a guard records that child going out, the flat's approvers get an in-app and live alert. It would store children's details, so if it returns it needs a privacy check, the least data needed (for example first name and an optional photo), a set deletion period for exit records, and an owner decision on whether the guard waits for a parent's OK. Alerts would stay in-app and Realtime only (D-41).
 
 ### More "done" screens (from P58)
 
