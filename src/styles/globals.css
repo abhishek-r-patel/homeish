@@ -13,31 +13,52 @@
   --breakpoint-medium: 37.5rem;
   --breakpoint-expanded: 64rem;
 
-  --color-ink: #1b1f23;
-  --color-ink-muted: #59606a;
-  --color-ink-disabled: #8a9099;
-  --color-paper: #f5f7fa;
+  --color-ink: #0f172a;
+  --color-ink-muted: #526077;
+  --color-ink-disabled: #8a94a6;
+  --color-paper: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-sunken: #edf1f6;
-  --color-rule: #d9e0e8;
-  --color-rule-strong: #7a7f86;
-  --color-brand: #1e4e8c;
-  --color-brand-hover: #183f72;
-  --color-brand-tint: #e6eef8;
+  --color-surface-sunken: #f1f5f9;
+  --color-rule: #e6ebf2;
+  --color-rule-strong: #7a8597;
+  --color-brand: #4338ca;
+  --color-brand-hover: #3730a3;
+  --color-brand-tint: #eef2ff;
   --color-on-brand: #ffffff;
-  --color-focus: #0b5fff;
-  --color-success: #1e6b3a;
-  --color-success-tint: #e7f3ea;
-  --color-warning: #8a4b00;
-  --color-warning-tint: #fbf0dc;
-  --color-danger: #b42318;
-  --color-danger-tint: #fbe9e7;
-  --color-info: #1e4e8c;
-  --color-info-tint: #e6eef8;
-  --color-neutral: #59606a;
-  --color-neutral-tint: #e9edf2;
-  --color-dev-bar: #1b1f23;
+  --color-focus: #4f46e5;
+  --color-success: #047857;
+  --color-success-tint: #ecfdf5;
+  --color-warning: #b45309;
+  --color-warning-tint: #fffbeb;
+  --color-danger: #be123c;
+  --color-danger-tint: #fff1f2;
+  --color-info: #4338ca;
+  --color-info-tint: #eef2ff;
+  --color-neutral: #526077;
+  --color-neutral-tint: #f1f5f9;
+  --color-dev-bar: #0f172a;
   --color-dev-label: #ffd966;
+
+  /* Module accents (DESIGN 2.5): icon tiles only, never status. */
+  --color-accent-indigo: #4338ca;
+  --color-accent-indigo-tint: #eef2ff;
+  --color-accent-orange: #c2410c;
+  --color-accent-orange-tint: #fff1e6;
+  --color-accent-emerald: #047857;
+  --color-accent-emerald-tint: #ecfdf5;
+  --color-accent-pink: #be185d;
+  --color-accent-pink-tint: #fdf2f8;
+  --color-accent-sky: #0369a1;
+  --color-accent-sky-tint: #e0f2fe;
+  --color-accent-violet: #6d28d9;
+  --color-accent-violet-tint: #f5f3ff;
+  --color-accent-teal: #0f766e;
+  --color-accent-teal-tint: #f0fdfa;
+  --color-accent-amber: #b45309;
+  --color-accent-amber-tint: #fef3c7;
+  --color-on-holo: #0f172a;
+  --color-holo-action: #0f172a;
+  --color-on-holo-action: #ffffff;
 
   --font-sans: 'Nunito Variable', ui-sans-serif, system-ui, sans-serif;
   --font-heading:
@@ -86,9 +107,9 @@
   --spacing-space-7: 48px;
   --spacing-space-8: 64px;
 
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
 
   --container-content-narrow: 560px;
   --container-content-default: 960px;
@@ -99,7 +120,124 @@
   --duration-motion-base: 200ms;
   --duration-motion-slow: 280ms;
   --spacing-overlay-max: 90dvh;
-  --shadow-overlay: 0 8px 32px rgb(27 31 35 / 16%);
+  --shadow-overlay: 0 8px 32px rgb(15 23 42 / 16%);
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 4%), 0 6px 20px rgb(15 23 42 / 5%);
+  --shadow-float: 0 12px 32px rgb(124 58 237 / 18%);
+}
+
+/* Dark theme (DESIGN 2.6): same token names, so components need no changes. */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-ink: #f1f5f9;
+  --color-ink-muted: #a0aabb;
+  --color-ink-disabled: #6b7486;
+  --color-paper: #0a0c14;
+  --color-surface: #131726;
+  --color-surface-sunken: #0f1320;
+  --color-rule: #1f2537;
+  --color-rule-strong: #5d6880;
+  --color-brand: #a5b4fc;
+  --color-brand-hover: #c7d2fe;
+  --color-brand-tint: #1e2142;
+  --color-on-brand: #0a0c14;
+  --color-focus: #818cf8;
+  --color-success: #6ee7b7;
+  --color-success-tint: #0f2a22;
+  --color-warning: #fcd34d;
+  --color-warning-tint: #2a2110;
+  --color-danger: #fda4af;
+  --color-danger-tint: #2e1219;
+  --color-info: #a5b4fc;
+  --color-info-tint: #1e2142;
+  --color-neutral: #a0aabb;
+  --color-neutral-tint: #1b2030;
+  --color-accent-indigo: #a5b4fc;
+  --color-accent-indigo-tint: #1e2142;
+  --color-accent-orange: #fdba74;
+  --color-accent-orange-tint: #2b1a10;
+  --color-accent-emerald: #6ee7b7;
+  --color-accent-emerald-tint: #0f2a22;
+  --color-accent-pink: #f9a8d4;
+  --color-accent-pink-tint: #2d1324;
+  --color-accent-sky: #7dd3fc;
+  --color-accent-sky-tint: #0c2333;
+  --color-accent-violet: #c4b5fd;
+  --color-accent-violet-tint: #221a3d;
+  --color-accent-teal: #5eead4;
+  --color-accent-teal-tint: #0b2a28;
+  --color-accent-amber: #fcd34d;
+  --color-accent-amber-tint: #2a2110;
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 3%) inset;
+  --shadow-float: 0 0 40px rgb(196 181 253 / 22%);
+}
+
+/* Holographic hero surface (DESIGN 1.1): one per screen, for the headline card only. */
+@utility holo-surface {
+  position: relative;
+  overflow: hidden;
+  color: var(--color-on-holo);
+  background-image: linear-gradient(
+    120deg,
+    #a5f3fc,
+    #c4b5fd,
+    #fbcfe8,
+    #fde68a,
+    #a5f3fc
+  );
+  background-size: 300% 100%;
+  box-shadow: var(--shadow-float);
+  animation: holo-shift 10s linear infinite;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      rgb(255 255 255 / 40%) 50%,
+      transparent 65%
+    );
+    background-size: 250% 100%;
+    animation: holo-sheen 5s ease-in-out infinite;
+  }
+}
+
+@keyframes holo-shift {
+  to {
+    background-position: 300% 0;
+  }
+}
+
+@keyframes holo-sheen {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -150% 0;
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+@utility live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: live-pulse 1.8s ease-out infinite;
 }
 
 [data-font-preference='device_default'] {
@@ -168,5 +306,11 @@ input:is(
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .holo-surface,
+  .holo-surface::after,
+  .live-dot {
+    animation: none !important;
   }
 }

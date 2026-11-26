@@ -2,10 +2,11 @@
 'use client';
 
 import Link from 'next/link';
-import { primaryLinkClass } from '@/components/billing/styles';
+import { MotionConfig, motion } from 'motion/react';
 import { StatusChip, type ProductStatus } from '@/components/ui/data-display';
 import { Banner, EmptyState } from '@/components/ui/feedback';
 import { useUiTranslator } from '@/components/ui/language';
+import { ModuleIconTile } from '@/components/ui/module-icon';
 import { billDisplayStatus, todayInTimeZone } from '@/core/billing/format';
 import {
   residentNextDueDate,
@@ -25,6 +26,13 @@ import {
   QuickActionTiles,
   ResidentGraph,
 } from './dashboard-sections';
+import {
+  DuesCard,
+  HomeGreeting,
+  PendingRow,
+  riseIn,
+  staggerChildren,
+} from './resident-home-cards';
 
 function activityStatus(
   item: ResidentHomeActivity,
@@ -107,190 +115,199 @@ export function ResidentHome({
     quickActions ?? shortcuts.map((item) => ({ key: item.href, ...item }));
 
   return (
-    <div className="grid min-w-0 gap-space-6">
-      <header className="grid gap-space-2">
-        <div className="rounded-lg border border-brand/15 bg-brand-tint p-space-5">
-          <p className="text-micro font-semibold uppercase tracking-wide text-brand">
-            {t('My home')}
-          </p>
-          <h1 className="mt-space-1 break-words text-display font-semibold">
-            {t('Hello {name}', { name: snapshot.resident_name })}
-          </h1>
-          {snapshot.units.length ? (
-            <p className="text-body text-ink-muted">
-              {t('{unitLabel} {units}', {
-                unitLabel: snapshot.unit_label,
-                units: snapshot.units.map((unit) => unit.number).join(', '),
-              })}
-            </p>
-          ) : null}
-          <p className="text-caption text-ink-muted">
-            {t('Updated {time}', {
-              time: formatLocalizedTime(
-                new Date(snapshot.server_now),
-                displayLocale,
-                { timeZone: snapshot.timezone },
-              ),
-            })}
-          </p>
-        </div>
-      </header>
-
-      {suspended ? (
-        <Banner tone="info">
-          {t('This society is suspended. Home information is read-only.')}
-        </Banner>
-      ) : null}
-      {snapshot.units.length === 0 ? (
-        <Banner title={t('No active unit linked')} tone="neutral">
-          {t(
-            'You are not linked to an active {unit}. Contact the society office if this is wrong.',
-            { unit: snapshot.unit_label.toLowerCase() },
-          )}
-        </Banner>
-      ) : null}
-
-      <QuickActionTiles
-        actions={resolvedActions}
-        availableActions={allQuickActions ?? resolvedActions}
-        firstFourOnPhone
-      />
-
-      {hasDues || hasPending ? (
-        <section
-          aria-labelledby="home-action-needed"
-          className="grid gap-space-3"
+    <MotionConfig reducedMotion="user">
+      <motion.div
+        animate="shown"
+        className="grid min-w-0 gap-space-6"
+        initial="hidden"
+        variants={staggerChildren}
+      >
+        <HomeGreeting
+          eyebrow={t('My home')}
+          name={snapshot.resident_name}
+          title={t('Hello {name}', { name: snapshot.resident_name })}
         >
-          <h2 className="text-heading" id="home-action-needed">
-            {t('Needs attention')}
-          </h2>
-          {hasDues ? (
-            <div className="grid gap-space-4 rounded-lg border border-rule bg-surface p-space-5 medium:p-space-6">
-              <div className="grid gap-space-2">
-                <h3 className="text-body-strong">{t('Amount due')}</h3>
-                <p className="break-all text-display font-semibold tabular-nums">
-                  {formatLocalizedCurrency(total, displayLocale)}
-                </p>
-                {displayDueDate && nextDue ? (
-                  <p
-                    className={`text-body ${nextDue < today ? 'text-danger' : 'text-ink-muted'}`}
-                  >
-                    {nextDue < today
+          <p className="flex flex-wrap items-center gap-x-space-2 text-caption text-ink-muted">
+            {snapshot.units.length ? (
+              <span className="rounded-full bg-surface-sunken px-space-2 py-space-1 font-semibold text-ink">
+                {t('{unitLabel} {units}', {
+                  unitLabel: snapshot.unit_label,
+                  units: snapshot.units.map((unit) => unit.number).join(', '),
+                })}
+              </span>
+            ) : null}
+            <span>
+              {t('Updated {time}', {
+                time: formatLocalizedTime(
+                  new Date(snapshot.server_now),
+                  displayLocale,
+                  { timeZone: snapshot.timezone },
+                ),
+              })}
+            </span>
+          </p>
+        </HomeGreeting>
+
+        {suspended ? (
+          <Banner tone="info">
+            {t('This society is suspended. Home information is read-only.')}
+          </Banner>
+        ) : null}
+        {snapshot.units.length === 0 ? (
+          <Banner title={t('No active unit linked')} tone="neutral">
+            {t(
+              'You are not linked to an active {unit}. Contact the society office if this is wrong.',
+              { unit: snapshot.unit_label.toLowerCase() },
+            )}
+          </Banner>
+        ) : null}
+
+        {hasDues || hasPending ? (
+          <motion.section
+            aria-labelledby="home-action-needed"
+            className="grid gap-space-3"
+            variants={staggerChildren}
+          >
+            <h2 className="text-heading" id="home-action-needed">
+              {t('Needs attention')}
+            </h2>
+            {hasDues ? (
+              <DuesCard
+                actionLabel={t('View Bills')}
+                amount={formatLocalizedCurrency(total, displayLocale)}
+                dueLine={
+                  displayDueDate && nextDue
+                    ? nextDue < today
                       ? t('Overdue since {date}', { date: displayDueDate })
-                      : t('Next due {date}', { date: displayDueDate })}
-                  </p>
-                ) : null}
-              </div>
-              <div>
-                <Link className={primaryLinkClass} href="/bills">
-                  {t('View Bills')}
-                </Link>
-              </div>
-            </div>
-          ) : null}
-          {hasPending ? (
-            <ul className="grid gap-space-3 medium:grid-cols-2">
-              {snapshot.pending_visitors > 0 ? (
-                <li>
-                  <Link
-                    className="flex min-h-14 items-center justify-between gap-space-3 rounded-md border border-rule bg-surface p-space-4 text-body-strong hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                    href="/visitors"
-                  >
-                    {t(
-                      snapshot.pending_visitors === 1
-                        ? '{count} visitor needs your response'
-                        : '{count} visitors need your response',
-                      {
-                        count: formatLocalizedNumber(
-                          snapshot.pending_visitors,
-                          displayLocale,
-                        ),
-                      },
-                    )}
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                </li>
-              ) : null}
-              {snapshot.pending_deliveries > 0 ? (
-                <li>
-                  <Link
-                    className="flex min-h-14 items-center justify-between gap-space-3 rounded-md border border-rule bg-surface p-space-4 text-body-strong hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                    href="/deliveries"
-                  >
-                    {t(
-                      snapshot.pending_deliveries === 1
-                        ? '{count} delivery needs your response'
-                        : '{count} deliveries need your response',
-                      {
-                        count: formatLocalizedNumber(
-                          snapshot.pending_deliveries,
-                          displayLocale,
-                        ),
-                      },
-                    )}
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                </li>
-              ) : null}
-            </ul>
-          ) : null}
-        </section>
-      ) : null}
-
-      {graph ? <ResidentGraph graph={graph} /> : null}
-
-      <ComingUp items={comingUp} timezone={snapshot.timezone} />
-
-      <section aria-labelledby="home-activity" className="grid gap-space-3">
-        <h2 className="text-heading" id="home-activity">
-          {t('Recent activity')}
-        </h2>
-        {snapshot.activity.length ? (
-          <ul className="overflow-hidden rounded-md border border-rule bg-surface">
-            {snapshot.activity.map((item) => (
-              <li
-                className="border-b border-rule last:border-b-0"
-                key={`${item.module}-${item.id}`}
+                      : t('Next due {date}', { date: displayDueDate })
+                    : null
+                }
+                isOverdue={nextDue !== null && nextDue < today}
+                label={t('Amount due')}
+              />
+            ) : null}
+            {hasPending ? (
+              <motion.ul
+                className="grid gap-space-3 medium:grid-cols-2"
+                variants={riseIn}
               >
-                <Link
-                  className="flex min-h-14 flex-wrap items-center justify-between gap-space-3 p-space-4 hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-focus"
-                  href={activityLink(item)}
-                >
-                  <span className="grid min-w-0 gap-space-1">
-                    <span className="text-caption text-ink-muted">
-                      {t(moduleLabels[item.module])}
-                      {item.unit_number ? ` · ${item.unit_number}` : ''}
-                    </span>
-                    <span className="break-words text-body-strong">
-                      {item.title}
-                    </span>
-                    <time
-                      className="text-caption text-ink-muted"
-                      dateTime={item.occurred_at}
-                    >
-                      {formatLocalizedDateTime(
-                        new Date(item.occurred_at),
-                        displayLocale,
+                {snapshot.pending_visitors > 0 ? (
+                  <li>
+                    <PendingRow
+                      href="/visitors"
+                      label={t(
+                        snapshot.pending_visitors === 1
+                          ? '{count} visitor needs your response'
+                          : '{count} visitors need your response',
                         {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                          timeZone: snapshot.timezone,
+                          count: formatLocalizedNumber(
+                            snapshot.pending_visitors,
+                            displayLocale,
+                          ),
                         },
                       )}
-                    </time>
-                  </span>
-                  <StatusChip status={activityStatus(item, today)} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyState
-            description={t('New updates will appear here.')}
-            title={t('No activity yet')}
+                      moduleKey="visitor"
+                    />
+                  </li>
+                ) : null}
+                {snapshot.pending_deliveries > 0 ? (
+                  <li>
+                    <PendingRow
+                      href="/deliveries"
+                      label={t(
+                        snapshot.pending_deliveries === 1
+                          ? '{count} delivery needs your response'
+                          : '{count} deliveries need your response',
+                        {
+                          count: formatLocalizedNumber(
+                            snapshot.pending_deliveries,
+                            displayLocale,
+                          ),
+                        },
+                      )}
+                      moduleKey="delivery"
+                    />
+                  </li>
+                ) : null}
+              </motion.ul>
+            ) : null}
+          </motion.section>
+        ) : null}
+
+        <motion.div variants={riseIn}>
+          <QuickActionTiles
+            actions={resolvedActions}
+            availableActions={allQuickActions ?? resolvedActions}
+            firstFourOnPhone
           />
-        )}
-      </section>
-    </div>
+        </motion.div>
+
+        {graph ? (
+          <motion.div variants={riseIn}>
+            <ResidentGraph graph={graph} />
+          </motion.div>
+        ) : null}
+
+        <motion.div variants={riseIn}>
+          <ComingUp items={comingUp} timezone={snapshot.timezone} />
+        </motion.div>
+
+        <motion.section
+          aria-labelledby="home-activity"
+          className="grid gap-space-3"
+          variants={riseIn}
+        >
+          <h2 className="text-heading" id="home-activity">
+            {t('Recent activity')}
+          </h2>
+          {snapshot.activity.length ? (
+            <ul className="overflow-hidden rounded-lg border border-rule bg-surface shadow-card">
+              {snapshot.activity.map((item) => (
+                <li
+                  className="border-b border-rule last:border-b-0"
+                  key={`${item.module}-${item.id}`}
+                >
+                  <Link
+                    className="flex min-h-16 flex-wrap items-center justify-between gap-space-3 p-space-4 transition-colors duration-motion-fast hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-focus"
+                    href={activityLink(item)}
+                  >
+                    <ModuleIconTile moduleKey={item.module} size="sm" />
+                    <span className="grid min-w-0 flex-1 gap-space-1">
+                      <span className="text-caption text-ink-muted">
+                        {t(moduleLabels[item.module])}
+                        {item.unit_number ? ` · ${item.unit_number}` : ''}
+                      </span>
+                      <span className="break-words text-body-strong">
+                        {item.title}
+                      </span>
+                      <time
+                        className="text-caption text-ink-muted"
+                        dateTime={item.occurred_at}
+                      >
+                        {formatLocalizedDateTime(
+                          new Date(item.occurred_at),
+                          displayLocale,
+                          {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                            timeZone: snapshot.timezone,
+                          },
+                        )}
+                      </time>
+                    </span>
+                    <StatusChip status={activityStatus(item, today)} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              description={t('New updates will appear here.')}
+              title={t('No activity yet')}
+            />
+          )}
+        </motion.section>
+      </motion.div>
+    </MotionConfig>
   );
 }

@@ -1,7 +1,7 @@
 // Exercise the resident home with synthetic data without accessing hosted services.
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ResidentShell } from '@/components/app-shells';
 import { ResidentHome } from '@/components/home/resident-home';
@@ -75,6 +75,14 @@ const sample: ResidentHomeSnapshot = {
 function Fixture() {
   const params = useSearchParams();
   const state = params.get('state');
+  const theme = params.get('theme');
+  // Preview-only switch until the app gets a real theme setting.
+  useEffect(() => {
+    if (theme === 'dark') document.documentElement.dataset.theme = 'dark';
+    return () => {
+      delete document.documentElement.dataset.theme;
+    };
+  }, [theme]);
   const disabled = state === 'disabled';
   const empty = state === 'empty';
   const noUnit = state === 'no-unit';

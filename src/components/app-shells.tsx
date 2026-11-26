@@ -11,6 +11,7 @@ import type { PermissionMaps } from '../core/permissions';
 import type { SocietyRole } from '../core/permissions';
 import type { MessageValues } from '../core/i18n/messages';
 import { Dialog } from './ui/dialog';
+import { ModuleIcon } from './ui/module-icon';
 import { NotificationBell } from './notifications/notification-bell';
 import { SosAlertBanner } from './sos/alert-banner';
 import { useLanguage } from './language-provider';
@@ -119,47 +120,6 @@ const DEVELOPER_NAVIGATION: readonly ShellNavigationItem[] = [
   },
 ];
 
-const MODULE_ICONS: Readonly<Record<ModuleKey, string>> = {
-  core: 'M3 10.5 12 3l9 7.5M5 9v11h14V9M9 20v-6h6v6',
-  visitor:
-    'M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm6-7a4 4 0 0 1 0 8m2 3h1a4 4 0 0 1 4 4v2',
-  delivery:
-    'M3 7h11v11H3zM14 11h4l3 3v4h-7zM7 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm11 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z',
-  billing: 'M5 3h14v18l-7-4-7 4V3Zm4 5h6m-6 4h6',
-  service_request: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
-  staff:
-    'M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8-3h6m-3-3v6',
-  housekeeping:
-    'm12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Zm7 12 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z',
-  amc: 'M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18l3 3 5.3-5.3a5 5 0 0 0 6.4-6.4L15 12l-3-3 2.7-2.7Z',
-  notice: 'M6 3h9l4 4v14H6zM14 3v5h5m-9 4h6m-6 4h6',
-  amenity: 'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z',
-  directory:
-    'M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m6-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8-3v6m-3-3h6',
-  expense: 'M4 4h16v16H4zM8 8h8M8 12h8m-8 4h4',
-  tenancy: 'M3 10.5 12 3l9 7.5M5 9v11h14V9M8 15h8m-3-3 3 3-3 3',
-  document:
-    'M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z',
-  parking: 'M5 3h14v18H5zM9 17V7h4a3 3 0 0 1 0 6H9',
-  sos: 'M12 3 2 20h20L12 3Zm0 6v5m0 3h.01',
-  vendor: 'M4 8h16v12H4zM9 8V5h6v3M4 13h16',
-  patrol: 'M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Zm-3 9 2 2 4-4',
-  metering: 'M12 21a9 9 0 1 0-9-9M12 12l4-4M7 17h10',
-  asset: 'M4 7l8-4 8 4v10l-8 4-8-4V7Zm0 0 8 4 8-4M12 11v10',
-  home_services:
-    'M3 10.5 12 3l9 7.5M5 9v11h14V9M14.7 12.3a2.5 2.5 0 0 0-3.2 3.2L9 18l1 1 2.5-2.5a2.5 2.5 0 0 0 3.2-3.2L14.5 14.5l-1-1 1.2-1.2Z',
-  poll: 'M4 4h16v16H4zM8 12l3 3 5-6',
-  meeting:
-    'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm4 9h6m-6 3h4',
-  event:
-    'M7 3v4m10-4v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm7 7 1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4L12 12Z',
-  community: 'M4 5h16v10H9l-5 4V5Zm4 4h8m-8 3h5',
-  language:
-    'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-9 9h18m-9-9a15 15 0 0 1 0 18m0-18a15 15 0 0 0 0 18',
-  major_works:
-    'M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18l3 3 5.3-5.3a5 5 0 0 0 6.4-6.4L15 12l-3-3 2.7-2.7Z',
-};
-
 function isActivePath(pathname: string, href: string) {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
 }
@@ -260,10 +220,6 @@ function SvgIcon({ path }: { path: string }) {
       />
     </svg>
   );
-}
-
-export function ModuleIcon({ moduleKey }: { moduleKey: ModuleKey }) {
-  return <SvgIcon path={MODULE_ICONS[moduleKey]} />;
 }
 
 function NavigationIcon({ item }: { item: ShellNavigationItem }) {

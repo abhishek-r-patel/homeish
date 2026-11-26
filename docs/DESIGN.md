@@ -20,18 +20,18 @@
 
 ## 1. Visual Direction and Design Principles
 
-### 1.1 Direction: "The Gate Register"
+### 1.1 Direction: "Holo" (DD-13, replaces "The Gate Register")
 
-Homeish digitizes the paper visitor register, the notice board and the maintenance receipt book. The look keeps their clear, trustworthy records while using a cool light background, dark ink text, softer corners, stamped status labels, and one confident blue.
+Homeish should feel like a premium consumer app, not a paper register. The page stays light and calm; one slowly shifting holographic card carries the screen's headline (for example, the resident's dues), each module has its own coloured icon tile, primary pills are dark ink, and live items pulse gently. A matching dark theme (2.6) glows instead of shining. Status, money and records stay as exact and plain as before.
 
-| Do                                                                            | Do not                                                    |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Cool light background, ink-dark text, clear dividers and softer corners       | Gradients, glassmorphism, neon, glow, blurred blobs       |
-| One brand colour used sparingly for primary actions and selection             | Multi-colour hero sections, decorative illustration packs |
-| Stamp-style status labels (text + icon + tint)                                | Colour-only status dots                                   |
-| Dense, scannable lists for staff; spacious, single-task screens for residents | Card-in-card-in-card nesting, shadows on everything       |
-| Plain language ("Allow", "Deny", "Pay Now")                                   | Jargon, marketing copy inside the product                 |
-| Real data and real empty states                                               | Placeholder stats, fake charts, emoji as UI               |
+| Do                                                                                | Do not                                                                   |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Light page, ink-dark text, soft-shadowed cards with generous corners              | More than one holographic surface per screen, or holo behind long text   |
+| One module accent colour per module (2.5), always on a tint tile with a line icon | Solid bright tile backgrounds, accents used to show status               |
+| Stamp-style status labels (text + icon + tint)                                    | Colour-only status; a live dot is always next to text that says the same |
+| Short spring entrances and gentle hover lift (8)                                  | Fading text in or out, bouncing, animated amounts or counts              |
+| Dense, scannable lists for staff; spacious, single-task screens for residents     | Card-in-card-in-card nesting                                             |
+| Plain language ("Allow", "Deny", "Pay Now") and real data with real empty states  | Jargon, marketing copy, placeholder stats, fake charts, emoji as UI      |
 
 ### 1.2 Principles
 
@@ -57,35 +57,37 @@ Homeish digitizes the paper visitor register, the notice board and the maintenan
 
 ## 2. Color
 
-Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; dark mode doubles the QA matrix). Tokens are semantic so a dark theme can be added later without touching components.
+Light theme is the default. A dark theme (2.6) is defined under DD-13 by redefining the same tokens under `[data-theme='dark']`, so components need no changes. It is not yet user-selectable; only the home preview (`/fixtures/home?theme=dark`) turns it on. A **Light / Dark / Same as my phone** choice in the profile is planned (PRD CORE-51, IMPLEMENTATION_PLAN P62.6).
 
 ### 2.1 Core palette
 
 | Token            | Hex       | Use                                                                               |
 | ---------------- | --------- | --------------------------------------------------------------------------------- |
-| `ink`            | `#1B1F23` | Primary text, headings                                                            |
-| `ink-muted`      | `#59606A` | Secondary text, captions, helper text                                             |
-| `ink-disabled`   | `#8A9099` | Disabled text only (not for essential content)                                    |
-| `paper`          | `#F5F7FA` | App background                                                                    |
+| `ink`            | `#0F172A` | Primary text, headings                                                            |
+| `ink-muted`      | `#526077` | Secondary text, captions, helper text                                             |
+| `ink-disabled`   | `#8A94A6` | Disabled text only (not for essential content)                                    |
+| `paper`          | `#F8FAFC` | App background                                                                    |
 | `surface`        | `#FFFFFF` | Cards, inputs, sheets, table bodies                                               |
-| `surface-sunken` | `#EDF1F6` | Table headers, read-only fields, code blocks                                      |
-| `rule`           | `#D9E0E8` | Decorative dividers, card outlines                                                |
-| `rule-strong`    | `#7A7F86` | Essential control borders (inputs, checkboxes, secondary buttons), 3:1 on surface |
-| `brand`          | `#1E4E8C` | Primary buttons, links, selected state, focus accent                              |
-| `brand-hover`    | `#183F72` | Hover/pressed brand                                                               |
-| `brand-tint`     | `#E6EEF8` | Selected row/option background, info backgrounds                                  |
+| `surface-sunken` | `#F1F5F9` | Table headers, read-only fields, code blocks, unit chip                           |
+| `rule`           | `#E6EBF2` | Decorative dividers, card outlines                                                |
+| `rule-strong`    | `#7A8597` | Essential control borders (inputs, checkboxes, secondary buttons), 3:1 on surface |
+| `brand`          | `#4338CA` | Primary buttons, links, selected state, focus accent (indigo)                     |
+| `brand-hover`    | `#3730A3` | Hover/pressed brand                                                               |
+| `brand-tint`     | `#EEF2FF` | Selected row/option background, info backgrounds                                  |
 | `on-brand`       | `#FFFFFF` | Text/icons on `brand`                                                             |
-| `focus`          | `#0B5FFF` | Focus ring (2px, 2px offset; distinct from `brand` fills)                         |
+| `focus`          | `#4F46E5` | Focus ring (2px, 2px offset; distinct from `brand` fills)                         |
+| `on-holo`        | `#0F172A` | Text on the holographic surface (both themes)                                     |
+| `holo-action`    | `#0F172A` | Dark ink pill button on the holographic surface; text uses `on-holo-action` white |
 
 ### 2.2 Semantic palette
 
 | Token     | Text/Icon | Tint (backgrounds) | Meaning                                   |
 | --------- | --------- | ------------------ | ----------------------------------------- |
-| `success` | `#1E6B3A` | `#E7F3EA`          | Approved, paid, resolved, active          |
-| `warning` | `#8A4B00` | `#FBF0DC`          | Pending attention, expiring, overdue soon |
-| `danger`  | `#B42318` | `#FBE9E7`          | Denied, failed, overdue, destructive      |
-| `info`    | `#1E4E8C` | `#E6EEF8`          | Neutral information, in progress          |
-| `neutral` | `#59606A` | `#E9EDF2`          | Draft, closed, inactive, cancelled        |
+| `success` | `#047857` | `#ECFDF5`          | Approved, paid, resolved, active          |
+| `warning` | `#B45309` | `#FFFBEB`          | Pending attention, expiring, overdue soon |
+| `danger`  | `#BE123C` | `#FFF1F2`          | Denied, failed, overdue, destructive      |
+| `info`    | `#4338CA` | `#EEF2FF`          | Neutral information, in progress          |
+| `neutral` | `#526077` | `#F1F5F9`          | Draft, closed, inactive, cancelled        |
 
 ### 2.3 Colour rules
 
@@ -94,9 +96,9 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 - Brand colour is reserved for: primary action, links, selection, active navigation item. It is not used for decoration or status.
 - Maximum one `brand` filled button per visible view region (Section 6.1).
 - Text on `paper`/`surface` uses `ink` or `ink-muted` only. Do not use `ink-disabled` for information the user needs.
-- Do not introduce additional hues. Charts (reports, P2) reuse semantic tokens plus `ink-muted`; never rely on hue alone to separate series.
-- **Accents on dashboards (DD-10):** a stat tile may carry a 3px left bar and a 26px icon square in one semantic tint (`info`, `warning`, `neutral` or `success`, matching what the number means); quick-action tiles use the `brand-tint` square with a `brand` icon, all the same. No solid-colour tile backgrounds and no per-tile rainbow.
-- Developer console accent: `dev-bar` `#1B1F23` (ink) header with `#FFD966` label chip, see Section 12.5.
+- Do not introduce hues beyond the semantic and module accent palettes (2.5). Charts (reports, P2) reuse semantic tokens plus `ink-muted`; never rely on hue alone to separate series.
+- **Accents on dashboards (DD-10, amended by DD-13):** a stat tile may carry a 3px left bar and an icon square in one semantic tint matching what the number means. Module icons (quick actions, activity, coming up, pending rows) use that module's accent tile from 2.5. No solid-colour tile backgrounds.
+- Developer console accent: `dev-bar` `#0F172A` (ink) header with `#FFD966` label chip, see Section 12.5.
 
 ### 2.4 Target contrast (to verify)
 
@@ -108,6 +110,31 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 | Semantic text / its tint                     | ≥ 4.5:1 |
 | `rule-strong` / `surface` (control boundary) | ≥ 3:1   |
 | `focus` ring / adjacent surfaces             | ≥ 3:1   |
+| Module accent / its tint (2.5), both themes  | ≥ 4.5:1 |
+| `on-holo` / every holographic gradient stop  | ≥ 4.5:1 |
+
+### 2.5 Module accents (DD-13)
+
+Each module has one line icon and one accent, mapped in `src/components/ui/module-icon.tsx` (`MODULE_VISUALS`). Accents identify a module; they never carry status. Each accent is used as `accent-{name}` (icon) on `accent-{name}-tint` (tile).
+
+| Accent    | Light icon / tint     | Dark icon / tint      |
+| --------- | --------------------- | --------------------- |
+| `indigo`  | `#4338CA` / `#EEF2FF` | `#A5B4FC` / `#1E2142` |
+| `orange`  | `#C2410C` / `#FFF1E6` | `#FDBA74` / `#2B1A10` |
+| `emerald` | `#047857` / `#ECFDF5` | `#6EE7B7` / `#0F2A22` |
+| `pink`    | `#BE185D` / `#FDF2F8` | `#F9A8D4` / `#2D1324` |
+| `sky`     | `#0369A1` / `#E0F2FE` | `#7DD3FC` / `#0C2333` |
+| `violet`  | `#6D28D9` / `#F5F3FF` | `#C4B5FD` / `#221A3D` |
+| `teal`    | `#0F766E` / `#F0FDFA` | `#5EEAD4` / `#0B2A28` |
+| `amber`   | `#B45309` / `#FEF3C7` | `#FCD34D` / `#2A2110` |
+
+### 2.6 Dark theme (DD-13)
+
+`[data-theme='dark']` redefines every colour token: page `#0A0C14`, surface `#131726`, sunken `#0F1320`, rule `#1F2537`, ink `#F1F5F9`, muted ink `#A0AABB`, brand `#A5B4FC` with `on-brand` `#0A0C14`, and lightened semantic colours on deep tints. The holographic surface keeps its light gradient and `on-holo` text and gains a soft violet glow (`shadow-float`). The values live in `src/styles/globals.css`.
+
+### 2.7 Holographic surface (DD-13)
+
+The `holo-surface` utility is a cyan → lilac → pink → yellow gradient that drifts over 10 seconds, with a white sheen sweeping across every 5 seconds. Use it for **one** headline card per screen (resident dues) and small identity marks (the avatar). Content inside sits above the sheen (`relative z-10`) in solid `on-holo` ink; never put translucent text on it. Not used on guard screens.
 
 ---
 
@@ -166,14 +193,16 @@ Light theme only in MVP. **[DD-01]**: dark mode deferred (guards use sunlight; d
 
 | Token            | Value              | Use                                              |
 | ---------------- | ------------------ | ------------------------------------------------ |
-| `radius-sm`      | 6px                | Chips, badges, small buttons                     |
-| `radius-md`      | 12px               | Inputs, buttons, cards, tables                   |
-| `radius-lg`      | 20px               | Bottom sheets (top corners), modals, home hero   |
+| `radius-sm`      | 8px                | Chips, badges, small buttons                     |
+| `radius-md`      | 14px               | Inputs, buttons, icon tiles, tables              |
+| `radius-lg`      | 24px               | Cards, home hero, bottom sheets, modals          |
 | `border`         | 1px `rule`         | Cards, dividers, table lines                     |
 | `border-control` | 1px `rule-strong`  | Inputs, checkboxes, secondary buttons            |
+| `shadow-card`    | two soft shadows   | Cards and list containers (DD-13)                |
+| `shadow-float`   | soft violet glow   | The holographic surface only                     |
 | `shadow-overlay` | single soft shadow | Modals, bottom sheets, popovers, toasts **only** |
 
-Cards and sections have a border, **no shadow**. Elevation is reserved for things that float above content.
+Cards and sections have a 1px `rule` border plus `shadow-card`. Do not stack heavier shadows on cards; `shadow-overlay` stays reserved for things that float above content.
 
 ### 4.3 Touch targets
 
@@ -351,7 +380,7 @@ Rules:
 
 ### 6.7 Cards, list items, stat tiles
 
-- **Card:** `surface`, `border`, `radius-md`, `space-4/5` padding. No shadow. No nested cards; use dividers and headings inside.
+- **Card:** `surface`, `border`, `radius-lg`, `shadow-card`, `space-4/5` padding. No nested cards; use dividers and headings inside.
 - **List item (default pattern for entries):** one row = primary line (name / title), secondary line (unit · time), trailing status chip and chevron when tappable. Whole row is the target (≥ 56px). Rows separated by `rule` lines, not cards, to keep lists compact.
 - **Stat tile (dashboards):** label (`caption`), value (`display`, tabular), optional delta/context line, and the optional accent bar and icon square from 2.3. Tiles are links when they drill down (visible chevron or underline on hover). No sparkline decoration.
 - **Dashboard and resident Home layout (DD-10):** a `brand-tint` greeting band (name, date, society or flat, one line of what needs attention), stat tiles, then **Quick actions** beside **Needs attention**, then one small graph and **Coming up**, and the activity feed last. The greeting band carries no buttons; the tiles replace them. Admin stat tiles are exactly four: Visitors today, Open requests, Collected this month, Outstanding (CORE-37). New societies show the **Getting started** card (CORE-39) above Quick actions until it is done or hidden. Guard and supervisor homes use the same band, tiles and Coming up, with the guard's big gate buttons kept first (5.4).
@@ -516,10 +545,13 @@ Leaving a dirty form (Back, nav, close) prompts a confirm dialog: "Leave without
 
 ### 8.1 Motion principles
 
-- Motion explains change, never decorates. No looping, bouncing, parallax or celebratory effects. No animated numbers for amounts or counts.
+- Motion gives the app life but never hides information. No bouncing, parallax or celebratory effects. No animated numbers for amounts or counts.
 - Durations: `motion-fast` 120ms (hover, focus, switch), `motion-base` 200ms (expand/collapse, tab change), `motion-slow` 280ms (sheets, dialogs). Easing: ease-out for entering, ease-in for leaving.
+- **Allowed ambient motion (DD-13):** the holographic surface drifts (10s) and its sheen sweeps (5s); a `live-dot` pulses (1.8s) beside text that already states the pending item. Nothing else loops.
+- **Entrances (DD-13):** home sections rise into place with a short spring and a 50ms stagger (the `motion` library, `motion/react`). Entrances move and scale only; they never fade, so text contrast is correct at every frame.
+- **Hover and press (DD-13):** cards lift by 2px on hover and scale to 97–98% while pressed.
 - Animate opacity and transform only. Do not animate layout properties that cause reflow.
-- **Reduced motion:** when the user prefers reduced motion, replace transitions with instant state changes (keep focus and state indicators). Skeleton shimmer becomes a static placeholder.
+- **Reduced motion:** when the user prefers reduced motion, replace transitions with instant state changes (keep focus and state indicators). The holo drift and sheen, live-dot pulse and entrances stop (`MotionConfig reducedMotion="user"` plus CSS rules). Skeleton shimmer becomes a static placeholder.
 
 ### 8.2 Specific behaviors
 
@@ -996,7 +1028,7 @@ P42.5's draft, approval and change screens and P41.3's comparison, cash-flow, do
 
 ## 13. Iconography and Imagery
 
-- One icon library, line style, 1.5px stroke, 24px default (20px in chips, 28px on guard tiles). No filled/line mixing.
+- One icon library, **Lucide** (`lucide-react`, DD-13), line style, 1.8px stroke, 24px default (20px in chips and small tiles, 28px on guard tiles). No filled/line mixing. Module icons come only from `MODULE_VISUALS` in `src/components/ui/module-icon.tsx`.
 - Icons accompany text; icon-only controls always have accessible names and tooltips (desktop). Decorative icons are hidden from assistive tech.
 - No stock illustrations. Empty states use a single line icon. Photos appear only as user-provided content (visitor, parcel, request, society logo).
 - Society logo: optional, shown in top bar (max 32px high) and on printed bills; default is the society's name as text in `heading` weight.
@@ -1166,17 +1198,18 @@ Public marketing and enquiry copy uses customer-facing terms: **Homeish team** f
 
 ## 20. Decisions Requiring Your Approval
 
-| ID    | Decision                                                                                                                                                           | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Priority |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| DD-01 | Light theme only in MVP (dark mode later)                                                                                                                          | **Approved 2026-11-09:** light theme only; dark mode may be revisited after MVP                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Closed   |
-| DD-02 | Typeface and user preference                                                                                                                                       | **Amended 2026-11-20:** Nunito body + Quicksand headings; retain the account-saved device-default option                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Closed   |
-| DD-03 | Guard alert sound/haptic on resident decision, with mute                                                                                                           | **Approved 2026-11-09:** brief alert with a global mute setting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Closed   |
-| DD-04 | "Help" screen exposing a copyable session/request ID on every role                                                                                                 | **Approved 2026-11-09:** copyable ID available from Help throughout the app                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Closed   |
-| DD-05 | Society-configurable unit terminology                                                                                                                              | **Approved 2026-11-09:** custom text, 1–24 letters or spaces; defaults to "Unit"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Closed   |
-| DD-06 | Brand colour (`#1E4E8C` blue) and the "Gate Register" direction                                                                                                    | **Amended 2026-11-20:** retain blue and clear records; use a cool background and softer corners                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Closed   |
-| DD-07 | Product logo/mark (product name Homeish confirmed in PRD D-01)                                                                                                     | **Approved 2026-11-09:** Homeish wordmark paired with the roof-and-entry mark from logo concept 15. Name and logo option sheets: [name-logo-options.svg](./proposals/name-logo-options.svg), [short-name-logo-options.svg](./proposals/short-name-logo-options.svg), [english-name-logo-options.svg](./proposals/english-name-logo-options.svg)                                                                                                                                                                                                                                         | Closed   |
-| DD-08 | Bottom tab bar for residents/admin on phones vs. hamburger drawer                                                                                                  | **Approved 2026-11-09:** bottom tabs on phones                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Closed   |
-| DD-09 | Confirmation for developer high-impact actions (suspend/archive society, disabling module with pending items)                                                      | **Approved 2026-11-09:** standard dialog stating the consequence; no typed confirmation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Closed   |
-| DD-10 | Navigation and dashboard consolidation (PRD D-91), compared with Multi School ERP and AcadLynk                                                                     | **Approved 2026-11-24:** topic groups (5.3), place picker (5.2), calm look with small accents, quick-action tiles and one graph (2.3, 6.7); built in IMPLEMENTATION_PLAN phases P54–P56, with every detail agreed in PRD D-93. Option sheets: [navigation-grouping-options.svg](./proposals/navigation-grouping-options.svg), [two-role-switch-options.svg](./proposals/two-role-switch-options.svg), [dashboard-look-options.svg](./proposals/dashboard-look-options.svg), [navigation-ideas-options.svg](./proposals/navigation-ideas-options.svg)                                    | Closed   |
-| DD-11 | Everyday polish, admin confidence and homepage additions (PRD D-96), from Multi School ERP, AcadLynk and MHM Studios                                               | **Approved for planning 2026-11-25:** group-page status lines, done screens, notice reach, change history with undo, role preview, reports hub, What's new, phone **+** in the tab bar and three homepage sections (5.2, 5.3, 6.11, 12.4, 12.5, 18); built in IMPLEMENTATION_PLAN phases P58–P60. Samples: [sample-1-in-app-recommended.png](./proposals/sample-1-in-app-recommended.png), [sample-2-in-app-later.png](./proposals/sample-2-in-app-later.png), [sample-3-homepage-fits-rules.png](./proposals/sample-3-homepage-fits-rules.png). Open: tab-bar slot count (P60 kickoff) | Open     |
-| DD-12 | Working demo look (PRD D-97): homepage role buttons, demo-host role picker, demo notice banner, developer demo-data card, Environments card and beta website label | **Approved for planning 2026-11-25:** as in 12.5 (D-10, D-11) and 18 "Working demo"; real app screens only, no demo-only layouts; replaces the D-49 disabled demo and the browser-only illustration; built in IMPLEMENTATION_PLAN phase P61. The quoted screen text is a draft the owner checks during UAT (P61.9)                                                                                                                                                                                                                                                                      | Closed   |
+| ID    | Decision                                                                                                                                                           | Recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Priority |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| DD-01 | Light theme only in MVP (dark mode later)                                                                                                                          | **Approved 2026-11-09:** light theme only; dark mode may be revisited after MVP. **Superseded by DD-13:** dark theme defined, not yet user-selectable                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Closed   |
+| DD-02 | Typeface and user preference                                                                                                                                       | **Amended 2026-11-20:** Nunito body + Quicksand headings; retain the account-saved device-default option                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Closed   |
+| DD-03 | Guard alert sound/haptic on resident decision, with mute                                                                                                           | **Approved 2026-11-09:** brief alert with a global mute setting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Closed   |
+| DD-04 | "Help" screen exposing a copyable session/request ID on every role                                                                                                 | **Approved 2026-11-09:** copyable ID available from Help throughout the app                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Closed   |
+| DD-05 | Society-configurable unit terminology                                                                                                                              | **Approved 2026-11-09:** custom text, 1–24 letters or spaces; defaults to "Unit"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Closed   |
+| DD-06 | Brand colour (`#1E4E8C` blue) and the "Gate Register" direction                                                                                                    | **Amended 2026-11-20:** retain blue and clear records; use a cool background and softer corners. **Superseded by DD-13:** indigo brand and the "Holo" direction                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Closed   |
+| DD-07 | Product logo/mark (product name Homeish confirmed in PRD D-01)                                                                                                     | **Approved 2026-11-09:** Homeish wordmark paired with the roof-and-entry mark from logo concept 15. Name and logo option sheets: [name-logo-options.svg](./proposals/name-logo-options.svg), [short-name-logo-options.svg](./proposals/short-name-logo-options.svg), [english-name-logo-options.svg](./proposals/english-name-logo-options.svg)                                                                                                                                                                                                                                                                            | Closed   |
+| DD-08 | Bottom tab bar for residents/admin on phones vs. hamburger drawer                                                                                                  | **Approved 2026-11-09:** bottom tabs on phones                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Closed   |
+| DD-09 | Confirmation for developer high-impact actions (suspend/archive society, disabling module with pending items)                                                      | **Approved 2026-11-09:** standard dialog stating the consequence; no typed confirmation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Closed   |
+| DD-10 | Navigation and dashboard consolidation (PRD D-91), compared with Multi School ERP and AcadLynk                                                                     | **Approved 2026-11-24:** topic groups (5.3), place picker (5.2), calm look with small accents, quick-action tiles and one graph (2.3, 6.7); built in IMPLEMENTATION_PLAN phases P54–P56, with every detail agreed in PRD D-93. Option sheets: [navigation-grouping-options.svg](./proposals/navigation-grouping-options.svg), [two-role-switch-options.svg](./proposals/two-role-switch-options.svg), [dashboard-look-options.svg](./proposals/dashboard-look-options.svg), [navigation-ideas-options.svg](./proposals/navigation-ideas-options.svg)                                                                       | Closed   |
+| DD-11 | Everyday polish, admin confidence and homepage additions (PRD D-96), from Multi School ERP, AcadLynk and MHM Studios                                               | **Approved for planning 2026-11-25:** group-page status lines, done screens, notice reach, change history with undo, role preview, reports hub, What's new, phone **+** in the tab bar and three homepage sections (5.2, 5.3, 6.11, 12.4, 12.5, 18); built in IMPLEMENTATION_PLAN phases P58–P60. Samples: [sample-1-in-app-recommended.png](./proposals/sample-1-in-app-recommended.png), [sample-2-in-app-later.png](./proposals/sample-2-in-app-later.png), [sample-3-homepage-fits-rules.png](./proposals/sample-3-homepage-fits-rules.png). Open: tab-bar slot count (P60 kickoff)                                    | Open     |
+| DD-12 | Working demo look (PRD D-97): homepage role buttons, demo-host role picker, demo notice banner, developer demo-data card, Environments card and beta website label | **Approved for planning 2026-11-25:** as in 12.5 (D-10, D-11) and 18 "Working demo"; real app screens only, no demo-only layouts; replaces the D-49 disabled demo and the browser-only illustration; built in IMPLEMENTATION_PLAN phase P61. The quoted screen text is a draft the owner checks during UAT (P61.9)                                                                                                                                                                                                                                                                                                         | Closed   |
+| DD-13 | "Holo" visual refresh to compete with premium consumer apps; supersedes the "Gate Register" direction (DD-06) and opens the dark theme (DD-01)                     | **In progress 2026-11:** owner chose concept R1 "Holo Classic" (light) with R5 for dark; added `lucide-react` and `motion` with owner approval; new palette, module accents, radii, card shadow, holographic surface and motion (1.1, 2, 4.2, 8, 13). Built first on the resident home; shell, other screens, a theme setting and guard screens await owner review. **2026-11-26:** rollout approved for planning under PRD D-98 as IMPLEMENTATION_PLAN P62 (app frame, admin home, other resident screens, guard and housekeeping screens without holo or looping motion, theme choice), before the P61 demo seed and UAT | Open     |

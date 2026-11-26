@@ -9,7 +9,7 @@ import {
   saveQuickActionPinsAction,
   setGettingStartedDismissedAction,
 } from '@/app/workspace-actions';
-import { ModuleIcon } from '@/components/app-shells';
+import { ModuleIconTile } from '@/components/ui/module-icon';
 import { EmptyState } from '@/components/ui/feedback';
 import { useUiTranslator } from '@/components/ui/language';
 import type { ModuleKey } from '@/core/modules';
@@ -116,6 +116,15 @@ const SOURCE_LABELS: Readonly<Record<ComingUpItem['source'], string>> = {
   poll: 'Poll closes',
 };
 
+const SOURCE_MODULES: Readonly<Record<ComingUpItem['source'], ModuleKey>> = {
+  meeting: 'meeting',
+  event: 'event',
+  bill: 'billing',
+  amenity: 'amenity',
+  amc: 'amc',
+  poll: 'poll',
+};
+
 export function QuickActionTiles({
   actions,
   availableActions = actions,
@@ -202,10 +211,10 @@ export function QuickActionTiles({
               key={action.key}
             >
               <Link
-                className="flex min-h-24 flex-col items-start justify-between gap-space-3 rounded-md border border-rule bg-surface p-space-4 text-body-strong shadow-card hover:border-brand hover:bg-brand-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                className="flex min-h-28 flex-col items-start justify-between gap-space-3 rounded-lg border border-rule bg-surface p-space-4 text-body-strong shadow-card transition duration-motion-base ease-out hover:-translate-y-0.5 hover:border-brand/40 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 href={action.href}
               >
-                <ModuleIcon moduleKey={action.moduleKey} />
+                <ModuleIconTile moduleKey={action.moduleKey} />
                 <span>{t(action.label)}</span>
               </Link>
             </li>
@@ -333,18 +342,22 @@ export function ComingUp({
         <span className="text-caption text-ink-muted">{t('Next 7 days')}</span>
       </div>
       {items.length ? (
-        <ul className="overflow-hidden rounded-md border border-rule bg-surface">
+        <ul className="overflow-hidden rounded-lg border border-rule bg-surface shadow-card">
           {items.map((item) => (
             <li
               className="border-b border-rule last:border-b-0"
               key={`${item.source}-${item.item_id}`}
             >
               <Link
-                className="flex min-h-14 items-center justify-between gap-space-3 p-space-4 hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-focus"
+                className="flex min-h-16 items-center justify-between gap-space-3 p-space-4 transition-colors duration-motion-fast hover:bg-surface-sunken focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-focus"
                 href={item.href}
               >
-                <span className="grid min-w-0 gap-space-1">
-                  <span className="text-caption text-brand">
+                <ModuleIconTile
+                  moduleKey={SOURCE_MODULES[item.source]}
+                  size="sm"
+                />
+                <span className="grid min-w-0 flex-1 gap-space-1">
+                  <span className="text-caption text-ink-muted">
                     {t(SOURCE_LABELS[item.source])}
                   </span>
                   <span className="break-words text-body-strong">
